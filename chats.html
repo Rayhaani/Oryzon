@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus - Unified Inbox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #050505;
+            --cyan-neon: #00F2FF;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-dim: rgba(255, 255, 255, 0.6);
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--obsidian);
+            background-image: radial-gradient(circle at 50% 0%, rgba(0, 242, 255, 0.05), transparent);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 15px 15px 5px;
+            background: transparent;
+            backdrop-filter: blur(15px);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .header-top {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .back-trigger { cursor: pointer; display: flex; align-items: center; }
+        h1 { font-size: 15px; font-weight: 600; color: white; }
+        .search-trigger { cursor: pointer; color: var(--text-dim); }
+
+        /* FIXED BUTTONS GROUP WITH BALANCED SPACING */
+        .smart-btn-group {
+            display: flex;
+            gap: 5px;
+            justify-content: space-between;
+            padding-bottom: 8px;
+        }
+
+        .smart-btn {
+            padding: 5px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .smart-btn.active {
+            background: rgba(0, 242, 255, 0.1);
+            border-color: var(--cyan-neon);
+            color: var(--cyan-neon);
+            box-shadow: 0 0 8px rgba(0, 242, 255, 0.2);
+        }
+
+        .view-container {
+            flex: 1; overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .view-container::-webkit-scrollbar { display: none; }
+
+        .tab-view { display: none; }
+        .tab-view.active { display: block; }
+
+        .chat-item {
+            display: flex; align-items: center;
+            padding: 10px 15px; 
+            text-decoration: none; color: inherit;
+            height: 65px;
+        }
+
+        .chat-item:active { background: rgba(255, 255, 255, 0.05); }
+
+        .profile-stack { position: relative; margin-right: 12px; }
+        .user-img {
+            width: 46px; height: 46px; border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--glass-border);
+        }
+
+        .status-ring { border: 2px solid var(--cyan-neon); padding: 2px; }
+
+        .chat-details { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+        .chat-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+        .name { font-size: 13.5px; font-weight: 600; color: #fff; }
+        .time { font-size: 9px; color: var(--text-dim); }
+        .preview-text {
+            font-size: 11.5px; color: var(--text-dim);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-top">
+            <div class="back-trigger" onclick="history.back()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+            </div>
+            <h1>Messages</h1>
+            <div class="search-trigger">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+        </div>
+
+        <div class="smart-btn-group">
+            <div class="smart-btn active" onclick="switchTab(this, 'personal')">Personal</div>
+            <div class="smart-btn" onclick="switchTab(this, 'groups')">Groups</div>
+            <div class="smart-btn" onclick="switchTab(this, 'updates')">Updates</div>
+            <div class="smart-btn" onclick="switchTab(this, 'friends')">Friends</div>
+        </div>
+    </header>
+
+    <div class="view-container">
+        <div id="personal" class="tab-view active">
+            <a href="chat-interior.html" class="chat-item">
+                <div class="profile-stack"><img src="https://via.placeholder.com/46/111/00F2FF?text=A" class="user-img"></div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">Ahmad Tech Hub</span><span class="time">2:45 PM</span></div>
+                    <p class="preview-text">Sannu abokina, Nexus Cloud Miner yana nan?</p>
+                </div>
+            </a>
+            <a href="chat-interior.html" class="chat-item">
+                <div class="profile-stack"><img src="https://via.placeholder.com/46/222/00F2FF?text=M" class="user-img"></div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">Musa Developer</span><span class="time">1:15 PM</span></div>
+                    <p class="preview-text">Na kammala tsarin database din...</p>
+                </div>
+            </a>
+        </div>
+
+        <div id="groups" class="tab-view">
+            <a href="chat-interior.html" class="chat-item">
+                <div class="profile-stack"><img src="https://via.placeholder.com/46/00F2FF/000?text=KM" class="user-img" style="border-radius: 12px;"></div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">KanoMart Devs</span><span class="time">1:10 PM</span></div>
+                    <p class="preview-text">Ali: Update logic ɗin yanzu...</p>
+                </div>
+            </a>
+            <a href="chat-interior.html" class="chat-item">
+                <div class="profile-stack"><img src="https://via.placeholder.com/46/333/00F2FF?text=SY" class="user-img" style="border-radius: 12px;"></div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">Synergy Core</span><span class="time">Yesterday</span></div>
+                    <p class="preview-text">Bello: The protocol is live!</p>
+                </div>
+            </a>
+        </div>
+
+        <div id="updates" class="tab-view">
+            <div class="chat-item">
+                <div class="profile-stack"><img src="https://via.placeholder.com/46/222/00F2FF?text=Me" class="user-img status-ring"></div>
+                <div class="chat-details">
+                    <span class="name">My Status</span>
+                    <p class="preview-text">Tap to add neural update</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="friends" class="tab-view">
+            <a href="chat-interior.html" class="chat-item">
+                <div class="profile-stack"><img src="https://via.placeholder.com/46/333/fff?text=S" class="user-img"></div>
+                <div class="chat-details"><span class="name">Salisu Synergy</span><p class="preview-text">Active Now</p></div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(element, tabId) {
+            document.querySelectorAll('.smart-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+    </script>
+</body>
+  </html>
+  
