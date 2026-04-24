@@ -237,44 +237,57 @@
         }
 
 
-
-        /* Wannan zai tabbatar card din ya mamaye ko'ina */
+/* Wannan zai gyara yadda rubutu ke bayyana a saman bidiyon */
 .post-card.immersive-mode {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 5000;
-    background: #000; /* Black background domin bidiyo ya fito */
     display: flex;
     flex-direction: column;
+    justify-content: flex-end; /* Tura rubutu can kasa */
+    background: #000; /* Black background domin bidiyo ya fito radau */
 }
 
-/* Wannan zai tabbatar media din (hoto/bidiyo) ya cika ko'ina */
-.immersive-mode .post-media, 
-.immersive-mode .video-placeholder {
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover; /* Shi ne zai sa ya cika screen ba tare da ya murtsuke ba */
+.immersive-mode .post-media {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: 1; /* Bidiyo ya koma karkashin rubutu */
 }
 
-/* Wannan zai dauko rubutun ya dawo da shi saman bidiyon a kasa */
+/* Wannan zai ba rubutun inuwa don a iya karantawa a saman kowane kalar bidiyo */
 .immersive-mode .post-header,
 .immersive-mode .post-content,
 .immersive-mode .interaction-bar,
 .immersive-mode .earning-badge {
     position: relative;
-    z-index: 5001; /* Domin ya hau saman hoton */
-    margin-top: auto; /* Zai tura su can kasa */
-    padding: 20px;
-    background: linear-gradient(transparent, rgba(0,0,0,0.8)); /* Inuwar baki don a iya karantawa */
+    z-index: 10; /* Rubutu ya hau sama */
+    padding: 10px 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    }
+
+
+
+
+        .earning-progress-container {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+}
+
+.earning-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--emerald-pulse);
+    box-shadow: 0 0 10px var(--emerald-pulse);
+    transition: width 0.1s linear;
 }
         
-        
+
     </style>
 </head>
 <body>
@@ -311,6 +324,10 @@
                 <button class="btn-nexus">🔗 Nexus</button>
             </div>
             <span class="earning-badge">+0.002 NT earned for viewing</span>
+       <div class="earning-progress-container">
+    <div class="earning-progress-bar"></div>
+       </div>
+            
         </div>
 
         <div class="post-card">
@@ -328,6 +345,10 @@
                 <button class="btn-nexus">🔗 Nexus</button>
             </div>
             <span class="earning-badge">+0.005 NT earned for watching</span>
+        <div class="earning-progress-container">
+    <div class="earning-progress-bar"></div>
+</div>
+
         </div>
     </div>
 
@@ -347,6 +368,10 @@
         <button class="btn-nexus">🔗 Nexus</button>
     </div>
     <span class="earning-badge">+0.005 NT earned</span>
+    <div class="earning-progress-container">
+    <div class="earning-progress-bar"></div>
+</div>
+
     </div>
 
     
@@ -397,6 +422,21 @@ document.querySelectorAll('.post-card').forEach(card => {
         }
     });
 });
+
+
+
+        function startEarningProgress(card) {
+    const progressBar = card.querySelector('.earning-progress-bar');
+    let width = 0;
+    const interval = setInterval(() => {
+        if (width >= 100 || !card.classList.contains('immersive-mode')) {
+            clearInterval(interval);
+        } else {
+            width += 1;
+            progressBar.style.width = width + '%';
+        }
+    }, 100); // Zai dauki sakan 10 kafin ya cika
+        }
         
     </script>
 </body>
