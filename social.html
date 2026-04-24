@@ -326,6 +326,16 @@
             border: 1.5px solid #fff;
             object-fit: cover;
         }
+
+
+        .earning-badge {
+    font-size: 10px;
+    color: var(--emerald-pulse);
+    display: block;
+    margin-top: 10px;
+    font-family: 'Orbitron', sans-serif;
+        }
+        
     </style>
 </head>
 <body>
@@ -467,6 +477,96 @@ function toggleSave(btn) {
     icon.classList.toggle('fa-solid');
     icon.classList.toggle('fa-regular');
 }
+
+        const nexusPosts = [
+    {
+        id: 1,
+        username: "Sadiq_Alhassan",
+        content: "Barka da zuwa sabuwar duniyar Nexus 3000. 🚀",
+        mediaType: "image",
+        mediaUrl: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1000",
+        isAd: false,
+        likes: "228",
+        comments: "12"
+    },
+    {
+        id: 2,
+        username: "Tech_King_Kano",
+        content: "Kalli yadda UI dinmu yake tamkar zinari! #NexusGold",
+        mediaType: "video",
+        mediaUrl: "https://www.w3schools.com/html/mov_bbb.mp4", // Misalin video
+        isAd: false,
+        likes: "1.5k",
+        comments: "84"
+    },
+    {
+        id: 3,
+        username: "Sponsored",
+        content: "Saka wannan Application din domin samun kyautar 500 NT kai tsaye!",
+        mediaType: "image",
+        mediaUrl: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1000",
+        isAd: true, // Wannan Talla ce
+        earningBadge: "+0.005 NT earned for watching",
+        likes: "10k",
+        comments: "500"
+    }
+];
+
+
+
+        function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
+    feedContainer.innerHTML = ''; // Share tsofaffin posts
+
+    nexusPosts.forEach(post => {
+        // 1. Duba ko Image ne ko Video
+        let mediaHTML = '';
+        if (post.mediaType === 'image') {
+            mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
+        } else if (post.mediaType === 'video') {
+            mediaHTML = `
+                <video class="post-media" autoplay loop muted playsinline>
+                    <source src="${post.mediaUrl}" type="video/mp4">
+                </video>`;
+        }
+
+        // 2. Duba ko Talla ce domin saka Earning Badge
+        let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
+
+        // 3. Gina Post Card din baki daya
+        const cardHTML = `
+            <div class="post-card" onclick="toggleImmersive(this)">
+                <div class="post-header">
+                    <div class="avatar"></div>
+                    <div class="username">${post.username}</div>
+                </div>
+                <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
+                
+                ${mediaHTML}
+                
+                <div class="interaction-bar" onclick="stopProp(event)">
+                    <div class="left-actions">
+                        <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                            <i class="fa-regular fa-heart"></i>
+                            <span>${post.likes}</span>
+                        </button>
+                        <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
+                        <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
+                        <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
+                    </div>
+                    <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
+                </div>
+                ${badgeHTML}
+            </div>
+        `;
+
+        feedContainer.innerHTML += cardHTML;
+    });
+}
+
+// Kira aikin idan an bude page
+window.onload = renderNexusFeed;
+        
         
     </script>
 </body>
