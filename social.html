@@ -447,6 +447,14 @@
 
 
 
+        .post-media {
+    width: 100%;       /* Ya cika faɗin post ɗin */
+    max-height: 400px; /* Kada ya yi tsayi da yawa */
+    border-radius: 12px;
+    margin-top: 10px;
+    background: #000;  /* Background baƙi idan bidiyon bai loda ba */
+        }
+        
         
         
     </style>
@@ -871,7 +879,43 @@ function previewMedia(input) {
   // 3. Kira aikin Feed bayan an kunna Firebase
   renderNexusFeed();
 
+
+
+    // Misali yayin da kake loop din posts dinka daga Firestore
+db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+    let html = "";
+    snapshot.forEach((doc) => {
+        const post = doc.data();
         
+        // 1. Fara gina sauran sassan post din (username, text)
+        let mediaElement = "";
+
+        // 2. Duba idan akwai media kuma wanne iri ne
+        if (post.mediaUrl) {
+            if (post.mediaType === 'video') {
+                // Idan bidiyo ne, yi amfani da <video> tag
+                mediaElement = `
+                    <video controls class="post-media">
+                        <source src="${post.mediaUrl}" type="video/mp4">
+                        Wayarka ba ta goyon bayan kallon wannan bidiyon.
+                    </video>`;
+            } else {
+                // Idan hoto ne, yi amfani da <img> tag
+                mediaElement = `<img src="${post.mediaUrl}" class="post-media" alt="Post Image">`;
+            }
+        }
+
+        // 3. Haɗa komai wuri guda
+        html += `
+            <div class="post-card">
+                <h3>${post.username}</h3>
+                <p>${post.content}</p>
+                ${mediaElement} </div>
+        `;
+    });
+    document.getElementById('feedContainer').innerHTML = html;
+});
+    
     </script>
 </body>
 </html>
