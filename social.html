@@ -455,6 +455,31 @@
     background: #000;  /* Background baƙi idan bidiyon bai loda ba */
         }
         
+
+
+        /* Wurin da media yake zama */
+.media-container {
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 15px;
+    overflow: hidden; /* Don kusurwoyin su zagaye */
+    background-color: #000; /* Don ya nuna baki kafin bidiyon ya lodu */
+}
+
+/* Tsarin bidiyo */
+.post-video {
+    width: 100%;
+    display: block;
+    max-height: 500px; /* Kada bidiyo ya yi tsayi da yawa */
+    object-fit: cover; /* Don bidiyon ya cika sararin sa */
+}
+
+/* Tsarin hoto */
+.post-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
         
         
     </style>
@@ -915,6 +940,40 @@ db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
     });
     document.getElementById('feedContainer').innerHTML = html;
 });
+
+
+    // A cikin loop din da kake loda posts
+const postData = doc.data();
+let mediaTag = ""; // Wannan zai dauki HTML din da zamu nuna
+
+// Goge tsohon sashin mediaTag din ka saka wannan:
+let mediaTag = ""; 
+
+if (postData.mediaUrl) {
+    if (postData.mediaType === 'video') {
+        // Wannan shi ne babban gyaran da zai sa bidiyo ya tashi da kansa
+        mediaTag = `
+            <video class="post-video" autoplay muted loop playsinline controls>
+                <source src="${postData.mediaUrl}" type="video/mp4">
+                Wayarka ba ta goyon bayan wannan bidiyon.
+            </video>`;
+    } else {
+        // Idan hoto ne
+        mediaTag = `<img src="${postData.mediaUrl}" class="post-image" alt="Post Image">`;
+    }
+}
+
+// Sannan ka hada shi da wannan template din
+const postTemplate = `
+    <div class="post-card">
+        <p>${postData.content}</p>
+        <div class="media-container" style="background-color: #000; border-radius: 12px; overflow: hidden;">
+            ${mediaTag}
+        </div>
+    </div>
+`;
+            
+    
     
     </script>
 </body>
