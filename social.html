@@ -709,9 +709,128 @@ function toggleSave(btn) {
 
 
 
-    <script>
-// 1. Configuration din Firebase (Oryzon)
-const firebaseConfig = {
+        function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
+    feedContainer.innerHTML = ''; // Share tsofaffin posts
+
+    nexusPosts.forEach(post => {
+        // 1. Duba ko Image ne ko Video
+        let mediaHTML = '';
+        if (post.mediaType === 'image') {
+            mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
+        } else if (post.mediaType === 'video') {
+            mediaHTML = `
+                <video class="post-media" autoplay loop muted playsinline>
+                    <source src="${post.mediaUrl}" type="video/mp4">
+                </video>`;
+        }
+
+        // 2. Duba ko Talla ce domin saka Earning Badge
+        let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
+
+        // 3. Gina Post Card din baki daya
+        const cardHTML = `
+            <div class="post-card" onclick="toggleImmersive(this)">
+                <div class="post-header">
+                    <div class="avatar"></div>
+                    <div class="username">${post.username}</div>
+                </div>
+                <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
+                
+                ${mediaHTML}
+                
+                <div class="interaction-bar" onclick="stopProp(event)">
+                    <div class="left-actions">
+                        <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                            <i class="fa-regular fa-heart"></i>
+                            <span>${post.likes}</span>
+                        </button>
+                        <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
+                        <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
+                        <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
+                    </div>
+                    <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
+                </div>
+                ${badgeHTML}
+            </div>
+        `;
+
+        feedContainer.innerHTML += cardHTML;
+    });
+}
+
+// Kira aikin idan an bude page
+window.onload = renderNexusFeed;
+
+
+        // Function na bude Overlay
+function openPostOverlay() {
+    console.log("Overlay is opening..."); // Don dubawa a console
+    const overlay = document.getElementById('postOverlay');
+    if(overlay) {
+        overlay.style.display = 'flex';
+    } else {
+        console.error("Ba a samu element mai ID postOverlay ba!");
+    }
+}
+
+// Function na rufe Overlay
+function closePostOverlay() {
+    const overlay = document.getElementById('postOverlay');
+    if(overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+
+
+                // 1. Bude Overlay idan an danna icon na tsakiya a footer
+document.querySelector('.fa-square-plus').parentElement.onclick = function() {
+    document.getElementById('postOverlay').style.display = 'flex';
+};
+
+function closePostOverlay() {
+    document.getElementById('postOverlay').style.display = 'none';
+}
+
+
+        // Bude Overlay
+function openPostOverlay() {
+    document.getElementById('postOverlay').style.display = 'flex';
+}
+
+// Rufe Overlay
+function closePostOverlay() {
+    document.getElementById('postOverlay').style.display = 'none';
+}
+
+// Preview na Media (Hoton ko Video zai fito kafin ka yi posting)
+function previewMedia(input) {
+    const preview = document.getElementById('mediaPreview');
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        // System din zai duba: Idan Video ne zai nuna Video Player, idan Hoto ne zai nuna Image
+        if (file.type.includes('video')) {
+            preview.innerHTML = `<video src="${e.target.result}" autoplay loop muted style="width:100%; border-radius:10px;"></video>`;
+        } else {
+            preview.innerHTML = `<img src="${e.target.result}" style="width:100%; border-radius:10px;">`;
+        }
+    }
+    reader.readAsDataURL(file);
+}
+
+
+
+        // Aikin Posting
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+  // 2. Saita Configuration (Daidai yadda ka turo min)
+  const firebaseConfig = {
     apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
     authDomain: "oryzon-50ea4.firebaseapp.com",
     projectId: "oryzon-50ea4",
@@ -719,60 +838,31 @@ const firebaseConfig = {
     messagingSenderId: "782106742622",
     appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
     measurementId: "G-K5085DLL2W"
-};
+  };
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
+  // Kunna Firebase (Wannan dole ne ya kasance a farko)
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.firestore();
 
-// 2. Aikin Janyo Posts (Live Feed)
-function renderNexusFeed() {
-    const feedContainer = document.querySelector('.feed-container');
+  // 3. Aikin Preview Media (Hoto ko Bideyo)
+  function previewMedia(input) {
+      const preview = document.getElementById('mediaPreview');
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          if (file.type.includes('video')) {
+              preview.innerHTML = `<video src="${e.target.result}" autoplay loop muted style="width:100%; border-radius:10px;"></video>`;
+          } else {
+              preview.innerHTML = `<img src="${e.target.result}" style="width:100%; border-radius:10px;">`;
+          }
+      }
+      reader.readAsDataURL(file);
+  }
 
-    // Muna amfani da onSnapshot domin koda yaushe an yi sabon post ya fito nan take
-    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        let allPostsHTML = '';
-
-        snapshot.forEach((doc) => {
-            const post = doc.data();
-            let mediaHTML = '';
-
-            if (post.mediaUrl) {
-                if (post.mediaType === 'video') {
-                    mediaHTML = `<video class="post-media" autoplay loop muted playsinline controls><source src="${post.mediaUrl}" type="video/mp4"></video>`;
-                } else {
-                    mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
-                }
-            }
-
-            allPostsHTML += `
-                <div class="post-card" onclick="toggleImmersive(this)">
-                    <div class="post-header">
-                        <div class="avatar"></div>
-                        <div class="username">${post.username || 'Nexus_User'}</div>
-                    </div>
-                    <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
-                    ${mediaHTML}
-                    <div class="interaction-bar" onclick="stopProp(event)">
-                        <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                                <i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span>
-                            </button>
-                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>0</span></button>
-                            <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
-                        </div>
-                        <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
-                    </div>
-                </div>`;
-        });
-        feedContainer.innerHTML = allPostsHTML;
-    });
-}
-
-// 3. Aikin Turawa (Publish Post)
-async function publishPost() {
+  // 4. Babban Aikin Publishing (Cloudinary + Firestore)
+  async function publishPost() {
     const text = document.getElementById('postText').value;
     const fileInput = document.getElementById('fileUpload');
     const file = fileInput.files[0];
@@ -780,7 +870,7 @@ async function publishPost() {
 
     if (!text && !file) return alert("Saka rubutu ko hoto!");
 
-    publishBtn.innerText = "Ina turawa...";
+    publishBtn.innerText = "Ina turawa (Uploading)...";
     publishBtn.disabled = true;
 
     try {
@@ -799,11 +889,13 @@ async function publishPost() {
                 body: formData
             });
 
+            if (!response.ok) throw new Error("Cloudinary upload failed");
             const data = await response.json();
             mediaUrl = data.secure_url;
             mediaType = file.type.includes('video') ? 'video' : 'image';
         }
 
+        // Saka a Firestore
         await db.collection("posts").add({
             username: "Sadiq_Alhassan", 
             content: text,
@@ -813,57 +905,26 @@ async function publishPost() {
             likes: 0
         });
 
-        closePostOverlay();
-        document.getElementById('postText').value = "";
-        document.getElementById('mediaPreview').innerHTML = "";
+        alert("An tura saƙon naka! 🚀");
+        location.reload();
+
     } catch (error) {
+        console.error(error);
         alert("An samu matsala: " + error.message);
     } finally {
         publishBtn.innerText = "Publish Post";
         publishBtn.disabled = false;
     }
-}
+  }
 
-// 4. UI Controls (Wadannan ne suke budewa da rufe komai)
-function toggleImmersive(card) {
-    card.classList.toggle('immersive-mode');
-    const footer = document.getElementById('instaFooter');
-    footer.classList.toggle('footer-hidden', card.classList.contains('immersive-mode'));
-}
-
-function stopProp(e) { e.stopPropagation(); }
-
-function triggerPulse(btn, e) {
-    if (e) e.stopPropagation();
-    const icon = btn.querySelector('i');
-    icon.classList.toggle('fa-regular');
-    icon.classList.toggle('fa-solid');
-    icon.style.color = icon.classList.contains('fa-solid') ? "#ff4757" : "#fff";
-}
-
-function toggleSave(btn) {
-    const icon = btn.querySelector('i');
-    icon.classList.toggle('fa-solid');
-    icon.classList.toggle('fa-regular');
-}
-
-function openPostOverlay() { document.getElementById('postOverlay').style.display = 'flex'; }
-function closePostOverlay() { document.getElementById('postOverlay').style.display = 'none'; }
-
-function previewMedia(input) {
-    const preview = document.getElementById('mediaPreview');
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        preview.innerHTML = file.type.includes('video') 
-            ? `<video src="${e.target.result}" autoplay loop muted style="width:100%; border-radius:10px;"></video>`
-            : `<img src="${e.target.result}" style="width:100%; border-radius:10px;">`;
-    }
-    reader.readAsDataURL(file);
-}
-
-// 5. Kunna komai idan page ya gama lodi
-window.onload = renderNexusFeed;
+  // 5. Overlay Controls
+  function openPostOverlay() { document.getElementById('postOverlay').style.display = 'flex'; }
+  function closePostOverlay() { document.getElementById('postOverlay').style.display = 'none'; }
+  
+  // Tabbatar renderNexusFeed() tana nan idan kana buƙatar nuna posts
+  if (typeof renderNexusFeed === "function") {
+      renderNexusFeed();
+  }
 </script>
     
         
