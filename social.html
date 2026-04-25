@@ -473,6 +473,15 @@
         }
         
         
+        /* Wannan zai tabbatar browser ba ta fito da nata alamomin ba */
+video::-webkit-media-controls {
+    display:none !important;
+}
+video::-webkit-media-controls-start-playback-button {
+    display: none !important;
+    -webkit-appearance: none;
+}
+
         
     </style>
 </head>
@@ -911,11 +920,12 @@ db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         if (post.mediaUrl) {
             if (post.mediaType === 'video') {
                 // Idan bidiyo ne, yi amfani da <video> tag
+
                 mediaElement = `
-                    <video controls class="post-media">
-                        <source src="${post.mediaUrl}" type="video/mp4">
-                        Wayarka ba ta goyon bayan kallon wannan bidiyon.
-                    </video>`;
+    <video autoplay loop muted playsinline class="post-media">
+        <source src="${post.mediaUrl}" type="video/mp4">
+    </video>`;
+                
             } else {
                 // Idan hoto ne, yi amfani da <img> tag
                 mediaElement = `<img src="${post.mediaUrl}" class="post-media" alt="Post Image">`;
@@ -932,6 +942,19 @@ db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
     });
     document.getElementById('feedContainer').innerHTML = html;
 });
+
+
+    // Idan an danna bidiyo ya yi play/pause kamar Instagram
+document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'VIDEO') {
+        if (e.target.paused) {
+            e.target.play();
+        } else {
+            e.target.pause();
+        }
+    }
+});
+    
     
     </script>
 </body>
