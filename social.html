@@ -335,6 +335,105 @@
     margin-top: 10px;
     font-family: 'Orbitron', sans-serif;
         }
+
+
+        .post-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(15px);
+    display: none; /* A boye yake har sai an danna icon */
+    justify-content: center;
+    align-items: center;
+    z-index: 6000;
+}
+
+.overlay-content {
+    background: var(--obsidian);
+    width: 90%;
+    max-width: 450px;
+    border: 1px solid var(--glass-border);
+    border-radius: 25px;
+    padding: 20px;
+    box-shadow: var(--gold-glow);
+}
+
+.overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.overlay-header h3 { font-family: 'Orbitron'; font-size: 14px; color: var(--premium-gold); }
+
+.close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+
+#postText {
+    width: 100%;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-radius: 15px;
+    color: white;
+    padding: 15px;
+    font-family: 'Inter';
+    resize: none;
+}
+
+.media-preview { margin-top: 15px; border-radius: 10px; overflow: hidden; max-height: 200px; }
+.media-preview img, .media-preview video { width: 100%; object-fit: cover; }
+
+.overlay-actions {
+    margin: 20px 0;
+    display: flex;
+    gap: 15px;
+}
+
+.action-item {
+    background: rgba(253, 224, 141, 0.1);
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--premium-gold);
+    font-size: 13px;
+}
+
+.publish-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(45deg, #FDE08D, #B8860B);
+    border: none;
+    border-radius: 30px;
+    color: black;
+    font-weight: bold;
+    font-family: 'Orbitron';
+    cursor: pointer;
+}
+
+
+        .post-category-selector { margin-top: 15px; }
+.category-options { display: flex; gap: 10px; }
+.cat-chip input { display: none; }
+.cat-chip span {
+    padding: 8px 15px;
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-block;
+    transition: 0.3s;
+}
+.cat-chip input:checked + span {
+    background: var(--premium-gold);
+    color: black;
+    border-color: var(--premium-gold);
+    box-shadow: var(--gold-glow);
+}
+        
         
     </style>
 </head>
@@ -406,11 +505,54 @@
     <nav class="nexus-footer" id="instaFooter">
         <div class="footer-icon active"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L4 9v12h5v-7h6v7h5V9l-8-6z"/></svg></div>
         <div class="footer-icon" onclick="window.location.href='chats.html'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 11-7.6-12.7 8.38 8.38 0 013.8.9L21 3z"/></svg></div>
-        <div class="footer-icon active"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg></div>
+        <div class="footer-icon" onclick="openPostOverlay()">
+    <i class="fa-regular fa-square-plus"></i>
+        </div>
         <div class="footer-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 2v20M8 2v20M2 12h20"/></svg></div>
         <div class="footer-icon" onclick="window.location.href='me.html'"><img src="https://via.placeholder.com/150" alt="Me" class="profile-img"></div>
     </nav>
 
+
+        <div id="postOverlay" class="post-overlay">
+    <div class="overlay-content">
+        <div class="overlay-header">
+            <h3>Create New Post</h3>
+            <button onclick="closePostOverlay()" class="close-btn">&times;</button>
+        </div>
+        
+        <textarea id="postText" placeholder="What's on your mind?"></textarea>
+        
+        <div class="media-preview" id="mediaPreview">
+            </div>
+
+        <div class="overlay-actions">
+            <label for="fileUpload" class="action-item">
+                <i class="fa-solid fa-camera"></i>
+                <span>Media</span>
+                <input type="file" id="fileUpload" hidden accept="image/*,video/*" onchange="previewMedia(this)">
+            </label>
+        </div>
+
+        <button onclick="publishPost()" class="publish-btn">Publish Post</button>
+    </div>
+        </div>
+
+        <div class="post-category-selector">
+    <p style="font-size: 12px; color: #aaa; margin-bottom: 8px;">Wane irin post ne?</p>
+    <div class="category-options">
+        <label class="cat-chip">
+            <input type="radio" name="postType" value="normal" checked>
+            <span>Normal Post</span>
+        </label>
+        <label class="cat-chip">
+            <input type="radio" name="postType" value="business">
+            <span>Business (Showcase)</span>
+        </label>
+    </div>
+</div>
+
+        
+        </body>
     <script>
         // AIKIN FULL SCREEN (IMMERSIVE MODE)
         function toggleImmersive(card) {
@@ -567,6 +709,127 @@ function toggleSave(btn) {
 // Kira aikin idan an bude page
 window.onload = renderNexusFeed;
         
+
+        // 1. Bude Overlay idan an danna icon na tsakiya a footer
+document.querySelector('.fa-square-plus').parentElement.onclick = function() {
+    document.getElementById('postOverlay').style.display = 'flex';
+};
+
+function closePostOverlay() {
+    document.getElementById('postOverlay').style.display = 'none';
+}
+
+// 2. Preview na Media (Zai gane ko hoto ne ko video)
+function previewMedia(input) {
+    const preview = document.getElementById('mediaPreview');
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        if (file.type.includes('video')) {
+            preview.innerHTML = `<video src="${e.target.result}" autoplay loop muted></video>`;
+        } else {
+            preview.innerHTML = `<img src="${e.target.result}">`;
+        }
+    }
+    reader.readAsDataURL(file);
+}
+
+// 3. Publish Post (Zai saka sabon post a saman Feed dinka)
+function publishPost() {
+    const text = document.getElementById('postText').value;
+    const mediaContainer = document.getElementById('mediaPreview');
+    const mediaElement = mediaContainer.querySelector('img, video');
+    
+    if (!text && !mediaElement) return alert("Saka rubutu ko hoto!");
+
+    const newPost = {
+        username: "Sadiq_Alhassan", // User dinka
+        content: text,
+        mediaType: mediaElement && mediaElement.tagName === 'VIDEO' ? 'video' : 'image',
+        mediaUrl: mediaElement ? mediaElement.src : '',
+        isAd: false,
+        likes: "0",
+        comments: "0"
+    };
+
+    // Saka post din a saman list (nexusPosts array din da muka yi dā)
+    nexusPosts.unshift(newPost);
+    
+    // Sake nuna feed din (re-render)
+    renderNexusFeed();
+    
+    // Rufe overlay da share bayanan dā
+    closePostOverlay();
+    document.getElementById('postText').value = '';
+    mediaContainer.innerHTML = '';
+}
+
+
+        // Bude Overlay
+function openPostOverlay() {
+    document.getElementById('postOverlay').style.display = 'flex';
+}
+
+// Rufe Overlay
+function closePostOverlay() {
+    document.getElementById('postOverlay').style.display = 'none';
+}
+
+// Preview na Media (Hoton ko Video zai fito kafin ka yi posting)
+function previewMedia(input) {
+    const preview = document.getElementById('mediaPreview');
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        // System din zai duba: Idan Video ne zai nuna Video Player, idan Hoto ne zai nuna Image
+        if (file.type.includes('video')) {
+            preview.innerHTML = `<video src="${e.target.result}" autoplay loop muted style="width:100%; border-radius:10px;"></video>`;
+        } else {
+            preview.innerHTML = `<img src="${e.target.result}" style="width:100%; border-radius:10px;">`;
+        }
+    }
+    reader.readAsDataURL(file);
+}
+
+// Aikin Posting
+function publishPost() {
+    const text = document.getElementById('postText').value;
+    const mediaContainer = document.getElementById('mediaPreview');
+    const mediaElement = mediaContainer.querySelector('img, video');
+    
+    // Anan zamu duba zabin mutum (Normal ko Business)
+    const category = document.querySelector('input[name="postType"]:checked').value;
+    
+    if (!text && !mediaElement) return alert("Don Allah saka rubutu ko hoto!");
+
+    const newPost = {
+        id: Date.now(), // Unique ID don system ya ganeshi a profile
+        username: "Sadiq_Alhassan",
+        content: text,
+        mediaType: mediaElement && mediaElement.tagName === 'VIDEO' ? 'video' : 'image',
+        mediaUrl: mediaElement ? mediaElement.src : '',
+        category: category, // 'normal' (Timeline) ko 'business' (Showcase)
+        isAd: false,
+        likes: 0,
+        comments: 0
+    };
+
+    // 1. Saka a babban Feed (social.html)
+    nexusPosts.unshift(newPost);
+    renderNexusFeed();
+
+    // 2. A gaba (idan mun koma Profile Page), wannan 'category' din 
+    // shi ne zai raba posts din zuwa Timeline ko Showcase kai tsaye.
+    
+    closePostOverlay();
+    // Share komai don wani posting din
+    document.getElementById('postText').value = '';
+    mediaContainer.innerHTML = '';
+}
+        
+
         
     </script>
 </body>
