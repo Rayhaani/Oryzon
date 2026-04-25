@@ -709,55 +709,65 @@ function toggleSave(btn) {
 
 
 
-        function renderNexusFeed() {
+        async function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
-    feedContainer.innerHTML = ''; // Share tsofaffin posts
+    let allPostsHTML = '';
 
+    // 1. Janyo sabbin posts daga Firestore Database dinka
+    try {
+        const snapshot = await db.collection("posts").orderBy("timestamp", "desc").get();
+        snapshot.forEach((doc) => {
+            const post = doc.data();
+            let mediaHTML = post.mediaUrl ? (post.mediaType === 'video' 
+                ? `<video class="post-media" autoplay loop muted playsinline controls><source src="${post.mediaUrl}"></video>` 
+                : `<img src="${post.mediaUrl}" class="post-media">`) : '';
+
+            allPostsHTML += `
+                <div class="post-card" onclick="toggleImmersive(this)">
+                    <div class="post-header">
+                        <div class="avatar"></div>
+                        <div class="username">${post.username || 'Sadiq_Alhassan'}</div>
+                    </div>
+                    <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
+                    ${mediaHTML}
+                    <div class="interaction-bar" onclick="stopProp(event)">
+                        <div class="left-actions">
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span></button>
+                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>0</span></button>
+                        </div>
+                        <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
+                    </div>
+                </div>`;
+        });
+    } catch (e) { 
+        console.error("Firestore error:", e); 
+    }
+
+    // 2. Kara wadancan tsoffin posts din (Static/Fake ones) a karshe
     nexusPosts.forEach(post => {
-        // 1. Duba ko Image ne ko Video
-        let mediaHTML = '';
-        if (post.mediaType === 'image') {
-            mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
-        } else if (post.mediaType === 'video') {
-            mediaHTML = `
-                <video class="post-media" autoplay loop muted playsinline>
-                    <source src="${post.mediaUrl}" type="video/mp4">
-                </video>`;
-        }
-
-        // 2. Duba ko Talla ce domin saka Earning Badge
-        let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
-
-        // 3. Gina Post Card din baki daya
-        const cardHTML = `
+        let mediaHTML = post.mediaType === 'image' 
+            ? `<img src="${post.mediaUrl}" class="post-media">` 
+            : `<video class="post-media" autoplay loop muted playsinline><source src="${post.mediaUrl}"></video>`;
+        
+        allPostsHTML += `
             <div class="post-card" onclick="toggleImmersive(this)">
                 <div class="post-header">
                     <div class="avatar"></div>
                     <div class="username">${post.username}</div>
                 </div>
                 <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
-                
                 ${mediaHTML}
-                
                 <div class="interaction-bar" onclick="stopProp(event)">
                     <div class="left-actions">
-                        <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                            <i class="fa-regular fa-heart"></i>
-                            <span>${post.likes}</span>
-                        </button>
-                        <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
-                        <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
-                        <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
+                        <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes}</span></button>
                     </div>
-                    <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
                 </div>
-                ${badgeHTML}
-            </div>
-        `;
-
-        feedContainer.innerHTML += cardHTML;
+            </div>`;
     });
-}
+
+    feedContainer.innerHTML = allPostsHTML;
+        }
+        
 
 // Kira aikin idan an bude page
 window.onload = renderNexusFeed;
