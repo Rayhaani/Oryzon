@@ -707,65 +707,81 @@ function toggleSave(btn) {
     }
 ];
 
-
-
 function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
 
+    // Wannan zai rika sauraron Firestore a duk lokacin da aka yi sabon post
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        feedContainer.innerHTML = ''; 
+        let allPostsHTML = ''; 
 
-        // A. Fara nuna posts daga Cloud
+        // A. Nuna posts daga Firestore (Cloud)
         snapshot.forEach((doc) => {
             const post = doc.data();
-            let mediaHTML = post.mediaUrl ? (post.mediaType === 'image' 
-                ? `<img src="${post.mediaUrl}" class="post-media">` 
-                : `<video src="${post.mediaUrl}" class="post-media" controls autoplay loop muted></video>`) : '';
+            let mediaTag = ""; 
 
-            feedContainer.innerHTML += `
+            if (post.mediaUrl) {
+                if (post.mediaType === 'video') {
+                    // Wannan shi ne babban gyaran da muka yi don Autoplay
+                    mediaTag = `
+                        <video class="post-video" autoplay muted loop playsinline controls>
+                            <source src="${post.mediaUrl}" type="video/mp4">
+                        </video>`;
+                } else {
+                    mediaTag = `<img src="${post.mediaUrl}" class="post-image">`;
+                }
+            }
+
+            allPostsHTML += `
                 <div class="post-card" onclick="toggleImmersive(this)">
                     <div class="post-header">
                         <div class="avatar"></div>
-                        <div class="username">${post.username} (Cloud)</div>
+                        <div class="username">${post.username || 'Nexus User'}</div>
                     </div>
                     <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
-                    ${mediaHTML}
+                    <div class="media-container">${mediaTag}</div>
                     <div class="interaction-bar" onclick="stopProp(event)">
                         <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span></button>
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                                <i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span>
+                            </button>
                             <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>0</span></button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // B. Sai kuma tsofaffin posts dinmu na gwaji (Hardcoded)
+        // B. Nuna tsofaffin posts dinmu na gwaji (nexusPosts)
         nexusPosts.forEach(post => {
-            let mediaHTML = post.mediaType === 'image' 
-                ? `<img src="${post.mediaUrl}" class="post-media">` 
-                : `<video class="post-media" autoplay loop muted><source src="${post.mediaUrl}"></video>`;
+            let mediaTag = post.mediaType === 'video' 
+                ? `<video class="post-video" autoplay muted loop playsinline controls><source src="${post.mediaUrl}"></video>` 
+                : `<img src="${post.mediaUrl}" class="post-image">`;
             
             let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
 
-            feedContainer.innerHTML += `
+            allPostsHTML += `
                 <div class="post-card" onclick="toggleImmersive(this)">
                     <div class="post-header">
                         <div class="avatar"></div>
                         <div class="username">${post.username}</div>
                     </div>
                     <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
-                    ${mediaHTML}
+                    <div class="media-container">${mediaTag}</div>
                     <div class="interaction-bar" onclick="stopProp(event)">
                         <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes}</span></button>
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                                <i class="fa-regular fa-heart"></i><span>${post.likes}</span>
+                            </button>
                             <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
                         </div>
                     </div>
                     ${badgeHTML}
                 </div>`;
         });
+
+        feedContainer.innerHTML = allPostsHTML;
     });
 }
+        
         
         
         
@@ -906,74 +922,7 @@ function previewMedia(input) {
 
 
 
-    // Misali yayin da kake loop din posts dinka daga Firestore
-db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-    let html = "";
-    snapshot.forEach((doc) => {
-        const post = doc.data();
-        
-        // 1. Fara gina sauran sassan post din (username, text)
-        let mediaElement = "";
 
-        // 2. Duba idan akwai media kuma wanne iri ne
-        if (post.mediaUrl) {
-            if (post.mediaType === 'video') {
-                // Idan bidiyo ne, yi amfani da <video> tag
-                mediaElement = `
-                    <video controls class="post-media">
-                        <source src="${post.mediaUrl}" type="video/mp4">
-                        Wayarka ba ta goyon bayan kallon wannan bidiyon.
-                    </video>`;
-            } else {
-                // Idan hoto ne, yi amfani da <img> tag
-                mediaElement = `<img src="${post.mediaUrl}" class="post-media" alt="Post Image">`;
-            }
-        }
-
-        // 3. Haɗa komai wuri guda
-        html += `
-            <div class="post-card">
-                <h3>${post.username}</h3>
-                <p>${post.content}</p>
-                ${mediaElement} </div>
-        `;
-    });
-    document.getElementById('feedContainer').innerHTML = html;
-});
-
-
-    // A cikin loop din da kake loda posts
-const postData = doc.data();
-let mediaTag = ""; // Wannan zai dauki HTML din da zamu nuna
-
-// Goge tsohon sashin mediaTag din ka saka wannan:
-let mediaTag = ""; 
-
-if (postData.mediaUrl) {
-    if (postData.mediaType === 'video') {
-        // Wannan shi ne babban gyaran da zai sa bidiyo ya tashi da kansa
-        mediaTag = `
-            <video class="post-video" autoplay muted loop playsinline controls>
-                <source src="${postData.mediaUrl}" type="video/mp4">
-                Wayarka ba ta goyon bayan wannan bidiyon.
-            </video>`;
-    } else {
-        // Idan hoto ne
-        mediaTag = `<img src="${postData.mediaUrl}" class="post-image" alt="Post Image">`;
-    }
-}
-
-// Sannan ka hada shi da wannan template din
-const postTemplate = `
-    <div class="post-card">
-        <p>${postData.content}</p>
-        <div class="media-container" style="background-color: #000; border-radius: 12px; overflow: hidden;">
-            ${mediaTag}
-        </div>
-    </div>
-`;
-            
-    
     
     </script>
 </body>
