@@ -366,20 +366,20 @@
     overflow: hidden; 
     width: 100%;
     background: rgba(0,0,0,0.2);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px dashed var(--glass-border);
+    display: flex; /* Zai bar shi a matsayin flex */
+    border: none;  /* Mun cire dashed border don kar ya fito a bayan hoto */
 }
 
 .media-preview img, 
 .media-preview video { 
     width: 100%; 
-    height: auto; /* Wannan zai sa hoton ya fito duka */
-    max-height: 350px; /* Amma kada ya wuce tsayi kaza don kar ya cika screen */
-    object-fit: contain; /* Wannan zai nuna dukkan sassan hoton */
+    height: 100%; 
+    min-height: 250px; /* Ya zama akwai kyan kallo ko da hoton siriri ne */
+    max-height: 450px; /* Mun ɗan ƙara tsayin don ya fito sarai */
+    object-fit: cover;  /* Wannan ne zai sa ya mamaye hagu da dama gaba ɗaya */
     display: block;
 }
+        
         
 .overlay-actions {
     margin: 20px 0;
@@ -762,45 +762,43 @@ function previewMedia(input) {
     }
     reader.readAsDataURL(file);
 }
-
+        
 // Aikin Posting
 
   async function publishPost() {
     const text = document.getElementById('postText').value;
     const fileInput = document.getElementById('fileUpload');
     const file = fileInput.files[0];
-    const category = document.querySelector('input[name="postType"]:checked').value;
     const publishBtn = document.querySelector('.publish-btn');
 
     if (!text && !file) return alert("Don Allah saka rubutu ko hoto!");
 
-    // Nuna wa mutum cewa ana aiki
-    publishBtn.innerText = "Uploading to Oryzon...";
+    publishBtn.innerText = "Processing...";
     publishBtn.disabled = true;
 
     let mediaUrl = "";
 
     try {
-        // 1. Tura hoto zuwa Storage idan akwai
         if (file) {
-            const storageRef = storage.ref('posts/' + Date.now() + "_" + file.name);
-            const uploadTask = await storageRef.put(file);
-            mediaUrl = await uploadTask.ref.getDownloadURL();
+            // Wannan aikin zai mayar da hoton ya zama rubutu (Base64)
+            mediaUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
         }
 
-        // 2. Tura bayanan zuwa Firestore
+        // Tura komai zuwa Firestore kai tsaye
         await db.collection("posts").add({
-            username: "Sadiq_Alhassan", // Daga baya zamu saita asalin sunan mai login
+            username: "Sadiq_Alhassan", 
             content: text,
             mediaUrl: mediaUrl,
             mediaType: file ? (file.type.includes('video') ? 'video' : 'image') : 'none',
-            category: category,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             likes: 0,
             comments: 0
         });
 
-        // 3. Share komai bayan an gama
         closePostOverlay();
         document.getElementById('postText').value = '';
         document.getElementById('mediaPreview').innerHTML = '';
@@ -808,13 +806,13 @@ function previewMedia(input) {
         alert("An yi Posting cikin nasara! 🚀");
 
     } catch (error) {
-        console.error("Kuskure ya faru: ", error);
-        alert("An samu matsala wajen haɗawa da Oryzon Cloud.");
+        console.error(error);
+        alert("Kuskure ya faru wajen tura bayanai.");
     } finally {
         publishBtn.innerText = "Publish Post";
         publishBtn.disabled = false;
     }
-  }
+        }
         
   
 
