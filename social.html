@@ -709,55 +709,81 @@ function toggleSave(btn) {
 
 
 
-     function renderNexusFeed() {
+   function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
-    feedContainer.innerHTML = ''; // Share tsofaffin posts
 
-    nexusPosts.forEach(post => {
-        // 1. Duba ko Image ne ko Video
-        let mediaHTML = '';
-        if (post.mediaType === 'image') {
-            mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
-        } else if (post.mediaType === 'video') {
-            mediaHTML = `
-                <video class="post-media" autoplay loop muted playsinline>
-                    <source src="${post.mediaUrl}" type="video/mp4">
-                </video>`;
-        }
+    // Wannan zai saurari duk wani canji a Firestore (Live Updates)
+    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+        let allPostsHTML = ''; 
 
-        // 2. Duba ko Talla ce domin saka Earning Badge
-        let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
+        // 1. Dauko sabbin posts daga Firestore
+        snapshot.forEach((doc) => {
+            const post = doc.data();
+            let mediaTag = ""; 
 
-        // 3. Gina Post Card din baki daya
-        const cardHTML = `
-            <div class="post-card" onclick="toggleImmersive(this)">
-                <div class="post-header">
-                    <div class="avatar"></div>
-                    <div class="username">${post.username}</div>
-                </div>
-                <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
-                
-                ${mediaHTML}
-                
-                <div class="interaction-bar" onclick="stopProp(event)">
-                    <div class="left-actions">
-                        <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                            <i class="fa-regular fa-heart"></i>
-                            <span>${post.likes}</span>
-                        </button>
-                        <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
-                        <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
-                        <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
+            if (post.mediaUrl) {
+                if (post.mediaType === 'video') {
+                    mediaTag = `
+                        <video class="post-media" autoplay muted loop playsinline controls>
+                            <source src="${post.mediaUrl}" type="video/mp4">
+                        </video>`;
+                } else {
+                    mediaTag = `<img src="${post.mediaUrl}" class="post-media">`;
+                }
+            }
+
+            allPostsHTML += `
+                <div class="post-card" onclick="toggleImmersive(this)">
+                    <div class="post-header">
+                        <div class="avatar"></div>
+                        <div class="username">${post.username || 'Nexus User'}</div>
                     </div>
-                    <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
-                </div>
-                ${badgeHTML}
-            </div>
-        `;
+                    <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
+                    ${mediaTag}
+                    <div class="interaction-bar" onclick="stopProp(event)">
+                        <div class="left-actions">
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                                <i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span>
+                            </button>
+                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>0</span></button>
+                        </div>
+                        <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
+                    </div>
+                </div>`;
+        });
 
-        feedContainer.innerHTML += cardHTML;
+        // 2. Sannan mu kara wadancan tsoffin posts din na jabu a kasa (Optional)
+        nexusPosts.forEach(post => {
+            let mediaTag = post.mediaType === 'video' 
+                ? `<video class="post-media" autoplay muted loop playsinline controls><source src="${post.mediaUrl}"></video>` 
+                : `<img src="${post.mediaUrl}" class="post-media">`;
+            
+            let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
+
+            allPostsHTML += `
+                <div class="post-card" onclick="toggleImmersive(this)">
+                    <div class="post-header">
+                        <div class="avatar"></div>
+                        <div class="username">${post.username}</div>
+                    </div>
+                    <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
+                    ${mediaTag}
+                    <div class="interaction-bar" onclick="stopProp(event)">
+                        <div class="left-actions">
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                                <i class="fa-regular fa-heart"></i><span>${post.likes}</span>
+                            </button>
+                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
+                        </div>
+                    </div>
+                    ${badgeHTML}
+                </div>`;
+        });
+
+        feedContainer.innerHTML = allPostsHTML;
     });
-     } 
+   }
+        
 
 // Kira aikin idan an bude page
 window.onload = renderNexusFeed;
