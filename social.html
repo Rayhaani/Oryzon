@@ -661,24 +661,19 @@ function toggleSave(btn) {
 ];
 
 
+
 function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
 
-    // 1. Fara janyo posts daga Cloud (Oryzon)
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        feedContainer.innerHTML = ''; // Share wurin don sabuntawa
+        feedContainer.innerHTML = ''; 
 
-        // 2. Nuna sababbin posts daga Database idan akwai
+        // A. Fara nuna posts daga Cloud
         snapshot.forEach((doc) => {
             const post = doc.data();
-            let mediaHTML = '';
-            if (post.mediaUrl) {
-                if (post.mediaType === 'image') {
-                    mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
-                } else {
-                    mediaHTML = `<video src="${post.mediaUrl}" class="post-media" controls autoplay loop muted></video>`;
-                }
-            }
+            let mediaHTML = post.mediaUrl ? (post.mediaType === 'image' 
+                ? `<img src="${post.mediaUrl}" class="post-media">` 
+                : `<video src="${post.mediaUrl}" class="post-media" controls autoplay loop muted></video>`) : '';
 
             feedContainer.innerHTML += `
                 <div class="post-card" onclick="toggleImmersive(this)">
@@ -690,44 +685,41 @@ function renderNexusFeed() {
                     ${mediaHTML}
                     <div class="interaction-bar" onclick="stopProp(event)">
                         <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                                <i class="fa-regular fa-heart"></i>
-                                <span>${post.likes || 0}</span>
-                            </button>
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span></button>
                             <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>0</span></button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
 
-        // 3. Sannan ka ƙara waɗancan posts ɗin naka na asali (nexusPosts) a ƙasa don gwaji
+        // B. Sai kuma tsofaffin posts dinmu na gwaji (Hardcoded)
         nexusPosts.forEach(post => {
             let mediaHTML = post.mediaType === 'image' 
                 ? `<img src="${post.mediaUrl}" class="post-media">` 
                 : `<video class="post-media" autoplay loop muted><source src="${post.mediaUrl}"></video>`;
+            
+            let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
 
             feedContainer.innerHTML += `
                 <div class="post-card" onclick="toggleImmersive(this)">
                     <div class="post-header">
                         <div class="avatar"></div>
-                        <div class="username">${post.username} (Local)</div>
+                        <div class="username">${post.username}</div>
                     </div>
                     <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
                     ${mediaHTML}
                     <div class="interaction-bar" onclick="stopProp(event)">
                         <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                                <i class="fa-regular fa-heart"></i>
-                                <span>${post.likes}</span>
-                            </button>
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes}</span></button>
+                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
                         </div>
                     </div>
-                </div>
-            `;
+                    ${badgeHTML}
+                </div>`;
         });
     });
-        }
+}
+        
         
         
 // Kira aikin idan an bude page
@@ -824,13 +816,18 @@ function previewMedia(input) {
     }
   }
         
+  
 
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  // 1. Zuba asalin scripts na Firebase a nan
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
-    <script>
-  // Wannan shi ne sirrin Oryzon dinka
+
+<script>
+  // 2. Saita Configuration din Oryzon Cloud
   const firebaseConfig = {
     apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
     authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -841,17 +838,16 @@ function previewMedia(input) {
     measurementId: "G-K5085DLL2W"
   };
 
-  // Fara aikin Firebase
   firebase.initializeApp(firebaseConfig);
-  
-  // Kunna database da storage domin amfani a Nexus
   const db = firebase.firestore();
   const storage = firebase.storage();
   const analytics = firebase.analytics();
 
   console.log("Oryzon Cloud is now active! 🚀");
-    </script>
-    
+
+  // 3. Kira aikin Feed bayan an kunna Firebase
+  renderNexusFeed();
+
         
     </script>
 </body>
