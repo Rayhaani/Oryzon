@@ -433,6 +433,26 @@
     border-color: var(--premium-gold);
     box-shadow: var(--gold-glow);
 }
+
+
+        .nexus-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 55px; /* Na dan kara tsawon kadan */
+    background: rgba(5, 5, 5, 0.95);
+    backdrop-filter: blur(15px);
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 4000; /* Dole ya zama kasa da overlay amma sama da feed */
+}
+
+/* Wannan zai gyara matsalar boyewar footer */
+.footer-hidden {
+    transform: translateY(100%) !important;
+}
         
         
     </style>
@@ -512,18 +532,30 @@
         <div class="footer-icon" onclick="window.location.href='me.html'"><img src="https://via.placeholder.com/150" alt="Me" class="profile-img"></div>
     </nav>
 
-
-        <div id="postOverlay" class="post-overlay">
+<div id="postOverlay" class="post-overlay">
     <div class="overlay-content">
         <div class="overlay-header">
             <h3>Create New Post</h3>
             <button onclick="closePostOverlay()" class="close-btn">&times;</button>
         </div>
         
-        <textarea id="postText" placeholder="What's on your mind?"></textarea>
-        
-        <div class="media-preview" id="mediaPreview">
+        <textarea id="postText" placeholder="Mene ne a ranka?"></textarea>
+
+        <div class="post-category-selector">
+            <p style="font-size: 11px; color: #aaa; margin-bottom: 8px;">What's on your mind?</p>
+            <div class="category-options">
+                <label class="cat-chip">
+                    <input type="radio" name="postType" value="normal" checked>
+                    <span>Timeline</span>
+                </label>
+                <label class="cat-chip">
+                    <input type="radio" name="postType" value="business">
+                    <span>Showcase</span>
+                </label>
             </div>
+        </div>
+        
+        <div class="media-preview" id="mediaPreview"></div>
 
         <div class="overlay-actions">
             <label for="fileUpload" class="action-item">
@@ -535,21 +567,8 @@
 
         <button onclick="publishPost()" class="publish-btn">Publish Post</button>
     </div>
-        </div>
-
-        <div class="post-category-selector">
-    <p style="font-size: 12px; color: #aaa; margin-bottom: 8px;">Wane irin post ne?</p>
-    <div class="category-options">
-        <label class="cat-chip">
-            <input type="radio" name="postType" value="normal" checked>
-            <span>Normal Post</span>
-        </label>
-        <label class="cat-chip">
-            <input type="radio" name="postType" value="business">
-            <span>Business (Showcase)</span>
-        </label>
-    </div>
 </div>
+        
 
         
         </body>
@@ -717,52 +736,6 @@ document.querySelector('.fa-square-plus').parentElement.onclick = function() {
 
 function closePostOverlay() {
     document.getElementById('postOverlay').style.display = 'none';
-}
-
-// 2. Preview na Media (Zai gane ko hoto ne ko video)
-function previewMedia(input) {
-    const preview = document.getElementById('mediaPreview');
-    const file = input.files[0];
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-        if (file.type.includes('video')) {
-            preview.innerHTML = `<video src="${e.target.result}" autoplay loop muted></video>`;
-        } else {
-            preview.innerHTML = `<img src="${e.target.result}">`;
-        }
-    }
-    reader.readAsDataURL(file);
-}
-
-// 3. Publish Post (Zai saka sabon post a saman Feed dinka)
-function publishPost() {
-    const text = document.getElementById('postText').value;
-    const mediaContainer = document.getElementById('mediaPreview');
-    const mediaElement = mediaContainer.querySelector('img, video');
-    
-    if (!text && !mediaElement) return alert("Saka rubutu ko hoto!");
-
-    const newPost = {
-        username: "Sadiq_Alhassan", // User dinka
-        content: text,
-        mediaType: mediaElement && mediaElement.tagName === 'VIDEO' ? 'video' : 'image',
-        mediaUrl: mediaElement ? mediaElement.src : '',
-        isAd: false,
-        likes: "0",
-        comments: "0"
-    };
-
-    // Saka post din a saman list (nexusPosts array din da muka yi dā)
-    nexusPosts.unshift(newPost);
-    
-    // Sake nuna feed din (re-render)
-    renderNexusFeed();
-    
-    // Rufe overlay da share bayanan dā
-    closePostOverlay();
-    document.getElementById('postText').value = '';
-    mediaContainer.innerHTML = '';
 }
 
 
