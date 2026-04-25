@@ -888,67 +888,82 @@ function previewMedia(input) {
   }
 
   // 4. Babban Aikin Publishing (Cloudinary + Firestore)
-async function publishPost() {
-    const text = document.getElementById('postText').value;
-    const fileInput = document.getElementById('fileUpload');
-    const file = fileInput.files[0];
-    const publishBtn = document.querySelector('.publish-btn');
 
-    if (!text && !file) return alert("Saka rubutu ko bidiyo!");
+    function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
 
-    // Nuna cewa aiki yana tafiya
-    publishBtn.innerText = "Ina turawa (Uploading)...";
-    publishBtn.disabled = true;
+    // Wannan zai saurari duk wani canji a Firestore (Live Updates)
+    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+        let allPostsHTML = ''; 
 
-    try {
-        let mediaUrl = "";
-        let mediaType = "none";
+        // 1. Dauko sabbin posts daga Firestore
+        snapshot.forEach((doc) => {
+            const post = doc.data();
+            let mediaTag = ""; 
 
-        if (file) {
-            // Bayanan Cloudinary dinka
-            const cloudName = "diixjieyp";
-            const uploadPreset = "oryzon_media"; 
+            if (post.mediaUrl) {
+                if (post.mediaType === 'video') {
+                    mediaTag = `
+                        <video class="post-media" autoplay muted loop playsinline controls>
+                            <source src="${post.mediaUrl}" type="video/mp4">
+                        </video>`;
+                } else {
+                    mediaTag = `<img src="${post.mediaUrl}" class="post-media">`;
+                }
+            }
 
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', uploadPreset);
+            allPostsHTML += `
+                <div class="post-card" onclick="toggleImmersive(this)">
+                    <div class="post-header">
+                        <div class="avatar"></div>
+                        <div class="username">${post.username || 'Nexus User'}</div>
+                    </div>
+                    <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
+                    ${mediaTag}
+                    <div class="interaction-bar" onclick="stopProp(event)">
+                        <div class="left-actions">
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                                <i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span>
+                            </button>
+                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>0</span></button>
+                        </div>
+                        <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
+                    </div>
+                </div>`;
+        });
 
-            // Tura fayil din zuwa Cloudinary
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) throw new Error("Cloudinary upload failed");
-
-            const data = await response.json();
-            mediaUrl = data.secure_url; // Link din hoto ko bidiyo
-            mediaType = file.type.includes('video') ? 'video' : 'image';
-        }
-
-        // Adana bayanan a Firestore (Wannan shi ne link din dake hada Cloudinary da Nexus)
-await firebase.firestore().collection("posts").add({
-    username: "Sadiq_Alhassan", 
-    content: text,
-    mediaUrl: mediaUrl, // Wannan URL din daga Cloudinary yake fitowa
-    mediaType: mediaType,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    likes: 0
-});
-
-alert("An riga an tura saƙon naka! 🚀");
-location.reload();
-
-        
-    } catch (error) {
-        console.error(error);
-        alert("An samu matsala: " + error.message);
-    } finally {
-        publishBtn.innerText = "Publish Post";
-        publishBtn.disabled = false;
-    }
-        }
+        // 2. Sannan mu kara wadancan tsoffin posts din na jabu a kasa (Optional)
+        nexusPosts.forEach(post => {
+            let mediaTag = post.mediaType === 'video' 
+                ? `<video class="post-media" autoplay muted loop playsinline controls><source src="${post.mediaUrl}"></video>` 
+                : `<img src="${post.mediaUrl}" class="post-media">`;
             
+            let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
+
+            allPostsHTML += `
+                <div class="post-card" onclick="toggleImmersive(this)">
+                    <div class="post-header">
+                        <div class="avatar"></div>
+                        <div class="username">${post.username}</div>
+                    </div>
+                    <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
+                    ${mediaTag}
+                    <div class="interaction-bar" onclick="stopProp(event)">
+                        <div class="left-actions">
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                                <i class="fa-regular fa-heart"></i><span>${post.likes}</span>
+                            </button>
+                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
+                        </div>
+                    </div>
+                    ${badgeHTML}
+                </div>`;
+        });
+
+        feedContainer.innerHTML = allPostsHTML;
+    });
+                           }
+    
         
     </script>
 </body>
