@@ -661,57 +661,60 @@ function toggleSave(btn) {
 ];
 
 
-
-        function renderNexusFeed() {
+function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
-    feedContainer.innerHTML = ''; // Share tsofaffin posts
 
-    nexusPosts.forEach(post => {
-        // 1. Duba ko Image ne ko Video
-        let mediaHTML = '';
-        if (post.mediaType === 'image') {
-            mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
-        } else if (post.mediaType === 'video') {
-            mediaHTML = `
-                <video class="post-media" autoplay loop muted playsinline>
-                    <source src="${post.mediaUrl}" type="video/mp4">
-                </video>`;
-        }
+    // Wannan zai saurari duk wani canji da aka yi a Cloud
+    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+        feedContainer.innerHTML = ''; // Share asalin dake kai kafin a loda sababbi
 
-        // 2. Duba ko Talla ce domin saka Earning Badge
-        let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
+        snapshot.forEach((doc) => {
+            const post = doc.data();
+            const postId = doc.id; // Za mu yi amfani da wannan wajen Like a gaba
 
-        // 3. Gina Post Card din baki daya
-        const cardHTML = `
-            <div class="post-card" onclick="toggleImmersive(this)">
-                <div class="post-header">
-                    <div class="avatar"></div>
-                    <div class="username">${post.username}</div>
-                </div>
-                <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
-                
-                ${mediaHTML}
-                
-                <div class="interaction-bar" onclick="stopProp(event)">
-                    <div class="left-actions">
-                        <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                            <i class="fa-regular fa-heart"></i>
-                            <span>${post.likes}</span>
-                        </button>
-                        <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
-                        <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
-                        <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
+            let mediaHTML = '';
+            if (post.mediaUrl) {
+                if (post.mediaType === 'image') {
+                    mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
+                } else if (post.mediaType === 'video') {
+                    mediaHTML = `<video src="${post.mediaUrl}" class="post-media" controls autoplay loop muted></video>`;
+                }
+            }
+
+            // Duba ko talla ce don nuna kalar zinari (Premium Gold)
+            let adBadge = post.isAd ? `<span class="earning-badge">+0.005 NT earned</span>` : '';
+
+            const cardHTML = `
+                <div class="post-card" onclick="toggleImmersive(this)">
+                    <div class="post-header">
+                        <div class="avatar"></div>
+                        <div class="username">${post.username}</div>
                     </div>
-                    <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
+                    <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
+                    
+                    ${mediaHTML}
+                    
+                    <div class="interaction-bar" onclick="stopProp(event)">
+                        <div class="left-actions">
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                                <i class="fa-regular fa-heart"></i>
+                                <span>${post.likes || 0}</span>
+                            </button>
+                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments || 0}</span></button>
+                            <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
+                            <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
+                        </div>
+                        <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
+                    </div>
+                    ${adBadge}
                 </div>
-                ${badgeHTML}
-            </div>
-        `;
-
-        feedContainer.innerHTML += cardHTML;
+            `;
+            feedContainer.innerHTML += cardHTML;
+        });
     });
 }
 
+        
 // Kira aikin idan an bude page
 window.onload = renderNexusFeed;
         
@@ -754,40 +757,57 @@ function previewMedia(input) {
 }
 
 // Aikin Posting
-function publishPost() {
+
+  async function publishPost() {
     const text = document.getElementById('postText').value;
-    const mediaContainer = document.getElementById('mediaPreview');
-    const mediaElement = mediaContainer.querySelector('img, video');
-    
-    // Anan zamu duba zabin mutum (Normal ko Business)
+    const fileInput = document.getElementById('fileUpload');
+    const file = fileInput.files[0];
     const category = document.querySelector('input[name="postType"]:checked').value;
-    
-    if (!text && !mediaElement) return alert("Don Allah saka rubutu ko hoto!");
+    const publishBtn = document.querySelector('.publish-btn');
 
-    const newPost = {
-        id: Date.now(), // Unique ID don system ya ganeshi a profile
-        username: "Sadiq_Alhassan",
-        content: text,
-        mediaType: mediaElement && mediaElement.tagName === 'VIDEO' ? 'video' : 'image',
-        mediaUrl: mediaElement ? mediaElement.src : '',
-        category: category, // 'normal' (Timeline) ko 'business' (Showcase)
-        isAd: false,
-        likes: 0,
-        comments: 0
-    };
+    if (!text && !file) return alert("Don Allah saka rubutu ko hoto!");
 
-    // 1. Saka a babban Feed (social.html)
-    nexusPosts.unshift(newPost);
-    renderNexusFeed();
+    // Nuna wa mutum cewa ana aiki
+    publishBtn.innerText = "Uploading to Oryzon...";
+    publishBtn.disabled = true;
 
-    // 2. A gaba (idan mun koma Profile Page), wannan 'category' din 
-    // shi ne zai raba posts din zuwa Timeline ko Showcase kai tsaye.
-    
-    closePostOverlay();
-    // Share komai don wani posting din
-    document.getElementById('postText').value = '';
-    mediaContainer.innerHTML = '';
-}
+    let mediaUrl = "";
+
+    try {
+        // 1. Tura hoto zuwa Storage idan akwai
+        if (file) {
+            const storageRef = storage.ref('posts/' + Date.now() + "_" + file.name);
+            const uploadTask = await storageRef.put(file);
+            mediaUrl = await uploadTask.ref.getDownloadURL();
+        }
+
+        // 2. Tura bayanan zuwa Firestore
+        await db.collection("posts").add({
+            username: "Sadiq_Alhassan", // Daga baya zamu saita asalin sunan mai login
+            content: text,
+            mediaUrl: mediaUrl,
+            mediaType: file ? (file.type.includes('video') ? 'video' : 'image') : 'none',
+            category: category,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            likes: 0,
+            comments: 0
+        });
+
+        // 3. Share komai bayan an gama
+        closePostOverlay();
+        document.getElementById('postText').value = '';
+        document.getElementById('mediaPreview').innerHTML = '';
+        fileInput.value = '';
+        alert("An yi Posting cikin nasara! 🚀");
+
+    } catch (error) {
+        console.error("Kuskure ya faru: ", error);
+        alert("An samu matsala wajen haɗawa da Oryzon Cloud.");
+    } finally {
+        publishBtn.innerText = "Publish Post";
+        publishBtn.disabled = false;
+    }
+  }
         
 
         <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
