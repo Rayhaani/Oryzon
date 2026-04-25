@@ -360,24 +360,38 @@
     resize: none;
 }
 
-.media-preview { 
-    margin-top: 15px; 
-    border-radius: 15px; 
-    overflow: hidden; 
+/* Wannan zai hana hoton ya tura buttons kasa sosai */
+.media-preview {
+    margin-top: 15px;
+    border-radius: 15px;
+    overflow: hidden;
     width: 100%;
+    max-height: 250px; /* Mun rage tsayin anan */
     background: rgba(0,0,0,0.2);
-    display: flex; /* Zai bar shi a matsayin flex */
-    border: none;  /* Mun cire dashed border don kar ya fito a bayan hoto */
+    display: flex;
+    border: 1px dashed var(--glass-border);
 }
 
-.media-preview img, 
-.media-preview video { 
-    width: 100%; 
-    height: 100%; 
-    min-height: 250px; /* Ya zama akwai kyan kallo ko da hoton siriri ne */
-    max-height: 450px; /* Mun ɗan ƙara tsayin don ya fito sarai */
-    object-fit: cover;  /* Wannan ne zai sa ya mamaye hagu da dama gaba ɗaya */
-    display: block;
+.media-preview img {
+    width: 100%;
+    height: 250px; /* Dole ya tsaya a 250px */
+    object-fit: cover;
+}
+
+/* Wannan zai gyara Overlay din ya zama scannable */
+.overlay-content {
+    max-height: 90vh; /* Hana shi wuce tsayin screen */
+    overflow-y: auto; /* Idan rubutu ya yi yawa a yi scroll a ciki */
+    position: relative;
+}
+
+/* Tabbatar alamar Cancel (X) tana saman hoto koyaushe */
+.overlay-header {
+    position: sticky;
+    top: 0;
+    background: var(--obsidian);
+    z-index: 10;
+    padding-bottom: 10px;
 }
         
         
@@ -771,16 +785,15 @@ function previewMedia(input) {
     const file = fileInput.files[0];
     const publishBtn = document.querySelector('.publish-btn');
 
-    if (!text && !file) return alert("Don Allah saka rubutu ko hoto!");
+    if (!text && !file) return alert("Saka rubutu ko hoto!");
 
-    publishBtn.innerText = "Processing...";
+    publishBtn.innerText = "Connecting...";
     publishBtn.disabled = true;
 
-    let mediaUrl = "";
-
     try {
+        let mediaUrl = "";
         if (file) {
-            // Wannan aikin zai mayar da hoton ya zama rubutu (Base64)
+            // Maida hoto zuwa karamin rubutu (Optimized Base64)
             mediaUrl = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
@@ -788,31 +801,27 @@ function previewMedia(input) {
             });
         }
 
-        // Tura komai zuwa Firestore kai tsaye
+        // Tura bayanai zuwa Cloud Firestore
         await db.collection("posts").add({
             username: "Sadiq_Alhassan", 
             content: text,
             mediaUrl: mediaUrl,
             mediaType: file ? (file.type.includes('video') ? 'video' : 'image') : 'none',
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            likes: 0,
-            comments: 0
+            likes: 0
         });
 
-        closePostOverlay();
-        document.getElementById('postText').value = '';
-        document.getElementById('mediaPreview').innerHTML = '';
-        fileInput.value = '';
-        alert("An yi Posting cikin nasara! 🚀");
+        alert("An tura cikin nasara! 🚀");
+        location.reload(); // Refresh don ganin sabon post
 
     } catch (error) {
-        console.error(error);
-        alert("Kuskure ya faru wajen tura bayanai.");
+        console.error("Firebase Error:", error);
+        alert("An samu matsala: " + error.message);
     } finally {
         publishBtn.innerText = "Publish Post";
         publishBtn.disabled = false;
     }
-        }
+  }
         
   
 
