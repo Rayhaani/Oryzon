@@ -663,73 +663,53 @@ function toggleSave(btn) {
 
 function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
+    feedContainer.innerHTML = ''; // Share tsofaffin posts
 
-    // 1. Fara janyo posts daga Cloud (Oryzon)
-    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        feedContainer.innerHTML = ''; // Share wurin don sabuntawa
+    nexusPosts.forEach(post => {
+        // 1. Duba ko Image ne ko Video
+        let mediaHTML = '';
+        if (post.mediaType === 'image') {
+            mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
+        } else if (post.mediaType === 'video') {
+            mediaHTML = `
+                <video class="post-media" autoplay loop muted playsinline>
+                    <source src="${post.mediaUrl}" type="video/mp4">
+                </video>`;
+        }
 
-        // 2. Nuna sababbin posts daga Database idan akwai
-        snapshot.forEach((doc) => {
-            const post = doc.data();
-            let mediaHTML = '';
-            if (post.mediaUrl) {
-                if (post.mediaType === 'image') {
-                    mediaHTML = `<img src="${post.mediaUrl}" class="post-media">`;
-                } else {
-                    mediaHTML = `<video src="${post.mediaUrl}" class="post-media" controls autoplay loop muted></video>`;
-                }
-            }
+        // 2. Duba ko Talla ce domin saka Earning Badge
+        let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
 
-            feedContainer.innerHTML += `
-                <div class="post-card" onclick="toggleImmersive(this)">
-                    <div class="post-header">
-                        <div class="avatar"></div>
-                        <div class="username">${post.username} (Cloud)</div>
-                    </div>
-                    <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
-                    ${mediaHTML}
-                    <div class="interaction-bar" onclick="stopProp(event)">
-                        <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                                <i class="fa-regular fa-heart"></i>
-                                <span>${post.likes || 0}</span>
-                            </button>
-                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>0</span></button>
-                        </div>
-                    </div>
+        // 3. Gina Post Card din baki daya
+        const cardHTML = `
+            <div class="post-card" onclick="toggleImmersive(this)">
+                <div class="post-header">
+                    <div class="avatar"></div>
+                    <div class="username">${post.username}</div>
                 </div>
-            `;
-        });
-
-        // 3. Sannan ka ƙara waɗancan posts ɗin naka na asali (nexusPosts) a ƙasa don gwaji
-        nexusPosts.forEach(post => {
-            let mediaHTML = post.mediaType === 'image' 
-                ? `<img src="${post.mediaUrl}" class="post-media">` 
-                : `<video class="post-media" autoplay loop muted><source src="${post.mediaUrl}"></video>`;
-
-            feedContainer.innerHTML += `
-                <div class="post-card" onclick="toggleImmersive(this)">
-                    <div class="post-header">
-                        <div class="avatar"></div>
-                        <div class="username">${post.username} (Local)</div>
+                <div class="post-content" style="margin-bottom:10px; font-size:14px; color:#ddd;">${post.content}</div>
+                
+                ${mediaHTML}
+                
+                <div class="interaction-bar" onclick="stopProp(event)">
+                    <div class="left-actions">
+                        <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                            <i class="fa-regular fa-heart"></i>
+                            <span>${post.likes}</span>
+                        </button>
+                        <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
+                        <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
+                        <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
                     </div>
-                    <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
-                    ${mediaHTML}
-                    <div class="interaction-bar" onclick="stopProp(event)">
-                        <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                                <i class="fa-regular fa-heart"></i>
-                                <span>${post.likes}</span>
-                            </button>
-                        </div>
-                    </div>
+                    <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
                 </div>
-            `;
-        });
+                ${badgeHTML}
+            </div>
+        `;
+
+        feedContainer.innerHTML += cardHTML;
     });
 }
-
-
         
 // Kira aikin idan an bude page
 window.onload = renderNexusFeed;
