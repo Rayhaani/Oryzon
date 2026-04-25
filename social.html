@@ -455,31 +455,6 @@
     background: #000;  /* Background baƙi idan bidiyon bai loda ba */
         }
         
-
-
-        /* Wurin da media yake zama */
-.media-container {
-    width: 100%;
-    margin-top: 10px;
-    border-radius: 15px;
-    overflow: hidden; /* Don kusurwoyin su zagaye */
-    background-color: #000; /* Don ya nuna baki kafin bidiyon ya lodu */
-}
-
-/* Tsarin bidiyo */
-.post-video {
-    width: 100%;
-    display: block;
-    max-height: 500px; /* Kada bidiyo ya yi tsayi da yawa */
-    object-fit: cover; /* Don bidiyon ya cika sararin sa */
-}
-
-/* Tsarin hoto */
-.post-image {
-    width: 100%;
-    height: auto;
-    display: block;
-}
         
         
     </style>
@@ -707,81 +682,65 @@ function toggleSave(btn) {
     }
 ];
 
+
+
 function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
 
-    // Wannan zai rika sauraron Firestore a duk lokacin da aka yi sabon post
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        let allPostsHTML = ''; 
+        feedContainer.innerHTML = ''; 
 
-        // A. Nuna posts daga Firestore (Cloud)
+        // A. Fara nuna posts daga Cloud
         snapshot.forEach((doc) => {
             const post = doc.data();
-            let mediaTag = ""; 
+            let mediaHTML = post.mediaUrl ? (post.mediaType === 'image' 
+                ? `<img src="${post.mediaUrl}" class="post-media">` 
+                : `<video src="${post.mediaUrl}" class="post-media" controls autoplay loop muted></video>`) : '';
 
-            if (post.mediaUrl) {
-                if (post.mediaType === 'video') {
-                    // Wannan shi ne babban gyaran da muka yi don Autoplay
-                    mediaTag = `
-                        <video class="post-video" autoplay muted loop playsinline controls>
-                            <source src="${post.mediaUrl}" type="video/mp4">
-                        </video>`;
-                } else {
-                    mediaTag = `<img src="${post.mediaUrl}" class="post-image">`;
-                }
-            }
-
-            allPostsHTML += `
+            feedContainer.innerHTML += `
                 <div class="post-card" onclick="toggleImmersive(this)">
                     <div class="post-header">
                         <div class="avatar"></div>
-                        <div class="username">${post.username || 'Nexus User'}</div>
+                        <div class="username">${post.username} (Cloud)</div>
                     </div>
                     <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
-                    <div class="media-container">${mediaTag}</div>
+                    ${mediaHTML}
                     <div class="interaction-bar" onclick="stopProp(event)">
                         <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                                <i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span>
-                            </button>
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span></button>
                             <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>0</span></button>
                         </div>
                     </div>
                 </div>`;
         });
 
-        // B. Nuna tsofaffin posts dinmu na gwaji (nexusPosts)
+        // B. Sai kuma tsofaffin posts dinmu na gwaji (Hardcoded)
         nexusPosts.forEach(post => {
-            let mediaTag = post.mediaType === 'video' 
-                ? `<video class="post-video" autoplay muted loop playsinline controls><source src="${post.mediaUrl}"></video>` 
-                : `<img src="${post.mediaUrl}" class="post-image">`;
+            let mediaHTML = post.mediaType === 'image' 
+                ? `<img src="${post.mediaUrl}" class="post-media">` 
+                : `<video class="post-media" autoplay loop muted><source src="${post.mediaUrl}"></video>`;
             
             let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
 
-            allPostsHTML += `
+            feedContainer.innerHTML += `
                 <div class="post-card" onclick="toggleImmersive(this)">
                     <div class="post-header">
                         <div class="avatar"></div>
                         <div class="username">${post.username}</div>
                     </div>
                     <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
-                    <div class="media-container">${mediaTag}</div>
+                    ${mediaHTML}
                     <div class="interaction-bar" onclick="stopProp(event)">
                         <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                                <i class="fa-regular fa-heart"></i><span>${post.likes}</span>
-                            </button>
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes}</span></button>
                             <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
                         </div>
                     </div>
                     ${badgeHTML}
                 </div>`;
         });
-
-        feedContainer.innerHTML = allPostsHTML;
     });
 }
-        
         
         
         
@@ -922,7 +881,40 @@ function previewMedia(input) {
 
 
 
+    // Misali yayin da kake loop din posts dinka daga Firestore
+db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+    let html = "";
+    snapshot.forEach((doc) => {
+        const post = doc.data();
+        
+        // 1. Fara gina sauran sassan post din (username, text)
+        let mediaElement = "";
 
+        // 2. Duba idan akwai media kuma wanne iri ne
+        if (post.mediaUrl) {
+            if (post.mediaType === 'video') {
+                // Idan bidiyo ne, yi amfani da <video> tag
+                mediaElement = `
+                    <video controls class="post-media">
+                        <source src="${post.mediaUrl}" type="video/mp4">
+                        Wayarka ba ta goyon bayan kallon wannan bidiyon.
+                    </video>`;
+            } else {
+                // Idan hoto ne, yi amfani da <img> tag
+                mediaElement = `<img src="${post.mediaUrl}" class="post-media" alt="Post Image">`;
+            }
+        }
+
+        // 3. Haɗa komai wuri guda
+        html += `
+            <div class="post-card">
+                <h3>${post.username}</h3>
+                <p>${post.content}</p>
+                ${mediaElement} </div>
+        `;
+    });
+    document.getElementById('feedContainer').innerHTML = html;
+});
     
     </script>
 </body>
