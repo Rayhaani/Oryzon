@@ -709,25 +709,39 @@ function toggleSave(btn) {
 ];
 
 
-
 function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
 
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        feedContainer.innerHTML = ''; 
+        let allPostsHTML = ''; 
 
-        // A. Fara nuna posts daga Cloud
+        // 1. Janyo posts daga Cloud tare da Optimization
         snapshot.forEach((doc) => {
             const post = doc.data();
-            let mediaHTML = post.mediaUrl ? (post.mediaType === 'image' 
-                ? `<img src="${post.mediaUrl}" class="post-media">` 
-                : `<video src="${post.mediaUrl}" class="post-media" controls autoplay loop muted></video>`) : '';
+            let mediaHTML = '';
 
-            feedContainer.innerHTML += `
+            if (post.mediaUrl) {
+                // Wannan layin zai sa Cloudinary ya rage nauyin hoto/bidiyo don ya bude INSTANTLY
+                const optimizedUrl = post.mediaUrl.replace("/upload/", "/upload/f_auto,q_auto,w_800/");
+                
+                if (post.mediaType === 'image') {
+                    mediaHTML = `<img src="${optimizedUrl}" class="post-media" loading="lazy">`;
+                } else {
+                    // Gyaran aspect-ratio don bidiyo ya nuna da kyau tun kafin ya loda
+                    mediaHTML = `
+                        <div style="width:100%; aspect-ratio: 16/9; background: #000; border-radius: 15px; overflow: hidden;">
+                            <video src="${optimizedUrl}" class="post-media" 
+                                   style="width:100%; height:100%; object-fit: cover;"
+                                   autoplay loop muted playsinline preload="metadata"></video>
+                        </div>`;
+                }
+            }
+
+            allPostsHTML += `
                 <div class="post-card" onclick="toggleImmersive(this)">
                     <div class="post-header">
                         <div class="avatar"></div>
-                        <div class="username">${post.username} (Cloud)</div>
+                        <div class="username">${post.username || 'User'} (Cloud)</div>
                     </div>
                     <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
                     ${mediaHTML}
@@ -740,15 +754,13 @@ function renderNexusFeed() {
                 </div>`;
         });
 
-        // B. Sai kuma tsofaffin posts dinmu na gwaji (Hardcoded)
+        // 2. Tsofaffin posts (Hardcoded)
         nexusPosts.forEach(post => {
             let mediaHTML = post.mediaType === 'image' 
-                ? `<img src="${post.mediaUrl}" class="post-media">` 
-                : `<video class="post-media" autoplay loop muted><source src="${post.mediaUrl}"></video>`;
+                ? `<img src="${post.mediaUrl}" class="post-media" loading="lazy">` 
+                : `<video class="post-media" autoplay loop muted playsinline style="object-fit: cover;"><source src="${post.mediaUrl}"></video>`;
             
-            let badgeHTML = post.isAd ? `<span class="earning-badge">${post.earningBadge}</span>` : '';
-
-            feedContainer.innerHTML += `
+            allPostsHTML += `
                 <div class="post-card" onclick="toggleImmersive(this)">
                     <div class="post-header">
                         <div class="avatar"></div>
@@ -759,14 +771,16 @@ function renderNexusFeed() {
                     <div class="interaction-bar" onclick="stopProp(event)">
                         <div class="left-actions">
                             <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes}</span></button>
-                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>${post.comments}</span></button>
                         </div>
                     </div>
-                    ${badgeHTML}
                 </div>`;
         });
+
+        feedContainer.innerHTML = allPostsHTML;
     });
 }
+        
+
         
         
         
