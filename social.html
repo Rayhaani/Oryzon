@@ -780,23 +780,19 @@ function renderNexusFeed() {
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         let allPostsHTML = ''; 
 
-        // 1. Janyo posts daga Cloud tare da Optimization
+        // 1. Janyo posts daga Cloud
         snapshot.forEach((doc) => {
             const post = doc.data();
             let mediaHTML = '';
 
             if (post.mediaUrl) {
-                // Wannan layin zai sa Cloudinary ya rage nauyin hoto/bidiyo don ya bude INSTANTLY
                 const optimizedUrl = post.mediaUrl.replace("/upload/", "/upload/f_auto,q_auto,w_800/");
-                
                 if (post.mediaType === 'image') {
                     mediaHTML = `<img src="${optimizedUrl}" class="post-media" loading="lazy">`;
                 } else {
-                    // Gyaran aspect-ratio don bidiyo ya nuna da kyau tun kafin ya loda
-                   mediaHTML = `
-                        <div style="width:100%; background: transparent; border-radius: 15px; overflow: hidden;">
+                    mediaHTML = `
+                        <div style="width:100%; background: transparent; border-radius: 0; overflow: hidden;">
                             <video src="${optimizedUrl}" class="post-media" 
-                                   style="width:100%; height:auto; object-fit: cover;"
                                    autoplay loop muted playsinline preload="metadata"></video>
                         </div>`;
                 }
@@ -806,14 +802,26 @@ function renderNexusFeed() {
                 <div class="post-card" onclick="toggleImmersive(this)">
                     <div class="post-header">
                         <div class="avatar"></div>
-                        <div class="username">${post.username || 'User'} (Cloud)</div>
+                        <div class="username">${post.username || 'User'}</div>
                     </div>
-                    <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
+                    <div class="post-content">${post.content}</div>
                     ${mediaHTML}
+                    
                     <div class="interaction-bar" onclick="stopProp(event)">
                         <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes || 0}</span></button>
-                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>0</span></button>
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                                <i class="fa-regular fa-heart"></i>
+                                <span>${post.likes || 0}</span>
+                            </button>
+                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i></button>
+                            <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
+                            <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
+                        </div>
+                        <div class="right-actions">
+                            <button class="btn-gift">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> 
+                                <span>Gift</span>
+                            </button>
                         </div>
                     </div>
                 </div>`;
@@ -831,11 +839,24 @@ function renderNexusFeed() {
                         <div class="avatar"></div>
                         <div class="username">${post.username}</div>
                     </div>
-                    <div class="post-content" style="margin-bottom:10px;">${post.content}</div>
+                    <div class="post-content">${post.content}</div>
                     ${mediaHTML}
+                    
                     <div class="interaction-bar" onclick="stopProp(event)">
                         <div class="left-actions">
-                            <button class="btn-nexus" onclick="triggerPulse(this, event)"><i class="fa-regular fa-heart"></i><span>${post.likes}</span></button>
+                            <button class="btn-nexus" onclick="triggerPulse(this, event)">
+                                <i class="fa-regular fa-heart"></i>
+                                <span>${post.likes}</span>
+                            </button>
+                            <button class="btn-nexus"><i class="fa-regular fa-comment"></i></button>
+                            <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></button>
+                            <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
+                        </div>
+                        <div class="right-actions">
+                            <button class="btn-gift">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> 
+                                <span>Gift</span>
+                            </button>
                         </div>
                     </div>
                 </div>`;
@@ -844,9 +865,7 @@ function renderNexusFeed() {
         feedContainer.innerHTML = allPostsHTML;
     });
 }
-        
-
-        
+          
         
         
 // Kira aikin idan an bude page
