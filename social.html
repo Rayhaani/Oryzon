@@ -759,32 +759,38 @@ function triggerPulse(btn, e) {
 // Aikin Save button
 async function toggleSave(btn, postId) {
     const icon = btn.querySelector('i');
-    const text = btn.querySelector('span');
-    const userId = "Sadiq_Alhassan"; // Anan za ka saka ID na wanda yake amfani da app din
+    const text = btn.querySelector('span'); 
 
+    // WANNAN SHINE ASALIN CODE DINKA (Ba mu taba komai ba)
     icon.classList.toggle('fa-solid');
     icon.classList.toggle('fa-regular');
 
-    try {
-        if (icon.classList.contains('fa-solid')) {
-            // Adanawa a Database
-            await db.collection("saved_posts").doc(`${userId}_${postId}`).set({
-                userId: userId,
+    if (icon.classList.contains('fa-solid')) {
+        text.innerText = "Saved"; 
+        btn.style.color = "var(--premium-gold)"; 
+        
+        // --- KARIN AIKI NA DATABASE A NAN ---
+        try {
+            await db.collection("saved_posts").doc(`Sadiq_${postId}`).set({
+                userId: "Sadiq_Alhassan",
                 postId: postId,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                savedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            text.innerText = "Saved";
-            btn.style.color = "var(--premium-gold)";
-        } else {
-            // Cirewa daga Database
-            await db.collection("saved_posts").doc(`${userId}_${postId}`).delete();
-            text.innerText = "Save";
-            btn.style.color = "#fff";
-        }
-    } catch (error) {
-        console.error("Kuskure wajen adanawa: ", error);
+        } catch (e) { console.error("Error saving:", e); }
+        // ------------------------------------
+
+    } else {
+        text.innerText = "Save"; 
+        btn.style.color = "#fff"; 
+
+        // --- KARIN AIKI NA DATABASE A NAN ---
+        try {
+            await db.collection("saved_posts").doc(`Sadiq_${postId}`).delete();
+        } catch (e) { console.error("Error removing:", e); }
+        // ------------------------------------
     }
         }
+        
                 
 
         const nexusPosts = [
@@ -855,13 +861,6 @@ function renderNexusFeed() {
 
 
 
-        // A cikin renderNexusFeed ko generatePostHTML
-async function checkSavedStatus(postId) {
-    const userId = "Sadiq_Alhassan";
-    const doc = await db.collection("saved_posts").doc(`${userId}_${postId}`).get();
-    return doc.exists; // Zai dawo da true idan an taba saving
-}
-
         
 // Wannan function din zai gina tsarin post daya da icons hudu
 
@@ -906,7 +905,7 @@ async function checkSavedStatus(postId) {
                 </div>
 
                 <div class="action-capsules save-capsule">
-                    <div class="capsule" onclick="toggleSave(this)">
+                    <div class="capsule" onclick="toggleSave(this, '${post.id}')">
                         <i class="fa-regular fa-bookmark"></i>
                         <span>Save</span>
                     </div>
@@ -914,6 +913,7 @@ async function checkSavedStatus(postId) {
             </div>
         </div>`;
  }
+        
         
         
           
