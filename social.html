@@ -719,25 +719,35 @@ video::-webkit-media-controls-start-playback-button {
 
 
 
-.avatar {
-    /* Wannan zai cire ta daga lissafin layout din katin */
-    position: absolute; 
-    top: 5px; 
-    left: 5px; 
-    width: 40px; /* Rage girmanta kadan */
-    height: 40px; 
-    border: 2px solid #fde08d; 
-    border-radius: 50%; 
-    z-index: 1000; /* Tabbatar tana sama */
-    background: #111;
-    object-fit: cover;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+header {
+    width: 100vw; /* Tabbatar ya mamaye duka fadin screen din waya */
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    z-index: 5000;
+    /* Wannan zai hana sauran abubuwa tura shi */
+    box-sizing: border-box; 
 }
 
-.post-card {
-    position: relative; /* Wannan yana da matukar muhimmanci */
-    overflow: visible; 
+.avatar {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 42px; /* Mun dan kara rage ta kadan don ta fi zama daidai */
+    height: 42px; 
+    border: 2px solid #fde08d; 
+    border-radius: 50%; 
+    z-index: 100;
+    background: #111;
+    object-fit: cover;
+    /* Wannan yana da muhimmanci don kar ta tura layout */
+    pointer-events: none; 
 }
+        
         
         
         
@@ -1077,30 +1087,31 @@ function renderNexusFeed() {
 
     const vBadge = `<span class="nexus-badge" style="display: inline-flex; align-items: center; margin-left: 4px; flex-shrink: 0;"><i class="fa-solid fa-check"></i></span>`;
 
-return `
-    <div class="post-card" onclick="toggleImmersive(this)">
-        <div class="avatar"></div>
 
-        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; height: 50px;">
+   return `
+    <div class="post-card" style="overflow: visible; position: relative;">
+        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative; overflow: hidden; border-radius: 15px 15px 0 0;">
             
-            <div style="display: flex; align-items: center; flex: 1;">
-                <div style="width: 45px; flex-shrink: 0;"></div>
+            <div style="display: flex; align-items: center; gap: 0; flex: 1;">
+                <div class="avatar-container" style="position: relative; width: 40px; height: 40px; flex-shrink: 0;">
+                     <div class="avatar"></div> 
+                </div>
                 
-                <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center;">
+                <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 10px;">
                     <span>${post.username || 'Sadiq_Alhassan'}</span>
                     ${vBadge}
                 </div>
             </div>
             
-            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-                <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
-                
-                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
+            <div class="header-actions" style="display: flex; align-items: center; gap: 12px; padding-right: 10px;">
+                <button class="follow-text-link">Follow</button>
+                <div class="gift-btn-nexus">
                     <span class="gift-emoji">🎁</span>
                     <span style="font-size: 10px;">Gift</span>
                 </div>
             </div>
         </div>
+          
         
          
             <div class="post-content" style="padding: 10px 15px;">${post.content}</div>
