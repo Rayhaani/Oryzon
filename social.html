@@ -757,23 +757,35 @@ function triggerPulse(btn, e) {
         
 
 // Aikin Save button
-function toggleSave(btn) {
+async function toggleSave(btn, postId) {
     const icon = btn.querySelector('i');
-    const text = btn.querySelector('span'); // Wannan zai kamo rubutun kusa da icon din
+    const text = btn.querySelector('span');
+    const userId = "Sadiq_Alhassan"; // Anan za ka saka ID na wanda yake amfani da app din
 
     icon.classList.toggle('fa-solid');
     icon.classList.toggle('fa-regular');
 
-    // Dubawa idan icon din yana 'solid' (ma'ana an danna shi)
-    if (icon.classList.contains('fa-solid')) {
-        text.innerText = "Saved"; // Idan an danna, rubutu ya koma Saved
-        btn.style.color = "var(--premium-gold)"; // Zaka iya saita kalar zinari anan
-    } else {
-        text.innerText = "Save"; // Idan aka sake danna (unsave), ya koma Save
-        btn.style.color = "#fff"; // Ya koma kalar fari
+    try {
+        if (icon.classList.contains('fa-solid')) {
+            // Adanawa a Database
+            await db.collection("saved_posts").doc(`${userId}_${postId}`).set({
+                userId: userId,
+                postId: postId,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            text.innerText = "Saved";
+            btn.style.color = "var(--premium-gold)";
+        } else {
+            // Cirewa daga Database
+            await db.collection("saved_posts").doc(`${userId}_${postId}`).delete();
+            text.innerText = "Save";
+            btn.style.color = "#fff";
+        }
+    } catch (error) {
+        console.error("Kuskure wajen adanawa: ", error);
     }
         }
-        
+                
 
         const nexusPosts = [
     {
@@ -841,6 +853,16 @@ function renderNexusFeed() {
     });
 }
 
+
+
+        // A cikin renderNexusFeed ko generatePostHTML
+async function checkSavedStatus(postId) {
+    const userId = "Sadiq_Alhassan";
+    const doc = await db.collection("saved_posts").doc(`${userId}_${postId}`).get();
+    return doc.exists; // Zai dawo da true idan an taba saving
+}
+
+        
 // Wannan function din zai gina tsarin post daya da icons hudu
 
  function generatePostHTML(post) {
