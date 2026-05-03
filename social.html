@@ -829,29 +829,64 @@ async function toggleSave(btn, postId) {
 ];
 
 
-    async function renderNexusFeed() {
-    const feedContainer = document.querySelector('.feed-container');
+  function generatePostHTML(post) {
+    // Wannan layin shi ne sirrin: Idan userSavedPosts ba ya nan, zai dauki empty array []
+    const savedList = userSavedPosts || [];
+    const isSaved = savedList.includes(post.id);
     
-    // 1. Kamo duk abubuwan da Sadiq ya adana
-    const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
-    userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
+    const saveIcon = isSaved ? 'fa-solid' : 'fa-regular';
+    const saveText = isSaved ? 'Saved' : 'Save';
+    const saveColor = isSaved ? 'var(--premium-gold)' : '#fff';
 
-    // 2. Sauran code dinka
-    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        let allPostsHTML = ''; 
-        snapshot.forEach((doc) => {
-            const postData = doc.data();
-            const post = { id: doc.id, ...postData }; // Tabbatar muna da ID
+    let mediaHTML = '';
+    if (post.mediaUrl) {
+        mediaHTML = post.mediaType === 'video' 
+            ? `<video src="${post.mediaUrl}" class="post-media" autoplay loop muted playsinline></video>`
+            : `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+    }
+
+    return `
+        <div class="post-card" onclick="toggleImmersive(this)">
+            <div class="post-header">
+                <div class="avatar"></div>
+                <div class="username">${post.username || 'User'}</div>
+            </div>
+            <div class="post-content">${post.content}</div>
+            ${mediaHTML}
+
             
-            // DUBA NAN: Muna duba idan ID din yana cikin jerin saved posts
-            const isSaved = userSavedPosts.includes(post.id);
-            
-            // Muna tura isSaved zuwa generatePostHTML
-            allPostsHTML += generatePostHTML(post, isSaved);
-        });
-        feedContainer.innerHTML = allPostsHTML;
-    });
-                         }
+            <div class="interaction-bar" onclick="stopProp(event)">
+                <div class="action-capsules">
+                    <div class="capsule" onclick="triggerPulse(this, event)">
+                        <i class="fa-regular fa-heart"></i>
+                        <span>${post.likes || 0}</span>
+                    </div>
+
+                    <div class="capsule">
+                        <i class="fa-regular fa-comment"></i>
+                        <span>12</span>
+                    </div>
+
+                    <div class="capsule">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>5</span>
+                    </div>
+
+                    <div class="capsule">
+                        <i class="fa-regular fa-paper-plane"></i>
+                    </div>
+                </div>
+
+                <div class="action-capsules save-capsule">
+                    <div class="capsule" onclick="toggleSave(this, '${post.id}')">
+                        <i class="fa-regular fa-bookmark"></i>
+                        <span>Save</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
+        
         
                                                                    }
              
