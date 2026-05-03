@@ -883,32 +883,36 @@ function generatePostHTML(post) {
                                                                    }
              
 // Wannan function din zai gina tsarin post daya da icons hudu 
-async function renderNexusFeed() {
-    const feedContainer = document.querySelector('.feed-container');
-    
-    try {
-        // 1. Kamo saved posts dinka da farko
-        const savedSnapshot = await db.collection("saved_posts")
-                                      .where("userId", "==", "Sadiq_Alhassan")
-                                      .get();
-        userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
-    } catch (e) {
-        console.log("Ba a samu saved posts ba tukunna");
-        userSavedPosts = []; // Idan aka samu error ya zama empty array maimakon ya tsayar da posts
-    }
 
-    // 2. Nuna Posts dinka daga Firestore
+  function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
+
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         let allPostsHTML = ''; 
+
+        // 1. POSTS DAGA FIREBASE
         snapshot.forEach((doc) => {
-            const post = { id: doc.id, ...doc.data() };
+            const post = doc.data();
+            let mediaHTML = '';
+            if (post.mediaUrl) {
+                if (post.mediaType === 'video') {
+                    mediaHTML = `<video src="${post.mediaUrl}" class="post-media" autoplay loop muted playsinline></video>`;
+                } else {
+                    mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+                }
+            }
+                    
             allPostsHTML += generatePostHTML(post);
         });
+
+        // 2. TSOFAFFIN POSTS (HARDCODED)
+        nexusPosts.forEach(post => {
+            allPostsHTML += generatePostHTML(post);
+        });
+
         feedContainer.innerHTML = allPostsHTML;
     });
-}
-        
-          
+  }        
         
         
 // Kira aikin idan an bude page
