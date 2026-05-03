@@ -829,27 +829,43 @@ async function toggleSave(btn, postId) {
 ];
 
 
-        async function renderNexusFeed() {
+    async function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
     
-    // 1. Kamo duk abubuwan da Sadiq ya adana a Database tun kafin mu nuna posts
+    // 1. Kamo duk abubuwan da Sadiq ya adana
     const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
     userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
 
-    // 2. Sauran code dinka na Firestore snapshot yana nan yadda yake...
+    // 2. Sauran code dinka
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         let allPostsHTML = ''; 
         snapshot.forEach((doc) => {
-            const post = { id: doc.id, ...doc.data() }; // Tabbatar muna da ID
-            allPostsHTML += generatePostHTML(post);
+            const postData = doc.data();
+            const post = { id: doc.id, ...postData }; // Tabbatar muna da ID
+            
+            // DUBA NAN: Muna duba idan ID din yana cikin jerin saved posts
+            const isSaved = userSavedPosts.includes(post.id);
+            
+            // Muna tura isSaved zuwa generatePostHTML
+            allPostsHTML += generatePostHTML(post, isSaved);
         });
         feedContainer.innerHTML = allPostsHTML;
     });
+                         }
+        
                                                                    }
              
 // Wannan function din zai gina tsarin post daya da icons hudu
 
- function generatePostHTML(post) {
+ 
+function generatePostHTML(post) {
+    // --- GYARA KADAN NA DUBI (Ba a taba tsarinka ba) ---
+    const isSaved = userSavedPosts.includes(post.id);
+    const saveIcon = isSaved ? 'fa-solid' : 'fa-regular';
+    const saveText = isSaved ? 'Saved' : 'Save';
+    const saveColor = isSaved ? 'var(--premium-gold)' : '#fff';
+    // -------------------------------------------------
+
     let mediaHTML = '';
     if (post.mediaUrl) {
         mediaHTML = post.mediaType === 'video' 
@@ -890,16 +906,14 @@ async function toggleSave(btn, postId) {
                 </div>
 
                 <div class="action-capsules save-capsule">
-                    <div class="capsule" onclick="toggleSave(this, '${post.id}')">
-                        <i class="fa-regular fa-bookmark"></i>
-                        <span>Save</span>
+                    <div class="capsule" onclick="toggleSave(this, '${post.id}')" style="color: ${saveColor}">
+                        <i class="${saveIcon} fa-bookmark"></i>
+                        <span>${saveText}</span>
                     </div>
                 </div>
             </div>
         </div>`;
- }
-        
-        
+}
         
           
         
