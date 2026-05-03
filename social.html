@@ -683,6 +683,22 @@ video::-webkit-media-controls-start-playback-button {
     98% { transform: rotate(15deg); }
 }
         
+
+        .username {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.gift-btn-nexus span {
+    white-space: nowrap; /* Wannan zai hana rubutun "Gift" sauka kasa */
+}
+
+.nexus-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 2px;
+}
         
     </style>
 </head>
@@ -1010,8 +1026,7 @@ function renderNexusFeed() {
         feedContainer.innerHTML = allPostsHTML;
     });
                                                                    }
-        
-function generatePostHTML(post) {
+       function generatePostHTML(post) {
     let mediaHTML = '';
     if (post.mediaUrl) {
         mediaHTML = post.mediaType === 'video' 
@@ -1019,28 +1034,28 @@ function generatePostHTML(post) {
             : `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
     }
 
-    const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
+    const vBadge = `<span class="nexus-badge" style="display: inline-flex; align-items: center; margin-left: 4px; flex-shrink: 0;"><i class="fa-solid fa-check"></i></span>`;
 
     return `
         <div class="post-card" onclick="toggleImmersive(this)">
-            <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; height: 55px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div class="avatar" style="position: static; width: 34px; height: 34px;"></div>
-                    <div class="username" style="font-size: 13px;">
-                        ${post.username || 'User'} ${vBadge}
+            <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 12px; height: 55px; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+                    <div class="avatar" style="position: static; width: 34px; height: 34px; flex-shrink: 0;"></div>
+                    <div class="username" style="font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center;">
+                        <span style="overflow: hidden; text-overflow: ellipsis;">${post.username || 'User'}</span>
+                        ${vBadge}
                     </div>
                 </div>
                 
-                <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 6px;">
-                    <button class="follow-btn-nexus" onclick="handleFollow(this)">Follow</button>
+                <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                    <button class="follow-btn-nexus" onclick="handleFollow(this)" style="min-width: 75px; height: 28px; font-size: 10px; padding: 0 8px;">Follow</button>
                     
-                    
-<div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-    <span class="gift-emoji">🎁</span>
-    <span>Send gift</span>
-</div>
- </div>
- </div>
+                    <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')" style="height: 28px; padding: 0 10px; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                        <span class="gift-emoji" style="font-size: 14px;">🎁</span>
+                        <span style="font-size: 10px; font-weight: 600;">Gift</span>
+                    </div>
+                </div>
+            </div>
             
             <div class="post-content">${post.content}</div>
             ${mediaHTML}
@@ -1063,9 +1078,9 @@ function generatePostHTML(post) {
                 </div>
             </div>
         </div>`;
-                                                                   }
-                          
-        
+       }
+               
+            
         
 `<div class="username">
     ${post.username} 
