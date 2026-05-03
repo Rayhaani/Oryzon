@@ -695,7 +695,8 @@ video::-webkit-media-controls-start-playback-button {
         
         </body>
     <script>
-
+let userSavedPosts = []; // Wannan zai rinka rike duk abin da ka taba saving
+        
     
         // AIKIN FULL SCREEN (IMMERSIVE MODE)
         function toggleImmersive(card) {
@@ -860,6 +861,24 @@ function renderNexusFeed() {
 }
 
 
+        async function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
+    
+    // 1. Kamo duk abubuwan da Sadiq ya adana a Database tun kafin mu nuna posts
+    const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
+    userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
+
+    // 2. Sauran code dinka na Firestore snapshot yana nan yadda yake...
+    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+        let allPostsHTML = ''; 
+        snapshot.forEach((doc) => {
+            const post = { id: doc.id, ...doc.data() }; // Tabbatar muna da ID
+            allPostsHTML += generatePostHTML(post);
+        });
+        feedContainer.innerHTML = allPostsHTML;
+    });
+                                                                   }
+        
 
         
 // Wannan function din zai gina tsarin post daya da icons hudu
