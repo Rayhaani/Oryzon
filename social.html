@@ -643,31 +643,40 @@ video::-webkit-media-controls-start-playback-button {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 255, 255, 0.1); /* Dark Glass Effect */
+    background: rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 4px 10px;
-    border-radius: 10px;
+    padding: 5px 12px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: 0.4s ease;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.gift-btn-nexus:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: var(--premium-gold);
-    transform: translateY(-1px);
+.gift-btn-nexus:active {
+    transform: scale(0.9);
 }
 
-.gift-btn-nexus img {
-    width: 18px; /* Wannan hoton gift din ne */
-    height: 18px;
-    filter: drop-shadow(0 0 5px rgba(253, 224, 141, 0.5));
+.gift-emoji {
+    font-size: 16px;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+    animation: giftWobble 3s infinite;
 }
 
-.gift-btn-nexus span {
+.gift-btn-nexus span:last-child {
     font-size: 11px;
-    color: #efefef;
+    color: #ffffff;
     font-weight: 500;
+    letter-spacing: 0.3px;
 }
+
+/* Wannan zai rinka girgiza gift din kadan-kadan don jan hankali */
+@keyframes giftWobble {
+    0%, 100% { transform: rotate(0deg); }
+    80% { transform: rotate(0deg); }
+    85% { transform: rotate(10deg); }
+    90% { transform: rotate(-10deg); }
+    95% { transform: rotate(10deg); }
+}
+        
         
         
     </style>
@@ -1006,7 +1015,6 @@ function generatePostHTML(post) {
     }
 
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
-    const giftIconUrl = "https://cdn-icons-png.flaticon.com/512/5607/5607833.png"; 
 
     return `
         <div class="post-card" onclick="toggleImmersive(this)">
@@ -1020,7 +1028,7 @@ function generatePostHTML(post) {
                     <button class="follow-btn-nexus" onclick="handleFollow(this)">Follow</button>
                     
                     <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-                        <img src="${giftIconUrl}" alt="gift">
+                        <span class="gift-emoji">🎁</span>
                         <span>Send gift</span>
                     </div>
                 </div>
@@ -1028,29 +1036,17 @@ function generatePostHTML(post) {
             
             <div class="post-content">${post.content}</div>
             ${mediaHTML}
-    
+
             <div class="interaction-bar" onclick="stopProp(event)">
                 <div class="action-capsules">
                     <div class="capsule" onclick="triggerPulse(this, event)">
                         <i class="fa-regular fa-heart"></i>
                         <span>${post.likes || 0}</span>
                     </div>
-
-                    <div class="capsule">
-                        <i class="fa-regular fa-comment"></i>
-                        <span>12</span>
-                    </div>
-
-                    <div class="capsule">
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                        <span>5</span>
-                    </div>
-
-                    <div class="capsule">
-                        <i class="fa-regular fa-paper-plane"></i>
-                    </div>
+                    <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
+                    <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
+                    <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
                 </div>
-
                 <div class="action-capsules save-capsule">
                     <div class="capsule" onclick="toggleSave(this, '${post.id}')">
                         <i class="fa-regular fa-bookmark"></i>
@@ -1059,7 +1055,7 @@ function generatePostHTML(post) {
                 </div>
             </div>
         </div>`;
- }
+                        }
         
         
 `<div class="username">
