@@ -829,7 +829,61 @@ async function toggleSave(btn, postId) {
 ];
 
 
-function generatePostHTML(post) {
+
+function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
+
+    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+        let allPostsHTML = ''; 
+
+        // 1. POSTS DAGA FIREBASE
+        snapshot.forEach((doc) => {
+            const post = doc.data();
+            let mediaHTML = '';
+            if (post.mediaUrl) {
+                if (post.mediaType === 'video') {
+                    mediaHTML = `<video src="${post.mediaUrl}" class="post-media" autoplay loop muted playsinline></video>`;
+                } else {
+                    mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+                }
+            }
+                    
+            allPostsHTML += generatePostHTML(post);
+        });
+
+        // 2. TSOFAFFIN POSTS (HARDCODED)
+        nexusPosts.forEach(post => {
+            allPostsHTML += generatePostHTML(post);
+        });
+
+        feedContainer.innerHTML = allPostsHTML;
+    });
+}
+
+
+        async function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
+    
+    // 1. Kamo duk abubuwan da Sadiq ya adana a Database tun kafin mu nuna posts
+    const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
+    userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
+
+    // 2. Sauran code dinka na Firestore snapshot yana nan yadda yake...
+    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+        let allPostsHTML = ''; 
+        snapshot.forEach((doc) => {
+            const post = { id: doc.id, ...doc.data() }; // Tabbatar muna da ID
+            allPostsHTML += generatePostHTML(post);
+        });
+        feedContainer.innerHTML = allPostsHTML;
+    });
+                                                                   }
+        
+
+        
+// Wannan function din zai gina tsarin post daya da icons hudu
+
+ function generatePostHTML(post) {
     let mediaHTML = '';
     if (post.mediaUrl) {
         mediaHTML = post.mediaType === 'video' 
@@ -877,42 +931,11 @@ function generatePostHTML(post) {
                 </div>
             </div>
         </div>`;
-        }  
+ }
         
         
-                                                                   }
-             
-// Wannan function din zai gina tsarin post daya da icons hudu 
-
-  function renderNexusFeed() {
-    const feedContainer = document.querySelector('.feed-container');
-
-    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        let allPostsHTML = ''; 
-
-        // 1. POSTS DAGA FIREBASE
-        snapshot.forEach((doc) => {
-            const post = doc.data();
-            let mediaHTML = '';
-            if (post.mediaUrl) {
-                if (post.mediaType === 'video') {
-                    mediaHTML = `<video src="${post.mediaUrl}" class="post-media" autoplay loop muted playsinline></video>`;
-                } else {
-                    mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
-                }
-            }
-                    
-            allPostsHTML += generatePostHTML(post);
-        });
-
-        // 2. TSOFAFFIN POSTS (HARDCODED)
-        nexusPosts.forEach(post => {
-            allPostsHTML += generatePostHTML(post);
-        });
-
-        feedContainer.innerHTML = allPostsHTML;
-    });
-  }        
+        
+          
         
         
 // Kira aikin idan an bude page
