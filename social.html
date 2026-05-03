@@ -609,59 +609,64 @@ video::-webkit-media-controls-start-playback-button {
                                 
 
 
-        /* Professional Action Cluster */
+        
+  /* Professional Header Action Cluster */
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-left: auto; /* Tura su can hagu */
+    gap: 10px;
+    margin-left: auto;
 }
 
-/* Follow Button - Slim & Sharp */
-.follow-pill {
-    background: rgba(253, 224, 141, 0.1);
-    border: 1px solid var(--premium-gold);
-    color: var(--premium-gold);
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
+/* World-Class Follow Button - Futuristic & Clean */
+.follow-btn-nexus {
+    background: transparent;
+    border: 1px solid rgba(253, 224, 141, 0.4);
+    color: #fff;
+    padding: 4px 14px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(5px);
 }
 
-.follow-pill:hover {
-    background: var(--premium-gold);
+.follow-btn-nexus.active {
+    background: #fff;
     color: #000;
-    box-shadow: var(--gold-glow);
+    border-color: #fff;
 }
 
-/* Gift Button - Interactive Pulse */
-.gift-trigger {
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(135deg, #FF4757, #ff6b81);
-    border-radius: 50%;
+/* Premium Send Gift Button - Exact Design but Better */
+.gift-btn-nexus {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.1); /* Dark Glass Effect */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 10px;
+    border-radius: 10px;
     cursor: pointer;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
-    transition: 0.4s;
+    transition: 0.4s ease;
 }
 
-.gift-trigger i {
-    font-size: 12px;
-    color: white;
+.gift-btn-nexus:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--premium-gold);
+    transform: translateY(-1px);
 }
 
-.gift-trigger:hover {
-    transform: scale(1.1) rotate(15deg);
-    box-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+.gift-btn-nexus img {
+    width: 18px; /* Wannan hoton gift din ne */
+    height: 18px;
+    filter: drop-shadow(0 0 5px rgba(253, 224, 141, 0.5));
+}
+
+.gift-btn-nexus span {
+    font-size: 11px;
+    color: #efefef;
+    font-weight: 500;
 }
         
         
@@ -1004,6 +1009,7 @@ function generatePostHTML(post) {
     }
 
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
+    const giftIconUrl = "https://cdn-icons-png.flaticon.com/512/5607/5607833.png"; 
 
     return `
         <div class="post-card" onclick="toggleImmersive(this)">
@@ -1014,15 +1020,20 @@ function generatePostHTML(post) {
                 </div>
                 
                 <div class="header-actions" onclick="stopProp(event)">
-                    <div class="follow-pill" onclick="handleFollow('${post.username}', this)">Follow</div>
-                    <div class="gift-trigger" onclick="openGiftPanel('${post.username}')">
-                        <i class="fa-solid fa-gift"></i>
+                    <button class="follow-btn-nexus" onclick="handleFollow(this)">Follow</button>
+                    
+                    <div class="gift-btn-nexus" onclick="openGiftModal('${post.username}')">
+                        <img src="${giftIconUrl}" alt="gift">
+                        <span>Send gift</span>
                     </div>
                 </div>
             </div>
             
             <div class="post-content">${post.content}</div>
             ${mediaHTML}
+    `;
+                                            }
+                
         
             <div class="interaction-bar" onclick="stopProp(event)">
                 <div class="action-capsules">
@@ -1253,19 +1264,17 @@ document.addEventListener('click', function(e) {
 });
 
 
-function handleFollow(username, btn) {
-    if(btn.innerText === "FOLLOW") {
-        btn.innerText = "FOLLOWING";
-        btn.style.background = "rgba(80, 250, 123, 0.2)";
-        btn.style.borderColor = "var(--emerald-pulse)";
-        btn.style.color = "var(--emerald-pulse)";
+function handleFollow(btn) {
+    if (btn.innerText === "Follow") {
+        btn.innerText = "Following";
+        btn.classList.add('active'); // Wannan zai canza kalar button din
+        if (navigator.vibrate) navigator.vibrate(10);
     } else {
-        btn.innerText = "FOLLOW";
-        btn.style.background = "rgba(253, 224, 141, 0.1)";
-        btn.style.borderColor = "var(--premium-gold)";
-        btn.style.color = "var(--premium-gold)";
+        btn.innerText = "Follow";
+        btn.classList.remove('active');
     }
 }
+    
 
 function openGiftPanel(username) {
     // Nan gaba za mu iya bude wani panel na musamman
