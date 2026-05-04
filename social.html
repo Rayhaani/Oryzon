@@ -1149,7 +1149,7 @@ function generatePostHTML(post) {
         if (post.mediaType === 'video') {
             mediaHTML = `
                 <div style="position: relative;">
-                    <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
+                    <video src="${post.mediaUrl}" class="post-media" loop playsinline></video>
                     <div class="mute-toggle" onclick="toggleGlobalSound(event, this)">
                         <i class="fa-solid fa-volume-xmark"></i>
                     </div>
@@ -1157,8 +1157,8 @@ function generatePostHTML(post) {
         } else {
             mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
         }
-    }
-
+        }
+                           
     
    return `
     <div class="post-card" onclick="toggleImmersive(this)">
@@ -1437,57 +1437,46 @@ function openGiftPanel(username) {
       }
     
     
-    let isGlobalMuted = true;
+  // 1. Control State
+let isGlobalMuted = true;
 
-function toggleGlobalSound(event, btn) {
-    if (event) event.stopPropagation();
-    
-    isGlobalMuted = !isGlobalMuted;
-    
-    // Nemo duk wani video da yake gaban idon mutum (visible)
-    const allVideos = document.querySelectorAll('video');
-    allVideos.forEach(vid => {
-        // Sai bidiyon da yake bayyane kawai za mu taɓa
-        const rect = vid.getBoundingClientRect();
-        const isVisible = (rect.top >= 0 && rect.bottom <= window.innerHeight);
-        
-        if (isVisible) {
-            vid.muted = isGlobalMuted;
-            if (!isGlobalMuted) vid.play();
-        } else {
-            vid.muted = true; // Duk wanda ba a kansa ake ba ya yi shiru
-        }
-    });
-
-    // Gyara icons
-    document.querySelectorAll('.mute-toggle i').forEach(icon => {
-        icon.className = isGlobalMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
-    });
-}
-
-// WANNAN SHINE AIKIN DA ZAI RINKA KASHE SAUTIN IDAN KA WUCE VIDEO
+// 2. Wannan shi ne yake lura da scrolling
 const videoObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const vid = entry.target;
-        if (!entry.isIntersecting) {
-            // Idan mutum ya wuce bidiyon, kashe sauti kuma tsayar da shi
-            vid.pause();
-            vid.muted = true;
+        if (entry.isIntersecting) {
+            vid.play().catch(() => {}); // Fara wasa
+            vid.muted = isGlobalMuted;   // Bi ka'idar button din sauti
         } else {
-            // Idan bidiyon ya fito fili, kunna shi
-            vid.play();
-            // Idan kuma dama mutum ya kunna "Global Sound", to ya bar shi da sauti
-            vid.muted = isGlobalMuted;
+            vid.pause();                // Tsaya idan an wuce
+            vid.muted = true;           // Yi shiru
         }
     });
-}, { threshold: 0.6 }); // Sai bidiyon ya fito kashi 60% sannan zai yi aiki
+}, { threshold: 0.5 });
 
-// Wannan zai sa ido akan kowane sabon video da aka sa a Feed
+// 3. Wannan yana hada Observer da kowane video
 function observeVideos() {
     document.querySelectorAll('video').forEach(vid => {
         videoObserver.observe(vid);
     });
 }
+
+// 4. Button din kunne da kashe sauti (Sound Button)
+function toggleGlobalSound(event, btn) {
+    if (event) event.stopPropagation();
+    isGlobalMuted = !isGlobalMuted; // Canza state (On/Off)
+
+    // Canza sauti ga kowane video dake kan screen yanzu
+    document.querySelectorAll('video').forEach(vid => {
+        vid.muted = isGlobalMuted;
+    });
+
+    // Gyara dukkan icons din su zama iri daya
+    document.querySelectorAll('.mute-toggle i').forEach(icon => {
+        icon.className = isGlobalMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+    });
+    }
+                     
     
     
       
