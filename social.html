@@ -1162,37 +1162,39 @@ async function toggleSave(btn, postId) {
     }
 ];
 
-function renderNexusFeed() {
+
+async function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
+    
+    // 1. Kamo Saved Posts (Idan kana bukata)
+    try {
+        const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
+        userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
+    } catch(e) { console.log("No saved posts found"); }
 
+    // 2. Sauraren Firebase (Real-time)
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        let allPostsHTML = ''; 
+        let firebasePostsHTML = ''; 
 
-        // 1. POSTS DAGA FIREBASE
+        // Saka posts daga Firebase
         snapshot.forEach((doc) => {
-            const post = doc.data();
-            let mediaHTML = '';
-            if (post.mediaUrl) {
-                if (post.mediaType === 'video') {
-                    mediaHTML = `<video src="${post.mediaUrl}" class="post-media" autoplay loop muted playsinline></video>`;
-                } else {
-                    mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
-                }
-            }
-                    
-            allPostsHTML += generatePostHTML(post);
+            const post = { id: doc.id, ...doc.data() };
+            firebasePostsHTML += generatePostHTML(post);
         });
 
-        // 2. TSOFAFFIN POSTS (HARDCODED)
+        // 3. Saka hardcoded posts (Idan har yanzu kana son su fito a kasa)
+        let hardcodedHTML = '';
         nexusPosts.forEach(post => {
-            allPostsHTML += generatePostHTML(post);
+            hardcodedHTML += generatePostHTML(post);
         });
 
-        feedContainer.innerHTML = allPostsHTML;
+        // Zuba posts din kawai, ba tare da taba komai ba
+        feedContainer.innerHTML = firebasePostsHTML + hardcodedHTML;
     });
-}
+        }
 
 
+        
 
 
         async function renderNexusFeed() {
@@ -1288,6 +1290,10 @@ function renderNexusFeed() {
 window.onload = renderNexusFeed;
         
 
+
+
+        
+        
         // 1. Bude Overlay idan an danna icon na tsakiya a footer
 document.querySelector('.fa-square-plus').parentElement.onclick = function() {
         document.getElementById('postOverlay').style.display = 'flex';
