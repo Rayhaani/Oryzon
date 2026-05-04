@@ -1143,14 +1143,13 @@ function renderNexusFeed() {
 
 const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
 
-
-        function generatePostHTML(post) {
+function generatePostHTML(post) {
     let mediaHTML = '';
     if (post.mediaUrl) {
         if (post.mediaType === 'video') {
             mediaHTML = `
                 <div style="position: relative;">
-                    <video src="${post.mediaUrl}" class="post-media" loop playsinline muted></video>
+                    <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
                     <div class="mute-toggle" onclick="toggleGlobalSound(event, this)">
                         <i class="fa-solid fa-volume-xmark"></i>
                     </div>
@@ -1160,6 +1159,7 @@ const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></spa
         }
     }
 
+    
    return `
     <div class="post-card" onclick="toggleImmersive(this)">
         <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
@@ -1364,20 +1364,26 @@ db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
     snapshot.forEach((doc) => {
         const post = doc.data();
         
+        // 1. Fara gina sauran sassan post din (username, text)
         let mediaElement = "";
 
+        // 2. Duba idan akwai media kuma wanne iri ne
         if (post.mediaUrl) {
             if (post.mediaType === 'video') {
+                // Idan bidiyo ne, yi amfani da <video> tag
+
                 mediaElement = `
     <video autoplay loop muted playsinline class="post-media">
         <source src="${post.mediaUrl}" type="video/mp4">
     </video>`;
                 
             } else {
+                // Idan hoto ne, yi amfani da <img> tag
                 mediaElement = `<img src="${post.mediaUrl}" class="post-media" alt="Post Image">`;
             }
         }
 
+        // 3. Haɗa komai wuri guda
         html += `
             <div class="post-card">
                 <h3>${post.username}</h3>
@@ -1386,11 +1392,20 @@ db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         `;
     });
     document.getElementById('feedContainer').innerHTML = html;
-
-    // SAKA SHI A NAN (DAIDAI KASAN INNERHTML):
-    observeVideos(); 
 });
-    
+
+
+    // Idan an danna bidiyo ya yi play/pause kamar Instagram
+document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'VIDEO') {
+        if (e.target.paused) {
+            e.target.play();
+        } else {
+            e.target.pause();
+        }
+    }
+});
+
 
 function handleFollow(btn) {
     if (btn.innerText === "Follow") {
@@ -1410,47 +1425,29 @@ function openGiftPanel(username) {
       }
     
     
-    let isGlobalMuted = true;
-
-const videoObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        const vid = entry.target;
-        if (entry.isIntersecting) {
-            // Idan bidiyo ya shigo screen
-            vid.play().catch(error => console.log("Autoplay blocked"));
-            vid.muted = isGlobalMuted; // Ya dauki yanayin da ka saka a Global
-        } else {
-            // Idan an wuce bidiyo
-            vid.pause();
-            vid.muted = true;
-        }
-    });
-}, { threshold: 0.6 }); // Sai ya shigo kashi 60% sannan zai fara
-
-function observeVideos() {
-    document.querySelectorAll('video').forEach(vid => {
-        videoObserver.observe(vid);
-    });
-}
+    let isGlobalMuted = true; // A koda yaushe bidiyo yana farawa a kunne ba sauti
 
 function toggleGlobalSound(event, btn) {
-    if (event) event.stopPropagation();
-    isGlobalMuted = !isGlobalMuted;
+    if (event) event.stopPropagation(); // Don kar ya koma immersive mode
     
-    document.querySelectorAll('video').forEach(vid => {
-        // Kawai wanda yake a bayyane (visible) za mu budewa sauti
-        const rect = vid.getBoundingClientRect();
-        if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
-            vid.muted = isGlobalMuted;
-        }
+    isGlobalMuted = !isGlobalMuted; // Canja yanayin sauti
+    
+    const allVideos = document.querySelectorAll('video');
+    const allMuteIcons = document.querySelectorAll('.mute-toggle i');
+    
+    allVideos.forEach(vido => {
+        vido.muted = isGlobalMuted;
     });
 
-    // Gyara Icons
-    document.querySelectorAll('.mute-toggle i').forEach(icon => {
-        icon.className = isGlobalMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+    // Gyara kalar icons din duka su dace da yanayin da ake ciki
+    allMuteIcons.forEach(icon => {
+        if (isGlobalMuted) {
+            icon.classList.replace('fa-volume-high', 'fa-volume-xmark');
+        } else {
+            icon.classList.replace('fa-volume-xmark', 'fa-volume-high');
+        }
     });
-}
-    
+    }
     
       
     
