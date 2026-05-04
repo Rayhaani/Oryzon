@@ -1138,16 +1138,23 @@ function renderNexusFeed() {
         feedContainer.innerHTML = allPostsHTML;
     });
                                                                    }
-      function generatePostHTML(post) {
+       
+    function generatePostHTML(post) {
     let mediaHTML = '';
     if (post.mediaUrl) {
-        mediaHTML = post.mediaType === 'video' 
-            ? `<video src="${post.mediaUrl}" class="post-media" autoplay loop muted playsinline></video>`
-            : `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+        if (post.mediaType === 'video') {
+            mediaHTML = `
+                <div style="position: relative;">
+                    <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
+                    <div class="mute-toggle" onclick="toggleGlobalSound(event, this)">
+                        <i class="fa-solid fa-volume-xmark"></i>
+                    </div>
+                </div>`;
+        } else {
+            mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+        }
     }
-
-    const vBadge = `<span class="nexus-badge" style="display: inline-flex; align-items: center; margin-left: 4px; flex-shrink: 0;"><i class="fa-solid fa-check"></i></span>`;
-
+        
 
    return `
     <div class="post-card" onclick="toggleImmersive(this)">
@@ -1200,16 +1207,6 @@ function renderNexusFeed() {
         </div>`;
                                                  }
                         
-          
-if (post.mediaType === 'video') {
-    mediaHTML = `
-        <div style="position: relative;">
-            <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
-            <div class="mute-toggle" onclick="toggleGlobalSound(event, this)">
-                <i class="fa-solid fa-volume-xmark"></i>
-            </div>
-        </div>`;
-        }
         
 `<div class="username">
     ${post.username} 
