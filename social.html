@@ -377,6 +377,7 @@
     --glass-border: rgba(255, 255, 255, 0.1);
 }
 
+
 .nexus-footer {
             position: fixed; bottom: 0; width: 100%; height: 50px; 
             background: rgba(5, 5, 5, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -388,8 +389,7 @@
         .footer-icon { color: #fff; opacity: 0.5; cursor: pointer; height: 100%; width: 50px; display: flex; align-items: center; justify-content: center; }
         .footer-icon.active { opacity: 1; filter: drop-shadow(0 0 5px var(--cyan-neon)); }
         .profile-img { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #fff; object-fit: cover; }
-        
-        
+                
 
         .earning-badge {
     font-size: 10px;
@@ -1291,87 +1291,60 @@ function previewMedia(input) {
               
   
 
-  // 1. Zuba asalin scripts na Firebase a nan
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+</script> <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
 <script>
-  // 2. Saita Configuration din Oryzon Cloud
+  // 2. Saita Configuration (Ba a canza komai ba anan)
   const firebaseConfig = {
     apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
     authDomain: "oryzon-50ea4.firebaseapp.com",
     projectId: "oryzon-50ea4",
     storageBucket: "oryzon-50ea4.firebasestorage.app",
     messagingSenderId: "782106742622",
-    appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
-    measurementId: "G-K5085DLL2W"
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
   };
 
-  firebase.initializeApp(firebaseConfig);
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
   const db = firebase.firestore();
-  const storage = firebase.storage();
-  const analytics = firebase.analytics();
 
-  console.log("Oryzon Cloud is now active! 🚀");
+  // 3. Kira aikin Feed da zarar an gama loda duka abubuwan page din
+  window.addEventListener('load', () => {
+      renderNexusFeed();
+  });
 
-  // 3. Kira aikin Feed bayan an kunna Firebase
-  renderNexusFeed();
+  // 4. Scroll Logic don Footer dinka ta rinka fita tana dawowa yadda ka tsara a CSS
+  let lastScrollTop = 0;
+  const footer = document.getElementById('instaFooter');
+  
+  window.addEventListener('scroll', () => {
+      // Idan kana cikin immersive mode (full screen), kar mu taba footer
+      if (document.querySelector('.immersive-mode')) return;
 
+      let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
+      if (scrollTop > lastScrollTop) { 
+          // Idan ana tafiya kasa, sanya class din da ka riga ka tsara
+          footer.classList.add('footer-hidden'); 
+      } else { 
+          // Idan ana dawowa sama, cire shi
+          footer.classList.remove('footer-hidden'); 
+      }
+      lastScrollTop = scrollTop;
+  });
 
+  // 5. Video Play/Pause (Kamar Instagram)
+  document.addEventListener('click', function(e) {
+      if (e.target.tagName === 'VIDEO') {
+          if (e.target.paused) e.target.play();
+          else e.target.pause();
+      }
+  });
 
-    // Misali yayin da kake loop din posts dinka daga Firestore
-db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-    let html = "";
-    snapshot.forEach((doc) => {
-        const post = doc.data();
-        
-        // 1. Fara gina sauran sassan post din (username, text)
-        let mediaElement = "";
-
-        // 2. Duba idan akwai media kuma wanne iri ne
-        if (post.mediaUrl) {
-            if (post.mediaType === 'video') {
-                // Idan bidiyo ne, yi amfani da <video> tag
-
-                mediaElement = `
-    <video autoplay loop muted playsinline class="post-media">
-        <source src="${post.mediaUrl}" type="video/mp4">
-    </video>`;
-                
-            } else {
-                // Idan hoto ne, yi amfani da <img> tag
-                mediaElement = `<img src="${post.mediaUrl}" class="post-media" alt="Post Image">`;
-            }
-        }
-
-        // 3. Haɗa komai wuri guda
-        html += `
-            <div class="post-card">
-                <h3>${post.username}</h3>
-                <p>${post.content}</p>
-                ${mediaElement} </div>
-        `;
-    });
-    document.getElementById('feedContainer').innerHTML = html;
-});
-
-
-    // Idan an danna bidiyo ya yi play/pause kamar Instagram
-document.addEventListener('click', function(e) {
-    if (e.target.tagName === 'VIDEO') {
-        if (e.target.paused) {
-            e.target.play();
-        } else {
-            e.target.pause();
-        }
-    }
-});
-
-
+      
 function handleFollow(btn) {
     if (btn.innerText === "Follow") {
         btn.innerText = "Following";
