@@ -787,6 +787,29 @@ header {
     display: block;
     text-transform: lowercase; /* Kamar yadda Instagram yake yi */
          }
+
+
+         /* Mute Toggle Button Style */
+.mute-toggle {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    z-index: 100;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mute-toggle i {
+    font-size: 14px;
+}
          
     </style>
 </head>
@@ -1115,18 +1138,28 @@ function renderNexusFeed() {
         feedContainer.innerHTML = allPostsHTML;
     });
                                                                    }
-      function generatePostHTML(post) {
+            
+         // 1. Ka tabbatar ka saka wannan layin a saman generatePostHTML
+const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
+
+function generatePostHTML(post) {
     let mediaHTML = '';
     if (post.mediaUrl) {
-        mediaHTML = post.mediaType === 'video' 
-            ? `<video src="${post.mediaUrl}" class="post-media" autoplay loop muted playsinline></video>`
-            : `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+        if (post.mediaType === 'video') {
+            mediaHTML = `
+                <div style="position: relative;">
+                    <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
+                    <div class="mute-toggle" onclick="toggleGlobalSound(event, this)">
+                        <i class="fa-solid fa-volume-xmark"></i>
+                    </div>
+                </div>`;
+        } else {
+            mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+        }
     }
 
-    const vBadge = `<span class="nexus-badge" style="display: inline-flex; align-items: center; margin-left: 4px; flex-shrink: 0;"><i class="fa-solid fa-check"></i></span>`;
-
-
-   return `
+      
+            return `
     <div class="post-card" onclick="toggleImmersive(this)">
         <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
             
@@ -1391,7 +1424,30 @@ function openGiftPanel(username) {
       }
     
     
+    let isGlobalMuted = true; // A koda yaushe bidiyo yana farawa a kunne ba sauti
+
+function toggleGlobalSound(event, btn) {
+    if (event) event.stopPropagation(); // Don kar ya koma immersive mode
     
+    isGlobalMuted = !isGlobalMuted; // Canja yanayin sauti
+    
+    const allVideos = document.querySelectorAll('video');
+    const allMuteIcons = document.querySelectorAll('.mute-toggle i');
+    
+    allVideos.forEach(vido => {
+        vido.muted = isGlobalMuted;
+    });
+
+    // Gyara kalar icons din duka su dace da yanayin da ake ciki
+    allMuteIcons.forEach(icon => {
+        if (isGlobalMuted) {
+            icon.classList.replace('fa-volume-high', 'fa-volume-xmark');
+        } else {
+            icon.classList.replace('fa-volume-xmark', 'fa-volume-high');
+        }
+    });
+    }
+        
       
     
     </script>
