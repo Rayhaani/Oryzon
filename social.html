@@ -1391,33 +1391,35 @@ function openGiftPanel(username) {
     alert("Kyautar NT tokens tana kan hanya zuwa ga " + username);
       }
     
-    
-     let currentlyPlayingVideo = null;
+  let currentlyPlayingVideo = null;
 
 const videoObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const vid = entry.target;
 
         if (entry.isIntersecting) {
-            // Tsayar da video na baya, kashe sautinsa
+            // Tsayar da video na baya TARE da kashe sautinsa nan take
             if (currentlyPlayingVideo && currentlyPlayingVideo !== vid) {
                 currentlyPlayingVideo.pause();
                 currentlyPlayingVideo.muted = true;
+                currentlyPlayingVideo.currentTime = 0;
                 const prevCard = currentlyPlayingVideo.closest('.post-card');
                 if (prevCard) {
                     const prevIcon = prevCard.querySelector('.mute-toggle i');
                     if (prevIcon) prevIcon.className = 'fa-solid fa-volume-xmark';
                 }
             }
-            // Buga sabon video - muted
+
+            // Sabon video ya shiga - muted koyaushe
             vid.muted = true;
             vid.play().catch(() => {});
             currentlyPlayingVideo = vid;
 
         } else {
-            // Video ya fita screen - kashe shi gaba daya
-            vid.pause();
+            // *** WANNAN SHINE GYARAN ASALI ***
+            // Da zaran video ya FITA screen ko kadan - kashe sauti NAN TAKE
             vid.muted = true;
+            vid.pause();
             vid.currentTime = 0;
             const card = vid.closest('.post-card');
             if (card) {
@@ -1427,8 +1429,12 @@ const videoObserver = new IntersectionObserver((entries) => {
             if (currentlyPlayingVideo === vid) currentlyPlayingVideo = null;
         }
     });
-}, { threshold: 0.6 });
-
+}, { 
+    threshold: [0, 0.1]  // *** WANNAN SHINE BABBAN GYARAN ***
+                         // 0 = Da zaran pixel DAYA ya fita, kashe sauti
+                         // Kafin: 0.6 = Yana jira kashi 60% ya fita kafin ya kashe
+});  
+    
 
 function toggleVideoSound(event, btn) {
     if (event) event.stopPropagation();
@@ -1455,7 +1461,7 @@ function toggleVideoSound(event, btn) {
 }   
 
     
-      
+       
     
     </script>
 </body>
