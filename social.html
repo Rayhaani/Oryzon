@@ -1161,7 +1161,7 @@ async function renderNexusFeed() {
         if (post.mediaType === 'video') {
             mediaHTML = `
                 <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
-                <div class="mute-toggle" onclick="toggleGlobalSound(event, this)" style="position: absolute; bottom: 65px; right: 15px; z-index: 100;">
+                <div class="mute-toggle" onclick="toggleVideoSound(event, this)" style="position: absolute; bottom: 65px; right: 15px; z-index: 100;">
                     <i class="fa-solid fa-volume-xmark"></i>
                 </div>`;
         } else {
@@ -1391,44 +1391,69 @@ function openGiftPanel(username) {
     alert("Kyautar NT tokens tana kan hanya zuwa ga " + username);
       }
     
-    let isGlobalMuted = true; // A koda yaushe bidiyo yana farawa a kunne ba sauti
-
-function toggleGlobalSound(event, btn) {
-    if (event) event.stopPropagation(); // Don kar ya koma immersive mode
     
-    isGlobalMuted = !isGlobalMuted; // Canja yanayin sauti
-    
-    const allVideos = document.querySelectorAll('video');
-    const allMuteIcons = document.querySelectorAll('.mute-toggle i');
-    
-    allVideos.forEach(vido => {
-        vido.muted = isGlobalMuted;
-    });
+     let currentlyPlayingVideo = null;
 
-    // Gyara kalar icons din duka su dace da yanayin da ake ciki
-    allMuteIcons.forEach(icon => {
-        if (isGlobalMuted) {
-            icon.classList.replace('fa-volume-high', 'fa-volume-xmark');
-        } else {
-            icon.classList.replace('fa-volume-xmark', 'fa-volume-high');
-        }
-    });
-    }
-        
-
-    const videoObserver = new IntersectionObserver((entries) => {
+const videoObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const vid = entry.target;
+
         if (entry.isIntersecting) {
-            vid.play().catch(() => {}); 
-            vid.muted = isGlobalMuted; 
+            // Tsayar da video na baya, kashe sautinsa
+            if (currentlyPlayingVideo && currentlyPlayingVideo !== vid) {
+                currentlyPlayingVideo.pause();
+                currentlyPlayingVideo.muted = true;
+                const prevCard = currentlyPlayingVideo.closest('.post-card');
+                if (prevCard) {
+                    const prevIcon = prevCard.querySelector('.mute-toggle i');
+                    if (prevIcon) prevIcon.className = 'fa-solid fa-volume-xmark';
+                }
+            }
+            // Buga sabon video - muted
+            vid.muted = true;
+            vid.play().catch(() => {});
+            currentlyPlayingVideo = vid;
+
         } else {
-            vid.pause(); // Tsayar da bidiyo
-            vid.currentTime = 0; // Maida shi farko (Optional)
-            vid.muted = true; // Kashe sauti
+            // Video ya fita screen - kashe shi gaba daya
+            vid.pause();
+            vid.muted = true;
+            vid.currentTime = 0;
+            const card = vid.closest('.post-card');
+            if (card) {
+                const icon = card.querySelector('.mute-toggle i');
+                if (icon) icon.className = 'fa-solid fa-volume-xmark';
+            }
+            if (currentlyPlayingVideo === vid) currentlyPlayingVideo = null;
         }
     });
-}, { threshold: 0.2 }); // Da zaran kashi 80% ya fita, ya mutu
+}, { threshold: 0.6 });
+
+
+function toggleVideoSound(event, btn) {
+    if (event) event.stopPropagation();
+    const card = btn.closest('.post-card');
+    const vid = card ? card.querySelector('video') : null;
+    if (!vid) return;
+    const icon = btn.querySelector('i');
+
+    if (vid.muted) {
+        // Kashe sauti na duk sauran videos
+        document.querySelectorAll('video').forEach(other => {
+            if (other !== vid) {
+                other.muted = true;
+                const otherIcon = other.closest('.post-card')?.querySelector('.mute-toggle i');
+                if (otherIcon) otherIcon.className = 'fa-solid fa-volume-xmark';
+            }
+        });
+        vid.muted = false;
+        icon.className = 'fa-solid fa-volume-high';
+    } else {
+        vid.muted = true;
+        icon.className = 'fa-solid fa-volume-xmark';
+    }
+}   
+
     
       
     
