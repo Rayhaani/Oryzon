@@ -1391,14 +1391,16 @@ function openGiftPanel(username) {
     alert("Kyautar NT tokens tana kan hanya zuwa ga " + username);
       }
     
-  let currentlyPlayingVideo = null;
+  // Tracker guda biyu - wane video ke playing, da yanayin sound
+let currentlyPlayingVideo = null;
+let globalSoundOn = false; // FALSE = muted, TRUE = sound yana kunna
 
 const videoObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const vid = entry.target;
 
         if (entry.isIntersecting) {
-            // Tsayar da video na baya TARE da kashe sautinsa nan take
+            // 1. Tsayar da video na baya
             if (currentlyPlayingVideo && currentlyPlayingVideo !== vid) {
                 currentlyPlayingVideo.pause();
                 currentlyPlayingVideo.muted = true;
@@ -1410,16 +1412,26 @@ const videoObserver = new IntersectionObserver((entries) => {
                 }
             }
 
-            // Sabon video ya shiga - muted koyaushe
-            vid.muted = true;
+            // 2. Buga sabon video - tare da yanayin sound na yanzu
+            vid.muted = !globalSoundOn; // Idan sound yana on, sabon video ya yi sauti kai tsaye
             vid.play().catch(() => {});
             currentlyPlayingVideo = vid;
 
+            // 3. Gyara icon din sabon video ya nuna yanayin daidai
+            const card = vid.closest('.post-card');
+            if (card) {
+                const icon = card.querySelector('.mute-toggle i');
+                if (icon) {
+                    icon.className = globalSoundOn 
+                        ? 'fa-solid fa-volume-high' 
+                        : 'fa-solid fa-volume-xmark';
+                }
+            }
+
         } else {
-            // *** WANNAN SHINE GYARAN ASALI ***
-            // Da zaran video ya FITA screen ko kadan - kashe sauti NAN TAKE
-            vid.muted = true;
+            // Video ya fita - tsayar da shi kawai, ba sauyi sound state ba
             vid.pause();
+            vid.muted = true;
             vid.currentTime = 0;
             const card = vid.closest('.post-card');
             if (card) {
@@ -1429,11 +1441,7 @@ const videoObserver = new IntersectionObserver((entries) => {
             if (currentlyPlayingVideo === vid) currentlyPlayingVideo = null;
         }
     });
-}, { 
-    threshold: [0, 0.1]  // *** WANNAN SHINE BABBAN GYARAN ***
-                         // 0 = Da zaran pixel DAYA ya fita, kashe sauti
-                         // Kafin: 0.6 = Yana jira kashi 60% ya fita kafin ya kashe
-});  
+}, { threshold: [0, 0.1] });
 
 
 function toggleVideoSound(event, btn) {
@@ -1443,8 +1451,11 @@ function toggleVideoSound(event, btn) {
     if (!vid) return;
     const icon = btn.querySelector('i');
 
-    if (vid.muted) {
-        // Kashe sauti na duk sauran videos
+    // Canza global sound state
+    globalSoundOn = !globalSoundOn;
+
+    if (globalSoundOn) {
+        // Kashe sauti na duk sauran videos da suke a baya
         document.querySelectorAll('video').forEach(other => {
             if (other !== vid) {
                 other.muted = true;
@@ -1452,26 +1463,25 @@ function toggleVideoSound(event, btn) {
                 if (otherIcon) otherIcon.className = 'fa-solid fa-volume-xmark';
             }
         });
+        // Kunna sauti na wannan video
         vid.muted = false;
         icon.className = 'fa-solid fa-volume-high';
     } else {
+        // Kashe sauti - reset global state
         vid.muted = true;
         icon.className = 'fa-solid fa-volume-xmark';
     }
-}   
+}
 
-    
 
-    function observeVideos() {
-    // Cire tsofaffin observations kafin a fara sababbi
+function observeVideos() {
     videoObserver.disconnect();
-    
-    // Kalli duk videos da suke a page yanzu
     document.querySelectorAll('video').forEach(vid => {
-        vid.muted = true; // Tabbatar sun fara muted
-        videoObserver.observe(vid); // Saka observer akan kowannensu
+        vid.muted = true;
+        videoObserver.observe(vid);
     });
-    }
+}
+
     
     </script>
 </body>
