@@ -1350,6 +1350,8 @@ function previewMedia(input) {
 
 
     // Misali yayin da kake loop din posts dinka daga Firestore
+
+
 db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
     let html = "";
     snapshot.forEach((doc) => {
@@ -1386,6 +1388,10 @@ db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
 });
 
 
+    observeVideos(); 
+});
+    
+
     // Idan an danna bidiyo ya yi play/pause kamar Instagram
 document.addEventListener('click', function(e) {
     if (e.target.tagName === 'VIDEO') {
@@ -1397,8 +1403,9 @@ document.addEventListener('click', function(e) {
     }
 });
 
-
-function handleFollow(btn) {
+    
+    
+    function handleFollow(btn) {
     if (btn.innerText === "Follow") {
         btn.innerText = "Following";
         btn.classList.add('active'); // Wannan zai canza kalar button din
@@ -1439,6 +1446,27 @@ function toggleGlobalSound(event, btn) {
     });
     }
         
+
+    const videoObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const vid = entry.target;
+        if (entry.isIntersecting) {
+            // Idan bidiyon ya fito fili
+            vid.play().catch(() => {}); 
+            vid.muted = isGlobalMuted; 
+        } else {
+            // Idan an wuce bidiyon (Wannan shi ne zai kashe shi)
+            vid.pause();
+            vid.muted = true;
+        }
+    });
+}, { threshold: 0.5 }); // Kashi 50% na bidiyon ya shiga/fita zai yi aiki
+
+function observeVideos() {
+    document.querySelectorAll('video').forEach(vid => {
+        videoObserver.observe(vid);
+    });
+}
     
       
     
