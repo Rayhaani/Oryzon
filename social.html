@@ -1351,41 +1351,42 @@ function previewMedia(input) {
 
     // Misali yayin da kake loop din posts dinka daga Firestore
 
-
 db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
     let html = "";
     snapshot.forEach((doc) => {
         const post = doc.data();
         
-        // 1. Fara gina sauran sassan post din (username, text)
         let mediaElement = "";
 
-        // 2. Duba idan akwai media kuma wanne iri ne
         if (post.mediaUrl) {
             if (post.mediaType === 'video') {
-                // Idan bidiyo ne, yi amfani da <video> tag
-
+                // Mun bar shi yadda yake
                 mediaElement = `
     <video autoplay loop muted playsinline class="post-media">
         <source src="${post.mediaUrl}" type="video/mp4">
     </video>`;
                 
             } else {
-                // Idan hoto ne, yi amfani da <img> tag
                 mediaElement = `<img src="${post.mediaUrl}" class="post-media" alt="Post Image">`;
             }
         }
 
-        // 3. Haɗa komai wuri guda
         html += `
             <div class="post-card">
                 <h3>${post.username}</h3>
                 <p>${post.content}</p>
-                ${mediaElement} </div>
+                ${mediaElement} 
+            </div>
         `;
     });
+    
+    // 1. Saka HTML din a page
     document.getElementById('feedContainer').innerHTML = html;
+
+    // 2. WANNAN SHINE LAYIN DA ZAI TSAYAR DA VIDEO IDAN AN WUCE (Kada ka manta shi)
+    observeVideos(); 
 });
+      
 
 
     
