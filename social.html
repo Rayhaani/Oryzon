@@ -1120,24 +1120,35 @@ function renderNexusFeed() {
 
 
 
-
-        async function renderNexusFeed() {
+async function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
     
-    // 1. Kamo duk abubuwan da Sadiq ya adana a Database tun kafin mu nuna posts
-    const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
-    userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
+    // 1. Kamo Saved Posts (Optional)
+    try {
+        const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
+        userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
+    } catch(e) { console.log(e) }
 
-    // 2. Sauran code dinka na Firestore snapshot yana nan yadda yake...
+    // 2. Babban Snapshot na Posts
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         let allPostsHTML = ''; 
+        
         snapshot.forEach((doc) => {
-            const post = { id: doc.id, ...doc.data() }; // Tabbatar muna da ID
+            const post = { id: doc.id, ...doc.data() };
             allPostsHTML += generatePostHTML(post);
         });
+
+        // Saka posts a page
         feedContainer.innerHTML = allPostsHTML;
+        
+        // MAFI MUHIMMANCI: Saka musu ido yanzu
+        setTimeout(() => {
+            observeVideos();
+        }, 300); // Mun dan jira kadan domin HTML din ya zauna daram
     });
-                                                                   }
+}
+        
+        
             
          
      
@@ -1349,48 +1360,7 @@ function previewMedia(input) {
 
 
 
-    // Misali yayin da kake loop din posts dinka daga Firestore
-
-db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-    let html = "";
-    snapshot.forEach((doc) => {
-        const post = doc.data();
-        
-        let mediaElement = "";
-
-        if (post.mediaUrl) {
-            if (post.mediaType === 'video') {
-                // Mun bar shi yadda yake
-                mediaElement = `
-    <video autoplay loop muted playsinline class="post-media">
-        <source src="${post.mediaUrl}" type="video/mp4">
-    </video>`;
-                
-            } else {
-                mediaElement = `<img src="${post.mediaUrl}" class="post-media" alt="Post Image">`;
-            }
-        }
-
-        html += `
-            <div class="post-card">
-                <h3>${post.username}</h3>
-                <p>${post.content}</p>
-                ${mediaElement} 
-            </div>
-        `;
-    });
     
-    // 1. Saka HTML din a page
-    document.getElementById('feedContainer').innerHTML = html;
-
-    // 2. WANNAN SHINE LAYIN DA ZAI TSAYAR DA VIDEO IDAN AN WUCE (Kada ka manta shi)
-    observeVideos(); 
-});
-      
-
-
-    
-
     // Idan an danna bidiyo ya yi play/pause kamar Instagram
 document.addEventListener('click', function(e) {
     if (e.target.tagName === 'VIDEO') {
@@ -1450,22 +1420,15 @@ function toggleGlobalSound(event, btn) {
     entries.forEach(entry => {
         const vid = entry.target;
         if (entry.isIntersecting) {
-            // Idan bidiyon ya fito fili
             vid.play().catch(() => {}); 
             vid.muted = isGlobalMuted; 
         } else {
-            // Idan an wuce bidiyon (Wannan shi ne zai kashe shi)
-            vid.pause();
-            vid.muted = true;
+            vid.pause(); // Tsayar da bidiyo
+            vid.currentTime = 0; // Maida shi farko (Optional)
+            vid.muted = true; // Kashe sauti
         }
     });
-}, { threshold: 0.5 }); // Kashi 50% na bidiyon ya shiga/fita zai yi aiki
-
-function observeVideos() {
-    document.querySelectorAll('video').forEach(vid => {
-        videoObserver.observe(vid);
-    });
-}
+}, { threshold: 0.2 }); // Da zaran kashi 80% ya fita, ya mutu
     
       
     
