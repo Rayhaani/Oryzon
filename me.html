@@ -207,33 +207,29 @@
         </div>
 
         <script>
-            
-    // --- FIREBASE SETUP (MUHIMMI) ---
     const firebaseConfig = {
-        apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-        authDomain: "oryzon-50ea4.firebaseapp.com",
-        projectId: "oryzon-50ea4",
-        storageBucket: "oryzon-50ea4.firebasestorage.app",
-        messagingSenderId: "782106742622",
-        appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
-        measurementId: "G-K5085DLL2W"
+      apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+      authDomain: "oryzon-50ea4.firebaseapp.com",
+      projectId: "oryzon-50ea4",
+      storageBucket: "oryzon-50ea4.firebasestorage.app",
+      messagingSenderId: "782106742622",
+      appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+      measurementId: "G-K5085DLL2W"
     };
 
-    // Fara Firebase
+    // Fara Firebase idan bai tashi ba
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
 
-    // --- DAWO DA HOTO IDAN AN GOGE DATA ---
+    // WANNAN ZAI DAWO MA DA HOTON DAGA DATABASE KO AN GOGE DATA
     window.onload = async function() {
-        // Nuna na jikin waya tukunna don sauri
         const savedCover = localStorage.getItem('userCover');
         const savedProfile = localStorage.getItem('userProfilePic');
         if (savedCover) document.getElementById('main-cover-img').src = savedCover;
         if (savedProfile) document.getElementById('main-profile-img').src = savedProfile;
 
-        // Kwaso daga Database dindindin
         try {
             const doc = await db.collection('users').doc('Sadiq_Alhassan').get();
             if (doc.exists) {
@@ -247,10 +243,9 @@
                     localStorage.setItem('userCover', data.userCover);
                 }
             }
-        } catch (e) { console.log("Database connection slow..."); }
+        } catch (e) { console.log("Waiting for connection..."); }
     };
 
-    // --- AJIYE HOTO A DATABASE ---
     async function updatePhoto(event, type) {
         const file = event.target.files[0];
         if (!file) return;
@@ -259,34 +254,30 @@
         document.getElementById(imgId).style.opacity = "0.5";
 
         try {
+            // 1. TURA HOTON CLOUDINARY (STORAGE)
             const cloudName = "diixjieyp";
             const uploadPreset = "oryzon_media"; 
-
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', uploadPreset);
 
             const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-                method: 'POST',
-                body: formData
+                method: 'POST', body: formData
             });
 
-            if (!response.ok) throw new Error("Cloudinary error");
             const data = await response.json();
-            const secureUrl = data.secure_url;
+            const secureUrl = data.secure_url; // Link din hoto daga Cloudinary
 
-            // 1. Ajiye a Database dindindin
+            // 2. AJIYE LINK DIN A FIRESTORE (DATABASE)
             const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
             await db.collection('users').doc('Sadiq_Alhassan').set({
                 [storageKey]: secureUrl
             }, { merge: true });
 
-            // 2. Ajiye a waya (Local Storage)
             localStorage.setItem(storageKey, secureUrl);
-
             document.getElementById(imgId).src = secureUrl;
             document.getElementById(imgId).style.opacity = "1";
-            alert("Success! Hotonka ya zauna dindindin. 🚀");
+            alert("An ajiye hoton Cloudinary a Database dindindin! ✅");
 
         } catch (error) {
             alert("Matsala: " + error.message);
@@ -311,24 +302,8 @@
         localStorage.removeItem(storageKey);
         document.getElementById(type + '-menu').classList.add('hidden');
     }
-
-    function switchTab(tab) {
-        const sArea = document.getElementById('showcase-area');
-        const tArea = document.getElementById('timeline-area');
-        const bS = document.getElementById('btn-showcase');
-        const bT = document.getElementById('btn-timeline');
-        if (tab === 'showcase') {
-            sArea.classList.remove('hidden'); tArea.classList.add('hidden');
-            bS.className = 'btn-slim btn-white'; bT.className = 'btn-slim btn-trans';
-        } else {
-            sArea.classList.add('hidden'); tArea.classList.remove('hidden');
-            bT.className = 'btn-slim btn-white'; bS.className = 'btn-slim btn-trans';
-        }
-    }
-
-        
-            
         </script>
+        
     </main>
 </body>
     </html>
