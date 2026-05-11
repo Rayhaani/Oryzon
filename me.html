@@ -222,19 +222,14 @@
 
 
         
-const db = firebase.firestore(); 
-            
-            async function updatePhoto(event, type) {
+async function updatePhoto(event, type) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Nuna wa mutum ana aiki (Loading)
     const imgId = type === 'cover' ? 'main-cover-img' : 'main-profile-img';
-    const originalSrc = document.getElementById(imgId).src;
     document.getElementById(imgId).style.opacity = "0.5";
 
     try {
-        // 1. Bayanan Cloudinary dinka
         const cloudName = "diixjieyp";
         const uploadPreset = "oryzon_media"; 
 
@@ -242,7 +237,6 @@ const db = firebase.firestore();
         formData.append('file', file);
         formData.append('upload_preset', uploadPreset);
 
-        // 2. Tura hoton zuwa Cloudinary
         const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
             method: 'POST',
             body: formData
@@ -251,41 +245,37 @@ const db = firebase.firestore();
         if (!response.ok) throw new Error("Cloudinary upload failed");
 
         const data = await response.json();
-        const secureUrl = data.secure_url; // Wannan shi ne link din hoton
+        const secureUrl = data.secure_url;
 
-        // 3. WANNAN SHI NE MUHIMMIN SASHE:
-        // Mun haddace link din a wayarka domin publishPost ya dauka
         const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
         localStorage.setItem(storageKey, secureUrl);
 
-        // ... (bayan Cloudinary ya dawo da data.secure_url)
-
-if (data.secure_url) {
-    const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
-    localStorage.setItem(storageKey, data.secure_url);
-
-    // --- SABON GYARA: Tura shi Firestore ---
-    // Mun dauka kana da 'db' (Firestore instance) da kuma 'userId'
-    const userRef = db.collection('users').doc(userId); // Ko kuma yadda kake kiran User dinka
-    await userRef.update({
-        [storageKey]: data.secure_url
-    });
-    // ---------------------------------------
-
-    document.getElementById(imgId).src = data.secure_url;
-    alert("An sabunta hoton ka cikin nasara! 🚀");
-}
+        // --- GYARAN FIRESTORE ---
+        // 1. Mun kira Firebase a nan domin gujewa "initialization error"
+        const db = firebase.firestore(); 
         
+        // 2. Mun yi amfani da sunanka a matsayin doc ID maimakon 'userId' da babu shi
+        const userRef = db.collection('users').doc('Sadiq_Alhassan'); 
+        
+        await userRef.set({
+            [storageKey]: secureUrl
+        }, { merge: true }); // Merge: true zai sa kar ya goge hoton dake nan idan ka canja daya
+        // ------------------------
+
+        document.getElementById(imgId).src = secureUrl;
+        document.getElementById(imgId).style.opacity = "1";
+        alert("An sabunta hoton ka a Firestore dindindin! 🚀");
 
     } catch (error) {
         console.error(error);
-        alert("An samu matsala wajen upload: " + error.message);
+        alert("An samu matsala: " + error.message);
         document.getElementById(imgId).style.opacity = "1";
     }
 
-    // Rufe menu
     document.getElementById(type + '-menu').classList.add('hidden');
-    }
+}
+            
+            
             
 
            function removePhoto(type) {
