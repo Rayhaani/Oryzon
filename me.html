@@ -218,17 +218,56 @@
                 menu.classList.toggle('hidden');
             }
 
-            function updatePhoto(event, type) {
-                const reader = new FileReader();
-                const imgId = type === 'cover' ? 'main-cover-img' : 'main-profile-img';
-                const storageKey = type === 'cover' ? 'userCover' : 'userProfile';
-                reader.onload = function() {
-                    document.getElementById(imgId).src = reader.result;
-                    localStorage.setItem(storageKey, reader.result);
-                }
-                if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
-                document.getElementById(type + '-menu').classList.add('hidden');
-            }
+            async function updatePhoto(event, type) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Nuna wa mutum ana aiki (Loading)
+    const imgId = type === 'cover' ? 'main-cover-img' : 'main-profile-img';
+    const originalSrc = document.getElementById(imgId).src;
+    document.getElementById(imgId).style.opacity = "0.5";
+
+    try {
+        // 1. Bayanan Cloudinary dinka
+        const cloudName = "diixjieyp";
+        const uploadPreset = "oryzon_media"; 
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', uploadPreset);
+
+        // 2. Tura hoton zuwa Cloudinary
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) throw new Error("Cloudinary upload failed");
+
+        const data = await response.json();
+        const secureUrl = data.secure_url; // Wannan shi ne link din hoton
+
+        // 3. WANNAN SHI NE MUHIMMIN SASHE:
+        // Mun haddace link din a wayarka domin publishPost ya dauka
+        const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
+        localStorage.setItem(storageKey, secureUrl);
+
+        // 4. Sabunta hoton dake nuna a screen
+        document.getElementById(imgId).src = secureUrl;
+        document.getElementById(imgId).style.opacity = "1";
+
+        alert("An sabunta hoton ka cikin nasara! 🚀");
+
+    } catch (error) {
+        console.error(error);
+        alert("An samu matsala wajen upload: " + error.message);
+        document.getElementById(imgId).style.opacity = "1";
+    }
+
+    // Rufe menu
+    document.getElementById(type + '-menu').classList.add('hidden');
+    }
+            
 
             function removePhoto(type) {
                 const imgId = type === 'cover' ? 'main-cover-img' : 'main-profile-img';
