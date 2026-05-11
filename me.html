@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
     <style>
         :root { --neon: #00f2fe; --glow: rgba(0, 242, 254, 0.4); --bg: #050505; }
         body { 
@@ -207,42 +208,49 @@
 
         <script>
             
-    // 1. WANNAN SHI NE MAI DAWO DA HOTONKA KO AN GOGE DATA
-    window.onload = function() {
-        // Da farko nuna abinda ke cikin wayar (don sauri)
+    // --- FIREBASE SETUP (MUHIMMI) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+        authDomain: "oryzon-50ea4.firebaseapp.com",
+        projectId: "oryzon-50ea4",
+        storageBucket: "oryzon-50ea4.firebasestorage.app",
+        messagingSenderId: "782106742622",
+        appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+        measurementId: "G-K5085DLL2W"
+    };
+
+    // Fara Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // --- DAWO DA HOTO IDAN AN GOGE DATA ---
+    window.onload = async function() {
+        // Nuna na jikin waya tukunna don sauri
         const savedCover = localStorage.getItem('userCover');
         const savedProfile = localStorage.getItem('userProfilePic');
         if (savedCover) document.getElementById('main-cover-img').src = savedCover;
         if (savedProfile) document.getElementById('main-profile-img').src = savedProfile;
 
-        // Sannan kaje Database ka kwaso ainihin hoton dindindin
-        // Muna jira na sakan 1 don tabbatar Firebase ya tashi
-        setTimeout(async () => {
-            try {
-                const db = firebase.firestore();
-                const doc = await db.collection('users').doc('Sadiq_Alhassan').get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    if (data.userProfilePic) {
-                        document.getElementById('main-profile-img').src = data.userProfilePic;
-                        localStorage.setItem('userProfilePic', data.userProfilePic);
-                    }
-                    if (data.userCover) {
-                        document.getElementById('main-cover-img').src = data.userCover;
-                        localStorage.setItem('userCover', data.userCover);
-                    }
+        // Kwaso daga Database dindindin
+        try {
+            const doc = await db.collection('users').doc('Sadiq_Alhassan').get();
+            if (doc.exists) {
+                const data = doc.data();
+                if (data.userProfilePic) {
+                    document.getElementById('main-profile-img').src = data.userProfilePic;
+                    localStorage.setItem('userProfilePic', data.userProfilePic);
                 }
-            } catch (e) { console.log("Database not ready yet"); }
-        }, 1500);
-    }
+                if (data.userCover) {
+                    document.getElementById('main-cover-img').src = data.userCover;
+                    localStorage.setItem('userCover', data.userCover);
+                }
+            }
+        } catch (e) { console.log("Database connection slow..."); }
+    };
 
-    function toggleMenu(menuId) {
-        const menu = document.getElementById(menuId);
-        const allMenus = document.querySelectorAll('.photo-menu');
-        allMenus.forEach(m => { if(m.id !== menuId) m.classList.add('hidden'); });
-        menu.classList.toggle('hidden');
-    }
-
+    // --- AJIYE HOTO A DATABASE ---
     async function updatePhoto(event, type) {
         const file = event.target.files[0];
         if (!file) return;
@@ -251,9 +259,6 @@
         document.getElementById(imgId).style.opacity = "0.5";
 
         try {
-            // Tabbatar Firebase yana nan kafin mu fara
-            if (typeof firebase === 'undefined') throw new Error("Firebase bai gama loda ba, sake gwadawa");
-
             const cloudName = "diixjieyp";
             const uploadPreset = "oryzon_media"; 
 
@@ -266,54 +271,58 @@
                 body: formData
             });
 
-            if (!response.ok) throw new Error("Cloudinary upload failed");
+            if (!response.ok) throw new Error("Cloudinary error");
             const data = await response.json();
             const secureUrl = data.secure_url;
 
-            // 1. Ajiye a waya
+            // 1. Ajiye a Database dindindin
             const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
-            localStorage.setItem(storageKey, secureUrl);
-
-            // 2. Ajiye a Database dindindin
-            const db = firebase.firestore(); 
             await db.collection('users').doc('Sadiq_Alhassan').set({
                 [storageKey]: secureUrl
             }, { merge: true });
 
+            // 2. Ajiye a waya (Local Storage)
+            localStorage.setItem(storageKey, secureUrl);
+
             document.getElementById(imgId).src = secureUrl;
             document.getElementById(imgId).style.opacity = "1";
-            alert("An ajiye a Database dindindin! 🚀");
+            alert("Success! Hotonka ya zauna dindindin. 🚀");
 
         } catch (error) {
-            alert("Kuskure: " + error.message);
+            alert("Matsala: " + error.message);
             document.getElementById(imgId).style.opacity = "1";
         }
         document.getElementById(type + '-menu').classList.add('hidden');
     }
 
+    // Sauran ayyukan menu
+    function toggleMenu(menuId) {
+        const menu = document.getElementById(menuId);
+        document.querySelectorAll('.photo-menu').forEach(m => { if(m.id !== menuId) m.classList.add('hidden'); });
+        menu.classList.toggle('hidden');
+    }
+
     function removePhoto(type) {
         const imgId = type === 'cover' ? 'main-cover-img' : 'main-profile-img';
         const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
-        
         document.getElementById(imgId).src = type === 'cover' 
             ? "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200" 
             : "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
-            
         localStorage.removeItem(storageKey);
         document.getElementById(type + '-menu').classList.add('hidden');
     }
 
     function switchTab(tab) {
-        const showcase = document.getElementById('showcase-area');
-        const timeline = document.getElementById('timeline-area');
-        const btnS = document.getElementById('btn-showcase');
-        const btnT = document.getElementById('btn-timeline');
+        const sArea = document.getElementById('showcase-area');
+        const tArea = document.getElementById('timeline-area');
+        const bS = document.getElementById('btn-showcase');
+        const bT = document.getElementById('btn-timeline');
         if (tab === 'showcase') {
-            showcase.classList.remove('hidden'); timeline.classList.add('hidden');
-            btnS.className = 'btn-slim btn-white'; btnT.className = 'btn-slim btn-trans';
+            sArea.classList.remove('hidden'); tArea.classList.add('hidden');
+            bS.className = 'btn-slim btn-white'; bT.className = 'btn-slim btn-trans';
         } else {
-            showcase.classList.add('hidden'); timeline.classList.remove('hidden');
-            btnT.className = 'btn-slim btn-white'; btnS.className = 'btn-slim btn-trans';
+            sArea.classList.add('hidden'); tArea.classList.remove('hidden');
+            bT.className = 'btn-slim btn-white'; bS.className = 'btn-slim btn-trans';
         }
     }
 
