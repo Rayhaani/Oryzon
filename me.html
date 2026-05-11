@@ -254,11 +254,24 @@
         const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
         localStorage.setItem(storageKey, secureUrl);
 
-        // 4. Sabunta hoton dake nuna a screen
-        document.getElementById(imgId).src = secureUrl;
-        document.getElementById(imgId).style.opacity = "1";
+        // ... (bayan Cloudinary ya dawo da data.secure_url)
 
-        alert("An sabunta hoton ka cikin nasara! 🚀");
+if (data.secure_url) {
+    const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
+    localStorage.setItem(storageKey, data.secure_url);
+
+    // --- SABON GYARA: Tura shi Firestore ---
+    // Mun dauka kana da 'db' (Firestore instance) da kuma 'userId'
+    const userRef = db.collection('users').doc(userId); // Ko kuma yadda kake kiran User dinka
+    await userRef.update({
+        [storageKey]: data.secure_url
+    });
+    // ---------------------------------------
+
+    document.getElementById(imgId).src = data.secure_url;
+    alert("An sabunta hoton ka cikin nasara! 🚀");
+}
+        
 
     } catch (error) {
         console.error(error);
