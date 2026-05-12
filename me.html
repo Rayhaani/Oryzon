@@ -543,82 +543,49 @@ async function loadTimelinePosts() {
     }
                 }
             
-         
-         function generatePostHTML(post) {
-    const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
-    let mediaHTML = '';
+        function generatePostHTML(post) {
+    // Tabbatar an yi amfani da hoto na karshe daga profile
+    const myProfilePic = localStorage.getItem('userProfilePic') || "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
+    const currentPic = (post.username === "Sadiq_Alhassan") ? myProfilePic : (post.userProfilePic || myProfilePic);
 
-    // Saita hoton Profile
-    const savedProfilePic = localStorage.getItem('userProfilePic');
-    const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic) 
-                       ? savedProfilePic 
-                       : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=member");
-
-    // Sashin Media (Hoton ko Video) - Exactly as social.html
-    if (post.mediaUrl) {
-        if (post.mediaType === 'video') {
-            mediaHTML = `
-                <div style="position: relative;">
-                    <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
-                    <div class="mute-toggle" onclick="toggleVideoSound(event, this)" style="position: absolute; bottom: 15px; right: 15px; z-index: 100;">
-                        <i class="fa-solid fa-volume-xmark"></i>
-                    </div>
-                </div>`;
-        } else {
-            mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
-        }
-    }
-
-    // --- WANNAN SHINE ASALIN HTML DIN SOCIAL.HTML ---
     return `
-    <div class="post-card" onclick="toggleImmersive(this)">
-        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; position: relative;">
-            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                <div class="avatar-container" style="position: relative; width: 42px; height: 42px; flex-shrink: 0;">
-                     <img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d;"> 
-                </div>
-                <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; color: #fff;">
-                    <span>${post.username || 'Sadiq_Alhassan'}</span>
-                    ${vBadge}
+    <div class="nexus-post-card">
+        <div class="nexus-post-header">
+            <div class="user-info">
+                <img src="${currentPic}" class="nexus-avatar">
+                <div class="nexus-username">
+                    ${post.username || 'Sadiq_Alhassan'} 
+                    <i class="fa-solid fa-circle-check gold-check"></i>
                 </div>
             </div>
-            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 10px;">
-                <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
-                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-                    <span class="gift-emoji">🎁</span>
-                    <span style="font-size: 10px; color: #fff;">Gift</span>
+            <div class="header-right">
+                <button class="nexus-follow-btn">FOLLOW</button>
+                <div class="nexus-gift-btn">
+                    <span>🎁 Gift</span>
                 </div>
             </div>
         </div>
 
-        <div class="post-content" style="padding: 5px 15px; font-size: 14px; color: #efefef;">
-            ${post.content || ''}
-        </div>
+        <div class="nexus-post-text">${post.content || 'Amazing Love💕'}</div>
 
-        ${mediaHTML}
+        ${post.mediaUrl ? (post.mediaType === 'video' ? 
+            `<video src="${post.mediaUrl}" class="nexus-post-media" loop muted autoplay playsinline></video>` : 
+            `<img src="${post.mediaUrl}" class="nexus-post-media">`) : ''}
 
-        <div class="interaction-bar" onclick="stopProp(event)" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(10, 10, 10, 0.5);">
-            <div class="action-capsules" style="display: flex; gap: 8px;">
-                <div class="capsule" onclick="triggerPulse(this, event)" style="background: rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 6px 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #fff;">
-                    <i class="fa-regular fa-heart"></i>
-                    <span style="font-size: 11px;">${post.likes || 0}</span>
-                </div>
-                <div class="capsule" style="background: rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 6px 12px; color: #fff; display: flex; align-items: center; gap: 5px;">
-                    <i class="fa-regular fa-comment"></i><span style="font-size: 11px;">0</span>
-                </div>
-                <div class="capsule" style="background: rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 6px 12px; color: #fff;">
-                    <i class="fa-solid fa-arrows-rotate"></i>
-                </div>
+        <div class="nexus-interaction-bar">
+            <div class="nexus-actions">
+                <div class="action-item"><i class="fa-regular fa-heart"></i> <span>0</span></div>
+                <div class="action-item"><i class="fa-regular fa-comment"></i> <span>12</span></div>
+                <div class="action-item"><i class="fa-solid fa-arrows-rotate"></i> <span>5</span></div>
+                <div class="action-item"><i class="fa-regular fa-paper-plane"></i></div>
             </div>
-            <div class="action-capsules save-capsule">
-                <div class="capsule" onclick="toggleSave(this, '${post.id}')" style="background: rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 6px 12px; color: #fff; display: flex; align-items: center; gap: 5px;">
-                    <i class="fa-regular fa-bookmark"></i>
-                    <span style="font-size: 11px;">Save</span>
-                </div>
+            <div class="nexus-save-btn">
+                <i class="fa-regular fa-bookmark"></i> Save
             </div>
         </div>
     </div>`;
-         }
+        }
+            
             
 
 
