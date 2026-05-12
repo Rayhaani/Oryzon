@@ -506,44 +506,46 @@ async function fetchFirebaseData() {
 
 
             function generatePostHTML(post) {
-    // Tabbatar an yi amfani da hoto na karshe daga profile
-    const myProfilePic = localStorage.getItem('userProfilePic') || "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
-    const currentPic = (post.username === "Sadiq_Alhassan") ? myProfilePic : (post.userProfilePic || myProfilePic);
+    const savedPic = localStorage.getItem('userProfilePic') || "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
+    const currentPic = (post.username === "Sadiq_Alhassan") ? savedPic : (post.userProfilePic || savedPic);
 
     return `
-    <div class="nexus-post-card">
-        <div class="nexus-post-header">
-            <div class="user-info">
-                <img src="${currentPic}" class="nexus-avatar">
-                <div class="nexus-username">
-                    ${post.username || 'Sadiq_Alhassan'} 
-                    <i class="fa-solid fa-circle-check gold-check"></i>
+    <div class="post-card">
+        <div class="post-header">
+            <div class="avatar-container">
+                <img src="${currentPic}" class="avatar">
+            </div>
+            <div class="username-box">
+                <div class="username-text">
+                    ${post.username || 'Sadiq_Alhassan'}
+                    <span class="nexus-badge" style="transform: rotate(0deg); width:14px; height:14px; background:#1d9bf0; clip-path:none; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;">
+                        <i class="fa-solid fa-check" style="font-size:8px; color:white;"></i>
+                    </span>
                 </div>
             </div>
-            <div class="header-right">
-                <button class="nexus-follow-btn">FOLLOW</button>
-                <div class="nexus-gift-btn">
-                    <span>🎁 Gift</span>
+            <div style="margin-left: auto;">
+                <div class="gift-btn-nexus">
+                    <span class="gift-emoji">🎁</span>
+                    <span>Gift</span>
                 </div>
             </div>
         </div>
 
-        <div class="nexus-post-text">${post.content || 'Amazing Love💕'}</div>
+        <div class="post-content">
+            ${post.content}
+        </div>
 
         ${post.mediaUrl ? (post.mediaType === 'video' ? 
-            `<video src="${post.mediaUrl}" class="nexus-post-media" loop muted autoplay playsinline></video>` : 
-            `<img src="${post.mediaUrl}" class="nexus-post-media">`) : ''}
+            `<div style="position:relative;">
+                <video src="${post.mediaUrl}" class="post-media" loop muted autoplay playsinline style="width:100%; display:block;"></video>
+             </div>` : 
+            `<img src="${post.mediaUrl}" class="post-media" style="width:100%; display:block;">`) : ''}
 
-        <div class="nexus-interaction-bar">
-            <div class="nexus-actions">
-                <div class="action-item"><i class="fa-regular fa-heart"></i> <span>0</span></div>
-                <div class="action-item"><i class="fa-regular fa-comment"></i> <span>12</span></div>
-                <div class="action-item"><i class="fa-solid fa-arrows-rotate"></i> <span>5</span></div>
-                <div class="action-item"><i class="fa-regular fa-paper-plane"></i></div>
-            </div>
-            <div class="nexus-save-btn">
-                <i class="fa-regular fa-bookmark"></i> Save
-            </div>
+        <div class="interaction-bar" style="padding: 10px 15px; display: flex; gap: 20px;">
+            <div class="btn-nexus"><i class="fa-regular fa-heart"></i> <span>${post.likes || 0}</span></div>
+            <div class="btn-nexus"><i class="fa-regular fa-comment"></i> <span>12</span></div>
+            <div class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></div>
+            <div class="btn-nexus" style="margin-left: auto;"><i class="fa-regular fa-bookmark"></i></div>
         </div>
     </div>`;
             }
