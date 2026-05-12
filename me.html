@@ -441,47 +441,78 @@ async function fetchFirebaseData() {
 
 
 
+
+
 async function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     
     try {
-        // 1. Kamo posts na Sadiq kadai (Ba zamu sa orderBy a nan ba don kaucewa Error)
         const snapshot = await db.collection('posts')
             .where("username", "==", "Sadiq_Alhassan")
             .get();
 
         if (!snapshot.empty) {
             timelineArea.innerHTML = ''; 
-
-            // 2. Mayar da snapshot din zuwa Array domin mu iya jera su da kan mu
             let postsArray = [];
-            snapshot.forEach(doc => {
-                postsArray.push({ id: doc.id, ...doc.data() });
-            });
+            snapshot.forEach(doc => postsArray.push({ id: doc.id, ...doc.data() }));
 
-            // 3. JERA SU (Sorting): Sabon post ya dawo sama
-            postsArray.sort((a, b) => {
-                const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
-                const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
-                return timeB - timeA; // Babban lokaci (Sabo) zai dawo sama
-            });
+            // Jera su daga sabo zuwa tsoho
+            postsArray.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
 
-            // 4. Saka su a HTML
             postsArray.forEach(post => {
-                timelineArea.innerHTML += generatePostHTML(post);
+                // MASTERCODE: Wannan shi ne asalin siffar card din social.html
+                const cardHTML = `
+                    <div class="post-card" style="background: rgba(255,255,255,0.03); border-radius: 30px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="post-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                            <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(45deg, #00f2fe, #7000ff); padding: 2px;">
+                                <img src="${post.userProfilePic || 'https://api.dicebear.com/7.x/bottts/svg?seed=mamba'}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #050505;">
+                            </div>
+                            <div>
+                                <div class="username" style="font-weight: 800; font-size: 13px; color: #fff;">${post.username}</div>
+                                <div style="font-size: 10px; color: rgba(255,255,255,0.4);">
+                                    ${post.timestamp ? new Date(post.timestamp.toDate()).toLocaleString() : 'Just now'}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="post-content" style="font-size: 12px; color: rgba(255,255,255,0.8); line-height: 1.6; margin-bottom: 15px;">
+                            ${post.content || ''}
+                        </div>
+
+                        ${post.mediaUrl ? `
+                            <div class="post-media" style="border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;">
+                                ${post.mediaType === 'video' 
+                                    ? `<video src="${post.mediaUrl}" controls style="width: 100%; display: block;"></video>` 
+                                    : `<img src="${post.mediaUrl}" style="width: 100%; display: block; object-fit: cover;">`}
+                            </div>
+                        ` : ''}
+
+                        <div class="interaction-bar" style="display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <div class="left-actions" style="display: flex; gap: 15px;">
+                                <div style="color: rgba(255,255,255,0.5); font-size: 11px; display: flex; align-items: center; gap: 5px;">
+                                    <i class="fa-regular fa-heart"></i> <span>${post.likes || 0}</span>
+                                </div>
+                                <div style="color: rgba(255,255,255,0.5); font-size: 11px; display: flex; align-items: center; gap: 5px;">
+                                    <i class="fa-regular fa-comment"></i> <span>0</span>
+                                </div>
+                            </div>
+                            <div style="color: rgba(255,255,255,0.5);"><i class="fa-regular fa-bookmark"></i></div>
+                        </div>
+                    </div>
+                `;
+                timelineArea.insertAdjacentHTML('beforeend', cardHTML);
             });
             
-            console.log("An jera posts a jere kuma komai ya fito! ✅");
+            // Sake kunna Auto-play na bidiyo
+            setTimeout(() => { if(typeof observeVideos === 'function') observeVideos(); }, 300);
         } else {
-            timelineArea.innerHTML = '<p class="text-center text-gray-500 text-[10px] mt-10">Babu saƙonni a timeline ɗinka tukunna.</p>';
+            timelineArea.innerHTML = '<p style="text-align:center; color:#555; font-size:11px; margin-top:50px;">Babu saƙonni a yanzu.</p>';
         }
     } catch (error) {
-        console.error("Kuskure:", error);
+        console.error("Error:", error);
     }
-}
-            
-
-
+            }
+                
 
             function generatePostHTML(post) {
     return `
