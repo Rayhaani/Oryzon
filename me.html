@@ -314,27 +314,46 @@
     const db = firebase.firestore();
 
     // WANNAN ZAI DAWO MA DA HOTON DAGA DATABASE KO AN GOGE DATA
-    window.onload = async function() {
-        const savedCover = localStorage.getItem('userCover');
-        const savedProfile = localStorage.getItem('userProfilePic');
-        if (savedCover) document.getElementById('main-cover-img').src = savedCover;
-        if (savedProfile) document.getElementById('main-profile-img').src = savedProfile;
-        
-        try {
-            const doc = await db.collection('users').doc('Sadiq_Alhassan').get();
-            if (doc.exists) {
-                const data = doc.data();
-                if (data.userProfilePic) {
-                    document.getElementById('main-profile-img').src = data.userProfilePic;
-                    localStorage.setItem('userProfilePic', data.userProfilePic);
-                }
-                if (data.userCover) {
-                    document.getElementById('main-cover-img').src = data.userCover;
-                    localStorage.setItem('userCover', data.userCover);
-                }
+    
+       window.onload = function() {
+    // 1. Nan take a dauko hoto daga LocalStorage don gudun jinkiri
+    const savedCover = localStorage.getItem('userCover');
+    const savedProfile = localStorage.getItem('userProfilePic');
+    
+    if (savedCover) document.getElementById('main-cover-img').src = savedCover;
+    if (savedProfile) document.getElementById('main-profile-img').src = savedProfile;
+
+    // 2. Fara loda bayanan Firebase a "background" ba tare da an dakatar da shafin ba
+    fetchFirebaseData();
+
+    // 3. Kira function din loda timeline posts
+    loadTimelinePosts();
+};
+
+// Mun raba wannan a matsayin async function na daban
+async function fetchFirebaseData() {
+    try {
+        const doc = await db.collection('users').doc('Sadiq_Alhassan').get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.userProfilePic) {
+                document.getElementById('main-profile-img').src = data.userProfilePic;
+                localStorage.setItem('userProfilePic', data.userProfilePic);
             }
-        } catch (e) { console.log("Waiting for connection..."); }
-    };
+            if (data.userCover) {
+                document.getElementById('main-cover-img').src = data.userCover;
+                localStorage.setItem('userCover', data.userCover);
+            }
+        }
+    } catch (e) {
+        console.error("Firebase Connection Error:", e);
+    }
+}
+            
+            
+            
+            
+            
 
     async function updatePhoto(event, type) {
         const file = event.target.files[0];
