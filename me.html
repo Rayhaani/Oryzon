@@ -505,57 +505,48 @@ async function fetchFirebaseData() {
 
 
 
- async function loadTimelinePosts() {
-    const timelineArea = document.getElementById('timeline-area');
-    
-    try {
-        const snapshot = await db.collection('posts')
-            .where("username", "==", "Sadiq_Alhassan")
-            .get();
+            function generatePostHTML(post) {
+    // Tabbatar an yi amfani da hoto na karshe daga profile
+    const myProfilePic = localStorage.getItem('userProfilePic') || "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
+    const currentPic = (post.username === "Sadiq_Alhassan") ? myProfilePic : (post.userProfilePic || myProfilePic);
 
-        if (!snapshot.empty) {
-            // Wannan layin zai goge tsoffin samfuran dake kai (Static Posts)
-            timelineArea.innerHTML = ''; 
+    return `
+    <div class="nexus-post-card">
+        <div class="nexus-post-header">
+            <div class="user-info">
+                <img src="${currentPic}" class="nexus-avatar">
+                <div class="nexus-username">
+                    ${post.username || 'Sadiq_Alhassan'} 
+                    <i class="fa-solid fa-circle-check gold-check"></i>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="nexus-follow-btn">FOLLOW</button>
+                <div class="nexus-gift-btn">
+                    <span>🎁 Gift</span>
+                </div>
+            </div>
+        </div>
 
-            snapshot.forEach(doc => {
-                const post = doc.data();
-                
-                // Muna hada HTML din kowane post daya bayan daya
-                const postHTML = `
-                    <div class="glass-vault p-4 rounded-[30px] border-none bg-white/5 mb-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center gap-3">
-                                <img src="${post.userProfilePic || 'https://api.dicebear.com/7.x/bottts/svg?seed=mamba'}" class="w-10 h-10 rounded-full border border-cyan-400/30">
-                                <div>
-                                    <h4 class="text-white font-bold text-xs">${post.username}</h4>
-                                    <p class="text-gray-500 text-[10px]">
-                                        ${post.timestamp ? new Date(post.timestamp.toDate()).toLocaleString() : 'Just now'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="text-gray-300 text-xs mb-4">${post.content || ''}</p>
-                        ${post.mediaUrl ? `
-                            <div class="rounded-2xl overflow-hidden border border-white/5">
-                                ${post.mediaType === 'video' 
-                                    ? `<video src="${post.mediaUrl}" controls class="w-full"></video>` 
-                                    : `<img src="${post.mediaUrl}" class="w-full">`}
-                            </div>` : ''}
-                    </div>
-                `;
-                // Wannan ne zai saka sabon post din a cikin shafin
-                timelineArea.insertAdjacentHTML('beforeend', postHTML);
-            });
-            
-            console.log("An gama saka posts 10 a shafi.");
-        } else {
-            timelineArea.innerHTML = '<p class="text-center text-gray-500 text-xs">Babu posts a yanzu.</p>';
-        }
-    } catch (error) {
-        console.error("Kuskure wajen nuna posts:", error);
-    }
- }
-            
+        <div class="nexus-post-text">${post.content || 'Amazing Love💕'}</div>
+
+        ${post.mediaUrl ? (post.mediaType === 'video' ? 
+            `<video src="${post.mediaUrl}" class="nexus-post-media" loop muted autoplay playsinline></video>` : 
+            `<img src="${post.mediaUrl}" class="nexus-post-media">`) : ''}
+
+        <div class="nexus-interaction-bar">
+            <div class="nexus-actions">
+                <div class="action-item"><i class="fa-regular fa-heart"></i> <span>0</span></div>
+                <div class="action-item"><i class="fa-regular fa-comment"></i> <span>12</span></div>
+                <div class="action-item"><i class="fa-solid fa-arrows-rotate"></i> <span>5</span></div>
+                <div class="action-item"><i class="fa-regular fa-paper-plane"></i></div>
+            </div>
+            <div class="nexus-save-btn">
+                <i class="fa-regular fa-bookmark"></i> Save
+            </div>
+        </div>
+    </div>`;
+            }
             
         </script>
         
