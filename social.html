@@ -852,40 +852,6 @@ header {
         </div>
     </header>
 
-   <div class="filter-tabs" style="display: flex; justify-content: center; gap: 25px; margin-top: 70px; margin-bottom: 15px;">
-    <button onclick="changeFeed('all')" id="tab-all" class="tab-btn active-tab">Global</button>
-    <button onclick="changeFeed('mine')" id="tab-mine" class="tab-btn">Timeline</button>
-</div>
-
-<style>
-    .tab-btn {
-        background: transparent;
-        border: none;
-        color: rgba(255,255,255,0.4);
-        font-family: 'Orbitron', sans-serif;
-        font-size: 11px;
-        letter-spacing: 1px;
-        cursor: pointer;
-        padding: 8px 5px;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-    .active-tab {
-        color: #fde08d !important;
-    }
-    .active-tab::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background: #fde08d;
-        box-shadow: 0 0 10px #fde08d;
-    }
-</style>
-    
-    
     <div class="feed-container">
         <div class="post-card" onclick="toggleImmersive(this)">
             <div class="post-header">
@@ -1190,47 +1156,36 @@ function renderNexusFeed() {
 }
 
 
+
 async function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
     
-    // 1. Kamo Saved Posts (Optional) - Ba mu taɓa nan ba
+    // 1. Kamo Saved Posts (Optional)
     try {
         const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
         userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
     } catch(e) { console.log(e) }
 
-    // --- SABON GYARA: Tace query dangane da wane Tab aka danna ---
-    let query = db.collection("posts").orderBy("timestamp", "desc");
-
-    // Idan aka danna 'Timeline', sai mu tace na Sadiq kadai
-    if (currentMode === 'mine') {
-        query = db.collection("posts")
-                  .where("username", "==", "Sadiq_Alhassan")
-                  .orderBy("timestamp", "desc");
-    }
-    // ----------------------------------------------------------
-
-    // 2. Babban Snapshot na Posts - Anan ma ba mu taɓa yadda kake zuba HTML ɗin ba
-    query.onSnapshot((snapshot) => {
+    // 2. Babban Snapshot na Posts
+    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         let allPostsHTML = ''; 
         
         snapshot.forEach((doc) => {
             const post = { id: doc.id, ...doc.data() };
-            // Mun kiyaye wannan function din naka don komai ya fito daidai
             allPostsHTML += generatePostHTML(post);
         });
 
-        // Saka posts a page EXACTLY yadda kake yi
+        // Saka posts a page
         feedContainer.innerHTML = allPostsHTML;
         
-        // MAFI MUHIMMANCI: Saka musu ido yanzu (Auto-play)
+        // MAFI MUHIMMANCI: Saka musu ido yanzu
         setTimeout(() => {
-            if(typeof observeVideos === 'function') observeVideos();
-        }, 300); 
+            observeVideos();
+        }, 300); // Mun dan jira kadan domin HTML din ya zauna daram
     });
-        }
-                                                                   
-
+}
+        
+        
 
     function generatePostHTML(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
