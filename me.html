@@ -180,49 +180,62 @@
 
 
 
-        /* Babban Card din */
+/* Babban Card din - Mun cire Gold din sama kamar yadda kace */
 .post-card {
-    background: #0a0a0a;
-    border-radius: 20px;
+    background: #050505; /* Obsidian baki */
+    border-radius: 0px; /* Ya fi kyau a rectangular kamar hoton */
     margin-bottom: 15px;
     position: relative;
-    overflow: hidden;
-    /* Layin gwal na saman card din */
-    border-top: 1.5px solid #FDE08D; 
-    border-left: 1px solid rgba(253, 224, 141, 0.1);
-    border-right: 1px solid rgba(253, 224, 141, 0.1);
-    border-bottom: 1px solid rgba(253, 224, 141, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Siririn layi a kasa kawai */
 }
 
-/* Header inda suna yake */
+/* Header: Avatar tana zaune a hagu, rubutu a bayanta */
 .post-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 10px 15px 10px 50px; /* Mun bar fili hagu don avatar */
-    position: relative;
-    /* Layin dake raba suna da rubutun post */
-    border-bottom: 1px solid rgba(253, 224, 141, 0.2); 
+    padding: 12px 15px;
+    gap: 12px;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); /* Layin raba suna da post content */
 }
 
-/* Avatar din dake manne a kusurwar hagu sama */
+/* Avatar din a kusurwar sama hagu (Exact size & border) */
 .avatar-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 45px;
-    height: 45px;
-    z-index: 10;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
 }
 
 .avatar {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 2px solid #FDE08D;
+    border: 1.5px solid #FDE08D; /* Siririn layin gwal din */
     object-fit: cover;
-    background: #111;
 }
+
+/* Sunan mai post */
+.username-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.username-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Rubutun post */
+.post-content {
+    padding: 12px 15px;
+    font-size: 14px;
+    color: #efefef;
+    line-height: 1.5;
+}
+        
         
     </style>
 </head>
@@ -539,77 +552,53 @@ async function loadTimelinePosts() {
     }
 }
             
-function generatePostHTML(post) {
-    const vBadge = `<span class="nexus-badge" style="display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; background:#1d9bf0; clip-path:polygon(50% 0%, 61% 5%, 72% 0%, 80% 9%, 91% 9%, 91% 20%, 100% 28%, 95% 39%, 100% 50%, 95% 61%, 100% 72%, 91% 80%, 91% 91%, 80% 91%, 72% 100%, 61% 95%, 50% 100%, 39% 95%, 28% 100%, 20% 91%, 9% 91%, 9% 80%, 0% 72%, 5% 61%, 0% 50%, 5% 39%, 0% 28%, 9% 20%, 9% 9%, 20% 9%, 28% 0%, 39% 5%); margin-left:4px;"><i class="fa-solid fa-check" style="font-size:8px; color:white;"></i></span>`;
-    
-    let mediaHTML = '';
-    const savedProfilePic = localStorage.getItem('userProfilePic');
-    const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic) 
-                       ? savedProfilePic 
-                       : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=member");
 
-    if (post.mediaUrl) {
-        if (post.mediaType === 'video') {
-            mediaHTML = `
-                <div style="position: relative; width:100%; border-radius:15px; overflow:hidden; margin-top:10px;">
-                    <video src="${post.mediaUrl}" style="width:100%; display:block;" loop playsinline autoplay muted></video>
-                </div>`;
-        } else {
-            mediaHTML = `<img src="${post.mediaUrl}" style="width:100%; border-radius:15px; margin-top:10px; display:block; object-fit:cover;">`;
-        }
-    }
+        
+
+            function generatePostHTML(post) {
+    const savedPic = localStorage.getItem('userProfilePic') || "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
+    const currentPic = (post.username === "Sadiq_Alhassan") ? savedPic : (post.userProfilePic || savedPic);
 
     return `
-    <div class="post-card" style="background: rgba(255,255,255,0.03); backdrop-filter:blur(10px); border-radius:25px; border:1px solid rgba(255,255,255,0.08); margin-bottom:20px; padding:15px; color:#fff; overflow:hidden;">
-        
-        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="${currentPic}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fde08d; object-fit: cover;">
-                <div style="display: flex; flex-direction: column;">
-                    <div style="font-size: 13px; font-weight: 700; display: flex; align-items: center;">
-                        ${post.username || 'Sadiq_Alhassan'} ${vBadge}
-                    </div>
-                    <span style="font-size: 10px; color: rgba(255,255,255,0.4);">
-                        ${post.timestamp ? new Date(post.timestamp.toDate()).toLocaleDateString() : 'Just now'}
+    <div class="post-card">
+        <div class="post-header">
+            <div class="avatar-container">
+                <img src="${currentPic}" class="avatar">
+            </div>
+            <div class="username-box">
+                <div class="username-text">
+                    ${post.username || 'Sadiq_Alhassan'}
+                    <span class="nexus-badge" style="transform: rotate(0deg); width:14px; height:14px; background:#1d9bf0; clip-path:none; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;">
+                        <i class="fa-solid fa-check" style="font-size:8px; color:white;"></i>
                     </span>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 12px; color: #fff; font-weight: 600; cursor: pointer;">Follow</span>
-                <div style="background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                    <span style="font-size: 12px;">🎁</span>
-                    <span style="font-size: 10px; font-weight: 700;">Gift</span>
+            <div style="margin-left: auto;">
+                <div class="gift-btn-nexus">
+                    <span class="gift-emoji">🎁</span>
+                    <span>Gift</span>
                 </div>
             </div>
         </div>
 
-        <div class="post-content" style="font-size: 13px; color: #efefef; line-height: 1.5; margin-bottom: 5px; padding: 0 5px;">
-            ${post.content || ''}
+        <div class="post-content">
+            ${post.content}
         </div>
 
-        ${mediaHTML}
+        ${post.mediaUrl ? (post.mediaType === 'video' ? 
+            `<div style="position:relative;">
+                <video src="${post.mediaUrl}" class="post-media" loop muted autoplay playsinline style="width:100%; display:block;"></video>
+             </div>` : 
+            `<img src="${post.mediaUrl}" class="post-media" style="width:100%; display:block;">`) : ''}
 
-        <div class="interaction-bar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);">
-            <div style="display: flex; gap: 10px;">
-                <div style="background: rgba(255,255,255,0.08); border-radius: 50px; padding: 6px 15px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <i class="fa-regular fa-heart" style="font-size: 14px;"></i>
-                    <span style="font-size: 12px;">${post.likes || 0}</span>
-                </div>
-                <div style="background: rgba(255,255,255,0.08); border-radius: 50px; padding: 6px 15px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <i class="fa-regular fa-comment" style="font-size: 14px;"></i>
-                    <span style="font-size: 12px;">0</span>
-                </div>
-                <div style="background: rgba(255,255,255,0.08); border-radius: 50px; padding: 6px 12px; cursor: pointer;">
-                    <i class="fa-solid fa-arrows-rotate" style="font-size: 13px; color: rgba(255,255,255,0.6);"></i>
-                </div>
-            </div>
-            <div style="background: rgba(255,255,255,0.08); border-radius: 50px; padding: 6px 15px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                <i class="fa-regular fa-bookmark" style="font-size: 14px;"></i>
-                <span style="font-size: 12px;">Save</span>
-            </div>
+        <div class="interaction-bar" style="padding: 10px 15px; display: flex; gap: 20px;">
+            <div class="btn-nexus"><i class="fa-regular fa-heart"></i> <span>${post.likes || 0}</span></div>
+            <div class="btn-nexus"><i class="fa-regular fa-comment"></i> <span>12</span></div>
+            <div class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></div>
+            <div class="btn-nexus" style="margin-left: auto;"><i class="fa-regular fa-bookmark"></i></div>
         </div>
     </div>`;
-}
+            }
             
 
 
