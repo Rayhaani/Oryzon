@@ -11,7 +11,7 @@
     
     <style>
         :root { --neon: #00f2fe; --glow: rgba(0, 242, 254, 0.4); --bg: #050505; }
-      
+
         body {
     background-color: #050505 !important; /* Wannan shi ne asalin baki din */
     background-image: none !important;    /* Mun goge wancan gradient din */
@@ -22,7 +22,6 @@
     overflow-x: hidden;
     padding-bottom: 60px;
         }
-        
         
         .cover-wrapper { width: 100%; height: 220px; position: absolute; top: 0; left: 0; z-index: 10; overflow: hidden; }
         .cover-photo { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; background: linear-gradient(to bottom, transparent, var(--bg)); }
@@ -158,65 +157,35 @@
     text-transform: lowercase;
     margin-top: -2px;
             }
+                       
 
 
-        
-
-    /* Babban Card din - Mun cire Gold din sama kamar yadda kace */
+    /* Sabon Salon Post Card na Social.html */
 .post-card {
-    background: #050505; /* Obsidian baki */
-    border-radius: 0px; /* Ya fi kyau a rectangular kamar hoton */
-    margin-bottom: 15px;
-    position: relative;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Siririn layi a kasa kawai */
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
 }
 
-/* Header: Avatar tana zaune a hagu, rubutu a bayanta */
-.post-header {
-    display: flex;
-    align-items: center;
-    padding: 12px 15px;
-    gap: 12px;
-    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); /* Layin raba suna da post content */
-}
-
-/* Avatar din a kusurwar sama hagu (Exact size & border) */
-.avatar-container {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-}
-
-.avatar {
+.post-media {
     width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 1.5px solid #FDE08D; /* Siririn layin gwal din */
+    max-height: 450px;
     object-fit: cover;
+    display: block;
 }
 
-/* Sunan mai post */
-.username-box {
-    display: flex;
-    flex-direction: column;
+.capsule {
+    transition: all 0.2s ease;
 }
 
-.username-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-/* Rubutun post */
-.post-content {
-    padding: 12px 15px;
-    font-size: 14px;
-    color: #efefef;
-    line-height: 1.5;
-}
+.capsule:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.2) !important;
+    }
         
     </style>
 </head>
@@ -502,53 +471,152 @@ async function fetchFirebaseData() {
     }
             }
             
+async function loadTimelinePosts() {
+    const timelineArea = document.getElementById('timeline-area');
+    
+    try {
+        const snapshot = await db.collection('posts')
+            .where("username", "==", "Sadiq_Alhassan")
+            .get();
 
+        if (!snapshot.empty) {
+            timelineArea.innerHTML = ''; 
+            let postsArray = [];
+            snapshot.forEach(doc => postsArray.push({ id: doc.id, ...doc.data() }));
 
+            // Jera su daga sabo zuwa tsoho
+            postsArray.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
 
-            function generatePostHTML(post) {
-    const savedPic = localStorage.getItem('userProfilePic') || "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
-    const currentPic = (post.username === "Sadiq_Alhassan") ? savedPic : (post.userProfilePic || savedPic);
+            postsArray.forEach(post => {
+                // MUN CANZA NAN: Muna kiran generatePostHTML(post) maimakon tsohon HTML din
+                const cardHTML = generatePostHTML(post);
+                timelineArea.insertAdjacentHTML('beforeend', cardHTML);
+            });
+            
+            setTimeout(() => { if(typeof observeVideos === 'function') observeVideos(); }, 300);
+        } else {
+            timelineArea.innerHTML = '<p style="text-align:center; color:#555; font-size:11px; margin-top:50px;">Babu saƙonni a yanzu.</p>';
+        }
+    } catch (error) {
+        console.error("Error:", error);
+    }
+                }
+            
+         
+         function generatePostHTML(post) {
+    const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
+    let mediaHTML = '';
 
+    // Saita hoton Profile
+    const savedProfilePic = localStorage.getItem('userProfilePic');
+    const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic) 
+                       ? savedProfilePic 
+                       : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=member");
+
+    // Sashin Media (Hoton ko Video) - Exactly as social.html
+    if (post.mediaUrl) {
+        if (post.mediaType === 'video') {
+            mediaHTML = `
+                <div style="position: relative;">
+                    <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
+                    <div class="mute-toggle" onclick="toggleVideoSound(event, this)" style="position: absolute; bottom: 15px; right: 15px; z-index: 100;">
+                        <i class="fa-solid fa-volume-xmark"></i>
+                    </div>
+                </div>`;
+        } else {
+            mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+        }
+    }
+
+    // --- WANNAN SHINE ASALIN HTML DIN SOCIAL.HTML ---
     return `
-    <div class="post-card">
-        <div class="post-header">
-            <div class="avatar-container">
-                <img src="${currentPic}" class="avatar">
-            </div>
-            <div class="username-box">
-                <div class="username-text">
-                    ${post.username || 'Sadiq_Alhassan'}
-                    <span class="nexus-badge" style="transform: rotate(0deg); width:14px; height:14px; background:#1d9bf0; clip-path:none; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;">
-                        <i class="fa-solid fa-check" style="font-size:8px; color:white;"></i>
-                    </span>
+    <div class="post-card" onclick="toggleImmersive(this)">
+        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; position: relative;">
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                <div class="avatar-container" style="position: relative; width: 42px; height: 42px; flex-shrink: 0;">
+                     <img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d;"> 
+                </div>
+                <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; color: #fff;">
+                    <span>${post.username || 'Sadiq_Alhassan'}</span>
+                    ${vBadge}
                 </div>
             </div>
-            <div style="margin-left: auto;">
-                <div class="gift-btn-nexus">
+            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 10px;">
+                <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
+                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
                     <span class="gift-emoji">🎁</span>
-                    <span>Gift</span>
+                    <span style="font-size: 10px; color: #fff;">Gift</span>
                 </div>
             </div>
         </div>
 
-        <div class="post-content">
-            ${post.content}
+        <div class="post-content" style="padding: 5px 15px; font-size: 14px; color: #efefef;">
+            ${post.content || ''}
         </div>
 
-        ${post.mediaUrl ? (post.mediaType === 'video' ? 
-            `<div style="position:relative;">
-                <video src="${post.mediaUrl}" class="post-media" loop muted autoplay playsinline style="width:100%; display:block;"></video>
-             </div>` : 
-            `<img src="${post.mediaUrl}" class="post-media" style="width:100%; display:block;">`) : ''}
+        ${mediaHTML}
 
-        <div class="interaction-bar" style="padding: 10px 15px; display: flex; gap: 20px;">
-            <div class="btn-nexus"><i class="fa-regular fa-heart"></i> <span>${post.likes || 0}</span></div>
-            <div class="btn-nexus"><i class="fa-regular fa-comment"></i> <span>12</span></div>
-            <div class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i></div>
-            <div class="btn-nexus" style="margin-left: auto;"><i class="fa-regular fa-bookmark"></i></div>
+        <div class="interaction-bar" onclick="stopProp(event)" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(10, 10, 10, 0.5);">
+            <div class="action-capsules" style="display: flex; gap: 8px;">
+                <div class="capsule" onclick="triggerPulse(this, event)" style="background: rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 6px 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #fff;">
+                    <i class="fa-regular fa-heart"></i>
+                    <span style="font-size: 11px;">${post.likes || 0}</span>
+                </div>
+                <div class="capsule" style="background: rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 6px 12px; color: #fff; display: flex; align-items: center; gap: 5px;">
+                    <i class="fa-regular fa-comment"></i><span style="font-size: 11px;">0</span>
+                </div>
+                <div class="capsule" style="background: rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 6px 12px; color: #fff;">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </div>
+            </div>
+            <div class="action-capsules save-capsule">
+                <div class="capsule" onclick="toggleSave(this, '${post.id}')" style="background: rgba(255, 255, 255, 0.08); border-radius: 50px; padding: 6px 12px; color: #fff; display: flex; align-items: center; gap: 5px;">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <span style="font-size: 11px;">Save</span>
+                </div>
+            </div>
         </div>
     </div>`;
-            }
+         }
+            
+
+
+            let currentMode = 'all'; // Default na Global
+
+function changeFeed(mode) {
+    currentMode = mode;
+    // Canza kalar tabs
+    document.getElementById('tab-all').classList.toggle('active-tab', mode === 'all');
+    document.getElementById('tab-mine').classList.toggle('active-tab', mode === 'mine');
+    
+    renderNexusFeed(); // Sake loda posts
+}
+
+async function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
+    feedContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#fde08d;">Loading Protocol...</div>';
+
+    let query = db.collection("posts").orderBy("timestamp", "desc");
+
+    if (currentMode === 'mine') {
+        query = db.collection("posts")
+                  .where("username", "==", "Sadiq_Alhassan")
+                  .orderBy("timestamp", "desc");
+    }
+
+    query.onSnapshot((snapshot) => {
+        let allPostsHTML = ''; 
+        snapshot.forEach((doc) => {
+            const post = { id: doc.id, ...doc.data() };
+            allPostsHTML += generatePostHTML(post);
+        });
+        feedContainer.innerHTML = allPostsHTML;
+        setTimeout(() => { if(typeof observeVideos === 'function') observeVideos(); }, 300);
+    }, (error) => {
+        console.error("Firebase Error:", error);
+        // Idan akwai Indexing Error, Firebase zai nuna link anan
+    });
+}
             
         </script>
         
