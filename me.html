@@ -514,29 +514,114 @@ async function loadTimelinePosts() {
             }
                 
 
-            function generatePostHTML(post) {
-    return `
-        <div class="glass-vault p-4 rounded-[30px] border-none bg-white/5 mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-3">
-                    <img src="${post.userProfilePic || 'https://api.dicebear.com/7.x/bottts/svg?seed=mamba'}" class="w-10 h-10 rounded-full border border-cyan-400/30">
-                    <div>
-                        <h4 class="text-white font-bold text-xs">${post.username}</h4>
-                        <p class="text-gray-500 text-[10px]">Just now</p>
+         function generatePostHTML(post) {
+    const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
+    let mediaHTML = '';
+
+    // Kalar Avatar da Hoton Profile
+    const savedProfilePic = localStorage.getItem('userProfilePic') || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
+    const currentPic = (post.username === "Sadiq_Alhassan") ? savedProfilePic : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=member");
+
+    // Siffar Media (Hoto ko Video)
+    if (post.mediaUrl) {
+        if (post.mediaType === 'video') {
+            mediaHTML = `
+                <div style="position: relative;">
+                    <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
+                    <div class="mute-toggle" onclick="toggleVideoSound(event, this)">
+                        <i class="fa-solid fa-volume-xmark"></i>
                     </div>
+                </div>`;
+        } else {
+            mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+        }
+    }
+
+    // Wannan ita ce asalin siffar social.html
+    return `
+    <div class="post-card" onclick="toggleImmersive(this)">
+        <div class="post-header">
+            <div style="display: flex; align-items: center; gap: 0; flex: 1;">
+                <div class="avatar-container" style="position: relative; width: 42px; height: 42px; flex-shrink: 0;">
+                     <img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d;"> 
+                </div>
+                <div class="username" style="margin-left: 10px;">
+                    <span>${post.username || 'Sadiq_Alhassan'}</span>
+                    ${vBadge}
                 </div>
             </div>
-            <p class="text-gray-300 text-xs mb-4">${post.content || ''}</p>
-            ${post.mediaUrl ? `
-                <div class="rounded-2xl overflow-hidden border border-white/5">
-                    ${post.mediaType === 'video' 
-                        ? `<video src="${post.mediaUrl}" controls class="w-full"></video>` 
-                        : `<img src="${post.mediaUrl}" class="w-full">`}
-                </div>` : ''}
+            <div class="header-actions" onclick="stopProp(event)">
+                <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
+                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
+                    <span class="gift-emoji">🎁</span>
+                    <span>Gift</span>
+                </div>
+            </div>
         </div>
-    `;
-            }
+        
+        <div class="post-content">${post.content || ''}</div>
+        
+        ${mediaHTML}
+
+        <div class="interaction-bar" onclick="stopProp(event)">
+            <div class="action-capsules">
+                <div class="capsule" onclick="triggerPulse(this, event)">
+                    <i class="fa-regular fa-heart"></i>
+                    <span>${post.likes || 0}</span>
+                </div>
+                <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
+                <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
+                <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
+            </div>
+            <div class="action-capsules save-capsule">
+                <div class="capsule" onclick="toggleSave(this, '${post.id}')">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <span>Save</span>
+                </div>
+            </div>
+        </div>
+    </div>`;
+         }
             
+            
+
+
+            let currentMode = 'all'; // Default na Global
+
+function changeFeed(mode) {
+    currentMode = mode;
+    // Canza kalar tabs
+    document.getElementById('tab-all').classList.toggle('active-tab', mode === 'all');
+    document.getElementById('tab-mine').classList.toggle('active-tab', mode === 'mine');
+    
+    renderNexusFeed(); // Sake loda posts
+}
+
+async function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
+    feedContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#fde08d;">Loading Protocol...</div>';
+
+    let query = db.collection("posts").orderBy("timestamp", "desc");
+
+    if (currentMode === 'mine') {
+        query = db.collection("posts")
+                  .where("username", "==", "Sadiq_Alhassan")
+                  .orderBy("timestamp", "desc");
+    }
+
+    query.onSnapshot((snapshot) => {
+        let allPostsHTML = ''; 
+        snapshot.forEach((doc) => {
+            const post = { id: doc.id, ...doc.data() };
+            allPostsHTML += generatePostHTML(post);
+        });
+        feedContainer.innerHTML = allPostsHTML;
+        setTimeout(() => { if(typeof observeVideos === 'function') observeVideos(); }, 300);
+    }, (error) => {
+        console.error("Firebase Error:", error);
+        // Idan akwai Indexing Error, Firebase zai nuna link anan
+    });
+}
             
         </script>
         
