@@ -441,40 +441,70 @@ async function fetchFirebaseData() {
 
 
 
- async function loadTimelinePosts() {
+async function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     
     try {
-        // Tace posts na Sadiq kadai
+        // 1. Kamo posts na Sadiq kadai (Ba zamu sa orderBy a nan ba don kaucewa Error)
         const snapshot = await db.collection('posts')
             .where("username", "==", "Sadiq_Alhassan")
-            .orderBy("timestamp", "desc") // Don na baya-bayan nan ya fito sama
             .get();
 
         if (!snapshot.empty) {
             timelineArea.innerHTML = ''; 
 
+            // 2. Mayar da snapshot din zuwa Array domin mu iya jera su da kan mu
+            let postsArray = [];
             snapshot.forEach(doc => {
-                const post = { id: doc.id, ...doc.data() };
-                
-                // ANAN NE SIRRIN: Maimakon mu sake gina wani HTML daban,
-                // za mu kira asalin function din da kake amfani da shi a Feed.
-                // Idan baka sa shi a wannan file din ba, ka tabbata ka kwafi shi.
+                postsArray.push({ id: doc.id, ...doc.data() });
+            });
+
+            // 3. JERA SU (Sorting): Sabon post ya dawo sama
+            postsArray.sort((a, b) => {
+                const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
+                const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+                return timeB - timeA; // Babban lokaci (Sabo) zai dawo sama
+            });
+
+            // 4. Saka su a HTML
+            postsArray.forEach(post => {
                 timelineArea.innerHTML += generatePostHTML(post);
             });
             
-            // Sake kunna bidiyo idan akwai
-            setTimeout(() => { if(typeof observeVideos === 'function') observeVideos(); }, 300);
-            
+            console.log("An jera posts a jere kuma komai ya fito! ✅");
         } else {
             timelineArea.innerHTML = '<p class="text-center text-gray-500 text-[10px] mt-10">Babu saƙonni a timeline ɗinka tukunna.</p>';
         }
     } catch (error) {
-        console.error("Kuskure wajen nuna posts:", error);
-        // Idan ya ba ka error na Index, cire .orderBy tukunna
+        console.error("Kuskure:", error);
     }
- }
+}
             
+
+
+
+            function generatePostHTML(post) {
+    return `
+        <div class="glass-vault p-4 rounded-[30px] border-none bg-white/5 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <img src="${post.userProfilePic || 'https://api.dicebear.com/7.x/bottts/svg?seed=mamba'}" class="w-10 h-10 rounded-full border border-cyan-400/30">
+                    <div>
+                        <h4 class="text-white font-bold text-xs">${post.username}</h4>
+                        <p class="text-gray-500 text-[10px]">Just now</p>
+                    </div>
+                </div>
+            </div>
+            <p class="text-gray-300 text-xs mb-4">${post.content || ''}</p>
+            ${post.mediaUrl ? `
+                <div class="rounded-2xl overflow-hidden border border-white/5">
+                    ${post.mediaType === 'video' 
+                        ? `<video src="${post.mediaUrl}" controls class="w-full"></video>` 
+                        : `<img src="${post.mediaUrl}" class="w-full">`}
+                </div>` : ''}
+        </div>
+    `;
+            }
             
             
         </script>
