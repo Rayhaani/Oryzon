@@ -1215,9 +1215,15 @@ header {
         </div>
 
         <div class="flex gap-4 my-6">
-             <button id="btn-showcase" onclick="switchTab('showcase')" class="btn-slim btn-white">Showcase</button>
-             <button id="btn-timeline" onclick="switchTab('timeline')" class="btn-slim btn-trans">Timeline</button>
-        </div>
+     <button id="btn-showcase" onclick="switchTab('showcase')" class="btn-slim btn-white">Showcase</button>
+     <button id="btn-timeline" onclick="switchTab('timeline')" class="btn-slim btn-trans">Timeline</button>
+</div>
+
+<!-- Ka tabbatar timeline-area yana farawa da "display: none" a CSS ko kuma ka bashi class="hidden" -->
+<div id="timeline-area" class="hidden pb-10 px-1">
+    <!-- Post zasu shigo nan -->
+</div>
+        
         
         <!-- SHOWCASE AREA (9 BOXES) -->
         <div id="showcase-area" class="insta-grid pb-10">
@@ -1440,29 +1446,7 @@ async function fetchFirebaseData() {
        
 
 
-            function switchTab(tab) {
-    // Nemo areas din biyu
-    const showcase = document.getElementById('showcase-area');
-    const timeline = document.getElementById('timeline-area');
-    const btnShowcase = document.getElementById('btn-showcase');
-    const btnTimeline = document.getElementById('btn-timeline');
-
-    if (tab === 'showcase') {
-        // Nuna Showcase, boye Timeline
-        showcase.classList.remove('hidden');
-        timeline.classList.add('hidden');
-        // Canja launin button
-        btnShowcase.className = 'btn-slim btn-white';
-        btnTimeline.className = 'btn-slim btn-trans';
-    } else {
-        // Nuna Timeline, boye Showcase
-        timeline.classList.remove('hidden');
-        showcase.classList.add('hidden');
-        // Canja launin button
-        btnTimeline.className = 'btn-slim btn-white';
-        btnShowcase.className = 'btn-slim btn-trans';
-    }
-            }
+            
             
 async function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
@@ -1636,6 +1620,36 @@ function closeSubModal() {
     // Dawo da kyamarorin
     document.querySelector('.camera-cover-main').style.visibility = "visible";
     document.querySelector('.camera-profile-main').style.visibility = "visible";
+        }
+
+
+
+            function switchTab(tab) {
+    const showcase = document.getElementById('showcase-area');
+    const timeline = document.getElementById('timeline-area');
+    const btnShowcase = document.getElementById('btn-showcase');
+    const btnTimeline = document.getElementById('btn-timeline');
+
+    if (tab === 'showcase') {
+        // Nuna Showcase
+        showcase.style.display = 'grid'; // Amfani da grid saboda insta-grid ne
+        timeline.style.display = 'none';
+        
+        // Canja kalar buttons
+        btnShowcase.classList.replace('btn-trans', 'btn-white');
+        btnTimeline.classList.replace('btn-white', 'btn-trans');
+    } else {
+        // Nuna Timeline
+        timeline.style.display = 'block';
+        showcase.style.display = 'none';
+        
+        // Canja kalar buttons
+        btnTimeline.classList.replace('btn-trans', 'btn-white');
+        btnShowcase.classList.replace('btn-white', 'btn-trans');
+        
+        // Kira function din loda posts idan har yanzu basu fito ba
+        loadTimelinePosts();
+    }
         }
             
         
