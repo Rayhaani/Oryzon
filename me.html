@@ -1438,6 +1438,8 @@ async function fetchFirebaseData() {
     }
 
 
+            
+
             function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     db.collection('posts')
@@ -1447,8 +1449,10 @@ async function fetchFirebaseData() {
             timelineArea.innerHTML = ''; 
             snapshot.forEach(doc => {
                 const post = doc.data();
-                // Idan posts dinka basu da category, ko kuma category din "business" ne, su fito a Timeline
-                if (!post.category || post.category === "business" || post.category === "post") {
+                
+                // SHARADI: Idan category ba "showcase" ba ne, to ya fito a Timeline
+                // Wannan zai hada da "business", "post", ko wadanda basu da category
+                if (post.category !== "business") {
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
             });
@@ -1655,6 +1659,40 @@ function closeSubModal() {
 
             if (!hasImages) {
                 showcaseArea.innerHTML = '<p>Babu hotuna a nan.</p>';
+            }
+        });
+            }
+
+
+
+
+
+            function loadShowcaseImages() {
+    const showcaseArea = document.getElementById('showcase-area');
+    db.collection('posts')
+        .where("username", "==", "Sadiq_Alhassan")
+        .onSnapshot(snapshot => {
+            showcaseArea.innerHTML = '';
+            let hasImages = false;
+
+            snapshot.forEach(doc => {
+                const post = doc.data();
+                
+                // SHARADI: Hotuna su fito anan kawai idan category dinsu "business" ne
+                if (post.category === "business") {
+                    if (post.mediaUrl) {
+                        hasImages = true;
+                        showcaseArea.insertAdjacentHTML('beforeend', `
+                            <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px;">
+                                <img src="${post.mediaUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                        `);
+                    }
+                }
+            });
+
+            if (!hasImages) {
+                showcaseArea.innerHTML = '<p style="text-align:center; width:100%;">Babu hotuna a nan.</p>';
             }
         });
             }
