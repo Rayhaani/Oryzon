@@ -1225,18 +1225,11 @@ header {
 </div>
         
         
-        <!-- SHOWCASE AREA (9 BOXES) -->
-        <div id="showcase-area" class="insta-grid pb-10">
-            <div class="grid-item"><img src="https://images.unsplash.com/photo-1583944438403-f5260a7c0838?w=400"></div>
-            <div class="grid-item"><img src="https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5?w=400"></div>
-            <div class="grid-item"><img src="https://images.unsplash.com/photo-1574169208507-84376144848b?w=400"></div>
-            <div class="grid-item"><img src="https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?w=400"></div>
-            <div class="grid-item"><img src="https://images.unsplash.com/photo-1590736962100-30514a6016da?w=400"></div>
-            <div class="grid-item"><img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400"></div>
-            <div class="grid-item"><img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=400"></div>
-            <div class="grid-item"><img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400"></div>
-            <div class="grid-item"><img src="https://images.unsplash.com/photo-1445205170230-053b830c6050?w=400"></div>
-        </div>
+        <!-- SHOWCASE AREA (Dynamic) -->
+<div id="showcase-area" class="insta-grid pb-10">
+    <!-- Hotunan Firebase za su fito a nan -->
+</div>
+        
 
         <!-- TIMELINE AREA WITH FULL DETAILS -->
         <div id="timeline-area" class="hidden pb-10 px-1">
@@ -1645,6 +1638,46 @@ function switchTab(tab) {
     }
         }
     
+
+
+
+            async function loadShowcaseImages() {
+    const showcaseArea = document.getElementById('showcase-area');
+    
+    try {
+        // Muna kiran posts daga Firestore
+        const snapshot = await db.collection('posts')
+            .where("username", "==", "Sadiq_Alhassan") // Tabbatar sunan ya dace
+            .orderBy("timestamp", "desc") // Na baya-bayan nan su fara fitowa
+            .limit(9) // Boxes 9 kacal muke bukata
+            .get();
+
+        if (!snapshot.empty) {
+            showcaseArea.innerHTML = ''; // Share tsofaffin hotunan Unsplash
+
+            snapshot.forEach(doc => {
+                const post = doc.data();
+                // Tabbatar akwai mediaUrl kuma hoto ne
+                if (post.mediaUrl) {
+                    const itemHTML = `
+                        <div class="grid-item">
+                            <img src="${post.mediaUrl}" 
+                                 style="width: 100%; height: 100%; object-fit: cover;" 
+                                 onclick="viewPost('${doc.id}')">
+                        </div>`;
+                    showcaseArea.insertAdjacentHTML('beforeend', itemHTML);
+                }
+            });
+        } else {
+            console.log("Ba a samu posts ba a Firebase.");
+        }
+    } catch (error) {
+        console.error("Kuskure wajen loda Showcase:", error);
+    }
+}
+
+// Kira function din lokacin da aka bude page
+window.addEventListener('load', loadShowcaseImages);
             
             
         </script>
