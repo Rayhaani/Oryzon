@@ -1052,30 +1052,27 @@ async function toggleSave(btn, postId) {
         
     const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
         
-    
-if (post.mediaUrl) {
-    if (post.mediaType === 'video') {
-        mediaHTML = `
-            <div class="video-wrapper" style="position: relative; background: #111; min-height: 300px; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                <video 
-                    src="${post.mediaUrl}" 
-                    class="post-media" 
-                    loop playsinline muted 
-                    preload="metadata"
-                    style="width: 100%; height: auto; display: block; object-fit: cover;">
-                </video>
-                <!-- Loading Spinner - Zai bace idan bidiyo ya fara play -->
-                <div class="video-loader" style="position: absolute; color: #fde08d; font-size: 20px;"><i class="fas fa-spinner fa-spin"></i></div>
-                <div class="mute-toggle" onclick="toggleVideoSound(event, this)" style="position: absolute; bottom: 15px; right: 15px; z-index: 100;">
-                    <i class="fa-solid fa-volume-xmark"></i>
-                </div>
-            </div>`;
-    } else {
-        mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy" style="width:100%; height:auto;">`;
+    // 1. Ginin sashin hoto ko bidiyo (An gyara preloading don magance blank screen)
+    if (post.mediaUrl) {
+        if (post.mediaType === 'video') {
+            mediaHTML = `
+                <div style="position: relative; background: #000; min-height: 250px; display: flex; align-items: center; overflow: hidden;">
+                    <video 
+                        src="${post.mediaUrl}" 
+                        class="post-media" 
+                        loop playsinline autoplay muted 
+                        preload="auto"
+                        style="width: 100%; height: auto; display: block;">
+                    </video>
+                    <div class="mute-toggle" onclick="toggleVideoSound(event, this)" style="position: absolute; bottom: 15px; right: 15px; z-index: 100;">
+                        <i class="fa-solid fa-volume-xmark"></i>
+                    </div>
+                </div>`;
+        } else {
+            mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+        }
     }
-}
 
-        
     // 2. Rufe komai a cikin return guda daya
     return `
     <div class="post-card" onclick="toggleImmersive(this)">
@@ -1483,14 +1480,17 @@ function handleVideoPriority() {
         }
     });
 
-    // Kunna wanda yake tsakiya
-    if (focusVideo && focusVideo.paused) {
-        focusVideo.play().catch(err => {
-            console.log("Autoplay blocked");
-        });
+    // Kunna bidiyo mafi kusa da tsakiya
+    if (focusVideo) {
+        const playPromise = focusVideo.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                // Autoplay block prevention
+            });
+        }
     }
-} // <--- Wannan rufe function din ne ya rage a naka
-    
+}
+
 // 3. Babban Function na Render (Firebase Only)
 async function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
@@ -1541,3 +1541,4 @@ window.addEventListener('scroll', () => {
     </script>
 </body>
 </html>
+
