@@ -1133,6 +1133,14 @@ header {
     background: #fff; color: #000; cursor: pointer;
 }
 .gold-vibe { background: #ffcc00; }           
+  
+  
+        
+        .post-media, .grid-item img {
+    background: #1a1a1a; /* Launin da zai nuna kafin hoton ya fito */
+    min-height: 200px;
+   }   
+    
     </style>
 </head>
 <body>
@@ -1368,24 +1376,24 @@ firebase.firestore().enablePersistence()
 // Mun raba wannan a matsayin async function na daban
 async function fetchFirebaseData() {
     try {
-        const doc = await db.collection('users').doc('Sadiq_Alhassan').get();
+        // 1. Fara dubawa a Cache (Local Storage na Firebase)
+        const doc = await db.collection('users').doc('Sadiq_Alhassan').get({ source: 'cache' })
+            .catch(() => db.collection('users').doc('Sadiq_Alhassan').get({ source: 'server' }));
+
         if (doc.exists) {
             const data = doc.data();
-            if (data.userProfilePic) {
-                document.getElementById('main-profile-img').src = data.userProfilePic;
-                localStorage.setItem('userProfilePic', data.userProfilePic);
-            }
-            if (data.userCover) {
-                document.getElementById('main-cover-img').src = data.userCover;
-                localStorage.setItem('userCover', data.userCover);
-            }
+            if (data.userProfilePic) updateUI('main-profile-img', data.userProfilePic, 'userProfilePic');
+            if (data.userCover) updateUI('main-cover-img', data.userCover, 'userCover');
         }
     } catch (e) {
-        console.error("Firebase Connection Error:", e);
+        console.error("Loda bayanai ya fuskanci matsala:", e);
     }
 }
-            
-            
+
+function updateUI(id, url, storageKey) {
+    document.getElementById(id).src = url;
+    localStorage.setItem(storageKey, url);
+}
             
             
             
@@ -1477,32 +1485,42 @@ function generatePostHTML(post) {
     const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
     const savedProfilePic = localStorage.getItem('userProfilePic');
 
-// Idan post din naka ne (Sadiq_Alhassan), yi amfani da hoton profile dinka
-// Idan na wani ne, yi amfani da hoton da yake jikin post din ko default avatar
-const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic) 
-                   ? savedProfilePic 
-                   : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=member");
+    // Idan post din naka ne (Sadiq_Alhassan), yi amfani da hoton profile dinka
+    // Idan na wani ne, yi amfani da hoton da yake jikin post din ko default avatar
+    const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic) 
+                       ? savedProfilePic 
+                       : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=member");
         
-        // Mun bar wannan tana amfani da class="avatar" domin ta dauki CSS dinka, amma mun gyara top/left
-        const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top: 4px; left: 8px; z-index: 50;">`;
+    // GYARA: Mun kara f_auto,q_auto idan hoton profile din na Cloudinary ne don saurin loda hoto
+    const optimizedProfilePic = currentPic.includes('cloudinary.com') 
+                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w_50/') 
+                                : currentPic;
+
+    const profilePicHTML = `<img src="${optimizedProfilePic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top: 4px; left: 8px; z-index: 50;" loading="lazy">`;
         
-        // ----------------------------------------------------
+    // ----------------------------------------------------
 
     // 1. Ginin sashin hoto ko bidiyo
     if (post.mediaUrl) {
+        // GYARA: Optimization don Cloudinary don hoton/bidiyon ya fito nan take
+        const fastMediaUrl = post.mediaUrl.includes('cloudinary.com') 
+                             ? post.mediaUrl.replace('/upload/', '/upload/f_auto,q_auto,w_600/') 
+                             : post.mediaUrl;
+
         if (post.mediaType === 'video') {
             mediaHTML = `
-                <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
+                <video src="${fastMediaUrl}" class="post-media" loop playsinline autoplay muted preload="metadata"></video>
                 <div class="mute-toggle" onclick="toggleVideoSound(event, this)" style="position: absolute; bottom: 65px; right: 15px; z-index: 100;">
                     <i class="fa-solid fa-volume-xmark"></i>
                 </div>`;
         } else {
-            mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
+            // loading="lazy" yana taimakawa wajen rashin cin data da loda hoto da sauri
+            mediaHTML = `<img src="${fastMediaUrl}" class="post-media" loading="lazy">`;
         }
     }
 
     // 2. Rufe komai a cikin return guda daya
-         return `
+    return `
     <div class="post-card" onclick="toggleImmersive(this)" style="margin-bottom: 8px !important;">
         <!-- Mun kara padding-left: 55px domin sunan ya matsa dama ya barwa avatar fili -->
         <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 50px; height: 50px; position: relative;">
@@ -1514,9 +1532,7 @@ const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic)
                  <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 0px;">
                     <a href="me.html" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">
                         <span>${post.username || 'Sadiq_Alhassan'}</span>
-
-
-                                   </a>
+                    </a>
                     ${vBadge}
                 </div>
             </div>
@@ -1549,7 +1565,7 @@ const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic)
         </div>
     </div>`;
             }
-                         
+                            
         
          
             let currentMode = 'all'; // Default na Global
