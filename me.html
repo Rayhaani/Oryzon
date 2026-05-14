@@ -1445,32 +1445,36 @@ async function fetchFirebaseData() {
     }
 
 
+
             async function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     
-    // Idan an riga an loda posts, kada a sake loda su don gudun nauyi
-    if (timelineArea.innerHTML.trim() !== "") return;
-
     try {
-        // Misalin kiran Firebase Firestore
-        const querySnapshot = await getDocs(collection(db, "posts"));
-        timelineArea.innerHTML = ""; // Share loading spinner
-        
-        querySnapshot.forEach((doc) => {
-            const post = doc.data();
-            timelineArea.innerHTML += `
-                <div class="post-card">
-                    <p>${post.content}</p>
-                </div>
-            `;
-        });
+        // Tabbatar kana kiran posts na Sadiq_Alhassan kadai
+        const snapshot = await db.collection('posts')
+            .where("username", "==", "Sadiq_Alhassan")
+            .get();
+
+        if (!snapshot.empty) {
+            timelineArea.innerHTML = ''; // Goge "Loading..."
+            let postsArray = [];
+            snapshot.forEach(doc => postsArray.push({ id: doc.id, ...doc.data() }));
+
+            // Jera su: Sabo a sama
+            postsArray.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+
+            postsArray.forEach(post => {
+                const cardHTML = generatePostHTML(post);
+                timelineArea.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        } else {
+            timelineArea.innerHTML = '<p class="text-center text-gray-500 text-[10px] mt-10">Babu saƙonni a nan.</p>';
+        }
     } catch (error) {
-        console.error("Kuskure wajen loda posts:", error);
+        console.error("Firebase Error:", error);
     }
             }
             
-
-        
 
 
 function generatePostHTML(post) {
@@ -1615,33 +1619,33 @@ function closeSubModal() {
         }
 
 
-
-            
-            function switchTab(tab) {
+function switchTab(tab) {
     const showcase = document.getElementById('showcase-area');
     const timeline = document.getElementById('timeline-area');
-    
+    const btnShowcase = document.getElementById('btn-showcase');
+    const btnTimeline = document.getElementById('btn-timeline');
+
     if (tab === 'showcase') {
-        // Nuna Showcase, boye Timeline
-        showcase.setAttribute('style', 'display: grid !important');
-        timeline.setAttribute('style', 'display: none !important');
-        
-        // Canja launin buttons
-        document.getElementById('btn-showcase').className = 'btn-slim btn-white';
-        document.getElementById('btn-timeline').className = 'btn-slim btn-trans';
+        showcase.classList.remove('hidden');
+        timeline.classList.add('hidden');
+        // Gyaran kalar button
+        btnShowcase.className = 'btn-slim btn-white';
+        btnTimeline.className = 'btn-slim btn-trans';
     } else {
-        // Nuna Timeline, boye Showcase
-        timeline.setAttribute('style', 'display: block !important');
-        showcase.setAttribute('style', 'display: none !important');
+        timeline.classList.remove('hidden');
+        showcase.classList.add('hidden');
+        // Gyaran kalar button
+        btnTimeline.className = 'btn-slim btn-white';
+        btnShowcase.className = 'btn-slim btn-trans';
         
-        // Canja launin buttons
-        document.getElementById('btn-timeline').className = 'btn-slim btn-white';
-        document.getElementById('btn-showcase').className = 'btn-slim btn-trans';
-        
-        // Kira posts daga Firebase
-        loadTimelinePosts(); 
+        // Tabbatar an loda posts idan Timeline din wayam yake
+        if (timeline.children.length <= 1) { 
+            loadTimelinePosts(); 
+        }
     }
-            }
+        }
+    
+            
             
         </script>
         
