@@ -1551,17 +1551,24 @@ function changeFeed(mode) {
     renderNexusFeed(); // Sake loda posts
 }
 
-async function renderNexusFeed() {
+
+            async function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
     feedContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#fde08d;">Loading Protocol...</div>';
 
-    let query = db.collection("posts").orderBy("timestamp", "desc");
+    // 1. Wannan zai dauko posts na Timeline na kowa da kowa (amma ba Showcase ba)
+    let query = db.collection("posts")
+                  .where("category", "==", "post") 
+                  .orderBy("timestamp", "desc");
 
     if (currentMode === 'mine') {
+        // 2. Wannan zai dauko naka na kanka kawai (Timeline posts kawai)
         query = db.collection("posts")
                   .where("username", "==", "Sadiq_Alhassan")
+                  .where("category", "==", "post") // Wannan zai tace showcase dinka
                   .orderBy("timestamp", "desc");
     }
+    
 
     query.onSnapshot((snapshot) => {
         let allPostsHTML = ''; 
