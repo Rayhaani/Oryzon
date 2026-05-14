@@ -1438,22 +1438,22 @@ async function fetchFirebaseData() {
     }
 
 
-async function loadTimelinePosts() {
+function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
-    try {
-        // MUHIMMI: .where("category", "==", "post")
-        const snapshot = await db.collection('posts')
-            .where("username", "==", "Sadiq_Alhassan")
-            .where("category", "==", "post") // Kawai posts na Timeline zasu fito nan
-            .orderBy("timestamp", "desc")
-            .get();
-
-        // ... sauran code din generatePostHTML
-    } catch (error) {
-        console.error("Timeline Error:", error);
-    }
+    db.collection('posts')
+        .where("username", "==", "Sadiq_Alhassan")
+        .orderBy("timestamp", "desc")
+        .onSnapshot(snapshot => {
+            timelineArea.innerHTML = ''; 
+            snapshot.forEach(doc => {
+                const post = doc.data();
+                // Logic: Idan category "post" ne KO KUMA babu category ko kadan
+                if (!post.category || post.category === "post") {
+                    timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
+                }
+            });
+        });
 }
-            
             
 
 
@@ -1627,36 +1627,23 @@ function switchTab(tab) {
     
 
 
-async function loadShowcaseImages() {
+function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
-    if (!showcaseArea) return;
-
-    try {
-        // MUHIMMI: Mun kara .where("category", "==", "showcase")
-        const snapshot = await db.collection('posts')
-            .where("username", "==", "Sadiq_Alhassan") 
-            .where("category", "==", "showcase") // Wannan zai raba su da Timeline
-            .orderBy("timestamp", "desc")
-            .limit(9)
-            .get();
-
-        if (!snapshot.empty) {
-            showcaseArea.innerHTML = ''; 
+    db.collection('posts')
+        .where("username", "==", "Sadiq_Alhassan")
+        .where("category", "==", "showcase") // Tacewa: Masu showcase kawai
+        .onSnapshot(snapshot => {
+            showcaseArea.innerHTML = '';
             snapshot.forEach(doc => {
                 const post = doc.data();
-                const itemHTML = `
-                    <div class="grid-item">
-                        <img src="${post.mediaUrl}" 
-                             class="w-full h-full object-cover" 
-                             onclick="viewPost('${doc.id}')">
-                    </div>`;
-                showcaseArea.insertAdjacentHTML('beforeend', itemHTML);
+                showcaseArea.insertAdjacentHTML('beforeend', `
+                    <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px;">
+                        <img src="${post.mediaUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                `);
             });
+        });
         }
-    } catch (error) {
-        console.error("Showcase Error:", error);
-    }
-}
             
             
             
