@@ -1443,43 +1443,35 @@ async function fetchFirebaseData() {
         localStorage.removeItem(storageKey);
         document.getElementById(type + '-menu').classList.add('hidden');
     }
-       
 
 
-            
-            
-async function loadTimelinePosts() {
+            async function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     
+    // Idan an riga an loda posts, kada a sake loda su don gudun nauyi
+    if (timelineArea.innerHTML.trim() !== "") return;
+
     try {
-        const snapshot = await db.collection('posts')
-            .where("username", "==", "Sadiq_Alhassan")
-            .get();
-
-        if (!snapshot.empty) {
-            timelineArea.innerHTML = ''; 
-            let postsArray = [];
-            snapshot.forEach(doc => postsArray.push({ id: doc.id, ...doc.data() }));
-
-            // Jera su daga sabo zuwa tsoho
-            postsArray.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
-
-            postsArray.forEach(post => {
-                // MUN CANZA NAN: Muna kiran generatePostHTML(post) maimakon tsohon HTML din
-                const cardHTML = generatePostHTML(post);
-                timelineArea.insertAdjacentHTML('beforeend', cardHTML);
-            });
-            
-            setTimeout(() => { if(typeof observeVideos === 'function') observeVideos(); }, 300);
-        } else {
-            timelineArea.innerHTML = '<p style="text-align:center; color:#555; font-size:11px; margin-top:50px;">Babu saƙonni a yanzu.</p>';
-        }
-    } catch (error) {
-        console.error("Error:", error);
-    }
-                }
-            
+        // Misalin kiran Firebase Firestore
+        const querySnapshot = await getDocs(collection(db, "posts"));
+        timelineArea.innerHTML = ""; // Share loading spinner
         
+        querySnapshot.forEach((doc) => {
+            const post = doc.data();
+            timelineArea.innerHTML += `
+                <div class="post-card">
+                    <p>${post.content}</p>
+                </div>
+            `;
+        });
+    } catch (error) {
+        console.error("Kuskure wajen loda posts:", error);
+    }
+            }
+            
+
+        
+
 
 function generatePostHTML(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
@@ -1624,35 +1616,33 @@ function closeSubModal() {
 
 
 
+            
             function switchTab(tab) {
     const showcase = document.getElementById('showcase-area');
     const timeline = document.getElementById('timeline-area');
-    const btnShowcase = document.getElementById('btn-showcase');
-    const btnTimeline = document.getElementById('btn-timeline');
-
+    
     if (tab === 'showcase') {
-        // Nuna Showcase
-        showcase.style.display = 'grid'; // Amfani da grid saboda insta-grid ne
-        timeline.style.display = 'none';
+        // Nuna Showcase, boye Timeline
+        showcase.setAttribute('style', 'display: grid !important');
+        timeline.setAttribute('style', 'display: none !important');
         
-        // Canja kalar buttons
-        btnShowcase.classList.replace('btn-trans', 'btn-white');
-        btnTimeline.classList.replace('btn-white', 'btn-trans');
+        // Canja launin buttons
+        document.getElementById('btn-showcase').className = 'btn-slim btn-white';
+        document.getElementById('btn-timeline').className = 'btn-slim btn-trans';
     } else {
-        // Nuna Timeline
-        timeline.style.display = 'block';
-        showcase.style.display = 'none';
+        // Nuna Timeline, boye Showcase
+        timeline.setAttribute('style', 'display: block !important');
+        showcase.setAttribute('style', 'display: none !important');
         
-        // Canja kalar buttons
-        btnTimeline.classList.replace('btn-trans', 'btn-white');
-        btnShowcase.classList.replace('btn-white', 'btn-trans');
+        // Canja launin buttons
+        document.getElementById('btn-timeline').className = 'btn-slim btn-white';
+        document.getElementById('btn-showcase').className = 'btn-slim btn-trans';
         
-        // Kira function din loda posts idan har yanzu basu fito ba
-        loadTimelinePosts();
+        // Kira posts daga Firebase
+        loadTimelinePosts(); 
     }
-        }
+            }
             
-        
         </script>
         
     </main>
