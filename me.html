@@ -1438,7 +1438,7 @@ async function fetchFirebaseData() {
     }
 
 
-function loadTimelinePosts() {
+            function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     db.collection('posts')
         .where("username", "==", "Sadiq_Alhassan")
@@ -1447,16 +1447,14 @@ function loadTimelinePosts() {
             timelineArea.innerHTML = ''; 
             snapshot.forEach(doc => {
                 const post = doc.data();
-                
-                // Sabon Logic: Nuna komai muddin ba "showcase" ba ne
-                if (post.category !== "showcase") {
+                // Idan posts dinka basu da category, ko kuma category din "business" ne, su fito a Timeline
+                if (!post.category || post.category === "business" || post.category === "post") {
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
             });
         });
             }
             
-
 function generatePostHTML(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
     let mediaHTML = '';
@@ -1631,36 +1629,35 @@ function closeSubModal() {
             }
             
 
-function loadShowcaseImages() {
+
+
+            function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
     db.collection('posts')
         .where("username", "==", "Sadiq_Alhassan")
-        .where("category", "==", "showcase") 
+        // Tunda yanzu posts dinka "business" ne, bari mu nuna su anan ma
         .onSnapshot(snapshot => {
             showcaseArea.innerHTML = '';
             
-            // Idan babu komai a showcase
-            if (snapshot.empty) {
-                showcaseArea.innerHTML = '<p style="text-align:center; width:100%; color:gray;">Babu hotuna a nan.</p>';
-                return;
-            }
-
+            let hasImages = false;
             snapshot.forEach(doc => {
                 const post = doc.data();
-                if (post.mediaUrl) { // Tabbatar akwai hoto kafin sakawa
+                // Idan post din yana da hoto (mediaUrl), to ya nuna shi a grid din showcase
+                if (post.mediaUrl) {
+                    hasImages = true;
                     showcaseArea.insertAdjacentHTML('beforeend', `
-                        <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px; background: #eee;">
-                            <img src="${post.mediaUrl}" 
-                                 style="width: 100%; height: 100%; object-fit: cover;" 
-                                 onclick="viewFullImage('${post.mediaUrl}')"
-                                 alt="Showcase item">
+                        <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px;">
+                            <img src="${post.mediaUrl}" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
                     `);
                 }
             });
+
+            if (!hasImages) {
+                showcaseArea.innerHTML = '<p>Babu hotuna a nan.</p>';
+            }
         });
-}
-            
+            }
             
             
         </script>
