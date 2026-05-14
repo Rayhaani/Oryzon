@@ -1035,50 +1035,8 @@ async function toggleSave(btn, postId) {
         
             
 
-async function renderNexusFeed() {
-    const feedContainer = document.querySelector('.feed-container');
-    
-    // 1. Kamo Saved Posts na Sadiq (Optional)
-    try {
-        const savedSnapshot = await db.collection("saved_posts")
-            .where("userId", "==", "Sadiq_Alhassan")
-            .get();
-        userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
-    } catch(e) { 
-        console.log("Error loading saved posts:", e); 
-    }
 
-    // 2. Babban Snapshot na Posts daga Firebase kaɗai
-    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        let allPostsHTML = ''; 
-        
-        // Idan babu komai a database
-        if (snapshot.empty) {
-            feedContainer.innerHTML = '<div style="text-align:center; padding:50px; color:#fde08d;">Babu wani sako tukunna...</div>';
-            return;
-        }
-
-        snapshot.forEach((doc) => {
-            // Muna saka ID din kowane post domin aikin Like da Save
-            const post = { id: doc.id, ...doc.data() };
-            
-            // Kira generatePostHTML wanda zai gina HTML din kowane post
-            allPostsHTML += generatePostHTML(post);
-        });
-
-        // Saka duka posts ɗin a page (Blink of an eye!)
-        feedContainer.innerHTML = allPostsHTML;
-        
-        // Kunna idon lura da videos don su yi autoplay
-        setTimeout(() => {
-            observeVideos();
-        }, 300); 
-    }, (error) => {
-        console.error("Firebase Snapshot Error:", error);
-    });
-        }
-        
-        
+  
 
     function generatePostHTML(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
@@ -1458,7 +1416,120 @@ function observeVideos() {
 
 // Kira aikin nan take idan page ya gama lodi
 window.addEventListener('DOMContentLoaded', loadFooterProfile);
+
+
+
+
+    /**
+ * NEXUS PROTOCOL - ADVANCED VIDEO FEED ENGINE
+ * Features: Viewport Priority, Pre-fetching, & Intelligent Scroll
+ */
+
+// 1. Saitin Intersection Observer don Loda Bidiyo Tun Kafin su Bayyana (Pre-fetching)
+const videoOptions = {
+    root: null,
+    rootMargin: '400px 0px', // Fara loda bidiyo pixels 400 kafin ya shigo screen
+    threshold: 0.01
+};
+
+const nexusObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const video = entry.target;
+        
+        if (entry.isIntersecting) {
+            // Fara loda bidiyo a boye (Buffer)
+            video.preload = "auto";
+        } else {
+            // Idan ya fita nesa, dakatar da shi don rage nauyi
+            video.pause();
+        }
+    });
+}, videoOptions);
+
+// 2. Viewport Priority Logic: Gano bidiyon da yake tsakiya daidai
+function handleVideoPriority() {
+    const videos = document.querySelectorAll('.post-media');
+    let focusVideo = null;
+    let minDistance = Infinity;
+    const screenCenter = window.innerHeight / 2;
+
+    videos.forEach(video => {
+        if (video.tagName === 'VIDEO') {
+            const rect = video.getBoundingClientRect();
+            const videoCenter = rect.top + (rect.height / 2);
+            const distanceFromCenter = Math.abs(screenCenter - videoCenter);
+
+            // Duba idan bidiyon yana cikin screen akalla da kashi 50%
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                if (distanceFromCenter < minDistance) {
+                    minDistance = distanceFromCenter;
+                    focusVideo = video;
+                }
+            }
+            // Kashe duka sauran bidiyoyin
+            if (video !== focusVideo) {
+                video.pause();
+            }
+        }
+    });
+
+    // Kunna bidiyo mafi kusa da tsakiya
+    if (focusVideo) {
+        const playPromise = focusVideo.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                // Autoplay block prevention
+            });
+        }
+    }
+}
+
+// 3. Babban Function na Render (Firebase Only)
+async function renderNexusFeed() {
+    const feedContainer = document.querySelector('.feed-container');
     
+    // Kamo Saved Posts na Sadiq_Alhassan
+    try {
+        const savedSnapshot = await db.collection("saved_posts")
+            .where("userId", "==", "Sadiq_Alhassan")
+            .get();
+        window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
+    } catch(e) { console.log("Saved posts error:", e); }
+
+    // Sauraran Firebase don sabbin posts
+    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+        let allPostsHTML = ''; 
+
+        if (snapshot.empty) {
+            feedContainer.innerHTML = '<div class="empty-feed">No posts yet...</div>';
+            return;
+        }
+
+        snapshot.forEach((doc) => {
+            const post = { id: doc.id, ...doc.data() };
+            allPostsHTML += generatePostHTML(post);
+        });
+
+        // Saka posts a page
+        feedContainer.innerHTML = allPostsHTML;
+
+        // Kunna sa ido akan sabbin bidiyoyin da aka saka
+        const newVideos = feedContainer.querySelectorAll('video');
+        newVideos.forEach(v => nexusObserver.observe(v));
+
+        // Kira priority check bayan an gama lodi
+        setTimeout(handleVideoPriority, 500);
+    });
+}
+
+// 4. Saka Scrolling Listener don saurin dubawa
+let scrollTimeout;
+window.addEventListener('scroll', () => {
+    // Raba aikin (Debouncing) don kar wayar ta yi zafi
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(handleVideoPriority, 150);
+}, { passive: true });
+                    
     
     </script>
 </body>
