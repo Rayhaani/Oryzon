@@ -854,37 +854,9 @@ header {
     </header>
 
     <div class="feed-container">
-        <div class="post-card" onclick="toggleImmersive(this)">
-            <div class="post-header">
-                <div class="avatar"></div>
-                <div class="username">Sadiq_Alhassan</div>
-            </div>
-            <div class="post-content">Barka da zuwa sabuwar duniyar Nexus. Wannan shi ne farkon tafiyar mu ta shekarar 3000. 🚀</div>
-            <img src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop" alt="Nexus Media" class="post-media">
-           
-            <div class="interaction-bar" onclick="stopProp(event)">
-                <div class="left-actions">
-                    <button class="btn-nexus" onclick="triggerPulse(this, event)">
-                        <i class="fa-regular fa-heart"></i>
-                        <span>228</span>
-                    </button>
-                    <button class="btn-nexus"><i class="fa-regular fa-comment"></i><span>12</span></button>
-                    <button class="btn-nexus"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></button>
-                    <button class="btn-nexus"><i class="fa-regular fa-paper-plane"></i></button>
-                </div>
-                <div class="save-btn" onclick="toggleSave(this)"><i class="fa-regular fa-bookmark"></i></div>
-            </div>
-        </div>
-
-        <div class="post-card" onclick="toggleImmersive(this)">
-    <div class="post-header">
-        <div class="avatar"></div>
-        <div class="username">Tech_King_Kano</div>
+    <!-- Nan zai kasance wayam, Firebase ne zai cika shi -->
     </div>
-    <div class="post-content">Duba yadda wannan UI din yake yawo tamkar ruwa! #GoldEdition</div>
-    <img src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=2000&auto=format&fit=crop" alt="Nexus Media" class="post-media">
     
-
             
             <div class="interaction-bar" onclick="stopProp(event)">
     <div class="left-actions">
@@ -1090,101 +1062,50 @@ async function toggleSave(btn, postId) {
     }
         }
         
-                
-
-        const nexusPosts = [
-    {
-        id: 1,
-        username: "Sadiq_Alhassan",
-        content: "Barka da zuwa sabuwar duniyar Nexus 3000. 🚀",
-        mediaType: "image",
-        mediaUrl: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1000",
-        isAd: false,
-        likes: "228",
-        comments: "12"
-    },
-    {
-        id: 2,
-        username: "Tech_King_Kano",
-        content: "Kalli yadda UI dinmu yake tamkar zinari! #NexusGold",
-        mediaType: "video",
-        mediaUrl: "https://www.w3schools.com/html/mov_bbb.mp4", // Misalin video
-        isAd: false,
-        likes: "1.5k",
-        comments: "84"
-    },
-    {
-        id: 3,
-        username: "Sponsored",
-        content: "Saka wannan Application din domin samun kyautar 500 NT kai tsaye!",
-        mediaType: "image",
-        mediaUrl: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1000",
-        isAd: true, // Wannan Talla ce
-        earningBadge: "+0.005 NT earned for watching",
-        likes: "10k",
-        comments: "500"
-    }
-];
-
-function renderNexusFeed() {
-    const feedContainer = document.querySelector('.feed-container');
-
-    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        let allPostsHTML = ''; 
-
-        // 1. POSTS DAGA FIREBASE
-        snapshot.forEach((doc) => {
-            const post = doc.data();
-            let mediaHTML = '';
-            if (post.mediaUrl) {
-                if (post.mediaType === 'video') {
-                    mediaHTML = `<video src="${post.mediaUrl}" class="post-media" autoplay loop muted playsinline></video>`;
-                } else {
-                    mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy">`;
-                }
-            }
-                    
-            allPostsHTML += generatePostHTML(post);
-        });
-
-        // 2. TSOFAFFIN POSTS (HARDCODED)
-        nexusPosts.forEach(post => {
-            allPostsHTML += generatePostHTML(post);
-        });
-
-        feedContainer.innerHTML = allPostsHTML;
-    });
-}
-
-
+            
 
 async function renderNexusFeed() {
     const feedContainer = document.querySelector('.feed-container');
     
-    // 1. Kamo Saved Posts (Optional)
+    // 1. Kamo Saved Posts na Sadiq (Optional)
     try {
-        const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
+        const savedSnapshot = await db.collection("saved_posts")
+            .where("userId", "==", "Sadiq_Alhassan")
+            .get();
         userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
-    } catch(e) { console.log(e) }
+    } catch(e) { 
+        console.log("Error loading saved posts:", e); 
+    }
 
-    // 2. Babban Snapshot na Posts
+    // 2. Babban Snapshot na Posts daga Firebase kaɗai
     db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         let allPostsHTML = ''; 
         
+        // Idan babu komai a database
+        if (snapshot.empty) {
+            feedContainer.innerHTML = '<div style="text-align:center; padding:50px; color:#fde08d;">Babu wani sako tukunna...</div>';
+            return;
+        }
+
         snapshot.forEach((doc) => {
+            // Muna saka ID din kowane post domin aikin Like da Save
             const post = { id: doc.id, ...doc.data() };
+            
+            // Kira generatePostHTML wanda zai gina HTML din kowane post
             allPostsHTML += generatePostHTML(post);
         });
 
-        // Saka posts a page
+        // Saka duka posts ɗin a page (Blink of an eye!)
         feedContainer.innerHTML = allPostsHTML;
         
-        // MAFI MUHIMMANCI: Saka musu ido yanzu
+        // Kunna idon lura da videos don su yi autoplay
         setTimeout(() => {
             observeVideos();
-        }, 300); // Mun dan jira kadan domin HTML din ya zauna daram
+        }, 300); 
+    }, (error) => {
+        console.error("Firebase Snapshot Error:", error);
     });
-}
+        }
         
         
 
