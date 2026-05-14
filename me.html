@@ -1438,35 +1438,22 @@ async function fetchFirebaseData() {
     }
 
 
-
-            async function loadTimelinePosts() {
+async function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
-    
     try {
-        // Tabbatar kana kiran posts na Sadiq_Alhassan kadai
+        // MUHIMMI: .where("category", "==", "post")
         const snapshot = await db.collection('posts')
             .where("username", "==", "Sadiq_Alhassan")
+            .where("category", "==", "post") // Kawai posts na Timeline zasu fito nan
+            .orderBy("timestamp", "desc")
             .get();
 
-        if (!snapshot.empty) {
-            timelineArea.innerHTML = ''; // Goge "Loading..."
-            let postsArray = [];
-            snapshot.forEach(doc => postsArray.push({ id: doc.id, ...doc.data() }));
-
-            // Jera su: Sabo a sama
-            postsArray.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
-
-            postsArray.forEach(post => {
-                const cardHTML = generatePostHTML(post);
-                timelineArea.insertAdjacentHTML('beforeend', cardHTML);
-            });
-        } else {
-            timelineArea.innerHTML = '<p class="text-center text-gray-500 text-[10px] mt-10">Babu saƙonni a nan.</p>';
-        }
+        // ... sauran code din generatePostHTML
     } catch (error) {
-        console.error("Firebase Error:", error);
+        console.error("Timeline Error:", error);
     }
-            }
+}
+            
             
 
 
@@ -1640,44 +1627,37 @@ function switchTab(tab) {
     
 
 
-
-            async function loadShowcaseImages() {
+async function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
-    
+    if (!showcaseArea) return;
+
     try {
-        // Muna kiran posts daga Firestore
+        // MUHIMMI: Mun kara .where("category", "==", "showcase")
         const snapshot = await db.collection('posts')
-            .where("username", "==", "Sadiq_Alhassan") // Tabbatar sunan ya dace
-            .orderBy("timestamp", "desc") // Na baya-bayan nan su fara fitowa
-            .limit(9) // Boxes 9 kacal muke bukata
+            .where("username", "==", "Sadiq_Alhassan") 
+            .where("category", "==", "showcase") // Wannan zai raba su da Timeline
+            .orderBy("timestamp", "desc")
+            .limit(9)
             .get();
 
         if (!snapshot.empty) {
-            showcaseArea.innerHTML = ''; // Share tsofaffin hotunan Unsplash
-
+            showcaseArea.innerHTML = ''; 
             snapshot.forEach(doc => {
                 const post = doc.data();
-                // Tabbatar akwai mediaUrl kuma hoto ne
-                if (post.mediaUrl) {
-                    const itemHTML = `
-                        <div class="grid-item">
-                            <img src="${post.mediaUrl}" 
-                                 style="width: 100%; height: 100%; object-fit: cover;" 
-                                 onclick="viewPost('${doc.id}')">
-                        </div>`;
-                    showcaseArea.insertAdjacentHTML('beforeend', itemHTML);
-                }
+                const itemHTML = `
+                    <div class="grid-item">
+                        <img src="${post.mediaUrl}" 
+                             class="w-full h-full object-cover" 
+                             onclick="viewPost('${doc.id}')">
+                    </div>`;
+                showcaseArea.insertAdjacentHTML('beforeend', itemHTML);
             });
-        } else {
-            console.log("Ba a samu posts ba a Firebase.");
         }
     } catch (error) {
-        console.error("Kuskure wajen loda Showcase:", error);
+        console.error("Showcase Error:", error);
     }
 }
-
-// Kira function din lokacin da aka bude page
-window.addEventListener('load', loadShowcaseImages);
+            
             
             
         </script>
