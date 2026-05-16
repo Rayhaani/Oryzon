@@ -15,7 +15,7 @@
             --text-dim: rgba(255, 255, 255, 0.6);
         }
 
-        /* GYARA NA 1: Hana duka shafin rawa ko juya-juya ta gefe (Anti-horizontal scroll) */
+        /* GYARA: Hana duka shafin rawa ko juya-juya ta gefe */
         html, body {
             overflow: hidden;
             width: 100%;
@@ -43,7 +43,7 @@
             justify-content: space-between;
             border: 1px solid rgba(0, 242, 255, 0.1);
             box-shadow: 0 0 50px rgba(0, 242, 255, 0.05);
-            overflow: hidden; /* Karfafa kulle duk wani abu da zai fita waje */
+            overflow: hidden;
         }
 
         /* Ambient Bio-Glow Matrix */
@@ -57,7 +57,7 @@
             transform: scale(1.3);
             transition: background-image 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             animation: bioPulse 8s infinite alternate;
-            pointer-events: none; /* Hana shi karbar taba da zai sa gidan rawa */
+            pointer-events: none;
         }
 
         @keyframes bioPulse {
@@ -152,56 +152,47 @@
         }
         .grid-left, .grid-right { flex: 1; height: 100%; }
 
-        /* Floating Interactive Aura Slider Widget */
-        .aura-slider-panel {
-            position: absolute; bottom: 130px; right: 16px;
-            background: var(--glass-bg); border: 1px solid var(--glass-border);
-            padding: 10px; border-radius: 20px; display: none;
-            flex-direction: column; align-items: center; gap: 8px; z-index: 12;
-            backdrop-filter: blur(15px);
-        }
-        .aura-slider-panel.active { display: flex; }
-        .aura-slider {
-            writing-mode: bt-lr; -webkit-appearance: slider-vertical;
-            width: 8px; height: 100px; background: rgba(255,255,255,0.1);
-            outline: none; border-radius: 4px;
-        }
-
-        /* GYARA NA 2: An daga typing bar container ya dawo sama (bottom: 65px) domin kar ya hade da navigation keys na waya */
+        /* Footer Container */
         .hud-footer-capsule {
             position: absolute;
-            bottom: 65px; /* An gyara daga 25px zuwa 65px domin ya hau sama */
+            bottom: 65px;
             left: 16px; right: 16px;
             padding: 10px;
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
-            display: flex; gap: 8px; align-items: center; /* An canza zuwa center domin daidaiton abubuwan cikin akwatin */
+            display: flex; gap: 8px; align-items: center;
             z-index: 10;
             backdrop-filter: blur(20px);
             box-shadow: 0 -5px 25px rgba(0,0,0,0.3);
             transition: opacity 0.3s;
         }
 
-        /* GYARA NA 3: An daidaita tsarin akwatin rubutu domin magance matsalar hoto na biyu */
+        /* GYARA MAFI GAURAYA: Tsarin akwatin rubutu don cire duka layuka da borders lokacin typing */
         .cyber-input {
             flex: 1; 
-            height: 40px; /* Tsayayyen tsawo wanda ba zai rushe zane ba */
+            height: 40px; 
             background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.05);
+            border: none; /* An cire border gaba daya */
+            outline: none; /* An hana fitar layin waje (focus ring) */
             border-radius: 20px;
-            padding: 10px 16px;
+            padding: 11px 16px;
             color: white; 
             font-size: 13px;
-            outline: none; 
-            transition: 0.3s;
             resize: none; 
-            overflow-y: auto; /* Idan rubutu ya yi yawa zai yi scroll a cikinsa lafiya ba tare da ya haure sama ba */
+            overflow-y: auto;
             white-space: pre-wrap;
             word-break: break-word;
             line-height: 1.4;
+            box-shadow: none;
         }
-        .cyber-input:focus { border-color: var(--cyan-neon); background: rgba(0,242,255,0.03); }
+        /* Tabbatar cewa ko an taba shi, ba zai fitar da wani layi na gefe ba */
+        .cyber-input:focus, .cyber-input:active {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: rgba(255,255,255,0.08);
+        }
 
         .hud-action-node {
             width: 40px; height: 40px; border-radius: 50%;
@@ -220,6 +211,13 @@
             background: rgba(255, 0, 85, 0.15);
             border-color: var(--magenta-neon);
             box-shadow: 0 0 12px rgba(255, 0, 85, 0.3);
+        }
+
+        /* Sabon salo na maɓallin share status */
+        .hud-action-node.share-btn:hover {
+            background: rgba(0, 200, 255, 0.15);
+            border-color: #00C8FF;
+            box-shadow: 0 0 12px rgba(0, 200, 255, 0.3);
         }
 
         .hud-action-node.ghost-active {
@@ -264,11 +262,6 @@
             <img src="" class="matrix-media-frame" id="matrixMedia">
         </div>
 
-        <div class="aura-slider-panel" id="auraPanel">
-            <input type="range" min="0" max="100" value="75" class="aura-slider" id="auraSlider">
-            <span style="font-size: 9px; font-family: monospace; color: var(--cyan-neon);" id="auraValue">75% AURA</span>
-        </div>
-
         <div class="hud-footer-capsule">
             <div class="hud-action-node" id="ghostNode" onclick="toggleGhostInfiltration()" title="Ghost Mode (Incognito View)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -280,8 +273,10 @@
 
             <textarea class="cyber-input" placeholder="Type a message..." rows="1"></textarea>
 
-            <div class="hud-action-node" onclick="toggleAuraPanel()" title="Rate Aura Level">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <div class="hud-action-node share-btn" onclick="shareToMyStatus()" title="Share to My Status">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00F2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>
+                </svg>
             </div>
 
             <div class="hud-action-node" onclick="executeMediaDownload()" title="Download Status to Storage">
@@ -398,9 +393,25 @@
             alert(`⚡ Transaction Initiated: Sending 0.5 SYNERGY Tokens directly to ${cyberNetworkFeed[currentActiveUser].user}.`);
         }
 
-        function toggleAuraPanel() {
-            const panel = document.getElementById('auraPanel');
-            panel.classList.toggle('active');
+        /* GYARA LOGIC: Sabon aiki na tura status kai tsaye tare da bawa mutum damar rubuta caption na kansa */
+        function shareToMyStatus() {
+            // Dakatar da timeline din na wucin gadi don kada status din ya tsallake yayin da ake rubutu
+            clearInterval(hudTimerClock);
+            mainContainer.classList.add('paused');
+
+            const currentMediaUrl = cyberNetworkFeed[currentActiveUser].nodes[currentMediaIndex].url;
+            
+            // Nuna akwatin neman custom caption
+            const userCaption = prompt("Write your custom caption for this status:");
+            
+            if (userCaption !== null) {
+                // Anan ne zakasa API na backend dinka da zai tura zuwa "My Status" database
+                alert(`🚀 Reshared to My Status successfully!\n\n📷 Media: [Current View]\n✍️ Your Caption: "${userCaption || 'No caption'}"`);
+            }
+            
+            // Dawo da tafiyar status din daidai
+            beginTimelineSweep();
+            mainContainer.classList.remove('paused');
         }
 
         function executeMediaDownload() {
@@ -417,10 +428,6 @@
                 node.classList.remove('ghost-active');
             }
         }
-
-        document.getElementById('auraSlider').addEventListener('input', (e) => {
-            document.getElementById('auraValue').innerText = `${e.target.value}% AURA`;
-        });
 
         document.getElementById('touchLeft').addEventListener('click', () => triggerNavigationPipeline(-1));
         document.getElementById('touchRight').addEventListener('click', () => triggerNavigationPipeline(1));
