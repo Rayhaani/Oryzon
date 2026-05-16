@@ -964,6 +964,58 @@ header {
 .story-card:active .story-avatar-wrapper {
     transform: scale(0.93);
                      }
+
+
+
+
+         /* --- DAIDAITA GIRMAN STORIES (STANDARD SIZE) --- */
+.highlight-ring {
+    width: 68px !important;  /* Mun tsayar da boyayyen girma iri daya */
+    height: 68px !important;
+    border-radius: 24px !important; /* Holographic high-end shape */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.highlight-ring img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 20px !important; /* Domin ya bar filin border kadan */
+    object-fit: cover !important;
+    border: 2px solid #050505 !important; /* Bakin layi tsakanin hoto da border */
+}
+
+/* --- LIVE ANIMATION (INSTAGRAM STYLE) --- */
+.live-ring {
+    border: 2px solid #ff0055 !important; /* Kalar ja/pink ta Live */
+    box-shadow: 0 0 8px rgba(255, 0, 85, 0.6);
+    animation: livePulse 1.2s infinite ease-in-out !important;
+}
+
+@keyframes livePulse {
+    0% {
+        box-shadow: 0 0 4px rgba(255, 0, 85, 0.5);
+        border-color: #ff0055 !important;
+    }
+    50% {
+        box-shadow: 0 0 16px rgba(255, 0, 85, 0.9), 0 0 25px rgba(255, 0, 85, 0.4);
+        border-color: #ff5599 !important; /* Hasken zai dan bude kasaitaccen gani */
+    }
+    100% {
+        box-shadow: 0 0 4px rgba(255, 0, 85, 0.5);
+        border-color: #ff0055 !important;
+    }
+}
+
+/* Default border na sauran stories (Gold vibe) */
+.story-active-ring {
+    border: 2px solid #fde08d !important;
+}
          
     </style>
 </head>
@@ -987,41 +1039,39 @@ header {
 
 
 
+<div class="smart-box-highlights">
+    <div class="highlights-scroll">
+        <div class="highlight-item" onclick="openStory('your_story')">
+            <div class="highlight-ring style="border: 2px dashed rgba(255,255,255,0.3);">
+                <img id="story-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=mamba">
+            </div>
+            <p class="highlight-label">Your Story</p>
+        </div>
 
-<div class="nexus-stories-container">
+        <div class="highlight-item" onclick="openStory('live_now')">
+            <div class="highlight-ring live-ring">
+                <img src="https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5?w=100">
+            </div>
+            <p class="highlight-label" style="color: #ff0055 !important;">• LIVE</p>
+        </div>
+
+        <div class="highlight-item" onclick="openStory('toubs_collection')">
+            <div class="highlight-ring story-active-ring">
+                <img src="https://images.unsplash.com/photo-1583944438403-f5260a7c0838?w=100">
+            </div>
+            <p class="highlight-label">Toubs</p>
+        </div>
+
+        <div class="highlight-item" onclick="openStory('tech_node')">
+            <div class="highlight-ring story-active-ring">
+                <img src="https://images.unsplash.com/photo-1574169208507-84376144848b?w=100">
+            </div>
+            <p class="highlight-label">Tech</p>
+        </div>
+    </div>
+</div>
     
-    <div class="story-card active-user">
-        <div class="story-avatar-wrapper add-story">
-            <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg" alt="" class="story-avatar">
-            <div class="add-story-btn">+</div>
-        </div>
-        <span class="story-username">Your story</span>
-    </div>
 
-    <div class="story-card is-live">
-        <div class="story-avatar-wrapper">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_英語_logo.svg" alt="" class="story-avatar">
-            <div class="live-badge">LIVE</div>
-        </div>
-        <span class="story-username">aljazeeraeng</span>
-    </div>
-
-    <div class="story-card has-story">
-        <div class="story-avatar-wrapper">
-            <img src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg" alt="" class="story-avatar">
-        </div>
-        <span class="story-username">trtafrikaha</span>
-    </div>
-
-    <div class="story-card has-story">
-        <div class="story-avatar-wrapper">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/6/62/BBC_News_2019.svg" alt="" class="story-avatar">
-        </div>
-        <span class="story-username">bbcnews</span>
-    </div>
-</div>
-        
-</div>
         
     
     <div class="feed-container">
@@ -1694,6 +1744,29 @@ window.addEventListener('scroll', () => {
     scrollTimeout = setTimeout(handleVideoPriority, 150);
 }, { passive: true });
                     
+
+
+    function openStory(storyId) {
+    // A nan gaba zaka iya saka overlay ko modal dake nuna cikakken hoton story din
+    console.log("An bude Story mai ID: " + storyId);
+    
+    if(storyId === 'live_now') {
+        alert("Shiga tsarin Synergy Live Stream... 🎥🔥");
+        // zaka iya tura shi zuwa shafin live misali: window.location.href = 'live.html';
+    } else {
+        // Misali na bude babban hoto na dan lokaci
+        alert("Ana loda labarin Synergy Story... ⚡");
+    }
+}
+
+// Gyaran hadin gwiwa: Tabbatar "Your Story" shima yana dauko hoton mai shafin kai tsaye daga LocalStorage idan an canza
+document.addEventListener("DOMContentLoaded", function() {
+    const savedProfile = localStorage.getItem('userProfilePic');
+    const storyAvatar = document.getElementById('story-avatar-preview');
+    if (savedProfile && storyAvatar) {
+        storyAvatar.src = savedProfile;
+    }
+});
     
     </script>
 </body>
