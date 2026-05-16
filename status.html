@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus - Minimalist Story HUD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark-core: #0a0a0c;
+            --gold-glow: #d4af37;
+            --cyan-neon: #00F2FF;
+            --glass-bg: rgba(10, 10, 12, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body {
+            background-color: #000;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        .nexus-viewport {
+            width: 100%;
+            height: 100%;
+            max-width: 450px;
+            position: relative;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ambient Blur Projector */
+        .ambient-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(60px) brightness(0.25);
+            z-index: 1;
+            transform: scale(1.2);
+        }
+
+        /* Top Progress Metrics */
+        .timeline-matrix {
+            position: absolute;
+            top: 12px; left: 12px; right: 12px;
+            display: flex; gap: 4px; z-index: 10;
+        }
+        .matrix-bar { flex: 1; height: 2px; background: rgba(255, 255, 255, 0.15); border-radius: 2px; overflow: hidden; }
+        .matrix-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #fff, var(--gold-glow)); }
+
+        /* Elegant Minimal Top Header */
+        .hud-header {
+            position: absolute;
+            top: 24px; left: 0; right: 0;
+            padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0));
+            transition: opacity 0.3s;
+        }
+
+        .user-meta-node { display: flex; align-items: center; gap: 10px; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--gold-glow); object-fit: cover; }
+        .user-info h2 { font-size: 14px; font-weight: 600; color: #fff; }
+        .user-info span { font-size: 10px; color: rgba(255,255,255,0.5); display: block; }
+
+        .hud-top-actions { display: flex; align-items: center; gap: 14px; }
+        .badge-status { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold-glow); color: var(--gold-glow); font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-family: monospace; }
+
+        /* Main Image Container */
+        .content-canvas {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 4;
+            position: relative;
+        }
+        .main-media-frame { width: 100%; max-height: 100vh; object-fit: contain; }
+
+        /* Touch Infrastructure */
+        .touch-zones { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; z-index: 5; }
+        .zone-left, .zone-right { flex: 1; height: 100%; }
+
+        /* PREMIUM HIGH-UTILITY FOOTER ENGINE */
+        .hud-footer-controls {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 20px 20px 30px 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0));
+            display: flex; flex-direction: column; gap: 16px;
+            z-index: 10;
+            transition: opacity 0.3s;
+        }
+
+        .footer-action-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        /* Interactive Input Field */
+        .reply-input-capsule {
+            flex: 1; height: 44px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 0 16px; color: white; font-size: 13px;
+            outline: none; backdrop-filter: blur(10px);
+            margin-right: 12px; transition: 0.2s;
+        }
+        .reply-input-capsule:focus { border-color: var(--gold-glow); background: rgba(255, 255, 255, 0.12); }
+
+        /* Utility Functional Buttons */
+        .utility-circle-node {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; backdrop-filter: blur(10px); transition: 0.2s;
+        }
+        .utility-circle-node:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.05); }
+        .utility-circle-node svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; }
+
+        /* GHOST INCOGNITO TOGGLE GLOW */
+        .utility-circle-node.active-ghost { border-color: var(--cyan-neon); background: rgba(0, 242, 255, 0.1); }
+        .utility-circle-node.active-ghost svg { stroke: var(--cyan-neon); }
+
+        /* HIDE HUD SYSTEM ON HOLD */
+        .nexus-viewport.hud-hidden .hud-header,
+        .nexus-viewport.hud-hidden .hud-footer-controls,
+        .nexus-viewport.hud-hidden .timeline-matrix {
+            opacity: 0; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nexus-viewport" id="nexusViewport">
+        <div class="ambient-layer" id="ambientLayer"></div>
+
+        <div class="timeline-matrix" id="timelineMatrix"></div>
+
+        <div class="hud-header">
+            <div class="user-meta-node">
+                <img src="" class="user-avatar" id="userAvatar">
+                <div class="user-info">
+                    <h2 id="userNameNode">System Booting...</h2>
+                    <span id="userTimeNode">Just Now</span>
+                </div>
+            </div>
+            <div class="hud-top-actions">
+                <div class="badge-status" id="integrityBadge">HUMAN_AUTH</div>
+                <div class="utility-circle-node" style="width:30px; height:30px;" onclick="window.location.href='chats.html'">
+                    <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="touch-zones">
+            <div class="zone-left" id="btnPrev"></div>
+            <div class="zone-right" id="btnNext"></div>
+        </div>
+
+        <div class="content-canvas">
+            <img src="" class="main-media-frame" id="mainMedia">
+        </div>
+
+        <div class="hud-footer-controls">
+            <div class="footer-action-row">
+                <div class="utility-circle-node" id="ghostToggle" onclick="toggleGhostMode()" title="Toggle Incognito View">
+                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+
+                <input type="text" class="reply-input-capsule" placeholder="Tura sako ga mai status...">
+
+                <div class="utility-circle-node" onclick="triggerSynergyTip()" style="margin-right:8px;" title="Tip Synergy Token">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9H10.5a2.5 2.5 0 0 0 0 5h3a2.5 2.5 0 0 1 0 5H9"/></svg>
+                </div>
+
+                <div class="utility-circle-node" onclick="saveStatusOutput()" title="Save Status to Device">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // High Quality Raw Feeds Data
+        const feedDataPipeline = {
+            'ramatu': {
+                name: "Ramatu Arahman",
+                avatar: "https://via.placeholder.com/40/111/d4af37?text=RA",
+                time: "minti 24 da suka wuce",
+                isAi: false,
+                nodes: [
+                    { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600' }
+                ]
+            },
+            'ahmad': {
+                name: "Ahmad Tech Hub",
+                avatar: "https://via.placeholder.com/40/222/00F2FF?text=AT",
+                time: "awa 1 da suka wuce",
+                isAi: true,
+                nodes: [
+                    { url: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600' }
+                ]
+            }
+        };
+
+        let activeUserKey = 'ramatu';
+        let activeMediaIndex = 0;
+        let timelineClock;
+        let sweepProgress = 0;
+        const durationStep = 5000; // 5 Seconds Rotation
+        let isGhostModeActive = false;
+
+        function loadNexusNode() {
+            clearInterval(timelineClock);
+            const userProfile = feedDataPipeline[activeUserKey];
+            const currentMedia = userProfile.nodes[activeMediaIndex];
+
+            // Render Core Screen Parameters
+            document.getElementById('userNameNode').innerText = userProfile.name;
+            document.getElementById('userAvatar').src = userProfile.avatar;
+            document.getElementById('userTimeNode').innerText = userProfile.time;
+            document.getElementById('mainMedia').src = currentMedia.url;
+            document.getElementById('ambientLayer').style.backgroundImage = `url('${currentMedia.url}')`;
+
+            // Toggle AI verification
+            const badge = document.getElementById('integrityBadge');
+            badge.innerText = userProfile.isAi ? "AI_GENERATED" : "HUMAN_AUTH";
+            badge.style.color = userProfile.isAi ? "#FF0055" : "var(--gold-glow)";
+            badge.style.borderColor = userProfile.isAi ? "#FF0055" : "var(--gold-glow)";
+
+            // Render Progress Interface Indicators
+            const timeline = document.getElementById('timelineMatrix');
+            timeline.innerHTML = '';
+            userProfile.nodes.forEach((_, idx) => {
+                const bar = document.createElement('div');
+                bar.className = 'matrix-bar';
+                const fill = document.createElement('div');
+                fill.className = 'matrix-fill';
+                if(idx < activeMediaIndex) fill.style.width = '100%';
+                bar.appendChild(fill);
+                timeline.appendChild(bar);
+            });
+
+            startTimelineSweep();
+        }
+
+        function startTimelineSweep() {
+            sweepProgress = 0;
+            const fills = document.querySelectorAll('.matrix-fill');
+            const currentFill = fills[activeMediaIndex];
+
+            timelineClock = setInterval(() => {
+                sweepProgress += (100 / (durationStep / 30));
+                if(currentFill) currentFill.style.width = `${sweepProgress}%`;
+
+                if(sweepProgress >= 100) {
+                    clearInterval(timelineClock);
+                    navigatePipeline(1);
+                }
+            }, 30);
+        }
+
+        function navigatePipeline(direction) {
+            const userProfile = feedDataPipeline[activeUserKey];
+            if(direction === 1) { // Forward
+                if(activeMediaIndex < userProfile.nodes.length - 1) {
+                    activeMediaIndex++;
+                    loadNexusNode();
+                } else {
+                    const keys = Object.keys(feedDataPipeline);
+                    const currentIdx = keys.indexOf(activeUserKey);
+                    if(currentIdx < keys.length - 1) {
+                        activeUserKey = keys[currentIdx + 1];
+                        activeMediaIndex = 0;
+                        loadNexusNode();
+                    } else {
+                        window.location.href = 'chats.html';
+                    }
+                }
+            } else { // Backward
+                if(activeMediaIndex > 0) {
+                    activeMediaIndex--;
+                    loadNexusNode();
+                } else {
+                    const keys = Object.keys(feedDataPipeline);
+                    const currentIdx = keys.indexOf(activeUserKey);
+                    if(currentIdx > 0) {
+                        activeUserKey = keys[currentIdx - 1];
+                        activeMediaIndex = feedDataPipeline[activeUserKey].nodes.length - 1;
+                        loadNexusNode();
+                    }
+                }
+            }
+        }
+
+        // FEATURE 1: Native Status Saver Logic
+        function saveStatusOutput() {
+            const currentUrl = feedDataPipeline[activeUserKey].nodes[activeMediaIndex].url;
+            alert(`📥 Nexus Downloader: Hoton ${feedDataPipeline[activeUserKey].name} yana sauka kai tsaye zuwa wayarka a matsayin Ultra-HD Media!`);
+        }
+
+        // FEATURE 11: Incognito Ghost Mode Toggle
+        function toggleGhostMode() {
+            isGhostModeActive = !isGhostModeActive;
+            const btn = document.getElementById('ghostToggle');
+            if(isGhostModeActive) {
+                btn.classList.add('active-ghost');
+                alert("👁️ Ghost Mode ON: Zaka iya kallon kowane status yanzu ba tare da sunanka ya bayyana gare su ba.");
+            } else {
+                btn.classList.remove('active-ghost');
+            }
+        }
+
+        // FEATURE 5: Synergy Micro-Tip Payment Trigger
+        function triggerSynergyTip() {
+            alert(`⚡ Synergy Core Node: An tura kyautar 0.2 NT Token ga ${feedDataPipeline[activeUserKey].name} cikin nasara.`);
+        }
+
+        // FEATURE 12: Clean Screen Hold (Long Press to Hide All Text/Icons)
+        const viewport = document.getElementById('nexusViewport');
+        window.addEventListener('touchstart', (e) => {
+            if(e.target.id === 'btnPrev' || e.target.id === 'btnNext') {
+                clearInterval(timelineClock);
+                viewport.classList.add('hud-hidden'); // Hides all navigation overlays
+            }
+        });
+        window.addEventListener('touchend', (e) => {
+            if(e.target.id === 'btnPrev' || e.target.id === 'btnNext') {
+                startTimelineSweep();
+                viewport.classList.remove('hud-hidden');
+            }
+        });
+
+        document.getElementById('btnPrev').addEventListener('click', () => navigatePipeline(-1));
+        document.getElementById('btnNext').addEventListener('click', () => navigatePipeline(1));
+
+        loadNexusNode();
+    </script>
+</body>
+</html>
