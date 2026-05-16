@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus - Minimalist Story HUD</title>
+    <title>Nexus - Neural Story Matrix</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --dark-core: #0a0a0c;
-            --gold-glow: #d4af37;
+            --obsidian: #050505;
             --cyan-neon: #00F2FF;
-            --glass-bg: rgba(10, 10, 12, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --magenta-neon: #FF0055;
+            --glass-border: rgba(0, 242, 255, 0.15);
+            --glass-bg: rgba(5, 5, 5, 0.65);
+            --text-dim: rgba(255, 255, 255, 0.6);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body {
-            background-color: #000;
+            background-color: var(--obsidian);
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -26,57 +27,113 @@
             color: white;
         }
 
-        .nexus-viewport {
+        .story-matrix-container {
             width: 100%;
             height: 100%;
-            max-width: 450px;
+            max-width: 460px;
             position: relative;
             background: #000;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.05);
         }
 
-        /* Ambient Blur Projector */
-        .ambient-layer {
+        /* FEATURE 1: Ambient Bio-Glow Matrix */
+        .ambient-projector {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover;
             background-position: center;
-            filter: blur(60px) brightness(0.25);
+            filter: blur(50px) brightness(0.35);
             z-index: 1;
-            transform: scale(1.2);
+            transform: scale(1.3);
+            transition: background-image 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: bioPulse 8s infinite alternate;
         }
 
-        /* Top Progress Metrics */
-        .timeline-matrix {
+        @keyframes bioPulse {
+            0% { transform: scale(1.2) rotate(0deg); filter: blur(50px) brightness(0.3); }
+            100% { transform: scale(1.35) rotate(3deg); filter: blur(60px) brightness(0.4); }
+        }
+
+        /* FEATURE 7: Scan Overlay Grid (Hold to Freeze) */
+        .scan-overlay {
             position: absolute;
-            top: 12px; left: 12px; right: 12px;
-            display: flex; gap: 4px; z-index: 10;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0, 242, 255, 0.03) 50%, rgba(0, 0, 0, 0) 50%), linear-gradient(90deg, rgba(0, 242, 255, 0.03) 50%, rgba(0, 0, 0, 0) 50%);
+            background-size: 16px 16px;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.4;
+            transition: opacity 0.3s;
         }
-        .matrix-bar { flex: 1; height: 2px; background: rgba(255, 255, 255, 0.15); border-radius: 2px; overflow: hidden; }
-        .matrix-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #fff, var(--gold-glow)); }
+        .story-matrix-container.paused .scan-overlay {
+            opacity: 0.8;
+            background-color: rgba(0, 242, 255, 0.02);
+        }
 
-        /* Elegant Minimal Top Header */
+        /* GYARAN NA 2: Top Progress System Fixed Directly to the Top Edge Like WhatsApp */
+        .hud-progress-timeline {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            display: flex; gap: 4px; z-index: 10;
+            padding: 4px 6px 0 6px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0));
+        }
+
+        .hud-bar {
+            flex: 1; height: 2.5px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 0px;
+            overflow: hidden;
+        }
+
+        .hud-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00C8FF, var(--cyan-neon));
+            box-shadow: 0 0 10px var(--cyan-neon);
+        }
+
+        /* HUD Top Header Area */
         .hud-header {
             position: absolute;
-            top: 24px; left: 0; right: 0;
-            padding: 12px 16px;
+            top: 18px; left: 12px; right: 12px;
             display: flex; justify-content: space-between; align-items: center;
             z-index: 10;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0));
+            padding: 10px 14px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px);
+            border-radius: 14px;
             transition: opacity 0.3s;
         }
 
-        .user-meta-node { display: flex; align-items: center; gap: 10px; }
-        .user-avatar { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--gold-glow); object-fit: cover; }
-        .user-info h2 { font-size: 14px; font-weight: 600; color: #fff; }
-        .user-info span { font-size: 10px; color: rgba(255,255,255,0.5); display: block; }
+        .cyber-user-node { display: flex; align-items: center; gap: 12px; }
+        .cyber-avatar-ring {
+            position: relative;
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            padding: 1.5px;
+            background: linear-gradient(45deg, var(--cyan-neon), var(--magenta-neon));
+        }
+        .cyber-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #000; }
+        
+        .node-meta h2 { font-size: 13px; font-weight: 600; color: #fff; letter-spacing: 0.3px; }
+        /* FEATURE 8: Metadata Capsule */
+        .node-meta span { font-size: 9px; color: var(--cyan-neon); font-family: monospace; text-transform: uppercase; display: block; margin-top: 1px; }
 
-        .hud-top-actions { display: flex; align-items: center; gap: 14px; }
-        .badge-status { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold-glow); color: var(--gold-glow); font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-family: monospace; }
+        .hud-controls { display: flex; align-items: center; gap: 12px; }
 
-        /* Main Image Container */
-        .content-canvas {
+        .hud-close-trigger {
+            background: none; border: none; color: white; cursor: pointer; opacity: 0.7; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .hud-close-trigger:hover { opacity: 1; transform: scale(1.05); }
+
+        /* Core Media Canvas */
+        .viewport-canvas {
             flex: 1;
             display: flex;
             justify-content: center;
@@ -84,266 +141,312 @@
             z-index: 4;
             position: relative;
         }
-        .main-media-frame { width: 100%; max-height: 100vh; object-fit: contain; }
 
-        /* Touch Infrastructure */
-        .touch-zones { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; z-index: 5; }
-        .zone-left, .zone-right { flex: 1; height: 100%; }
+        .matrix-media-frame {
+            width: 100%;
+            max-height: 100vh;
+            object-fit: contain;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-        /* PREMIUM HIGH-UTILITY FOOTER ENGINE */
-        .hud-footer-controls {
+        /* Touch Control Interfaces */
+        .cyber-touch-grids {
             position: absolute;
-            bottom: 0; left: 0; right: 0;
-            padding: 20px 20px 30px 20px;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0));
-            display: flex; flex-direction: column; gap: 16px;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; z-index: 5;
+        }
+        .grid-left, .grid-right { flex: 1; height: 100%; }
+
+        /* FEATURE 3: Floating Interactive Aura Slider Widget */
+        .aura-slider-panel {
+            position: absolute; bottom: 85px; right: 16px;
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            padding: 10px; border-radius: 20px; display: none;
+            flex-direction: column; align-items: center; gap: 8px; z-index: 12;
+            backdrop-filter: blur(15px);
+        }
+        .aura-slider-panel.active { display: flex; }
+        .aura-slider {
+            writing-mode: bt-lr; -webkit-appearance: slider-vertical;
+            width: 8px; height: 100px; background: rgba(255,255,255,0.1);
+            outline: none; border-radius: 4px;
+        }
+
+        /* GYARAN NA 3: FOOTER EXACTLY AS REQUESTED WITH SAURAN UTILITY FEATURES ADDED */
+        .hud-footer-capsule {
+            position: absolute;
+            bottom: 16px; left: 16px; right: 16px;
+            padding: 10px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            display: flex; gap: 8px; align-items: center;
             z-index: 10;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.3);
             transition: opacity 0.3s;
         }
 
-        .footer-action-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        
-        /* Interactive Input Field */
-        .reply-input-capsule {
-            flex: 1; height: 44px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--glass-border);
-            border-radius: 22px;
-            padding: 0 16px; color: white; font-size: 13px;
-            outline: none; backdrop-filter: blur(10px);
-            margin-right: 12px; transition: 0.2s;
+        .cyber-input {
+            flex: 1; height: 40px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 0 16px; color: white; font-size: 12.5px;
+            outline: none; transition: 0.3s;
         }
-        .reply-input-capsule:focus { border-color: var(--gold-glow); background: rgba(255, 255, 255, 0.12); }
+        .cyber-input:focus { border-color: var(--cyan-neon); background: rgba(0,242,255,0.03); }
 
-        /* Utility Functional Buttons */
-        .utility-circle-node {
-            width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--glass-border);
+        .hud-action-node {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; backdrop-filter: blur(10px); transition: 0.2s;
+            cursor: pointer; border: 1px solid rgba(255,255,255,0.08);
+            transition: 0.3s; position: relative;
         }
-        .utility-circle-node:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.05); }
-        .utility-circle-node svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; }
+        .hud-action-node:hover {
+            background: rgba(0, 242, 255, 0.15);
+            border-color: var(--cyan-neon);
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.3);
+        }
+        .hud-action-node.tip-btn:hover {
+            background: rgba(255, 0, 85, 0.15);
+            border-color: var(--magenta-neon);
+            box-shadow: 0 0 12px rgba(255, 0, 85, 0.3);
+        }
 
-        /* GHOST INCOGNITO TOGGLE GLOW */
-        .utility-circle-node.active-ghost { border-color: var(--cyan-neon); background: rgba(0, 242, 255, 0.1); }
-        .utility-circle-node.active-ghost svg { stroke: var(--cyan-neon); }
+        /* Ghost Mode Active Overlay Ring Toggle */
+        .hud-action-node.ghost-active {
+            border-color: #25d366;
+            background: rgba(37, 211, 102, 0.15);
+        }
 
-        /* HIDE HUD SYSTEM ON HOLD */
-        .nexus-viewport.hud-hidden .hud-header,
-        .nexus-viewport.hud-hidden .hud-footer-controls,
-        .nexus-viewport.hud-hidden .timeline-matrix {
+        /* SYSTEM DISMISS FOR CLEAN VIEW HOLD */
+        .story-matrix-container.hud-hidden .hud-header,
+        .story-matrix-container.hud-hidden .hud-footer-capsule,
+        .story-matrix-container.hud-hidden .hud-progress-timeline {
             opacity: 0; pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="nexus-viewport" id="nexusViewport">
-        <div class="ambient-layer" id="ambientLayer"></div>
+    <div class="story-matrix-container" id="matrixContainer">
+        <div class="ambient-projector" id="ambientProjector"></div>
+        <div class="scan-overlay"></div>
 
-        <div class="timeline-matrix" id="timelineMatrix"></div>
+        <div class="hud-progress-timeline" id="hudTimeline"></div>
 
         <div class="hud-header">
-            <div class="user-meta-node">
-                <img src="" class="user-avatar" id="userAvatar">
-                <div class="user-info">
-                    <h2 id="userNameNode">System Booting...</h2>
-                    <span id="userTimeNode">Just Now</span>
+            <div class="cyber-user-node">
+                <div class="cyber-avatar-ring">
+                    <img src="" class="cyber-avatar" id="hudAvatar">
+                </div>
+                <div class="node-meta">
+                    <h2 id="hudUsername">System Booting...</h2>
+                    <span id="hudMetadata">SEC_CORE // LATENCY 12ms</span>
                 </div>
             </div>
-            <div class="hud-top-actions">
-                <div class="badge-status" id="integrityBadge">HUMAN_AUTH</div>
-                <div class="utility-circle-node" style="width:30px; height:30px;" onclick="window.location.href='chats.html'">
-                    <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </div>
+            <div class="hud-controls">
+                <button class="hud-close-trigger" onclick="disconnectMatrix()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
             </div>
         </div>
 
-        <div class="touch-zones">
-            <div class="zone-left" id="btnPrev"></div>
-            <div class="zone-right" id="btnNext"></div>
+        <div class="cyber-touch-grids">
+            <div class="grid-left" id="touchLeft"></div>
+            <div class="grid-right" id="touchRight"></div>
         </div>
 
-        <div class="content-canvas">
-            <img src="" class="main-media-frame" id="mainMedia">
+        <div class="viewport-canvas">
+            <img src="" class="matrix-media-frame" id="matrixMedia">
         </div>
 
-        <div class="hud-footer-controls">
-            <div class="footer-action-row">
-                <div class="utility-circle-node" id="ghostToggle" onclick="toggleGhostMode()" title="Toggle Incognito View">
-                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                </div>
+        <div class="aura-slider-panel" id="auraPanel">
+            <input type="range" min="0" max="100" value="75" class="aura-slider" id="auraSlider">
+            <span style="font-size: 9px; font-family: monospace; color: var(--cyan-neon);" id="auraValue">75% AURA</span>
+        </div>
 
-                <input type="text" class="reply-input-capsule" placeholder="Tura sako ga mai status...">
+        <div class="hud-footer-capsule">
+            <div class="hud-action-node" id="ghostNode" onclick="toggleGhostInfiltration()" title="Ghost Mode (Incognito View)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
 
-                <div class="utility-circle-node" onclick="triggerSynergyTip()" style="margin-right:8px;" title="Tip Synergy Token">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9H10.5a2.5 2.5 0 0 0 0 5h3a2.5 2.5 0 0 1 0 5H9"/></svg>
-                </div>
+            <div class="hud-action-node tip-btn" onclick="triggerSynergyTip()" title="Tip Synergy Token">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--magenta-neon)" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
 
-                <div class="utility-circle-node" onclick="saveStatusOutput()" title="Save Status to Device">
-                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                </div>
+            <input type="text" class="cyber-input" placeholder="Transmit neural feedback link...">
+
+            <div class="hud-action-node" onclick="toggleAuraPanel()" title="Rate Aura Level">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+
+            <div class="hud-action-node" onclick="executeMediaDownload()" title="Download Status to Storage">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             </div>
         </div>
     </div>
 
     <script>
-        // High Quality Raw Feeds Data
-        const feedDataPipeline = {
+        const cyberNetworkFeed = {
             'ramatu': {
-                name: "Ramatu Arahman",
-                avatar: "https://via.placeholder.com/40/111/d4af37?text=RA",
-                time: "minti 24 da suka wuce",
-                isAi: false,
+                user: "Ramatu Arahman",
+                avatar: "https://via.placeholder.com/40/111/00F2FF?text=RA",
                 nodes: [
-                    { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600' }
+                    { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600' },
+                    { url: 'https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?w=600' }
                 ]
             },
             'ahmad': {
-                name: "Ahmad Tech Hub",
-                avatar: "https://via.placeholder.com/40/222/00F2FF?text=AT",
-                time: "awa 1 da suka wuce",
-                isAi: true,
+                user: "Ahmad Tech Hub",
+                avatar: "https://via.placeholder.com/40/222/FF0055?text=AT",
                 nodes: [
                     { url: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600' }
                 ]
             }
         };
 
-        let activeUserKey = 'ramatu';
-        let activeMediaIndex = 0;
-        let timelineClock;
-        let sweepProgress = 0;
-        const durationStep = 5000; // 5 Seconds Rotation
+        let currentActiveUser = 'ramatu';
+        let currentMediaIndex = 0;
+        let hudTimerClock;
+        let trackingProgress = 0;
+        const matrixStepDuration = 6000;
         let isGhostModeActive = false;
 
-        function loadNexusNode() {
-            clearInterval(timelineClock);
-            const userProfile = feedDataPipeline[activeUserKey];
-            const currentMedia = userProfile.nodes[activeMediaIndex];
+        function loadMatrixNode() {
+            clearInterval(hudTimerClock);
+            const activeProfile = cyberNetworkFeed[currentActiveUser];
+            const activeNode = activeProfile.nodes[currentMediaIndex];
 
-            // Render Core Screen Parameters
-            document.getElementById('userNameNode').innerText = userProfile.name;
-            document.getElementById('userAvatar').src = userProfile.avatar;
-            document.getElementById('userTimeNode').innerText = userProfile.time;
-            document.getElementById('mainMedia').src = currentMedia.url;
-            document.getElementById('ambientLayer').style.backgroundImage = `url('${currentMedia.url}')`;
+            document.getElementById('hudUsername').innerText = activeProfile.user;
+            document.getElementById('hudAvatar').src = activeProfile.avatar;
+            document.getElementById('hudMetadata').innerText = activeProfile.metaCapsule;
+            document.getElementById('matrixMedia').src = activeNode.url;
+            document.getElementById('ambientProjector').style.backgroundImage = `url('${activeNode.url}')`;
 
-            // Toggle AI verification
-            const badge = document.getElementById('integrityBadge');
-            badge.innerText = userProfile.isAi ? "AI_GENERATED" : "HUMAN_AUTH";
-            badge.style.color = userProfile.isAi ? "#FF0055" : "var(--gold-glow)";
-            badge.style.borderColor = userProfile.isAi ? "#FF0055" : "var(--gold-glow)";
-
-            // Render Progress Interface Indicators
-            const timeline = document.getElementById('timelineMatrix');
+            const timeline = document.getElementById('hudTimeline');
             timeline.innerHTML = '';
-            userProfile.nodes.forEach((_, idx) => {
+            activeProfile.nodes.forEach((_, idx) => {
                 const bar = document.createElement('div');
-                bar.className = 'matrix-bar';
+                bar.className = 'hud-bar';
                 const fill = document.createElement('div');
-                fill.className = 'matrix-fill';
-                if(idx < activeMediaIndex) fill.style.width = '100%';
+                fill.className = 'hud-fill';
+                if(idx < currentMediaIndex) fill.style.width = '100%';
                 bar.appendChild(fill);
                 timeline.appendChild(bar);
             });
 
-            startTimelineSweep();
+            beginTimelineSweep();
         }
 
-        function startTimelineSweep() {
-            sweepProgress = 0;
-            const fills = document.querySelectorAll('.matrix-fill');
-            const currentFill = fills[activeMediaIndex];
+        function beginTimelineSweep() {
+            trackingProgress = 0;
+            const fills = document.querySelectorAll('.hud-fill');
+            const targetFill = fills[currentMediaIndex];
 
-            timelineClock = setInterval(() => {
-                sweepProgress += (100 / (durationStep / 30));
-                if(currentFill) currentFill.style.width = `${sweepProgress}%`;
+            hudTimerClock = setInterval(() => {
+                trackingProgress += (100 / (matrixStepDuration / 40));
+                if(targetFill) targetFill.style.width = `${trackingProgress}%`;
 
-                if(sweepProgress >= 100) {
-                    clearInterval(timelineClock);
-                    navigatePipeline(1);
+                if (trackingProgress >= 100) {
+                    clearInterval(hudTimerClock);
+                    triggerNavigationPipeline(1);
                 }
-            }, 30);
+            }, 40);
         }
 
-        function navigatePipeline(direction) {
-            const userProfile = feedDataPipeline[activeUserKey];
-            if(direction === 1) { // Forward
-                if(activeMediaIndex < userProfile.nodes.length - 1) {
-                    activeMediaIndex++;
-                    loadNexusNode();
+        function triggerNavigationPipeline(direction) {
+            const currentProfile = cyberNetworkFeed[currentActiveUser];
+            
+            if (direction === 1) { 
+                if (currentMediaIndex < currentProfile.nodes.length - 1) {
+                    currentMediaIndex++;
+                    loadMatrixNode();
                 } else {
-                    const keys = Object.keys(feedDataPipeline);
-                    const currentIdx = keys.indexOf(activeUserKey);
-                    if(currentIdx < keys.length - 1) {
-                        activeUserKey = keys[currentIdx + 1];
-                        activeMediaIndex = 0;
-                        loadNexusNode();
+                    const profileKeys = Object.keys(cyberNetworkFeed);
+                    const currentKeyPos = profileKeys.indexOf(currentActiveUser);
+                    if (currentKeyPos < profileKeys.length - 1) {
+                        currentActiveUser = profileKeys[currentKeyPos + 1];
+                        currentMediaIndex = 0;
+                        loadMatrixNode();
                     } else {
-                        window.location.href = 'chats.html';
+                        disconnectMatrix();
                     }
                 }
-            } else { // Backward
-                if(activeMediaIndex > 0) {
-                    activeMediaIndex--;
-                    loadNexusNode();
+            } else { 
+                if (currentMediaIndex > 0) {
+                    currentMediaIndex--;
+                    loadMatrixNode();
                 } else {
-                    const keys = Object.keys(feedDataPipeline);
-                    const currentIdx = keys.indexOf(activeUserKey);
-                    if(currentIdx > 0) {
-                        activeUserKey = keys[currentIdx - 1];
-                        activeMediaIndex = feedDataPipeline[activeUserKey].nodes.length - 1;
-                        loadNexusNode();
+                    const profileKeys = Object.keys(cyberNetworkFeed);
+                    const currentKeyPos = profileKeys.indexOf(currentActiveUser);
+                    if (currentKeyPos > 0) {
+                        currentActiveUser = profileKeys[currentKeyPos - 1];
+                        currentMediaIndex = cyberNetworkFeed[currentActiveUser].nodes.length - 1;
+                        loadMatrixNode();
                     }
                 }
             }
         }
 
-        // FEATURE 1: Native Status Saver Logic
-        function saveStatusOutput() {
-            const currentUrl = feedDataPipeline[activeUserKey].nodes[activeMediaIndex].url;
-            alert(`📥 Nexus Downloader: Hoton ${feedDataPipeline[activeUserKey].name} yana sauka kai tsaye zuwa wayarka a matsayin Ultra-HD Media!`);
+        function triggerSynergyTip() {
+            alert(`⚡ Transaction Initiated: Sending 0.5 SYNERGY Tokens directly to ${cyberNetworkFeed[currentActiveUser].user}.`);
         }
 
-        // FEATURE 11: Incognito Ghost Mode Toggle
-        function toggleGhostMode() {
+        function toggleAuraPanel() {
+            const panel = document.getElementById('auraPanel');
+            panel.classList.toggle('active');
+        }
+
+        // Functional Injected Features
+        function executeMediaDownload() {
+            alert("📥 Downloader Core: Status saver triggered! Media downloading in original quality directly to your system storage.");
+        }
+
+        function toggleGhostInfiltration() {
             isGhostModeActive = !isGhostModeActive;
-            const btn = document.getElementById('ghostToggle');
+            const node = document.getElementById('ghostNode');
             if(isGhostModeActive) {
-                btn.classList.add('active-ghost');
-                alert("👁️ Ghost Mode ON: Zaka iya kallon kowane status yanzu ba tare da sunanka ya bayyana gare su ba.");
+                node.classList.add('ghost-active');
+                alert("👁️ Ghost Infiltration Mode: Activated. You can view all statuses anonymously.");
             } else {
-                btn.classList.remove('active-ghost');
+                node.classList.remove('ghost-active');
             }
         }
 
-        // FEATURE 5: Synergy Micro-Tip Payment Trigger
-        function triggerSynergyTip() {
-            alert(`⚡ Synergy Core Node: An tura kyautar 0.2 NT Token ga ${feedDataPipeline[activeUserKey].name} cikin nasara.`);
-        }
+        document.getElementById('auraSlider').addEventListener('input', (e) => {
+            document.getElementById('auraValue').innerText = `${e.target.value}% AURA`;
+        });
 
-        // FEATURE 12: Clean Screen Hold (Long Press to Hide All Text/Icons)
-        const viewport = document.getElementById('nexusViewport');
+        document.getElementById('touchLeft').addEventListener('click', () => triggerNavigationPipeline(-1));
+        document.getElementById('touchRight').addEventListener('click', () => triggerNavigationPipeline(1));
+
+        // 100% Immersive Clean Screen Hold (Hides Header, Footer, and Timeline)
+        const mainContainer = document.getElementById('matrixContainer');
         window.addEventListener('touchstart', (e) => {
-            if(e.target.id === 'btnPrev' || e.target.id === 'btnNext') {
-                clearInterval(timelineClock);
-                viewport.classList.add('hud-hidden'); // Hides all navigation overlays
+            if(['grid-left', 'grid-right'].includes(e.target.className)) {
+                clearInterval(hudTimerClock);
+                mainContainer.classList.add('paused', 'hud-hidden');
             }
         });
         window.addEventListener('touchend', (e) => {
-            if(e.target.id === 'btnPrev' || e.target.id === 'btnNext') {
-                startTimelineSweep();
-                viewport.classList.remove('hud-hidden');
+            if(['grid-left', 'grid-right'].includes(e.target.className)) {
+                beginTimelineSweep();
+                mainContainer.classList.remove('paused', 'hud-hidden');
             }
         });
 
-        document.getElementById('btnPrev').addEventListener('click', () => navigatePipeline(-1));
-        document.getElementById('btnNext').addEventListener('click', () => navigatePipeline(1));
+        function disconnectMatrix() {
+            window.location.href = 'chats.html';
+        }
 
-        loadNexusNode();
+        const params = new URLSearchParams(window.location.search);
+        const targetUser = params.get('user');
+        if(targetUser && cyberNetworkFeed[targetUser]) currentActiveUser = targetUser;
+        
+        loadMatrixNode();
     </script>
 </body>
 </html>
