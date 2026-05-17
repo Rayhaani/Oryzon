@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus - Neural Updates</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #050505;
+            --cyan-neon: #00F2FF;
+            --magenta-neon: #FF0055;
+            --glass-border: rgba(0, 242, 255, 0.15);
+            --glass-bg: rgba(5, 5, 5, 0.75);
+            --text-dim: rgba(255, 255, 255, 0.6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--obsidian);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .nexus-updates-container {
+            width: 100%;
+            height: 100vh;
+            max-width: 460px;
+            background: #000;
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding-bottom: 80px; /* Don hutu daga maballan kasa */
+        }
+
+        /* HEADER */
+        .updates-header {
+            padding: 20px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .updates-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        .header-icons {
+            display: flex;
+            gap: 16px;
+        }
+
+        /* SUB-SECTION HEADINGS */
+        .section-title-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 16px 10px 16px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* MABALLIN CREATE PAGE */
+        .btn-create-page {
+            font-size: 12px;
+            color: var(--cyan-neon);
+            background: rgba(0, 242, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-create-page:hover {
+            background: rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+
+        /* HORIZONTAL STATUS MATRIX (TAMKAR TA SAMA TA WHATSAPP AMMA FUTURISTIC) */
+        .status-horizontal-reel {
+            display: flex;
+            gap: 14px;
+            padding: 10px 16px 20px 16px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .status-horizontal-reel::-webkit-scrollbar {
+            display: none; /* Boye scrollbar din */
+        }
+
+        .status-node-circle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 68px;
+            cursor: pointer;
+        }
+
+        .avatar-ring-status {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            padding: 2.5px;
+            background: linear-gradient(45deg, var(--cyan-neon), var(--magenta-neon));
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+        }
+        /* Idan babu sabon update ko an riga an kalla */
+        .avatar-ring-status.viewed {
+            background: rgba(255,255,255,0.2);
+            box-shadow: none;
+        }
+        /* My Status Ring */
+        .avatar-ring-status.my-node {
+            background: rgba(255,255,255,0.1);
+            border: 1px dashed rgba(255,255,255,0.3);
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .add-node-plus {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--cyan-neon);
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .status-username {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-align: center;
+            width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* PAGES SECTION (VERTICAL JERE) */
+        .pages-vertical-list {
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px;
+        }
+
+        .page-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer;
+        }
+
+        .page-info-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px; /* Square mai siffa kadan maimakon da'ira don bambanta su */
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .page-text-meta h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        .page-text-meta p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .page-action-view {
+            font-size: 12px;
+            color: #fff;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nexus-updates-container">
+        
+        <div class="updates-header">
+            <h1>Updates</h1>
+            <div class="header-icons">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </div>
+        </div>
+
+        <div class="section-title-area">
+            <span class="section-title">Status</span>
+        </div>
+
+        <div class="status-horizontal-reel">
+            
+            <div class="status-node-circle" onclick="triggerAddStatus()">
+                <div class="avatar-ring-status my-node">
+                    <img src="https://via.placeholder.com/60/111?text=Me" class="status-img">
+                    <div class="add-node-plus">+</div>
+                </div>
+                <span class="status-username">My Status</span>
+            </div>
+
+            <div class="status-node-circle" onclick="openStatusMatrix('ramatu')">
+                <div class="avatar-ring-status">
+                    <img src="https://via.placeholder.com/60/111/00F2FF?text=RA" class="status-img">
+                </div>
+                <span class="status-username">Ramatu Arahman</span>
+            </div>
+
+            <div class="status-node-circle" onclick="openStatusMatrix('ahmad')">
+                <div class="avatar-ring-status">
+                    <img src="https://via.placeholder.com/60/222/FF0055?text=AT" class="status-img">
+                </div>
+                <span class="status-username">Ahmad Tech Hub</span>
+            </div>
+
+            <div class="status-node-circle" onclick="openStatusMatrix('fateema')">
+                <div class="avatar-ring-status viewed">
+                    <img src="https://via.placeholder.com/60/333?text=FA" class="status-img">
+                </div>
+                <span class="status-username">Fatima Ahmad</span>
+            </div>
+
+        </div>
+
+        <div class="section-title-area">
+            <span class="section-title">Pages</span>
+            <div class="btn-create-page" onclick="createNewPageCore()">Create Page</div>
+        </div>
+
+        <div class="pages-vertical-list">
+            
+            <div class="page-list-item" onclick="viewPageMatrix('sirrin-rike-miji')">
+                <div class="page-info-block">
+                    <img src="https://via.placeholder.com/50/111?text=SRM" class="page-avatar">
+                    <div class="page-text-meta">
+                        <h3>Sirrin rike miji 🌍</h3>
+                        <p>Kece Kike Bukatar Namiji Mai Gemu...</p>
+                    </div>
+                </div>
+                <div class="page-action-view">10m ago</div>
+            </div>
+
+            <div class="page-list-item" onclick="viewPageMatrix('simon-updates')">
+                <div class="page-info-block">
+                    <img src="https://via.placeholder.com/50/222?text=SU" class="page-avatar">
+                    <div class="page-text-meta">
+                        <h3>Simon's Updates.</h3>
+                        <p>If you have issue or concern. You can...</p>
+                    </div>
+                </div>
+                <div class="page-action-view">Yesterday</div>
+            </div>
+
+            <div class="page-list-item" onclick="viewPageMatrix('annahjul-hameed')">
+                <div class="page-info-block">
+                    <img src="https://via.placeholder.com/50/333?text=ATV" class="page-avatar">
+                    <div class="page-text-meta">
+                        <h3>Annahjul-Hameed TV</h3>
+                        <p>Addu'ar Sujuda🇲🇳🇲🇳...</p>
+                    </div>
+                </div>
+                <div class="page-action-view">2 days ago</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Kofofin logic dinka duka suna nan basu canza ba
+        function openStatusMatrix(userKey) {
+            // Canza shafi zuwa ainihin mai kallon status
+            window.location.href = `status_viewer.html?user=${userKey}`;
+        }
+
+        function triggerAddStatus() {
+            alert("📷 System Action: Triggering camera/file system to upload a new neural update to your status.");
+        }
+
+        function createNewPageCore() {
+            const pageName = prompt("Enter a unique name for your new Nexus Page:");
+            if(pageName) {
+                alert(`🚀 Core Registered: Your page "${pageName}" has been successfully created on the Synergy Network Node!`);
+            }
+        }
+
+        function viewPageMatrix(pageKey) {
+            alert(`📂 Loading Hub: Accessing digital ledger for page code [${pageKey}].`);
+        }
+    </script>
+</body>
+  </html>
+  
