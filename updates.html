@@ -400,110 +400,98 @@ function handleStatusUpload(input) {
         reader.readAsDataURL(file);
     }
 }
-
 // ==========================================
-// 3. AIKIN KWASO STATUS DAGA DATABASE (FETCH ENGINE)
+// GYARAYYAN AIKIN KWASO STATUS (INTELLIGENT SYNC)
 // ==========================================
 function fetchStatusesFromFirebase() {
     if (!db) return;
 
     db.collection("statusData").orderBy("timestamp", "desc").get()
     .then((querySnapshot) => {
-        // Share tsofaffin katunan jabu na da
+        
+        // 1. DAUROWO TSOFAFFIN CARDS DIN JABU NA DA (Kada su bace)
+        // Wannan zai tabbatar da cewa su Ahmad Tech Hub basu bace ba
         statusData.length = 0; 
 
-        // Saka "My Status" kowane lokaci a saman jeri
-        statusData.push({
+        // 2. SHIRYA SHAFIN "MY STATUS" NA ASALI MAI ALAMAR (+)
+        let myStatusCard = {
             id: "my-status",
             username: "My Status",
             isMe: true,
             profileImg: "https://via.placeholder.com/40/111?text=Me",
-            previewImg: "https://via.placeholder.com/150x250/111?text=My+Story",
+            previewImg: "https://via.placeholder.com/150x250/111?text=No+Update", // Default idan babu komai
             timestamp: Date.now(),
-            totalUpdates: 1,
+            totalUpdates: 0,
             viewedCount: 0
-        });
+        };
 
-        // Saka sauran wadanda aka kwaso daga database din Oryzon
+        let tempOtherStatuses = [];
+
+        // 3. RARRABE BAYANAI DAGA FIREBASE
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            statusData.push({
-                id: doc.id,
-                username: data.username,
-                isMe: false,
-                profileImg: data.profileImg,
-                previewImg: data.previewImg,
-                timestamp: data.timestamp,
-                totalUpdates: data.totalUpdates || 1,
-                viewedCount: data.viewedCount || 0
-            });
+            
+            // Idan sunan "Sadiq" ne (Wato Kai Ne), to a tura hoton cikin "My Status" na asali
+            if (data.username === "Sadiq") {
+                myStatusCard.previewImg = data.previewImg; // Canza hoton gurbin My Status zuwa sabon hoton da ka dora
+                myStatusCard.totalUpdates += 1;
+            } else {
+                // Idan na wani ne daban, a shirya masa babban card dinsa
+                tempOtherStatuses.push({
+                    id: doc.id,
+                    username: data.username,
+                    isMe: false,
+                    profileImg: data.profileImg || "https://via.placeholder.com/40/222",
+                    previewImg: data.previewImg,
+                    timestamp: data.timestamp,
+                    totalUpdates: data.totalUpdates || 1,
+                    viewedCount: data.viewedCount || 0
+                });
+            }
         });
 
-        // Kira babban aikinmu na WhatsApp jeri domin ya tsara katunan a fuska
+        // 4. SAKA "MY STATUS" A SAMAN JERI KOWANE LOKACI
+        statusData.push(myStatusCard);
+
+        // 5. MAIDASHO TSOFAFFIN KATUNAN ABOKAI (Idan database babu na kowa, su fito na jabu)
+        if (tempOtherStatuses.length > 0) {
+            statusData.push(...tempOtherStatuses);
+        } else {
+            // Wadannan sune tsofaffin abokan tunda database dinka yanzu fanko yake
+            statusData.push(
+                {
+                    id: "ramatu",
+                    username: "Ramatu Arahman",
+                    isMe: false,
+                    profileImg: "https://via.placeholder.com/40/333",
+                    previewImg: "https://via.placeholder.com/150x250/333?text=Ramatu+Update",
+                    timestamp: Date.now() - 1440000,
+                    totalUpdates: 1,
+                    viewedCount: 1
+                },
+                {
+                    id: "ahmad",
+                    username: "Ahmad Tech Hub",
+                    isMe: false,
+                    profileImg: "https://via.placeholder.com/40/444",
+                    previewImg: "https://via.placeholder.com/150x250/444?text=Ahmad+Update",
+                    timestamp: Date.now() - 7200000,
+                    totalUpdates: 1,
+                    viewedCount: 0
+                }
+            );
+        }
+
+        // Kira babban tsarin WhatsApp dinka na asali domin ya zana su a fuska
         if (typeof sortAndRenderStatus === "function") {
             sortAndRenderStatus(); 
         }
     })
     .catch((error) => {
-        console.error("Kasa kwaso bayanai: ", error);
+        console.error("An samu matsala wajen kwaso bayanai: ", error);
     });
 }
-
-// Canza tsohon window.onload dake kasa zuwa wannan:
-window.onload = function() {
-    // Idan akwai sauran kiran asali
-    if (typeof sortAndRenderStatus === "function" && statusData.length > 0) {
-        sortAndRenderStatus();
-    }
-};
         
-
-        // LISSAFIN DATA NA KOWANE STATUS (Yanzu da tsarin adadin hotuna da lokaci)
-        const statusData = [
-            {
-                id: "my-status",
-                username: "My Status",
-                isMe: true,
-                profileImg: "https://via.placeholder.com/40/111?text=Me",
-                previewImg: "https://via.placeholder.com/150x250/111?text=My+Story",
-                timestamp: Date.now(), // Ko da yaushe yana gaba
-                totalUpdates: 1,
-                viewedCount: 0
-            },
-            {
-                id: "ramatu",
-                username: "Ramatu Arahman",
-                isMe: false,
-                profileImg: "https://via.placeholder.com/40/111/00F2FF?text=RA",
-                previewImg: "https://via.placeholder.com/150x250/002233?text=Ramatu+Update",
-                timestamp: Date.now() - 3600000, // Awa daya da ta wuce
-                totalUpdates: 3,
-                viewedCount: 2 // Ta kalli guda 2, ya rage 1 (Ba zai koma karshe ba!)
-            },
-            {
-                id: "ahmad",
-                username: "Ahmad Tech Hub",
-                isMe: false,
-                profileImg: "https://via.placeholder.com/40/222/FF0055?text=AT",
-                previewImg: "https://via.placeholder.com/150x250/330011?text=Ahmad+Node",
-                timestamp: Date.now() - 600000, // Minti 10 da suka wuce (Sabon status)
-                totalUpdates: 2,
-                viewedCount: 0 // Bai kalla ko daya ba
-            },
-            {
-                id: "fateema",
-                username: "Fatima Ahmad",
-                isMe: false,
-                profileImg: "https://via.placeholder.com/40/333?text=FA",
-                previewImg: "https://via.placeholder.com/150x250/222222?text=Fatima+Story",
-                timestamp: Date.now() - 7200000, // Awa biyu da suka wuce
-                totalUpdates: 1,
-                viewedCount: 1 // Ta gama kallo gaba daya (Zai koma can karshe!)
-            }
-        ];
-
-
-
         
         // LOGIC DIN JERA STATUS KAMAR WHATSAPP (SORTING ENGINE)
         function sortAndRenderStatus() {
