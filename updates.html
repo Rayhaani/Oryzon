@@ -141,7 +141,7 @@
             box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
         }
         .avatar-ring-status.viewed {
-            background: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.4) !important; /*大 Dole ya zama madaidaici idan an kalla */
         }
         .avatar-ring-status.my-node {
             background: rgba(255,255,255,0.2);
@@ -269,42 +269,7 @@
             <span class="section-title">Status</span>
         </div>
 
-        <div class="status-horizontal-reel">
-            
-            <div class="status-node-circle" onclick="triggerAddStatus()">
-                <div class="avatar-ring-status my-node">
-                    <img src="https://via.placeholder.com/40/111?text=Me">
-                    <div class="add-node-plus">+</div>
-                </div>
-                <img src="https://via.placeholder.com/150x250/111?text=My+Story" class="status-img">
-                <span class="status-username">My Status</span>
-            </div>
-
-            <div class="status-node-circle" onclick="openStatusMatrix('ramatu')">
-                <div class="avatar-ring-status">
-                    <img src="https://via.placeholder.com/40/111/00F2FF?text=RA">
-                </div>
-                <img src="https://via.placeholder.com/150x250/002233?text=Ramatu+Update" class="status-img">
-                <span class="status-username">Ramatu Arahman</span>
-            </div>
-
-            <div class="status-node-circle" onclick="openStatusMatrix('ahmad')">
-                <div class="avatar-ring-status">
-                    <img src="https://via.placeholder.com/40/222/FF0055?text=AT">
-                </div>
-                <img src="https://via.placeholder.com/150x250/330011?text=Ahmad+Node" class="status-img">
-                <span class="status-username">Ahmad Tech Hub</span>
-            </div>
-
-            <div class="status-node-circle" onclick="openStatusMatrix('fateema')">
-                <div class="avatar-ring-status viewed">
-                    <img src="https://via.placeholder.com/40/333?text=FA">
-                </div>
-                <img src="https://via.placeholder.com/150x250/222222?text=Fatima+Story" class="status-img">
-                <span class="status-username">Fatima Ahmad</span>
-            </div>
-
-        </div>
+        <div class="status-horizontal-reel" id="statusReelContainer"></div>
 
         <div class="section-title-area">
             <span class="section-title">Pages</span>
@@ -350,15 +315,148 @@
 
     </div>
 
+    <input type="file" id="hiddenCameraInput" accept="image/*,video/*" style="display: none;" onchange="handleStatusUpload(this)">
+
     <script>
-        // Wannan aikin na mutane ne kawai zai tafi shafin status.html
-        function openStatusMatrix(userKey) {
-            window.location.href = `status.html?user=${userKey}`;
+        // LISSAFIN DATA NA KOWANE STATUS (Yanzu da tsarin adadin hotuna da lokaci)
+        const statusData = [
+            {
+                id: "my-status",
+                username: "My Status",
+                isMe: true,
+                profileImg: "https://via.placeholder.com/40/111?text=Me",
+                previewImg: "https://via.placeholder.com/150x250/111?text=My+Story",
+                timestamp: Date.now(), // Ko da yaushe yana gaba
+                totalUpdates: 1,
+                viewedCount: 0
+            },
+            {
+                id: "ramatu",
+                username: "Ramatu Arahman",
+                isMe: false,
+                profileImg: "https://via.placeholder.com/40/111/00F2FF?text=RA",
+                previewImg: "https://via.placeholder.com/150x250/002233?text=Ramatu+Update",
+                timestamp: Date.now() - 3600000, // Awa daya da ta wuce
+                totalUpdates: 3,
+                viewedCount: 2 // Ta kalli guda 2, ya rage 1 (Ba zai koma karshe ba!)
+            },
+            {
+                id: "ahmad",
+                username: "Ahmad Tech Hub",
+                isMe: false,
+                profileImg: "https://via.placeholder.com/40/222/FF0055?text=AT",
+                previewImg: "https://via.placeholder.com/150x250/330011?text=Ahmad+Node",
+                timestamp: Date.now() - 600000, // Minti 10 da suka wuce (Sabon status)
+                totalUpdates: 2,
+                viewedCount: 0 // Bai kalla ko daya ba
+            },
+            {
+                id: "fateema",
+                username: "Fatima Ahmad",
+                isMe: false,
+                profileImg: "https://via.placeholder.com/40/333?text=FA",
+                previewImg: "https://via.placeholder.com/150x250/222222?text=Fatima+Story",
+                timestamp: Date.now() - 7200000, // Awa biyu da suka wuce
+                totalUpdates: 1,
+                viewedCount: 1 // Ta gama kallo gaba daya (Zai koma can karshe!)
+            }
+        ];
+
+        // LOGIC DIN JERA STATUS KAMAR WHATSAPP (SORTING ENGINE)
+        function sortAndRenderStatus() {
+            // Raba My Status daban saboda shi koyaushe yana nan daram a farko
+            const myStatusNode = statusData.find(s => s.isMe);
+            const others = statusData.filter(s => !s.isMe);
+
+            others.sort((a, b) => {
+                const aFullyViewed = a.viewedCount >= a.totalUpdates;
+                const bFullyViewed = b.viewedCount >= b.totalUpdates;
+
+                // 1. Idan daya ya cika kallo daya bai cika ba, wanda bai cika ba ya dawo gaba
+                if (aFullyViewed && !bFullyViewed) return 1;
+                if (!aFullyViewed && bFullyViewed) return -1;
+
+                // 2. Idan duka matakin daya ne (ko duka an kalla, ko duka basu kammala ba), na kusa (Newest) ya dawo gaba
+                return b.timestamp - a.timestamp;
+            });
+
+            // Gwamfata jerin: My Status sannan sauran mutane da suka tantance
+            const finalSortedList = [myStatusNode, ...others];
+
+            // RENDER ENGINE
+            const container = document.getElementById('statusReelContainer');
+            container.innerHTML = '';
+
+            finalSortedList.forEach(status => {
+                const card = document.createElement('div');
+                card.className = 'status-node-circle';
+                
+                if (status.isMe) {
+                    card.setAttribute('onclick', 'triggerAddStatus()');
+                } else {
+                    card.setAttribute('onclick', `openStatusMatrix('${status.id}')`);
+                }
+
+                let ringClass = 'avatar-ring-status';
+                if (status.isMe) {
+                    ringClass += ' my-node';
+                } else if (status.viewedCount >= status.totalUpdates) {
+                    ringClass += ' viewed'; // Idan an kalla duka gaba daya
+                }
+
+                const plusIcon = status.isMe ? '<div class="add-node-plus">+</div>' : '';
+
+                card.innerHTML = `
+                    <div class="${ringClass}">
+                        <img src="${status.profileImg}">
+                        ${plusIcon}
+                    </div>
+                    <img src="${status.previewImg}" class="status-img">
+                    <span class="status-username">${status.username}</span>
+                `;
+                container.appendChild(card);
+            });
         }
 
-        // Katin farko na My Status shi kadai zai bude nan domin saka sabon status
+        // BUDE CAMERA KO FILE SYSTEM DA GASKE
         function triggerAddStatus() {
-            alert("📷 System Action: Triggering camera/file system to upload a new neural update to your status.");
+            document.getElementById('hiddenCameraInput').click();
+        }
+
+        // IDAN MUTUM YA ZABO HOTO DAGA KYAMARA
+        function handleStatusUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const fileURL = URL.createObjectURL(file);
+                
+                // Sabunta Katin My Status da hoton da aka dauka
+                const myStatus = statusData.find(s => s.isMe);
+                myStatus.previewImg = fileURL;
+                myStatus.timestamp = Date.now();
+                
+                // Sake gina katunan a fuska
+                sortAndRenderStatus();
+            }
+        }
+
+        // LOKACIN DANNA STATUS NA SAURAN MUTANE
+        function openStatusMatrix(userKey) {
+            const targetStatus = statusData.find(s => s.id === userKey);
+            if (targetStatus) {
+                // Kwaikwayon cewa ka kara kallon hoto guda daya (Simulate viewing an item)
+                if (targetStatus.viewedCount < targetStatus.totalUpdates) {
+                    targetStatus.viewedCount++;
+                    // Zaka iya canza timestamp din idan kana so ya dawo sabo, amma WhatsApp baya canza na tsohon status
+                }
+            }
+            
+            // Sake gina tsarin katunan
+            sortAndRenderStatus();
+
+            // Tura mutum zuwa shafin kallo bayan seconds kadan
+            setTimeout(() => {
+                window.location.href = `status.html?user=${userKey}`;
+            }, 180);
         }
 
         function createNewPageCore() {
@@ -371,6 +469,9 @@
         function viewPageMatrix(pageKey) {
             alert(`📂 Loading Hub: Accessing digital ledger for page code [${pageKey}].`);
         }
+
+        // Kaddamar da gina katunan da zaran shafi ya gama lodi
+        window.onload = sortAndRenderStatus;
     </script>
 </body>
 </html>
