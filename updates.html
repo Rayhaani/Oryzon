@@ -318,6 +318,73 @@
     <input type="file" id="hiddenCameraInput" accept="image/*,video/*" style="display: none;" onchange="handleStatusUpload(this)">
 
     <script>
+
+        // 1. Shigo da Firestore Core kawai (Ba ma bukatar Storage yanzu)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// 2. Lambobin da ka bayar na Oryzon
+const firebaseConfig = {
+  apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+  authDomain: "oryzon-50ea4.firebaseapp.com",
+  projectId: "oryzon-50ea4",
+  storageBucket: "oryzon-50ea4.firebasestorage.app",
+  messagingSenderId: "782106742622",
+  appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+  measurementId: "G-K5085DLL2W"
+};
+
+// Kaddamar da Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 3. GYARAN AIKIN UPLOAD (Canza Hoto zuwa Rubutun Base64 don ya adanu a Database)
+async function handleStatusUpload(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Duba girman hoto don kar ya yi nauyi a database (Kada ya wuce 1MB)
+        if (file.size > 1048576) { 
+            alert("Hoton ya yi nauyi sosai, da fatan ka zabi hoto mara nauyi don loda shi cikin sauri.");
+            return;
+        }
+
+        console.log("Ana sarrafa hoto zuwa rumbun Oryzon Database...");
+
+        // Juyar da hoton kyamara zuwa Rubutu (Base64)
+        const reader = new FileReader();
+        reader.onload = async function (e) {
+            const base64Image = e.target.result; // Wannan shi ne hoton ya zama rubutu
+
+            try {
+                // Shirya bayanan da zasu tafi Firestore
+                const newStatusDoc = {
+                    username: "Sadiq", 
+                    profileImg: "https://via.placeholder.com/40/111?text=Me", 
+                    previewImg: base64Image, // Rubutun hotonmu yana tafiya Firestore kai tsaye anan
+                    timestamp: Date.now(), 
+                    totalUpdates: 1,
+                    viewedCount: 0,
+                    isMe: false 
+                };
+
+                // Turawa zuwa Firestore collection mai suna "statusData"
+                await addDoc(collection(db, "statusData"), newStatusDoc);
+                console.log("An adana a database daram!");
+
+                // Sake wartsake fuska don sabon status ya fito
+                fetchStatusesFromFirebase();
+
+            } catch (error) {
+                console.error("Kasa adana hoto a Firestore: ", error);
+                alert("An samu akasi wajen hadawa da Firestore Database, duba tsarin blocked rules dinki.");
+            }
+        };
+
+        reader.readAsDataURL(file); // Fara juyar da hoton
+    }
+}
+        
         // LISSAFIN DATA NA KOWANE STATUS (Yanzu da tsarin adadin hotuna da lokaci)
         const statusData = [
             {
@@ -423,22 +490,7 @@
             document.getElementById('hiddenCameraInput').click();
         }
 
-        // IDAN MUTUM YA ZABO HOTO DAGA KYAMARA
-        function handleStatusUpload(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const fileURL = URL.createObjectURL(file);
-                
-                // Sabunta Katin My Status da hoton da aka dauka
-                const myStatus = statusData.find(s => s.isMe);
-                myStatus.previewImg = fileURL;
-                myStatus.timestamp = Date.now();
-                
-                // Sake gina katunan a fuska
-                sortAndRenderStatus();
-            }
-        }
-
+        
         // LOKACIN DANNA STATUS NA SAURAN MUTANE
         function openStatusMatrix(userKey) {
             const targetStatus = statusData.find(s => s.id === userKey);
