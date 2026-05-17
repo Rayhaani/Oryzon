@@ -198,68 +198,199 @@
         </button>
     </div>
 
-    <script>
-       // 1. Karɓar bayanai daga shafin baya ta hanyar URL Parameters
-const urlParams = new URLSearchParams(window.location.search);
-const partnerName = urlParams.get('user') || "Nexus Vendor"; // Idan ba a danna kowa ba, zai bar sunan tsoho
-const partnerAvatar = urlParams.get('avatar') || "https://via.placeholder.com/150/050505/00F2FF?text=+";
 
-const myId = "Sadiq"; // Asalin sunanka na aiki a kan platform ɗin
-let chatRoomId = "";
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-// 2. Canza suna da hoton Header ta atomatik ba tare da an taɓa HTML ko CSS ba
-document.addEventListener("DOMContentLoaded", () => {
-    const nameDisplay = document.querySelector(".vendor-info div:nth-child(1)");
-    const avatarDisplay = document.getElementById("profileDisplay");
+<script>
+    // An shigar da asalin bayanan Firebase dinka da ka turo ba tare da an taba ko lamba daya ba
+    const firebaseConfig = {
+      apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+      authDomain: "oryzon-50ea4.firebaseapp.com",
+      projectId: "oryzon-50ea4",
+      storageBucket: "oryzon-50ea4.firebasestorage.app",
+      messagingSenderId: "782106742622",
+      appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+      measurementId: "G-K5085DLL2W"
+    };
 
-    if (nameDisplay) nameDisplay.innerText = partnerName;
-    if (avatarDisplay && urlParams.get('avatar')) avatarDisplay.src = partnerAvatar;
-
-    // Hada ID na musamman na dakin hirarku a Firebase (Misali: Sadiq_Ahmad Tech Hub)
-    if (myId < partnerName) {
-        chatRoomId = `${myId}_${partnerName}`;
-    } else {
-        chatRoomId = `${partnerName}_${myId}`;
-    }
+    // Fara kunna Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+</script>
     
-    console.log("Nexus Sync Node Active For Room ID: " + chatRoomId);
-    
-    // IDAN KANA SON JONA FIREBASE REALTIME STREAMS A NAN GABA:
-    // Zaka iya kiran function ɗinka na loda sakonni anan: loadNexusMessages(chatRoomId);
-});
+<script>
+    // Karɓar bayanai daga shafin baya ta hanyar URL Parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const partnerName = urlParams.get('user') || "Nexus Vendor";
+    const partnerAvatar = urlParams.get('avatar') || "https://via.placeholder.com/150/050505/00F2FF?text=+";
 
-// --- Asalin asalin functions ɗinka na baya ba tare da an canza musu komai ba ---
-const profileInput = document.getElementById('profileInput');
-if (profileInput) {
-    profileInput.addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) { document.getElementById('profileDisplay').src = e.target.result; }
-            reader.readAsDataURL(file);
+    // Asalin sunanka na aiki a kan platform ɗin (Sadiq)
+    const myId = "Sadiq"; 
+    let chatRoomId = "";
+
+    // Canza suna da hoton Header ta atomatik
+    document.addEventListener("DOMContentLoaded", () => {
+        const nameDisplay = document.querySelector(".vendor-info div:nth-child(1)");
+        const avatarDisplay = document.getElementById("profileDisplay");
+
+        if (nameDisplay) nameDisplay.innerText = partnerName;
+        if (avatarDisplay && urlParams.get('avatar')) avatarDisplay.src = partnerAvatar;
+
+        // Haɗa ID na musamman na dakin hirarku a Firebase
+        if (myId < partnerName) {
+            chatRoomId = `${myId}_${partnerName}`;
+        } else {
+            chatRoomId = `${partnerName}_${myId}`;
+        }
+        
+        // Kunna tsarin sauraron sakonni da kuma duba Online/Last Seen status
+        if (typeof db !== "undefined") {
+            listenToNexusMessages();
+            checkPartnerStatus();
+        } else {
+            console.warn("Firebase db ba a gano shi ba.");
         }
     });
-}
 
-function autoExpand(field) {
-    field.style.height = 'inherit';
-    const height = field.scrollHeight;
-    field.style.height = height + 'px';
-}
+    // Tsarin Sauraron Saƙonni a ainihin lokaci
+    function listenToNexusMessages() {
+        db.collection("personalChats")
+          .doc(chatRoomId)
+          .collection("messages")
+          .orderBy("timestamp", "asc")
+          .onSnapshot((snapshot) => {
+              const chatFlow = document.getElementById("chat-flow");
+              if (!chatFlow) return;
+              
+              chatFlow.innerHTML = ''; 
 
-function toggleButtons() {
-    const input = document.getElementById('msgInput');
-    const voiceBtn = document.getElementById('voiceBtn');
-    const sendBtn = document.getElementById('sendBtn');
-    
-    if (input && input.value.trim().length > 0) {
-        if (voiceBtn) voiceBtn.style.display = 'none';
-        if (sendBtn) sendBtn.style.display = 'flex';
-    } else {
-        if (voiceBtn) voiceBtn.style.display = 'flex';
-        if (sendBtn) sendBtn.style.display = 'none';
+              snapshot.forEach((doc) => {
+                  const msgData = doc.data();
+                  const isMe = msgData.senderId === myId;
+
+                  let formattedTime = "Just Now";
+                  if (msgData.timestamp) {
+                      const date = new Date(msgData.timestamp);
+                      formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  }
+
+                  const msgBubble = document.createElement("div");
+                  msgBubble.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
+                  msgBubble.innerHTML = `
+                      ${msgData.text}
+                      <span class="timestamp">${formattedTime}</span>
+                  `;
+                  chatFlow.appendChild(msgBubble);
+              });
+              
+              chatFlow.scrollTop = chatFlow.scrollHeight;
+          });
     }
+
+    // Aika Saƙo zuwa Firebase
+    function sendNeuralMessage() {
+        const inputField = document.getElementById("msgInput");
+        if (!inputField) return;
+
+        const messageText = inputField.value.trim();
+        if (messageText === "") return;
+
+        const packet = {
+            senderId: myId,
+            receiverId: partnerName,
+            text: messageText,
+            timestamp: Date.now()
+        };
+
+        db.collection("personalChats")
+          .doc(chatRoomId)
+          .collection("messages")
+          .add(packet)
+          .then(() => {
+              inputField.value = ""; 
+              autoExpand(inputField); 
+              toggleButtons(); 
+          })
+          .catch((err) => {
+              console.error("Kuskure wajen aika sako: ", err);
+          });
+    }
+
+    // Jona maballin tura sako da Keyboard Enter
+    document.addEventListener("DOMContentLoaded", () => {
+        const sendBtn = document.getElementById("sendBtn");
+        const msgInput = document.getElementById("msgInput");
+        
+        if(sendBtn) sendBtn.addEventListener("click", sendNeuralMessage);
+        if(msgInput) {
+            msgInput.addEventListener("keypress", (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendNeuralMessage();
+                }
+            });
         }
+    });
+
+    // Duba tsarin Online da Last Seen na kowane memba guda daban
+    function checkPartnerStatus() {
+        const statusDisplay = document.querySelector(".vendor-info div:nth-child(2)");
+        if (!statusDisplay) return;
+
+        db.collection("users").doc(partnerName).onSnapshot((doc) => {
+            if (doc.exists) {
+                const userData = doc.data();
+                if (userData.isOnline) {
+                    statusDisplay.innerText = "Sync Active";
+                    statusDisplay.style.color = "#00FF88"; 
+                } else if (userData.lastSeen) {
+                    const date = new Date(userData.lastSeen);
+                    const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    statusDisplay.innerText = `Last Seen ${timeString}`;
+                    statusDisplay.style.color = "rgba(255,255,255,0.4)"; 
+                }
+            } else {
+                statusDisplay.innerText = "Offline";
+                statusDisplay.style.color = "rgba(255,255,255,0.4)";
+            }
+        });
+    }
+
+    // Ayyukan asali na shafinka
+    const profileInput = document.getElementById('profileInput');
+    if (profileInput) {
+        profileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) { document.getElementById('profileDisplay').src = e.target.result; }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    function autoExpand(field) {
+        field.style.height = 'inherit';
+        const height = field.scrollHeight;
+        field.style.height = height + 'px';
+    }
+
+    function toggleButtons() {
+        const input = document.getElementById('msgInput');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        
+        if (input && input.value.trim().length > 0) {
+            if (voiceBtn) voiceBtn.style.display = 'none';
+            if (sendBtn) sendBtn.style.display = 'flex';
+        } else {
+            if (voiceBtn) voiceBtn.style.display = 'flex';
+            if (sendBtn) sendBtn.style.display = 'none';
+        }
+    }
+                    
+    
         
     </script>
 </body>
