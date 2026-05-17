@@ -318,10 +318,15 @@
     <input type="file" id="hiddenCameraInput" accept="image/*,video/*" style="display: none;" onchange="handleStatusUpload(this)">
 
     <script>
-    // ==========================================
+    
+// ==========================================
+// GLOBALS: ADANA BAYANAN STATUS
+// ==========================================
+const statusData = []; // Wannan shi ne asalin variable din da ya bace a baya!
+
+// ==========================================
 // 1. SHIGO DA FIREBASE CORE DA FIRESTORE (COMPAT VERSION)
 // ==========================================
-// Wannan tsarin baya bukatar type="module", zai yi lodi kai tsaye a kowane script
 const script1 = document.createElement('script');
 script1.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js";
 document.head.appendChild(script1);
@@ -330,10 +335,9 @@ const script2 = document.createElement('script');
 script2.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js";
 document.head.appendChild(script2);
 
-// Babban Variable dake rike da Database na Firebase
 let db;
 
-// Kaddamar da Firebase da zaran wadancan scripts sun gama lodi a browser
+// Kaddamar da Firebase da zaran wadancan scripts sun gama lodi
 script2.onload = function() {
     const firebaseConfig = {
       apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
@@ -345,23 +349,21 @@ script2.onload = function() {
       measurementId: "G-K5085DLL2W"
     };
 
-    // Fara aiki da Firebase Compat
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     console.log("Firebase Database ya riga ya gama lodi 100%!");
     
-    // Kwaso tsofaffin status na gaskiya daga database
+    // Kwaso status na gaskiya daga database
     fetchStatusesFromFirebase();
 };
 
 // ==========================================
-// 2. SMMAN SABON AIKIN UPLOAD (BASE64 ENGINE)
+// 2. SABON AIKIN UPLOAD (BASE64 ENGINE)
 // ==========================================
 function handleStatusUpload(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
         
-        // Duba girman hoto don kar ya wuce 1MB a Firestore
         if (file.size > 1048576) { 
             alert("Hoton ya yi nauyi sosai, da fatan ka zabi hoto mara nauyi don loda shi cikin sauri.");
             return;
@@ -378,7 +380,6 @@ function handleStatusUpload(input) {
                 return;
             }
 
-            // Aika bayanan kai tsaye cikin Firestore collection na "statusData"
             db.collection("statusData").add({
                 username: "Sadiq", 
                 profileImg: "https://via.placeholder.com/40/111?text=Me", 
@@ -390,7 +391,7 @@ function handleStatusUpload(input) {
             })
             .then(() => {
                 console.log("An yi nasarar adana status dinka a Firestore!");
-                fetchStatusesFromFirebase(); // Wartsake fuska
+                fetchStatusesFromFirebase(); 
             })
             .catch((error) => {
                 console.error("Error wajen turawa: ", error);
@@ -401,30 +402,25 @@ function handleStatusUpload(input) {
     }
 }
 
-      // ==========================================
-// SAFE INTELLIGENT SYNC (NO INDEX REQUIRED)
+// ==========================================
+// 3. INTELLIGENT SYNC (NO INDEX REQUIRED)
 // ==========================================
 function fetchStatusesFromFirebase() {
     if (!db) {
-        // Idan Firebase bai gama lodi ba, kada mu bar shafi ya mutu fanko
         renderDefaultBackupStatuses();
         return;
     }
 
-    // Dauko dukkan status ba tare da hadadden orderBy na Firebase ba
     db.collection("statusData").get()
     .then((querySnapshot) => {
-        
-        // Share tsofaffin katunan jabu na da domin tsara sababbi
         statusData.length = 0; 
 
-        // 1. SHIRYA SHAFIN "MY STATUS" NA ASALI MAI ALAMAR (+)
         let myStatusCard = {
             id: "my-status",
             username: "My Status",
             isMe: true,
             profileImg: "https://via.placeholder.com/40/111?text=Me",
-            previewImg: "https://via.placeholder.com/150x250/111?text=No+Update", // Idan babu komai
+            previewImg: "https://via.placeholder.com/150x250/111?text=No+Update", 
             timestamp: Date.now(),
             totalUpdates: 0,
             viewedCount: 0
@@ -432,17 +428,14 @@ function fetchStatusesFromFirebase() {
 
         let tempOtherStatuses = [];
 
-        // 2. RARRABE BAYANAI DAGA FIREBASE
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             
-            // Idan sunan "Sadiq" ne (Wato Kai Ne), tura hoton cikin "My Status" na asali
             if (data.username === "Sadiq") {
-                myStatusCard.previewImg = data.previewImg; // Hoto zai hau kan My Status dinka
+                myStatusCard.previewImg = data.previewImg; 
                 myStatusCard.timestamp = data.timestamp || Date.now();
                 myStatusCard.totalUpdates += 1;
             } else {
-                // Idan na wani ne daban, a adana shi a jerin abokai
                 tempOtherStatuses.push({
                     id: doc.id,
                     username: data.username,
@@ -456,14 +449,11 @@ function fetchStatusesFromFirebase() {
             }
         });
 
-        // Juyawa ko tsara jerin abokai na gaskiya ta duba da na karshe da aka dora (Sort na JavaScript)
         tempOtherStatuses.sort((a, b) => b.timestamp - a.timestamp);
 
-        // 3. SAKA "MY STATUS" A SAMAN JERI KOWANE LOKACI
         statusData.push(myStatusCard);
 
-        // 4. DAUROWO TSOFAFFIN KATUNAN ABOKAI NA DĀ (Idan database babu na kowa, su fito)
-        // Wannan zai tabbatar da cewa su Ramatu da Ahmad basu bace ba ko da yaushe
+        // DAUROWO CARDS NA JABU DOMIN KADA SHAFIN YAYI FANKO
         statusData.push(
             {
                 id: "ramatu",
@@ -487,24 +477,20 @@ function fetchStatusesFromFirebase() {
             }
         );
 
-        // Idan akwai sauran na gaskiya daga database, su ma su hau kai tsaye
         if (tempOtherStatuses.length > 0) {
             statusData.push(...tempOtherStatuses);
         }
 
-        // Kira babban tsarin WhatsApp dinka na asali domin ya zana su a fuska
         if (typeof sortAndRenderStatus === "function") {
             sortAndRenderStatus(); 
         }
     })
     .catch((error) => {
         console.error("Firebase Error: ", error);
-        // Idan an samu matsala ma, kada mu bar shafi a fanko, sanya tsofaffin cards din
         renderDefaultBackupStatuses();
     });
 }
 
-// Aikin gaggawa na maido da cards idan intanet ko wani abu ya bayar da matsala
 function renderDefaultBackupStatuses() {
     statusData.length = 0;
     statusData.push(
@@ -542,105 +528,102 @@ function renderDefaultBackupStatuses() {
     if (typeof sortAndRenderStatus === "function") {
         sortAndRenderStatus();
     }
-        }
-          
+}
 
+// ==========================================
+// 4. LOGIC DIN JERA STATUS KAMAR WHATSAPP
+// ==========================================
+function sortAndRenderStatus() {
+    if (statusData.length === 0) return;
+
+    const myStatusNode = statusData.find(s => s.isMe);
+    const others = statusData.filter(s => !s.isMe);
+
+    others.sort((a, b) => {
+        const aFullyViewed = a.viewedCount >= a.totalUpdates;
+        const bFullyViewed = b.viewedCount >= b.totalUpdates;
+
+        if (aFullyViewed && !bFullyViewed) return 1;
+        if (!aFullyViewed && bFullyViewed) return -1;
+
+        return b.timestamp - a.timestamp;
+    });
+
+    const finalSortedList = [];
+    if (myStatusNode) finalSortedList.push(myStatusNode);
+    finalSortedList.push(...others);
+
+    const container = document.getElementById('statusReelContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    finalSortedList.forEach(status => {
+        const card = document.createElement('div');
+        card.className = 'status-node-circle';
         
-        // LOGIC DIN JERA STATUS KAMAR WHATSAPP (SORTING ENGINE)
-        function sortAndRenderStatus() {
-            // Raba My Status daban saboda shi koyaushe yana nan daram a farko
-            const myStatusNode = statusData.find(s => s.isMe);
-            const others = statusData.filter(s => !s.isMe);
-
-            others.sort((a, b) => {
-                const aFullyViewed = a.viewedCount >= a.totalUpdates;
-                const bFullyViewed = b.viewedCount >= b.totalUpdates;
-
-                // 1. Idan daya ya cika kallo daya bai cika ba, wanda bai cika ba ya dawo gaba
-                if (aFullyViewed && !bFullyViewed) return 1;
-                if (!aFullyViewed && bFullyViewed) return -1;
-
-                // 2. Idan duka matakin daya ne (ko duka an kalla, ko duka basu kammala ba), na kusa (Newest) ya dawo gaba
-                return b.timestamp - a.timestamp;
-            });
-
-            // Gwamfata jerin: My Status sannan sauran mutane da suka tantance
-            const finalSortedList = [myStatusNode, ...others];
-
-            // RENDER ENGINE
-            const container = document.getElementById('statusReelContainer');
-            container.innerHTML = '';
-
-            finalSortedList.forEach(status => {
-                const card = document.createElement('div');
-                card.className = 'status-node-circle';
-                
-                if (status.isMe) {
-                    card.setAttribute('onclick', 'triggerAddStatus()');
-                } else {
-                    card.setAttribute('onclick', `openStatusMatrix('${status.id}')`);
-                }
-
-                let ringClass = 'avatar-ring-status';
-                if (status.isMe) {
-                    ringClass += ' my-node';
-                } else if (status.viewedCount >= status.totalUpdates) {
-                    ringClass += ' viewed'; // Idan an kalla duka gaba daya
-                }
-
-                const plusIcon = status.isMe ? '<div class="add-node-plus">+</div>' : '';
-
-                card.innerHTML = `
-                    <div class="${ringClass}">
-                        <img src="${status.profileImg}">
-                        ${plusIcon}
-                    </div>
-                    <img src="${status.previewImg}" class="status-img">
-                    <span class="status-username">${status.username}</span>
-                `;
-                container.appendChild(card);
-            });
+        if (status.isMe) {
+            card.setAttribute('onclick', 'triggerAddStatus()');
+        } else {
+            card.setAttribute('onclick', `openStatusMatrix('${status.id}')`);
         }
 
-        // BUDE CAMERA KO FILE SYSTEM DA GASKE
-        function triggerAddStatus() {
-            document.getElementById('hiddenCameraInput').click();
+        let ringClass = 'avatar-ring-status';
+        if (status.isMe) {
+            ringClass += ' my-node';
+        } else if (status.viewedCount >= status.totalUpdates) {
+            ringClass += ' viewed'; 
         }
 
-        
-        // LOKACIN DANNA STATUS NA SAURAN MUTANE
-        function openStatusMatrix(userKey) {
-            const targetStatus = statusData.find(s => s.id === userKey);
-            if (targetStatus) {
-                // Kwaikwayon cewa ka kara kallon hoto guda daya (Simulate viewing an item)
-                if (targetStatus.viewedCount < targetStatus.totalUpdates) {
-                    targetStatus.viewedCount++;
-                    // Zaka iya canza timestamp din idan kana so ya dawo sabo, amma WhatsApp baya canza na tsohon status
-                }
-            }
-            
-            // Sake gina tsarin katunan
-            sortAndRenderStatus();
+        const plusIcon = status.isMe ? '<div class="add-node-plus">+</div>' : '';
 
-            // Tura mutum zuwa shafin kallo bayan seconds kadan
-            setTimeout(() => {
-                window.location.href = `status.html?user=${userKey}`;
-            }, 180);
+        card.innerHTML = `
+            <div class="${ringClass}">
+                <img src="${status.profileImg}">
+                ${plusIcon}
+            </div>
+            <img src="${status.previewImg}" class="status-img">
+            <span class="status-username">${status.username}</span>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function triggerAddStatus() {
+    document.getElementById('hiddenCameraInput').click();
+}
+
+function openStatusMatrix(userKey) {
+    const targetStatus = statusData.find(s => s.id === userKey);
+    if (targetStatus) {
+        if (targetStatus.viewedCount < targetStatus.totalUpdates) {
+            targetStatus.viewedCount++;
         }
+    }
+    
+    sortAndRenderStatus();
 
-        function createNewPageCore() {
-            const pageName = prompt("Enter a unique name for your new Nexus Page:");
-            if(pageName) {
-                alert(`🚀 Core Registered: Your page "${pageName}" has been successfully created on the Synergy Network Node!`);
-            }
-        }
+    setTimeout(() => {
+        window.location.href = `status.html?user=${userKey}`;
+    }, 180);
+}
 
-        function viewPageMatrix(pageKey) {
-            alert(`📂 Loading Hub: Accessing digital ledger for page code [${pageKey}].`);
-        }
+function createNewPageCore() {
+    const pageName = prompt("Enter a unique name for your new Nexus Page:");
+    if(pageName) {
+        alert(`🚀 Core Registered: Your page "${pageName}" has been successfully created on the Synergy Network Node!`);
+    }
+}
 
-        // Kaddamar da gina katunan da zaran shafi ya gama lodi
-        window.onload = sortAndRenderStatus;
+function viewPageMatrix(pageKey) {
+    alert(`📂 Loading Hub: Accessing digital ledger for page code [${pageKey}].`);
+}
+
+// Fara zana komai da zaran an shigo
+window.onload = function() {
+    renderDefaultBackupStatuses();
+};
+                            
+
     </script>
 </body>
 </html>
