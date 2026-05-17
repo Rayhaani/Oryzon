@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nexus - Neural Updates</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&family=Courier+Prime&family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --obsidian: #050505;
@@ -24,7 +24,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         .nexus-updates-container {
@@ -37,7 +37,7 @@
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            padding-bottom: 80px;
+            padding-bottom: 80px; /* Don hutu daga maballan kasa */
         }
 
         /* HEADER */
@@ -48,18 +48,30 @@
             align-items: center;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .updates-header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
-        .header-icons { display: flex; gap: 16px; }
+        .updates-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        .header-icons {
+            display: flex;
+            gap: 16px;
+        }
 
-        /* HEADINGS */
+        /* SUB-SECTION HEADINGS */
         .section-title-area {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 16px 16px 10px 16px;
         }
-        .section-title { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.9); }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
 
+        /* MABALLIN CREATE PAGE */
         .btn-create-page {
             font-size: 12px;
             color: var(--cyan-neon);
@@ -69,114 +81,182 @@
             border: 1px solid rgba(0, 242, 255, 0.2);
             cursor: pointer;
             font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-create-page:hover {
+            background: rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
         }
 
-        /* REEL JERE */
+        /* NEW CARD DESIGN - HORIZONTAL REEL */
         .status-horizontal-reel {
             display: flex;
-            gap: 4px;
+            gap: 4px; /* An rage tazarar tsakanin katunan zuwa 4px domin su matsu */
             padding: 10px 16px 20px 16px;
             overflow-x: auto;
             scroll-behavior: smooth;
             border-bottom: 1px solid rgba(255,255,255,0.05);
+            touch-action: pan-x; /* Hana katunan yin sama da kasa lokacin turawa (Static) */
         }
-        .status-horizontal-reel::-webkit-scrollbar { display: none; }
+        .status-horizontal-reel::-webkit-scrollbar {
+            display: none; /* Boye scrollbar din */
+        }
 
+        /* SABON TSARIN KATUNA (VERTICAL CARDS LIKE WHATSAPP) */
         .status-node-circle {
             display: flex;
             flex-direction: column;
             position: relative;
-            min-width: 95px;
-            height: 145px;
+            min-width: 95px; /* Tsarin fadin katin preview */
+            height: 145px;   /* Tsarin tsayin katin preview */
             border-radius: 12px;
             overflow: hidden;
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .status-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1; filter: brightness(0.75); }
+        /* Background image ko placeholder na katin */
+        .status-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            filter: brightness(0.75); /* Taimakawa sunan kasa ya fito fili */
+        }
 
+        /* Karamin Profile Ring dake saman katin - Yanzu ya manne a TOP LEFT CORNER */
         .avatar-ring-status {
             position: absolute;
             top: 0;
             left: 0;
             width: 32px;
             height: 32px;
-            border-radius: 0 0 12px 0;
+            border-radius: 0 0 12px 0; /* Kyautata kwana madaidaiciya don katin */
             padding: 2px;
             background: linear-gradient(45deg, var(--cyan-neon), var(--magenta-neon));
             z-index: 3;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
         }
-        .avatar-ring-status.viewed { background: rgba(255,255,255,0.3) !important; }
-        .avatar-ring-status.my-node { background: rgba(255,255,255,0.2); border-bottom: 1px dashed rgba(255,255,255,0.5); border-right: 1px dashed rgba(255,255,255,0.5); padding: 0; }
-        .avatar-ring-status img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-
-        .add-node-plus { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--cyan-neon); border: 1px solid #000; display: flex; align-items: center; justify-content: center; color: #000; font-size: 9px; font-weight: bold; }
-        .status-username { position: absolute; bottom: 8px; left: 8px; right: 8px; font-size: 11px; font-weight: 600; color: #fff; z-index: 3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
-        .status-node-circle::after { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%); z-index: 2; }
-
-        /* PAGES LIST */
-        .pages-vertical-list { display: flex; flex-direction: column; padding: 0 16px; }
-        .page-list-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer; }
-        .page-info-block { display: flex; align-items: center; gap: 12px; }
-        .page-avatar { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
-        .page-text-meta h3 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
-        .page-text-meta p { font-size: 12px; color: var(--text-dim); }
-        .page-action-view { font-size: 12px; color: #fff; opacity: 0.5; }
-
-        /* ==================== 1. MODAL NA ZABAR ZABI (ADD STATUS DIALOG) ==================== */
-        .status-picker-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10; display: none; flex-direction: column; justify-content: flex-end;
+        .avatar-ring-status.viewed {
+            background: rgba(255,255,255,0.4) !important; /*大 Dole ya zama madaidaici idan an kalla */
         }
-        .picker-header { display: flex; justify-content: space-between; padding: 16px; align-items: center; font-size: 18px; font-weight: 600; }
-        .picker-close { cursor: pointer; font-size: 22px; }
-        .picker-options-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 20px 16px; background: #111; border-radius: 24px 24px 0 0; }
-        .option-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: #fff; }
-        .option-icon-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #222; border: 1px solid rgba(255,255,255,0.1); font-size: 20px; transition: 0.2s; }
-        .option-btn:hover .option-icon-circle { background: var(--cyan-neon); color: #000; }
-
-        /* ==================== 2. TEXT STATUS EDITOR PAGE ==================== */
-        .text-editor-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #9c27b0; z-index: 11; display: none; flex-direction: column; justify-content: space-between; padding: 20px;
+        .avatar-ring-status.my-node {
+            background: rgba(255,255,255,0.2);
+            border-bottom: 1px dashed rgba(255,255,255,0.5);
+            border-right: 1px dashed rgba(255,255,255,0.5);
+            padding: 0;
         }
-        .editor-top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .editor-tools { display: flex; gap: 16px; }
-        .tool-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: bold; }
-        .editor-main-input { width: 100%; border: none; background: transparent; color: white; font-size: 26px; text-align: center; outline: none; resize: none; margin: auto 0; font-family: 'Inter', sans-serif; }
-        .editor-main-input::placeholder { color: rgba(255,255,255,0.6); }
-        .editor-footer-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .btn-send-status { width: 50px; height: 50px; background: #00e676; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; color: white; font-size: 18px; }
 
-        /* ==================== 3. MEDIA PREVIEW WITH CAPTION ==================== */
-        .media-preview-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 12; display: none; flex-direction: column; justify-content: space-between;
+        /* Karamin profile image a cikin da'irar sama - Na bar shi a da'ira domin fito da hoto */
+        .avatar-ring-status img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
-        .media-container { width: 100%; height: 75%; display: flex; align-items: center; justify-content: center; position: relative; }
-        .preview-media-element { width: 100%; height: 100%; object-fit: contain; }
-        .caption-input-area { display: flex; align-items: center; gap: 10px; padding: 16px; background: rgba(0,0,0,0.8); border-top: 1px solid rgba(255,255,255,0.05); width: 100%; }
-        .caption-box { flex: 1; background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 10px 16px; color: white; outline: none; font-size: 14px; }
-        .caption-box::placeholder { color: #8e8e93; }
 
-        /* ==================== 4. IMMERSIVE CONTINUOUS STATUS VIEWER ==================== */
-        .status-viewer-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #050505; z-index: 20; display: none; flex-direction: column; justify-content: space-between; padding: 16px;
+        /* Maballin Plus na My Status */
+        .add-node-plus {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--cyan-neon);
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 9px;
+            font-weight: bold;
         }
-        .viewer-progress-container { display: flex; gap: 4px; width: 100%; position: absolute; top: 12px; left: 0; padding: 0 16px; z-index: 22; }
-        .viewer-progress-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.25); border-radius: 2px; overflow: hidden; }
-        .viewer-progress-fill { width: 0%; height: 100%; background: var(--cyan-neon); transition: width 0.1s linear; }
-        .viewer-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 12px; z-index: 22; }
-        .viewer-user-info { display: flex; align-items: center; gap: 10px; }
-        .viewer-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--cyan-neon); }
-        .viewer-username { font-weight: 600; font-size: 14px; }
-        .viewer-time { font-size: 11px; color: var(--text-dim); }
-        .viewer-body { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; font-size: 24px; font-weight: bold; position: relative; }
-        .viewer-media { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; }
-        .viewer-caption-display { position: absolute; bottom: 30px; left: 16px; right: 16px; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; font-size: 15px; text-align: center; color: white; font-weight: normal; z-index: 23; }
+
+        /* Sunan mai status din a kasan katin */
+        .status-username {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+            text-align: left;
+            z-index: 3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8); /* Kyautata karanta suna a kan hoto */
+        }
+
+        /* Gradient overlay don duhun kasan katin */
+        .status-node-circle::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
+            z-index: 2;
+        }
+
+        /* PAGES SECTION (VERTICAL JERE) */
+        .pages-vertical-list {
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px;
+        }
+
+        .page-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer;
+        }
+
+        .page-info-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px; /* Square mai siffa kadan maimakon da'ira don bambanta su */
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .page-text-meta h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        .page-text-meta p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .page-action-view {
+            font-size: 12px;
+            color: #fff;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
 
     <div class="nexus-updates-container">
+        
         <div class="updates-header">
             <h1>Updates</h1>
             <div class="header-icons">
@@ -193,359 +273,205 @@
 
         <div class="section-title-area">
             <span class="section-title">Pages</span>
-            <div class="btn-create-page" onclick="alert('Page Creation Node Active')">Create Page</div>
+            <div class="btn-create-page" onclick="createNewPageCore()">Create Page</div>
         </div>
+
         <div class="pages-vertical-list">
-            <div class="page-list-item">
+            
+            <div class="page-list-item" onclick="viewPageMatrix('sirrin-rike-miji')">
                 <div class="page-info-block">
                     <img src="https://via.placeholder.com/50/111?text=SRM" class="page-avatar">
-                    <div class="page-text-meta"><h3>Sirrin rike miji 🌍</h3><p>Kece Kike Bukatar Namiji Mai Gemu...</p></div>
+                    <div class="page-text-meta">
+                        <h3>Sirrin rike miji 🌍</h3>
+                        <p>Kece Kike Bukatar Namiji Mai Gemu...</p>
+                    </div>
                 </div>
                 <div class="page-action-view">10m ago</div>
             </div>
-        </div>
-    </div>
 
-    <div class="status-picker-overlay" id="statusPickerModal">
-        <div class="picker-header">
-            <span>Add Neural Update</span>
-            <span class="picker-close" onclick="closePickerModal()">×</span>
-        </div>
-        <div class="picker-options-grid">
-            <div class="option-btn" onclick="openTextEditor()">
-                <div class="option-icon-circle" style="color: #9c27b0;">✏️</div><span>Text</span>
-            </div>
-            <div class="option-btn" onclick="triggerMediaSelector('image')">
-                <div class="option-icon-circle" style="color: #00e676;">🖼️</div><span>Photo</span>
-            </div>
-            <div class="option-btn" onclick="triggerMediaSelector('video')">
-                <div class="option-icon-circle" style="color: #00f2ff;">📹</div><span>Video</span>
-            </div>
-            <div class="option-btn" onclick="alert('Voice Node Connected! Speak now...')">
-                <div class="option-icon-circle" style="color: #ff0055;">🎙️</div><span>Voice</span>
-            </div>
-        </div>
-    </div>
-
-    <input type="file" id="mediaFileInput" style="display: none;" onchange="handleMediaSelected(this)">
-
-    <div class="text-editor-overlay" id="textEditorPage">
-        <div class="editor-top-bar">
-            <span class="picker-close" onclick="closeTextEditor()">×</span>
-            <div class="editor-tools">
-                <div class="tool-icon" onclick="changeEditorBackground()">🎨</div>
-                <div class="tool-icon" onclick="changeEditorFont()">Aa</div>
-            </div>
-        </div>
-        <textarea class="editor-main-input" id="textStatusContent" placeholder="Type a status" rows="3"></textarea>
-        <div class="editor-footer-bar">
-            <div></div>
-            <button class="btn-send-status" onclick="publishTextStatus()">✓</button>
-        </div>
-    </div>
-
-    <div class="media-preview-overlay" id="mediaPreviewPage">
-        <div class="editor-top-bar" style="padding: 16px;">
-            <span class="picker-close" onclick="closeMediaPreview()">×</span>
-        </div>
-        <div class="media-container" id="mediaPreviewHolder"></div>
-        <div class="caption-input-area">
-            <input type="text" class="caption-box" id="mediaCaptionInput" placeholder="Add a caption...">
-            <button class="btn-send-status" onclick="publishMediaStatus()">✓</button>
-        </div>
-    </div>
-
-    <div class="status-viewer-overlay" id="statusViewerOverlay">
-        <div class="viewer-progress-container" id="viewerProgressWrapper"></div>
-        <div class="viewer-header">
-            <div class="viewer-user-info">
-                <img src="" class="viewer-avatar" id="vAvatar">
-                <div>
-                    <div class="viewer-username" id="vName"></div>
-                    <div class="viewer-time" id="vTime">Just now</div>
+            <div class="page-list-item" onclick="viewPageMatrix('simon-updates')">
+                <div class="page-info-block">
+                    <img src="https://via.placeholder.com/50/222?text=SU" class="page-avatar">
+                    <div class="page-text-meta">
+                        <h3>Simon's Updates.</h3>
+                        <p>If you have issue or concern. You can...</p>
+                    </div>
                 </div>
+                <div class="page-action-view">Yesterday</div>
             </div>
-            <span class="picker-close" onclick="closeStatusViewer()" style="z-index:30;">×</span>
+
+            <div class="page-list-item" onclick="viewPageMatrix('annahjul-hameed')">
+                <div class="page-info-block">
+                    <img src="https://via.placeholder.com/50/333?text=ATV" class="page-avatar">
+                    <div class="page-text-meta">
+                        <h3>Annahjul-Hameed TV</h3>
+                        <p>Addu'ar Sujuda🇲🇳🇲🇳...</p>
+                    </div>
+                </div>
+                <div class="page-action-view">2 days ago</div>
+            </div>
+
         </div>
-        <div class="viewer-body" id="viewerBodyContent"></div>
+
     </div>
+
+    <input type="file" id="hiddenCameraInput" accept="image/*,video/*" style="display: none;" onchange="handleStatusUpload(this)">
 
     <script>
-        // BACKGROUNDS & FONTS SYSTEM
-        const bgColors = ["#9c27b0", "#009688", "#e91e63", "#3f51b5", "#111111", "#ff5722"];
-        const fontStyles = ["'Inter', sans-serif", "'Courier Prime', monospace", "'Pacifico', cursive"];
-        let currentBgIdx = 0, currentFontIdx = 0;
-
-        // LOAD FROM LOCALSTORAGE OR DEFAULT DATA (Wannan tsarin zai sa baya bacewa!)
-        let statusData = JSON.parse(localStorage.getItem('nexus_status_vault')) || [
+        // LISSAFIN DATA NA KOWANE STATUS (Yanzu da tsarin adadin hotuna da lokaci)
+        const statusData = [
             {
-                id: "my-status", username: "My Status", isMe: true,
+                id: "my-status",
+                username: "My Status",
+                isMe: true,
                 profileImg: "https://via.placeholder.com/40/111?text=Me",
-                updates: []
+                previewImg: "https://via.placeholder.com/150x250/111?text=My+Story",
+                timestamp: Date.now(), // Ko da yaushe yana gaba
+                totalUpdates: 1,
+                viewedCount: 0
             },
             {
-                id: "ramatu", username: "Ramatu Arahman", isMe: false,
-                profileImg: "https://via.placeholder.com/40/00F2FF?text=RA",
-                updates: [
-                    { type: 'text', content: 'Dua For My Father 🤲', bg: '#009688', font: "'Inter', sans-serif", caption: '', time: '24m ago' },
-                    { type: 'image', content: 'https://images.unsplash.com/photo-1518770660439-4636190af475', caption: 'Nexus Smart Contract deployed successfully!', time: '10m ago' }
-                ]
+                id: "ramatu",
+                username: "Ramatu Arahman",
+                isMe: false,
+                profileImg: "https://via.placeholder.com/40/111/00F2FF?text=RA",
+                previewImg: "https://via.placeholder.com/150x250/002233?text=Ramatu+Update",
+                timestamp: Date.now() - 3600000, // Awa daya da ta wuce
+                totalUpdates: 3,
+                viewedCount: 2 // Ta kalli guda 2, ya rage 1 (Ba zai koma karshe ba!)
             },
             {
-                id: "ahmad", username: "Ahmad Tech Hub", isMe: false,
-                profileImg: "https://via.placeholder.com/40/FF0055?text=AT",
-                updates: [
-                    { type: 'image', content: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0', caption: 'Gas efficiency optimization high.', time: '1h ago' }
-                ]
+                id: "ahmad",
+                username: "Ahmad Tech Hub",
+                isMe: false,
+                profileImg: "https://via.placeholder.com/40/222/FF0055?text=AT",
+                previewImg: "https://via.placeholder.com/150x250/330011?text=Ahmad+Node",
+                timestamp: Date.now() - 600000, // Minti 10 da suka wuce (Sabon status)
+                totalUpdates: 2,
+                viewedCount: 0 // Bai kalla ko daya ba
+            },
+            {
+                id: "fateema",
+                username: "Fatima Ahmad",
+                isMe: false,
+                profileImg: "https://via.placeholder.com/40/333?text=FA",
+                previewImg: "https://via.placeholder.com/150x250/222222?text=Fatima+Story",
+                timestamp: Date.now() - 7200000, // Awa biyu da suka wuce
+                totalUpdates: 1,
+                viewedCount: 1 // Ta gama kallo gaba daya (Zai koma can karshe!)
             }
         ];
 
-        function saveData() {
-            localStorage.setItem('nexus_status_vault', JSON.stringify(statusData));
-        }
-
-        // REEL RENDER & SORT ENGINE (WhatsApp Algorithm)
-        function renderStatusReel() {
-            const myStatus = statusData.find(s => s.isMe);
+        // LOGIC DIN JERA STATUS KAMAR WHATSAPP (SORTING ENGINE)
+        function sortAndRenderStatus() {
+            // Raba My Status daban saboda shi koyaushe yana nan daram a farko
+            const myStatusNode = statusData.find(s => s.isMe);
             const others = statusData.filter(s => !s.isMe);
 
-            // Jera sauran mutane: Masu unread updates suna gaba, fully viewed suna komawa karshe
             others.sort((a, b) => {
-                const aUnread = a.updates.some(u => !u.isViewed);
-                const bUnread = b.updates.some(u => !u.isViewed);
-                if (aUnread && !bUnread) return -1;
-                if (!aUnread && bUnread) return 1;
-                return 0; // Maintain recent time order
+                const aFullyViewed = a.viewedCount >= a.totalUpdates;
+                const bFullyViewed = b.viewedCount >= b.totalUpdates;
+
+                // 1. Idan daya ya cika kallo daya bai cika ba, wanda bai cika ba ya dawo gaba
+                if (aFullyViewed && !bFullyViewed) return 1;
+                if (!aFullyViewed && bFullyViewed) return -1;
+
+                // 2. Idan duka matakin daya ne (ko duka an kalla, ko duka basu kammala ba), na kusa (Newest) ya dawo gaba
+                return b.timestamp - a.timestamp;
             });
 
-            const finalReel = [myStatus, ...others];
+            // Gwamfata jerin: My Status sannan sauran mutane da suka tantance
+            const finalSortedList = [myStatusNode, ...others];
+
+            // RENDER ENGINE
             const container = document.getElementById('statusReelContainer');
             container.innerHTML = '';
 
-            finalReel.forEach(user => {
-                // Idan babu updates ko kadan, saka default empty story image
-                const hasUpdates = user.updates && user.updates.length > 0;
-                let preview = "https://via.placeholder.com/150x250/111?text=No+Update";
-                
-                if (hasUpdates) {
-                    const lastUpdate = user.updates[user.updates.length - 1];
-                    preview = lastUpdate.type === 'text' ? 'https://via.placeholder.com/150x250/222?text=Text+Node' : lastUpdate.content;
-                }
-
+            finalSortedList.forEach(status => {
                 const card = document.createElement('div');
                 card.className = 'status-node-circle';
-                card.onclick = () => handleCardClick(user.id);
+                
+                if (status.isMe) {
+                    card.setAttribute('onclick', 'triggerAddStatus()');
+                } else {
+                    card.setAttribute('onclick', `openStatusMatrix('${status.id}')`);
+                }
 
                 let ringClass = 'avatar-ring-status';
-                if (user.isMe) {
+                if (status.isMe) {
                     ringClass += ' my-node';
-                } else {
-                    const allRead = user.updates.every(u => u.isViewed);
-                    if (allRead) ringClass += ' viewed';
+                } else if (status.viewedCount >= status.totalUpdates) {
+                    ringClass += ' viewed'; // Idan an kalla duka gaba daya
                 }
+
+                const plusIcon = status.isMe ? '<div class="add-node-plus">+</div>' : '';
 
                 card.innerHTML = `
                     <div class="${ringClass}">
-                        <img src="${user.profileImg}">
-                        ${user.isMe ? '<div class="add-node-plus">+</div>' : ''}
+                        <img src="${status.profileImg}">
+                        ${plusIcon}
                     </div>
-                    <img src="${preview}" class="status-img">
-                    <span class="status-username">${user.username}</span>
+                    <img src="${status.previewImg}" class="status-img">
+                    <span class="status-username">${status.username}</span>
                 `;
                 container.appendChild(card);
             });
         }
 
-        function handleCardClick(userId) {
-            if (userId === 'my-status') {
-                document.getElementById('statusPickerModal').style.display = 'flex';
-            } else {
-                startStatusSequence(userId);
-            }
+        // BUDE CAMERA KO FILE SYSTEM DA GASKE
+        function triggerAddStatus() {
+            document.getElementById('hiddenCameraInput').click();
         }
 
-        function closePickerModal() { document.getElementById('statusPickerModal').style.display = 'none'; }
-        function openTextEditor() { closePickerModal(); document.getElementById('textEditorPage').style.display = 'flex'; }
-        function closeTextEditor() { document.getElementById('textEditorPage').style.display = 'none'; }
-        
-        function changeEditorBackground() {
-            currentBgIdx = (currentBgIdx + 1) % bgColors.length;
-            document.getElementById('textEditorPage').style.background = bgColors[currentBgIdx];
-        }
-
-        function changeEditorFont() {
-            currentFontIdx = (currentFontIdx + 1) % fontStyles.length;
-            document.getElementById('textStatusContent').style.fontFamily = fontStyles[currentFontIdx];
-        }
-
-        // PUBLISH TEXT UPDATE
-        function publishTextStatus() {
-            const txt = document.getElementById('textStatusContent').value.trim();
-            if(!txt) return;
-            const myStatus = statusData.find(s => s.isMe);
-            myStatus.updates.push({
-                type: 'text', content: txt,
-                bg: bgColors[currentBgIdx], font: fontStyles[currentFontIdx],
-                caption: '', isViewed: true, time: 'Just now'
-            });
-            saveData();
-            document.getElementById('textStatusContent').value = '';
-            closeTextEditor();
-            renderStatusReel();
-        }
-
-        // MEDIA INTERACTIVE LOGIC
-        let selectedMediaType = 'image';
-        let stagedMediaURL = '';
-
-        function triggerMediaSelector(type) {
-            selectedMediaType = type;
-            closePickerModal();
-            const inp = document.getElementById('mediaFileInput');
-            inp.accept = type === 'image' ? 'image/*' : 'video/*';
-            inp.click();
-        }
-
-        function handleMediaSelected(input) {
+        // IDAN MUTUM YA ZABO HOTO DAGA KYAMARA
+        function handleStatusUpload(input) {
             if (input.files && input.files[0]) {
-                stagedMediaURL = URL.createObjectURL(input.files[0]);
-                const holder = document.getElementById('mediaPreviewHolder');
-                holder.innerHTML = '';
-
-                if (selectedMediaType === 'image') {
-                    holder.innerHTML = `<img src="${stagedMediaURL}" class="preview-media-element">`;
-                } else {
-                    holder.innerHTML = `<video src="${stagedMediaURL}" class="preview-media-element" autoplay loop muted></video>`;
-                }
-                document.getElementById('mediaPreviewPage').style.display = 'flex';
+                const file = input.files[0];
+                const fileURL = URL.createObjectURL(file);
+                
+                // Sabunta Katin My Status da hoton da aka dauka
+                const myStatus = statusData.find(s => s.isMe);
+                myStatus.previewImg = fileURL;
+                myStatus.timestamp = Date.now();
+                
+                // Sake gina katunan a fuska
+                sortAndRenderStatus();
             }
         }
 
-        function closeMediaPreview() { document.getElementById('mediaPreviewPage').style.display = 'none'; }
-
-        // PUBLISH PHOTO/VIDEO WITH CAPTION
-        function publishMediaStatus() {
-            const cap = document.getElementById('mediaCaptionInput').value.trim();
-            const myStatus = statusData.find(s => s.isMe);
-            myStatus.updates.push({
-                type: selectedMediaType, content: stagedMediaURL,
-                caption: cap, isViewed: true, time: 'Just now'
-            });
-            saveData();
-            document.getElementById('mediaCaptionInput').value = '';
-            closeMediaPreview();
-            renderStatusReel();
-        }
-
-        // ==================== IMMERSIVE CONTINUOUS MULTI-USER VIEWER ====================
-        let userSequence = [];
-        let currentUserIdx = 0, currentUpdateIdx = 0;
-        let viewProgressTimer = null;
-        let progressPercent = 0;
-
-        function startStatusSequence(startUserId) {
-            // Tattara duka sauran mutane masu updates
-            userSequence = statusData.filter(u => u.updates && u.updates.length > 0);
-            currentUserIdx = userSequence.findIndex(u => u.id === startUserId);
+        // LOKACIN DANNA STATUS NA SAURAN MUTANE
+        function openStatusMatrix(userKey) {
+            const targetStatus = statusData.find(s => s.id === userKey);
+            if (targetStatus) {
+                // Kwaikwayon cewa ka kara kallon hoto guda daya (Simulate viewing an item)
+                if (targetStatus.viewedCount < targetStatus.totalUpdates) {
+                    targetStatus.viewedCount++;
+                    // Zaka iya canza timestamp din idan kana so ya dawo sabo, amma WhatsApp baya canza na tsohon status
+                }
+            }
             
-            // Fara daga update na farko da mutum bai kalla ba (Unread node entry)
-            currentUpdateIdx = userSequence[currentUserIdx].updates.findIndex(u => !u.isViewed);
-            if(currentUpdateIdx === -1) currentUpdateIdx = 0; // Idan an kalla duka, fara daga farko
+            // Sake gina tsarin katunan
+            sortAndRenderStatus();
 
-            document.getElementById('statusViewerOverlay').style.display = 'flex';
-            loadActiveUpdate();
+            // Tura mutum zuwa shafin kallo bayan seconds kadan
+            setTimeout(() => {
+                window.location.href = `status.html?user=${userKey}`;
+            }, 180);
         }
 
-        function loadActiveUpdate() {
-            clearInterval(viewProgressTimer);
-            const user = userSequence[currentUserIdx];
-            const update = user.updates[currentUpdateIdx];
-
-            // Saka profile meta
-            document.getElementById('vAvatar').src = user.profileImg;
-            document.getElementById('vName').innerText = user.username;
-            document.getElementById('vTime').innerText = update.time || 'Just now';
-
-            // Mark as viewed
-            update.isViewed = true;
-            saveData();
-
-            // Gina alamomin sama (Progress ticks counts)
-            const wrapper = document.getElementById('viewerProgressWrapper');
-            wrapper.innerHTML = '';
-            user.updates.forEach((up, idx) => {
-                const bar = document.createElement('div');
-                bar.className = 'viewer-progress-bar';
-                const fill = document.createElement('div');
-                fill.className = 'viewer-progress-fill';
-                if (idx < currentUpdateIdx) fill.style.width = '100%';
-                bar.appendChild(fill);
-                wrapper.appendChild(bar);
-            });
-
-            // Saka content na jikin Screen
-            const body = document.getElementById('viewerBodyContent');
-            body.innerHTML = '';
-            body.style.background = 'transparent';
-
-            if (update.type === 'text') {
-                body.style.background = update.bg || '#111';
-                body.innerText = update.content;
-                body.style.fontFamily = update.font || 'sans-serif';
-            } else if (update.type === 'image') {
-                body.innerHTML = `<img src="${update.content}" class="viewer-media">`;
-            } else if (update.type === 'video') {
-                body.innerHTML = `<video src="${update.content}" class="viewer-media" autoplay playsinline></video>`;
-            }
-
-            // Nuna caption idan akwai
-            if (update.caption) {
-                const capDiv = document.createElement('div');
-                capDiv.className = 'viewer-caption-display';
-                capDiv.innerText = update.caption;
-                body.appendChild(capDiv);
-            }
-
-            // Fara tafiyar lokacin (Timer Engine)
-            progressPercent = 0;
-            const currentFillBar = wrapper.children[currentUpdateIdx].querySelector('.viewer-progress-fill');
-            
-            viewProgressTimer = setInterval(() => {
-                progressPercent += 2; // Gudu
-                if(currentFillBar) currentFillBar.style.width = progressPercent + '%';
-
-                if (progressPercent >= 100) {
-                    clearInterval(viewProgressTimer);
-                    goToNextUpdate();
-                }
-            }, 80); // 4 Seconds kowane daya
-        }
-
-        function goToNextUpdate() {
-            const user = userSequence[currentUserIdx];
-            if (currentUpdateIdx < user.updates.length - 1) {
-                currentUpdateIdx++;
-                loadActiveUpdate();
-            } else {
-                // Lokacin da duka updates na mutumin na yanzu suka kare, tafi na gaba kai tsaye!
-                if (currentUserIdx < userSequence.length - 1) {
-                    currentUserIdx++;
-                    currentUpdateIdx = 0;
-                    loadActiveUpdate();
-                } else {
-                    // Idan duka na kowa ya kare gaba daya, tsaya a shafin Updates, kar ka fita!
-                    closeStatusViewer();
-                }
+        function createNewPageCore() {
+            const pageName = prompt("Enter a unique name for your new Nexus Page:");
+            if(pageName) {
+                alert(`🚀 Core Registered: Your page "${pageName}" has been successfully created on the Synergy Network Node!`);
             }
         }
 
-        function closeStatusViewer() {
-            clearInterval(viewProgressTimer);
-            document.getElementById('statusViewerOverlay').style.display = 'none';
-            renderStatusReel();
+        function viewPageMatrix(pageKey) {
+            alert(`📂 Loading Hub: Accessing digital ledger for page code [${pageKey}].`);
         }
 
-        window.onload = () => { renderStatusReel(); };
+        // Kaddamar da gina katunan da zaran shafi ya gama lodi
+        window.onload = sortAndRenderStatus;
     </script>
 </body>
 </html>
