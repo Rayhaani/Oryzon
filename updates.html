@@ -579,7 +579,61 @@ function handleStatusUpload(input, fileType) {
     }
 }
 
-function fetchStatusesFromFirebase() {
+
+              
+
+function triggerAddStatus(event) {
+    if (event) event.stopPropagation();
+    showPremiumOverlay();
+}
+
+function showPremiumOverlay() {
+    document.getElementById('globalGlassOverlay').classList.add('active');
+}
+
+function hidePremiumOverlay() {
+    document.getElementById('globalGlassOverlay').classList.remove('active');
+}
+
+function dispatchAction(route) {
+    hidePremiumOverlay();
+    console.log("Routing to status type: ", route);
+    
+    if (route === 'camera') {
+        document.getElementById('hiddenCameraInput').setAttribute('capture', 'environment');
+        document.getElementById('hiddenCameraInput').click();
+    } else if (route === 'gallery') {
+        document.getElementById('hiddenCameraInput').removeAttribute('capture');
+        document.getElementById('hiddenCameraInput').click();
+    } else if (route === 'text') {
+        window.location.href = `text-status.html`;
+    } else if (route === 'music') {
+        window.location.href = `music-status.html`;
+    } else if (route === 'voice') {
+        document.getElementById('hiddenVideoInput').click();
+    }
+}
+
+function openStatusMatrix(userKey) {
+    const targetStatus = statusData.find(s => s.id === userKey);
+    if (targetStatus && targetStatus.viewedCount < targetStatus.totalUpdates) {
+        targetStatus.viewedCount++;
+    }
+    sortAndRenderStatus();
+    setTimeout(() => {
+        window.location.href = `status.html?user=${userKey}`;
+    }, 180);
+}
+
+window.onload = function() {
+    renderDefaultBackupStatuses();
+};
+
+
+
+
+
+        function fetchStatusesFromFirebase() {
     if (!db) {
         renderDefaultBackupStatuses();
         return;
@@ -593,7 +647,8 @@ function fetchStatusesFromFirebase() {
             id: "my-status",
             username: "My Status",
             isMe: true,
-            profileImg: "https://via.placeholder.com/40/111?text=Me",
+            // IDAN KANA DA ASALIN LINK NA HOTONKA, SAKASHI A NAN GUDE DA YA KOMA 'https://via.placeholder.com'
+            profileImg: "https://via.placeholder.com/40/111?text=Me", 
             previewImg: "https://via.placeholder.com/150x250/111?text=No+Update", 
             timestamp: Date.now(),
             totalUpdates: 0,
@@ -609,6 +664,9 @@ function fetchStatusesFromFirebase() {
                 myStatusCard.previewImg = data.previewImg; 
                 myStatusCard.timestamp = data.timestamp || Date.now();
                 myStatusCard.totalUpdates += 1;
+                if (data.profileImg && !data.profileImg.includes("placeholder.com")) {
+                    myStatusCard.profileImg = data.profileImg;
+                }
             } else {
                 tempOtherStatuses.push({
                     id: doc.id,
@@ -626,6 +684,7 @@ function fetchStatusesFromFirebase() {
         tempOtherStatuses.sort((a, b) => b.timestamp - a.timestamp);
         statusData.push(myStatusCard);
 
+        // Backup members data
         statusData.push(
             {
                 id: "ramatu", username: "Ramatu Arahman", isMe: false,
@@ -708,10 +767,10 @@ function sortAndRenderStatus() {
 
         const plusIcon = status.isMe ? `<div class="add-node-plus" onclick="triggerAddStatus(event)">+</div>` : '';
 
-        // GYARA NA MUSAMMAN: An saka hoto a asalin gidan a maimakon barinsa fanko ko baki
+        // GYARAN SIRRI: An cire 'ui-avatars' gaba daya don kada ya sake nuna MS ko AH. Yanzu hoton gaskiya na 'status.profileImg' zai fito radau.
         card.innerHTML = `
             <div class="${ringClass}">
-                <img src="${status.profileImg}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(status.username)}&background=00F2FF&color=000'">
+                <img src="${status.profileImg}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
                 ${plusIcon}
             </div>
             <img src="${status.previewImg}" class="status-img">
@@ -719,55 +778,7 @@ function sortAndRenderStatus() {
         `;
         container.appendChild(card);
     });
-            }
-        
-
-function triggerAddStatus(event) {
-    if (event) event.stopPropagation();
-    showPremiumOverlay();
-}
-
-function showPremiumOverlay() {
-    document.getElementById('globalGlassOverlay').classList.add('active');
-}
-
-function hidePremiumOverlay() {
-    document.getElementById('globalGlassOverlay').classList.remove('active');
-}
-
-function dispatchAction(route) {
-    hidePremiumOverlay();
-    console.log("Routing to status type: ", route);
-    
-    if (route === 'camera') {
-        document.getElementById('hiddenCameraInput').setAttribute('capture', 'environment');
-        document.getElementById('hiddenCameraInput').click();
-    } else if (route === 'gallery') {
-        document.getElementById('hiddenCameraInput').removeAttribute('capture');
-        document.getElementById('hiddenCameraInput').click();
-    } else if (route === 'text') {
-        window.location.href = `text-status.html`;
-    } else if (route === 'music') {
-        window.location.href = `music-status.html`;
-    } else if (route === 'voice') {
-        document.getElementById('hiddenVideoInput').click();
-    }
-}
-
-function openStatusMatrix(userKey) {
-    const targetStatus = statusData.find(s => s.id === userKey);
-    if (targetStatus && targetStatus.viewedCount < targetStatus.totalUpdates) {
-        targetStatus.viewedCount++;
-    }
-    sortAndRenderStatus();
-    setTimeout(() => {
-        window.location.href = `status.html?user=${userKey}`;
-    }, 180);
-}
-
-window.onload = function() {
-    renderDefaultBackupStatuses();
-};
+                }
         
     </script>
 </body>
