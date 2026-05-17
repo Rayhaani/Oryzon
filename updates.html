@@ -141,7 +141,7 @@
             box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
         }
         .avatar-ring-status.viewed {
-            background: rgba(255,255,255,0.4) !important; /*大 Dole ya zama madaidaici idan an kalla */
+            background: rgba(255,255,255,0.4) !important; /* Dole ya zama madaidaici idan an kalla */
         }
         .avatar-ring-status.my-node {
             background: rgba(255,255,255,0.2);
@@ -269,7 +269,8 @@
             <span class="section-title">Status</span>
         </div>
 
-        <div class="status-horizontal-reel" id="statusReelContainer"></div>
+        <div class="status-horizontal-reel" id="statusReelContainer">
+            </div>
 
         <div class="section-title-area">
             <span class="section-title">Pages</span>
@@ -315,51 +316,76 @@
 
     </div>
 
-    <input type="file" id="hiddenCameraInput" accept="image/*,video/*" style="display: none;" onchange="handleStatusUpload(this)">
-
     <script>
-        // Wannan aikin zai karbi fayil din hoton kyamara ya tura shi Firebase
+
+
+        // 1. Shigo da Firestore Core kawai (Ba ma bukatar Storage yanzu)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// 2. Lambobin da ka bayar na Oryzon
+const firebaseConfig = {
+  apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+  authDomain: "oryzon-50ea4.firebaseapp.com",
+  projectId: "oryzon-50ea4",
+  storageBucket: "oryzon-50ea4.firebasestorage.app",
+  messagingSenderId: "782106742622",
+  appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+  measurementId: "G-K5085DLL2W"
+};
+
+// Kaddamar da Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 3. GYARAN AIKIN UPLOAD (Canza Hoto zuwa Rubutun Base64 don ya adanu a Database)
 async function handleStatusUpload(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
         
-        // Nuna wa mai amfani alamar cewa aikin tura hoto yana tafiya
-        console.log("Ana tura hoton status zuwa Oryzon Cloud Storage...");
-
-        try {
-            // A. Tura Fayil din zuwa Cloud Storage na Firebase
-            const storageRef = ref(storage, `status_uploads/${Date.now()}_${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            
-            // B. Dauko takaitaccen adireshin hoton (Download URL)
-            const downloadURL = await getDownloadURL(snapshot.ref);
-
-            // C. Shirya bayanan status din da za a adana a Firestore Database
-            const newStatusDoc = {
-                username: "Sadiq", // Da zaran tsarin login ya kammala za a sanya dynamic user anan
-                profileImg: "https://via.placeholder.com/40/111?text=Me", 
-                previewImg: downloadURL, // Adireshin hoton da ke zaune a Firebase Storage yanzu
-                timestamp: Date.now(), // Adana exact lokacin da aka yi upload din
-                totalUpdates: 1,
-                viewedCount: 0,
-                isMe: false // Ana sanya false domin sauran mutane su gani a matsayin sabon status
-            };
-
-            // D. Turawa zuwa Firestore collection mai suna "statusData"
-            await addDoc(collection(db, "statusData"), newStatusDoc);
-            console.log("Success!");
-
-            // E. Sake kiran babban aikinmu na jera status domin ya kwaso sabbin bayanai
-            fetchStatusesFromFirebase();
-
-        } catch (error) {
-            console.error("Error occur: ", error);
-            alert("Error occur, check your internet connectivity and try again.");
+        // Duba girman hoto don kar ya yi nauyi a database (Kada ya wuce 1MB)
+        if (file.size > 1048576) { 
+            alert("Hoton ya yi nauyi sosai, da fatan ka zabi hoto mara nauyi don loda shi cikin sauri.");
+            return;
         }
+
+        console.log("Ana sarrafa hoto zuwa rumbun Oryzon Database...");
+
+        // Juyar da hoton kyamara zuwa Rubutu (Base64)
+        const reader = new FileReader();
+        reader.onload = async function (e) {
+            const base64Image = e.target.result; // Wannan shi ne hoton ya zama rubutu
+
+            try {
+                // Shirya bayanan da zasu tafi Firestore
+                const newStatusDoc = {
+                    username: "Sadiq", 
+                    profileImg: "https://via.placeholder.com/40/111?text=Me", 
+                    previewImg: base64Image, // Rubutun hotonmu yana tafiya Firestore kai tsaye anan
+                    timestamp: Date.now(), 
+                    totalUpdates: 1,
+                    viewedCount: 0,
+                    isMe: false 
+                };
+
+                // Turawa zuwa Firestore collection mai suna "statusData"
+                await addDoc(collection(db, "statusData"), newStatusDoc);
+                console.log("An adana a database daram!");
+
+                // Sake wartsake fuska don sabon status ya fito
+                fetchStatusesFromFirebase();
+
+            } catch (error) {
+                console.error("Kasa adana hoto a Firestore: ", error);
+                alert("An samu akasi wajen hadawa da Firestore Database, duba tsarin blocked rules dinki.");
+            }
+        };
+
+        reader.readAsDataURL(file); // Fara juyar da hoton
     }
 }
         
-        // LISSAFIN DATA NA KOWANE STATUS (Yanzu da tsarin adadin hotuna da lokaci)
+        // LISSAFIN DATA NA KOWANE STATUS (Wannan zai iya fitowa daga API dinka na gaba)
         const statusData = [
             {
                 id: "my-status",
@@ -367,9 +393,7 @@ async function handleStatusUpload(input) {
                 isMe: true,
                 profileImg: "https://via.placeholder.com/40/111?text=Me",
                 previewImg: "https://via.placeholder.com/150x250/111?text=My+Story",
-                timestamp: Date.now(), // Ko da yaushe yana gaba
-                totalUpdates: 1,
-                viewedCount: 0
+                viewed: false
             },
             {
                 id: "ramatu",
@@ -377,9 +401,7 @@ async function handleStatusUpload(input) {
                 isMe: false,
                 profileImg: "https://via.placeholder.com/40/111/00F2FF?text=RA",
                 previewImg: "https://via.placeholder.com/150x250/002233?text=Ramatu+Update",
-                timestamp: Date.now() - 3600000, // Awa daya da ta wuce
-                totalUpdates: 3,
-                viewedCount: 2 // Ta kalli guda 2, ya rage 1 (Ba zai koma karshe ba!)
+                viewed: false
             },
             {
                 id: "ahmad",
@@ -387,9 +409,7 @@ async function handleStatusUpload(input) {
                 isMe: false,
                 profileImg: "https://via.placeholder.com/40/222/FF0055?text=AT",
                 previewImg: "https://via.placeholder.com/150x250/330011?text=Ahmad+Node",
-                timestamp: Date.now() - 600000, // Minti 10 da suka wuce (Sabon status)
-                totalUpdates: 2,
-                viewedCount: 0 // Bai kalla ko daya ba
+                viewed: false
             },
             {
                 id: "fateema",
@@ -397,56 +417,36 @@ async function handleStatusUpload(input) {
                 isMe: false,
                 profileImg: "https://via.placeholder.com/40/333?text=FA",
                 previewImg: "https://via.placeholder.com/150x250/222222?text=Fatima+Story",
-                timestamp: Date.now() - 7200000, // Awa biyu da suka wuce
-                totalUpdates: 1,
-                viewedCount: 1 // Ta gama kallo gaba daya (Zai koma can karshe!)
+                viewed: true // Wannan an riga an kalla tun farko
             }
         ];
 
-        // LOGIC DIN JERA STATUS KAMAR WHATSAPP (SORTING ENGINE)
-        function sortAndRenderStatus() {
-            // Raba My Status daban saboda shi koyaushe yana nan daram a farko
-            const myStatusNode = statusData.find(s => s.isMe);
-            const others = statusData.filter(s => !s.isMe);
-
-            others.sort((a, b) => {
-                const aFullyViewed = a.viewedCount >= a.totalUpdates;
-                const bFullyViewed = b.viewedCount >= b.totalUpdates;
-
-                // 1. Idan daya ya cika kallo daya bai cika ba, wanda bai cika ba ya dawo gaba
-                if (aFullyViewed && !bFullyViewed) return 1;
-                if (!aFullyViewed && bFullyViewed) return -1;
-
-                // 2. Idan duka matakin daya ne (ko duka an kalla, ko duka basu kammala ba), na kusa (Newest) ya dawo gaba
-                return b.timestamp - a.timestamp;
-            });
-
-            // Gwamfata jerin: My Status sannan sauran mutane da suka tantance
-            const finalSortedList = [myStatusNode, ...others];
-
-            // RENDER ENGINE
+        // AIKIN DA ZAI GINA KATUNAN A FUSKA (RENDER ENGINE)
+        function renderStatusCards() {
             const container = document.getElementById('statusReelContainer');
-            container.innerHTML = '';
+            container.innerHTML = ''; // Share tsofaffin katunnan
 
-            finalSortedList.forEach(status => {
+            statusData.forEach(status => {
+                // Sifofin katin HTML
                 const card = document.createElement('div');
                 card.className = 'status-node-circle';
                 
+                // Raba aikin danna kati: Na farko zai yi triggerAddStatus, sauran za su bude status.html
                 if (status.isMe) {
                     card.setAttribute('onclick', 'triggerAddStatus()');
                 } else {
                     card.setAttribute('onclick', `openStatusMatrix('${status.id}')`);
                 }
 
+                // Sanya alamar zobe (ring) dangane da shin katin na kanka ne ko an kalla
                 let ringClass = 'avatar-ring-status';
-                if (status.isMe) {
-                    ringClass += ' my-node';
-                } else if (status.viewedCount >= status.totalUpdates) {
-                    ringClass += ' viewed'; // Idan an kalla duka gaba daya
-                }
+                if (status.isMe) ringClass += ' my-node';
+                else if (status.viewed) ringClass += ' viewed';
 
+                // Plus button na katin farko
                 const plusIcon = status.isMe ? '<div class="add-node-plus">+</div>' : '';
 
+                // Cusa kashin HTML a cikin katin
                 card.innerHTML = `
                     <div class="${ringClass}">
                         <img src="${status.profileImg}">
@@ -455,130 +455,31 @@ async function handleStatusUpload(input) {
                     <img src="${status.previewImg}" class="status-img">
                     <span class="status-username">${status.username}</span>
                 `;
+
                 container.appendChild(card);
             });
         }
 
-
-
-        // Aikin kwaso dukkan status daga Firebase Firestore
-async function fetchStatusesFromFirebase() {
-    try {
-        const q = query(collection(db, "statusData"), orderBy("timestamp", "desc"));
-        const querySnapshot = await getDocs(q);
-        
-        // Share tsofaffin bayanan cikin array na jabu na da
-        statusData.length = 0; 
-
-        // Saka ainihin "My Status" dinka a saman kowane lokaci
-        statusData.push({
-            id: "my-status",
-            username: "My Status",
-            isMe: true,
-            profileImg: "https://via.placeholder.com/40/111?text=Me",
-            previewImg: "https://via.placeholder.com/150x250/111?text=My+Story",
-            timestamp: Date.now(),
-            totalUpdates: 1,
-            viewedCount: 0
-        });
-
-        // Saka sauran wadanda aka kwaso daga database
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            statusData.push({
-                id: doc.id,
-                username: data.username,
-                isMe: false,
-                profileImg: data.profileImg,
-                previewImg: data.previewImg,
-                timestamp: data.timestamp,
-                totalUpdates: data.totalUpdates || 1,
-                viewedCount: data.viewedCount || 0
-            });
-        });
-
-        // Bayan an gama tarawa, a kira aikin jeri na asali na WhatsApp da muka gina a baya
-        if (typeof sortAndRenderStatus === "function") {
-            sortAndRenderStatus(); 
-        }
-
-    } catch (error) {
-        console.error("Kasa kwaso bayanai daga Firestore: ", error);
-    }
-}
-
-// Canza aikin da ke faruwa idan shafi ya gama lodi (window.onload) zuwa wannan:
-window.onload = function() {
-    fetchStatusesFromFirebase();
-};
-
-
-        
-        // BUDE CAMERA KO FILE SYSTEM DA GASKE
-        function triggerAddStatus() {
-            document.getElementById('hiddenCameraInput').click();
-        }
-
-        // IDAN MUTUM YA ZABO HOTO DAGA KYAMARA
-        // Wannan aikin zai karbi fayil din hoton kyamara ya tura shi Firebase
-async function handleStatusUpload(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        
-        // Nuna wa mai amfani alamar cewa aikin tura hoto yana tafiya
-        console.log("Ana tura hoton status zuwa Oryzon Cloud Storage...");
-
-        try {
-            // A. Tura Fayil din zuwa Cloud Storage na Firebase
-            const storageRef = ref(storage, `status_uploads/${Date.now()}_${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            
-            // B. Dauko takaitaccen adireshin hoton (Download URL)
-            const downloadURL = await getDownloadURL(snapshot.ref);
-
-            // C. Shirya bayanan status din da za a adana a Firestore Database
-            const newStatusDoc = {
-                username: "Sadiq", // Da zaran tsarin login ya kammala za a sanya dynamic user anan
-                profileImg: "https://via.placeholder.com/40/111?text=Me", 
-                previewImg: downloadURL, // Adireshin hoton da ke zaune a Firebase Storage yanzu
-                timestamp: Date.now(), // Adana exact lokacin da aka yi upload din
-                totalUpdates: 1,
-                viewedCount: 0,
-                isMe: false // Ana sanya false domin sauran mutane su gani a matsayin sabon status
-            };
-
-            // D. Turawa zuwa Firestore collection mai suna "statusData"
-            await addDoc(collection(db, "statusData"), newStatusDoc);
-            console.log("An yi nasarar adana status a database!");
-
-            // E. Sake kiran babban aikinmu na jera status domin ya kwaso sabbin bayanai
-            fetchStatusesFromFirebase();
-
-        } catch (error) {
-            console.error("An samu matsala wajen adana bayanai a Firebase: ", error);
-            alert("An samu matsala wajen tura status dinka, duba intanet dinka sannan ka sake jarabawa.");
-        }
-    }
-}
-        
-        // LOKACIN DANNA STATUS NA SAURAN MUTANE
+        // BIYAYYA GA MAU'ALAN DA AKA DANNA (Wannan na mutane ne kawai)
         function openStatusMatrix(userKey) {
+            // Nemo katin da aka danna a cikin Data mu mayar da shi "viewed = true" (Active Logic)
             const targetStatus = statusData.find(s => s.id === userKey);
             if (targetStatus) {
-                // Kwaikwayon cewa ka kara kallon hoto guda daya (Simulate viewing an item)
-                if (targetStatus.viewedCount < targetStatus.totalUpdates) {
-                    targetStatus.viewedCount++;
-                    // Zaka iya canza timestamp din idan kana so ya dawo sabo, amma WhatsApp baya canza na tsohon status
-                }
+                targetStatus.viewed = true;
             }
             
-            // Sake gina tsarin katunan
-            sortAndRenderStatus();
+            // Sake gina katunan domin katin da aka danna ya nuna an kalla kafin tafiya shafin
+            renderStatusCards();
 
-            // Tura mutum zuwa shafin kallo bayan seconds kadan
+            // Tafiya zuwa ainihin shafin na kallo
             setTimeout(() => {
                 window.location.href = `status.html?user=${userKey}`;
-            }, 180);
+            }, 150); // Dan jinkiri kadan na milliseconds domin ido ya gani
+        }
+
+        // KATIN FARKO NA MY STATUS SHI KADAI ZAI KIRALU NAN
+        function triggerAddStatus() {
+            alert("📷 System Action: Triggering camera/file system to upload a new neural update to your status.");
         }
 
         function createNewPageCore() {
@@ -593,7 +494,7 @@ async function handleStatusUpload(input) {
         }
 
         // Kaddamar da gina katunan da zaran shafi ya gama lodi
-        window.onload = sortAndRenderStatus;
+        window.onload = renderStatusCards;
     </script>
 </body>
 </html>
