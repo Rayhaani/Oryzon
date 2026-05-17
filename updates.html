@@ -88,85 +88,121 @@
             box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
         }
 
-        /* HORIZONTAL STATUS MATRIX (TAMKAR TA SAMA TA WHATSAPP AMMA FUTURISTIC) */
+        /* NEW CARD DESIGN - HORIZONTAL REEL */
         .status-horizontal-reel {
             display: flex;
-            gap: 14px;
+            gap: 4px; /* An rage tazarar tsakanin katunan zuwa 4px domin su matsu */
             padding: 10px 16px 20px 16px;
             overflow-x: auto;
             scroll-behavior: smooth;
             border-bottom: 1px solid rgba(255,255,255,0.05);
+            touch-action: pan-x; /* Hana katunan yin sama da kasa lokacin turawa (Static) */
         }
         .status-horizontal-reel::-webkit-scrollbar {
             display: none; /* Boye scrollbar din */
         }
 
+        /* SABON TSARIN KATUNA (VERTICAL CARDS LIKE WHATSAPP) */
         .status-node-circle {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            min-width: 68px;
-            cursor: pointer;
-        }
-
-        .avatar-ring-status {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            padding: 2.5px;
-            background: linear-gradient(45deg, var(--cyan-neon), var(--magenta-neon));
             position: relative;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
-        }
-        /* Idan babu sabon update ko an riga an kalla */
-        .avatar-ring-status.viewed {
-            background: rgba(255,255,255,0.2);
-            box-shadow: none;
-        }
-        /* My Status Ring */
-        .avatar-ring-status.my-node {
-            background: rgba(255,255,255,0.1);
-            border: 1px dashed rgba(255,255,255,0.3);
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-width: 95px; /* Tsarin fadin katin preview */
+            height: 145px;   /* Tsarin tsayin katin preview */
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
+        /* Background image ko placeholder na katin */
         .status-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            filter: brightness(0.75); /* Taimakawa sunan kasa ya fito fili */
+        }
+
+        /* Karamin Profile Ring dake saman katin - Yanzu ya manne a TOP LEFT CORNER */
+        .avatar-ring-status {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 0 0 12px 0; /* Kyautata kwana madaidaiciya don katin */
+            padding: 2px;
+            background: linear-gradient(45deg, var(--cyan-neon), var(--magenta-neon));
+            z-index: 3;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+        .avatar-ring-status.viewed {
+            background: rgba(255,255,255,0.4);
+        }
+        .avatar-ring-status.my-node {
+            background: rgba(255,255,255,0.2);
+            border-bottom: 1px dashed rgba(255,255,255,0.5);
+            border-right: 1px dashed rgba(255,255,255,0.5);
+            padding: 0;
+        }
+
+        /* Karamin profile image a cikin da'irar sama - Na bar shi a da'ira domin fito da hoto */
+        .avatar-ring-status img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            background: #000;
         }
 
+        /* Maballin Plus na My Status */
         .add-node-plus {
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 20px;
-            height: 20px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             background: var(--cyan-neon);
-            border: 2px solid #000;
+            border: 1px solid #000;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #000;
-            font-size: 14px;
+            font-size: 9px;
             font-weight: bold;
         }
 
+        /* Sunan mai status din a kasan katin */
         .status-username {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
             font-size: 11px;
-            color: var(--text-dim);
-            text-align: center;
-            width: 70px;
+            font-weight: 600;
+            color: #fff;
+            text-align: left;
+            z-index: 3;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8); /* Kyautata karanta suna a kan hoto */
+        }
+
+        /* Gradient overlay don duhun kasan katin */
+        .status-node-circle::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
+            z-index: 2;
         }
 
         /* PAGES SECTION (VERTICAL JERE) */
@@ -235,32 +271,36 @@
 
         <div class="status-horizontal-reel">
             
-            <div class="status-node-circle" onclick="openStatusMatrix('my-status')">
+            <div class="status-node-circle" onclick="triggerAddStatus()">
                 <div class="avatar-ring-status my-node">
-                    <img src="https://via.placeholder.com/60/111?text=Me" class="status-img">
+                    <img src="https://via.placeholder.com/40/111?text=Me">
                     <div class="add-node-plus">+</div>
                 </div>
+                <img src="https://via.placeholder.com/150x250/111?text=My+Story" class="status-img">
                 <span class="status-username">My Status</span>
             </div>
 
             <div class="status-node-circle" onclick="openStatusMatrix('ramatu')">
                 <div class="avatar-ring-status">
-                    <img src="https://via.placeholder.com/60/111/00F2FF?text=RA" class="status-img">
+                    <img src="https://via.placeholder.com/40/111/00F2FF?text=RA">
                 </div>
+                <img src="https://via.placeholder.com/150x250/002233?text=Ramatu+Update" class="status-img">
                 <span class="status-username">Ramatu Arahman</span>
             </div>
 
             <div class="status-node-circle" onclick="openStatusMatrix('ahmad')">
                 <div class="avatar-ring-status">
-                    <img src="https://via.placeholder.com/60/222/FF0055?text=AT" class="status-img">
+                    <img src="https://via.placeholder.com/40/222/FF0055?text=AT">
                 </div>
+                <img src="https://via.placeholder.com/150x250/330011?text=Ahmad+Node" class="status-img">
                 <span class="status-username">Ahmad Tech Hub</span>
             </div>
 
             <div class="status-node-circle" onclick="openStatusMatrix('fateema')">
                 <div class="avatar-ring-status viewed">
-                    <img src="https://via.placeholder.com/60/333?text=FA" class="status-img">
+                    <img src="https://via.placeholder.com/40/333?text=FA">
                 </div>
+                <img src="https://via.placeholder.com/150x250/222222?text=Fatima+Story" class="status-img">
                 <span class="status-username">Fatima Ahmad</span>
             </div>
 
@@ -311,9 +351,14 @@
     </div>
 
     <script>
+        // Wannan aikin na mutane ne kawai zai tafi shafin status.html
         function openStatusMatrix(userKey) {
-            // Canza shafi zuwa ainihin status.html tare da tura ID din mutumin da aka danna
             window.location.href = `status.html?user=${userKey}`;
+        }
+
+        // Katin farko na My Status shi kadai zai bude nan domin saka sabon status
+        function triggerAddStatus() {
+            alert("📷 System Action: Triggering camera/file system to upload a new neural update to your status.");
         }
 
         function createNewPageCore() {
@@ -328,5 +373,4 @@
         }
     </script>
 </body>
-                        </html>
-        
+</html>
