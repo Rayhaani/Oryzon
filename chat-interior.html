@@ -199,35 +199,68 @@
     </div>
 
     <script>
-        const profileInput = document.getElementById('profileInput');
-        profileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) { document.getElementById('profileDisplay').src = e.target.result; }
-                reader.readAsDataURL(file);
-            }
-        });
+       // 1. Karɓar bayanai daga shafin baya ta hanyar URL Parameters
+const urlParams = new URLSearchParams(window.location.search);
+const partnerName = urlParams.get('user') || "Nexus Vendor"; // Idan ba a danna kowa ba, zai bar sunan tsoho
+const partnerAvatar = urlParams.get('avatar') || "https://via.placeholder.com/150/050505/00F2FF?text=+";
 
-        function autoExpand(field) {
-            field.style.height = 'inherit';
-            const height = field.scrollHeight;
-            field.style.height = height + 'px';
-        }
+const myId = "Sadiq"; // Asalin sunanka na aiki a kan platform ɗin
+let chatRoomId = "";
 
-        function toggleButtons() {
-            const input = document.getElementById('msgInput');
-            const voiceBtn = document.getElementById('voiceBtn');
-            const sendBtn = document.getElementById('sendBtn');
-            
-            if (input.value.trim().length > 0) {
-                voiceBtn.style.display = 'none';
-                sendBtn.style.display = 'flex';
-            } else {
-                voiceBtn.style.display = 'flex';
-                sendBtn.style.display = 'none';
-            }
+// 2. Canza suna da hoton Header ta atomatik ba tare da an taɓa HTML ko CSS ba
+document.addEventListener("DOMContentLoaded", () => {
+    const nameDisplay = document.querySelector(".vendor-info div:nth-child(1)");
+    const avatarDisplay = document.getElementById("profileDisplay");
+
+    if (nameDisplay) nameDisplay.innerText = partnerName;
+    if (avatarDisplay && urlParams.get('avatar')) avatarDisplay.src = partnerAvatar;
+
+    // Hada ID na musamman na dakin hirarku a Firebase (Misali: Sadiq_Ahmad Tech Hub)
+    if (myId < partnerName) {
+        chatRoomId = `${myId}_${partnerName}`;
+    } else {
+        chatRoomId = `${partnerName}_${myId}`;
+    }
+    
+    console.log("Nexus Sync Node Active For Room ID: " + chatRoomId);
+    
+    // IDAN KANA SON JONA FIREBASE REALTIME STREAMS A NAN GABA:
+    // Zaka iya kiran function ɗinka na loda sakonni anan: loadNexusMessages(chatRoomId);
+});
+
+// --- Asalin asalin functions ɗinka na baya ba tare da an canza musu komai ba ---
+const profileInput = document.getElementById('profileInput');
+if (profileInput) {
+    profileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) { document.getElementById('profileDisplay').src = e.target.result; }
+            reader.readAsDataURL(file);
         }
+    });
+}
+
+function autoExpand(field) {
+    field.style.height = 'inherit';
+    const height = field.scrollHeight;
+    field.style.height = height + 'px';
+}
+
+function toggleButtons() {
+    const input = document.getElementById('msgInput');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    
+    if (input && input.value.trim().length > 0) {
+        if (voiceBtn) voiceBtn.style.display = 'none';
+        if (sendBtn) sendBtn.style.display = 'flex';
+    } else {
+        if (voiceBtn) voiceBtn.style.display = 'flex';
+        if (sendBtn) sendBtn.style.display = 'none';
+    }
+        }
+        
     </script>
 </body>
 </html>
