@@ -322,10 +322,10 @@
 // ==========================================
 // GLOBALS: ADANA BAYANAN STATUS
 // ==========================================
-const statusData = []; // Wannan shi ne asalin variable din da ya bace a baya!
+const statusData = [];
 
 // ==========================================
-// 1. SHIGO DA FIREBASE CORE DA FIRESTORE (COMPAT VERSION)
+// 1. SHIGO DA FIREBASE CORE, FIRESTORE DA STORAGE
 // ==========================================
 const script1 = document.createElement('script');
 script1.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js";
@@ -335,10 +335,14 @@ const script2 = document.createElement('script');
 script2.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js";
 document.head.appendChild(script2);
 
-let db;
+const script3 = document.createElement('script');
+script3.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js";
+document.head.appendChild(script3);
 
-// Kaddamar da Firebase da zaran wadancan scripts sun gama lodi
-script2.onload = function() {
+let db;
+let storage;
+
+script3.onload = function() {
     const firebaseConfig = {
       apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
       authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -351,59 +355,61 @@ script2.onload = function() {
 
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
-    console.log("Firebase Database ya riga ya gama lodi 100%!");
+    storage = firebase.storage(); // Kaddamar da rumbun ajiya na bidiyo da hotuna
+    console.log("Firebase Database & Storage sun gama lodi 100%!");
     
-    // Kwaso status na gaskiya daga database
     fetchStatusesFromFirebase();
 };
 
 // ==========================================
-// 2. SABON AIKIN UPLOAD (BASE64 ENGINE)
+// 2. SMMAN SABON AIKIN UPLOAD NA HOTO DA BIDIYO (FIREBASE STORAGE)
 // ==========================================
-function handleStatusUpload(input) {
+function handleStatusUpload(input, fileType) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
         
-        if (file.size > 1048576) { 
-            alert("Hoton ya yi nauyi sosai, da fatan ka zabi hoto mara nauyi don loda shi cikin sauri.");
+        // Mun cire takunkumin 1MB! Muna barin manyan bidiyoyi su wuce zuwa Storage
+        console.log(`Ana tura ${fileType} zuwa rumbun Oryzon Storage...`);
+
+        if (!storage || !db) {
+            alert("Siffar sadarwa ba ta gama lodi ba, da fatan ka jira sakan guda.");
             return;
         }
 
-        console.log("Ana sarrafa hoto zuwa rumbun Oryzon Database...");
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const base64Image = e.target.result;
-
-            if (!db) {
-                alert("Database bai gama lodi ba tukunna, da fatan ka jira sakan daya sannan ka sake jarabawa.");
-                return;
-            }
-
-            db.collection("statusData").add({
+        // Samar da gurbi na musamman a Storage don kada hotuna su goge na juna
+        const fileRef = storage.ref().child(`status_files/${Date.now()}_${file.name}`);
+        
+        // Fara tura babban file din
+        fileRef.put(file).then((snapshot) => {
+            // Bayan ya gama tura babban bidiyon/hoton, janyo link din sa na gaskiya
+            return snapshot.ref.getDownloadURL();
+        })
+        .then((downloadURL) => {
+            // Ajiye link din a Firestore collection
+            return db.collection("statusData").add({
                 username: "Sadiq", 
                 profileImg: "https://via.placeholder.com/40/111?text=Me", 
-                previewImg: base64Image, 
+                previewImg: downloadURL, // Link din hoton ko bidiyon dake storage
+                type: fileType, // 'image' ko 'video'
                 timestamp: Date.now(), 
                 totalUpdates: 1,
                 viewedCount: 0,
                 isMe: false 
-            })
-            .then(() => {
-                console.log("An yi nasarar adana status dinka a Firestore!");
-                fetchStatusesFromFirebase(); 
-            })
-            .catch((error) => {
-                console.error("Error wajen turawa: ", error);
             });
-        };
-
-        reader.readAsDataURL(file);
+        })
+        .then(() => {
+            console.log("An yi nasarar dora sabon status dinka!");
+            fetchStatusesFromFirebase(); 
+        })
+        .catch((error) => {
+            console.error("Error gurin uploading: ", error);
+            alert("An samu matsala wajen tura status dinka, duba intanet dinka sannan ka sake jarabawa.");
+        });
     }
 }
 
 // ==========================================
-// 3. INTELLIGENT SYNC (NO INDEX REQUIRED)
+// 3. JANYO BAYANAI DAGA DATABASE
 // ==========================================
 function fetchStatusesFromFirebase() {
     if (!db) {
@@ -450,30 +456,21 @@ function fetchStatusesFromFirebase() {
         });
 
         tempOtherStatuses.sort((a, b) => b.timestamp - a.timestamp);
-
         statusData.push(myStatusCard);
 
-        // DAUROWO CARDS NA JABU DOMIN KADA SHAFIN YAYI FANKO
+        // Katunan Jabu don kada shafi ya zauna fanko
         statusData.push(
             {
-                id: "ramatu",
-                username: "Ramatu Arahman",
-                isMe: false,
+                id: "ramatu", username: "Ramatu Arahman", isMe: false,
                 profileImg: "https://via.placeholder.com/40/333",
                 previewImg: "https://via.placeholder.com/150x250/333?text=Ramatu+Update",
-                timestamp: Date.now() - 1440000,
-                totalUpdates: 1,
-                viewedCount: 1
+                timestamp: Date.now() - 1440000, totalUpdates: 1, viewedCount: 1
             },
             {
-                id: "ahmad",
-                username: "Ahmad Tech Hub",
-                isMe: false,
+                id: "ahmad", username: "Ahmad Tech Hub", isMe: false,
                 profileImg: "https://via.placeholder.com/40/444",
                 previewImg: "https://via.placeholder.com/150x250/444?text=Ahmad+Update",
-                timestamp: Date.now() - 7200000,
-                totalUpdates: 1,
-                viewedCount: 0
+                timestamp: Date.now() - 7200000, totalUpdates: 1, viewedCount: 0
             }
         );
 
@@ -494,36 +491,9 @@ function fetchStatusesFromFirebase() {
 function renderDefaultBackupStatuses() {
     statusData.length = 0;
     statusData.push(
-        {
-            id: "my-status",
-            username: "My Status",
-            isMe: true,
-            profileImg: "https://via.placeholder.com/40/111?text=Me",
-            previewImg: "https://via.placeholder.com/150x250/111?text=No+Update",
-            timestamp: Date.now(),
-            totalUpdates: 0,
-            viewedCount: 0
-        },
-        {
-            id: "ramatu",
-            username: "Ramatu Arahman",
-            isMe: false,
-            profileImg: "https://via.placeholder.com/40/333",
-            previewImg: "https://via.placeholder.com/150x250/333?text=Ramatu+Update",
-            timestamp: Date.now() - 1440000,
-            totalUpdates: 1,
-            viewedCount: 1
-        },
-        {
-            id: "ahmad",
-            username: "Ahmad Tech Hub",
-            isMe: false,
-            profileImg: "https://via.placeholder.com/40/444",
-            previewImg: "https://via.placeholder.com/150x250/444?text=Ahmad+Update",
-            timestamp: Date.now() - 7200000,
-            totalUpdates: 1,
-            viewedCount: 0
-        }
+        { id: "my-status", username: "My Status", isMe: true, profileImg: "https://via.placeholder.com/40/111?text=Me", previewImg: "https://via.placeholder.com/150x250/111?text=No+Update", timestamp: Date.now(), totalUpdates: 0, viewedCount: 0 },
+        { id: "ramatu", username: "Ramatu Arahman", isMe: false, profileImg: "https://via.placeholder.com/40/333", previewImg: "https://via.placeholder.com/150x250/333?text=Ramatu+Update", timestamp: Date.now() - 1440000, totalUpdates: 1, viewedCount: 1 },
+        { id: "ahmad", username: "Ahmad Tech Hub", isMe: false, profileImg: "https://via.placeholder.com/40/444", previewImg: "https://via.placeholder.com/150x250/444?text=Ahmad+Update", timestamp: Date.now() - 7200000, totalUpdates: 1, viewedCount: 0 }
     );
     if (typeof sortAndRenderStatus === "function") {
         sortAndRenderStatus();
@@ -531,7 +501,7 @@ function renderDefaultBackupStatuses() {
 }
 
 // ==========================================
-// 4. LOGIC DIN JERA STATUS KAMAR WHATSAPP
+// 4. TSARIN KAWASO KATUNA DA BAMBANTA DANNAWA
 // ==========================================
 function sortAndRenderStatus() {
     if (statusData.length === 0) return;
@@ -542,10 +512,8 @@ function sortAndRenderStatus() {
     others.sort((a, b) => {
         const aFullyViewed = a.viewedCount >= a.totalUpdates;
         const bFullyViewed = b.viewedCount >= b.totalUpdates;
-
         if (aFullyViewed && !bFullyViewed) return 1;
         if (!aFullyViewed && bFullyViewed) return -1;
-
         return b.timestamp - a.timestamp;
     });
 
@@ -561,8 +529,9 @@ function sortAndRenderStatus() {
         const card = document.createElement('div');
         card.className = 'status-node-circle';
         
+        // Jikin Card din gaba daya zai bude shafin kallo (my-status.html ko na sauran mutane)
         if (status.isMe) {
-            card.setAttribute('onclick', 'triggerAddStatus()');
+            card.setAttribute('onclick', "window.location.href='my-status.html'");
         } else {
             card.setAttribute('onclick', `openStatusMatrix('${status.id}')`);
         }
@@ -574,7 +543,8 @@ function sortAndRenderStatus() {
             ringClass += ' viewed'; 
         }
 
-        const plusIcon = status.isMe ? '<div class="add-node-plus">+</div>' : '';
+        // Sanya aikin event.stopPropagation() a jikin plus icon domin kada ya danna jikin card din
+        const plusIcon = status.isMe ? `<div class="add-node-plus" onclick="triggerAddStatus(event)">+</div>` : '';
 
         card.innerHTML = `
             <div class="${ringClass}">
@@ -588,42 +558,33 @@ function sortAndRenderStatus() {
     });
 }
 
-function triggerAddStatus() {
-    document.getElementById('hiddenCameraInput').click();
+// ZABAR SHAFIN DA AKE SO A DORA HOTO KO BIDIYO
+function triggerAddStatus(event) {
+    if (event) event.stopPropagation(); // Tsayar da dannan jikin card
+    
+    const choice = prompt("Latsa '1' don dora Hoto, ko '2' don dora Bidiyo:");
+    if (choice === "1") {
+        document.getElementById('hiddenCameraInput').click();
+    } else if (choice === "2") {
+        document.getElementById('hiddenVideoInput').click();
+    }
 }
 
 function openStatusMatrix(userKey) {
     const targetStatus = statusData.find(s => s.id === userKey);
-    if (targetStatus) {
-        if (targetStatus.viewedCount < targetStatus.totalUpdates) {
-            targetStatus.viewedCount++;
-        }
+    if (targetStatus && targetStatus.viewedCount < targetStatus.totalUpdates) {
+        targetStatus.viewedCount++;
     }
-    
     sortAndRenderStatus();
-
     setTimeout(() => {
         window.location.href = `status.html?user=${userKey}`;
     }, 180);
 }
 
-function createNewPageCore() {
-    const pageName = prompt("Enter a unique name for your new Nexus Page:");
-    if(pageName) {
-        alert(`🚀 Core Registered: Your page "${pageName}" has been successfully created on the Synergy Network Node!`);
-    }
-}
-
-function viewPageMatrix(pageKey) {
-    alert(`📂 Loading Hub: Accessing digital ledger for page code [${pageKey}].`);
-}
-
-// Fara zana komai da zaran an shigo
 window.onload = function() {
     renderDefaultBackupStatuses();
 };
-                            
-
+            
     </script>
 </body>
 </html>
