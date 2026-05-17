@@ -318,6 +318,47 @@
     <input type="file" id="hiddenCameraInput" accept="image/*,video/*" style="display: none;" onchange="handleStatusUpload(this)">
 
     <script>
+        // Wannan aikin zai karbi fayil din hoton kyamara ya tura shi Firebase
+async function handleStatusUpload(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Nuna wa mai amfani alamar cewa aikin tura hoto yana tafiya
+        console.log("Ana tura hoton status zuwa Oryzon Cloud Storage...");
+
+        try {
+            // A. Tura Fayil din zuwa Cloud Storage na Firebase
+            const storageRef = ref(storage, `status_uploads/${Date.now()}_${file.name}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            
+            // B. Dauko takaitaccen adireshin hoton (Download URL)
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            // C. Shirya bayanan status din da za a adana a Firestore Database
+            const newStatusDoc = {
+                username: "Sadiq", // Da zaran tsarin login ya kammala za a sanya dynamic user anan
+                profileImg: "https://via.placeholder.com/40/111?text=Me", 
+                previewImg: downloadURL, // Adireshin hoton da ke zaune a Firebase Storage yanzu
+                timestamp: Date.now(), // Adana exact lokacin da aka yi upload din
+                totalUpdates: 1,
+                viewedCount: 0,
+                isMe: false // Ana sanya false domin sauran mutane su gani a matsayin sabon status
+            };
+
+            // D. Turawa zuwa Firestore collection mai suna "statusData"
+            await addDoc(collection(db, "statusData"), newStatusDoc);
+            console.log("Success!");
+
+            // E. Sake kiran babban aikinmu na jera status domin ya kwaso sabbin bayanai
+            fetchStatusesFromFirebase();
+
+        } catch (error) {
+            console.error("Error occur: ", error);
+            alert("Error occur, check your internet connectivity and try again.");
+        }
+    }
+}
+        
         // LISSAFIN DATA NA KOWANE STATUS (Yanzu da tsarin adadin hotuna da lokaci)
         const statusData = [
             {
@@ -418,27 +459,108 @@
             });
         }
 
+
+
+        // Aikin kwaso dukkan status daga Firebase Firestore
+async function fetchStatusesFromFirebase() {
+    try {
+        const q = query(collection(db, "statusData"), orderBy("timestamp", "desc"));
+        const querySnapshot = await getDocs(q);
+        
+        // Share tsofaffin bayanan cikin array na jabu na da
+        statusData.length = 0; 
+
+        // Saka ainihin "My Status" dinka a saman kowane lokaci
+        statusData.push({
+            id: "my-status",
+            username: "My Status",
+            isMe: true,
+            profileImg: "https://via.placeholder.com/40/111?text=Me",
+            previewImg: "https://via.placeholder.com/150x250/111?text=My+Story",
+            timestamp: Date.now(),
+            totalUpdates: 1,
+            viewedCount: 0
+        });
+
+        // Saka sauran wadanda aka kwaso daga database
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            statusData.push({
+                id: doc.id,
+                username: data.username,
+                isMe: false,
+                profileImg: data.profileImg,
+                previewImg: data.previewImg,
+                timestamp: data.timestamp,
+                totalUpdates: data.totalUpdates || 1,
+                viewedCount: data.viewedCount || 0
+            });
+        });
+
+        // Bayan an gama tarawa, a kira aikin jeri na asali na WhatsApp da muka gina a baya
+        if (typeof sortAndRenderStatus === "function") {
+            sortAndRenderStatus(); 
+        }
+
+    } catch (error) {
+        console.error("Kasa kwaso bayanai daga Firestore: ", error);
+    }
+}
+
+// Canza aikin da ke faruwa idan shafi ya gama lodi (window.onload) zuwa wannan:
+window.onload = function() {
+    fetchStatusesFromFirebase();
+};
+
+
+        
         // BUDE CAMERA KO FILE SYSTEM DA GASKE
         function triggerAddStatus() {
             document.getElementById('hiddenCameraInput').click();
         }
 
         // IDAN MUTUM YA ZABO HOTO DAGA KYAMARA
-        function handleStatusUpload(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const fileURL = URL.createObjectURL(file);
-                
-                // Sabunta Katin My Status da hoton da aka dauka
-                const myStatus = statusData.find(s => s.isMe);
-                myStatus.previewImg = fileURL;
-                myStatus.timestamp = Date.now();
-                
-                // Sake gina katunan a fuska
-                sortAndRenderStatus();
-            }
-        }
+        // Wannan aikin zai karbi fayil din hoton kyamara ya tura shi Firebase
+async function handleStatusUpload(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Nuna wa mai amfani alamar cewa aikin tura hoto yana tafiya
+        console.log("Ana tura hoton status zuwa Oryzon Cloud Storage...");
 
+        try {
+            // A. Tura Fayil din zuwa Cloud Storage na Firebase
+            const storageRef = ref(storage, `status_uploads/${Date.now()}_${file.name}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            
+            // B. Dauko takaitaccen adireshin hoton (Download URL)
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            // C. Shirya bayanan status din da za a adana a Firestore Database
+            const newStatusDoc = {
+                username: "Sadiq", // Da zaran tsarin login ya kammala za a sanya dynamic user anan
+                profileImg: "https://via.placeholder.com/40/111?text=Me", 
+                previewImg: downloadURL, // Adireshin hoton da ke zaune a Firebase Storage yanzu
+                timestamp: Date.now(), // Adana exact lokacin da aka yi upload din
+                totalUpdates: 1,
+                viewedCount: 0,
+                isMe: false // Ana sanya false domin sauran mutane su gani a matsayin sabon status
+            };
+
+            // D. Turawa zuwa Firestore collection mai suna "statusData"
+            await addDoc(collection(db, "statusData"), newStatusDoc);
+            console.log("An yi nasarar adana status a database!");
+
+            // E. Sake kiran babban aikinmu na jera status domin ya kwaso sabbin bayanai
+            fetchStatusesFromFirebase();
+
+        } catch (error) {
+            console.error("An samu matsala wajen adana bayanai a Firebase: ", error);
+            alert("An samu matsala wajen tura status dinka, duba intanet dinka sannan ka sake jarabawa.");
+        }
+    }
+}
+        
         // LOKACIN DANNA STATUS NA SAURAN MUTANE
         function openStatusMatrix(userKey) {
             const targetStatus = statusData.find(s => s.id === userKey);
