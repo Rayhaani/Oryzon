@@ -1408,47 +1408,6 @@ firebase.firestore().enablePersistence()
   });
             
     const db = firebase.firestore();
-
-    // WANNAN ZAI DAWO MA DA HOTON DAGA DATABASE KO AN GOGE DATA
-    
-       window.onload = function() {
-    // 1. Nan take a dauko hoto daga LocalStorage don gudun jinkiri
-    const savedCover = localStorage.getItem('userCover');
-    const savedProfile = localStorage.getItem('userProfilePic');
-    
-    if (savedCover) document.getElementById('main-cover-img').src = savedCover;
-    if (savedProfile) document.getElementById('main-profile-img').src = savedProfile;
-
-    // 2. Fara loda bayanan Firebase a "background" ba tare da an dakatar da shafin ba
-    fetchFirebaseData();
-
-    // 3. Kira function din loda timeline posts
-    loadTimelinePosts();
-};
-
-// Mun raba wannan a matsayin async function na daban
-async function fetchFirebaseData() {
-    try {
-        // 1. Fara dubawa a Cache (Local Storage na Firebase)
-        const doc = await db.collection('users').doc('Sadiq_Alhassan').get({ source: 'cache' })
-            .catch(() => db.collection('users').doc('Sadiq_Alhassan').get({ source: 'server' }));
-
-        if (doc.exists) {
-            const data = doc.data();
-            if (data.userProfilePic) updateUI('main-profile-img', data.userProfilePic, 'userProfilePic');
-            if (data.userCover) updateUI('main-cover-img', data.userCover, 'userCover');
-        }
-    } catch (e) {
-        console.error("Loda bayanai ya fuskanci matsala:", e);
-    }
-}
-
-function updateUI(id, url, storageKey) {
-    document.getElementById(id).src = url;
-    localStorage.setItem(storageKey, url);
-}
-            
-            
             
 
     async function updatePhoto(event, type) {
@@ -1775,7 +1734,63 @@ function closeSubModal() {
             }
         });
             }
-            
+
+
+
+
+
+            window.onload = function() {
+    // 1. Nan take a dauko hotuna da suna daga LocalStorage don gudun jinkirin lodi
+    const savedCover = localStorage.getItem('userCover');
+    const savedProfile = localStorage.getItem('userProfilePic');
+    
+    // Nuna tsoffin bayanai kafin na database su karaso
+    document.getElementById('profile-name-text').innerText = "Sadiq_Alhassan"; 
+
+    if (savedCover) document.getElementById('main-cover-img').src = savedCover;
+    if (savedProfile) document.getElementById('main-profile-img').src = savedProfile;
+
+    // 2. Fara loda bayanan Firebase daki-daki
+    fetchFirebaseData();
+
+    // 3. Kira ayyukan loda posts na timeline da lissafin yawan posts
+    loadTimelinePosts();
+    countUserPosts();
+};
+
+// Dauko hotunan profile da cover daga Firestore
+async function fetchFirebaseData() {
+    try {
+        const doc = await db.collection('users').doc('Sadiq_Alhassan').get({ source: 'cache' })
+            .catch(() => db.collection('users').doc('Sadiq_Alhassan').get({ source: 'server' }));
+
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.userProfilePic) updateUI('main-profile-img', data.userProfilePic, 'userProfilePic');
+            if (data.userCover) updateUI('main-cover-img', data.userCover, 'userCover');
+        }
+    } catch (e) {
+        console.error("Loda bayanai ya fuskanci matsala:", e);
+    }
+}
+
+// Lissafin yawan posts na gaskiya daga Firestore don nuna daidai a Profile Card
+function countUserPosts() {
+    db.collection('posts')
+      .where("username", "==", "Sadiq_Alhassan")
+      .onSnapshot(snapshot => {
+          document.getElementById('stats-posts-count').innerText = snapshot.size;
+      });
+}
+
+function updateUI(id, url, storageKey) {
+    const element = document.getElementById(id);
+    if(element) {
+        element.src = url;
+        localStorage.setItem(storageKey, url);
+    }
+}
+
             
         </script>
         
