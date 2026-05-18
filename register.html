@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Protocol</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep-black: #000000;
+            --nexus-cyan: #00F2FF;
+            --border-subtle: rgba(255, 255, 255, 0.05);
+            --text-secondary: rgba(255, 255, 255, 0.5);
+            --error-red: #ff3b30;
+            --success-green: #34c759;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep-black);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* CARD EXACTLY FROM THE PROVIDED CHAT IMAGE COLOR */
+        .nexus-auth-card {
+            width: 100%;
+            max-width: 400px;
+            background: linear-gradient(135deg, #1e1c1c 0%, #121111 100%);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease, background 0.6s ease, box-shadow 0.6s ease;
+        }
+
+        /* THE ELITE COLLAPSE REACTION */
+        .nexus-auth-card.implode-active {
+            transform: scale(0.1);
+            opacity: 0;
+            background: var(--nexus-cyan);
+            box-shadow: 0 0 80px 20px var(--nexus-cyan);
+            filter: blur(4px);
+        }
+
+        /* PROGRESS TRACKER LINE */
+        .progress-engine {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 35px;
+            border-radius: 2px;
+            position: relative;
+            transition: opacity 0.4s ease;
+        }
+        .progress-line-fill {
+            height: 100%;
+            width: 20%;
+            background: var(--nexus-cyan);
+            box-shadow: 0 0 10px var(--nexus-cyan);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* SLIDE TRANSITION WINDOW */
+        .slider-window {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 140px;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        /* Sub-elements fade out during collapse */
+        .nexus-auth-card.implode-active .slider-window,
+        .nexus-auth-card.implode-active .progress-engine,
+        .nexus-auth-card.implode-active .auth-footer {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .form-step {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(50px);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease, visibility 0.5s;
+        }
+
+        .form-step.active {
+            position: relative;
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        .form-step.exit {
+            position: absolute;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-50px);
+        }
+
+        /* TYPOGRAPHY CLEANED */
+        .step-header h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+        }
+
+        /* CORE INPUT FIELD STYLE */
+        .nexus-input-field {
+            width: 100%;
+            background: #0d0d0f;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 15px;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .nexus-input-field:focus {
+            border-color: var(--nexus-cyan);
+            background: #111114;
+        }
+
+        /* ERROR PROMPTS */
+        .error-message {
+            color: var(--error-red);
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        /* USERNAME SUGGESTIONS DROP-DOWN */
+        .suggestions-box {
+            background: #0d0d0f;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            margin-top: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            display: none;
+        }
+        .suggestion-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover {
+            background: rgba(0, 242, 255, 0.03);
+            color: var(--nexus-cyan);
+        }
+        .suggestion-item::after {
+            content: '✓';
+            color: var(--success-green);
+            font-size: 12px;
+        }
+
+        /* FUTURISTIC BUTTON CONTROLS ARRANGEMENT */
+        .btn-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 60px;
+            width: 100%;
+        }
+        
+        .nexus-back-text {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            padding: 10px 0;
+        }
+        .nexus-back-text:hover {
+            color: #ffffff;
+        }
+
+        /* FUTURISTIC ROUND BUTTON WITH ARROW AND TEXT */
+        .nexus-round-next {
+            margin-left: auto;
+            background: transparent;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 30px;
+            padding: 10px 20px;
+            color: var(--nexus-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.05);
+            animation: buttonPulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+            transition: all 0.3s ease;
+        }
+        
+        .nexus-round-next span {
+            font-size: 14px;
+            transition: transform 0.2s ease;
+        }
+
+        .nexus-round-next:hover {
+            background: rgba(0, 242, 255, 0.05);
+            border-color: var(--nexus-cyan);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        }
+        
+        .nexus-round-next:hover span {
+            transform: translateX(3px);
+        }
+
+        .nexus-round-next:disabled {
+            opacity: 0.2;
+            animation: none;
+            box-shadow: none;
+            border-color: var(--border-subtle);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        @keyframes buttonPulse {
+            0% {
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.05);
+                border-color: rgba(0, 242, 255, 0.2);
+            }
+            100% {
+                box-shadow: 0 0 20px rgba(0, 242, 255, 0.25);
+                border-color: rgba(0, 242, 255, 0.7);
+            }
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            transition: opacity 0.4s ease;
+        }
+        .auth-footer a { color: var(--nexus-cyan); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="nexus-auth-card" id="authCard">
+        <div class="progress-engine">
+            <div class="progress-line-fill" id="progressFill"></div>
+        </div>
+
+        <form id="nexusQuantumForm" onsubmit="executeSync(event)">
+            <div class="slider-window">
+
+                <div class="form-step active" id="step1">
+                    <div class="step-header">
+                        <h2>Full Name</h2>
+                    </div>
+                    <input type="text" id="inpName" class="nexus-input-field" required autocomplete="off">
+                    <div class="btn-container">
+                        <button type="button" class="nexus-round-next" onclick="moveForward(2)">NEXT <span>→</span></button>
+                    </div>
+                </div>
+
+                <div class="form-step" id="step2">
+                    <div class="step-header">
+                        <h2>Date of Birth</h2>
+                    </div>
+                    <input type="date" id="inpDOB" class="nexus-input-field" required>
+                    <div class="error-message" id="ageError">Access Denied: You must be at least 16 years old.</div>
+                    <div class="btn-container">
+                        <button type="button" class="nexus-back-text" onclick="moveBackward(1)">Back</button>
+                        <button type="button" class="nexus-round-next" onclick="moveForward(3)">NEXT <span>→</span></button>
+                    </div>
+                </div>
+
+                <div class="form-step" id="step3">
+                    <div class="step-header">
+                        <h2>Choose Username</h2>
+                    </div>
+                    <input type="text" id="inpUsername" class="nexus-input-field" required autocomplete="off">
+                    <div class="error-message" id="usernameError">The username is not available. Suggestions below:</div>
+                    
+                    <div class="suggestions-box" id="suggestionsBox"></div>
+
+                    <div class="btn-container">
+                        <button type="button" class="nexus-back-text" onclick="moveBackward(2)">Back</button>
+                        <button type="button" class="nexus-round-next" id="userNextBtn" onclick="moveForward(4)">NEXT <span>→</span></button>
+                    </div>
+                </div>
+
+                <div class="form-step" id="step4">
+                    <div class="step-header">
+                        <h2>Phone or Email</h2>
+                    </div>
+                    <input type="text" id="inpIdentity" class="nexus-input-field" required autocomplete="off">
+                    <div class="btn-container">
+                        <button type="button" class="nexus-back-text" onclick="moveBackward(3)">Back</button>
+                        <button type="button" class="nexus-round-next" onclick="moveForward(5)">NEXT <span>→</span></button>
+                    </div>
+                </div>
+
+                <div class="form-step" id="step5">
+                    <div class="step-header">
+                        <h2>Password</h2>
+                    </div>
+                    <input type="password" id="inpPassword" class="nexus-input-field" required>
+                    <div class="btn-container">
+                        <button type="button" class="nexus-back-text" onclick="moveBackward(4)">Back</button>
+                        <button type="submit" class="nexus-round-next" id="submitBtn">SUBMIT <span>→</span></button>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            Already registered? <a href="#">Login Here</a>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+          authDomain: "oryzon-50ea4.firebaseapp.com",
+          projectId: "oryzon-50ea4",
+          storageBucket: "oryzon-50ea4.firebasestorage.app",
+          messagingSenderId: "782106742622",
+          appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+          measurementId: "G-K5085DLL2W"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let activeStep = 1;
+        const totalSteps = 5;
+
+        const blacklistedUsernames = ["rayhaani", "ahmad", "nexus", "sadiq", "kanomart"];
+
+        document.getElementById("inpUsername").addEventListener("input", function(e) {
+            let val = e.target.value.toLowerCase().trim().replace(/\s+/g, '');
+            const errorPrompt = document.getElementById("usernameError");
+            const sugBox = document.getElementById("suggestionsBox");
+            const nextBtn = document.getElementById("userNextBtn");
+
+            if(val.length === 0) {
+                errorPrompt.style.display = "none";
+                sugBox.style.display = "none";
+                nextBtn.disabled = false;
+                return;
+            }
+
+            if(blacklistedUsernames.includes(val)) {
+                errorPrompt.style.display = "block";
+                sugBox.style.display = "block";
+                nextBtn.disabled = true;
+
+                sugBox.innerHTML = "";
+                let variants = [`${val}.ani`, `${val}_ani`, `${val}._`, `core_${val}`, `${val}.node`];
+
+                variants.forEach(variant => {
+                    let div = document.createElement("div");
+                    div.className = "suggestion-item";
+                    div.innerText = variant;
+                    div.onclick = function() {
+                        document.getElementById("inpUsername").value = variant;
+                        errorPrompt.style.display = "none";
+                        sugBox.style.display = "none";
+                        nextBtn.disabled = false;
+                    };
+                    sugBox.appendChild(div);
+                });
+            } else {
+                errorPrompt.style.display = "none";
+                sugBox.style.display = "none";
+                nextBtn.disabled = false;
+            }
+        });
+
+        function moveForward(target) {
+            if(activeStep === 1 && !document.getElementById("inpName").value.trim()) return;
+            
+            if(activeStep === 2) {
+                let birthDate = new Date(document.getElementById("inpDOB").value);
+                if(isNaN(birthDate)) return;
+                let today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                let m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { age--; }
+
+                if(age < 16) {
+                    document.getElementById("ageError").style.display = "block";
+                    return;
+                } else {
+                    document.getElementById("ageError").style.display = "none";
+                }
+            }
+
+            if(activeStep === 3 && document.getElementById("userNextBtn").disabled) return;
+            if(activeStep === 4 && !document.getElementById("inpIdentity").value.trim()) return;
+
+            let currentForm = document.getElementById(`step${activeStep}`);
+            currentForm.classList.add("exit");
+            currentForm.classList.remove("active");
+
+            activeStep = target;
+            
+            let nextForm = document.getElementById(`step${activeStep}`);
+            nextForm.classList.remove("exit");
+            nextForm.classList.add("active");
+
+            document.getElementById("progressFill").style.width = ((activeStep / totalSteps) * 100) + "%";
+        }
+
+        function moveBackward(target) {
+            let currentForm = document.getElementById(`step${activeStep}`);
+            currentForm.classList.remove("active");
+
+            activeStep = target;
+
+            let prevForm = document.getElementById(`step${activeStep}`);
+            prevForm.classList.remove("exit");
+            prevForm.classList.add("active");
+
+            document.getElementById("progressFill").style.width = ((activeStep / totalSteps) * 100) + "%";
+        }
+
+        function executeSync(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById("submitBtn");
+            const authCard = document.getElementById("authCard");
+            
+            const name = document.getElementById("inpName").value.trim();
+            const dob = document.getElementById("inpDOB").value;
+            const username = document.getElementById("inpUsername").value.trim();
+            const identity = document.getElementById("inpIdentity").value.trim();
+            const password = document.getElementById("inpPassword").value;
+
+            submitBtn.innerHTML = "SUBMITTING... <span>→</span>";
+            submitBtn.disabled = true;
+
+            db.collection("users").doc(username).set({
+                fullName: name,
+                dateOfBirth: dob,
+                username: username,
+                routingIdentity: identity,
+                accessCipher: password,
+                isOnline: true,
+                registrationTimestamp: Date.now()
+            })
+            .then(() => {
+                localStorage.setItem("nexus_user_session", username);
+                
+                // Trigger elite quantum implosion animation
+                authCard.classList.add("implode-active");
+                
+                // Dynamic redirect to login page exactly after 2 seconds (2000 milliseconds)
+                setTimeout(() => {
+                    window.location.href = "login.html"; 
+                }, 2000);
+            })
+            .catch((err) => {
+                console.error("Link error: ", err);
+                submitBtn.innerHTML = "SUBMIT <span>→</span>";
+                submitBtn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
