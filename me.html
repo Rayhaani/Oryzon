@@ -8,8 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
         :root { --neon: #00f2fe; --glow: rgba(0, 242, 254, 0.4); --bg: #050505; }
@@ -1432,7 +1432,8 @@ firebase.firestore().enablePersistence()
 
             // 2. AJIYE LINK DIN A FIRESTORE (DATABASE)
             const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
-            await db.collection('users').doc('Sadiq_Alhassan').set({
+            const docId = (currentUser && currentUser.uid) ? currentUser.uid : 'Sadiq_Alhassan';
+await db.collection('users').doc(docId).set({
                 [storageKey]: secureUrl
             }, { merge: true });
 
@@ -1467,25 +1468,41 @@ firebase.firestore().enablePersistence()
 
 
             
-
-            function loadTimelinePosts() {
+function loadTimelinePosts(uid, username) {
     const timelineArea = document.getElementById('timeline-area');
+    // Yi amfani da uid idan akwai shi, in ba haka ba yi amfani da username
+    const filterField = uid ? "authorUid" : "username";
+    const filterValue = uid || username || "Sadiq_Alhassan";
+    
     db.collection('posts')
-        .where("username", "==", "Sadiq_Alhassan")
+        .where(filterField, "==", filterValue)
         .orderBy("timestamp", "desc")
         .onSnapshot(snapshot => {
-            timelineArea.innerHTML = ''; 
+            timelineArea.innerHTML = '';
             snapshot.forEach(doc => {
                 const post = doc.data();
-                
-                // SHARADI: Idan category ba "showcase" ba ne, to ya fito a Timeline
-                // Wannan zai hada da "business", "post", ko wadanda basu da category
                 if (post.category !== "business") {
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
             });
+        }, (err) => {
+            // Fallback zuwa username idan index bai wanzu ba
+            console.warn("UID query failed, trying username:", err);
+            db.collection('posts')
+                .where("username", "==", username || "Sadiq_Alhassan")
+                .orderBy("timestamp", "desc")
+                .onSnapshot(snapshot => {
+                    timelineArea.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const post = doc.data();
+                        if (post.category !== "business") {
+                            timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
+                        }
+                    });
+                });
         });
-            }
+}
+            
             
 function generatePostHTML(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
@@ -1494,11 +1511,9 @@ function generatePostHTML(post) {
     // --- GYARAN GADA: Haɗi tsakanin Profile da Post Card ---
     const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
     const savedProfilePic = localStorage.getItem('userProfilePic');
-
-    // Idan post din naka ne (Sadiq_Alhassan), yi amfani da hoton profile dinka
-    // Idan na wani ne, yi amfani da hoton da yake jikin post din ko default avatar
-    const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic) 
-                       ? savedProfilePic 
+const loggedUsername = currentUser ? (currentUser.username || currentUser.uid) : 'Sadiq_Alhassan';
+const currentPic = (post.username === loggedUsername && savedProfilePic)
+    ? savedProfilePic 
                        : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=member");
         
     // GYARA: Mun kara f_auto,q_auto idan hoton profile din na Cloudinary ne don saurin loda hoto
@@ -1733,29 +1748,85 @@ function closeSubModal() {
         });
             }
 
+// ===== GLOBAL AUTH SYSTEM =====
+let currentUser = null; // Za a ajiye user data anan
 
+firebase.auth().onAuthStateChanged(async (firebaseUser) => {
+    if (!firebaseUser) {
+        // Ba a login ba - redirect zuwa login page
+        // window.location.href = 'login.html'; // Cire comment din idan kana da login page
+        console.warn("No user logged in. Falling back to guest mode.");
+        // Fallback: nuna default profile
+        loadProfileData('Sadiq_Alhassan');
+        return;
+    }
 
+    // User ya login - dauko bayanansu daga Firestore ta UID
+    try {
+        const userDoc = await db.collection('users').doc(firebaseUser.uid).get();
+        
+        if (userDoc.exists) {
+            currentUser = { uid: firebaseUser.uid, ...userDoc.data() };
+        } else {
+            // Idan doc ɗin bai wanzu ba, yi amfani da email/displayName daga Auth
+            currentUser = {
+                uid: firebaseUser.uid,
+                username: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+                userProfilePic: firebaseUser.photoURL || "https://api.dicebear.com/7.x/bottts/svg?seed=" + firebaseUser.uid,
+                userCover: null
+            };
+            // Ƙirƙiri doc ɗin idan bai wanzu ba
+            await db.collection('users').doc(firebaseUser.uid).set(currentUser, { merge: true });
+        }
 
+        // Yanzu nuna bayanan user ɗin a UI
+        applyUserToProfile(currentUser);
+        loadTimelinePosts(currentUser.uid, currentUser.username);
+        
+    } catch (e) {
+        console.error("Error fetching user data:", e);
+    }
+});
+            
 
-            window.onload = function() {
-    // 1. Nan take a dauko hotuna da suna daga LocalStorage don gudun jinkirin lodi
-    const savedCover = localStorage.getItem('userCover');
-    const savedProfile = localStorage.getItem('userProfilePic');
+// ===== NUNA BAYANAN USER A PROFILE =====
+function applyUserToProfile(user) {
+    // 1. Nuna profile picture a ko'ina
+    const profilePic = user.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + user.uid;
+    const coverPhoto = user.userCover || "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200";
     
-    // Nuna tsoffin bayanai kafin na database su karaso
-    document.getElementById('profile-name-text').innerText = "Sadiq_Alhassan"; 
+    if (document.getElementById('main-profile-img')) 
+        document.getElementById('main-profile-img').src = profilePic;
+    if (document.getElementById('main-cover-img')) 
+        document.getElementById('main-cover-img').src = coverPhoto;
 
-    if (savedCover) document.getElementById('main-cover-img').src = savedCover;
-    if (savedProfile) document.getElementById('main-profile-img').src = savedProfile;
+    // Ajiye a LocalStorage don gudun jinkiri
+    localStorage.setItem('userProfilePic', profilePic);
+    localStorage.setItem('userCover', coverPhoto);
 
-    // 2. Fara loda bayanan Firebase daki-daki
-    fetchFirebaseData();
+    // 2. Nuna suna a glass-vault-nexus
+    const nameEl = document.querySelector('.aliyu-name');
+    if (nameEl) nameEl.textContent = user.displayName || user.username || 'User';
 
-    // 3. Kira ayyukan loda posts na timeline da lissafin yawan posts
-    loadTimelinePosts();
-    countUserPosts();
-};
+    // 3. Nuna stats (posts, followers, friends)
+    if (user.postsCount !== undefined) {
+        const nums = document.querySelectorAll('.n-num');
+        if (nums[0]) nums[0].textContent = user.postsCount || 0;
+        if (nums[1]) nums[1].textContent = user.followersCount || 0;
+        if (nums[2]) nums[2].textContent = user.friendsCount || 0;
+    }
+}
 
+// ===== FALLBACK: LODA PROFILE NA WANI USER TA USERNAME =====
+async function loadProfileData(username) {
+    const snap = await db.collection('users').where('username', '==', username).limit(1).get();
+    if (!snap.empty) {
+        const data = snap.docs[0].data();
+        applyUserToProfile(data);
+    }
+}
+
+            
 // Dauko hotunan profile da cover daga Firestore
 async function fetchFirebaseData() {
     try {
@@ -1792,61 +1863,7 @@ function updateUI(id, url, storageKey) {
 
 
 
-           import { auth, db } from "./firebaseConfig"; // Tabbatar ka shigar da config dinka
-import { useState, useEffect } from "react";
-import { doc, getDoc } from "firebase/firestore";
-
-function ProfileSection() {
-  const [userProfile, setUserProfile] = useState({
-    username: "Loading...",
-    profilePic: "https://via.placeholder.com/150" // Default placeholder idan bashi da hoto
-  });
-
-  useEffect(() => {
-    // 1. Saurari shigowar mutum (Auth Listener)
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        // Idan mutum yayi login, muna duba ko akwai bayanansa a Firestore
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUserProfile({
-            username: userData.username || user.displayName || "No Name",
-            profilePic: userData.profilePic || user.photoURL || "https://via.placeholder.com/150"
-          });
-        } else {
-          // Idan babu a Firestore, amfani da na ainihin Auth din
-          setUserProfile({
-            username: user.displayName || "User",
-            profilePic: user.photoURL || "https://via.placeholder.com/150"
-          });
-        }
-      } else {
-        // Idan babu kowa (Not logged in), tura shi login page
-        window.location.href = "/login";
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  return (
-    <div>
-      {/* 2. Mayar da HTML/JSX dinka dynamic maimakon hardcoded */}
-      <div className="profile-container">
-        <img 
-          src={userProfile.profilePic} 
-          alt="Profile" 
-          className="profile-img-style" 
-          onError={(e) => { e.target.src = "https://via.placeholder.com/150"; }} // Idan hoton ya samu matsala
-        />
-        <h2 className="username-style">{userProfile.username}</h2>
-      </div>
-    </div>
-  );
-        }
+           
       
                 
         </script>
