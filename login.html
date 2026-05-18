@@ -199,7 +199,9 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+
+    <script>
+            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
@@ -222,35 +224,59 @@
             const authCard = document.getElementById("authCard");
             const errorPrompt = document.getElementById("loginError");
             
-            // GYARA: Mun cire .toLowerCase() domin ya dace da ainihin yadda aka yi rajista a database
-            const username = document.getElementById("loginUsername").value.trim();
-            const accessCipher = document.getElementById("loginPassword").value;
+            // Cire space na gaba da baya a kowane fage
+            const userInput = document.getElementById("loginUsername").value.trim();
+            const accessCipher = document.getElementById("loginPassword").value.trim();
 
             errorPrompt.style.display = "none";
             loginBtn.innerHTML = "VERIFYING... <span>→</span>";
 
-            db.collection("users").doc(username).get()
-            .then((doc) => {
-                if (doc.exists && doc.data().accessCipher === accessCipher) {
-                    db.collection("users").doc(username).update({ isOnline: true });
-                    localStorage.setItem("nexus_user_session", username);
-                    
-                    authCard.classList.add("implode-active");
-                    
-                    setTimeout(() => {
-                        window.location.href = "messages.html";
-                    }, 2000);
+            // Sabuwar hanya: Shiga cikin fields na documents duka don duba ainihin username dake ciki
+            db.collection("users")
+            .where("username", "==", userInput)
+            .get()
+            .then((querySnapshot) => {
+                if (!querySnapshot.empty) {
+                    let loginSuccess = false;
+                    let documentId = "";
+
+                    querySnapshot.forEach((doc) => {
+                        // Gwada kowace data data dace
+                        if (doc.data().accessCipher === accessCipher) {
+                            loginSuccess = true;
+                            documentId = doc.id;
+                        }
+                    });
+
+                    if (loginSuccess) {
+                        // Idan komai ya yi daidai, shiga ciki
+                        db.collection("users").doc(documentId).update({ isOnline: true });
+                        localStorage.setItem("nexus_user_session", documentId);
+                        
+                        authCard.classList.add("implode-active");
+                        
+                        setTimeout(() => {
+                            window.location.href = "messages.html";
+                        }, 2000);
+                    } else {
+                        // Idan password ne bai yi daidai ba
+                        errorPrompt.style.display = "block";
+                        loginBtn.innerHTML = "LOGIN <span>→</span>";
+                    }
                 } else {
+                    // Idan sam babu sunan a database
                     errorPrompt.style.display = "block";
                     loginBtn.innerHTML = "LOGIN <span>→</span>";
                 }
             })
             .catch((err) => {
                 console.error("Auth sync error: ", err);
+                alert("Kuskuren Haɗin Gizo: " + err.message); // Wannan zai nuna mana ainihin matsalar a wayarka idan akwai ta gizo
                 errorPrompt.style.display = "block";
                 loginBtn.innerHTML = "LOGIN <span>→</span>";
             });
         }
     </script>
+    
 </body>
 </html>
