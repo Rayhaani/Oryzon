@@ -28,21 +28,19 @@
             overflow: hidden;
         }
 
-        /* CARD EXACTLY FROM THE ORIGINAL RECOVERY COLOR - BUT SMART & COMPACT */
         .nexus-auth-card {
             width: 100%;
-            max-width: 340px; /* Slim, cute and smart width */
-            background: linear-gradient(135deg, #1e1c1c 0%, #121111 100%); /* Original exact color */
+            max-width: 340px;
+            background: linear-gradient(135deg, #1e1c1c 0%, #121111 100%);
             border: 1px solid rgba(255, 255, 255, 0.02);
             border-radius: 20px;
-            padding: 24px 20px; /* Tight padding to remove unnecessary spaces */
+            padding: 24px 20px;
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
             position: relative;
             overflow: hidden;
             transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease, background 0.6s ease, box-shadow 0.6s ease;
         }
 
-        /* THE ELITE COLLAPSE REACTION */
         .nexus-auth-card.implode-active {
             transform: scale(0.1);
             opacity: 0;
@@ -51,7 +49,6 @@
             filter: blur(4px);
         }
 
-        /* COMPACT FORM WINDOW */
         .login-window {
             width: 100%;
             display: flex;
@@ -59,7 +56,6 @@
             gap: 14px;
         }
 
-        /* TYPOGRAPHY - TITLE CASE SMALL LETTERS WITH FIRST CAPITAL */
         .step-header h2 {
             font-family: 'Orbitron', sans-serif;
             font-size: 15px;
@@ -70,12 +66,8 @@
             color: #ffffff;
         }
 
-        .input-block {
-            display: flex;
-            flex-direction: column;
-        }
+        .input-block { display: flex; flex-direction: column; }
 
-        /* CORE INPUT FIELD STYLE */
         .nexus-input-field {
             width: 100%;
             background: #0d0d0f;
@@ -92,7 +84,6 @@
             background: #111114;
         }
 
-        /* ERROR PROMPTS */
         .error-message {
             color: var(--error-red);
             font-size: 11px;
@@ -101,7 +92,6 @@
             line-height: 1.4;
         }
 
-        /* FUTURISTIC BUTTON CONTROLS ARRANGEMENT */
         .btn-container {
             margin-top: 18px;
             display: flex;
@@ -111,7 +101,6 @@
             width: 100%;
         }
 
-        /* FUTURISTIC ROUND BUTTON - ACTIVE STATE */
         .nexus-round-next {
             background: transparent;
             border: 1px solid rgba(0, 242, 255, 0.3);
@@ -131,30 +120,17 @@
             transition: all 0.3s ease;
         }
         
-        .nexus-round-next span {
-            font-size: 12px;
-            transition: transform 0.2s ease;
-        }
+        .nexus-round-next span { font-size: 12px; transition: transform 0.2s ease; }
 
         .nexus-round-next:hover {
             background: rgba(0, 242, 255, 0.05);
             border-color: var(--nexus-cyan);
             box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
         }
-        
-        .nexus-round-next:hover span {
-            transform: translateX(2px);
-        }
 
         @keyframes buttonPulse {
-            0% {
-                box-shadow: 0 0 8px rgba(0, 242, 255, 0.05);
-                border-color: rgba(0, 242, 255, 0.2);
-            }
-            100% {
-                box-shadow: 0 0 15px rgba(0, 242, 255, 0.25);
-                border-color: rgba(0, 242, 255, 0.6);
-            }
+            0% { box-shadow: 0 0 8px rgba(0, 242, 255, 0.05); border-color: rgba(0, 242, 255, 0.2); }
+            100% { box-shadow: 0 0 15px rgba(0, 242, 255, 0.25); border-color: rgba(0, 242, 255, 0.6); }
         }
 
         .auth-footer {
@@ -199,9 +175,7 @@
         </div>
     </div>
 
-
-    <script>
-            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
@@ -224,59 +198,36 @@
             const authCard = document.getElementById("authCard");
             const errorPrompt = document.getElementById("loginError");
             
-            // Cire space na gaba da baya a kowane fage
-            const userInput = document.getElementById("loginUsername").value.trim();
+            // Canza userInput zuwa lowercase don kiyaye tsari
+            const username = document.getElementById("loginUsername").value.trim().toLowerCase();
             const accessCipher = document.getElementById("loginPassword").value.trim();
 
             errorPrompt.style.display = "none";
             loginBtn.innerHTML = "VERIFYING... <span>→</span>";
 
-            // Sabuwar hanya: Shiga cikin fields na documents duka don duba ainihin username dake ciki
-            db.collection("users")
-            .where("username", "==", userInput)
-            .get()
-            .then((querySnapshot) => {
-                if (!querySnapshot.empty) {
-                    let loginSuccess = false;
-                    let documentId = "";
-
-                    querySnapshot.forEach((doc) => {
-                        // Gwada kowace data data dace
-                        if (doc.data().accessCipher === accessCipher) {
-                            loginSuccess = true;
-                            documentId = doc.id;
-                        }
-                    });
-
-                    if (loginSuccess) {
-                        // Idan komai ya yi daidai, shiga ciki
-                        db.collection("users").doc(documentId).update({ isOnline: true });
-                        localStorage.setItem("nexus_user_session", documentId);
-                        
-                        authCard.classList.add("implode-active");
-                        
-                        setTimeout(() => {
-                            window.location.href = "messages.html";
-                        }, 2000);
-                    } else {
-                        // Idan password ne bai yi daidai ba
-                        errorPrompt.style.display = "block";
-                        loginBtn.innerHTML = "LOGIN <span>→</span>";
-                    }
+            // Amfani da tabbatacciyar hanyar .doc() don kiyaye sauri da gujewa ratsewar gizo
+            db.collection("users").doc(username).get()
+            .then((doc) => {
+                if (doc.exists && doc.data().accessCipher === accessCipher) {
+                    db.collection("users").doc(username).update({ isOnline: true });
+                    localStorage.setItem("nexus_user_session", username);
+                    
+                    authCard.classList.add("implode-active");
+                    
+                    setTimeout(() => {
+                        window.location.href = "messages.html";
+                    }, 2000);
                 } else {
-                    // Idan sam babu sunan a database
                     errorPrompt.style.display = "block";
                     loginBtn.innerHTML = "LOGIN <span>→</span>";
                 }
             })
             .catch((err) => {
-                console.error("Auth sync error: ", err);
-                alert("Kuskuren Haɗin Gizo: " + err.message); // Wannan zai nuna mana ainihin matsalar a wayarka idan akwai ta gizo
+                console.error("Auth error: ", err);
                 errorPrompt.style.display = "block";
                 loginBtn.innerHTML = "LOGIN <span>→</span>";
             });
         }
     </script>
-    
 </body>
 </html>
