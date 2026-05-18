@@ -1943,6 +1943,39 @@ window.addEventListener('DOMContentLoaded', () => {
     // Kunna tsarin sa ido na bidiyo
     observeVideos();
 });
+
+
+
+
+    // 1. D'auko username d'in da yayi login a yanzu
+const currentUser = localStorage.getItem("nexus_user_session");
+
+if (!currentUser) {
+    // Idan mutum bai yi login ba, tura shi baya shafin login
+    window.location.href = "login.html";
+} else {
+    // 2. Nemo bayanan mai amfani daga Firestore
+    db.collection("users").doc(currentUser).get()
+    .then((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            
+            // 3. Sauya sunan Sadiq da ainihin sunan wanda yayi login
+            // Tabbatar akwai id="userProfileName" a gurin da aka rubuta sunan a HTML
+            if(document.getElementById("userProfileName")) {
+                document.getElementById("userProfileName").innerText = data.fullName;
+            }
+            
+            // 4. Idan akwai fagen hoto shima za ka iya canza shi
+            // if(document.getElementById("userProfileImg")) {
+            //     document.getElementById("userProfileImg").src = data.profilePicUrl || "default-avatar.png";
+            // }
+        }
+    })
+    .catch((err) => {
+        console.error("Error fetching user data:", err);
+    });
+}
     
     
     </script>
