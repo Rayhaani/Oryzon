@@ -1382,112 +1382,89 @@ header {
      
         <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-      authDomain: "oryzon-50ea4.firebaseapp.com",
-      projectId: "oryzon-50ea4",
-      storageBucket: "oryzon-50ea4.firebasestorage.app",
-      messagingSenderId: "782106742622",
-      appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
-      measurementId: "G-K5085DLL2W"
-    };
+  apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+  authDomain: "oryzon-50ea4.firebaseapp.com",
+  projectId: "oryzon-50ea4",
+  storageBucket: "oryzon-50ea4.firebasestorage.app",
+  messagingSenderId: "782106742622",
+  appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+  measurementId: "G-K5085DLL2W"
+};
 
-    // Fara Firebase idan bai tashi ba
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-            // Kunna Persistence domin loda komai nan take
-firebase.firestore().enablePersistence()
-  .catch((err) => {
-      if (err.code == 'failed-precondition') {
-          console.log("Multiple tabs open, persistence failed.");
-      } else if (err.code == 'unimplemented') {
-          console.log("Browser does not support persistence.");
-      }
-  });
-            
-    const db = firebase.firestore();
-            
+// Fara Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
-    
-    // Sauran ayyukan menu
-    function toggleMenu(menuId) {
-        const menu = document.getElementById(menuId);
-        document.querySelectorAll('.photo-menu').forEach(m => { if(m.id !== menuId) m.classList.add('hidden'); });
-        menu.classList.toggle('hidden');
-    }
+firebase.firestore().enablePersistence().catch((err) => {
+    console.log("Persistence failed or unsupported.");
+});
+        
+const db = firebase.firestore();
+let currentUser = null;
 
-    function removePhoto(type) {
-        const imgId = type === 'cover' ? 'main-cover-img' : 'main-profile-img';
-        const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
-        document.getElementById(imgId).src = type === 'cover' 
-            ? "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200" 
-            : "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
-        localStorage.removeItem(storageKey);
-        document.getElementById(type + '-menu').classList.add('hidden');
-    }
+// Function na canza tabs
+function toggleMenu(menuId) {
+    const menu = document.getElementById(menuId);
+    document.querySelectorAll('.photo-menu').forEach(m => { if(m.id !== menuId) m.classList.add('hidden'); });
+    menu.classList.toggle('hidden');
+}
 
+function removePhoto(type) {
+    const imgId = type === 'cover' ? 'main-cover-img' : 'main-profile-img';
+    const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
+    document.getElementById(imgId).src = type === 'cover' 
+        ? "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200" 
+        : "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
+    localStorage.removeItem(storageKey);
+    document.getElementById(type + '-menu').classList.add('hidden');
+}
 
-            
-function loadTimelinePosts(uid, username) {
+// ============================================================
+// 1. LODA POSTS NA TIMELINE (FIXED)
+// ============================================================
+function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
-    // Yi amfani da uid idan akwai shi, in ba haka ba yi amfani da username
-    const filterField = uid ? "authorUid" : "username";
-    const filterValue = uid || username || "Sadiq_Alhassan";
     
+    // Zai duba posts dinka na asali dake da sunan Sadiq_Alhassan
     db.collection('posts')
-        .where(filterField, "==", filterValue)
+        .where("username", "==", "Sadiq_Alhassan")
         .orderBy("timestamp", "desc")
         .onSnapshot(snapshot => {
             timelineArea.innerHTML = '';
+            let hasPosts = false;
             snapshot.forEach(doc => {
                 const post = doc.data();
                 if (post.category !== "business") {
+                    hasPosts = true;
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
             });
+            if(!hasPosts) {
+                timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">No posts found on timeline.</p>';
+            }
         }, (err) => {
-            // Fallback zuwa username idan index bai wanzu ba
-            console.warn("UID query failed, trying username:", err);
-            db.collection('posts')
-                .where("username", "==", username || "Sadiq_Alhassan")
-                .orderBy("timestamp", "desc")
-                .onSnapshot(snapshot => {
-                    timelineArea.innerHTML = '';
-                    snapshot.forEach(doc => {
-                        const post = doc.data();
-                        if (post.category !== "business") {
-                            timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
-                        }
-                    });
-                });
+            console.error("Timeline error:", err);
         });
 }
-            
-            
+
+// ============================================================
+// 2. GENERATE POST HTML (OPTIMIZED FOR CLOUDINARY)
+// ============================================================
 function generatePostHTML(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
     let mediaHTML = '';
 
-    // --- GYARAN GADA: Haɗi tsakanin Profile da Post Card ---
-    const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
     const savedProfilePic = localStorage.getItem('userProfilePic');
-const loggedUsername = currentUser ? (currentUser.username || currentUser.uid) : 'Sadiq_Alhassan';
-const currentPic = (post.username === loggedUsername && savedProfilePic)
-    ? savedProfilePic 
-                       : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=member");
-        
-    // GYARA: Mun kara f_auto,q_auto idan hoton profile din na Cloudinary ne don saurin loda hoto
+    const currentPic = savedProfilePic || post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
+    
     const optimizedProfilePic = currentPic.includes('cloudinary.com') 
-                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w_50/') 
+                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/') 
                                 : currentPic;
 
     const profilePicHTML = `<img src="${optimizedProfilePic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top: 4px; left: 8px; z-index: 50;" loading="lazy">`;
         
-    // ----------------------------------------------------
-
-    // 1. Ginin sashin hoto ko bidiyo
     if (post.mediaUrl) {
-        // GYARA: Optimization don Cloudinary don hoton/bidiyon ya fito nan take
         const fastMediaUrl = post.mediaUrl.includes('cloudinary.com') 
                              ? post.mediaUrl.replace('/upload/', '/upload/f_auto,q_auto,w_600/') 
                              : post.mediaUrl;
@@ -1499,166 +1476,42 @@ const currentPic = (post.username === loggedUsername && savedProfilePic)
                     <i class="fa-solid fa-volume-xmark"></i>
                 </div>`;
         } else {
-            // loading="lazy" yana taimakawa wajen rashin cin data da loda hoto da sauri
             mediaHTML = `<img src="${fastMediaUrl}" class="post-media" loading="lazy">`;
         }
     }
 
-    // 2. Rufe komai a cikin return guda daya
     return `
-    <div class="post-card" onclick="toggleImmersive(this)" style="margin-bottom: 8px !important;">
-        <!-- Mun kara padding-left: 55px domin sunan ya matsa dama ya barwa avatar fili -->
+    <div class="post-card" style="margin-bottom: 8px !important;">
         <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 50px; height: 50px; position: relative;">
             <div style="display: flex; align-items: center; gap: 0; flex: 1;">
-            
-                <a href="me.html" onclick="event.stopPropagation()" class="avatar-container" style="position: absolute; left: 0; top: 0; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer; z-index: 60;">
+                <a href="me.html" class="avatar-container" style="position: absolute; left: 0; top: 0; width: 42px; height: 50px; flex-shrink: 0; display: block; z-index: 60;">
                      ${profilePicHTML} 
                 </a>
                  <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 0px;">
-                    <a href="me.html" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">
-                        <span>${post.username || 'Sadiq_Alhassan'}</span>
-                    </a>
+                    <span style="color: #fff;">${post.username || 'Sadiq_Alhassan'}</span>
                     ${vBadge}
-                </div>
-            </div>
-            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-                <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
-                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-                    <span class="gift-emoji">🎁</span>
-                    <span style="font-size: 10px;">Gift</span>
                 </div>
             </div>
         </div>
         <div class="post-content" style="padding: 4px 10px;">${post.content}</div>
         ${mediaHTML}
-        <div class="interaction-bar" onclick="stopProp(event)">
-            <div class="action-capsules">
-                <div class="capsule" onclick="triggerPulse(this, event)">
-                    <i class="fa-regular fa-heart"></i>
-                    <span>${post.likes || 0}</span>
-                </div>
-                <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
-                <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
-                <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
-            </div>
-            <div class="action-capsules save-capsule">
-                <div class="capsule" onclick="toggleSave(this, '${post.id}')">
-                    <i class="fa-regular fa-bookmark"></i>
-                    <span>Save</span>
-                </div>
-            </div>
-        </div>
     </div>`;
-            }
-                            
-        
-         
-            let currentMode = 'all'; // Default na Global
-
-function changeFeed(mode) {
-    currentMode = mode;
-    // Canza kalar tabs
-    document.getElementById('tab-all').classList.toggle('active-tab', mode === 'all');
-    document.getElementById('tab-mine').classList.toggle('active-tab', mode === 'mine');
-    
-    renderNexusFeed(); // Sake loda posts
 }
 
-
-            async function renderNexusFeed() {
-    const feedContainer = document.querySelector('.feed-container');
-    feedContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#fde08d;">Loading Protocol...</div>';
-
-    // 1. Wannan zai dauko posts na Timeline na kowa da kowa (amma ba Showcase ba)
-    let query = db.collection("posts")
-                  .where("category", "==", "post") 
-                  .orderBy("timestamp", "desc");
-
-    if (currentMode === 'mine') {
-        // 2. Wannan zai dauko naka na kanka kawai (Timeline posts kawai)
-        query = db.collection("posts")
-                  .where("username", "==", "Sadiq_Alhassan")
-                  .where("category", "==", "post") // Wannan zai tace showcase dinka
-                  .orderBy("timestamp", "desc");
-    }
-    
-
-    query.onSnapshot((snapshot) => {
-        let allPostsHTML = ''; 
-        snapshot.forEach((doc) => {
-            const post = { id: doc.id, ...doc.data() };
-            allPostsHTML += generatePostHTML(post);
-        });
-        feedContainer.innerHTML = allPostsHTML;
-        setTimeout(() => { if(typeof observeVideos === 'function') observeVideos(); }, 300);
-    }, (error) => {
-        console.error("Firebase Error:", error);
-        // Idan akwai Indexing Error, Firebase zai nuna link anan
-    });
-}
-
-
-            
-        
-     function openSubModal() {
-    document.getElementById("subscriptionModal").style.display = "flex";
-    document.body.style.overflow = "hidden"; 
-    
-    // Boye kyamarorin don kar su huda overlay
-    document.querySelector('.camera-cover-main').style.visibility = "hidden";
-    document.querySelector('.camera-profile-main').style.visibility = "hidden";
-}
-
-function closeSubModal() {
-    document.getElementById("subscriptionModal").style.display = "none";
-    document.body.style.overflow = "auto";
-    
-    // Dawo da kyamarorin
-    document.querySelector('.camera-cover-main').style.visibility = "visible";
-    document.querySelector('.camera-profile-main').style.visibility = "visible";
-        }
-
-
-
-
-
-            function switchTab(tab) {
-    const showcase = document.getElementById('showcase-area');
-    const timeline = document.getElementById('timeline-area');
-    const btnShowcase = document.getElementById('btn-showcase');
-    const btnTimeline = document.getElementById('btn-timeline');
-
-    if (tab === 'showcase') {
-        showcase.classList.remove('hidden');
-        timeline.classList.add('hidden');
-        btnShowcase.className = 'btn-slim btn-white';
-        btnTimeline.className = 'btn-slim btn-trans';
-        loadShowcaseImages(); // <--- DOLE KA KIRAsHI ANAN
-    } else {
-        timeline.classList.remove('hidden');
-        showcase.classList.add('hidden');
-        btnTimeline.className = 'btn-slim btn-white';
-        btnShowcase.className = 'btn-slim btn-trans';
-        loadTimelinePosts();
-    }
-            }
-            
-
-
-
-            function loadShowcaseImages() {
+// ============================================================
+// 3. LODA SHOWCASE IMAGES (FIXED)
+// ============================================================
+function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
     db.collection('posts')
         .where("username", "==", "Sadiq_Alhassan")
-        // Tunda yanzu posts dinka "business" ne, bari mu nuna su anan ma
         .onSnapshot(snapshot => {
             showcaseArea.innerHTML = '';
-            
             let hasImages = false;
+
             snapshot.forEach(doc => {
                 const post = doc.data();
-                // Idan post din yana da hoto (mediaUrl), to ya nuna shi a grid din showcase
-                if (post.mediaUrl) {
+                if (post.category === "business" && post.mediaUrl) {
                     hasImages = true;
                     showcaseArea.insertAdjacentHTML('beforeend', `
                         <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px;">
@@ -1669,95 +1522,44 @@ function closeSubModal() {
             });
 
             if (!hasImages) {
-                showcaseArea.innerHTML = '<p>Babu hotuna a nan.</p>';
+                showcaseArea.innerHTML = '<p style="text-align:center; width:100%; color:#666;">Babu hotuna a nan.</p>';
             }
         });
-            }
+}
 
+function switchTab(tab) {
+    const showcase = document.getElementById('showcase-area');
+    const timeline = document.getElementById('timeline-area');
+    const btnShowcase = document.getElementById('btn-showcase');
+    const btnTimeline = document.getElementById('btn-timeline');
 
-
-
-
-            function loadShowcaseImages() {
-    const showcaseArea = document.getElementById('showcase-area');
-    db.collection('posts')
-        .where("username", "==", "Sadiq_Alhassan")
-        .onSnapshot(snapshot => {
-            showcaseArea.innerHTML = '';
-            let hasImages = false;
-
-            snapshot.forEach(doc => {
-                const post = doc.data();
-                
-                // SHARADI: Hotuna su fito anan kawai idan category dinsu "business" ne
-                if (post.category === "business") {
-                    if (post.mediaUrl) {
-                        hasImages = true;
-                        showcaseArea.insertAdjacentHTML('beforeend', `
-                            <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px;">
-                                <img src="${post.mediaUrl}" style="width: 100%; height: 100%; object-fit: cover;">
-                            </div>
-                        `);
-                    }
-                }
-            });
-
-            if (!hasImages) {
-                showcaseArea.innerHTML = '<p style="text-align:center; width:100%;">Babu hotuna a nan.</p>';
-            }
-        });
-            }
-
-
-        
-// ===== FALLBACK: LODA PROFILE NA WANI USER TA USERNAME =====
-async function loadProfileData(username) {
-    const snap = await db.collection('users').where('username', '==', username).limit(1).get();
-    if (!snap.empty) {
-        const data = snap.docs[0].data();
-        applyUserToProfile(data);
+    if (tab === 'showcase') {
+        showcase.classList.remove('hidden');
+        timeline.classList.add('hidden');
+        btnShowcase.className = 'btn-slim btn-white';
+        btnTimeline.className = 'btn-slim btn-trans';
+        loadShowcaseImages();
+    } else {
+        timeline.classList.remove('hidden');
+        showcase.classList.add('hidden');
+        btnTimeline.className = 'btn-slim btn-white';
+        btnShowcase.className = 'btn-slim btn-trans';
+        loadTimelinePosts();
     }
 }
 
-            
-// Dauko hotunan profile da cover daga Firestore
-async function fetchFirebaseData() {
-    try {
-        const doc = await db.collection('users').doc('Sadiq_Alhassan').get({ source: 'cache' })
-            .catch(() => db.collection('users').doc('Sadiq_Alhassan').get({ source: 'server' }));
-
-        if (doc.exists) {
-            const data = doc.data();
-            if (data.userProfilePic) updateUI('main-profile-img', data.userProfilePic, 'userProfilePic');
-            if (data.userCover) updateUI('main-cover-img', data.userCover, 'userCover');
-        }
-    } catch (e) {
-        console.error("Loda bayanai ya fuskanci matsala:", e);
-    }
+function openSubModal() {
+    document.getElementById("subscriptionModal").style.display = "flex";
+    document.body.style.overflow = "hidden"; 
 }
 
-// Lissafin yawan posts na gaskiya daga Firestore don nuna daidai a Profile Card
-function countUserPosts() {
-    db.collection('posts')
-      .where("username", "==", "Sadiq_Alhassan")
-      .onSnapshot(snapshot => {
-          document.getElementById('stats-posts-count').innerText = snapshot.size;
-      });
+function closeSubModal() {
+    document.getElementById("subscriptionModal").style.display = "none";
+    document.body.style.overflow = "auto";
 }
 
-function updateUI(id, url, storageKey) {
-    const element = document.getElementById(id);
-    if(element) {
-        element.src = url;
-        localStorage.setItem(storageKey, url);
-    }
-}
-
-
-
-
-            // ============================================================
-// 1. GYARAN UPDATE PHOTO (BARE & SECURE)
+// ============================================================
+// 4. UPDATE PHOTO TO CLOUDINARY & FIRESTORE (PERMANENT STORAGE FIXED)
 // ============================================================
 async function updatePhoto(event, type) {
     const file = event.target.files[0];
@@ -1767,7 +1569,6 @@ async function updatePhoto(event, type) {
     document.getElementById(imgId).style.opacity = "0.5";
 
     try {
-        // 1. TURA HOTON CLOUDINARY
         const cloudName = "diixjieyp";
         const uploadPreset = "oryzon_media"; 
         const formData = new FormData();
@@ -1781,115 +1582,82 @@ async function updatePhoto(event, type) {
         const data = await response.json();
         const secureUrl = data.secure_url; 
 
-        // 2. AJIYE A FIRESTORE (A matsayin mabuɗi na waje don Auth ya gansa kai tsaye)
         const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
         
-        // Tabbatar muna amfani da UID na ainihi idan yana da shi, in ba haka ba default
-        const docId = (currentUser && currentUser.uid) ? currentUser.uid : 'Sadiq_Alhassan';
-        
-        await db.collection('users').doc(docId).set({
+        // Zai adana a karkashin document na 'Sadiq_Alhassan' dindindin don kar ya bace bayan refresh
+        await db.collection('users').doc('Sadiq_Alhassan').set({
             [storageKey]: secureUrl
         }, { merge: true });
 
-        // Sabunta LocalStorage da UI nan take don gudun jinkiri
         localStorage.setItem(storageKey, secureUrl);
         document.getElementById(imgId).src = secureUrl;
         document.getElementById(imgId).style.opacity = "1";
         
-        // GYARA NA BANBANTAWA: Idan hoton profile ne, sabunta duka guraben hoton da ke shafin nan take
         if (type === 'profile') {
-            const allProfileImages = document.querySelectorAll('.avatar, #main-profile-img');
-            allProfileImages.forEach(img => {
-                img.src = secureUrl;
-            });
+            document.querySelectorAll('.avatar').forEach(img => { img.src = secureUrl; });
         }
 
-        alert("An sabunta hoto dindindin! ✅");
+        alert("Profile photo updated successfully! ✅");
 
     } catch (error) {
-        alert("Matsala: " + error.message);
+        alert("Upload Error: " + error.message);
         document.getElementById(imgId).style.opacity = "1";
     }
     document.getElementById(type + '-menu').classList.add('hidden');
 }
 
 // ============================================================
-// 2. GYARAN NUNA BAYANAN USER A PROFILE (SELECTOR & REFRESH FIXED)
+// 5. APPLICATION STATE TO PROFILE UI (STABLE INTEGRATION)
 // ============================================================
 function applyUserToProfile(user) {
     if (!user) return;
 
-    // Dauko hoton profile da cover (Idan babu, a saka default)
-    const profilePic = user.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + user.uid;
+    const profilePic = user.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
     const coverPhoto = user.userCover || "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200";
     
-    // Tabbatar babban da'ira da bango sun canza kuma sun tsaya bayan refresh
-    if (document.getElementById('main-profile-img')) {
-        document.getElementById('main-profile-img').src = profilePic;
-    }
-    if (document.getElementById('main-cover-img')) {
-        document.getElementById('main-cover-img').src = coverPhoto;
-    }
+    document.getElementById('main-profile-img').src = profilePic;
+    document.getElementById('main-cover-img').src = coverPhoto;
 
-    // Ajiye a LocalStorage domin gudun katsewa lokacin refresh
     localStorage.setItem('userProfilePic', profilePic);
     localStorage.setItem('userCover', coverPhoto);
 
-    // GYARA MATSALAR ID: Amfani da ID maimakon class domin saka suna daidai
-    const nameEl = document.getElementById('profile-name-text');
-    if (nameEl) {
-        nameEl.textContent = user.displayName || user.username || 'User';
-    }
-
-    // Nuna stats idan akwai su
-    const nums = document.querySelectorAll('.n-num');
-    if (nums.length >= 3) {
-        nums[0].textContent = user.postsCount || 0;
-        nums[1].textContent = user.followersCount || 2521; // fallback zuwa na asali
-        nums[2].textContent = user.friendsCount || 2037;   // fallback zuwa na asali
-    }
+    document.getElementById('profile-name-text').textContent = user.displayName || "Aliyu Haedar";
 }
 
 // ============================================================
-// 3. GLOBAL AUTH SYSTEM (STABLE INTEGRATION)
+// 6. GLOBAL AUTH MONITOR (REFRESH & COUNTER FIXED)
 // ============================================================
 firebase.auth().onAuthStateChanged(async (firebaseUser) => {
-    if (!firebaseUser) {
-        console.warn("No user logged in. Falling back to guest mode.");
-        loadProfileData('Sadiq_Alhassan');
-        return;
-    }
-
+    // Ko anyi login ko ba a yi ba, tsarin zai loda nod din Sadiq_Alhassan dindindin don gudun empty screen
     try {
-        // Dauko bayanai daga Firestore ta ainihin UID din da aka yi login da shi
-        const userDoc = await db.collection('users').doc(firebaseUser.uid).get();
-        
+        const userDoc = await db.collection('users').doc('Sadiq_Alhassan').get();
         if (userDoc.exists) {
-            currentUser = { uid: firebaseUser.uid, ...userDoc.data() };
+            currentUser = { uid: 'Sadiq_Alhassan', ...userDoc.data() };
+            applyUserToProfile(currentUser);
         } else {
-            // Idan sabon user ne, tsara bayanan yadda zai dace da Firestore dinka dindindin
+            // Fallback idan babu asali
             currentUser = {
-                uid: firebaseUser.uid,
-                username: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-                userProfilePic: firebaseUser.photoURL || "https://api.dicebear.com/7.x/bottts/svg?seed=" + firebaseUser.uid,
-                userCover: null
+                uid: 'Sadiq_Alhassan',
+                username: 'Sadiq_Alhassan',
+                displayName: 'Aliyu Haedar',
+                userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=mamba"
             };
-            await db.collection('users').doc(firebaseUser.uid).set(currentUser, { merge: true });
+            applyUserToProfile(currentUser);
         }
 
-        // Kunna aikin da zai sanya komai a gurbinsa
-        applyUserToProfile(currentUser);
-        loadTimelinePosts(currentUser.uid, currentUser.username);
+        // Loda lambobin yawan posts na gaskiya daga DB
+        db.collection('posts').where("username", "==", "Sadiq_Alhassan").onSnapshot(snap => {
+            document.getElementById('stats-posts-count').innerText = snap.size;
+        });
+
+        // Loda hotunan farko na tab din Showcase
+        loadShowcaseImages();
         
     } catch (e) {
-        console.error("Error fetching user data:", e);
+        console.error("Error loading secure session:", e);
     }
 });
-                                                    
-
-           
-      
-                
+        
         </script>
         
     </main>
