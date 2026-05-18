@@ -1418,10 +1418,9 @@ async function toggleSave(btn, postId) {
     const savedProfilePic = localStorage.getItem('userProfilePic');
 
 // Idan post din naka ne (Sadiq_Alhassan), yi amfani da hoton profile dinka
-// Idan na wani ne, yi amfani da hoton da yake jikin post din ko default avatar
-const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic) 
+const currentPic = (post.username === currentUser && savedProfilePic) 
                    ? savedProfilePic 
-                   : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=member");
+                   : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + post.username);
         
         const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
         
@@ -1452,7 +1451,7 @@ const currentPic = (post.username === "Sadiq_Alhassan" && savedProfilePic)
 
                <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 7px;">
                     <a href="me.html" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">
-                        <span>${post.username || 'Sadiq_Alhassan'}</span>
+                        <span>${post.username || 'User'}</span>
                     </a>
                     ${vBadge}
                 </div>
@@ -1589,8 +1588,9 @@ function previewMedia(input) {
 const selectedCategory = document.querySelector('input[name="postType"]:checked').value;
 
 // 2. Sannan ka hada shi a cikin bayanan da za su tafi Firebase
+    // YADDA ZAI KOMA:
 await db.collection("posts").add({
-    username: "Sadiq_Alhassan", 
+    username: currentUser, // Yanzu idan Rayhaan yayi post, sunansa zai tafi database
     content: text,
     mediaUrl: mediaUrl,
     mediaType: mediaType,
