@@ -1197,8 +1197,6 @@ header {
     </script>
 
 
-        
-
     <div class="cover-wrapper">
         <img id="main-cover-img" src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200" class="cover-photo" alt="Cover">
     </div>
@@ -1790,6 +1788,67 @@ function updateUI(id, url, storageKey) {
         localStorage.setItem(storageKey, url);
     }
 }
+
+
+
+            <script type="module">
+  // Shigo da abubuwan da ake buƙata daga Firebase (Tabbatar version ɗin ya dace da na sauran shafukanka)
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+  const auth = getAuth();
+  const db = getFirestore();
+
+  // Duba shigar mai amfani
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      try {
+        // Nemi takardar mai amfani (User Document) daga Firestore ta amfani da UID ɗinsa
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+
+          // 1. Canza Sunan Babban Profile
+          if (userData.fullName) {
+            const nameElement = document.getElementById("profile-name-text");
+            if (nameElement) nameElement.innerText = userData.fullName;
+          }
+
+          // 2. Canza Hoton Babban Profile
+          if (userData.profileImage) {
+            const imgElement = document.getElementById("main-profile-img");
+            if (imgElement) imgElement.src = userData.profileImage;
+          }
+
+          // 3. GYARAN TIMELINE: Wannan zai nemo dukkan tsofaffin sunaye da hotuna na cikin posts dake shafin ya canza su
+          if (userData.fullName) {
+            // Nemi dukkan h4 dake ɗauke da sunan Aliyu Haedar a cikin timeline
+            const timelineNames = document.querySelectorAll("#timeline-area h4.text-white");
+            timelineNames.forEach(el => {
+              if (el.innerText === "Aliyu Haedar") {
+                el.innerText = userData.fullName;
+              }
+            });
+          }
+
+          if (userData.profileImage) {
+            // Nemi dukkan hotunan profile dake cikin posts na timeline area
+            const timelineImages = document.querySelectorAll("#timeline-area img.w-10.h-10");
+            timelineImages.forEach(img => {
+              img.src = userData.profileImage;
+            });
+          }
+        }
+      } catch (error) {
+        console.error("An samu matsalar ɗauko bayanai daga Firestore:", error);
+      }
+    } else {
+      // Idan ba a yi login ba, tura shi shafin login.html
+      window.location.href = "login.html";
+    }
+  });
 
             
         </script>
