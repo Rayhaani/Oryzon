@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Protocol - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep-black: #000000;
+            --nexus-cyan: #00F2FF;
+            --border-subtle: rgba(255, 255, 255, 0.05);
+            --text-secondary: rgba(255, 255, 255, 0.5);
+            --error-red: #ff3b30;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep-black);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        /* SMART & CUTE COMPACT CARD */
+        .nexus-auth-card {
+            width: 100%;
+            max-width: 350px; /* Reduced from 400px for a slimmer profile */
+            background: linear-gradient(135deg, #161515 0%, #0d0c0c 100%);
+            border: 1px solid rgba(255, 255, 255, 0.01);
+            border-radius: 20px;
+            padding: 30px 24px; /* Tighter padding for standard smart look */
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease, background 0.6s ease, box-shadow 0.6s ease;
+        }
+
+        /* QUANTUM IMPLOSION REACTION */
+        .nexus-auth-card.implode-active {
+            transform: scale(0.1);
+            opacity: 0;
+            background: var(--nexus-cyan);
+            box-shadow: 0 0 80px 20px var(--nexus-cyan);
+            filter: blur(4px);
+        }
+
+        /* COMPACT FORM WINDOW */
+        .login-window {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px; /* Reduced gap for compact feeling */
+        }
+
+        /* SMART HEADERS */
+        .step-header h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px; /* Sleeker, smaller typography */
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .input-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* TIGHTENED INPUT FIELDS */
+        .nexus-input-field {
+            width: 100%;
+            background: #08080a;
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 14px; /* Balanced sizing */
+            font-size: 14px;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .nexus-input-field:focus {
+            border-color: var(--nexus-cyan);
+            background: #0d0d10;
+        }
+
+        .error-message {
+            color: var(--error-red);
+            font-size: 11px;
+            margin-top: 6px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        /* ACTIONS CONTAINER */
+        .btn-container {
+            margin-top: 8px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            min-height: 45px;
+            width: 100%;
+        }
+
+        /* MATCHING GLOWING ROUND BUTTON */
+        .nexus-round-next {
+            background: transparent;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 25px;
+            padding: 8px 18px;
+            color: var(--nexus-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.03);
+            animation: buttonPulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+            transition: all 0.3s ease;
+        }
+        
+        .nexus-round-next span {
+            font-size: 12px;
+            transition: transform 0.2s ease;
+        }
+
+        .nexus-round-next:hover {
+            background: rgba(0, 242, 255, 0.05);
+            border-color: var(--nexus-cyan);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+        }
+        
+        .nexus-round-next:hover span {
+            transform: translateX(2px);
+        }
+
+        .nexus-round-next:disabled {
+            opacity: 0.2;
+            animation: none;
+            box-shadow: none;
+            border-color: var(--border-subtle);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        @keyframes buttonPulse {
+            0% {
+                box-shadow: 0 0 8px rgba(0, 242, 255, 0.05);
+                border-color: rgba(0, 242, 255, 0.2);
+            }
+            100% {
+                box-shadow: 0 0 15px rgba(0, 242, 255, 0.25);
+                border-color: rgba(0, 242, 255, 0.6);
+            }
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        .auth-footer a { color: var(--nexus-cyan); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="nexus-auth-card" id="authCard">
+        <form id="nexusLoginForm" onsubmit="executeLogin(event)">
+            <div class="login-window">
+                
+                <div class="input-block">
+                    <div class="step-header">
+                        <h2>Username</h2>
+                    </div>
+                    <input type="text" id="loginUsername" class="nexus-input-field" required autocomplete="off">
+                </div>
+
+                <div class="input-block">
+                    <div class="step-header">
+                        <h2>Password</h2>
+                    </div>
+                    <input type="password" id="loginPassword" class="nexus-input-field" required>
+                    <div class="error-message" id="loginError">Authentication failed. Please check credentials.</div>
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit" class="nexus-round-next" id="loginBtn">LOGIN <span>→</span></button>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="index.html">Register Here</a>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+          authDomain: "oryzon-50ea4.firebaseapp.com",
+          projectId: "oryzon-50ea4",
+          storageBucket: "oryzon-50ea4.firebasestorage.app",
+          messagingSenderId: "782106742622",
+          appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+          measurementId: "G-K5085DLL2W"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function executeLogin(event) {
+            event.preventDefault();
+            const loginBtn = document.getElementById("loginBtn");
+            const authCard = document.getElementById("authCard");
+            const errorPrompt = document.getElementById("loginError");
+            
+            const username = document.getElementById("loginUsername").value.trim().toLowerCase();
+            const accessCipher = document.getElementById("loginPassword").value;
+
+            errorPrompt.style.display = "none";
+            loginBtn.innerHTML = "VERIFYING... <span>→</span>";
+            loginBtn.disabled = true;
+
+            db.collection("users").doc(username).get()
+            .then((doc) => {
+                if (doc.exists && doc.data().accessCipher === accessCipher) {
+                    db.collection("users").doc(username).update({ isOnline: true });
+                    localStorage.setItem("nexus_user_session", username);
+                    
+                    authCard.classList.add("implode-active");
+                    
+                    setTimeout(() => {
+                        window.location.href = "messages.html";
+                    }, 2000);
+                } else {
+                    errorPrompt.style.display = "block";
+                    loginBtn.innerHTML = "LOGIN <span>→</span>";
+                    loginBtn.disabled = false;
+                }
+            })
+            .catch((err) => {
+                console.error("Auth sync error: ", err);
+                errorPrompt.style.display = "block";
+                loginBtn.innerHTML = "LOGIN <span>→</span>";
+                loginBtn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
