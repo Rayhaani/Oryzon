@@ -198,32 +198,39 @@
             const authCard = document.getElementById("authCard");
             const errorPrompt = document.getElementById("loginError");
             
-            // Canza userInput zuwa lowercase don kiyaye tsari
+            // Canza shi zuwa lowercase don dacewa da database baki d'aya
             const username = document.getElementById("loginUsername").value.trim().toLowerCase();
             const accessCipher = document.getElementById("loginPassword").value.trim();
 
             errorPrompt.style.display = "none";
             loginBtn.innerHTML = "VERIFYING... <span>→</span>";
 
-            // Amfani da tabbatacciyar hanyar .doc() don kiyaye sauri da gujewa ratsewar gizo
             db.collection("users").doc(username).get()
             .then((doc) => {
-                if (doc.exists && doc.data().accessCipher === accessCipher) {
-                    db.collection("users").doc(username).update({ isOnline: true });
-                    localStorage.setItem("nexus_user_session", username);
-                    
-                    authCard.classList.add("implode-active");
-                    
-                    setTimeout(() => {
-                        window.location.href = "messages.html";
-                    }, 2000);
+                if (doc.exists) {
+                    if (doc.data().accessCipher === accessCipher) {
+                        db.collection("users").doc(username).update({ isOnline: true });
+                        localStorage.setItem("nexus_user_session", username);
+                        
+                        authCard.classList.add("implode-active");
+                        
+                        setTimeout(() => {
+                            window.location.href = "messages.html";
+                        }, 2000);
+                    } else {
+                        errorPrompt.innerText = "Kuskure: Kalmar sirri (Password) ba daidai ba!";
+                        errorPrompt.style.display = "block";
+                        loginBtn.innerHTML = "LOGIN <span>→</span>";
+                    }
                 } else {
+                    errorPrompt.innerText = "Kuskure: Ba a sami wannan Sunan (Username) ba!";
                     errorPrompt.style.display = "block";
                     loginBtn.innerHTML = "LOGIN <span>→</span>";
                 }
             })
             .catch((err) => {
                 console.error("Auth error: ", err);
+                errorPrompt.innerText = "Matsalar Haɗi: " + err.message;
                 errorPrompt.style.display = "block";
                 loginBtn.innerHTML = "LOGIN <span>→</span>";
             });
