@@ -1791,9 +1791,71 @@ function updateUI(id, url, storageKey) {
 
 
 
-            
 
-            
+            <script>
+  // Muna amfani da standard event listener don tabbatar shafin ya gama stacking kafin mu duba Firebase
+  window.addEventListener('DOMContentLoaded', () => {
+    
+    // Duba idan har an riga an loda Firebase a shafin
+    if (typeof firebase !== 'undefined') {
+      
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      // Sauraron shigar mai amfani
+      auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          try {
+            // Neman bayanan mutum daga Firestore
+            const userDocRef = db.collection("users").doc(user.uid);
+            const userDocSnap = await userDocRef.get();
+
+            if (userDocSnap.exists) {
+              const userData = userDocSnap.data();
+
+              // 1. Canza Sunan Babban Profile
+              if (userData.fullName) {
+                const nameElement = document.getElementById("profile-name-text");
+                if (nameElement) nameElement.innerText = userData.fullName;
+              }
+
+              // 2. Canza Hoton Babban Profile
+              if (userData.profileImage) {
+                const imgElement = document.getElementById("main-profile-img");
+                if (imgElement) imgElement.src = userData.profileImage;
+              }
+
+              // 3. Canza Sunaye da hotuna na cikin Timeline Posts
+              if (userData.fullName) {
+                const timelineNames = document.querySelectorAll("#timeline-area h4.text-white");
+                timelineNames.forEach(el => {
+                  if (el.innerText === "Aliyu Haedar") {
+                    el.innerText = userData.fullName;
+                  }
+                });
+              }
+
+              if (userData.profileImage) {
+                const timelineImages = document.querySelectorAll("#timeline-area img.w-10.h-10");
+                timelineImages.forEach(img => {
+                  img.src = userData.profileImage;
+                });
+              }
+            }
+          } catch (error) {
+            console.log("Error fetching profile details:", error);
+          }
+        } else {
+          // Idan babu kowa, tura shi login
+          window.location.href = "login.html";
+        }
+      });
+
+    } else {
+      console.log("Firebase e duba dake cikin shafin bai lodu ba tukuna.");
+    }
+  });
+                
         </script>
         
     </main>
