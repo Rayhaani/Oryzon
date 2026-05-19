@@ -1422,26 +1422,34 @@ function removePhoto(type) {
     document.getElementById(type + '-menu').classList.add('hidden');
 }
 
+// Function da yake gyara ReferenceError na bidiyo dake console dinka
+function toggleVideoSound(event, element) {
+    event.stopPropagation();
+    const video = element.previousElementSibling;
+    if (video) {
+        video.muted = !video.muted;
+        element.innerHTML = video.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+    }
+}
+
 // ============================================================
-// 1. LODA POSTS NA TIMELINE (GYARADDE)
+// 1. LODA POSTS NA TIMELINE (GYARADDE ENHANCED)
 // ============================================================
 function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     
-    if (!currentUser || !currentUser.username) {
-        timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading user profile...</p>';
-        return;
-    }
+    // Ko da babu currentUser, kada mu bar shi a 'Loading...', mu bashi tsohon username din idan an samu kuskure
+    const currentUsername = (currentUser && currentUser.username) ? currentUser.username : "Sadiq_Alhassan";
     
     db.collection('posts')
-        .where("username", "==", currentUser.username)
+        .where("username", "==", currentUsername)
         .orderBy("timestamp", "desc")
         .onSnapshot(snapshot => {
             timelineArea.innerHTML = '';
             let hasPosts = false;
             snapshot.forEach(doc => {
                 const post = doc.data();
-                if (post.category === "normal") { // Tace normal posts kawai a nan
+                if (post.category === "normal") { 
                     hasPosts = true;
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
@@ -1451,7 +1459,12 @@ function loadTimelinePosts() {
             }
         }, (err) => {
             console.error("Timeline error:", err);
-            timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:red;">Kuskure wajen loda posts.</p>';
+            // Idan matsalar Index ce ta sa ya ba da error, za mu sanar da kai a kan screen maimakon ya tsaya a 'Loading...'
+            timelineArea.innerHTML = `
+                <div style="text-align:center; padding:20px; color:#ff4444; font-size:13px;">
+                    <p>⚠️ Firestore Index Error.</p>
+                    <p style="font-size:11px; color:#888;">Duba Console dinka ka danna link din dake can don kunna Index.</p>
+                </div>`;
         });
 }
 
@@ -1466,7 +1479,7 @@ function generatePostHTML(post) {
     const currentPic = savedProfilePic || post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
     
     const optimizedProfilePic = currentPic.includes('cloudinary.com') 
-                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/') 
+                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w,100,h_100,c_fill/') 
                                 : currentPic;
 
     const profilePicHTML = `<img src="${optimizedProfilePic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top: 4px; left: 8px; z-index: 50;" loading="lazy">`;
@@ -1511,13 +1524,10 @@ function generatePostHTML(post) {
 function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
     
-    if (!currentUser || !currentUser.username) {
-        showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Loading showcase...</p>';
-        return;
-    }
+    const currentUsername = (currentUser && currentUser.username) ? currentUser.username : "Sadiq_Alhassan";
 
     db.collection('posts')
-        .where("username", "==", currentUser.username)
+        .where("username", "==", currentUsername)
         .onSnapshot(snapshot => {
             showcaseArea.innerHTML = '';
             let hasImages = false;
@@ -1539,7 +1549,7 @@ function loadShowcaseImages() {
             }
         }, (err) => {
             console.error("Showcase error: ", err);
-            showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:red;">Kuskure wajen loda hotuna.</p>';
+            showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#ff4444;">Kuskure wajen loda hotuna.</p>';
         });
 }
                              
@@ -1636,18 +1646,23 @@ function applyUserToProfile(user) {
     localStorage.setItem('userProfilePic', profilePic);
     localStorage.setItem('userCover', coverPhoto);
 
-    document.getElementById('profile-name-text').textContent = user.displayName || "Aliyu Haedar";
+    document.getElementById('profile-name-text').textContent = user.displayName || "Sadiq Alhassan";
 }
 
 // ============================================================
-// 6. GLOBAL AUTH MONITOR (AN GYARA REFRESH MATSALAR SULTAAN)
+// 6. GLOBAL AUTH MONITOR (FALLBACK AUTOMATION)
 // ============================================================
 firebase.auth().onAuthStateChanged(async (firebaseUser) => {
     try {
-        const userDoc = await db.collection('users').doc('Sadiq_Alhassan').get();
+        let userDoc = await db.collection('users').doc('Sadiq_Alhassan').get();
         
-        if (userDoc.exists && userDoc.data().username) {
-            currentUser = { uid: 'Sadiq_Alhassan', ...userDoc.data() };
+        // Idan babu shi da babban baki, mu duba ko yana da karamin baki a DB
+        if (!userDoc.exists) {
+            userDoc = await db.collection('users').doc('sadiq_alhassan').get();
+        }
+        
+        if (userDoc.exists) {
+            currentUser = { uid: userDoc.id, ...userDoc.data() };
         } else {
             currentUser = {
                 uid: 'Sadiq_Alhassan',
@@ -1655,7 +1670,6 @@ firebase.auth().onAuthStateChanged(async (firebaseUser) => {
                 displayName: 'Sadiq Alhassan',
                 userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=mamba"
             };
-            await db.collection('users').doc('Sadiq_Alhassan').set(currentUser, { merge: true });
         }
 
         applyUserToProfile(currentUser);
@@ -1664,7 +1678,7 @@ firebase.auth().onAuthStateChanged(async (firebaseUser) => {
             document.getElementById('stats-posts-count').innerText = snap.size;
         });
 
-        console.log("An loda mai amfani:", currentUser.username);
+        // Ko da matsalar index tana nan, wadannan zasu gudu ba tare da sun makale ba
         loadShowcaseImages();
         loadTimelinePosts();
         
@@ -1675,6 +1689,9 @@ firebase.auth().onAuthStateChanged(async (firebaseUser) => {
         loadTimelinePosts();
     }
 });
+                    
+
+
         
         </script>
         
