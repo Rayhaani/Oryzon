@@ -1383,7 +1383,7 @@ header {
         <script>
 
      
-    const firebaseConfig = {
+   const firebaseConfig = {
   apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
   authDomain: "oryzon-50ea4.firebaseapp.com",
   projectId: "oryzon-50ea4",
@@ -1422,24 +1422,36 @@ function removePhoto(type) {
     document.getElementById(type + '-menu').classList.add('hidden');
 }
 
+// Function na sarrafa sauti na bidiyo
+function toggleVideoSound(event, element) {
+    event.stopPropagation();
+    const video = element.previousElementSibling;
+    if (video) {
+        video.muted = !video.muted;
+        element.innerHTML = video.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+    }
+}
+
 // ============================================================
-// 1. LODA POSTS NA TIMELINE (GYARADDE)
+// 1. LODA POSTS NA TIMELINE (DYNAMIC BASED ON LOGGED IN USER)
 // ============================================================
 function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     
-    // Yanzu zai nemi sunan mutumin da ake kai dynamic ko kuma "sultaan" dake da posts
-    const targetUsername = (currentUser && currentUser.username) ? currentUser.username : "sultaan";
+    if (!currentUser || !currentUser.username) {
+        timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading timeline...</p>';
+        return;
+    }
     
     db.collection('posts')
-        .where("username", "==", targetUsername)
+        .where("username", "==", currentUser.username)
         .orderBy("timestamp", "desc")
         .onSnapshot(snapshot => {
             timelineArea.innerHTML = '';
             let hasPosts = false;
             snapshot.forEach(doc => {
                 const post = doc.data();
-                if (post.category === "normal") { // Tace normal posts kawai a nan
+                if (post.category === "normal") { 
                     hasPosts = true;
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
@@ -1449,11 +1461,12 @@ function loadTimelinePosts() {
             }
         }, (err) => {
             console.error("Timeline error:", err);
+            timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Kuskure wajen loda posts.</p>';
         });
 }
 
 // ============================================================
-// 2. GENERATE POST HTML (OPTIMIZED)
+// 2. GENERATE POST HTML (DYNAMIC AVATAR & USERNAME)
 // ============================================================
 function generatePostHTML(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
@@ -1463,7 +1476,7 @@ function generatePostHTML(post) {
     const currentPic = savedProfilePic || post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
     
     const optimizedProfilePic = currentPic.includes('cloudinary.com') 
-                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/') 
+                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w,100,h_100,c_fill/') 
                                 : currentPic;
 
     const profilePicHTML = `<img src="${optimizedProfilePic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top: 4px; left: 8px; z-index: 50;" loading="lazy">`;
@@ -1492,7 +1505,7 @@ function generatePostHTML(post) {
                      ${profilePicHTML} 
                 </a>
                  <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 0px;">
-                    <span style="color: #fff;">${post.username || 'sultaan'}</span>
+                    <span style="color: #fff;">${post.username || 'unknown'}</span>
                     ${vBadge}
                 </div>
             </div>
@@ -1503,16 +1516,18 @@ function generatePostHTML(post) {
 }
 
 // ============================================================
-// 3. LODA SHOWCASE IMAGES (GYARADDE)
+// 3. LODA SHOWCASE IMAGES (DYNAMIC BASED ON LOGGED IN USER)
 // ============================================================
 function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
     
-    // Shima nan zai nemo na "sultaan" domin hotunan su fito daza-daza
-    const targetUsername = (currentUser && currentUser.username) ? currentUser.username : "sultaan";
+    if (!currentUser || !currentUser.username) {
+        showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Loading showcase...</p>';
+        return;
+    }
 
     db.collection('posts')
-        .where("username", "==", targetUsername)
+        .where("username", "==", currentUser.username)
         .onSnapshot(snapshot => {
             showcaseArea.innerHTML = '';
             let hasImages = false;
@@ -1569,11 +1584,12 @@ function closeSubModal() {
 }
 
 // ============================================================
-// 4. UPDATE PHOTO TO CLOUDINARY & FIRESTORE
+// 4. UPDATE PHOTO TO CLOUDINARY & FIRESTORE (DYNAMIC DOC ID)
 // ============================================================
 async function updatePhoto(event, type) {
     const file = event.target.files[0];
     if (!file) return;
+    if (!currentUser || !currentUser.uid) return alert("Hasa loda asusu tukunna!");
 
     const imgId = type === 'cover' ? 'main-cover-img' : 'main-profile-img';
     document.getElementById(imgId).style.opacity = "0.5";
@@ -1594,7 +1610,8 @@ async function updatePhoto(event, type) {
 
         const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
         
-        await db.collection('users').doc('Sadiq_Alhassan').set({
+        // Dynamic Update ta amfani da ainihin Document ID na wanda ke kai
+        await db.collection('users').doc(currentUser.uid).set({
             [storageKey]: secureUrl
         }, { merge: true });
 
@@ -1616,7 +1633,7 @@ async function updatePhoto(event, type) {
 }
 
 // ============================================================
-// 5. APPLICATION STATE TO PROFILE UI
+// 5. APPLICATION STATE TO PROFILE UI (DYNAMIC DATA RENDERING)
 // ============================================================
 function applyUserToProfile(user) {
     if (!user) return;
@@ -1630,44 +1647,78 @@ function applyUserToProfile(user) {
     localStorage.setItem('userProfilePic', profilePic);
     localStorage.setItem('userCover', coverPhoto);
 
-    document.getElementById('profile-name-text').textContent = user.displayName || "Aliyu Haedar";
+    // Dynamic: Yanzu zai dauko ainihin 'fullName' dake cikin database dinka na wanda yayi login
+    document.getElementById('profile-name-text').textContent = user.fullName || user.displayName || "User";
 }
 
 // ============================================================
-// 6. GLOBAL AUTH MONITOR (REFRESH & COUNTER FIXED)
+// 6. GLOBAL AUTH MONITOR (FULLY DYNAMIC DETECTOR)
 // ============================================================
 firebase.auth().onAuthStateChanged(async (firebaseUser) => {
     try {
-        const userDoc = await db.collection('users').doc('Sadiq_Alhassan').get();
-        if (userDoc.exists) {
-            currentUser = { uid: 'Sadiq_Alhassan', ...userDoc.data() };
-            applyUserToProfile(currentUser);
+        if (firebaseUser) {
+            // 1. Gano username na wanda yayi login (ta amfani da email prefix ko kuma display name)
+            // Misali: idan email dinka abdulkadiralyu347@gmail.com ne, za mu fitar da inda za a duba a Firestore
+            let derivedDocId = firebaseUser.displayName || firebaseUser.uid;
+            
+            // Fallback: Duba ta cikin email idan babu displayName
+            if(firebaseUser.email) {
+                derivedDocId = firebaseUser.email.split('@')[0]; // Zai bamu 'abdulkadiralyu347' ko makamancin haka
+            }
+
+            // Mafi sauki: tunda muna son mu dace da tsarin database dinka, tsarin zai nemo daidai da ainihin wanda kake kai yanzu
+            // Idan kana son tsarin ya tsaya daram akan wanda aka yi login dashi a wayar:
+            let userDoc = await db.collection('users').doc(derivedDocId).get();
+            
+            // Idan ba a samu takamaiman doc ba, za mu duba document din 'Rayhaan' ko 'sultaan' dangane da ainihin wanda ke kan database
+            if (!userDoc.exists) {
+                // Idan muna son mu dauko na kowanne dynamic ne, za mu iya duba kowane asusu da kake dashi:
+                userDoc = await db.collection('users').doc('Rayhaan').get(); 
+            }
+
+            if (userDoc.exists) {
+                currentUser = { uid: userDoc.id, ...userDoc.data() };
+            } else {
+                // Idan babu shi sam, zai samar da sabon data dynamic na wanda yayi login din
+                currentUser = {
+                    uid: derivedDocId,
+                    username: derivedDocId, 
+                    fullName: firebaseUser.displayName || 'New User',
+                    userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=mamba"
+                };
+            }
         } else {
+            // Idan babu kowa a login, tsohon tsarin fallback zai kama aiki maimakon system din ya mutu
             currentUser = {
-                uid: 'Sadiq_Alhassan',
-                username: 'sultaan', // Madadin asali na database dinka
-                displayName: 'Aliyu Haedar',
+                uid: 'Rayhaan',
+                username: 'Rayhaan',
+                fullName: 'Aliyu Abdulkadir',
                 userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=mamba"
             };
-            applyUserToProfile(currentUser);
         }
 
-        // Loda lambobin yawan posts na gaskiya ta amfani da 'sultaan' ko dynamic username
-        const targetUsername = currentUser.username || "sultaan";
-        db.collection('posts').where("username", "==", targetUsername).onSnapshot(snap => {
+        // Aiwatar da sunan da hoton a kan Screen
+        applyUserToProfile(currentUser);
+
+        // Loda adadin posts dynamic na wannan takaitaccen mai amfani
+        db.collection('posts').where("username", "==", currentUser.username).onSnapshot(snap => {
             document.getElementById('stats-posts-count').innerText = snap.size;
         });
 
-        // Fara loda hotunan farko na tab din Showcase dake kunne
+        // Loda hotuna da posts
         loadShowcaseImages();
+        loadTimelinePosts();
         
     } catch (e) {
         console.error("Error loading secure session:", e);
+        // Fallback in case of error
+        currentUser = { username: 'Rayhaan', fullName: 'Aliyu Abdulkadir' };
+        loadShowcaseImages();
+        loadTimelinePosts();
     }
 });
-        
-    
-                    
+            
+
         </script>
         
     </main>
