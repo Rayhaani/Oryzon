@@ -1382,7 +1382,7 @@ header {
      
         <script>
 
-          const firebaseConfig = {
+     const firebaseConfig = {
   apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
   authDomain: "oryzon-50ea4.firebaseapp.com",
   projectId: "oryzon-50ea4",
@@ -1422,13 +1422,18 @@ function removePhoto(type) {
 }
 
 // ============================================================
-// 1. LODA POSTS NA TIMELINE (GYARADDE)
+// 1. LODA POSTS NA TIMELINE (AN GYARA MATSALAR SULTAAN)
 // ============================================================
 function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     
-    // Yanzu zai nemi sunan mutumin da ake kai dynamic ko kuma "sultaan" dake da posts
-    const targetUsername = (currentUser && currentUser.username) ? currentUser.username : "sultaan";
+    // Idan bayanan mai amfani basu lodo ba tukunna, mu dakata maimakon sanya sunan wani daban
+    if (!currentUser || !currentUser.username) {
+        timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading user profile...</p>';
+        return;
+    }
+    
+    const targetUsername = currentUser.username;
     
     db.collection('posts')
         .where("username", "==", targetUsername)
@@ -1438,7 +1443,7 @@ function loadTimelinePosts() {
             let hasPosts = false;
             snapshot.forEach(doc => {
                 const post = doc.data();
-                if (post.category === "normal") { // Tace normal posts kawai a nan
+                if (post.category === "normal") { 
                     hasPosts = true;
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
@@ -1462,7 +1467,7 @@ function generatePostHTML(post) {
     const currentPic = savedProfilePic || post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
     
     const optimizedProfilePic = currentPic.includes('cloudinary.com') 
-                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/') 
+                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w,100,h_100,c_fill/') 
                                 : currentPic;
 
     const profilePicHTML = `<img src="${optimizedProfilePic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top: 4px; left: 8px; z-index: 50;" loading="lazy">`;
@@ -1491,7 +1496,7 @@ function generatePostHTML(post) {
                      ${profilePicHTML} 
                 </a>
                  <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 0px;">
-                    <span style="color: #fff;">${post.username || 'sultaan'}</span>
+                    <span style="color: #fff;">${post.username || 'unknown'}</span>
                     ${vBadge}
                 </div>
             </div>
@@ -1502,13 +1507,17 @@ function generatePostHTML(post) {
 }
 
 // ============================================================
-// 3. LODA SHOWCASE IMAGES (GYARADDE)
+// 3. LODA SHOWCASE IMAGES (AN TACE NA MAI ACCOUNT KAWAI)
 // ============================================================
 function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
     
-    // Shima nan zai nemo na "sultaan" domin hotunan su fito daza-daza
-    const targetUsername = (currentUser && currentUser.username) ? currentUser.username : "sultaan";
+    if (!currentUser || !currentUser.username) {
+        showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Loading showcase...</p>';
+        return;
+    }
+    
+    const targetUsername = currentUser.username;
 
     db.collection('posts')
         .where("username", "==", targetUsername)
@@ -1633,7 +1642,7 @@ function applyUserToProfile(user) {
 }
 
 // ============================================================
-// 6. GLOBAL AUTH MONITOR (REFRESH & COUNTER FIXED)
+// 6. GLOBAL AUTH MONITOR (AN GYARA CASING DA FALLBACKS)
 // ============================================================
 firebase.auth().onAuthStateChanged(async (firebaseUser) => {
     try {
@@ -1642,30 +1651,32 @@ firebase.auth().onAuthStateChanged(async (firebaseUser) => {
             currentUser = { uid: 'Sadiq_Alhassan', ...userDoc.data() };
             applyUserToProfile(currentUser);
         } else {
+            // Idan babu shi a DB, sanya sunan Sadiq_Alhassan maimakon Sultaan
             currentUser = {
                 uid: 'Sadiq_Alhassan',
-                username: 'sultaan', // Madadin asali na database dinka
-                displayName: 'Aliyu Haedar',
+                username: 'Sadiq_Alhassan', 
+                displayName: 'Sadiq Alhassan',
                 userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=mamba"
             };
             applyUserToProfile(currentUser);
         }
 
-        // Loda lambobin yawan posts na gaskiya ta amfani da 'sultaan' ko dynamic username
-        const targetUsername = currentUser.username || "sultaan";
+        // Tabbatar an ɗauko adadin posts na mai account ɗin kawai
+        const targetUsername = currentUser.username;
         db.collection('posts').where("username", "==", targetUsername).onSnapshot(snap => {
             document.getElementById('stats-posts-count').innerText = snap.size;
         });
 
-        // Fara loda hotunan farko na tab din Showcase dake kunne
+        // Kira wadannan anan bayan an tabbatar currentUser ya riga ya lodo tuni
         loadShowcaseImages();
+        loadTimelinePosts();
         
     } catch (e) {
         console.error("Error loading secure session:", e);
     }
 });
-    
-    
+        
+
         </script>
         
     </main>
