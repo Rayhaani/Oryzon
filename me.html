@@ -1499,28 +1499,24 @@ function generatePostHTML(post) {
 }
 
 // ============================================================
-// 3. LODA SHOWCASE IMAGES (FIXED)
-// ============================================================
-// ============================================================
-// 3. LODA SHOWCASE IMAGES (DYNAMIC FOR EACH USER)
+// 3. LODA SHOWCASE IMAGES (DYNAMIC FOR PHONE - NO INDEX REQUIRED)
 // ============================================================
 function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
     
-    // Tsarin zai duba sunan mai shafin (Idan sultaan ne ya shiga zai zama 'sultaan')
-    // Idan kuma ba a gama loda sunan ba, zai dauki 'Sadiq_Alhassan' a matsayin fallback
+    // Tsarin zai gano sunan mai shafin (misali: sultaan)
     const targetUsername = (currentUser && currentUser.username) ? currentUser.username : "Sadiq_Alhassan";
 
     db.collection('posts')
-        .where("username", "==", targetUsername) // Tace duka posts na wannan takaitaccen user din
-        .where("category", "==", "business")    // Tace wadanda ke karkashin harkar kasuwanci kadai
+        .where("username", "==", targetUsername) // Wannan kadai zamu tambaya don gudun bukatar Index a waya
         .onSnapshot(snapshot => {
             showcaseArea.innerHTML = '';
             let hasImages = false;
 
             snapshot.forEach(doc => {
                 const post = doc.data();
-                if (post.mediaUrl) {
+                // Anan cikin JavaScript zamu tace 'business' da kanmu, yanzu zai yi aiki direct!
+                if (post.category === "business" && post.mediaUrl) {
                     hasImages = true;
                     showcaseArea.insertAdjacentHTML('beforeend', `
                         <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px;">
@@ -1534,10 +1530,10 @@ function loadShowcaseImages() {
                 showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Babu hotuna a nan.</p>';
             }
         }, (err) => {
-            console.error("Showcase query error: ", err);
+            console.error("Showcase error: ", err);
         });
-}
-            
+            }
+                             
             
 
 function switchTab(tab) {
