@@ -1944,41 +1944,35 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 
-    // 1. D'auko username d'in da yayi login a yanzu
-
-   firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const storage = firebase.storage();
-  const analytics = firebase.analytics();
-
-  console.log("Oryzon Cloud is now active! 🚀");
-
-  // --- MATSAR DA WANNAN SASHEN SAMA KAFIN RENDER ---
-  // 1. Dauko ainihin sunan wanda yake session a yanzu gabanin komai
-  const currentUser = localStorage.getItem("nexus_user_session");
-
-  if (!currentUser) {
-      // Idan mutum bai yi login ba, tura shi baya shafin login
-      window.location.href = "login.html";
-  } else {
-      // Nemo bayanan mai amfani daga Firestore don profile
-      db.collection("users").doc(currentUser).get()
-      .then((doc) => {
-          if (doc.exists) {
-              const data = doc.data();
-              if(document.getElementById("userProfileName")) {
-                  document.getElementById("userProfileName").innerText = data.fullName;
-              }
-          }
-      })
-      .catch((err) => {
-          console.error("Error fetching user data:", err);
-      });
-  }
-
-  // 2. Yanzu sai ka kira Feed din tunda an riga an san ko wane ne currentUser
-  renderNexusFeed();
     
+    const currentUser = localStorage.getItem("nexus_user_session");
+
+if (!currentUser) {
+    // Idan mutum bai yi login ba, tura shi baya shafin login
+    window.location.href = "login.html";
+} else {
+    // 2. Nemo bayanan mai amfani daga Firestore
+    db.collection("users").doc(currentUser).get()
+    .then((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            
+            // 3. Sauya sunan Sadiq da ainihin sunan wanda yayi login
+            // Tabbatar akwai id="userProfileName" a gurin da aka rubuta sunan a HTML
+            if(document.getElementById("userProfileName")) {
+                document.getElementById("userProfileName").innerText = data.fullName;
+            }
+            
+            // 4. Idan akwai fagen hoto shima za ka iya canza shi
+            // if(document.getElementById("userProfileImg")) {
+            //     document.getElementById("userProfileImg").src = data.profilePicUrl || "default-avatar.png";
+            // }
+        }
+    })
+    .catch((err) => {
+        console.error("Error fetching user data:", err);
+    });
+    }
     </script>
 </body>
 </html>
