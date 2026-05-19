@@ -1501,16 +1501,19 @@ function generatePostHTML(post) {
 // ============================================================
 // 3. LODA SHOWCASE IMAGES (FIXED)
 // ============================================================
+// ============================================================
+// 3. LODA SHOWCASE IMAGES (DYNAMIC FOR EACH USER)
+// ============================================================
 function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
     
-    // Maimakon saka "Sadiq_Alhassan", mun saka "currentUser.username" 
-    // Domin tsarin ya dauki sunan duk wanda ke kan shafin a lokacin (kamar 'sultaan')
+    // Tsarin zai duba sunan mai shafin (Idan sultaan ne ya shiga zai zama 'sultaan')
+    // Idan kuma ba a gama loda sunan ba, zai dauki 'Sadiq_Alhassan' a matsayin fallback
     const targetUsername = (currentUser && currentUser.username) ? currentUser.username : "Sadiq_Alhassan";
 
     db.collection('posts')
-        .where("category", "==", "business")
-        .where("username", "==", targetUsername) // Anan zai duba sunan mai shafin daidai
+        .where("username", "==", targetUsername) // Tace duka posts na wannan takaitaccen user din
+        .where("category", "==", "business")    // Tace wadanda ke karkashin harkar kasuwanci kadai
         .onSnapshot(snapshot => {
             showcaseArea.innerHTML = '';
             let hasImages = false;
@@ -1531,9 +1534,10 @@ function loadShowcaseImages() {
                 showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Babu hotuna a nan.</p>';
             }
         }, (err) => {
-            console.error("Showcase error: ", err);
+            console.error("Showcase query error: ", err);
         });
 }
+            
             
 
 function switchTab(tab) {
