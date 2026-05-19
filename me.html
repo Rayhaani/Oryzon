@@ -1382,7 +1382,8 @@ header {
      
         <script>
 
-     const firebaseConfig = {
+     
+    const firebaseConfig = {
   apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
   authDomain: "oryzon-50ea4.firebaseapp.com",
   projectId: "oryzon-50ea4",
@@ -1422,28 +1423,25 @@ function removePhoto(type) {
 }
 
 // ============================================================
-// 1. LODA POSTS NA TIMELINE (AN GYARA MATSALAR SULTAAN)
+// 1. LODA POSTS NA TIMELINE (GYARADDE)
 // ============================================================
 function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
     
-    // Idan bayanan mai amfani basu lodo ba tukunna, mu dakata maimakon sanya sunan wani daban
     if (!currentUser || !currentUser.username) {
         timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading user profile...</p>';
         return;
     }
     
-    const targetUsername = currentUser.username;
-    
     db.collection('posts')
-        .where("username", "==", targetUsername)
+        .where("username", "==", currentUser.username)
         .orderBy("timestamp", "desc")
         .onSnapshot(snapshot => {
             timelineArea.innerHTML = '';
             let hasPosts = false;
             snapshot.forEach(doc => {
                 const post = doc.data();
-                if (post.category === "normal") { 
+                if (post.category === "normal") { // Tace normal posts kawai a nan
                     hasPosts = true;
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
@@ -1453,6 +1451,7 @@ function loadTimelinePosts() {
             }
         }, (err) => {
             console.error("Timeline error:", err);
+            timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:red;">Kuskure wajen loda posts.</p>';
         });
 }
 
@@ -1467,7 +1466,7 @@ function generatePostHTML(post) {
     const currentPic = savedProfilePic || post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
     
     const optimizedProfilePic = currentPic.includes('cloudinary.com') 
-                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w,100,h_100,c_fill/') 
+                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/') 
                                 : currentPic;
 
     const profilePicHTML = `<img src="${optimizedProfilePic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top: 4px; left: 8px; z-index: 50;" loading="lazy">`;
@@ -1507,7 +1506,7 @@ function generatePostHTML(post) {
 }
 
 // ============================================================
-// 3. LODA SHOWCASE IMAGES (AN TACE NA MAI ACCOUNT KAWAI)
+// 3. LODA SHOWCASE IMAGES (GYARADDE)
 // ============================================================
 function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
@@ -1516,11 +1515,9 @@ function loadShowcaseImages() {
         showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Loading showcase...</p>';
         return;
     }
-    
-    const targetUsername = currentUser.username;
 
     db.collection('posts')
-        .where("username", "==", targetUsername)
+        .where("username", "==", currentUser.username)
         .onSnapshot(snapshot => {
             showcaseArea.innerHTML = '';
             let hasImages = false;
@@ -1542,6 +1539,7 @@ function loadShowcaseImages() {
             }
         }, (err) => {
             console.error("Showcase error: ", err);
+            showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:red;">Kuskure wajen loda hotuna.</p>';
         });
 }
                              
@@ -1642,41 +1640,42 @@ function applyUserToProfile(user) {
 }
 
 // ============================================================
-// 6. GLOBAL AUTH MONITOR (AN GYARA CASING DA FALLBACKS)
+// 6. GLOBAL AUTH MONITOR (AN GYARA REFRESH MATSALAR SULTAAN)
 // ============================================================
 firebase.auth().onAuthStateChanged(async (firebaseUser) => {
     try {
         const userDoc = await db.collection('users').doc('Sadiq_Alhassan').get();
-        if (userDoc.exists) {
+        
+        if (userDoc.exists && userDoc.data().username) {
             currentUser = { uid: 'Sadiq_Alhassan', ...userDoc.data() };
-            applyUserToProfile(currentUser);
         } else {
-            // Idan babu shi a DB, sanya sunan Sadiq_Alhassan maimakon Sultaan
             currentUser = {
                 uid: 'Sadiq_Alhassan',
                 username: 'Sadiq_Alhassan', 
                 displayName: 'Sadiq Alhassan',
                 userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=mamba"
             };
-            applyUserToProfile(currentUser);
+            await db.collection('users').doc('Sadiq_Alhassan').set(currentUser, { merge: true });
         }
 
-        // Tabbatar an ɗauko adadin posts na mai account ɗin kawai
-        const targetUsername = currentUser.username;
-        db.collection('posts').where("username", "==", targetUsername).onSnapshot(snap => {
+        applyUserToProfile(currentUser);
+
+        db.collection('posts').where("username", "==", currentUser.username).onSnapshot(snap => {
             document.getElementById('stats-posts-count').innerText = snap.size;
         });
 
-        // Kira wadannan anan bayan an tabbatar currentUser ya riga ya lodo tuni
+        console.log("An loda mai amfani:", currentUser.username);
         loadShowcaseImages();
         loadTimelinePosts();
         
     } catch (e) {
         console.error("Error loading secure session:", e);
+        currentUser = { username: 'Sadiq_Alhassan' };
+        loadShowcaseImages();
+        loadTimelinePosts();
     }
 });
         
-
         </script>
         
     </main>
