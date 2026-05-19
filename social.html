@@ -1307,324 +1307,250 @@ header {
         
         </body>
     <script>
-let userSavedPosts = []; // Wannan zai rinka rike duk abin da ka taba saving
-        
-    
-        // AIKIN FULL SCREEN (IMMERSIVE MODE)
-        function toggleImmersive(card) {
-            card.classList.toggle('immersive-mode');
-            const footer = document.getElementById('instaFooter');
-            if(card.classList.contains('immersive-mode')) {
-                footer.classList.add('footer-hidden');
-            } else {
-                footer.classList.remove('footer-hidden');
-            }
-        }
 
-        let tokens = 0.0000;
-        const tokenDisplay = document.getElementById('token-count');
-        setInterval(() => { tokens += 0.0001; tokenDisplay.innerText = tokens.toFixed(4) + " NT"; }, 5000);
+<script>
+  let userSavedPosts = []; // Wannan zai rinka rike duk abin da ka taba saving
+  let tokens = 0.0000;
+  let currentlyPlayingVideo = null;
+  let globalSoundOn = false; // FALSE = muted, TRUE = sound yana kunna
+  let scrollTimeout;
 
-        function triggerPulse(btn, event) {
-            // Hana katsalandan din danna card (don kar ya koma full screen idan an danna like)
-            if (event) event.stopPropagation(); 
-            
-            if (navigator.vibrate) navigator.vibrate(50);
-            btn.style.color = "#FDE08D";
-            btn.innerHTML = "✦ Pulsed!";
-            tokens += 0.0005;
-            tokenDisplay.innerText = tokens.toFixed(4) + " NT";
-            setTimeout(() => { btn.style.color = "#FDE08D"; btn.innerHTML = "✦ Pulse"; }, 2000);
-        }
+  // 1. Bayyana currentUser a matsayin Global Variable ta yadda kowa zai iya amfani da shi
+  const currentUser = localStorage.getItem("nexus_user_session");
 
-        const footer = document.getElementById('instaFooter');
-        let lastScrollTop = 0;
-        window.addEventListener('scroll', () => {
-            // Kada mu boye footer idan wani post yana full screen
-            if (document.querySelector('.immersive-mode')) return;
+  // Check nan take idan babu session, a tura shi login
+  if (!currentUser) {
+      window.location.href = "login.html";
+  }
 
-            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            if (scrollTop > lastScrollTop) { footer.classList.add('footer-hidden'); } 
-            else { footer.classList.remove('footer-hidden'); }
-            lastScrollTop = scrollTop;
-        });
+  // AIKIN FULL SCREEN (IMMERSIVE MODE)
+  function toggleImmersive(card) {
+      card.classList.toggle('immersive-mode');
+      const footer = document.getElementById('instaFooter');
+      if(card.classList.contains('immersive-mode')) {
+          footer.classList.add('footer-hidden');
+      } else {
+          footer.classList.remove('footer-hidden');
+      }
+  }
 
+  const tokenDisplay = document.getElementById('token-count');
+  setInterval(() => { tokens += 0.0001; tokenDisplay.innerText = tokens.toFixed(4) + " NT"; }, 5000);
 
+  const footer = document.getElementById('instaFooter');
+  let lastScrollTop = 0;
+  window.addEventListener('scroll', () => {
+      if (document.querySelector('.immersive-mode')) return;
+      let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollTop > lastScrollTop) { footer.classList.add('footer-hidden'); } 
+      else { footer.classList.remove('footer-hidden'); }
+      lastScrollTop = scrollTop;
+  });
 
-        // Wannan yana hana Card din budewa idan an taba icons
-function stopProp(e) { e.stopPropagation(); }
+  function stopProp(e) { e.stopPropagation(); }
 
-// Aikin Like button
-function triggerPulse(btn, e) {
-    if (e) e.stopPropagation(); 
-    const icon = btn.querySelector('i');
-    if(icon.classList.contains('fa-regular')) {
-        icon.classList.replace('fa-regular', 'fa-solid');
-        icon.style.color = "#ff4757"; // Jan Like
-        if(navigator.vibrate) navigator.vibrate(50);
-    } else {
-        icon.classList.replace('fa-solid', 'fa-regular');
-        icon.style.color = "#fff";
-    }
-}
-        
+  // Aikin Like button
+  function triggerPulse(btn, e) {
+      if (e) e.stopPropagation(); 
+      const icon = btn.querySelector('i');
+      if(icon.classList.contains('fa-regular')) {
+          icon.classList.replace('fa-regular', 'fa-solid');
+          icon.style.color = "#ff4757"; // Jan Like
+          if(navigator.vibrate) navigator.vibrate(50);
+          tokens += 0.0005;
+          tokenDisplay.innerText = tokens.toFixed(4) + " NT";
+      } else {
+          icon.classList.replace('fa-solid', 'fa-regular');
+          icon.style.color = "#fff";
+      }
+  }
 
-// Aikin Save button
-async function toggleSave(btn, postId) {
-    const icon = btn.querySelector('i');
-    const text = btn.querySelector('span'); 
+  // Aikin Save button
+  async function toggleSave(btn, postId) {
+      const icon = btn.querySelector('i');
+      const text = btn.querySelector('span'); 
 
-    // WANNAN SHINE ASALIN CODE DINKA (Ba mu taba komai ba)
-    icon.classList.toggle('fa-solid');
-    icon.classList.toggle('fa-regular');
+      icon.classList.toggle('fa-solid');
+      icon.classList.toggle('fa-regular');
 
-    if (icon.classList.contains('fa-solid')) {
-        text.innerText = "Saved"; 
-        btn.style.color = "var(--premium-gold)"; 
-        
-        // --- KARIN AIKI NA DATABASE A NAN ---
-        try {
-            await db.collection("saved_posts").doc(`Sadiq_${postId}`).set({
-                userId: "Sadiq_Alhassan",
-                postId: postId,
-                savedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        } catch (e) { console.error("Error saving:", e); }
-        // ------------------------------------
+      if (icon.classList.contains('fa-solid')) {
+          text.innerText = "Saved"; 
+          btn.style.color = "var(--premium-gold)"; 
+          try {
+              await db.collection("saved_posts").doc(`Sadiq_${postId}`).set({
+                  userId: "Sadiq_Alhassan",
+                  postId: postId,
+                  savedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+          } catch (e) { console.error("Error saving:", e); }
+      } else {
+          text.innerText = "Save"; 
+          btn.style.color = "#fff"; 
+          try {
+              await db.collection("saved_posts").doc(`Sadiq_${postId}`).delete();
+          } catch (e) { console.error("Error removing:", e); }
+      }
+  }
 
-    } else {
-        text.innerText = "Save"; 
-        btn.style.color = "#fff"; 
+  function generatePostHTML(post) {
+      const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
+      let mediaHTML = '';
 
-        // --- KARIN AIKI NA DATABASE A NAN ---
-        try {
-            await db.collection("saved_posts").doc(`Sadiq_${postId}`).delete();
-        } catch (e) { console.error("Error removing:", e); }
-        // ------------------------------------
-    }
-        }
-        
-            
-function generatePostHTML(post) {
-    const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
-    let mediaHTML = '';
+      const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
+      const savedProfilePic = localStorage.getItem('userProfilePic');
 
-    // --- GYARAN MANYAN KUMA SIFAR PROFILE AVATAR ---
-    const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
-    const savedProfilePic = localStorage.getItem('userProfilePic');
-    const currentSessionUser = localStorage.getItem("nexus_user_session");
+      let currentPic = defaultAvatar;
+      if (post.username && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
+          currentPic = savedProfilePic;
+      } else {
+          currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
+      }
+      
+      const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
+      
+      if (post.mediaUrl) {
+          if (post.mediaType === 'video') {
+              mediaHTML = `
+                  <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
+                  <div class="mute-toggle" onclick="toggleVideoSound(event, this)" style="position: absolute; bottom: 65px; right: 15px; z-index: 100;">
+                      <i class="fa-solid fa-volume-xmark"></i>
+                  </div>`;
+          } else {
+              mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="eager">`;
+          }
+      }
 
-    // Idan post din naka ne, yi amfani da hoton profile dinka na LocalStorage
-    let currentPic = defaultAvatar;
-    if (post.username && currentSessionUser && post.username.toLowerCase() === currentSessionUser.toLowerCase() && savedProfilePic) {
-        currentPic = savedProfilePic;
-    } else {
-        currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
-    }
-    
-    const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
-    // ----------------------------------------------------
-    
-        // 1. Ginin sashin hoto ko bidiyo
-    if (post.mediaUrl) {
-        if (post.mediaType === 'video') {
-            mediaHTML = `
-                <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
-                <div class="mute-toggle" onclick="toggleVideoSound(event, this)" style="position: absolute; bottom: 65px; right: 15px; z-index: 100;">
-                    <i class="fa-solid fa-volume-xmark"></i>
-                </div>`;
-        } else {
-         mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="eager">`;
-        }
-    }
+      return `
+      <div class="post-card" onclick="toggleImmersive(this)">
+          <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
+              <div style="display: flex; align-items: center; gap: 0; flex: 1;">
+                  <a href="me.html" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
+                       ${profilePicHTML} 
+                  </a>
+                 <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 7px;">
+                      <a href="me.html" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">
+                          <span>${post.username || 'User'}</span>
+                      </a>
+                      ${vBadge}
+                  </div>
+              </div>
+              <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+                  <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
+                  <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
+                      <span class="gift-emoji">🎁</span>
+                      <span style="font-size: 10px;">Gift</span>
+                  </div>
+              </div>
+          </div>
+          <div class="post-content" style="padding: 4px 10px;">${post.content}</div>
+          ${mediaHTML}
+          <div class="interaction-bar" onclick="stopProp(event)">
+              <div class="action-capsules">
+                  <div class="capsule" onclick="triggerPulse(this, event)">
+                      <i class="fa-regular fa-heart"></i>
+                      <span>${post.likes || 0}</span>
+                  </div>
+                  <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
+                  <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
+                  <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
+              </div>
+              <div class="action-capsules save-capsule">
+                  <div class="capsule" onclick="toggleSave(this, '${post.id}')">
+                      <i class="fa-regular fa-bookmark"></i>
+                      <span>Save</span>
+                  </div>
+              </div>
+          </div>
+      </div>`;
+  }
 
-    // 2. Rufe komai a cikin return guda daya
-    return `
-    <div class="post-card" onclick="toggleImmersive(this)">
-        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
-            <div style="display: flex; align-items: center; gap: 0; flex: 1;">
-                
-                <a href="me.html" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
-                     ${profilePicHTML} 
-                </a>
+  function openPostOverlay() {
+      document.getElementById('postOverlay').style.display = 'flex';
+  }
 
-               <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 7px;">
-                    <a href="me.html" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">
-                        <span>${post.username || 'User'}</span>
-                    </a>
-                    ${vBadge}
-                </div>
-            </div>
-            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-                <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
-                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-                    <span class="gift-emoji">🎁</span>
-                    <span style="font-size: 10px;">Gift</span>
-                </div>
-            </div>
-        </div>
-        <div class="post-content" style="padding: 4px 10px;">${post.content}</div>
-        ${mediaHTML}
-        <div class="interaction-bar" onclick="stopProp(event)">
-            <div class="action-capsules">
-                <div class="capsule" onclick="triggerPulse(this, event)">
-                    <i class="fa-regular fa-heart"></i>
-                    <span>${post.likes || 0}</span>
-                </div>
-                <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
-                <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
-                <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
-            </div>
-            <div class="action-capsules save-capsule">
-                <div class="capsule" onclick="toggleSave(this, '${post.id}')">
-                    <i class="fa-regular fa-bookmark"></i>
-                    <span>Save</span>
-                </div>
-            </div>
-        </div>
-    </div>`;
-    }
-        
-        
-                        
-             
-`<div class="username">
-    ${post.username} 
-    <span class="v-badge" title="Verified Nexus Member">
-        <i class="fa-solid fa-check"></i>
-    </span>
-</div>`
-        
-            
-        
-// Kira aikin idan an bude page
-window.onload = renderNexusFeed;
-        
+  function closePostOverlay() {
+      document.getElementById('postOverlay').style.display = 'none';
+  }
 
-        // 1. Bude Overlay idan an danna icon na tsakiya a footer
-document.querySelector('.fa-square-plus').parentElement.onclick = function() {
-        document.getElementById('postOverlay').style.display = 'flex';
-};
+  function previewMedia(input) {
+      const preview = document.getElementById('mediaPreview');
+      const file = input.files[0];
+      const reader = new FileReader();
 
-function closePostOverlay() {
-    document.getElementById('postOverlay').style.display = 'none';
-}
+      reader.onload = function(e) {
+          if (file.type.includes('video')) {
+              preview.innerHTML = `<video src="${e.target.result}" autoplay loop muted style="width:100%; border-radius:10px;"></video>`;
+          } else {
+              preview.innerHTML = `<img src="${e.target.result}" style="width:100%; border-radius:10px;">`;
+          }
+      }
+      reader.readAsDataURL(file);
+  }
+          
+  async function publishPost() { 
+      const text = document.getElementById('postText').value;
+      const fileInput = document.getElementById('fileUpload');
+      const file = fileInput.files[0];
+      const publishBtn = document.querySelector('.publish-btn');
 
+      if (!text && !file) return alert("Saka rubutu ko bidiyo!");
 
-        // Bude Overlay
-function openPostOverlay() {
-    document.getElementById('postOverlay').style.display = 'flex';
-}
+      publishBtn.innerText = "Ina turawa (Uploading)...";
+      publishBtn.disabled = true;
 
-// Rufe Overlay
-function closePostOverlay() {
-    document.getElementById('postOverlay').style.display = 'none';
-}
+      try {
+          let mediaUrl = "";
+          let mediaType = "none";
 
-// Preview na Media (Hoton ko Video zai fito kafin ka yi posting)
-function previewMedia(input) {
-    const preview = document.getElementById('mediaPreview');
-    const file = input.files[0];
-    const reader = new FileReader();
+          if (file) {
+              const cloudName = "diixjieyp";
+              const uploadPreset = "oryzon_media"; 
+              const formData = new FormData();
+              formData.append('file', file);
+              formData.append('upload_preset', uploadPreset);
 
-    reader.onload = function(e) {
-        // System din zai duba: Idan Video ne zai nuna Video Player, idan Hoto ne zai nuna Image
-        if (file.type.includes('video')) {
-            preview.innerHTML = `<video src="${e.target.result}" autoplay loop muted style="width:100%; border-radius:10px;"></video>`;
-        } else {
-            preview.innerHTML = `<img src="${e.target.result}" style="width:100%; border-radius:10px;">`;
-        }
-    }
-    reader.readAsDataURL(file);
-}
-        
-// Aikin Posting
+              const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+                  method: 'POST',
+                  body: formData
+              });
 
- 
-  async function publishPost() { // Na mayar da 'Async' ya koma 'async'
-    const text = document.getElementById('postText').value;
-    const fileInput = document.getElementById('fileUpload');
-    const file = fileInput.files[0];
-      const selectedCategory = document.querySelector('input[name="postType"]:checked').value;
-    const publishBtn = document.querySelector('.publish-btn');
+              if (!response.ok) throw new Error("Cloudinary upload failed");
+              const data = await response.json();
+              mediaUrl = data.secure_url;
+              mediaType = file.type.includes('video') ? 'video' : 'image';
+          }
 
-    if (!text && !file) return alert("Saka rubutu ko bidiyo!");
+          const selectedCategory = document.querySelector('input[name="postType"]:checked').value;
 
-    publishBtn.innerText = "Ina turawa (Uploading)...";
-    publishBtn.disabled = true;
+          await db.collection("posts").add({
+              username: currentUser, 
+              content: text,
+              mediaUrl: mediaUrl,
+              mediaType: mediaType,
+              category: selectedCategory, 
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              likes: 0
+          });
+          
+          alert("An riga an tura saƙon naka! 🚀");
+          location.reload();
 
-    // Tabbatar an bayyana db a nan idan ba'a yi hakan a sama ba
-    const db = firebase.firestore();
-
-    try {
-        let mediaUrl = "";
-        let mediaType = "none";
-
-        // AIKIN CLOUDINARY (Karka taba nan)
-        if (file) {
-            const cloudName = "diixjieyp";
-            const uploadPreset = "oryzon_media"; 
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', uploadPreset);
-
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) throw new Error("Cloudinary upload failed");
-            const data = await response.json();
-            mediaUrl = data.secure_url;
-            mediaType = file.type.includes('video') ? 'video' : 'image';
-        }
-
-        // --- GYARAN CONNECTION NA PROFILE PIC ---
-        const myProfilePic = localStorage.getItem('userProfilePic') || null;
-
-     
-        // 1. Tabbatar ka nemo category din da aka zaba kafin ka tura
-const selectedCategory = document.querySelector('input[name="postType"]:checked').value;
-
-// 2. Sannan ka hada shi a cikin bayanan da za su tafi Firebase
-    // YADDA ZAI KOMA:
-await db.collection("posts").add({
-    username: currentUser, // Yanzu idan Rayhaan yayi post, sunansa zai tafi database
-    content: text,
-    mediaUrl: mediaUrl,
-    mediaType: mediaType,
-    category: selectedCategory, // WANNAN SHI NE BABBAN GYARAN
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    likes: 0
-});
-        
-        
-
-        alert("An riga an tura saƙon naka! 🚀");
-        location.reload();
-
-    } catch (error) {
-        console.error(error);
-        alert("An samu matsala: " + error.message);
-    } finally {
-        publishBtn.innerText = "Publish Post";
-        publishBtn.disabled = false;
-    }
-        }
-        
-        
-  
-
-  // 1. Zuba asalin scripts na Firebase a nan
-
+      } catch (error) {
+          console.error(error);
+          alert("An samu matsala: " + error.message);
+      } finally {
+          publishBtn.innerText = "Publish Post";
+          publishBtn.disabled = false;
+      }
+  }
 </script>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
 <script>
-  // 2. Saita Configuration din Oryzon Cloud
   const firebaseConfig = {
     apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
     authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -1635,341 +1561,231 @@ await db.collection("posts").add({
     measurementId: "G-K5085DLL2W"
   };
 
-  
-    
-    // Idan an danna bidiyo ya yi play/pause kamar Instagram
-document.addEventListener('click', function(e) {
-    if (e.target.tagName === 'VIDEO') {
-        if (e.target.paused) {
-            e.target.play();
-        } else {
-            e.target.pause();
-        }
-    }
-});
-
-    
-    
-    function handleFollow(btn) {
-    if (btn.innerText === "Follow") {
-        btn.innerText = "Following";
-        btn.classList.add('active'); // Wannan zai canza kalar button din
-        if (navigator.vibrate) navigator.vibrate(10);
-    } else {
-        btn.innerText = "Follow";
-        btn.classList.remove('active');
-    }
-}
-    
-
-function openGiftPanel(username) {
-    // Nan gaba za mu iya bude wani panel na musamman
-    alert("Kyautar NT tokens tana kan hanya zuwa ga " + username);
-      }
-    
-  // Tracker guda biyu - wane video ke playing, da yanayin sound
-let currentlyPlayingVideo = null;
-let globalSoundOn = false; // FALSE = muted, TRUE = sound yana kunna
-
-const videoObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        const vid = entry.target;
-
-        if (entry.isIntersecting) {
-            // 1. Tsayar da video na baya
-            if (currentlyPlayingVideo && currentlyPlayingVideo !== vid) {
-                currentlyPlayingVideo.pause();
-                currentlyPlayingVideo.muted = true;
-                currentlyPlayingVideo.currentTime = 0;
-                const prevCard = currentlyPlayingVideo.closest('.post-card');
-                if (prevCard) {
-                    const prevIcon = prevCard.querySelector('.mute-toggle i');
-                    if (prevIcon) prevIcon.className = 'fa-solid fa-volume-xmark';
-                }
-            }
-
-            // 2. Buga sabon video - tare da yanayin sound na yanzu
-            vid.muted = !globalSoundOn; // Idan sound yana on, sabon video ya yi sauti kai tsaye
-            vid.play().catch(() => {});
-            currentlyPlayingVideo = vid;
-
-            // 3. Gyara icon din sabon video ya nuna yanayin daidai
-            const card = vid.closest('.post-card');
-            if (card) {
-                const icon = card.querySelector('.mute-toggle i');
-                if (icon) {
-                    icon.className = globalSoundOn 
-                        ? 'fa-solid fa-volume-high' 
-                        : 'fa-solid fa-volume-xmark';
-                }
-            }
-
-        } else {
-            // Video ya fita - tsayar da shi kawai, ba sauyi sound state ba
-            vid.pause();
-            vid.muted = true;
-            vid.currentTime = 0;
-            const card = vid.closest('.post-card');
-            if (card) {
-                const icon = card.querySelector('.mute-toggle i');
-                if (icon) icon.className = 'fa-solid fa-volume-xmark';
-            }
-            if (currentlyPlayingVideo === vid) currentlyPlayingVideo = null;
-        }
-    });
-}, { threshold: [0, 0.1] });
-
-
-function toggleVideoSound(event, btn) {
-    if (event) event.stopPropagation();
-    const card = btn.closest('.post-card');
-    const vid = card ? card.querySelector('video') : null;
-    if (!vid) return;
-    const icon = btn.querySelector('i');
-
-    // Canza global sound state
-    globalSoundOn = !globalSoundOn;
-
-    if (globalSoundOn) {
-        // Kashe sauti na duk sauran videos da suke a baya
-        document.querySelectorAll('video').forEach(other => {
-            if (other !== vid) {
-                other.muted = true;
-                const otherIcon = other.closest('.post-card')?.querySelector('.mute-toggle i');
-                if (otherIcon) otherIcon.className = 'fa-solid fa-volume-xmark';
-            }
-        });
-        // Kunna sauti na wannan video
-        vid.muted = false;
-        icon.className = 'fa-solid fa-volume-high';
-    } else {
-        // Kashe sauti - reset global state
-        vid.muted = true;
-        icon.className = 'fa-solid fa-volume-xmark';
-    }
-}
-
-
-function observeVideos() {
-    videoObserver.disconnect();
-    document.querySelectorAll('video').forEach(vid => {
-        vid.muted = true;
-        videoObserver.observe(vid);
-    });
-}
-
-
-    function loadFooterProfile() {
-    // 1. Nemo inda aka ajiye hoton a wayar (LocalStorage)
-    const savedPic = localStorage.getItem('userProfilePic');
-    const footerImg = document.getElementById('footerProfileImg');
-
-    if (savedPic && footerImg) {
-        // 2. Idan akwai hoto, saka shi a footer
-        footerImg.src = savedPic;
-    } else {
-        // 3. Idan babu, saka wannan robot din a matsayin default
-        if(footerImg) footerImg.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
-    }
-}
-
-// Kira aikin nan take idan page ya gama lodi
-window.addEventListener('DOMContentLoaded', loadFooterProfile);
-
-
-
-
-    /**
- * NEXUS PROTOCOL - ADVANCED VIDEO FEED ENGINE
- * Features: Viewport Priority, Pre-fetching, & Intelligent Scroll
- */
-
-// 1. Saitin Intersection Observer don Loda Bidiyo Tun Kafin su Bayyana (Pre-fetching)
-const videoOptions = {
-    root: null,
-    rootMargin: '400px 0px', // Fara loda bidiyo pixels 400 kafin ya shigo screen
-    threshold: 0.01
-};
-
-const nexusObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        const video = entry.target;
-        
-        if (entry.isIntersecting) {
-            // Fara loda bidiyo a boye (Buffer)
-            video.preload = "auto";
-        } else {
-            // Idan ya fita nesa, dakatar da shi don rage nauyi
-            video.pause();
-        }
-    });
-}, videoOptions);
-
-// 2. Viewport Priority Logic: Gano bidiyon da yake tsakiya daidai
-function handleVideoPriority() {
-    const videos = document.querySelectorAll('.post-media');
-    let focusVideo = null;
-    let minDistance = Infinity;
-    const screenCenter = window.innerHeight / 2;
-
-    videos.forEach(video => {
-        if (video.tagName === 'VIDEO') {
-            const rect = video.getBoundingClientRect();
-            const videoCenter = rect.top + (rect.height / 2);
-            const distanceFromCenter = Math.abs(screenCenter - videoCenter);
-
-            // Duba idan bidiyon yana cikin screen akalla da kashi 50%
-            if (rect.top < window.innerHeight && rect.bottom > 0) {
-                if (distanceFromCenter < minDistance) {
-                    minDistance = distanceFromCenter;
-                    focusVideo = video;
-                }
-            }
-            // Kashe duka sauran bidiyoyin
-            if (video !== focusVideo) {
-                video.pause();
-            }
-        }
-    });
-
-    // Kunna bidiyo mafi kusa da tsakiya
-    if (focusVideo) {
-        const playPromise = focusVideo.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                // Autoplay block prevention
-            });
-        }
-    }
-}
-
-// 3. Babban Function na Render (Firebase Only)
-async function renderNexusFeed() {
-    const feedContainer = document.querySelector('.feed-container');
-    
-    // Kamo Saved Posts na Sadiq_Alhassan
-    try {
-        const savedSnapshot = await db.collection("saved_posts")
-            .where("userId", "==", "Sadiq_Alhassan")
-            .get();
-        window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
-    } catch(e) { console.log("Saved posts error:", e); }
-
-    // Sauraran Firebase don sabbin posts
-    db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-        let allPostsHTML = ''; 
-
-        if (snapshot.empty) {
-            feedContainer.innerHTML = '<div class="empty-feed">No posts yet...</div>';
-            return;
-        }
-
-        snapshot.forEach((doc) => {
-            const post = { id: doc.id, ...doc.data() };
-            allPostsHTML += generatePostHTML(post);
-        });
-
-        // Saka posts a page
-        feedContainer.innerHTML = allPostsHTML;
-
-        // Kunna sa ido akan sabbin bidiyoyin da aka saka
-        const newVideos = feedContainer.querySelectorAll('video');
-        newVideos.forEach(v => nexusObserver.observe(v));
-
-        // Kira priority check bayan an gama lodi
-        setTimeout(handleVideoPriority, 500);
-    });
-}
-
-// 4. Saka Scrolling Listener don saurin dubawa
-let scrollTimeout;
-window.addEventListener('scroll', () => {
-    // Raba aikin (Debouncing) don kar wayar ta yi zafi
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(handleVideoPriority, 150);
-}, { passive: true });
-                    
-
-
-    // Cikakken aikin danna kowane Story Card
-function openStory(storyId) {
-    console.log("An danna Story mai ID: " + storyId);
-    
-    // Tabbatar na'urar tana girgiza (Vibration) kadan idan an danna
-    if (navigator.vibrate) navigator.vibrate(15);
-
-    if (storyId === 'live_now') {
-        alert("Shiga tsarin Synergy Live Stream... 🎥🔥\nAna haɗawa da asalin dandalin kai tsaye.");
-    } else if (storyId === 'your_story') {
-        alert("Wannan sashin story ɗinka ne! ⚡\nZa ka iya ɗora sabon hoto ko bidiyo anan nan gaba.");
-    } else {
-        // Idan na sauran abokai ne da suka ɗora
-        alert("Ana loda labarin Synergy Story na (" + storyId + ")... ⚡");
-    }
-}
-
-// Tabbatar an gudanar da sanya bidiyoyi a cikin tsarin sa ido tun da wuri
-function observeVideos() {
-    if (typeof videoObserver !== 'undefined') {
-        videoObserver.disconnect();
-        document.querySelectorAll('video').forEach(vid => {
-            vid.muted = true;
-            videoObserver.observe(vid);
-        });
-    }
-}
-
-// Tabbatar madaidaicin lodi lokacin da duka shafi ya tashi
-window.addEventListener('DOMContentLoaded', () => {
-    // Tabbatar an duba hoton profile na "Your Story" daga LocalStorage kai tsaye
-    const savedProfile = localStorage.getItem('userProfilePic');
-    const storyAvatar = document.getElementById('story-avatar-preview');
-    if (savedProfile && storyAvatar) {
-        storyAvatar.src = savedProfile;
-    }
-    
-    // Kunna tsarin sa ido na bidiyo
-    observeVideos();
-});
-
-
-
-
-    
-      firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
   const storage = firebase.storage();
   const analytics = firebase.analytics();
 
   console.log("Oryzon Cloud is now active! 🚀");
 
-  // 1. Bayyana currentUser a matsayin Global Variable ta yadda kowa zai iya amfani da shi
-  const currentUser = localStorage.getItem("nexus_user_session");
+  // Kira Feed da sauran ayyuka bayan lodi
+  window.addEventListener('DOMContentLoaded', () => {
+      renderNexusFeed();
+      loadFooterProfile();
+      
+      const savedProfile = localStorage.getItem('userProfilePic');
+      const storyAvatar = document.getElementById('story-avatar-preview');
+      if (savedProfile && storyAvatar) {
+          storyAvatar.src = savedProfile;
+      }
+      observeVideos();
 
-  // Check nan take idan babu session, a tura shi login
-  if (!currentUser) {
-      window.location.href = "login.html";
+      // Neman sunan profile don kiyayewa
+      if (currentUser) {
+          db.collection("users").doc(currentUser).get()
+          .then((doc) => {
+              if (doc.exists) {
+                  const data = doc.data();
+                  if (document.getElementById("userProfileName")) {
+                      document.getElementById("userProfileName").innerText = data.fullName;
+                  }
+              }
+          })
+          .catch((err) => {
+              console.error("Error fetching user data:", err);
+          });
+      }
+  });
+
+  document.addEventListener('click', function(e) {
+      if (e.target.tagName === 'VIDEO') {
+          if (e.target.paused) { e.target.play(); } 
+          else { e.target.paused(); }
+      }
+  });
+
+  function handleFollow(btn) {
+      if (btn.innerText === "Follow") {
+          btn.innerText = "Following";
+          btn.classList.add('active');
+          if (navigator.vibrate) navigator.vibrate(10);
+      } else {
+          btn.innerText = "Follow";
+          btn.classList.remove('active');
+      }
   }
 
-  // 2. Kira Feed ɗinka nan take domin posts su fito ba tare da jinkiri ba
-  renderNexusFeed();
-
-  // 3. Wannan kuma aikin duba sunan profile ne daga Firestore (Yana aiki a fakaice)
-  if (currentUser) {
-      db.collection("users").doc(currentUser).get()
-      .then((doc) => {
-          if (doc.exists) {
-              const data = doc.data();
-              if (document.getElementById("userProfileName")) {
-                  document.getElementById("userProfileName").innerText = data.fullName;
+  function openGiftPanel(username) {
+      alert("Kyautar NT tokens tana kan hospital/hanya zuwa ga " + username);
+  }
+      
+  const videoObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+          const vid = entry.target;
+          if (entry.isIntersecting) {
+              if (currentlyPlayingVideo && currentlyPlayingVideo !== vid) {
+                  currentlyPlayingVideo.pause();
+                  currentlyPlayingVideo.muted = true;
+                  currentlyPlayingVideo.currentTime = 0;
+                  const prevCard = currentlyPlayingVideo.closest('.post-card');
+                  if (prevCard) {
+                      const prevIcon = prevCard.querySelector('.mute-toggle i');
+                      if (prevIcon) prevIcon.className = 'fa-solid fa-volume-xmark';
+                  }
               }
+              vid.muted = !globalSoundOn;
+              vid.play().catch(() => {});
+              currentlyPlayingVideo = vid;
+
+              const card = vid.closest('.post-card');
+              if (card) {
+                  const icon = card.querySelector('.mute-toggle i');
+                  if (icon) {
+                      icon.className = globalSoundOn ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+                  }
+              }
+          } else {
+              vid.pause();
+              vid.muted = true;
+              vid.currentTime = 0;
+              const card = vid.closest('.post-card');
+              if (card) {
+                  const icon = card.querySelector('.mute-toggle i');
+                  if (icon) icon.className = 'fa-solid fa-volume-xmark';
+              }
+              if (currentlyPlayingVideo === vid) currentlyPlayingVideo = null;
           }
-      })
-      .catch((err) => {
-          console.error("Error fetching user data:", err);
       });
-        }
-    
+  }, { threshold: [0, 0.1] });
+
+  function toggleVideoSound(event, btn) {
+      if (event) event.stopPropagation();
+      const card = btn.closest('.post-card');
+      const vid = card ? card.querySelector('video') : null;
+      if (!vid) return;
+      const icon = btn.querySelector('i');
+
+      globalSoundOn = !globalSoundOn;
+
+      if (globalSoundOn) {
+          document.querySelectorAll('video').forEach(other => {
+              if (other !== vid) {
+                  other.muted = true;
+                  const otherIcon = other.closest('.post-card')?.querySelector('.mute-toggle i');
+                  if (otherIcon) otherIcon.className = 'fa-solid fa-volume-xmark';
+              }
+          });
+          vid.muted = false;
+          icon.className = 'fa-solid fa-volume-high';
+      } else {
+          vid.muted = true;
+          icon.className = 'fa-solid fa-volume-xmark';
+      }
+  }
+
+  function observeVideos() {
+      videoObserver.disconnect();
+      document.querySelectorAll('video').forEach(vid => {
+          vid.muted = true;
+          videoObserver.observe(vid);
+      });
+  }
+
+  function loadFooterProfile() {
+      const savedPic = localStorage.getItem('userProfilePic');
+      const footerImg = document.getElementById('footerProfileImg');
+      if (savedPic && footerImg) {
+          footerImg.src = savedPic;
+      } else {
+          if(footerImg) footerImg.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
+      }
+  }
+
+  const videoOptions = { root: null, rootMargin: '400px 0px', threshold: 0.01 };
+
+  const nexusObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+          const video = entry.target;
+          if (entry.isIntersecting) { video.preload = "auto"; } 
+          else { video.pause(); }
+      });
+  }, videoOptions);
+
+  function handleVideoPriority() {
+      const videos = document.querySelectorAll('.post-media');
+      let focusVideo = null;
+      let minDistance = Infinity;
+      const screenCenter = window.innerHeight / 2;
+
+      videos.forEach(video => {
+          if (video.tagName === 'VIDEO') {
+              const rect = video.getBoundingClientRect();
+              const videoCenter = rect.top + (rect.height / 2);
+              const distanceFromCenter = Math.abs(screenCenter - videoCenter);
+
+              if (rect.top < window.innerHeight && rect.bottom > 0) {
+                  if (distanceFromCenter < minDistance) {
+                      minDistance = distanceFromCenter;
+                      focusVideo = video;
+                  }
+              }
+              if (video !== focusVideo) { video.pause(); }
+          }
+      });
+
+      if (focusVideo) {
+          const playPromise = focusVideo.play();
+          if (playPromise !== undefined) { playPromise.catch(e => {}); }
+      }
+  }
+
+  async function renderNexusFeed() {
+      const feedContainer = document.querySelector('.feed-container');
+      try {
+          const savedSnapshot = await db.collection("saved_posts")
+              .where("userId", "==", "Sadiq_Alhassan")
+              .get();
+          window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
+      } catch(e) { console.log("Saved posts error:", e); }
+
+      db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+          let allPostsHTML = ''; 
+
+          if (snapshot.empty) {
+              feedContainer.innerHTML = '<div class="empty-feed" style="text-align:center; padding:20px; color:#aaa;">No posts yet...</div>';
+              return;
+          }
+
+          snapshot.forEach((doc) => {
+              const post = { id: doc.id, ...doc.data() };
+              allPostsHTML += generatePostHTML(post);
+          });
+
+          feedContainer.innerHTML = allPostsHTML;
+
+          const newVideos = feedContainer.querySelectorAll('video');
+          newVideos.forEach(v => nexusObserver.observe(v));
+          setTimeout(handleVideoPriority, 500);
+      });
+  }
+
+  window.addEventListener('scroll', () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(handleVideoPriority, 150);
+  }, { passive: true });
+
+  function openStory(storyId) {
+      if (navigator.vibrate) navigator.vibrate(15);
+      if (storyId === 'live_now') {
+          alert("Shiga tsarin Synergy Live Stream... 🎥🔥");
+      } else if (storyId === 'your_story') {
+          alert("Wannan sashin story ɗinka ne! ⚡");
+      } else {
+          alert("Ana loda labarin Synergy Story na (" + storyId + ")... ⚡");
+      }
+  }
+
+              
     </script>
 </body>
 </html>
