@@ -1406,26 +1406,27 @@ async function toggleSave(btn, postId) {
         
             
 
-
-  
-
-    function generatePostHTML(post) {
+function generatePostHTML(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
     let mediaHTML = '';
 
-    // --- GYARAN GADA: Haɗi tsakanin Profile da Post Card ---
-    const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
+    // --- GYARAN MANYAN KUMA SIFAR PROFILE AVATAR ---
+    const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
     const savedProfilePic = localStorage.getItem('userProfilePic');
+    const currentSessionUser = localStorage.getItem("nexus_user_session");
 
-// Idan post din naka ne (Sadiq_Alhassan), yi amfani da hoton profile dinka
-const currentPic = (post.username === currentUser && savedProfilePic) 
-                   ? savedProfilePic 
-                   : (post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + post.username);
-        
-        const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
-        
-        // ----------------------------------------------------
+    // Idan post din naka ne, yi amfani da hoton profile dinka na LocalStorage
+    let currentPic = defaultAvatar;
+    if (post.username && currentSessionUser && post.username.toLowerCase() === currentSessionUser.toLowerCase() && savedProfilePic) {
+        currentPic = savedProfilePic;
+    } else {
+        currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
+    }
+    
+    const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
+    // ----------------------------------------------------
 
+    
     // 1. Ginin sashin hoto ko bidiyo
     if (post.mediaUrl) {
         if (post.mediaType === 'video') {
@@ -1948,35 +1949,39 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
     // 1. D'auko username d'in da yayi login a yanzu
-const currentUser = localStorage.getItem("nexus_user_session");
 
-if (!currentUser) {
-    // Idan mutum bai yi login ba, tura shi baya shafin login
-    window.location.href = "login.html";
-} else {
-    // 2. Nemo bayanan mai amfani daga Firestore
-    db.collection("users").doc(currentUser).get()
-    .then((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            
-            // 3. Sauya sunan Sadiq da ainihin sunan wanda yayi login
-            // Tabbatar akwai id="userProfileName" a gurin da aka rubuta sunan a HTML
-            if(document.getElementById("userProfileName")) {
-                document.getElementById("userProfileName").innerText = data.fullName;
-            }
-            
-            // 4. Idan akwai fagen hoto shima za ka iya canza shi
-            // if(document.getElementById("userProfileImg")) {
-            //     document.getElementById("userProfileImg").src = data.profilePicUrl || "default-avatar.png";
-            // }
-        }
-    })
-    .catch((err) => {
-        console.error("Error fetching user data:", err);
-    });
-}
-    
+   firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+  const analytics = firebase.analytics();
+
+  console.log("Oryzon Cloud is now active! 🚀");
+
+  // --- MATSAR DA WANNAN SASHEN SAMA KAFIN RENDER ---
+  // 1. Dauko ainihin sunan wanda yake session a yanzu gabanin komai
+  const currentUser = localStorage.getItem("nexus_user_session");
+
+  if (!currentUser) {
+      // Idan mutum bai yi login ba, tura shi baya shafin login
+      window.location.href = "login.html";
+  } else {
+      // Nemo bayanan mai amfani daga Firestore don profile
+      db.collection("users").doc(currentUser).get()
+      .then((doc) => {
+          if (doc.exists) {
+              const data = doc.data();
+              if(document.getElementById("userProfileName")) {
+                  document.getElementById("userProfileName").innerText = data.fullName;
+              }
+          }
+      })
+      .catch((err) => {
+          console.error("Error fetching user data:", err);
+      });
+  }
+
+  // 2. Yanzu sai ka kira Feed din tunda an riga an san ko wane ne currentUser
+  renderNexusFeed();
     
     </script>
 </body>
