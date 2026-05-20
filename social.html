@@ -1310,13 +1310,12 @@ header {
   let globalSoundOn = false; // FALSE = muted, TRUE = sound yana kunna
   let scrollTimeout;
 
-    // ============================================================
+      // ============================================================
   // 1. SESSION MANAGEMENT & GLOBAL VARIABLES
   // ============================================================
-  // Kamo ainihin sunan da aka yi login da shi dynamic
+  // Kamo sunan session din login
   const currentUser = localStorage.getItem("nexus_user_session");
 
-  // Idan babu session na login, tura shi shafin login kai tsaye
   if (!currentUser) {
       window.location.href = "login.html";
   }
@@ -1364,7 +1363,7 @@ header {
   }
 
   // ============================================================
-  // 2. DYNAMIC SAVE SYSTEM (GYARAN MATSALA TA 1)
+  // 2. DYNAMIC SAVE SYSTEM
   // ============================================================
   async function toggleSave(btn, postId) {
       const icon = btn.querySelector('i');
@@ -1373,7 +1372,6 @@ header {
       icon.classList.toggle('fa-solid');
       icon.classList.toggle('fa-regular');
 
-      // Amfani da currentUser na ainihin wanda ya yi login dynamic
       const saveDocId = `${currentUser}_${postId}`;
 
       if (icon.classList.contains('fa-solid')) {
@@ -1396,13 +1394,12 @@ header {
   }
 
   // ============================================================
-  // 3. DYNAMIC HTML GENERATOR FOR POSTS (GYARAN MATSALA TA 2)
+  // 3. DYNAMIC HTML GENERATOR FOR POSTS
   // ============================================================
   function generatePostHTML(post) {
       const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
       let mediaHTML = '';
 
-      // Tabbatar an saka ainihin hoton mai post din, idan babu a saka default avatar
       const currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
       
       const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
@@ -1421,8 +1418,7 @@ header {
           }
       }
 
-      // Gyaran hanyar zuwa profile: idan mutum ya danna profile dinsa ya tafi me.html, na wani kuma user-profile.html?user=suna
-      const profileLink = (post.username && post.username.toLowerCase() === currentUser.toLowerCase()) 
+      const profileLink = (post.username && currentUser && post.username.toLowerCase() === currentUser.toLowerCase()) 
                           ? 'me.html' 
                           : `user-profile.html?user=${post.username}`;
 
@@ -1448,7 +1444,7 @@ header {
                   </div>
               </div>
           </div>
-          <div class="post-content" style="padding: 4px 10px;">${post.content}</div>
+          <div class="post-card-content" style="padding: 4px 10px; font-size: 14px; color: #efefef;">${post.content}</div>
           ${mediaHTML}
           <div class="interaction-bar" onclick="stopProp(event)">
               <div class="action-capsules">
@@ -1507,9 +1503,9 @@ header {
       try {
           let mediaUrl = "";
           let mediaType = "none";
-
-          // Dauko hoton profile din mai kaddamar da post din don adana shi a cikin post din
           let userProfilePicUrl = "";
+
+          // Muna amfani da ainihin sunan da aka yi login da shi don samo profile pic
           const userDoc = await db.collection("users").doc(currentUser).get();
           if (userDoc.exists) {
               userProfilePicUrl = userDoc.data().profilePic || "";
@@ -1537,7 +1533,7 @@ header {
 
           await db.collection("posts").add({
               username: currentUser, 
-              userProfilePic: userProfilePicUrl, // Adana hoton profile dinsa a nan don sauran mutuma su gani
+              userProfilePic: userProfilePicUrl, 
               content: text,
               mediaUrl: mediaUrl,
               mediaType: mediaType,
@@ -1559,17 +1555,20 @@ header {
   }
 
   // ============================================================
-  // 4. REAL-TIME RENDER FEED WITH CORRECTIONS
+  // 4. REAL-TIME RENDER FEED (REMOVED STRICT FILTERS FOR ALL POSTS)
   // ============================================================
   async function renderNexusFeed() {
       const feedContainer = document.querySelector('.feed-container');
+      
+      // Load saved posts dynamic ba tare da ya sake makale shafin ba
       try {
           const savedSnapshot = await db.collection("saved_posts")
-              .where("userId", "==", currentUser) // An canza shi zuwa dynamic currentUser
+              .where("userId", "==", currentUser) 
               .get();
           window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
       } catch(e) { console.log("Saved posts error:", e); }
 
+      // Wannan layin zai janyo DUKKAN posts na kowa da kowa ya nuna a feed kamar yadda kake so da fari!
       db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
           let allPostsHTML = ''; 
 
@@ -1588,11 +1587,21 @@ header {
           const newVideos = feedContainer.querySelectorAll('video');
           newVideos.forEach(v => nexusObserver.observe(v));
           setTimeout(handleVideoPriority, 500);
+      }, (error) => {
+          console.error("Firestore loading error: ", error);
+          // Idan an samu matsala gurin order ta timestamp (Index error), zai dawo da na asali ba tare da oda ba tukunna
+          db.collection("posts").onSnapshot((fallbackSnapshot) => {
+              let fallbackHTML = '';
+              fallbackSnapshot.forEach((doc) => {
+                  const post = { id: doc.id, ...doc.data() };
+                  fallbackHTML += generatePostHTML(post);
+              });
+              feedContainer.innerHTML = fallbackHTML;
+          });
       });
-              }
-          
-              
-          
+     }
+                                     
+  
     </script>
 </body>
 </html>
