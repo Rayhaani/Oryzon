@@ -1610,7 +1610,6 @@ async function updatePhoto(event, type) {
 
         const storageKey = type === 'cover' ? 'userCover' : 'userProfilePic';
         
-        // Dynamic Update ta amfani da ainihin Document ID na wanda ke kai
         await db.collection('users').doc(currentUser.uid).set({
             [storageKey]: secureUrl
         }, { merge: true });
@@ -1633,7 +1632,7 @@ async function updatePhoto(event, type) {
 }
 
 // ============================================================
-// 5. APPLICATION STATE TO PROFILE UI (DYNAMIC DATA RENDERING)
+// 5. APPLICATION STATE TO PROFILE UI (USERNAME USED INSTEAD OF FULLNAME)
 // ============================================================
 function applyUserToProfile(user) {
     if (!user) return;
@@ -1647,57 +1646,49 @@ function applyUserToProfile(user) {
     localStorage.setItem('userProfilePic', profilePic);
     localStorage.setItem('userCover', coverPhoto);
 
-    // Dynamic: Yanzu zai dauko ainihin 'fullName' dake cikin database dinka na wanda yayi login
-    document.getElementById('profile-name-text').textContent = user.fullName || user.displayName || "User";
+    // GYARA: Yanzu zai sanya 'username' (sultaan/Rayhaan) kai tsaye a matsayin sunan Profile!
+    document.getElementById('profile-name-text').textContent = user.username || "User";
 }
 
 // ============================================================
-// 6. GLOBAL AUTH MONITOR (FULLY DYNAMIC DETECTOR)
+// 6. GLOBAL AUTH MONITOR (DYNAMIC DETECTOR)
 // ============================================================
 firebase.auth().onAuthStateChanged(async (firebaseUser) => {
     try {
         if (firebaseUser) {
-            // 1. Gano username na wanda yayi login (ta amfani da email prefix ko kuma display name)
-            // Misali: idan email dinka abdulkadiralyu347@gmail.com ne, za mu fitar da inda za a duba a Firestore
             let derivedDocId = firebaseUser.displayName || firebaseUser.uid;
             
-            // Fallback: Duba ta cikin email idan babu displayName
             if(firebaseUser.email) {
-                derivedDocId = firebaseUser.email.split('@')[0]; // Zai bamu 'abdulkadiralyu347' ko makamancin haka
+                derivedDocId = firebaseUser.email.split('@')[0]; 
             }
 
-            // Mafi sauki: tunda muna son mu dace da tsarin database dinka, tsarin zai nemo daidai da ainihin wanda kake kai yanzu
-            // Idan kana son tsarin ya tsaya daram akan wanda aka yi login dashi a wayar:
+            // Tsarin zai nemi document din da sunansa yayi daidai da login din
             let userDoc = await db.collection('users').doc(derivedDocId).get();
             
-            // Idan ba a samu takamaiman doc ba, za mu duba document din 'Rayhaan' ko 'sultaan' dangane da ainihin wanda ke kan database
+            // Fallback idan ana canza-canza gurin testing
             if (!userDoc.exists) {
-                // Idan muna son mu dauko na kowanne dynamic ne, za mu iya duba kowane asusu da kake dashi:
-                userDoc = await db.collection('users').doc('Rayhaan').get(); 
+                userDoc = await db.collection('users').doc('sultaan').get(); 
             }
 
             if (userDoc.exists) {
                 currentUser = { uid: userDoc.id, ...userDoc.data() };
             } else {
-                // Idan babu shi sam, zai samar da sabon data dynamic na wanda yayi login din
                 currentUser = {
                     uid: derivedDocId,
                     username: derivedDocId, 
-                    fullName: firebaseUser.displayName || 'New User',
                     userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=mamba"
                 };
             }
         } else {
-            // Idan babu kowa a login, tsohon tsarin fallback zai kama aiki maimakon system din ya mutu
+            // Idan babu kowa a login, zai dauki asusun 'sultaan' a matsayin default
             currentUser = {
-                uid: 'Rayhaan',
-                username: 'Rayhaan',
-                fullName: 'Aliyu Abdulkadir',
+                uid: 'sultaan',
+                username: 'sultaan',
                 userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=mamba"
             };
         }
 
-        // Aiwatar da sunan da hoton a kan Screen
+        // Aiwatar da username da hoton a kan Screen
         applyUserToProfile(currentUser);
 
         // Loda adadin posts dynamic na wannan takaitaccen mai amfani
@@ -1711,14 +1702,13 @@ firebase.auth().onAuthStateChanged(async (firebaseUser) => {
         
     } catch (e) {
         console.error("Error loading secure session:", e);
-        // Fallback in case of error
-        currentUser = { username: 'Rayhaan', fullName: 'Aliyu Abdulkadir' };
+        currentUser = { username: 'sultaan' };
         loadShowcaseImages();
         loadTimelinePosts();
     }
 });
-            
-
+                
+        
         </script>
         
     </main>
