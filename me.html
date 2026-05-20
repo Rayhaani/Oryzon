@@ -1637,66 +1637,82 @@ async function updatePhoto(event, type) {
 function applyUserToProfile(user) {
     if (!user) return;
 
-    const profilePic = user.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
-    const coverPhoto = user.userCover || "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200";
+    const profilePic = user.userProfilePic || 
+                       "https://api.dicebear.com/7.x/bottts/svg?seed=" + user.username;
+    const coverPhoto = user.userCover || 
+                       "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200";
     
     document.getElementById('main-profile-img').src = profilePic;
     document.getElementById('main-cover-img').src = coverPhoto;
-
+    
     localStorage.setItem('userProfilePic', profilePic);
     localStorage.setItem('userCover', coverPhoto);
 
-    // GYARA: Yanzu zai sanya 'username' (sultaan/Rayhaan) kai tsaye a matsayin sunan Profile!
-    document.getElementById('profile-name-text').textContent = user.username || "User";
+    // Nuna fullName idan akwai shi, idan ba a nuna username
+    document.getElementById('profile-name-text').textContent = 
+        user.fullName || user.username || "User";
 }
-
 // ============================================================
 // 6. GLOBAL AUTH MONITOR (DYNAMIC DETECTOR)
 // ============================================================
 firebase.auth().onAuthStateChanged(async (firebaseUser) => {
     try {
-        if (firebaseUser) {
-            let derivedDocId = firebaseUser.email 
-                ? firebaseUser.email.split('@')[0] 
-                : firebaseUser.uid;
-
-            const userDoc = await db.collection('users').doc(derivedDocId).get();
-
-            if (userDoc.exists) {
-                currentUser = { uid: userDoc.id, ...userDoc.data() };
-            } else {
-                // Ƙirƙira sabon user da nasa details — KADA ka fallback zuwa sultaan
-                currentUser = {
-                    uid: derivedDocId,
-                    username: derivedDocId,
-                    userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=" + derivedDocId
-                };
-            }
-        } else {
-            // Babu wanda ya login — nuna blank profile, KADA ka loda posts na kowa
+        if (!firebaseUser) {
             currentUser = null;
             document.getElementById('profile-name-text').textContent = "Guest";
-            document.getElementById('showcase-area').innerHTML = 
-                '<p style="text-align:center;padding:20px;color:#666;">Login to view profile.</p>';
-            document.getElementById('timeline-area').innerHTML = 
-                '<p style="text-align:center;padding:20px;color:#666;">Login to view posts.</p>';
-            return; // Tsaya nan — kar a ci gaba
+            document.getElementById('showcase-area').innerHTML = '';
+            document.getElementById('timeline-area').innerHTML = '';
+            return;
         }
 
+        // Firestore doc ID = username, wanda shi ne email prefix
+        // Misali: sultaan@gmail.com → doc ID = "sultaan"
+        const emailPrefix = firebaseUser.email 
+            ? firebaseUser.email.split('@')[0] 
+            : firebaseUser.displayName;
+
+        const userDoc = await db.collection('users').doc(emailPrefix).get();
+
+        if (userDoc.exists) {
+            // Samu duk data daga Firestore kai tsaye
+            currentUser = { uid: userDoc.id, ...userDoc.data() };
+        } else {
+            // Idan babu document, sai a nemi ta username field
+            const querySnap = await db.collection('users')
+                .where('username', '==', emailPrefix)
+                .limit(1)
+                .get();
+
+            if (!querySnap.empty) {
+                currentUser = { uid: querySnap.docs[0].id, ...querySnap.docs[0].data() };
+            } else {
+                // Babu document gaba daya - profile blank, babu posts
+                currentUser = {
+                    uid: emailPrefix,
+                    username: emailPrefix,
+                    fullName: emailPrefix,
+                    userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=" + emailPrefix
+                };
+            }
+        }
+
+        // Apply profile
         applyUserToProfile(currentUser);
 
-        db.collection('posts').where("username", "==", currentUser.username).onSnapshot(snap => {
-            document.getElementById('stats-posts-count').innerText = snap.size;
-        });
+        // Load post count
+        db.collection('posts')
+            .where("username", "==", currentUser.username)
+            .onSnapshot(snap => {
+                document.getElementById('stats-posts-count').innerText = snap.size;
+            });
 
         loadShowcaseImages();
         loadTimelinePosts();
 
     } catch (e) {
-        console.error("Error loading secure session:", e);
+        console.error("Auth error:", e);
     }
-});             
-        
+});
         </script>
         
     </main>
