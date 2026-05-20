@@ -1310,10 +1310,13 @@ header {
   let globalSoundOn = false; // FALSE = muted, TRUE = sound yana kunna
   let scrollTimeout;
 
-  // 1. Bayyana currentUser a matsayin Global Variable ta yadda kowa zai iya amfani da shi
+    // ============================================================
+  // 1. SESSION MANAGEMENT & GLOBAL VARIABLES
+  // ============================================================
+  // Kamo ainihin sunan da aka yi login da shi dynamic
   const currentUser = localStorage.getItem("nexus_user_session");
 
-  // Check nan take idan babu session, a tura shi login
+  // Idan babu session na login, tura shi shafin login kai tsaye
   if (!currentUser) {
       window.location.href = "login.html";
   }
@@ -1350,7 +1353,7 @@ header {
       const icon = btn.querySelector('i');
       if(icon.classList.contains('fa-regular')) {
           icon.classList.replace('fa-regular', 'fa-solid');
-          icon.style.color = "#ff4757"; // Jan Like
+          icon.style.color = "#ff4757"; 
           if(navigator.vibrate) navigator.vibrate(50);
           tokens += 0.0005;
           tokenDisplay.innerText = tokens.toFixed(4) + " NT";
@@ -1360,7 +1363,9 @@ header {
       }
   }
 
-  // Aikin Save button
+  // ============================================================
+  // 2. DYNAMIC SAVE SYSTEM (GYARAN MATSALA TA 1)
+  // ============================================================
   async function toggleSave(btn, postId) {
       const icon = btn.querySelector('i');
       const text = btn.querySelector('span'); 
@@ -1368,12 +1373,15 @@ header {
       icon.classList.toggle('fa-solid');
       icon.classList.toggle('fa-regular');
 
+      // Amfani da currentUser na ainihin wanda ya yi login dynamic
+      const saveDocId = `${currentUser}_${postId}`;
+
       if (icon.classList.contains('fa-solid')) {
           text.innerText = "Saved"; 
           btn.style.color = "var(--premium-gold)"; 
           try {
-              await db.collection("saved_posts").doc(`Sadiq_${postId}`).set({
-                  userId: "Sadiq_Alhassan",
+              await db.collection("saved_posts").doc(saveDocId).set({
+                  userId: currentUser,
                   postId: postId,
                   savedAt: firebase.firestore.FieldValue.serverTimestamp()
               });
@@ -1382,24 +1390,20 @@ header {
           text.innerText = "Save"; 
           btn.style.color = "#fff"; 
           try {
-              await db.collection("saved_posts").doc(`Sadiq_${postId}`).delete();
+              await db.collection("saved_posts").doc(saveDocId).delete();
           } catch (e) { console.error("Error removing:", e); }
       }
   }
 
+  // ============================================================
+  // 3. DYNAMIC HTML GENERATOR FOR POSTS (GYARAN MATSALA TA 2)
+  // ============================================================
   function generatePostHTML(post) {
       const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
       let mediaHTML = '';
 
-      const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
-      const savedProfilePic = localStorage.getItem('userProfilePic');
-
-      let currentPic = defaultAvatar;
-      if (post.username && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
-          currentPic = savedProfilePic;
-      } else {
-          currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
-      }
+      // Tabbatar an saka ainihin hoton mai post din, idan babu a saka default avatar
+      const currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
       
       const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
       
@@ -1417,15 +1421,20 @@ header {
           }
       }
 
+      // Gyaran hanyar zuwa profile: idan mutum ya danna profile dinsa ya tafi me.html, na wani kuma user-profile.html?user=suna
+      const profileLink = (post.username && post.username.toLowerCase() === currentUser.toLowerCase()) 
+                          ? 'me.html' 
+                          : `user-profile.html?user=${post.username}`;
+
       return `
       <div class="post-card" onclick="toggleImmersive(this)">
           <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
               <div style="display: flex; align-items: center; gap: 0; flex: 1;">
-                  <a href="me.html" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
+                  <a href="${profileLink}" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
                        ${profilePicHTML} 
                   </a>
                  <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 7px;">
-                      <a href="me.html" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">
+                      <a href="${profileLink}" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">
                           <span>${post.username || 'User'}</span>
                       </a>
                       ${vBadge}
@@ -1499,6 +1508,13 @@ header {
           let mediaUrl = "";
           let mediaType = "none";
 
+          // Dauko hoton profile din mai kaddamar da post din don adana shi a cikin post din
+          let userProfilePicUrl = "";
+          const userDoc = await db.collection("users").doc(currentUser).get();
+          if (userDoc.exists) {
+              userProfilePicUrl = userDoc.data().profilePic || "";
+          }
+
           if (file) {
               const cloudName = "diixjieyp";
               const uploadPreset = "oryzon_media"; 
@@ -1521,6 +1537,7 @@ header {
 
           await db.collection("posts").add({
               username: currentUser, 
+              userProfilePic: userProfilePicUrl, // Adana hoton profile dinsa a nan don sauran mutuma su gani
               content: text,
               mediaUrl: mediaUrl,
               mediaType: mediaType,
@@ -1540,206 +1557,15 @@ header {
           publishBtn.disabled = false;
       }
   }
-</script>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-    authDomain: "oryzon-50ea4.firebaseapp.com",
-    projectId: "oryzon-50ea4",
-    storageBucket: "oryzon-50ea4.firebasestorage.app",
-    messagingSenderId: "782106742622",
-    appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
-    measurementId: "G-K5085DLL2W"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const storage = firebase.storage();
-  const analytics = firebase.analytics();
-
-  console.log("Oryzon Cloud is now active! 🚀");
-
-  // Kira Feed da sauran ayyuka bayan lodi
-  window.addEventListener('DOMContentLoaded', () => {
-      renderNexusFeed();
-      loadFooterProfile();
-      
-      const savedProfile = localStorage.getItem('userProfilePic');
-      const storyAvatar = document.getElementById('story-avatar-preview');
-      if (savedProfile && storyAvatar) {
-          storyAvatar.src = savedProfile;
-      }
-      observeVideos();
-
-      if (currentUser) {
-          db.collection("users").doc(currentUser).get()
-          .then((doc) => {
-              if (doc.exists) {
-                  const data = doc.data();
-                  if (document.getElementById("userProfileName")) {
-                      document.getElementById("userProfileName").innerText = data.fullName;
-                  }
-              }
-          })
-          .catch((err) => {
-              console.error("Error fetching user data:", err);
-          });
-      }
-  });
-
-  document.addEventListener('click', function(e) {
-      if (e.target.tagName === 'VIDEO') {
-          if (e.target.paused) { e.target.play(); } 
-          else { e.target.pause(); } // AN GYARA NAN: an cire .paused() zuwa .pause()
-      }
-  });
-
-  function handleFollow(btn) {
-      if (btn.innerText === "Follow") {
-          btn.innerText = "Following";
-          btn.classList.add('active');
-          if (navigator.vibrate) navigator.vibrate(10);
-      } else {
-          btn.innerText = "Follow";
-          btn.classList.remove('active');
-      }
-  }
-
-  function openGiftPanel(username) {
-      alert("Kyautar NT tokens tana kan hanya zuwa ga " + username);
-  }
-      
-  const videoObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-          const vid = entry.target;
-          if (entry.isIntersecting) {
-              if (currentlyPlayingVideo && currentlyPlayingVideo !== vid) {
-                  currentlyPlayingVideo.pause();
-                  currentlyPlayingVideo.muted = true;
-                  currentlyPlayingVideo.currentTime = 0;
-                  const prevCard = currentlyPlayingVideo.closest('.post-card');
-                  if (prevCard) {
-                      const prevIcon = prevCard.querySelector('.mute-toggle i');
-                      if (prevIcon) prevIcon.className = 'fa-solid fa-volume-xmark';
-                  }
-              }
-              vid.muted = !globalSoundOn;
-              vid.play().catch(() => {});
-              currentlyPlayingVideo = vid;
-
-              const card = vid.closest('.post-card');
-              if (card) {
-                  const icon = card.querySelector('.mute-toggle i');
-                  if (icon) {
-                      icon.className = globalSoundOn ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
-                  }
-              }
-          } else {
-              vid.pause();
-              vid.muted = true;
-              vid.currentTime = 0;
-              const card = vid.closest('.post-card');
-              if (card) {
-                  const icon = card.querySelector('.mute-toggle i');
-                  if (icon) icon.className = 'fa-solid fa-volume-xmark';
-              }
-              if (currentlyPlayingVideo === vid) currentlyPlayingVideo = null;
-          }
-      });
-  }, { threshold: [0, 0.1] });
-
-  function toggleVideoSound(event, btn) {
-      if (event) event.stopPropagation();
-      const card = btn.closest('.post-card');
-      const vid = card ? card.querySelector('video') : null;
-      if (!vid) return;
-      const icon = btn.querySelector('i');
-
-      globalSoundOn = !globalSoundOn;
-
-      if (globalSoundOn) {
-          document.querySelectorAll('video').forEach(other => {
-              if (other !== vid) {
-                  other.muted = true;
-                  const otherIcon = other.closest('.post-card')?.querySelector('.mute-toggle i');
-                  if (otherIcon) otherIcon.className = 'fa-solid fa-volume-xmark';
-              }
-          });
-          vid.muted = false;
-          icon.className = 'fa-solid fa-volume-high';
-      } else {
-          vid.muted = true;
-          icon.className = 'fa-solid fa-volume-xmark';
-      }
-  }
-
-  function observeVideos() {
-      videoObserver.disconnect();
-      document.querySelectorAll('video').forEach(vid => {
-          vid.muted = true;
-          videoObserver.observe(vid);
-      });
-  }
-
-  function loadFooterProfile() {
-      const savedPic = localStorage.getItem('userProfilePic');
-      const footerImg = document.getElementById('footerProfileImg');
-      if (savedPic && footerImg) {
-          footerImg.src = savedPic;
-      } else {
-          if(footerImg) footerImg.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
-      }
-  }
-
-  const videoOptions = { root: null, rootMargin: '400px 0px', threshold: 0.01 };
-
-  const nexusObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-          const video = entry.target;
-          if (entry.isIntersecting) { video.preload = "auto"; } 
-          else { video.pause(); }
-      });
-  }, videoOptions);
-
-  function handleVideoPriority() {
-      const videos = document.querySelectorAll('.post-media');
-      let focusVideo = null;
-      let minDistance = Infinity;
-      const screenCenter = window.innerHeight / 2;
-
-      videos.forEach(video => {
-          if (video.tagName === 'VIDEO') {
-              const rect = video.getBoundingClientRect();
-              const videoCenter = rect.top + (rect.height / 2);
-              const distanceFromCenter = Math.abs(screenCenter - videoCenter);
-
-              if (rect.top < window.innerHeight && rect.bottom > 0) {
-                  if (distanceFromCenter < minDistance) {
-                      minDistance = distanceFromCenter;
-                      focusVideo = video;
-                  }
-              }
-              if (video !== focusVideo) { video.pause(); }
-          }
-      });
-
-      if (focusVideo) {
-          const playPromise = focusVideo.play();
-          if (playPromise !== undefined) { playPromise.catch(e => {}); }
-      }
-  }
-
+  // ============================================================
+  // 4. REAL-TIME RENDER FEED WITH CORRECTIONS
+  // ============================================================
   async function renderNexusFeed() {
       const feedContainer = document.querySelector('.feed-container');
       try {
           const savedSnapshot = await db.collection("saved_posts")
-              .where("userId", "==", "Sadiq_Alhassan")
+              .where("userId", "==", currentUser) // An canza shi zuwa dynamic currentUser
               .get();
           window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
       } catch(e) { console.log("Saved posts error:", e); }
@@ -1763,23 +1589,10 @@ header {
           newVideos.forEach(v => nexusObserver.observe(v));
           setTimeout(handleVideoPriority, 500);
       });
-  }
-
-  window.addEventListener('scroll', () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(handleVideoPriority, 150);
-  }, { passive: true });
-
-  function openStory(storyId) {
-      if (navigator.vibrate) navigator.vibrate(15);
-      if (storyId === 'live_now') {
-          alert("Shiga tsarin Synergy Live Stream... 🎥🔥");
-      } else if (storyId === 'your_story') {
-          alert("Wannan sashin story ɗinka ne! ⚡");
-      } else {
-          alert("Ana loda labarin Synergy Story na (" + storyId + ")... ⚡");
-      }
-  }
+              }
+          
+              
+          
     </script>
 </body>
 </html>
