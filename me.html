@@ -1635,6 +1635,11 @@ async function initProfile() {
         // Karanta username daga localStorage kai tsaye
         const username = localStorage.getItem("nexus_user_session");
 
+// ↓ SABABBI - KARA KAWAI ↓
+const urlParams = new URLSearchParams(window.location.search);
+const profileUser = urlParams.get('user') || username;
+const isOwnProfile = profileUser === username;
+
         if (!username) {
             // Babu wanda ya login - tafi login page
             window.location.href = "login.html";
@@ -1642,22 +1647,29 @@ async function initProfile() {
         }
 
         // Nemi Firestore document kai tsaye da username a matsayin doc ID
-        const userDoc = await db.collection('users').doc(username).get();
+        const userDoc = await db.collection('users').doc(profileUser).get();
 
         if (userDoc.exists) {
             currentUser = { uid: userDoc.id, ...userDoc.data() };
         } else {
             // Username yana localStorage amma babu document - wani kuskure ne
             currentUser = {
-                uid: username,
-                username: username,
-                fullName: username,
-                userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=" + username
-            };
+    uid: profileUser,
+    username: profileUser,
+    fullName: profileUser,
+    userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=" + profileUser
+    };
         }
 
         // Apply profile UI
         applyUserToProfile(currentUser);
+        
+        // Idan wani ne, boye camera buttons
+if (!isOwnProfile) {
+    document.querySelector('.camera-cover-main').style.display = 'none';
+    document.querySelector('.camera-profile-main').style.display = 'none';
+    document.getElementById('getVerifiedBtn').style.display = 'none';
+}
 
         // Load post count na wannan user kadai
         db.collection('posts')
