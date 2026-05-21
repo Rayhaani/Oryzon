@@ -1320,20 +1320,102 @@ header {
 
   // AIKIN FULL SCREEN (IMMERSIVE MODE)
   function toggleImmersive(card) {
-    // Hana immersive mode idan an danna kan video kai tsaye
-    if (event && event.target.tagName === 'VIDEO') return;
+    // Hana immersive idan an danna kan buttons
     if (event && event.target.closest('.interaction-bar')) return;
     if (event && event.target.closest('.header-actions')) return;
-    
-    card.classList.toggle('immersive-mode');
+    if (event && event.target.closest('.follow-text-link')) return;
+    if (event && event.target.closest('.gift-btn-nexus')) return;
+
+    const video = card.querySelector('video');
     const footer = document.getElementById('instaFooter');
-    if(card.classList.contains('immersive-mode')) {
+
+    // === SHIGA IMMERSIVE MODE ===
+    if (!card.classList.contains('immersive-mode')) {
+        card.classList.add('immersive-mode');
         footer.classList.add('footer-hidden');
+
+        // Idan akwai video, saka back button
+        if (video) {
+            // Tabbatar video tana playing
+            video.play().catch(() => {});
+
+            // Hana danna kan video ya haifar da wani aiki
+            video.onclick = function(e) {
+                e.stopPropagation();
+                // Taba screen = pause/play toggle
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            };
+        }
+
+        // Saka back button idan babu shi
+        if (!card.querySelector('.immersive-back-btn')) {
+            const backBtn = document.createElement('div');
+            backBtn.className = 'immersive-back-btn';
+            backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+            backBtn.style.cssText = `
+                position: absolute;
+                top: 15px;
+                left: 15px;
+                width: 36px;
+                height: 36px;
+                background: rgba(0,0,0,0.5);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 16px;
+                z-index: 9999;
+                cursor: pointer;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.2);
+            `;
+            backBtn.onclick = function(e) {
+                e.stopPropagation();
+                exitImmersive(card);
+            };
+            card.appendChild(backBtn);
+        }
+
+        // Back button na waya (hardware back)
+        history.pushState({ immersive: true }, '');
+        window.onpopstate = function() {
+            exitImmersive(card);
+        };
+
     } else {
-        footer.classList.remove('footer-hidden');
+        exitImmersive(card);
     }
+}
+
+function exitImmersive(card) {
+    const video = card.querySelector('video');
+    const footer = document.getElementById('instaFooter');
+
+    card.classList.remove('immersive-mode');
+    footer.classList.remove('footer-hidden');
+
+    // Cire back button
+    const backBtn = card.querySelector('.immersive-back-btn');
+    if (backBtn) backBtn.remove();
+
+    // Maida video onclick zuwa na asali (scroll observer zai sarrafa shi)
+    if (video) {
+        video.onclick = null;
+        // Video ta ci gaba daga inda ta tsaya - ba ta tsaya ba
+        video.play().catch(() => {});
     }
 
+    // Cire popstate listener
+    window.onpopstate = null;
+}
+
+
+     
   const tokenDisplay = document.getElementById('token-count');
   setInterval(() => { tokens += 0.0001; tokenDisplay.innerText = tokens.toFixed(4) + " NT"; }, 5000);
 
