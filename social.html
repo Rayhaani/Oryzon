@@ -1349,30 +1349,54 @@ header {
   }
 
   // AIKIN FULL SCREEN (IMMERSIVE MODE)
-  function toggleImmersive(card) {
-    // Hana immersive idan an danna kan buttons
+
+   function toggleImmersive(card) {
     if (event && event.target.closest('.interaction-bar')) return;
     if (event && event.target.closest('.header-actions')) return;
     if (event && event.target.closest('.follow-text-link')) return;
     if (event && event.target.closest('.gift-btn-nexus')) return;
+    if (event && event.target.closest('a')) return;
 
     const video = card.querySelector('video');
     const footer = document.getElementById('instaFooter');
 
-    // === SHIGA IMMERSIVE MODE ===
     if (!card.classList.contains('immersive-mode')) {
+        
+        // 1. SAVE lokacin video kafin shiga
+        const savedTime = video ? video.currentTime : 0;
+        
         card.classList.add('immersive-mode');
         footer.classList.add('footer-hidden');
 
-        // Idan akwai video, saka back button
         if (video) {
-            // Tabbatar video tana playing
-            video.play().catch(() => {});
+            // 2. Force video ta bayyana kuma ta cika screen
+            video.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-height: none !important;
+                min-height: unset !important;
+                object-fit: cover !important;
+                border-radius: 0 !important;
+                z-index: 4999 !important;
+                background: #000 !important;
+                margin: 0 !important;
+            `;
+            
+            // 3. Koma lokacin da ta tsaya
+            video.currentTime = savedTime;
+            video.muted = false;
+            globalSoundOn = true;
+            
+            setTimeout(() => {
+                video.play().catch(() => {});
+            }, 50);
 
-            // Hana danna kan video ya haifar da wani aiki
+            // 4. Taba screen = pause/play
             video.onclick = function(e) {
                 e.stopPropagation();
-                // Taba screen = pause/play toggle
                 if (video.paused) {
                     video.play();
                 } else {
@@ -1381,18 +1405,18 @@ header {
             };
         }
 
-        // Saka back button idan babu shi
+        // 5. Back button
         if (!card.querySelector('.immersive-back-btn')) {
             const backBtn = document.createElement('div');
             backBtn.className = 'immersive-back-btn';
             backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
             backBtn.style.cssText = `
-                position: absolute;
+                position: fixed;
                 top: 15px;
                 left: 15px;
                 width: 36px;
                 height: 36px;
-                background: rgba(0,0,0,0.5);
+                background: rgba(0,0,0,0.6);
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
@@ -1402,16 +1426,16 @@ header {
                 z-index: 9999;
                 cursor: pointer;
                 backdrop-filter: blur(10px);
-                border: 1px solid rgba(255,255,255,0.2);
+                border: 1px solid rgba(255,255,255,0.3);
             `;
             backBtn.onclick = function(e) {
                 e.stopPropagation();
                 exitImmersive(card);
             };
-            card.appendChild(backBtn);
+            document.body.appendChild(backBtn);
         }
 
-        // Back button na waya (hardware back)
+        // 6. Hardware back button
         history.pushState({ immersive: true }, '');
         window.onpopstate = function() {
             exitImmersive(card);
@@ -1425,24 +1449,30 @@ header {
 function exitImmersive(card) {
     const video = card.querySelector('video');
     const footer = document.getElementById('instaFooter');
+    
+    // Save lokacin video
+    const savedTime = video ? video.currentTime : 0;
 
     card.classList.remove('immersive-mode');
     footer.classList.remove('footer-hidden');
 
-    // Cire back button
-    const backBtn = card.querySelector('.immersive-back-btn');
+    // Cire back button daga body
+    const backBtn = document.querySelector('.immersive-back-btn');
     if (backBtn) backBtn.remove();
 
-    // Maida video onclick zuwa na asali (scroll observer zai sarrafa shi)
     if (video) {
+        // Reset video style zuwa na asali
+        video.style.cssText = '';
+        video.currentTime = savedTime;
         video.onclick = null;
-        // Video ta ci gaba daga inda ta tsaya - ba ta tsaya ba
-        video.play().catch(() => {});
+        
+        setTimeout(() => {
+            video.play().catch(() => {});
+        }, 50);
     }
 
-    // Cire popstate listener
     window.onpopstate = null;
-}
+} 
 
 
      
@@ -1710,12 +1740,7 @@ function exitImmersive(card) {
       }
   });
 
-  document.addEventListener('click', function(e) {
-      if (e.target.tagName === 'VIDEO') {
-          if (e.target.paused) { e.target.play(); } 
-          else { e.target.pause(); } // AN GYARA NAN: an cire .paused() zuwa .pause()
-      }
-  });
+  
 
   function handleFollow(btn) {
       if (btn.innerText === "Follow") {
