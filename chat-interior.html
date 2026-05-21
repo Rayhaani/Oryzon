@@ -151,19 +151,97 @@
 <body>
 
     <header>
-        <div onclick="window.location.href='me.html'" style="margin-right: 15px; cursor: pointer;">
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        </div>
-        
-        <input type="file" id="profileInput" accept="image/*" style="display: none;">
-        <div class="header-profile" onclick="document.getElementById('profileInput').click()">
-            <img id="profileDisplay" src="https://via.placeholder.com/150/050505/00F2FF?text=+" alt="Profile">
+        <!-- CHAT HEADER - FACEBOOK STYLE -->
+<div style="
+    position: fixed;
+    top: 0; left: 0; width: 100%;
+    height: 56px;
+    background: rgba(5, 5, 5, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 10px;
+    z-index: 9999;
+    box-sizing: border-box;
+">
+    <!-- Back Button -->
+    <div onclick="history.back()" style="
+        width: 36px; height: 36px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; color: #fff; font-size: 18px;
+        flex-shrink: 0;
+    ">
+        <i class="fa-solid fa-chevron-left"></i>
+    </div>
+
+    <!-- Avatar -->
+    <div id="chat-header-avatar-wrapper" style="
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fde08d, #b8860b);
+        padding: 2px;
+        flex-shrink: 0;
+    ">
+        <img id="chat-header-avatar" 
+             src="https://api.dicebear.com/7.x/bottts/svg?seed=User" 
+             style="width:100%; height:100%; border-radius:50%; object-fit:cover; border: 2px solid #050505;">
+    </div>
+
+    <!-- Name + Online status -->
+    <div style="flex: 1; overflow: hidden;">
+        <div id="chat-header-name" style="
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: 'Inter', sans-serif;
+        ">Loading...</div>
+        <div style="font-size: 10px; color: #50FA7B; margin-top: 1px;">● Active now</div>
+    </div>
+
+    <!-- Action Icons -->
+    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+        <!-- Audio Call -->
+        <div onclick="startCall('audio')" style="
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #fff; font-size: 15px;
+        ">
+            <i class="fa-solid fa-phone"></i>
         </div>
 
-        <div class="vendor-info">
-            <div style="font-size: 13px; font-weight: 600;">Nexus Vendor</div>
-            <div style="font-size: 9px; color: #00FF88; font-family: 'Orbitron';">Sync Active</div>
+        <!-- Video Call -->
+        <div onclick="startCall('video')" style="
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #fff; font-size: 15px;
+        ">
+            <i class="fa-solid fa-video"></i>
         </div>
+
+        <!-- Info/Settings -->
+        <div onclick="openChatInfo()" style="
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #fff; font-size: 15px;
+        ">
+            <i class="fa-solid fa-circle-info"></i>
+        </div>
+    </div>
+</div>
     </header>
 
     <div id="chat-flow">
@@ -203,6 +281,11 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
 <script>
+    // Karbi sunan wanda ake chat da shi
+const urlParams = new URLSearchParams(window.location.search);
+const chatWith = urlParams.get('with') || 'Unknown User';
+  
+    
     // An shigar da asalin bayanan Firebase dinka da ka turo ba tare da an taba ko lamba daya ba
     const firebaseConfig = {
       apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
@@ -217,8 +300,41 @@
     // Fara kunna Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-</script>
+
+
+    // Load chat header info
+const urlParams = new URLSearchParams(window.location.search);
+const chatWith = urlParams.get('with');
+
+if (chatWith) {
+    // Set suna daga URL kafin Firestore ya loda
+    document.getElementById('chat-header-name').textContent = chatWith;
+    document.getElementById('chat-header-avatar').src = 
+        `https://api.dicebear.com/7.x/bottts/svg?seed=${chatWith}`;
+
+    // Loda bayanai daga Firestore
+    db.collection('users').doc(chatWith).get().then(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('chat-header-name').textContent = 
+                data.fullName || data.username || chatWith;
+            if (data.userProfilePic) {
+                document.getElementById('chat-header-avatar').src = data.userProfilePic;
+            }
+        }
+    });
+}
+
+function startCall(type) {
+    alert(`${type === 'audio' ? '📞 Audio' : '🎥 Video'} call zuwa ga ${chatWith}... \n\n(Wannan fasalin yana kan hanya!)`);
+}
+
+function openChatInfo() {
+    window.location.href = `profile.html?user=${chatWith}`;
+}
+
     
+</script>  
 <script>
     // Karɓar bayanai daga shafin baya ta hanyar URL Parameters
     const urlParams = new URLSearchParams(window.location.search);
