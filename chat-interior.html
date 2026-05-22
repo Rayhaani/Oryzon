@@ -6,6 +6,8 @@
     <title>Nexus - Neural Message Protocol</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/browser.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/browser.css">
     <style>
         :root {
             --obsidian: #050505;
@@ -21,16 +23,16 @@
         }
 
         body {
-            background-color: var(--obsidian);
-            background-image: radial-gradient(circle at 50% 100%, rgba(0, 242, 255, 0.07), transparent);
-            color: white;
-            font-family: 'Inter', sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
+    background-color: var(--obsidian);
+    background-image: radial-gradient(circle at 50% 100%, rgba(0, 242, 255, 0.07), transparent);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    height: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+} 
         header {
             height: 60px;
             background: rgba(5, 5, 5, 0.8);
@@ -55,14 +57,17 @@
         .header-profile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         #chat-flow {
-            flex: 1;
-            padding: 12px 15px 100px 15px; /* Reduced top padding to 12px to match gap */
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            scrollbar-width: none;
-        }
+    flex: 1;
+    padding: 70px 15px 80px 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: none;
+    /* Wannan zai tabbatar messages suna kasa koyaushe */
+    justify-content: flex-end;
+    min-height: 0;
+}
 
         .message {
             max-width: 78%;
@@ -146,7 +151,18 @@
             flex-shrink: 0;
         }
 
-        #sendBtn { display: none; }
+        #sendBtn { display: none; }  
+
+        /* Hana keyboard ya tura content sama */
+@supports (-webkit-touch-callout: none) {
+    body {
+        height: -webkit-fill-available;
+    }
+    #chat-flow {
+        padding-bottom: 90px;
+    }
+}
+        
     </style>
 </head>
 <body>
@@ -257,7 +273,55 @@
     
     <div class="input-area">
         <input type="file" id="galleryInput" accept="image/*" style="display: none;">
-        
+
+        <div id="emoji-mart-container" style="
+    display: none;
+    position: fixed;
+    bottom: 70px;
+    left: 0;
+    width: 100%;
+    z-index: 500;
+"></div>
+
+
+
+        <div id="emojiPanel" style="
+    display: none;
+    position: fixed;
+    bottom: 70px;
+    left: 0;
+    width: 100%;
+    background: #111;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    z-index: 500;
+    height: 280px;
+    overflow: hidden;
+    flex-direction: column;
+">
+    <!-- Category tabs -->
+    <div id="emojiTabs" style="
+        display: flex;
+        overflow-x: auto;
+        padding: 8px 10px;
+        gap: 5px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        scrollbar-width: none;
+        flex-shrink: 0;
+    "></div>
+    
+    <!-- Emoji grid -->
+    <div id="emojiGrid" style="
+        display: flex;
+        flex-wrap: wrap;
+        padding: 8px;
+        overflow-y: auto;
+        flex: 1;
+        align-content: flex-start;
+    "></div>
+        </div>
+
+
+
         <div class="neural-search-bar">
             <textarea id="msgInput" placeholder="Neural Message..." rows="1"></textarea>
             
@@ -403,6 +467,23 @@ function listenToNexusMessages() {
       });
 }
 
+
+      // Scroll to bottom always
+function scrollToBottom() {
+    const chatFlow = document.getElementById("chat-flow");
+    if (chatFlow) {
+        setTimeout(() => {
+            chatFlow.scrollTop = chatFlow.scrollHeight;
+        }, 100);
+    }
+}
+
+// Idan keyboard ya buɗe, scroll to bottom
+window.addEventListener('resize', () => {
+    scrollToBottom();
+});
+
+      
 function sendNeuralMessage() {
     const inputField = document.getElementById("msgInput");
     if (!inputField) return;
@@ -461,7 +542,187 @@ function toggleButtons() {
     }
 }
     
+
+
+        let emojiPickerLoaded = false;
+
+function toggleEmojiPanel() {
+    const container = document.getElementById('emoji-mart-container');
     
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        
+        // Load picker ɗaya kawai
+        if (!emojiPickerLoaded) {
+            const picker = new EmojiMart.Picker({
+                onEmojiSelect: (emoji) => {
+                    insertEmoji(emoji.native);
+                },
+                theme: 'dark',
+                previewPosition: 'none',
+                skinTonePosition: 'none',
+                locale: 'en',
+            });
+            container.appendChild(picker);
+            emojiPickerLoaded = true;
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+
+
+    const emojiCategories = {
+    '😀': [ // Smileys
+        '😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃',
+        '😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚',
+        '😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭',
+        '🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄',
+        '😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕',
+        '🤢','🤮','🤧','🥵','🥶','🥴','😵','💫','🤯','🤠',
+        '🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮',
+        '😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢',
+        '😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤',
+        '😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹'
+    ],
+    '👍': [ // Hands & People
+        '👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞',
+        '🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍',
+        '👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝',
+        '🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂',
+        '🦻','👃','🫀','🫁','🧠','🦷','🦴','👀','👁️','👅',
+        '👄','💋','🫦','👶','🧒','👦','👧','🧑','👱','👨',
+        '🧔','👩','🧓','👴','👵','🙍','🙎','🙅','🙆','💁',
+        '🙋','🧏','🙇','🤦','🤷','👮','🕵️','💂','🥷','👷'
+    ],
+    '❤️': [ // Hearts & Love
+        '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔',
+        '❤️‍🔥','❤️‍🩹','❣️','💕','💞','💓','💗','💖','💘','💝',
+        '💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️',
+        '🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏'
+    ],
+    '🎉': [ // Activities
+        '🎉','🎊','🎈','🎁','🎀','🎗️','🎟️','🎫','🏆','🥇',
+        '🥈','🥉','🏅','🎖️','🏵️','🎗️','🎪','🤹','🎭','🩰',
+        '🎨','🎬','🎤','🎧','🎼','🎵','🎶','🎹','🥁','🪘',
+        '🎷','🎺','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮'
+    ],
+    '🔥': [ // Symbols
+        '🔥','💯','✅','❌','❎','🔴','🟠','🟡','🟢','🔵',
+        '🟣','⚫','⚪','🟤','🔶','🔷','🔸','🔹','🔺','🔻',
+        '💠','🔘','🔲','🔳','▪️','▫️','◾','◽','◼️','◻️',
+        '⭐','🌟','💫','✨','⚡','🌈','☀️','🌤️','⛅','🌥️',
+        '☁️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️'
+    ],
+    '😂': [ // Most used / Recent
+        '😂','😭','🥺','😍','🥰','😊','🤣','😅','😩','😤',
+        '🙏','💪','👀','🔥','💯','❤️','✅','🎉','😎','🤔',
+        '😱','🤦','🤷','💀','😴','🤗','😋','🫡','🥳','😇'
+    ]
+};
+
+const categoryIcons = {
+    '😂': '🕐 Recent',
+    '😀': '😀 Smileys',
+    '👍': '👍 People',
+    '❤️': '❤️ Hearts',
+    '🎉': '🎉 Fun',
+    '🔥': '🔥 Symbols'
+};
+
+let currentCategory = '😂';
+
+function buildEmojiPanel() {
+    const tabs = document.getElementById('emojiTabs');
+    const grid = document.getElementById('emojiGrid');
+    
+    // Build tabs
+    if (!tabs.children.length) {
+        Object.keys(emojiCategories).forEach(cat => {
+            const tab = document.createElement('div');
+            tab.textContent = cat;
+            tab.style.cssText = `
+                font-size: 20px;
+                padding: 4px 8px;
+                cursor: pointer;
+                border-radius: 8px;
+                flex-shrink: 0;
+                opacity: ${cat === currentCategory ? '1' : '0.4'};
+                background: ${cat === currentCategory ? 'rgba(255,255,255,0.1)' : 'transparent'};
+            `;
+            tab.onclick = () => loadEmojiCategory(cat);
+            tabs.appendChild(tab);
+        });
+    }
+    
+    loadEmojiCategory(currentCategory);
+}
+
+function loadEmojiCategory(cat) {
+    currentCategory = cat;
+    const grid = document.getElementById('emojiGrid');
+    const tabs = document.getElementById('emojiTabs');
+    
+    // Update tab styles
+    Array.from(tabs.children).forEach((tab, i) => {
+        const tabCat = Object.keys(emojiCategories)[i];
+        tab.style.opacity = tabCat === cat ? '1' : '0.4';
+        tab.style.background = tabCat === cat ? 'rgba(255,255,255,0.1)' : 'transparent';
+    });
+    
+    // Load emojis
+    grid.innerHTML = '';
+    emojiCategories[cat].forEach(emoji => {
+        const span = document.createElement('span');
+        span.textContent = emoji;
+        span.style.cssText = `
+            font-size: 26px;
+            padding: 6px;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            transition: background 0.15s;
+        `;
+        span.onmouseenter = () => span.style.background = 'rgba(255,255,255,0.1)';
+        span.onmouseleave = () => span.style.background = 'transparent';
+        span.onclick = () => {
+            insertEmoji(emoji);
+            // Save to recent (optional)
+        };
+        grid.appendChild(span);
+    });
+    
+    grid.scrollTop = 0;
+}
+
+function toggleEmojiPanel() {
+    const panel = document.getElementById('emojiPanel');
+    
+    if (panel.style.display === 'none' || !panel.style.display) {
+        panel.style.display = 'flex';
+        buildEmojiPanel();
+        
+        // Close keyboard
+        document.getElementById('msgInput').blur();
+    } else {
+        panel.style.display = 'none';
+        document.getElementById('msgInput').focus();
+    }
+}
+
+// Close panel idan an danna waje
+document.addEventListener('click', (e) => {
+    const panel = document.getElementById('emojiPanel');
+    const btn = document.getElementById('emojiToggleBtn');
+    if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.style.display = 'none';
+    }
+});
     </script>
 </body>
 </html>
