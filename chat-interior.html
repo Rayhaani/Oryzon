@@ -337,8 +337,8 @@ function openChatInfo() {
 
     
 </script>  
-<script>
-    // Karɓar bayanai daga shafin baya ta hanyar URL Parameters
+
+  <script>
     const partnerAvatar = urlParams.get('avatar') || "https://via.placeholder.com/150/050505/00F2FF?text=+";
 
     // Asalin sunanka na aiki a kan platform ɗin (Sadiq)
@@ -347,11 +347,10 @@ function openChatInfo() {
 
     // Canza suna da hoton Header ta atomatik
     document.addEventListener("DOMContentLoaded", () => {
-        const nameDisplay = document.querySelector(".vendor-info div:nth-child(1)");
-        const avatarDisplay = document.getElementById("profileDisplay");
+        const nameDisplay = document.getElementById("chat-header-name");
+        const avatarDisplay = document.getElementById("chat-header-avatar");
 
-        if (nameDisplay) nameDisplay.innerText = partnerName;
-        if (avatarDisplay && urlParams.get('avatar')) avatarDisplay.src = partnerAvatar;
+        if (nameDisplay && partnerName) nameDisplay.innerText = partnerName;
 
         // Haɗa ID na musamman na dakin hirarku a Firebase
         if (myId < partnerName) {
@@ -404,7 +403,7 @@ function openChatInfo() {
           });
     }
 
-    // Aika Saƙo zuwa Firebase
+    // Aika Saƙo zuwa Firebase (An Gyara Matsalar Nan)
     function sendNeuralMessage() {
         const inputField = document.getElementById("msgInput");
         if (!inputField) return;
@@ -419,10 +418,19 @@ function openChatInfo() {
             timestamp: Date.now()
         };
 
+        // 1. Tura sako zuwa sub-collection na messages
         db.collection("personalChats")
           .doc(chatRoomId)
           .collection("messages")
           .add(packet)
+          .then(() => {
+              // 2. Bayan ya tafi, sai a sabunta Parent Document na wannan chat din
+              return db.collection("personalChats").doc(chatRoomId).set({
+                  lastMessage: messageText.substring(0, 50),
+                  lastMessageTime: Date.now(),
+                  members: [myId, partnerName]
+              }, { merge: true });
+          })
           .then(() => {
               inputField.value = ""; 
               autoExpand(inputField); 
@@ -432,15 +440,6 @@ function openChatInfo() {
               console.error("Kuskure wajen aika sako: ", err);
           });
     }
-
-
-    // Update last message a parent document
-db.collection("personalChats").doc(chatRoomId).set({
-    lastMessage: messageText.substring(0, 50),
-    lastMessageTime: Date.now(),
-    members: [myId, partnerName]
-}, { merge: true });
-
     
     // Jona maballin tura sako da Keyboard Enter
     document.addEventListener("DOMContentLoaded", () => {
@@ -482,19 +481,6 @@ db.collection("personalChats").doc(chatRoomId).set({
         });
     }
 
-    // Ayyukan asali na shafinka
-    const profileInput = document.getElementById('profileInput');
-    if (profileInput) {
-        profileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) { document.getElementById('profileDisplay').src = e.target.result; }
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
     function autoExpand(field) {
         field.style.height = 'inherit';
         const height = field.scrollHeight;
@@ -514,9 +500,7 @@ db.collection("personalChats").doc(chatRoomId).set({
             if (sendBtn) sendBtn.style.display = 'none';
         }
     }
-                    
     
-        
     </script>
 </body>
 </html>
