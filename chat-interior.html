@@ -22,7 +22,8 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        
+    
+
         body {
     background-color: var(--obsidian);
     background-image: radial-gradient(circle at 50% 100%, rgba(0, 242, 255, 0.07), transparent);
@@ -33,7 +34,6 @@
     display: flex;
     flex-direction: column;
         }
-        
         header {
             height: 60px;
             background: rgba(5, 5, 5, 0.8);
@@ -57,19 +57,17 @@
 
         .header-profile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        #chat-flow {
+#chat-flow {
     flex: 1;
-    padding: 68px 15px 12px 15px;
+    padding: 70px 15px 90px 15px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
     scrollbar-width: none;
     min-height: 0;
-    overscroll-behavior: contain;
-        }
-        
-        
+}
+
         .message {
             max-width: 78%;
             padding: 8px 12px 2px 12px;
@@ -95,20 +93,18 @@
             margin-bottom: 4px;
         }
 
-       .input-area {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 10px 12px 12px 12px;
-    background: rgba(5, 5, 5, 0.98);
-    backdrop-filter: blur(20px);
-    display: flex;
-    align-items: flex-end; 
-    gap: 8px;
-    z-index: 100;
-    flex-shrink: 0;
-       } 
+        .input-area {
+            position: fixed; 
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 12px 12px 12px; /* Reduced bottom padding to close the space */
+            background: transparent; 
+            display: flex;
+            align-items: flex-end; 
+            gap: 8px;
+            z-index: 100;
+        }
 
         .neural-search-bar {
             flex: 1;
@@ -156,6 +152,15 @@
 
         #sendBtn { display: none; }  
 
+        /* Hana keyboard ya tura content sama */
+@supports (-webkit-touch-callout: none) {
+    body {
+        height: -webkit-fill-available;
+    }
+    #chat-flow {
+        padding-bottom: 90px;
+    }
+}
         
     </style>
 </head>
@@ -267,7 +272,7 @@
     
     <div class="input-area">
         <input type="file" id="galleryInput" accept="image/*" style="display: none;">
-        
+
         <div id="emoji-mart-container" style="
     display: none;
     position: fixed;
@@ -316,13 +321,11 @@
 
 
 
-        <div class="neural-search-bar">
+       <div class="neural-search-bar">
 
-    <!-- Emoji - Hagu -->
-        <div class="icon-btn" id="emojiToggleBtn" 
-     onclick="openNativeEmoji()" 
-     style="padding-bottom:11px; flex-shrink:0; width:32px; justify-content:center;"> 
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
+    <!-- Emoji Button - Hagu -->
+    <div class="icon-btn" id="emojiToggleBtn" onclick="toggleEmojiPanel()" style="padding-bottom:11px; flex-shrink:0;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
             <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
             <line x1="9" y1="9" x2="9.01" y2="9" stroke-width="2.5"/>
@@ -331,20 +334,16 @@
     </div>
 
     <textarea id="msgInput" placeholder="Neural Message..." rows="1"></textarea>
-            <textarea id="msgInput" placeholder="Neural Message..." rows="1" inputmode="text"></textarea>
-            
 
-    <!-- Camera - Dama -->
-    <div class="icon-btn" 
-         onclick="document.getElementById('cameraInput').click()" 
-         style="padding-bottom:11px; flex-shrink:0; width:32px; justify-content:center;">
+    <!-- Camera Button - Dama -->
+    <div class="icon-btn" onclick="document.getElementById('cameraInput').click()" style="padding-bottom:11px; flex-shrink:0;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
             <circle cx="12" cy="13" r="4"/>
         </svg>
     </div>
 
-        </div>
+       </div> 
         <button id="voiceBtn" class="action-trigger">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         </button>
@@ -478,7 +477,7 @@ function listenToNexusMessages() {
               chatFlow.appendChild(msgBubble);
           });
 
-         // Scroll to bottom idan user yana kusa da kasa ko sako nashi ne
+        // Scroll to bottom idan user yana kusa da kasa ko sako nashi ne
 const isNearBottom = chatFlow.scrollHeight - chatFlow.scrollTop - chatFlow.clientHeight < 100;
 const lastMsg = snapshot.docs[snapshot.docs.length - 1];
 const isMyMessage = lastMsg && lastMsg.data().senderId === myId;
@@ -487,11 +486,25 @@ if (isNearBottom || isMyMessage) {
     setTimeout(() => {
         chatFlow.scrollTop = chatFlow.scrollHeight;
     }, 50);
-} 
-      });
+      }  
+      
+
+      // Scroll to bottom always
+function scrollToBottom() {
+    const chatFlow = document.getElementById("chat-flow");
+    if (chatFlow) {
+        setTimeout(() => {
+            chatFlow.scrollTop = chatFlow.scrollHeight;
+        }, 100);
+    }
 }
 
-  
+// Idan keyboard ya buɗe, scroll to bottom
+window.addEventListener('resize', () => {
+    scrollToBottom();
+});
+
+      
 function sendNeuralMessage() {
     const inputField = document.getElementById("msgInput");
     if (!inputField) return;
@@ -731,21 +744,6 @@ document.addEventListener('click', (e) => {
         panel.style.display = 'none';
     }
 });
-
-      function openNativeEmoji() {
-    const input = document.getElementById('msgInput');
-    // Bude keyboard na waya da emoji mode kai tsaye
-    input.focus();
-    // Wannan yana gaya wa Android ya bude emoji keyboard
-    try {
-        document.execCommand('selectAll', false, null);
-        document.execCommand('delete', false, null);
-    } catch(e) {}
-    
-    // Set inputmode zuwa emoji - yana bude emoji keyboard a Android
-    input.setAttribute('inputmode', 'text');
-    input.click();
-      }
     </script>
 </body>
 </html>
