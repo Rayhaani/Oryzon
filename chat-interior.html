@@ -250,18 +250,11 @@
 </div>
     </header>
 
-    <div id="chat-flow">
-        <div class="message incoming">
-            Is the protocol ready for deployment?
-            <span class="timestamp">12:02 PM</span>
-        </div>
-        
-        <div class="message outgoing">
-            System ready. All parameters finalized.
-            <span class="timestamp">12:05 PM</span>
-        </div>
-    </div>
 
+<div id="chat-flow">
+    <!-- Firebase messages zasu fito nan -->
+</div>
+    
     <div class="input-area">
         <input type="file" id="galleryInput" accept="image/*" style="display: none;">
         
@@ -360,6 +353,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+      document.addEventListener("DOMContentLoaded", () => {
+    const msgInput = document.getElementById("msgInput");
+    const sendBtn = document.getElementById("sendBtn");
+    
+    if (msgInput) {
+        msgInput.addEventListener("input", function() {
+            autoExpand(this);
+            toggleButtons();
+        });
+        msgInput.addEventListener("keypress", (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendNeuralMessage();
+            }
+        });
+    }
+    if (sendBtn) sendBtn.addEventListener("click", sendNeuralMessage);
+    
+    // Load chat
+    if (typeof db !== "undefined" && chatRoomId) {
+        listenToNexusMessages();
+    }
+});
+
+      
 function listenToNexusMessages() {
     db.collection("personalChats")
       .doc(chatRoomId)
@@ -452,15 +470,17 @@ function toggleButtons() {
     const input = document.getElementById('msgInput');
     const voiceBtn = document.getElementById('voiceBtn');
     const sendBtn = document.getElementById('sendBtn');
-
-    if (input && input.value.trim().length > 0) {
-        if (voiceBtn) voiceBtn.style.display = 'none';
-        if (sendBtn) sendBtn.style.display = 'flex';
+    
+    if (!input || !voiceBtn || !sendBtn) return;
+    
+    if (input.value.trim().length > 0) {
+        voiceBtn.style.display = 'none';
+        sendBtn.style.display = 'flex';
     } else {
-        if (voiceBtn) voiceBtn.style.display = 'flex';
-        if (sendBtn) sendBtn.style.display = 'none';
+        voiceBtn.style.display = 'flex';
+        sendBtn.style.display = 'none';
     }
-} 
+}
     
     
     </script>
