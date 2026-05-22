@@ -342,164 +342,126 @@ function openChatInfo() {
     const partnerAvatar = urlParams.get('avatar') || "https://via.placeholder.com/150/050505/00F2FF?text=+";
 
     // Asalin sunanka na aiki a kan platform ɗin (Sadiq)
-    const myId = "Sadiq"; 
-    let chatRoomId = "";
 
-    // Canza suna da hoton Header ta atomatik
-    document.addEventListener("DOMContentLoaded", () => {
-        const nameDisplay = document.getElementById("chat-header-name");
-        const avatarDisplay = document.getElementById("chat-header-avatar");
+      const myId = localStorage.getItem("nexus_user_session");
+if (!myId) window.location.href = "login.html";
 
-        if (nameDisplay && partnerName) nameDisplay.innerText = partnerName;
+const partnerAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${chatWith}`;
 
-        // Haɗa ID na musamman na dakin hirarku a Firebase
-        if (myId < partnerName) {
-            chatRoomId = `${myId}_${partnerName}`;
-        } else {
-            chatRoomId = `${partnerName}_${myId}`;
-        }
-        
-        // Kunna tsarin sauraron sakonni da kuma duba Online/Last Seen status
-        if (typeof db !== "undefined") {
-            listenToNexusMessages();
-            checkPartnerStatus();
-        } else {
-            console.warn("Firebase db ba a gano shi ba.");
-        }
-    });
+// Universal chatRoomId - works for everyone
+function getChatRoomId(user1, user2) {
+    return [user1, user2].sort().join('__');
+}
+let chatRoomId = getChatRoomId(myId, chatWith);
 
-    // Tsarin Sauraron Saƙonni a ainihin lokaci
-    function listenToNexusMessages() {
-        db.collection("personalChats")
-          .doc(chatRoomId)
-          .collection("messages")
-          .orderBy("timestamp", "asc")
-          .onSnapshot((snapshot) => {
-              const chatFlow = document.getElementById("chat-flow");
-              if (!chatFlow) return;
-              
-              chatFlow.innerHTML = ''; 
-
-              snapshot.forEach((doc) => {
-                  const msgData = doc.data();
-                  const isMe = msgData.senderId === myId;
-
-                  let formattedTime = "Just Now";
-                  if (msgData.timestamp) {
-                      const date = new Date(msgData.timestamp);
-                      formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                  }
-
-                  const msgBubble = document.createElement("div");
-                  msgBubble.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
-                  msgBubble.innerHTML = `
-                      ${msgData.text}
-                      <span class="timestamp">${formattedTime}</span>
-                  `;
-                  chatFlow.appendChild(msgBubble);
-              });
-              
-              chatFlow.scrollTop = chatFlow.scrollHeight;
-          });
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof db !== "undefined") {
+        listenToNexusMessages();
     }
+});
 
-    // Aika Saƙo zuwa Firebase (An Gyara Matsalar Nan)
-    function sendNeuralMessage() {
-        const inputField = document.getElementById("msgInput");
-        if (!inputField) return;
+function listenToNexusMessages() {
+    db.collection("personalChats")
+      .doc(chatRoomId)
+      .collection("messages")
+      .orderBy("timestamp", "asc")
+      .onSnapshot((snapshot) => {
+          const chatFlow = document.getElementById("chat-flow");
+          if (!chatFlow) return;
+          chatFlow.innerHTML = '';
 
-        const messageText = inputField.value.trim();
-        if (messageText === "") return;
+          snapshot.forEach((doc) => {
+              const msgData = doc.data();
+              const isMe = msgData.senderId === myId;
 
-        const packet = {
-            senderId: myId,
-            receiverId: partnerName,
-            text: messageText,
-            timestamp: Date.now()
-        };
+              let formattedTime = "Just Now";
+              if (msgData.timestamp) {
+                  const date = new Date(msgData.timestamp);
+                  formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              }
 
-        // 1. Tura sako zuwa sub-collection na messages
-        db.collection("personalChats")
-          .doc(chatRoomId)
-          .collection("messages")
-          .add(packet)
-          .then(() => {
-              // 2. Bayan ya tafi, sai a sabunta Parent Document na wannan chat din
-              return db.collection("personalChats").doc(chatRoomId).set({
-                  lastMessage: messageText.substring(0, 50),
-                  lastMessageTime: Date.now(),
-                  members: [myId, partnerName]
-              }, { merge: true });
-          })
-          .then(() => {
-              inputField.value = ""; 
-              autoExpand(inputField); 
-              toggleButtons(); 
-          })
-          .catch((err) => {
-              console.error("Kuskure wajen aika sako: ", err);
+              const msgBubble = document.createElement("div");
+              msgBubble.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
+              msgBubble.innerHTML = `
+                  ${msgData.text}
+                  <span class="timestamp">${formattedTime}</span>
+              `;
+              chatFlow.appendChild(msgBubble);
           });
-    }
-    
-    // Jona maballin tura sako da Keyboard Enter
-    document.addEventListener("DOMContentLoaded", () => {
-        const sendBtn = document.getElementById("sendBtn");
-        const msgInput = document.getElementById("msgInput");
-        
-        if(sendBtn) sendBtn.addEventListener("click", sendNeuralMessage);
-        if(msgInput) {
-            msgInput.addEventListener("keypress", (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendNeuralMessage();
-                }
-            });
-        }
-    });
 
-    // Duba tsarin Online da Last Seen na kowane memba guda daban
-    function checkPartnerStatus() {
-        const statusDisplay = document.querySelector(".vendor-info div:nth-child(2)");
-        if (!statusDisplay) return;
+          chatFlow.scrollTop = chatFlow.scrollHeight;
+      });
+}
 
-        db.collection("users").doc(partnerName).onSnapshot((doc) => {
-            if (doc.exists) {
-                const userData = doc.data();
-                if (userData.isOnline) {
-                    statusDisplay.innerText = "Sync Active";
-                    statusDisplay.style.color = "#00FF88"; 
-                } else if (userData.lastSeen) {
-                    const date = new Date(userData.lastSeen);
-                    const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    statusDisplay.innerText = `Last Seen ${timeString}`;
-                    statusDisplay.style.color = "rgba(255,255,255,0.4)"; 
-                }
-            } else {
-                statusDisplay.innerText = "Offline";
-                statusDisplay.style.color = "rgba(255,255,255,0.4)";
+function sendNeuralMessage() {
+    const inputField = document.getElementById("msgInput");
+    if (!inputField) return;
+
+    const messageText = inputField.value.trim();
+    if (messageText === "") return;
+
+    const packet = {
+        senderId: myId,
+        receiverId: chatWith,
+        text: messageText,
+        timestamp: Date.now()
+    };
+
+    db.collection("personalChats")
+      .doc(chatRoomId)
+      .collection("messages")
+      .add(packet)
+      .then(() => {
+          return db.collection("personalChats").doc(chatRoomId).set({
+              lastMessage: messageText.substring(0, 60),
+              lastMessageTime: Date.now(),
+              members: [myId, chatWith]
+          }, { merge: true });
+      })
+      .then(() => {
+          inputField.value = "";
+          autoExpand(inputField);
+          toggleButtons();
+      })
+      .catch((err) => {
+          console.error("Error:", err);
+      });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const sendBtn = document.getElementById("sendBtn");
+    const msgInput = document.getElementById("msgInput");
+
+    if (sendBtn) sendBtn.addEventListener("click", sendNeuralMessage);
+    if (msgInput) {
+        msgInput.addEventListener("keypress", (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendNeuralMessage();
             }
         });
     }
+});
 
-    function autoExpand(field) {
-        field.style.height = 'inherit';
-        const height = field.scrollHeight;
-        field.style.height = height + 'px';
-    }
+function autoExpand(field) {
+    field.style.height = 'inherit';
+    field.style.height = field.scrollHeight + 'px';
+}
 
-    function toggleButtons() {
-        const input = document.getElementById('msgInput');
-        const voiceBtn = document.getElementById('voiceBtn');
-        const sendBtn = document.getElementById('sendBtn');
-        
-        if (input && input.value.trim().length > 0) {
-            if (voiceBtn) voiceBtn.style.display = 'none';
-            if (sendBtn) sendBtn.style.display = 'flex';
-        } else {
-            if (voiceBtn) voiceBtn.style.display = 'flex';
-            if (sendBtn) sendBtn.style.display = 'none';
-        }
+function toggleButtons() {
+    const input = document.getElementById('msgInput');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const sendBtn = document.getElementById('sendBtn');
+
+    if (input && input.value.trim().length > 0) {
+        if (voiceBtn) voiceBtn.style.display = 'none';
+        if (sendBtn) sendBtn.style.display = 'flex';
+    } else {
+        if (voiceBtn) voiceBtn.style.display = 'flex';
+        if (sendBtn) sendBtn.style.display = 'none';
     }
+} 
+    
     
     </script>
 </body>
