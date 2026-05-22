@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus - Unified Inbox</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --obsidian: #050505;
@@ -214,67 +216,91 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 
 const myId = localStorage.getItem("nexus_user_session") || "Sadiq_Alhassan";
-
 async function loadChats() {
     const container = document.getElementById('chats-list-container');
     container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
     
-    // Nemi dukan sakonni da suka shafi wannan user
-    const snapshot = await db.collection("personalChats")
-        .orderBy("lastMessageTime", "desc")
-        .get();
-    
-    container.innerHTML = '';
-    let hasChats = false;
+    try {
+        const snapshot = await db.collection("personalChats").get();
+        
+        container.innerHTML = '';
+        let hasChats = false;
 
-    snapshot.forEach(doc => {
-        const chatId = doc.id; // e.g. "Sadiq_Sultaan" ko "Sultaan_Sadiq"
-        const parts = chatId.split('_');
-        
-        // Tabbatar wannan chat yana da alaka da ni
-        if (!chatId.includes(myId)) return;
-        
-        // Gano sunan ɗayan mutum
-        const otherUser = parts[0] === myId ? parts.slice(1).join('_') : parts[0];
-        
-        const data = doc.data();
-        const lastMsg = data.lastMessage || "Tap to open chat";
-        const lastTime = data.lastMessageTime 
-            ? new Date(data.lastMessageTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-            : "";
+        snapshot.forEach(doc => {
+            const chatId = doc.id;
+            
+            // Duba ko myId yana cikin chat ID din
+            if (!chatId.includes(myId.split('_')[0])) return;
+            
+            // Gano sunan ɗayan mutum daga chat ID
+            const parts = chatId.split('_');
+            let otherUser = '';
+            
+            // Chat ID format: "User1_User2" - gano wanda ba ni ba
+            if (chatId.startsWith(myId)) {
+                otherUser = chatId.replace(myId + '_', '');
+            } else {
+                otherUser = chatId.replace('_' + myId, '');
+            }
+            
+            if (!otherUser) return;
+            
+            const data = doc.data();
+            const lastMsg = data.lastMessage || "Tap to open chat";
+            const lastTime = data.lastMessageTime 
+                ? new Date(data.lastMessageTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                : "";
+            
+            // Load avatar daga Firestore
+            const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${otherUser}`;
 
-        hasChats = true;
-        container.insertAdjacentHTML('beforeend', `
-            <div onclick="window.location.href='chat-interior.html?with=${otherUser}'" 
-                 style="
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    padding: 12px 15px;
-                    border-bottom: 1px solid rgba(255,255,255,0.05);
-                    cursor: pointer;
-                    transition: background 0.2s;
-                 "
-                 onmouseenter="this.style.background='rgba(255,255,255,0.03)'"
-                 onmouseleave="this.style.background='transparent'"
-            >
-                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${otherUser}" 
-                     style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:1.5px solid rgba(255,255,255,0.1); flex-shrink:0;">
-                <div style="flex:1; overflow:hidden;">
-                    <div style="font-size:14px; font-weight:700; color:#fff; margin-bottom:3px;">${otherUser}</div>
-                    <div style="font-size:12px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${lastMsg}</div>
+            hasChats = true;
+            container.insertAdjacentHTML('beforeend', `
+                <div onclick="window.location.href='chat-interior.html?with=${otherUser}'" 
+                     style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 12px 15px;
+                        border-bottom: 1px solid rgba(255,255,255,0.05);
+                        cursor: pointer;
+                     "
+                >
+                    <img src="${avatarUrl}" id="avatar-${otherUser}"
+                         style="width:50px; height:50px; border-radius:50%; object-fit:cover; 
+                                border:1.5px solid rgba(255,255,255,0.1); flex-shrink:0;">
+                    <div style="flex:1; overflow:hidden;">
+                        <div style="font-size:14px; font-weight:700; color:#fff; margin-bottom:3px;">${otherUser}</div>
+                        <div style="font-size:12px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${lastMsg}</div>
+                    </div>
+                    <div style="font-size:11px; color:#555; flex-shrink:0;">${lastTime}</div>
                 </div>
-                <div style="font-size:11px; color:#555; flex-shrink:0;">${lastTime}</div>
-            </div>
-        `);
-    });
+            `);
+            
+            // Load real avatar daga Firestore a baya
+            db.collection('users').doc(otherUser).get().then(userDoc => {
+                if (userDoc.exists && userDoc.data().userProfilePic) {
+                    const img = document.getElementById(`avatar-${otherUser}`);
+                    if (img) img.src = userDoc.data().userProfilePic;
+                }
+            });
+        });
 
-    if (!hasChats) {
-        container.innerHTML = '<p style="text-align:center; padding:30px; color:#555;">No messages yet</p>';
+        if (!hasChats) {
+            container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
+        }
+        
+    } catch(err) {
+        console.error("Chat load error:", err);
+        container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
     }
 }
 
-loadChats();
+// Real-time listener - zai update idan sako ya shigo
+db.collection("personalChats").onSnapshot(() => {
+    loadChats();
+});
+
         
         function switchTab(element, tabId) {
             // Idan an danna maɓallin updates, zai buɗe shafin updates.html kai tsaye automatically
