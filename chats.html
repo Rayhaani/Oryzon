@@ -229,19 +229,12 @@ async function loadChats() {
         snapshot.forEach(doc => {
             const chatId = doc.id;
             
-            // Duba ko myId yana cikin chat ID din
-            if (!chatId.includes(myId.split('_')[0])) return;
-            
-            // Gano sunan ɗayan mutum daga chat ID
-            const parts = chatId.split('_');
-            let otherUser = '';
-            
-            // Chat ID format: "User1_User2" - gano wanda ba ni ba
-            if (chatId.startsWith(myId)) {
-                otherUser = chatId.replace(myId + '_', '');
-            } else {
-                otherUser = chatId.replace('_' + myId, '');
-            }
+
+            // Double underscore __ ne separator - works for any username
+if (!chatId.includes(myId)) return;
+
+const parts = chatId.split('__');
+const otherUser = parts[0] === myId ? parts[1] : parts[0];
             
             if (!otherUser) return;
             
