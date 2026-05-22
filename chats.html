@@ -133,24 +133,10 @@
         </div>
     </header>
 
-    <div class="view-container">
-        <div id="personal" class="tab-view active">
-            <a href="chat-interior.html" class="chat-item">
-                <div class="profile-stack"><img src="https://via.placeholder.com/46/111/00F2FF?text=A" class="user-img"></div>
-                <div class="chat-details">
-                    <div class="chat-header"><span class="name">Ahmad Tech Hub</span><span class="time">2:45 PM</span></div>
-                    <p class="preview-text">Sannu abokina, Nexus Cloud Miner yana nan?</p>
-                </div>
-            </a>
-            <a href="chat-interior.html" class="chat-item">
-                <div class="profile-stack"><img src="https://via.placeholder.com/46/222/00F2FF?text=M" class="user-img"></div>
-                <div class="chat-details">
-                    <div class="chat-header"><span class="name">Musa Developer</span><span class="time">1:15 PM</span></div>
-                    <p class="preview-text">Na kammala tsarin database din...</p>
-                </div>
-            </a>
-        </div>
-
+    
+<div id="chats-list-container">
+    <!-- Firebase zai cika nan -->
+</div>
         <div id="groups" class="tab-view">
             <a href="chat-interior.html" class="chat-item">
                 <div class="profile-stack"><img src="https://via.placeholder.com/46/00F2FF/000?text=KM" class="user-img" style="border-radius: 12px;"></div>
@@ -213,6 +199,83 @@
     </div>
 
     <script>
+        const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+
+const myId = localStorage.getItem("nexus_user_session") || "Sadiq_Alhassan";
+
+async function loadChats() {
+    const container = document.getElementById('chats-list-container');
+    container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
+    
+    // Nemi dukan sakonni da suka shafi wannan user
+    const snapshot = await db.collection("personalChats")
+        .orderBy("lastMessageTime", "desc")
+        .get();
+    
+    container.innerHTML = '';
+    let hasChats = false;
+
+    snapshot.forEach(doc => {
+        const chatId = doc.id; // e.g. "Sadiq_Sultaan" ko "Sultaan_Sadiq"
+        const parts = chatId.split('_');
+        
+        // Tabbatar wannan chat yana da alaka da ni
+        if (!chatId.includes(myId)) return;
+        
+        // Gano sunan ɗayan mutum
+        const otherUser = parts[0] === myId ? parts.slice(1).join('_') : parts[0];
+        
+        const data = doc.data();
+        const lastMsg = data.lastMessage || "Tap to open chat";
+        const lastTime = data.lastMessageTime 
+            ? new Date(data.lastMessageTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+            : "";
+
+        hasChats = true;
+        container.insertAdjacentHTML('beforeend', `
+            <div onclick="window.location.href='chat-interior.html?with=${otherUser}'" 
+                 style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 15px;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                    cursor: pointer;
+                    transition: background 0.2s;
+                 "
+                 onmouseenter="this.style.background='rgba(255,255,255,0.03)'"
+                 onmouseleave="this.style.background='transparent'"
+            >
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${otherUser}" 
+                     style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:1.5px solid rgba(255,255,255,0.1); flex-shrink:0;">
+                <div style="flex:1; overflow:hidden;">
+                    <div style="font-size:14px; font-weight:700; color:#fff; margin-bottom:3px;">${otherUser}</div>
+                    <div style="font-size:12px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${lastMsg}</div>
+                </div>
+                <div style="font-size:11px; color:#555; flex-shrink:0;">${lastTime}</div>
+            </div>
+        `);
+    });
+
+    if (!hasChats) {
+        container.innerHTML = '<p style="text-align:center; padding:30px; color:#555;">No messages yet</p>';
+    }
+}
+
+loadChats();
+        
         function switchTab(element, tabId) {
             // Idan an danna maɓallin updates, zai buɗe shafin updates.html kai tsaye automatically
             if (tabId === 'updates') {
