@@ -218,6 +218,8 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 
 const myId = localStorage.getItem("nexus_user_session") || "Sadiq_Alhassan";
+
+            
 async function loadChats() {
     const container = document.getElementById('chats-list-container');
     container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
@@ -240,13 +242,13 @@ async function loadChats() {
             if (!rawUser || rawUser === myId) return;
             if (!rawUser) return;            
                 
-            // AN SHIGAR DA GYARA 1: Tilasta sunan ya fara da babban harafi (Title Case) don ya yi daidai da Groups
-            const otherUser = rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
+            // Sunan farko na wucin gadi kafin cikakken suna ya fito
+            const initialName = rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
 
             const data = doc.data();
             const lastMsg = data.lastMessage || "Tap to open chat";
             
-            // AN SHIGAR DA GYARA 2: Tace lokaci zuwa exact tsarin 12-hour mai dauke da AM/PM dambas
+            // Tace lokaci zuwa exact tsarin 12-hour mai dauke da AM/PM dambas
             let lastTime = "";
             if (data.lastMessageTime) {
                 const dateObj = new Date(data.lastMessageTime);
@@ -263,13 +265,13 @@ async function loadChats() {
 
             hasChats = true;
             container.insertAdjacentHTML('beforeend', `
-                <a href="chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item">
+                <a href="chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item" id="chat-link-${rawUser}">
                     <div class="profile-stack">
                         <img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img">
                     </div>
                     <div class="chat-details">
                         <div class="chat-header">
-                            <span class="name">${otherUser}</span>
+                            <span class="name" id="name-${rawUser}">${initialName}</span>
                             <span class="time">${lastTime}</span>
                         </div>
                         <p class="preview-text">${lastMsg}</p>
@@ -277,11 +279,26 @@ async function loadChats() {
                 </a>
             `);
             
-            // Load real avatar daga Firestore a baya
+            // Loda Cikakken Suna da Hoto daga collection na 'users' a asirce
             db.collection('users').doc(rawUser).get().then(userDoc => {
-                if (userDoc.exists && userDoc.data().userProfilePic) {
-                    const img = document.getElementById(`avatar-${rawUser}`);
-                    if (img) img.src = userDoc.data().userProfilePic;
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    
+                    // GYARA: Kwaso cikakken suna (misali fullName ko name) daga Firebase dinka
+                    const fullName = userData.fullName || userData.name || userData.username;
+                    if (fullName) {
+                        const nameSpan = document.getElementById(`name-${rawUser}`);
+                        if (nameSpan) {
+                            // Canza shi zuwa Title Case koda an rubuta shi da karamin harafi a DB
+                            nameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                        }
+                    }
+                    
+                    // Loda ainihin hoton profile
+                    if (userData.userProfilePic) {
+                        const img = document.getElementById(`avatar-${rawUser}`);
+                        if (img) img.src = userData.userProfilePic;
+                    }
                 }
             });
         });
@@ -301,7 +318,6 @@ db.collection("personalChats").onSnapshot(() => {
     loadChats();
 });
             
-
         
         function switchTab(element, tabId) {
             // Idan an danna maɓallin updates, zai buɗe shafin updates.html kai tsaye automatically
