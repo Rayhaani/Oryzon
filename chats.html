@@ -231,46 +231,56 @@ async function loadChats() {
         snapshot.forEach(doc => {
             const chatId = doc.id;
             
-
             // Double underscore __ ne separator - works for any username
-if (!chatId.includes(myId)) return;
+            if (!chatId.includes(myId)) return;
 
-const parts = chatId.split('__');
-if (parts.length < 2) return; // Hana kuskure
-const otherUser = parts[0] === myId ? parts[1] : parts[0];
-if (!otherUser || otherUser === myId) return;
-  if (!otherUser) return;            
+            const parts = chatId.split('__');
+            if (parts.length < 2) return; // Hana kuskure
+            const rawUser = parts[0] === myId ? parts[1] : parts[0];
+            if (!rawUser || rawUser === myId) return;
+            if (!rawUser) return;            
                 
+            // AN SHIGAR DA GYARA 1: Tilasta sunan ya fara da babban harafi (Title Case) don ya yi daidai da Groups
+            const otherUser = rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
+
             const data = doc.data();
             const lastMsg = data.lastMessage || "Tap to open chat";
-            const lastTime = data.lastMessageTime 
-                ? new Date(data.lastMessageTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                : "";
+            
+            // AN SHIGAR DA GYARA 2: Tace lokaci zuwa exact tsarin 12-hour mai dauke da AM/PM dambas
+            let lastTime = "";
+            if (data.lastMessageTime) {
+                const dateObj = new Date(data.lastMessageTime);
+                let hours = dateObj.getHours();
+                const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // Mayar da 0 zuwa 12
+                lastTime = `${hours}:${minutes} ${ampm}`;
+            }
             
             // Load avatar daga Firestore
-            const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${otherUser}`;
+            const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${rawUser}`;
 
             hasChats = true;
-           container.insertAdjacentHTML('beforeend', `
-    <a href="chat-interior.html?with=${encodeURIComponent(otherUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item">
-        <div class="profile-stack">
-            <img src="${avatarUrl}" id="avatar-${otherUser}" class="user-img">
-        </div>
-        <div class="chat-details">
-            <div class="chat-header">
-                <span class="name">${otherUser}</span>
-                <span class="time">${lastTime}</span>
-            </div>
-            <p class="preview-text">${lastMsg}</p>
-        </div>
-    </a>
-`);
-            
+            container.insertAdjacentHTML('beforeend', `
+                <a href="chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item">
+                    <div class="profile-stack">
+                        <img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img">
+                    </div>
+                    <div class="chat-details">
+                        <div class="chat-header">
+                            <span class="name">${otherUser}</span>
+                            <span class="time">${lastTime}</span>
+                        </div>
+                        <p class="preview-text">${lastMsg}</p>
+                    </div>
+                </a>
+            `);
             
             // Load real avatar daga Firestore a baya
-            db.collection('users').doc(otherUser).get().then(userDoc => {
+            db.collection('users').doc(rawUser).get().then(userDoc => {
                 if (userDoc.exists && userDoc.data().userProfilePic) {
-                    const img = document.getElementById(`avatar-${otherUser}`);
+                    const img = document.getElementById(`avatar-${rawUser}`);
                     if (img) img.src = userDoc.data().userProfilePic;
                 }
             });
@@ -290,6 +300,7 @@ if (!otherUser || otherUser === myId) return;
 db.collection("personalChats").onSnapshot(() => {
     loadChats();
 });
+            
 
         
         function switchTab(element, tabId) {
