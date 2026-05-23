@@ -135,21 +135,21 @@
         </div>
     </header>
 
-    <div class="view-container">
-        <div id="personal" class="tab-view active">
-            <div id="chats-list-container">
-                </div>
-        </div>
+          <div id="personal" class="tab-view active">
+    <div id="chats-list-container">
+        <!-- Firebase zai cika nan -->
+    </div>
+</div>
 
-        <div id="groups" class="tab-view">
-            <a href="chat-interior.html?with=KanoMart Devs" class="chat-item">
+<div id="groups" class="tab-view">
+            <a href="chat-interior.html" class="chat-item">
                 <div class="profile-stack"><img src="https://via.placeholder.com/46/00F2FF/000?text=KM" class="user-img" style="border-radius: 12px;"></div>
                 <div class="chat-details">
                     <div class="chat-header"><span class="name">KanoMart Devs</span><span class="time">1:10 PM</span></div>
                     <p class="preview-text">Ali: Update logic ɗin yanzu...</p>
                 </div>
             </a>
-            <a href="chat-interior.html?with=Synergy Core" class="chat-item">
+            <a href="chat-interior.html" class="chat-item">
                 <div class="profile-stack"><img src="https://via.placeholder.com/46/333/00F2FF?text=SY" class="user-img" style="border-radius: 12px;"></div>
                 <div class="chat-details">
                     <div class="chat-header"><span class="name">Synergy Core</span><span class="time">Yesterday</span></div>
@@ -158,7 +158,7 @@
             </a>
         </div>
 
-        <div id="updates" class="tab-view">
+       <div id="updates" class="tab-view">
             <div class="chat-item" onclick="openStoryViewer('my-status')">
                 <div class="profile-stack">
                     <img src="https://via.placeholder.com/46/222/00F2FF?text=Me" class="user-img status-ring dynamic-ring">
@@ -191,10 +191,11 @@
                     <p class="preview-text">Nexus Cloud Miner update live</p>
                 </div>
             </div>
-        </div>
+       </div>
+        
 
         <div id="friends" class="tab-view">
-            <a href="chat-interior.html?with=Salisu Synergy" class="chat-item">
+            <a href="chat-interior.html" class="chat-item">
                 <div class="profile-stack"><img src="https://via.placeholder.com/46/333/fff?text=S" class="user-img"></div>
                 <div class="chat-details"><span class="name">Salisu Synergy</span><p class="preview-text">Active Now</p></div>
             </a>
@@ -203,102 +204,101 @@
 
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-            authDomain: "oryzon-50ea4.firebaseapp.com",
-            projectId: "oryzon-50ea4",
-            storageBucket: "oryzon-50ea4.firebasestorage.app",
-            messagingSenderId: "782106742622",
-            appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
-        };
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+};
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.firestore();
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
 
-        const myId = localStorage.getItem("nexus_user_session") || "Sadiq_Alhassan";
+const myId = localStorage.getItem("nexus_user_session") || "Sadiq_Alhassan";
+async function loadChats() {
+    const container = document.getElementById('chats-list-container');
+    container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
+    
+    try {
+        const snapshot = await db.collection("personalChats").get();
+        
+        container.innerHTML = '';
+        let hasChats = false;
 
-        // AN GYARA NAN: Yanzu Personal Chats yana amfani da cikakken tsarin rubutun Groups
-        async function loadChats() {
-            const container = document.getElementById('chats-list-container');
-            if (!container) return;
+        snapshot.forEach(doc => {
+            const chatId = doc.id;
             
-            try {
-                const snapshot = await db.collection("personalChats").get();
-                container.innerHTML = '';
-                let hasChats = false;
 
-                snapshot.forEach(doc => {
-                    const chatId = doc.id;
+            // Double underscore __ ne separator - works for any username
+if (!chatId.includes(myId)) return;
 
-                    if (!chatId.includes(myId)) return;
-
-                    const parts = chatId.split('__');
-                    if (parts.length < 2) return; 
-                    const otherUser = parts[0] === myId ? parts[1] : parts[0];
-                    if (!otherUser || otherUser === myId) return;
-                        
-                    const data = doc.data();
-                    const lastMsg = data.lastMessage || "Tap to open chat";
-                    const lastTime = data.lastMessageTime 
-                        ? new Date(data.lastMessageTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                        : "";
-                    
-                    const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${otherUser}`;
-                    hasChats = true;
-
-                    // Anan na sanya exact tsarin <a> da <div> na rubutun Groups dinka cif-cif!
-                    container.insertAdjacentHTML('beforeend', `
-                        <a href="chat-interior.html?with=${encodeURIComponent(otherUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item">
-                            <div class="profile-stack">
-                                <img src="${avatarUrl}" id="avatar-${otherUser}" class="user-img">
-                            </div>
-                            <div class="chat-details">
-                                <div class="chat-header">
-                                    <span class="name">${otherUser}</span>
-                                    <span class="time">${lastTime}</span>
-                                </div>
-                                <p class="preview-text">${lastMsg}</p>
-                            </div>
-                        </a>
-                    `);
-                    
-                    // Dynamic real profile picture loading a background
-                    db.collection('users').doc(otherUser).get().then(userDoc => {
-                        if (userDoc.exists && userDoc.data().userProfilePic) {
-                            const img = document.getElementById(`avatar-${otherUser}`);
-                            if (img) {
-                                img.src = userDoc.data().userProfilePic;
-                                // Sabunta link din auren tare da ainihin hoton shi
-                                const parentLink = img.closest('.chat-item');
-                                if (parentLink) {
-                                    parentLink.href = `chat-interior.html?with=${encodeURIComponent(otherUser)}&avatar=${encodeURIComponent(userDoc.data().userProfilePic)}`;
-                                }
-                            }
-                        }
-                    });
-                });
-
-                if (!hasChats) {
-                    container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
-                }
+const parts = chatId.split('__');
+if (parts.length < 2) return; // Hana kuskure
+const otherUser = parts[0] === myId ? parts[1] : parts[0];
+if (!otherUser || otherUser === myId) return;
+  if (!otherUser) return;            
                 
-            } catch(err) {
-                console.error("Chat load error:", err);
-                container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
-            }
-        }
+            const data = doc.data();
+            const lastMsg = data.lastMessage || "Tap to open chat";
+            const lastTime = data.lastMessageTime 
+                ? new Date(data.lastMessageTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                : "";
+            
+            // Load avatar daga Firestore
+            const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${otherUser}`;
 
-        // Real-time listener don canje-canje na take-da-take
-        db.collection("personalChats").onSnapshot(() => {
-            loadChats();
+            hasChats = true;
+           container.insertAdjacentHTML('beforeend', `
+    <a href="chat-interior.html?with=${encodeURIComponent(otherUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item">
+        <div class="profile-stack">
+            <img src="${avatarUrl}" id="avatar-${otherUser}" class="user-img">
+        </div>
+        <div class="chat-details">
+            <div class="chat-header">
+                <span class="name">${otherUser}</span>
+                <span class="time">${lastTime}</span>
+            </div>
+            <p class="preview-text">${lastMsg}</p>
+        </div>
+    </a>
+`);
+            
+            
+            // Load real avatar daga Firestore a baya
+            db.collection('users').doc(otherUser).get().then(userDoc => {
+                if (userDoc.exists && userDoc.data().userProfilePic) {
+                    const img = document.getElementById(`avatar-${otherUser}`);
+                    if (img) img.src = userDoc.data().userProfilePic;
+                }
+            });
         });
 
+        if (!hasChats) {
+            container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
+        }
+        
+    } catch(err) {
+        console.error("Chat load error:", err);
+        container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
+    }
+}
+
+// Real-time listener - zai update idan sako ya shigo
+db.collection("personalChats").onSnapshot(() => {
+    loadChats();
+});
+
+        
         function switchTab(element, tabId) {
+            // Idan an danna maɓallin updates, zai buɗe shafin updates.html kai tsaye automatically
             if (tabId === 'updates') {
                 window.location.href = 'updates.html';
-                return; 
+                return; // Tsayar da sauran kofofin aiki na ƙasa
             }
+
             document.querySelectorAll('.smart-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
             element.classList.add('active');
@@ -312,6 +312,61 @@
                 window.location.href = `story-viewer.html?user=${userId}`;
             }
         }
+
+
+
+        // Wannan function din zai kula da tura sunan memba zuwa shafin chat-interior.html ba tare da an taba CSS ko HTML ba
+function openChatRoom(event, name, avatar) {
+    event.preventDefault(); // Kare katsewar asalin tafiyar 'a' link din
+    const targetUrl = `chat-interior.html?user=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar)}`;
+    window.location.href = targetUrl;
+}
+
+// Muna jiran shafin ya gama loda abubuwansa
+document.addEventListener("DOMContentLoaded", () => {
+    // Gyara na musamman don fannin Personal Chats
+    const personalItems = document.querySelectorAll("#personal .chat-item");
+    personalItems.forEach(item => {
+        const nameText = item.querySelector(".name").innerText;
+        const avatarSrc = item.querySelector(".user-img").src;
+        
+        // Sanya muku sabon tsarin danna katin ba tare da an taba asalin HTML din ba
+        item.addEventListener("click", (e) => openChatRoom(e, nameText, avatarSrc));
+    });
+
+    // Gyara na musamman don fannin Friends
+    const friendItems = document.querySelectorAll("#friends .chat-item");
+    friendItems.forEach(item => {
+        const nameText = item.querySelector(".name").innerText;
+        const avatarSrc = item.querySelector(".user-img").src;
+        
+        item.addEventListener("click", (e) => openChatRoom(e, nameText, avatarSrc));
+    });
+});
+
+
+        // Wannan kudin zai gyara matsalar "Nexus Vendor" ta hanyar canza kofofin tafiya na asalin HTML dinka ta atomatik
+document.addEventListener("DOMContentLoaded", () => {
+    // Gyara na musamman don fannin Personal Chats
+    const personalLinks = document.querySelectorAll("#personal .chat-item");
+    personalLinks.forEach(link => {
+        const nameText = link.querySelector(".name").innerText;
+        const avatarSrc = link.querySelector(".user-img").src;
+        
+        // Dynamic routing: Muna sauya inda href din zai tafi da sunan mutumin da aka danna
+        link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
+    });
+
+    // Gyara na musamman don fannin Friends
+    const friendLinks = document.querySelectorAll("#friends .chat-item");
+    friendLinks.forEach(link => {
+        const nameText = link.querySelector(".name").innerText;
+        const avatarSrc = link.querySelector(".user-img").src;
+        
+        link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
+    });
+});
+        
     </script>
 </body>
-</html>
+                                                 </html>
