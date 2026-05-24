@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus - Unified Inbox</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&family=Orbitron:wght=600;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
@@ -13,6 +13,7 @@
             --cyan-neon: #00F2FF;
             --glass-border: rgba(255, 255, 255, 0.08);
             --text-dim: rgba(255, 255, 255, 0.6);
+            --neon-glow: 0 0 12px rgba(0, 242, 255, 0.25);
         }
 
         * {
@@ -29,6 +30,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
         }
 
         header {
@@ -41,13 +43,71 @@
         .header-top {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 12px;
+            position: relative;
         }
 
         .back-trigger { cursor: pointer; display: flex; align-items: center; }
         h1 { font-size: 15px; font-weight: 600; color: white; }
-        .search-trigger { cursor: pointer; color: var(--text-dim); }
 
-        /* FIXED BUTTONS GROUP WITH BALANCED SPACING */
+        .nexus-hud-controller {
+            display: flex;
+            align-items: center;
+            background: rgba(6, 9, 16, 0.6);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 14px;
+            box-shadow: inset 0 0 8px rgba(0, 242, 255, 0.05), var(--neon-glow);
+        }
+
+        .hud-btn {
+            cursor: pointer;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2px;
+        }
+
+        .hud-btn svg {
+            filter: drop-shadow(0 0 2px rgba(0, 242, 255, 0));
+            transition: 0.3s;
+        }
+
+        .hud-btn:active svg {
+            color: var(--cyan-neon);
+            stroke: var(--cyan-neon);
+            filter: drop-shadow(0 0 5px var(--cyan-neon));
+        }
+
+        .integrated-search-box {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--obsidian);
+            display: flex; align-items: center;
+            gap: 10px; padding: 0 5px;
+            opacity: 0; pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 110;
+        }
+
+        .integrated-search-box.active {
+            opacity: 1; pointer-events: all;
+        }
+
+        .integrated-search-box input {
+            flex: 1; background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            padding: 7px 14px; border-radius: 12px;
+            color: white; font-size: 12px; outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .integrated-search-box input:focus {
+            border-color: var(--cyan-neon);
+            box-shadow: var(--neon-glow);
+        }
+
         .smart-btn-group {
             display: flex;
             gap: 5px;
@@ -112,6 +172,104 @@
             font-size: 11.5px; color: var(--text-dim);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
+
+        /* ================= CYBER CARPET OVERLAY ================= */
+        .carpet-portal {
+            position: fixed;
+            top: 0; 
+            right: 0; 
+            width: 70%; 
+            max-height: 60vh; 
+            height: auto; 
+            background: rgba(5, 7, 12, 0.96);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-left: 1px solid rgba(0, 242, 255, 0.2);
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+            border-radius: 0 0 0 24px; 
+            z-index: 200;
+            display: flex; flex-direction: column;
+            box-shadow: -10px 15px 40px rgba(0,0,0,0.9), 0 5px 20px rgba(0,242,255,0.05);
+            
+            transform: scaleY(0);
+            transform-origin: top right;
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.4s ease;
+        }
+
+        .carpet-portal.unrolled {
+            transform: scaleY(1);
+            opacity: 1;
+        }
+
+        .portal-top-bar {
+            padding: 14px 15px 6px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .portal-headline {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--cyan-neon);
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
+        }
+
+        .close-portal-trigger {
+            cursor: pointer; color: var(--text-dim); padding: 2px;
+            transition: 0.3s; display: flex; align-items: center;
+        }
+        .close-portal-trigger:hover { color: #fff; }
+
+        .contacts-section-title {
+            padding: 4px 15px 4px;
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+        }
+
+        .portal-scrollable-body {
+            flex: 1; overflow-y: auto; padding: 2px 2px 10px;
+            scrollbar-width: none;
+        }
+        .portal-scrollable-body::-webkit-scrollbar { display: none; }
+
+        .cyber-contact-node {
+            display: flex; align-items: center; 
+            padding: 6px 15px;
+            border-radius: 10px; margin-bottom: 2px; cursor: pointer;
+            border: 1px solid transparent;
+            height: 50px;
+        }
+
+        .cyber-contact-node:active {
+            background: rgba(0, 242, 255, 0.03);
+        }
+
+        .cyber-contact-node .user-img {
+            width: 34px !important;
+            height: 34px !important;
+        }
+
+        .cyber-checkbox-ring {
+            width: 15px; height: 15px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.2); margin-left: auto;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+
+        .cyber-contact-node.selected .cyber-checkbox-ring {
+            border-color: var(--cyan-neon);
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 8px var(--cyan-neon);
+        }
+
+        .cyber-contact-node.selected .cyber-checkbox-ring::after {
+            content: ''; width: 5px; height: 5px; border-radius: 50%;
+            background: var(--cyan-neon);
+        }
     </style>
 </head>
 <body>
@@ -122,8 +280,26 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
             </div>
             <h1>Messages</h1>
-            <div class="search-trigger">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            
+            <div class="nexus-hud-controller">
+                <div class="hud-btn" onclick="toggleIntegratedSearch(true)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2">
+                        <path d="M15 15l5 5"/>
+                        <circle cx="11" cy="11" r="7"/>
+                    </svg>
+                </div>
+                <div class="hud-btn" onclick="openCarpetPortal()" style="border-left: 1px solid rgba(0,242,255,0.15); padding-left: 10px; margin-left: 8px;">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5">
+                        <path d="M12 4v16M4 12h16"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="integrated-search-box" id="integratedSearch">
+                <input type="text" id="mainSearchInput" placeholder="Search secure transmission..." oninput="filterActiveChats(this.value)">
+                <div class="hud-btn" onclick="toggleIntegratedSearch(false)" style="color: var(--cyan-neon);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </div>
             </div>
         </div>
 
@@ -135,13 +311,13 @@
         </div>
     </header>
 
-          <div id="personal" class="tab-view active">
-    <div id="chats-list-container">
-        <!-- Firebase zai cika nan -->
-    </div>
-</div>
+    <div class="view-container">
+        <div id="personal" class="tab-view active">
+            <div id="chats-list-container">
+                </div>
+        </div>
 
-<div id="groups" class="tab-view">
+        <div id="groups" class="tab-view">
             <a href="chat-interior.html" class="chat-item">
                 <div class="profile-stack"><img src="https://via.placeholder.com/46/00F2FF/000?text=KM" class="user-img" style="border-radius: 12px;"></div>
                 <div class="chat-details">
@@ -158,7 +334,7 @@
             </a>
         </div>
 
-       <div id="updates" class="tab-view">
+        <div id="updates" class="tab-view">
             <div class="chat-item" onclick="openStoryViewer('my-status')">
                 <div class="profile-stack">
                     <img src="https://via.placeholder.com/46/222/00F2FF?text=Me" class="user-img status-ring dynamic-ring">
@@ -191,8 +367,7 @@
                     <p class="preview-text">Nexus Cloud Miner update live</p>
                 </div>
             </div>
-       </div>
-        
+        </div>
 
         <div id="friends" class="tab-view">
             <a href="chat-interior.html" class="chat-item">
@@ -202,130 +377,207 @@
         </div>
     </div>
 
+    <div class="carpet-portal" id="carpetPortal">
+        <div class="portal-top-bar">
+            <span class="portal-headline" onclick="initializeGroupFromOverlay()" style="cursor:pointer;">Create Group</span>
+            <div class="close-portal-trigger" onclick="closeCarpetPortal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </div>
+        </div>
+        
+        <div class="contacts-section-title">Contacts On Oryzon</div>
+        
+        <div class="portal-scrollable-body" id="carpet-contacts-list">
+            </div>
+    </div>
+
     <script>
         const firebaseConfig = {
-    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-    authDomain: "oryzon-50ea4.firebaseapp.com",
-    projectId: "oryzon-50ea4",
-    storageBucket: "oryzon-50ea4.firebasestorage.app",
-    messagingSenderId: "782106742622",
-    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
-};
+            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+            authDomain: "oryzon-50ea4.firebaseapp.com",
+            projectId: "oryzon-50ea4",
+            storageBucket: "oryzon-50ea4.firebasestorage.app",
+            messagingSenderId: "782106742622",
+            appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+        };
 
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.firestore();
+        const myId = localStorage.getItem("nexus_user_session") || "Sadiq_Alhassan"; 
+        let selectedNodes = [];
+        let identifiedContacts = new Set(); // Kebantaccen runfani na adana mambobi ba tare da rubanya suna ba
 
-const myId = localStorage.getItem("nexus_user_session") || "Sadiq_Alhassan";
-
+        async function loadChats() {
+            const container = document.getElementById('chats-list-container');
+            container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
             
-async function loadChats() {
-    const container = document.getElementById('chats-list-container');
-    container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
-    
-    try {
-        const snapshot = await db.collection("personalChats").get();
-        
-        container.innerHTML = '';
-        let hasChats = false;
+            try {
+                const snapshot = await db.collection("personalChats").get();
+                container.innerHTML = '';
+                let hasChats = false;
+                identifiedContacts.clear(); // Share tsofaffin sunaye kafin sabon lodi
 
-        snapshot.forEach(doc => {
-            const chatId = doc.id;
-            
-            // Double underscore __ ne separator - works for any username
-            if (!chatId.includes(myId)) return;
+                snapshot.forEach(doc => {
+                    const chatId = doc.id;
+                    if (!chatId.includes(myId)) return;
 
-            const parts = chatId.split('__');
-            if (parts.length < 2) return; // Hana kuskure
-            const rawUser = parts[0] === myId ? parts[1] : parts[0];
-            if (!rawUser || rawUser === myId) return;
-            if (!rawUser) return;            
-                
-            // Sunan farko na wucin gadi kafin cikakken suna ya fito
-            const initialName = rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
-
-            const data = doc.data();
-            const lastMsg = data.lastMessage || "Tap to open chat";
-            
-            // Tace lokaci zuwa exact tsarin 12-hour mai dauke da AM/PM dambas
-            let lastTime = "";
-            if (data.lastMessageTime) {
-                const dateObj = new Date(data.lastMessageTime);
-                let hours = dateObj.getHours();
-                const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-                const ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12;
-                hours = hours ? hours : 12; // Mayar da 0 zuwa 12
-                lastTime = `${hours}:${minutes} ${ampm}`;
-            }
-            
-            // Load avatar daga Firestore
-            const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${rawUser}`;
-
-            hasChats = true;
-            container.insertAdjacentHTML('beforeend', `
-                <a href="chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item" id="chat-link-${rawUser}">
-                    <div class="profile-stack">
-                        <img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img">
-                    </div>
-                    <div class="chat-details">
-                        <div class="chat-header">
-                            <span class="name" id="name-${rawUser}">${initialName}</span>
-                            <span class="time">${lastTime}</span>
-                        </div>
-                        <p class="preview-text">${lastMsg}</p>
-                    </div>
-                </a>
-            `);
-            
-            // Loda Cikakken Suna da Hoto daga collection na 'users' a asirce
-            db.collection('users').doc(rawUser).get().then(userDoc => {
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
+                    const parts = chatId.split('__');
+                    if (parts.length < 2) return; 
+                    const rawUser = parts[0] === myId ? parts[1] : parts[0];
+                    if (!rawUser || rawUser === myId) return;
                     
-                    // GYARA: Kwaso cikakken suna (misali fullName ko name) daga Firebase dinka
-                    const fullName = userData.fullName || userData.name || userData.username;
-                    if (fullName) {
-                        const nameSpan = document.getElementById(`name-${rawUser}`);
-                        if (nameSpan) {
-                            // Canza shi zuwa Title Case koda an rubuta shi da karamin harafi a DB
-                            nameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                    // Sanya wannan member din a cikin Jerin Contacts na gaskiya!
+                    identifiedContacts.add(rawUser);
+                        
+                    const initialName = rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
+                    const data = doc.data();
+                    const lastMsg = data.lastMessage || "Tap to open chat";
+                    
+                    let lastTime = "";
+                    if (data.lastMessageTime) {
+                        const dateObj = new Date(data.lastMessageTime);
+                        let hours = dateObj.getHours();
+                        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        hours = hours % 12; hours = hours ? hours : 12; 
+                        lastTime = `${hours}:${minutes} ${ampm}`;
+                    }
+                    
+                    const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${rawUser}`;
+                    hasChats = true;
+                    
+                    container.insertAdjacentHTML('beforeend', `
+                        <a href="chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item" id="chat-link-${rawUser}">
+                            <div class="profile-stack"><img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img"></div>
+                            <div class="chat-details">
+                                <div class="chat-header">
+                                    <span class="name" id="name-${rawUser}">${initialName}</span>
+                                    <span class="time">${lastTime}</span>
+                                </div>
+                                <p class="preview-text">${lastMsg}</p>
+                            </div>
+                        </a>
+                    `);
+                    
+                    db.collection('users').doc(rawUser).get().then(userDoc => {
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            const fullName = userData.fullName || userData.name || userData.username;
+                            if (fullName) {
+                                const nameSpan = document.getElementById(`name-${rawUser}`);
+                                if (nameSpan) {
+                                    nameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                                }
+                                // Update sunan a cikin overlay ma idan an juyo dashi daga database
+                                const overlayNameSpan = document.getElementById(`overlay-name-${rawUser}`);
+                                if (overlayNameSpan) {
+                                    overlayNameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                                }
+                            }
+                            if (userData.userProfilePic) {
+                                const img = document.getElementById(`avatar-${rawUser}`);
+                                if (img) img.src = userData.userProfilePic;
+                                
+                                const overlayImg = document.getElementById(`overlay-avatar-${rawUser}`);
+                                if (overlayImg) overlayImg.src = userData.userProfilePic;
+                            }
                         }
-                    }
-                    
-                    // Loda ainihin hoton profile
-                    if (userData.userProfilePic) {
-                        const img = document.getElementById(`avatar-${rawUser}`);
-                        if (img) img.src = userData.userProfilePic;
-                    }
+                    });
+                });
+
+                if (!hasChats) {
+                    container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
                 }
+
+                // Bayan chats sun gama loduwa, a guje muga wane da wane ne za su shiga overlay
+                injectRealFirebaseContacts();
+
+            } catch(err) {
+                console.error("Chat load error:", err);
+                container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
+            }
+        }
+
+        /* ================= DYNAMIC FIREBASE OVERLAY INJECTION ================= */
+        function injectRealFirebaseContacts() {
+            const listBody = document.getElementById('carpet-contacts-list');
+            listBody.innerHTML = '';
+
+            if(identifiedContacts.size === 0) {
+                listBody.innerHTML = '<p style="text-align:center; padding:15px; color:#555; font-size:11px;">No contacts found</p>';
+                return;
+            }
+
+            // Gudanar da ainihin mambobin dake cikin tarbiyyar personalChats dinka
+            identifiedContacts.forEach(contactUsername => {
+                const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${contactUsername}`;
+                const initialFormattedName = contactUsername.charAt(0).toUpperCase() + contactUsername.slice(1);
+                
+                listBody.insertAdjacentHTML('beforeend', `
+                    <div class="cyber-contact-node" onclick="toggleNodeSelection(this, '${contactUsername}')">
+                        <div class="profile-stack">
+                            <img src="${defaultAvatar}" id="overlay-avatar-${contactUsername}" class="user-img">
+                        </div>
+                        <div class="chat-details">
+                            <span class="name" id="overlay-name-${contactUsername}" style="font-size:12.5px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;">${initialFormattedName}</span>
+                        </div>
+                        <div class="cyber-checkbox-ring"></div>
+                    </div>
+                `);
             });
+        }
+
+        function toggleNodeSelection(element, contact) {
+            if(navigator.vibrate) navigator.vibrate(12);
+            element.classList.toggle('selected');
+            if(element.classList.contains('selected')) {
+                selectedNodes.push(contact);
+            } else {
+                selectedNodes = selectedNodes.filter(id => id !== contact);
+            }
+        }
+
+        function openCarpetPortal() {
+            if(navigator.vibrate) navigator.vibrate([15, 10, 15]);
+            document.getElementById('carpetPortal').classList.add('unrolled');
+        }
+
+        document.getElementById('carpetPortal').addEventListener('click', function(e) {
+            e.stopPropagation();
         });
 
-        if (!hasChats) {
-            container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
+        function closeCarpetPortal() {
+            document.getElementById('carpetPortal').classList.remove('unrolled');
         }
-        
-    } catch(err) {
-        console.error("Chat load error:", err);
-        container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
-    }
-}
 
-// Real-time listener - zai update idan sako ya shigo
-db.collection("personalChats").onSnapshot(() => {
-    loadChats();
-});
-            
-        
-        function switchTab(element, tabId) {
-            // Idan an danna maɓallin updates, zai buɗe shafin updates.html kai tsaye automatically
-            if (tabId === 'updates') {
-                window.location.href = 'updates.html';
-                return; // Tsayar da sauran kofofin aiki na ƙasa
+        function initializeGroupFromOverlay() {
+            if(selectedNodes.length === 0) return alert("Select nodes to sync!");
+            alert(`Cluster Deployed: ${selectedNodes.join(', ')}`);
+            closeCarpetPortal();
+        }
+
+        function toggleIntegratedSearch(show) {
+            const box = document.getElementById('integratedSearch');
+            if(show) {
+                box.classList.add('active');
+                document.getElementById('mainSearchInput').focus();
+            } else {
+                box.classList.remove('active');
+                document.getElementById('mainSearchInput').value = '';
+                filterActiveChats('');
             }
+        }
 
+        function filterActiveChats(query) {
+            const items = document.querySelectorAll('.chat-item');
+            items.forEach(item => {
+                const name = item.querySelector('.name').innerText.toLowerCase();
+                item.style.display = name.includes(query.toLowerCase()) ? 'flex' : 'none';
+            });
+        }
+
+        function switchTab(element, tabId) {
+            if (tabId === 'updates') { window.location.href = 'updates.html'; return; }
             document.querySelectorAll('.smart-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
             element.classList.add('active');
@@ -340,60 +592,23 @@ db.collection("personalChats").onSnapshot(() => {
             }
         }
 
+        document.addEventListener("DOMContentLoaded", () => {
+            const personalLinks = document.querySelectorAll("#personal .chat-item");
+            personalLinks.forEach(link => {
+                const nameText = link.querySelector(".name").innerText;
+                const avatarSrc = link.querySelector(".user-img").src;
+                link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
+            });
 
+            const friendLinks = document.querySelectorAll("#friends .chat-item");
+            friendLinks.forEach(link => {
+                const nameText = link.querySelector(".name").innerText;
+                const avatarSrc = link.querySelector(".user-img").src;
+                link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
+            });
+        });
 
-        // Wannan function din zai kula da tura sunan memba zuwa shafin chat-interior.html ba tare da an taba CSS ko HTML ba
-function openChatRoom(event, name, avatar) {
-    event.preventDefault(); // Kare katsewar asalin tafiyar 'a' link din
-    const targetUrl = `chat-interior.html?user=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar)}`;
-    window.location.href = targetUrl;
-}
-
-// Muna jiran shafin ya gama loda abubuwansa
-document.addEventListener("DOMContentLoaded", () => {
-    // Gyara na musamman don fannin Personal Chats
-    const personalItems = document.querySelectorAll("#personal .chat-item");
-    personalItems.forEach(item => {
-        const nameText = item.querySelector(".name").innerText;
-        const avatarSrc = item.querySelector(".user-img").src;
-        
-        // Sanya muku sabon tsarin danna katin ba tare da an taba asalin HTML din ba
-        item.addEventListener("click", (e) => openChatRoom(e, nameText, avatarSrc));
-    });
-
-    // Gyara na musamman don fannin Friends
-    const friendItems = document.querySelectorAll("#friends .chat-item");
-    friendItems.forEach(item => {
-        const nameText = item.querySelector(".name").innerText;
-        const avatarSrc = item.querySelector(".user-img").src;
-        
-        item.addEventListener("click", (e) => openChatRoom(e, nameText, avatarSrc));
-    });
-});
-
-
-        // Wannan kudin zai gyara matsalar "Nexus Vendor" ta hanyar canza kofofin tafiya na asalin HTML dinka ta atomatik
-document.addEventListener("DOMContentLoaded", () => {
-    // Gyara na musamman don fannin Personal Chats
-    const personalLinks = document.querySelectorAll("#personal .chat-item");
-    personalLinks.forEach(link => {
-        const nameText = link.querySelector(".name").innerText;
-        const avatarSrc = link.querySelector(".user-img").src;
-        
-        // Dynamic routing: Muna sauya inda href din zai tafi da sunan mutumin da aka danna
-        link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
-    });
-
-    // Gyara na musamman don fannin Friends
-    const friendLinks = document.querySelectorAll("#friends .chat-item");
-    friendLinks.forEach(link => {
-        const nameText = link.querySelector(".name").innerText;
-        const avatarSrc = link.querySelector(".user-img").src;
-        
-        link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
-    });
-});
-        
+        db.collection("personalChats").onSnapshot(() => { loadChats(); });
     </script>
 </body>
-                                                 </html>
+</html>
