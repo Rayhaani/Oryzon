@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus - Neural Group Protocol</title>
+    <title>Nexus - Super Community Protocol</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&family=Orbitron:wght=700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --obsidian: #050505;
             --cyan-neon: #00F2FF;
+            --twitter-blue: #0095f6; /* Instagram Official Blue Hex */
             --purple-neon: #BD93F9;
             --green-neon: #50FA7B;
             --glass-border: rgba(255, 255, 255, 0.08);
             --user-bubble: linear-gradient(135deg, rgba(0, 242, 255, 0.15), rgba(0, 114, 255, 0.05));
-            --member-bubble: rgba(255, 255, 255, 0.04);
+            --member-bubble-header: rgba(255, 255, 255, 0.08);
+            --member-bubble-body: rgba(255, 255, 255, 0.03);
+            --badge-bg: rgba(189, 147, 249, 0.15);
         }
 
         * {
@@ -33,18 +36,28 @@
             flex-direction: column;
         }
 
+        /* HEADER DESIGN - SHIFTED TO THE EXTREME EDGES FOR MAX NAME SPACE */
         header {
             height: 65px;
-            background: rgba(5, 5, 5, 0.9);
+            background: rgba(5, 5, 5, 0.94);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 4px;
             display: flex;
             align-items: center;
-            padding: 0 12px;
+            padding: 0 8px 0 12px; /* Moved elements close to side edges */
             position: fixed;
             top: 0; left: 0; width: 100%;
             z-index: 9999;
-            gap: 10px;
+            box-shadow: 0 4px 30px rgba(0, 242, 255, 0.03);
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 12px;
         }
 
         .back-btn {
@@ -54,9 +67,10 @@
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
         }
 
-       .group-avatar-wrapper {
+        .group-avatar-wrapper {
             width: 40px; height: 40px;
             border-radius: 12px;
             background: linear-gradient(135deg, var(--cyan-neon), #0072FF);
@@ -66,26 +80,34 @@
 
         .group-avatar { width: 100%; height: 100%; border-radius: 11px; object-fit: cover; border: 2px solid #050505; }
 
-
-
- 
-
-        .group-info { flex: 1; overflow: hidden; }
+        /* EXPANDED FILI FOR KUNGIYAR AREWA DISPLAY */
+        .group-info { 
+            flex: 1; 
+            overflow: hidden;
+            padding-left: 2px;
+        }
         .group-name { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .community-hierarchy { font-size: 10px; color: rgba(255, 255, 255, 0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .header-actions { display: flex; gap: 8px; }
+        /* PUSHED UTTERLY TO THE RIGHT MARGIN */
+        .header-actions { 
+            display: flex; 
+            gap: 4px; 
+            margin-left: auto;
+        }
         .action-icon {
             width: 36px; height: 36px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: #fff; font-size: 14px;
+            cursor: pointer; color: #fff; font-size: 13px;
+            flex-shrink: 0;
         }
 
         #chat-flow {
             flex: 1;
-            padding: 80px 15px 110px 15px;
+            padding: 85px 15px 90px 15px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -94,38 +116,155 @@
         }
         #chat-flow::-webkit-scrollbar { display: none; }
 
-        .message {
-            max-width: 80%;
-            padding: 10px 12px 6px 12px;
+        .message-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            max-width: 85%;
+        }
+        .message-row.incoming { align-self: flex-start; }
+        .message-row.outgoing { align-self: flex-end; }
+
+        .user-avatar {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--glass-border);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .message-card {
             border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-card.incoming { border-top-left-radius: 4px; }
+        .message-card.outgoing { border-top-right-radius: 4px; border-color: rgba(0, 242, 255, 0.2); }
+
+        .message-header {
+            padding: 4px 12px;
+            background: var(--member-bubble-header);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+        
+        .header-meta-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* DISTINCT MULTI-COLOR FOR USER NAMES */
+        .message-row:nth-child(1) .sender-name { color: var(--purple-neon); }
+        .message-row:nth-child(2) .sender-name { color: var(--green-neon); }
+        .message-row.outgoing .sender-name { color: var(--cyan-neon); }
+        .sender-name { font-size: 11.5px; font-weight: 600; }
+        
+        /* OFFICIAL INSTAGRAM GEOMETRIC ROUNDED BADGE SHAPE EXTREMELY EXACT */
+        .verified-badge {
+            width: 14px;
+            height: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--twitter-blue);
+            flex-shrink: 0;
+        }
+
+        .role-badge {
+            font-size: 8.5px;
+            padding: 1px 5px;
+            background: var(--badge-bg);
+            border: 1px solid rgba(189, 147, 249, 0.3);
+            border-radius: 4px;
+            color: var(--purple-neon);
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .message-body {
+            padding: 8px 12px 4px 12px; 
             font-size: 13px;
             line-height: 1.4;
-            position: relative;
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
             word-wrap: break-word;
         }
+        .message-card.incoming .message-body { background: var(--member-bubble-body); }
+        .message-card.outgoing .message-body { background: var(--user-bubble); padding: 8px 12px 4px 12px; }
 
-        .incoming { align-self: flex-start; background: var(--member-bubble); border-top-left-radius: 4px; }
-        .outgoing { align-self: flex-end; background: var(--user-bubble); border-top-right-radius: 4px; border-color: rgba(0, 242, 255, 0.2); }
-
-        /* ADVANCED GROUP FEATURES ELEMENTS */
-        .sender-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-        .sender-name { font-size: 11px; font-weight: 600; color: var(--purple-neon); }
-
-        .timestamp {
-            font-size: 7.5px; color: rgba(255,255,255,0.35);
-            display: block; text-align: right; font-family: 'Orbitron', sans-serif;
-            margin-top: 4px;
+        .poll-container {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(255,255,255,0.02);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .poll-option {
+            background: rgba(255,255,255,0.04);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            z-index: 1;
+        }
+        .poll-bar {
+            position: absolute; left: 0; top: 0; bottom: 0;
+            background: rgba(0, 242, 255, 0.1);
+            z-index: -1;
         }
 
-        /* GEMINI INPUT BLOCK AREA SETUP */
+        .thread-block {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+            width: 100%;
+        }
+
+        .thread-link {
+            font-size: 10px;
+            color: var(--cyan-neon);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            background: rgba(0, 242, 255, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+
+        .timestamp {
+            font-size: 7.5px; 
+            color: rgba(255,255,255,0.35);
+            font-family: 'Orbitron', sans-serif;
+            display: inline-block;
+            vertical-align: bottom;
+            float: right;
+            margin-top: 6px;
+            margin-left: 8px;
+        }
+
+        /* GEMINI FLOATING INPUT LAYER STRUCTURE - NO BLACK BACKGROUND FIXED BAR */
         .input-area {
             position: fixed; bottom: 0; left: 0; right: 0;
-            padding: 16px 16px 24px 16px;
+            padding: 12px 16px 20px 16px;
             background: transparent;
             display: flex; justify-content: center;
-            z-index: 100;
+            z-index: 9999;
         }
 
         .neural-search-bar {
@@ -134,7 +273,7 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 28px; padding: 6px 12px 6px 18px;
             display: flex; align-items: center; min-height: 52px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         }
 
         .plus-icon {
@@ -165,41 +304,86 @@
 <body>
 
     <header>
-        <div class="back-btn" onclick="history.back()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-        </div>
+        <div class="header-top">
+            <div class="back-btn" onclick="history.back()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
 
-        <div class="group-avatar-wrapper">
-            <img class="group-avatar" src="https://via.placeholder.com/100/050505/00F2FF" alt="">
-        </div>
+            <div class="group-avatar-wrapper">
+                <img class="group-avatar" src="https://via.placeholder.com/100/050505/00F2FF" alt="">
+            </div>
 
-        <div class="group-info">
-            <div class="group-name" id="groupNameDisplay">KanoMart Devs</div>
-        </div>
+            <div class="group-info">
+                <div class="group-name" id="groupNameDisplay">Ƙungiyar Arewa 2026</div>
+                <div class="community-hierarchy">Kano Sector > Topic: Business News</div>
+            </div>
 
-        <div class="header-actions">
-            <div class="action-icon" onclick="alert('Calling group...')"><i class="fa-solid fa-phone"></i></div>
-            <div class="action-icon"><i class="fa-solid fa-layer-group"></i></div>
-            <div class="action-icon"><i class="fa-solid fa-sliders"></i></div>
+            <div class="header-actions">
+                <div class="action-icon" title="Schedule Post"><i class="fa-solid fa-clock"></i></div>
+                <div class="action-icon" title="Analytics"><i class="fa-solid fa-chart-line"></i></div>
+                <div class="action-icon"><i class="fa-solid fa-sliders"></i></div>
+            </div>
         </div>
     </header>
 
     <div id="chat-flow">
         
-        <div class="message incoming">
-            <div class="sender-meta">
-                <span class="sender-name">Ali_Developer</span>
+        <div class="message-row incoming">
+            <img class="user-avatar" src="https://via.placeholder.com/40/BD93F9/ffffff?text=AD" alt="Ali">
+            <div class="message-card incoming">
+                <div class="message-header">
+                    <div class="header-meta-left">
+                        <span class="sender-name">Ali_Developer</span>
+                        <span class="verified-badge">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="100%" height="100%">
+                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <span class="role-badge">Super Admin</span>
+                </div>
+                <div class="message-body">
+                    Masha Allah, an kammala tsara jadawalin sabon Super Community Platform dinmu na 2026 gaba daya.
+                    <div class="thread-block">
+                        <div class="thread-link"><i class="fa-solid fa-code-branch"></i> 12 threaded replies</div>
+                        <span class="timestamp">02:14 PM</span>
+                    </div>
+                </div>
             </div>
-            We have finished mapping the Kantin Kwari market directory database sync. Everything looks stable.
-            <span class="timestamp">02:14 PM</span>
         </div>
 
-        <div class="message outgoing">
-            <div class="sender-meta">
-                <span class="sender-name" style="color: var(--cyan-neon);">You</span>
+        <div class="message-row incoming">
+            <img class="user-avatar" src="https://via.placeholder.com/40/50FA7B/ffffff?text=MN" alt="MmnAfrah">
+            <div class="message-card incoming">
+                <div class="message-header">
+                    <div class="header-meta-left">
+                        <span class="sender-name">MmnAfrah Networker</span>
+                        <span class="verified-badge">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="100%" height="100%">
+                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <span class="role-badge">Moderator</span>
+                </div>
+                <div class="message-body">
+                    Barkanmu da safiya. Sakamakon jifancin kuri'un dandalinmu na karfe takwas na safe yana tafiya kamar haka:
+                    <div class="poll-container">
+                        <div class="poll-option"><div class="poll-bar" style="width: 72%;"></div><span>Option A: Custom App Ecosystem</span><span>72%</span></div>
+                        <div class="poll-option"><div class="poll-bar" style="width: 28%;"></div><span>Option B: Matrix Protocol Layer</span><span>28%</span></div>
+                    </div>
+                    <span class="timestamp">08:44 AM</span>
+                </div>
             </div>
-            Excellent work. Make sure the Sabon Gari wholesalers database has the exact same consistency layer.
-            <span class="timestamp">02:18 PM</span>
+        </div>
+
+        <div class="message-row outgoing">
+            <div class="message-card outgoing">
+                <div class="message-body">
+                    Wannan sabon fasalin header din da matsayin rubutu sun canza zane dari bisa dari. WhatsApp basu da wannan natively.
+                    <span class="timestamp">02:18 PM</span>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -252,7 +436,6 @@
             
             if(text === "") return;
             
-            // Samun ainihin lokaci
             const now = new Date();
             let hours = now.getHours();
             let minutes = now.getMinutes();
@@ -262,20 +445,19 @@
             minutes = minutes < 10 ? '0'+minutes : minutes;
             const timeString = (hours < 10 ? '0'+hours : hours) + ':' + minutes + ' ' + ampm;
 
-            // Kirkirar sabon sako na 'You'
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'message outgoing';
-            msgDiv.innerHTML = `
-                <div class="sender-meta">
-                    <span class="sender-name" style="color: var(--cyan-neon);">You</span>
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'message-row outgoing';
+            
+            rowDiv.innerHTML = `
+                <div class="message-card outgoing">
+                    <div class="message-body">
+                        ${text}
+                        <span class="timestamp">${timeString}</span>
+                    </div>
                 </div>
-                ${text}
-                <span class="timestamp">${timeString}</span>
             `;
             
-            chatFlow.appendChild(msgDiv);
-            
-            // Gungura hira zuwa kasa
+            chatFlow.appendChild(rowDiv);
             chatFlow.scrollTop = chatFlow.scrollHeight;
             
             input.value = "";
@@ -283,7 +465,6 @@
             toggleButtons();
         }
 
-        // Tura sako idan an danna Enter ba tare da Shift ba
         document.getElementById('msgInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
