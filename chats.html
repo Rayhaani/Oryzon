@@ -318,14 +318,14 @@
         </div>
 
         <div id="groups" class="tab-view">
-            <a href="chat-interior.html" class="chat-item">
+            <a href="group.html" class="chat-item">
                 <div class="profile-stack"><img src="https://via.placeholder.com/46/00F2FF/000?text=KM" class="user-img" style="border-radius: 12px;"></div>
                 <div class="chat-details">
                     <div class="chat-header"><span class="name">KanoMart Devs</span><span class="time">1:10 PM</span></div>
                     <p class="preview-text">Ali: Update logic ɗin yanzu...</p>
                 </div>
             </a>
-            <a href="chat-interior.html" class="chat-item">
+            <a href="group.html" class="chat-item">
                 <div class="profile-stack"><img src="https://via.placeholder.com/46/333/00F2FF?text=SY" class="user-img" style="border-radius: 12px;"></div>
                 <div class="chat-details">
                     <div class="chat-header"><span class="name">Synergy Core</span><span class="time">Yesterday</span></div>
@@ -405,7 +405,7 @@
         const db = firebase.firestore();
         const myId = localStorage.getItem("nexus_user_session") || "Sadiq_Alhassan"; 
         let selectedNodes = [];
-        let identifiedContacts = new Set(); // Kebantaccen runfani na adana mambobi ba tare da rubanya suna ba
+        let identifiedContacts = new Set(); 
 
         async function loadChats() {
             const container = document.getElementById('chats-list-container');
@@ -415,7 +415,7 @@
                 const snapshot = await db.collection("personalChats").get();
                 container.innerHTML = '';
                 let hasChats = false;
-                identifiedContacts.clear(); // Share tsofaffin sunaye kafin sabon lodi
+                identifiedContacts.clear(); 
 
                 snapshot.forEach(doc => {
                     const chatId = doc.id;
@@ -426,7 +426,6 @@
                     const rawUser = parts[0] === myId ? parts[1] : parts[0];
                     if (!rawUser || rawUser === myId) return;
                     
-                    // Sanya wannan member din a cikin Jerin Contacts na gaskiya!
                     identifiedContacts.add(rawUser);
                         
                     const initialName = rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
@@ -468,7 +467,6 @@
                                 if (nameSpan) {
                                     nameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
                                 }
-                                // Update sunan a cikin overlay ma idan an juyo dashi daga database
                                 const overlayNameSpan = document.getElementById(`overlay-name-${rawUser}`);
                                 if (overlayNameSpan) {
                                     overlayNameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -489,7 +487,6 @@
                     container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
                 }
 
-                // Bayan chats sun gama loduwa, a guje muga wane da wane ne za su shiga overlay
                 injectRealFirebaseContacts();
 
             } catch(err) {
@@ -498,7 +495,6 @@
             }
         }
 
-        /* ================= DYNAMIC FIREBASE OVERLAY INJECTION ================= */
         function injectRealFirebaseContacts() {
             const listBody = document.getElementById('carpet-contacts-list');
             listBody.innerHTML = '';
@@ -508,7 +504,6 @@
                 return;
             }
 
-            // Gudanar da ainihin mambobin dake cikin tarbiyyar personalChats dinka
             identifiedContacts.forEach(contactUsername => {
                 const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${contactUsername}`;
                 const initialFormattedName = contactUsername.charAt(0).toUpperCase() + contactUsername.slice(1);
