@@ -86,15 +86,15 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             display: flex; 
-            gap: 2px; /* Rage nisa tsakanin kowane layi kadan don santsi */
+            gap: 2px; 
             z-index: 10;
-            padding: 0; /* An cire padding domin ya manne a can saman screen da kusurwowi */
+            padding: 0; 
             background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
         }
 
         .hud-bar {
             flex: 1; 
-            height: 3px; /* Karfafa kaurinsa kadan don ya fito fili kamar na WhatsApp */
+            height: 3px; 
             background: rgba(255, 255, 255, 0.25);
             border-radius: 0px;
             overflow: hidden;
@@ -106,7 +106,7 @@
             box-shadow: 0 0 10px var(--cyan-neon);
         }
 
-        /* HUD Top Header Area - An daidaita shi tunda an cire padding na timeline */
+        /* HUD Top Header Area */
         .hud-header {
             position: absolute;
             top: 18px; left: 16px; right: 16px;
@@ -287,7 +287,16 @@
     </div>
 
     <script>
+        /* GYARA: Mun tsara jerin sanya sunayen yadda ya dace na farko ya zama na farko, na gaba ya biyo baya daidai */
         const cyberNetworkFeed = {
+            'ahmad': {
+                user: "Ahmad Tech Hub",
+                avatar: "https://via.placeholder.com/40/222/FF0055?text=AT",
+                timeLabel: "2h ago",
+                nodes: [
+                    { url: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600' }
+                ]
+            },
             'ramatu': {
                 user: "Ramatu Arahman",
                 avatar: "https://via.placeholder.com/40/111/00F2FF?text=RA",
@@ -296,18 +305,10 @@
                     { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600' },
                     { url: 'https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?w=600' }
                 ]
-            },
-            'ahmad': {
-                user: "Ahmad Tech Hub",
-                avatar: "https://via.placeholder.com/40/222/FF0055?text=AT",
-                timeLabel: "2h ago",
-                nodes: [
-                    { url: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600' }
-                ]
             }
         };
 
-        let currentActiveUser = 'ramatu';
+        let currentActiveUser = 'ahmad'; // Fara da Ahmad a matsayin na farko
         let currentMediaIndex = 0;
         let hudTimerClock;
         let trackingProgress = 0;
@@ -356,35 +357,30 @@
             }, 40);
         }
 
-        /* GYARA LOGIC: Tsallakawa zuwa status na gaba ko na mutum na gaba maimakon katsewa kwatsam */
+        /* GYARA LOGIC: Tsallakawa daidai daki-daki sannan dawowa updates.html */
         function triggerNavigationPipeline(direction) {
             const profileKeys = Object.keys(cyberNetworkFeed);
             const currentKeyPos = profileKeys.indexOf(currentActiveUser);
             const currentProfile = cyberNetworkFeed[currentActiveUser];
             
             if (direction === 1) { 
-                // Idan akwai sauran hoto a gaba na wannan mutumin
                 if (currentMediaIndex < currentProfile.nodes.length - 1) {
                     currentMediaIndex++;
                     loadMatrixNode();
                 } else {
-                    // Idan hotunan wannan mutumin sun kare, a duba ko akwai wani member a gaba
                     if (currentKeyPos < profileKeys.length - 1) {
                         currentActiveUser = profileKeys[currentKeyPos + 1];
                         currentMediaIndex = 0;
                         loadMatrixNode();
                     } else {
-                        // Idan duka kowa da kowa ya kare, sannan ne za a koma baya
                         disconnectMatrix();
                     }
                 }
             } else { 
-                // Idan an danna hagu kuma akwai sauran hoton baya na wannan mutumin
                 if (currentMediaIndex > 0) {
                     currentMediaIndex--;
                     loadMatrixNode();
                 } else {
-                    // Idan hotunan sun kare na wannan mutumin, a koma kan na member din baya
                     if (currentKeyPos > 0) {
                         currentActiveUser = profileKeys[currentKeyPos - 1];
                         currentMediaIndex = cyberNetworkFeed[currentActiveUser].nodes.length - 1;
@@ -445,16 +441,18 @@
             }
         });
 
+        /* GYARA: Canza hanyar fita zuwa updates.html */
         function disconnectMatrix() {
             window.location.href = 'updates.html';
         }
 
         const params = new URLSearchParams(window.location.search);
         const targetUser = params.get('user');
-        if(targetUser && cyberNetworkFeed[targetUser]) currentActiveUser = targetUser;
+        if(targetUser && cyberNetworkFeed[targetUser]) {
+            currentActiveUser = targetUser;
+        }
         
         loadMatrixNode();
     </script>
 </body>
-                    </html>
-                    
+</html>
