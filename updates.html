@@ -3,457 +3,783 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus - Neural Story Matrix</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&display=swap" rel="stylesheet">
+    <title>Nexus - Neural Updates</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --obsidian: #050505;
             --cyan-neon: #00F2FF;
             --magenta-neon: #FF0055;
             --glass-border: rgba(0, 242, 255, 0.15);
-            --glass-bg: rgba(5, 5, 5, 0.65);
+            --glass-bg: rgba(5, 5, 5, 0.75);
             --text-dim: rgba(255, 255, 255, 0.6);
-        }
-
-        /* GYARA: Hana duka shafin rawa ko juya-juya ta gefe */
-        html, body {
-            overflow: hidden;
-            width: 100%;
-            height: 100vh;
-            background-color: var(--obsidian);
+            --obsidian-dark: #0B0E11;
+            --whatsapp-green: #00A884;
+            --glass-white: rgba(255, 255, 255, 0.06);
+            --text-main: #E9EDEF;
+            --text-muted: #8696A0;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body {
+            background-color: var(--obsidian);
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        .story-matrix-container {
+        .nexus-updates-container {
             width: 100%;
-            height: 100%;
+            height: 100vh;
             max-width: 460px;
-            position: relative;
             background: #000;
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            border: 1px solid rgba(0, 242, 255, 0.1);
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.05);
-            overflow: hidden;
+            overflow-y: auto;
+            padding-bottom: 80px;
         }
 
-        /* Ambient Bio-Glow Matrix */
-        .ambient-projector {
+        /* HEADER */
+        .updates-header {
+            padding: 20px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .updates-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        .header-icons {
+            display: flex;
+            gap: 16px;
+        }
+
+        /* SUB-SECTION HEADINGS */
+        .section-title-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 16px 10px 16px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* MABALLIN CREATE PAGE */
+        .btn-create-page {
+            font-size: 12px;
+            color: var(--cyan-neon);
+            background: rgba(0, 242, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-create-page:hover {
+            background: rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+
+        /* HORIZONTAL REEL */
+        .status-horizontal-reel {
+            display: flex;
+            gap: 4px;
+            padding: 10px 16px 20px 16px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            touch-action: pan-x;
+        }
+        .status-horizontal-reel::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* JIKIN KATIN STATUS (ORIGINAL STYLE) */
+        .status-node-circle {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-width: 95px;
+            height: 145px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            filter: brightness(0.75);
+        }
+
+        /* AVATAR RING */
+        .avatar-ring-status {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 0 0 12px 0;
+            padding: 2px;
+            background: linear-gradient(45deg, var(--cyan-neon), var(--magenta-neon));
+            z-index: 3;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+        .avatar-ring-status img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .add-node-plus {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--cyan-neon);
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .status-username {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+            text-align: left;
+            z-index: 3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .status-node-circle::after {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
+            z-index: 2;
+        }
+
+        /* PAGES SECTION */
+        .pages-vertical-list {
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px;
+        }
+        .page-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer;
+        }
+        .page-info-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .page-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .page-text-meta h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        .page-text-meta p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        .page-action-view {
+            font-size: 12px;
+            color: #fff;
+            opacity: 0.5;
+        }
+
+
+        /* =================================================== */
+        /* PREMIUM GLASSMORPHIC OVERLAY SYSTEM                 */
+        /* =================================================== */
+        .premium-blur-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.3); 
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            z-index: 99999;
+            display: flex;
+            align-items: flex-start; 
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: backdrop-filter 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, visibility 0.4s;
+        }
+
+        .premium-blur-overlay.active {
+            visibility: visible;
+            opacity: 1;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+        }
+
+        .glass-panel-container {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(15, 18, 22, 0.85); 
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0 0 28px 28px; 
+            padding: 20px 12px 24px 12px;
+            transform: translateY(-100%); 
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 242, 255, 0.05);
+        }
+
+        .premium-blur-overlay.active .glass-panel-container {
+            transform: translateY(0);
+        }
+
+        .glass-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            padding: 0 6px;
+        }
+
+        .glass-panel-header h2 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: -0.3px;
+        }
+
+        .glass-close-x {
+            font-size: 18px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            transition: 0.2s;
+        }
+        .glass-close-x:hover { color: var(--magenta-neon); }
+
+        /* JERE KATUNAN GUDA 5 A OVERLAY (ROW MATSAKAI) */
+        .glass-cards-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        /* SIFFA TA MUSAMMAN NA CARD DIN OVERLAY (AN DAUKE COPIED CARD LOOK) */
+        .overlay-action-card {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            width: 100%;
+            height: 110px; /* Tsayi matsakaita don grid din 5 ya zauna kyau */
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            opacity: 0;
+            transform: scale(0.7) translateY(-20px);
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
+        }
+
+        .premium-blur-overlay.active .overlay-action-card {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Delays don katin su fito daya bayan daya na zamani */
+        .premium-blur-overlay.active .overlay-action-card:nth-child(1) { transition-delay: 0.03s; }
+        .premium-blur-overlay.active .overlay-action-card:nth-child(2) { transition-delay: 0.08s; }
+        .premium-blur-overlay.active .overlay-action-card:nth-child(3) { transition-delay: 0.13s; }
+        .premium-blur-overlay.active .overlay-action-card:nth-child(4) { transition-delay: 0.18s; }
+        .premium-blur-overlay.active .overlay-action-card:nth-child(5) { transition-delay: 0.23s; }
+
+        .overlay-action-card:active {
+            transform: scale(0.95) !important;
+        }
+
+        /* Karamin Ring a Top Left na Katin Overlay */
+        .overlay-card-ring {
+            position: absolute;
+            top: 0; left: 0;
+            width: 26px; height: 26px; /* An rage kadan don tsarin 110px height */
+            border-radius: 0 0 10px 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px;
+            z-index: 3;
+            box-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+        }
+
+        /* Launukan Rings na kowane katin aji a cikin overlay */
+        .or-camera { background: rgba(0, 242, 255, 0.2); border-right: 1px solid var(--cyan-neon); border-bottom: 1px solid var(--cyan-neon); color: var(--cyan-neon); }
+        .or-gallery { background: rgba(255, 0, 85, 0.2); border-right: 1px solid var(--magenta-neon); border-bottom: 1px solid var(--magenta-neon); color: var(--magenta-neon); }
+        .or-text { background: rgba(0, 168, 132, 0.2); border-right: 1px solid var(--whatsapp-green); border-bottom: 1px solid var(--whatsapp-green); color: var(--whatsapp-green); }
+        .or-music { background: rgba(156, 39, 176, 0.2); border-right: 1px solid #BA68C8; border-bottom: 1px solid #BA68C8; color: #BA68C8; }
+        .or-voice { background: rgba(255, 152, 0, 0.2); border-right: 1px solid #FFB74D; border-bottom: 1px solid #FFB74D; color: #FFB74D; }
+
+        /* Sunan dake kasa na katin overlay */
+        .overlay-card-label {
+            position: absolute;
+            bottom: 6px; left: 4px; right: 4px;
+            font-size: 10px; font-weight: 600;
+            color: #fff; text-align: center;
+            z-index: 3;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Background na katin don fito da siffar status preview */
+        .overlay-card-bg {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover;
             background-position: center;
-            filter: blur(50px) brightness(0.35);
             z-index: 1;
-            transform: scale(1.3);
-            transition: background-image 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            animation: bioPulse 8s infinite alternate;
-            pointer-events: none;
+            filter: brightness(0.45); /* Duhun background din don Icons da Label su fito radau */
         }
 
-        @keyframes bioPulse {
-            0% { transform: scale(1.2) rotate(0deg); filter: blur(50px) brightness(0.3); }
-            100% { transform: scale(1.35) rotate(3deg); filter: blur(60px) brightness(0.4); }
-        }
-
-        /* Scan Overlay Grid */
-        .scan-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0, 242, 255, 0.03) 50%, rgba(0, 0, 0, 0) 50%), linear-gradient(90deg, rgba(0, 242, 255, 0.03) 50%, rgba(0, 0, 0, 0) 50%);
-            background-size: 16px 16px;
+        .overlay-action-card::after {
+            content: '';
+            position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 60%);
             z-index: 2;
-            pointer-events: none;
-            opacity: 0.4;
-            transition: opacity 0.3s;
-        }
-        .story-matrix-container.paused .scan-overlay {
-            opacity: 0.8;
-            background-color: rgba(0, 242, 255, 0.02);
-        }
-
-        /* GYARA: Manne matakin layin timeline gaba daya a jikin baki ba tare da wani sarari ba */
-        .hud-progress-timeline {
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            display: flex; 
-            gap: 2px; /* Rage nisa tsakanin kowane layi kadan don santsi */
-            z-index: 10;
-            padding: 0; /* An cire padding domin ya manne a can saman screen da kusurwowi */
-            background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
-        }
-
-        .hud-bar {
-            flex: 1; 
-            height: 3px; /* Karfafa kaurinsa kadan don ya fito fili kamar na WhatsApp */
-            background: rgba(255, 255, 255, 0.25);
-            border-radius: 0px;
-            overflow: hidden;
-        }
-
-        .hud-fill {
-            height: 100%; width: 0%;
-            background: linear-gradient(90deg, #00C8FF, var(--cyan-neon));
-            box-shadow: 0 0 10px var(--cyan-neon);
-        }
-
-        /* HUD Top Header Area - An daidaita shi tunda an cire padding na timeline */
-        .hud-header {
-            position: absolute;
-            top: 18px; left: 16px; right: 16px;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 10;
-            transition: opacity 0.3s;
-        }
-
-        .cyber-user-node { display: flex; align-items: center; gap: 10px; }
-        .cyber-avatar-ring {
-            position: relative;
-            width: 38px; height: 38px;
-            border-radius: 50%;
-            padding: 1.5px;
-            background: linear-gradient(45deg, var(--cyan-neon), var(--magenta-neon));
-        }
-        .cyber-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #000; }
-        
-        .node-meta { display: flex; align-items: center; gap: 6px; }
-        .node-meta h2 { font-size: 14px; font-weight: 600; color: #fff; text-shadow: 1px 1px 4px rgba(0,0,0,0.8); }
-        .node-meta .story-time { font-size: 12px; color: rgba(255, 255, 255, 0.65); text-shadow: 1px 1px 4px rgba(0,0,0,0.8); }
-        .node-meta .story-time::before { content: " • "; margin-right: 2px; }
-
-        /* Core Media Canvas */
-        .viewport-canvas {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 4;
-            position: relative;
-        }
-
-        .matrix-media-frame {
-            width: 100%;
-            max-height: 100vh;
-            object-fit: contain;
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        /* Touch Control Interfaces */
-        .cyber-touch-grids {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; z-index: 5;
-        }
-        .grid-left, .grid-right { flex: 1; height: 100%; }
-
-        /* Footer Container */
-        .hud-footer-capsule {
-            position: absolute;
-            bottom: 65px;
-            left: 16px; right: 16px;
-            padding: 10px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            display: flex; gap: 8px; align-items: center;
-            z-index: 10;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.3);
-            transition: opacity 0.3s;
-        }
-
-        /* Tsarin akwatin rubutu */
-        .cyber-input {
-            flex: 1; 
-            height: 40px; 
-            background: rgba(255,255,255,0.05);
-            border: none; 
-            outline: none; 
-            border-radius: 20px;
-            padding: 11px 16px;
-            color: white; 
-            font-size: 13px;
-            resize: none; 
-            overflow-y: auto;
-            white-space: pre-wrap;
-            word-break: break-word;
-            line-height: 1.4;
-            box-shadow: none;
-        }
-        .cyber-input:focus, .cyber-input:active {
-            border: none !important;
-            outline: none !important;
-            box-shadow: none !important;
-            background: rgba(255,255,255,0.08);
-        }
-
-        .hud-action-node {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; border: 1px solid rgba(255,255,255,0.08);
-            transition: 0.3s; position: relative;
-            flex-shrink: 0;
-        }
-        .hud-action-node:hover {
-            background: rgba(0, 242, 255, 0.15);
-            border-color: var(--cyan-neon);
-            box-shadow: 0 0 12px rgba(0, 242, 255, 0.3);
-        }
-        .hud-action-node.tip-btn:hover {
-            background: rgba(255, 0, 85, 0.15);
-            border-color: var(--magenta-neon);
-            box-shadow: 0 0 12px rgba(255, 0, 85, 0.3);
-        }
-
-        .hud-action-node.share-btn:hover {
-            background: rgba(0, 200, 255, 0.15);
-            border-color: #00C8FF;
-            box-shadow: 0 0 12px rgba(0, 200, 255, 0.3);
-        }
-
-        .hud-action-node.ghost-active {
-            border-color: #25d366;
-            background: rgba(37, 211, 102, 0.15);
-        }
-
-        /* SYSTEM DISMISS FOR CLEAN VIEW HOLD */
-        .story-matrix-container.hud-hidden .hud-header,
-        .story-matrix-container.hud-hidden .hud-footer-capsule,
-        .story-matrix-container.hud-hidden .hud-progress-timeline {
-            opacity: 0; pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="story-matrix-container" id="matrixContainer">
-        <div class="ambient-projector" id="ambientProjector"></div>
-        <div class="scan-overlay"></div>
+    <div class="nexus-updates-container">
+        
+        <div class="updates-header">
+            <h1>Updates</h1>
+            <div class="header-icons">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </div>
+        </div>
 
-        <div class="hud-progress-timeline" id="hudTimeline"></div>
+        <div class="section-title-area">
+            <span class="section-title">Status</span>
+        </div>
 
-        <div class="hud-header">
-            <div class="cyber-user-node">
-                <div class="cyber-avatar-ring">
-                    <img src="" class="cyber-avatar" id="hudAvatar">
+        <div class="status-horizontal-reel" id="statusReelContainer"></div>
+
+        <div class="section-title-area">
+            <span class="section-title">Pages</span>
+            <div class="btn-create-page" onclick="createNewPageCore()">Create Page</div>
+        </div>
+
+        <div class="pages-vertical-list">
+            
+            <div class="page-list-item" onclick="viewPageMatrix('sirrin-rike-miji')">
+                <div class="page-info-block">
+                    <img src="https://via.placeholder.com/50/111?text=SRM" class="page-avatar">
+                    <div class="page-text-meta">
+                        <h3>Sirrin rike miji 🌍</h3>
+                        <p>Kece Kike Bukatar Namiji Mai Gemu...</p>
+                    </div>
                 </div>
-                <div class="node-meta">
-                    <h2 id="hudUsername">System Booting...</h2>
-                    <span class="story-time" id="hudTimeLabel">1h ago</span>
+                <div class="page-action-view">10m ago</div>
+            </div>
+
+            <div class="page-list-item" onclick="viewPageMatrix('simon-updates')">
+                <div class="page-info-block">
+                    <img src="https://via.placeholder.com/50/222?text=SU" class="page-avatar">
+                    <div class="page-text-meta">
+                        <h3>Simon's Updates.</h3>
+                        <p>If you have issue or concern. You can...</p>
+                    </div>
                 </div>
+                <div class="page-action-view">Yesterday</div>
             </div>
+
+            <div class="page-list-item" onclick="viewPageMatrix('annahjul-hameed')">
+                <div class="page-info-block">
+                    <img src="https://via.placeholder.com/50/333?text=ATV" class="page-avatar">
+                    <div class="page-text-meta">
+                        <h3>Annahjul-Hameed TV</h3>
+                        <p>Addu'ar Sujuda🇲🇳🇲🇳...</p>
+                    </div>
+                </div>
+                <div class="page-action-view">2 days ago</div>
+            </div>
+
         </div>
 
-        <div class="cyber-touch-grids">
-            <div class="grid-left" id="touchLeft"></div>
-            <div class="grid-right" id="touchRight"></div>
-        </div>
+    </div>
 
-        <div class="viewport-canvas">
-            <img src="" class="matrix-media-frame" id="matrixMedia">
-        </div>
+    <div class="premium-blur-overlay" id="globalGlassOverlay" onclick="hidePremiumOverlay()">
+        <div class="glass-panel-container" onclick="event.stopPropagation()">
+            
+            <div class="glass-panel-header">
+                <h2>Add status</h2>
+                <div class="glass-close-x" onclick="hidePremiumOverlay()">✕</div>
+            </div>
+            
+            <div class="glass-cards-row">
+                
+                <div class="overlay-action-card" onclick="dispatchAction('camera')">
+                    <div class="overlay-card-ring or-camera">📷</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Camera</span>
+                </div>
 
-        <div class="hud-footer-capsule">
-            <div class="hud-action-node" id="ghostNode" onclick="toggleGhostInfiltration()" title="Ghost Mode (Incognito View)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <div class="overlay-action-card" onclick="dispatchAction('gallery')">
+                    <div class="overlay-card-ring or-gallery">🖼️</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Gallery</span>
+                </div>
+
+                <div class="overlay-action-card" onclick="dispatchAction('text')">
+                    <div class="overlay-card-ring or-text">✏️</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1516414447565-b14be0adf13e?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Text</span>
+                </div>
+
+                <div class="overlay-action-card" onclick="dispatchAction('music')">
+                    <div class="overlay-card-ring or-music">🎵</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Music</span>
+                </div>
+
+                <div class="overlay-action-card" onclick="dispatchAction('voice')">
+                    <div class="overlay-card-ring or-voice">🎙️</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1478737270239-2f02b77fc618?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Voice</span>
+                </div>
+
             </div>
 
-            <div class="hud-action-node tip-btn" onclick="triggerSynergyTip()" title="Tip Synergy Token">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--magenta-neon)" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            </div>
-
-            <textarea class="cyber-input" placeholder="Type a message..." rows="1"></textarea>
-
-            <div class="hud-action-node share-btn" onclick="shareToMyStatus()" title="Share to My Status">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00F2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>
-                </svg>
-            </div>
-
-            <div class="hud-action-node" onclick="executeMediaDownload()" title="Download Status to Storage">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            </div>
         </div>
     </div>
 
+    <input type="file" id="hiddenCameraInput" accept="image/*" style="display: none;" onchange="handleStatusUpload(this, 'image')">
+    <input type="file" id="hiddenVideoInput" accept="video/*" style="display: none;" onchange="handleStatusUpload(this, 'video')">
+
     <script>
-        const cyberNetworkFeed = {
-            'ramatu': {
-                user: "Ramatu Arahman",
-                avatar: "https://via.placeholder.com/40/111/00F2FF?text=RA",
-                timeLabel: "1h ago",
-                nodes: [
-                    { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600' },
-                    { url: 'https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?w=600' }
-                ]
-            },
-            'ahmad': {
-                user: "Ahmad Tech Hub",
-                avatar: "https://via.placeholder.com/40/222/FF0055?text=AT",
-                timeLabel: "2h ago",
-                nodes: [
-                    { url: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600' }
-                ]
-            }
+    
+const statusData = [];
+
+// SHIGO DA FIREBASE CORE, FIRESTORE DA STORAGE
+const script1 = document.createElement('script');
+script1.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js";
+document.head.appendChild(script1);
+
+const script2 = document.createElement('script');
+script2.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js";
+document.head.appendChild(script2);
+
+const script3 = document.createElement('script');
+script3.src = "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js";
+document.head.appendChild(script3);
+
+let db;
+let storage;
+
+script3.onload = function() {
+    const firebaseConfig = {
+      apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+      authDomain: "oryzon-50ea4.firebaseapp.com",
+      projectId: "oryzon-50ea4",
+      storageBucket: "oryzon-50ea4.firebasestorage.app",
+      messagingSenderId: "782106742622",
+      appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+      measurementId: "G-K5085DLL2W"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    storage = firebase.storage();
+    console.log("Firebase Database & Storage sun gama lodi 100%!");
+    
+    fetchStatusesFromFirebase();
+};
+
+function handleStatusUpload(input, fileType) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        console.log(`Ana tura ${fileType} zuwa rumbun Oryzon Storage...`);
+
+        if (!storage || !db) {
+            alert("Siffar sadarwa ba ta gama lodi ba, da fatan ka jira sakan guda.");
+            return;
+        }
+
+        const fileRef = storage.ref().child(`status_files/${Date.now()}_${file.name}`);
+        
+        fileRef.put(file).then((snapshot) => {
+            return snapshot.ref.getDownloadURL();
+        })
+        .then((downloadURL) => {
+            return db.collection("statusData").add({
+                username: "Sadiq", 
+                profileImg: "https://via.placeholder.com/40/111?text=Me", 
+                previewImg: downloadURL, 
+                type: fileType, 
+                timestamp: Date.now(), 
+                totalUpdates: 1,
+                viewedCount: 0,
+                isMe: false 
+            });
+        })
+        .then(() => {
+            console.log("An yi nasarar dora sabon status dinka!");
+            fetchStatusesFromFirebase(); 
+        })
+        .catch((error) => {
+            console.error("Error gurin uploading: ", error);
+            alert("An samu matsala wajen tura status dinka.");
+        });
+    }
+}
+
+
+              
+
+function triggerAddStatus(event) {
+    if (event) event.stopPropagation();
+    showPremiumOverlay();
+}
+
+function showPremiumOverlay() {
+    document.getElementById('globalGlassOverlay').classList.add('active');
+}
+
+function hidePremiumOverlay() {
+    document.getElementById('globalGlassOverlay').classList.remove('active');
+}
+
+function dispatchAction(route) {
+    hidePremiumOverlay();
+    console.log("Routing to status type: ", route);
+    
+    if (route === 'camera') {
+        document.getElementById('hiddenCameraInput').setAttribute('capture', 'environment');
+        document.getElementById('hiddenCameraInput').click();
+    } else if (route === 'gallery') {
+        document.getElementById('hiddenCameraInput').removeAttribute('capture');
+        document.getElementById('hiddenCameraInput').click();
+    } else if (route === 'text') {
+        window.location.href = `text-status.html`;
+    } else if (route === 'music') {
+        window.location.href = `music-status.html`;
+    } else if (route === 'voice') {
+        document.getElementById('hiddenVideoInput').click();
+    }
+}
+
+function openStatusMatrix(userKey) {
+    const targetStatus = statusData.find(s => s.id === userKey);
+    if (targetStatus && targetStatus.viewedCount < targetStatus.totalUpdates) {
+        targetStatus.viewedCount++;
+    }
+    sortAndRenderStatus();
+    setTimeout(() => {
+        window.location.href = `status.html?user=${userKey}`;
+    }, 180);
+}
+
+window.onload = function() {
+    renderDefaultBackupStatuses();
+};
+
+
+
+
+
+        function fetchStatusesFromFirebase() {
+    if (!db) {
+        renderDefaultBackupStatuses();
+        return;
+    }
+
+    db.collection("statusData").get()
+    .then((querySnapshot) => {
+        statusData.length = 0; 
+
+        let myStatusCard = {
+            id: "my-status",
+            username: "My Status",
+            isMe: true,
+            // IDAN KANA DA ASALIN LINK NA HOTONKA, SAKASHI A NAN GUDE DA YA KOMA 'https://via.placeholder.com'
+            profileImg: "https://via.placeholder.com/40/111?text=Me", 
+            previewImg: "https://via.placeholder.com/150x250/111?text=No+Update", 
+            timestamp: Date.now(),
+            totalUpdates: 0,
+            viewedCount: 0
         };
 
-        let currentActiveUser = 'ramatu';
-        let currentMediaIndex = 0;
-        let hudTimerClock;
-        let trackingProgress = 0;
-        const matrixStepDuration = 6000;
-        let isGhostModeActive = false;
+        let tempOtherStatuses = [];
 
-        function loadMatrixNode() {
-            clearInterval(hudTimerClock);
-            const activeProfile = cyberNetworkFeed[currentActiveUser];
-            const activeNode = activeProfile.nodes[currentMediaIndex];
-
-            document.getElementById('hudUsername').innerText = activeProfile.user;
-            document.getElementById('hudTimeLabel').innerText = activeProfile.timeLabel || "1h ago";
-            document.getElementById('hudAvatar').src = activeProfile.avatar;
-            document.getElementById('matrixMedia').src = activeNode.url;
-            document.getElementById('ambientProjector').style.backgroundImage = `url('${activeNode.url}')`;
-
-            const timeline = document.getElementById('hudTimeline');
-            timeline.innerHTML = '';
-            activeProfile.nodes.forEach((_, idx) => {
-                const bar = document.createElement('div');
-                bar.className = 'hud-bar';
-                const fill = document.createElement('div');
-                fill.className = 'hud-fill';
-                if(idx < currentMediaIndex) fill.style.width = '100%';
-                bar.appendChild(fill);
-                timeline.appendChild(bar);
-            });
-
-            beginTimelineSweep();
-        }
-
-        function beginTimelineSweep() {
-            trackingProgress = 0;
-            const fills = document.querySelectorAll('.hud-fill');
-            const targetFill = fills[currentMediaIndex];
-
-            hudTimerClock = setInterval(() => {
-                trackingProgress += (100 / (matrixStepDuration / 40));
-                if(targetFill) targetFill.style.width = `${trackingProgress}%`;
-
-                if (trackingProgress >= 100) {
-                    clearInterval(hudTimerClock);
-                    triggerNavigationPipeline(1);
-                }
-            }, 40);
-        }
-
-        /* GYARA LOGIC: Tsallakawa zuwa status na gaba ko na mutum na gaba maimakon katsewa kwatsam */
-        function triggerNavigationPipeline(direction) {
-            const profileKeys = Object.keys(cyberNetworkFeed);
-            const currentKeyPos = profileKeys.indexOf(currentActiveUser);
-            const currentProfile = cyberNetworkFeed[currentActiveUser];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
             
-            if (direction === 1) { 
-                // Idan akwai sauran hoto a gaba na wannan mutumin
-                if (currentMediaIndex < currentProfile.nodes.length - 1) {
-                    currentMediaIndex++;
-                    loadMatrixNode();
-                } else {
-                    // Idan hotunan wannan mutumin sun kare, a duba ko akwai wani member a gaba
-                    if (currentKeyPos < profileKeys.length - 1) {
-                        currentActiveUser = profileKeys[currentKeyPos + 1];
-                        currentMediaIndex = 0;
-                        loadMatrixNode();
-                    } else {
-                        // Idan duka kowa da kowa ya kare, sannan ne za a koma baya
-                        disconnectMatrix();
-                    }
+            if (data.username === "Sadiq") {
+                myStatusCard.previewImg = data.previewImg; 
+                myStatusCard.timestamp = data.timestamp || Date.now();
+                myStatusCard.totalUpdates += 1;
+                if (data.profileImg && !data.profileImg.includes("placeholder.com")) {
+                    myStatusCard.profileImg = data.profileImg;
                 }
-            } else { 
-                // Idan an danna hagu kuma akwai sauran hoton baya na wannan mutumin
-                if (currentMediaIndex > 0) {
-                    currentMediaIndex--;
-                    loadMatrixNode();
-                } else {
-                    // Idan hotunan sun kare na wannan mutumin, a koma kan na member din baya
-                    if (currentKeyPos > 0) {
-                        currentActiveUser = profileKeys[currentKeyPos - 1];
-                        currentMediaIndex = cyberNetworkFeed[currentActiveUser].nodes.length - 1;
-                        loadMatrixNode();
-                    }
-                }
-            }
-        }
-
-        function triggerSynergyTip() {
-            alert(`⚡ Transaction Initiated: Sending 0.5 SYNERGY Tokens directly to ${cyberNetworkFeed[currentActiveUser].user}.`);
-        }
-
-        function shareToMyStatus() {
-            clearInterval(hudTimerClock);
-            mainContainer.classList.add('paused');
-
-            const currentMediaUrl = cyberNetworkFeed[currentActiveUser].nodes[currentMediaIndex].url;
-            const userCaption = prompt("Write your custom caption for this status:");
-            
-            if (userCaption !== null) {
-                alert(`🚀 Reshared to My Status successfully!\n\n📷 Media: [Current View]\n✍️ Your Caption: "${userCaption || 'No caption'}"`);
-            }
-            
-            beginTimelineSweep();
-            mainContainer.classList.remove('paused');
-        }
-
-        function executeMediaDownload() {
-            alert("📥 Downloader Core: Status saver triggered! Media downloading in original quality directly to your system storage.");
-        }
-
-        function toggleGhostInfiltration() {
-            isGhostModeActive = !isGhostModeActive;
-            const node = document.getElementById('ghostNode');
-            if(isGhostModeActive) {
-                node.classList.add('ghost-active');
-                alert("👁️ Ghost Infiltration Mode: Activated. You can view all statuses anonymously.");
             } else {
-                node.classList.remove('ghost-active');
-            }
-        }
-
-        document.getElementById('touchLeft').addEventListener('click', () => triggerNavigationPipeline(-1));
-        document.getElementById('touchRight').addEventListener('click', () => triggerNavigationPipeline(1));
-
-        const mainContainer = document.getElementById('matrixContainer');
-        window.addEventListener('touchstart', (e) => {
-            if(['grid-left', 'grid-right'].includes(e.target.className)) {
-                clearInterval(hudTimerClock);
-                mainContainer.classList.add('paused', 'hud-hidden');
-            }
-        });
-        window.addEventListener('touchend', (e) => {
-            if(['grid-left', 'grid-right'].includes(e.target.className)) {
-                beginTimelineSweep();
-                mainContainer.classList.remove('paused', 'hud-hidden');
+                tempOtherStatuses.push({
+                    id: doc.id,
+                    username: data.username,
+                    isMe: false,
+                    profileImg: data.profileImg || "https://via.placeholder.com/40/222",
+                    previewImg: data.previewImg,
+                    timestamp: data.timestamp || Date.now(),
+                    totalUpdates: data.totalUpdates || 1,
+                    viewedCount: data.viewedCount || 0
+                });
             }
         });
 
-        function disconnectMatrix() {
-            window.location.href = 'chats.html';
+        tempOtherStatuses.sort((a, b) => b.timestamp - a.timestamp);
+        statusData.push(myStatusCard);
+
+        // Backup members data
+        statusData.push(
+            {
+                id: "ramatu", username: "Ramatu Arahman", isMe: false,
+                profileImg: "https://via.placeholder.com/40/333",
+                previewImg: "https://via.placeholder.com/150x250/333?text=Ramatu+Update",
+                timestamp: Date.now() - 1440000, totalUpdates: 1, viewedCount: 1
+            },
+            {
+                id: "ahmad", username: "Ahmad Tech Hub", isMe: false,
+                profileImg: "https://via.placeholder.com/40/444",
+                previewImg: "https://via.placeholder.com/150x250/444?text=Ahmad+Update",
+                timestamp: Date.now() - 7200000, totalUpdates: 1, viewedCount: 0
+            }
+        );
+
+        if (tempOtherStatuses.length > 0) {
+            statusData.push(...tempOtherStatuses);
         }
 
-        const params = new URLSearchParams(window.location.search);
-        const targetUser = params.get('user');
-        if(targetUser && cyberNetworkFeed[targetUser]) currentActiveUser = targetUser;
+        if (typeof sortAndRenderStatus === "function") {
+            sortAndRenderStatus(); 
+        }
+    })
+    .catch((error) => {
+        console.error("Firebase Error: ", error);
+        renderDefaultBackupStatuses();
+    });
+}
+
+function renderDefaultBackupStatuses() {
+    statusData.length = 0;
+    statusData.push(
+        { id: "my-status", username: "My Status", isMe: true, profileImg: "https://via.placeholder.com/40/111?text=Me", previewImg: "https://via.placeholder.com/150x250/111?text=No+Update", timestamp: Date.now(), viewedCount: 0, totalUpdates: 0 },
+        { id: "ramatu", username: "Ramatu Arahman", isMe: false, profileImg: "https://via.placeholder.com/40/333", previewImg: "https://via.placeholder.com/150x250/333?text=Ramatu+Update", timestamp: Date.now() - 1440000, totalUpdates: 1, viewedCount: 1 },
+        { id: "ahmad", username: "Ahmad Tech Hub", isMe: false, profileImg: "https://via.placeholder.com/40/444", previewImg: "https://via.placeholder.com/150x250/444?text=Ahmad+Update", timestamp: Date.now() - 7200000, totalUpdates: 1, viewedCount: 0 }
+    );
+    if (typeof sortAndRenderStatus === "function") {
+        sortAndRenderStatus();
+    }
+}
+
+function sortAndRenderStatus() {
+    if (statusData.length === 0) return;
+
+    const myStatusNode = statusData.find(s => s.isMe);
+    const others = statusData.filter(s => !s.isMe);
+
+    others.sort((a, b) => {
+        const aFullyViewed = a.viewedCount >= a.totalUpdates;
+        const bFullyViewed = b.viewedCount >= b.totalUpdates;
+        if (aFullyViewed && !bFullyViewed) return 1;
+        if (!aFullyViewed && bFullyViewed) return -1;
+        return b.timestamp - a.timestamp;
+    });
+
+    const finalSortedList = [];
+    if (myStatusNode) finalSortedList.push(myStatusNode);
+    finalSortedList.push(...others);
+
+    const container = document.getElementById('statusReelContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    finalSortedList.forEach(status => {
+        const card = document.createElement('div');
+        card.className = 'status-node-circle';
         
-        loadMatrixNode();
+        if (status.isMe) {
+            card.setAttribute('onclick', "window.location.href='my-status.html'");
+        } else {
+            card.setAttribute('onclick', `openStatusMatrix('${status.id}')`);
+        }
+
+        let ringClass = 'avatar-ring-status';
+        if (status.isMe) {
+            ringClass += ' my-node';
+        } else if (status.viewedCount >= status.totalUpdates) {
+            ringClass += ' viewed'; 
+        }
+
+        const plusIcon = status.isMe ? `<div class="add-node-plus" onclick="triggerAddStatus(event)">+</div>` : '';
+
+        // GYARAN SIRRI: An cire 'ui-avatars' gaba daya don kada ya sake nuna MS ko AH. Yanzu hoton gaskiya na 'status.profileImg' zai fito radau.
+        card.innerHTML = `
+            <div class="${ringClass}">
+                <img src="${status.profileImg}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
+                ${plusIcon}
+            </div>
+            <img src="${status.previewImg}" class="status-img">
+            <span class="status-username">${status.username}</span>
+        `;
+        container.appendChild(card);
+    });
+                }
+        
     </script>
 </body>
 </html>
