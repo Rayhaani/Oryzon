@@ -1763,9 +1763,274 @@ if (!isOwnProfile) {
 
 // Kira wannan function kai tsaye - ba onAuthStateChanged ba
 initProfile();
+
+
+
+// ============================================================
+// SAKA WANNAN A CIKIN <script> TAG ɗinka a me.html
+// Ka canza BACKEND_URL zuwa URL ɗinka na Render.com
+// ============================================================
+
+const BACKEND_URL = 'https://oryzon-backend-ed1q.onrender.com';
+
+// ============================================================
+// UPDATE PHOTO - Profile da Cover
+// ============================================================
+async function updatePhoto(event, type) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const username = localStorage.getItem('nexus_user_session');
+    if (!username) return;
+
+    // Nuna loading
+    const imgId = type === 'cover' ? 'main-cover-img' : 'main-profile-img';
+    const imgEl = document.getElementById(imgId);
+    const originalSrc = imgEl.src;
+    imgEl.style.opacity = '0.5';
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', type);
+        formData.append('username', username);
+
+        const response = await fetch(`${BACKEND_URL}/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Nuna hoto nan take
+            imgEl.src = data.url;
+            imgEl.style.opacity = '1';
+
+            // Adana a Firestore
+            const userRef = db.collection('users').doc(username);
+            const updateData = {};
+            
+            if (type === 'profile') {
+                updateData.userProfilePic = data.url;
+                updateData.profilePicKey = data.key;
+                localStorage.setItem('userProfilePic', data.url);
+            } else {
+                updateData.userCover = data.url;
+                updateData.coverKey = data.key;
+                localStorage.setItem('userCover', data.url);
+            }
+
+            await userRef.update(updateData);
+            
+            // Rufe menu
+            document.querySelectorAll('.photo-menu').forEach(m => m.classList.add('hidden'));
+            
+        } else {
+            throw new Error(data.error);
+        }
+
+    } catch (err) {
+        console.error('Upload kuskure:', err);
+        imgEl.src = originalSrc;
+        imgEl.style.opacity = '1';
+        alert('Kuskure wajen upload: ' + err.message);
+    }
+}
+
+// ============================================================
+// FRIENDS REQUEST SYSTEM
+// ============================================================
+
+// Aika friend request
+async function sendFriendRequest(targetUsername) {
+    const myUsername = localStorage.getItem('nexus_user_session');
+    if (!myUsername || myUsername === targetUsername) return;
+
+    try {
+        // Duba ko request ta riga ta wanzu
+        const existing = await db.collection('friendRequests')
+            .where('from', '==', myUsername)
+            .where('to', '==', targetUsername)
+            .get();
+
+        if (!existing.empty) {
+            alert('Ka riga ka aika request!');
+            return;
+        }
+
+        // Duba ko sun riga sun zama friends
+        const friendship = await db.collection('friends')
+            .where('users', 'array-contains', myUsername)
+            .get();
+
+        let alreadyFriends = false;
+        friendship.forEach(doc => {
+            if (doc.data().users.includes(targetUsername)) alreadyFriends = true;
+        });
+
+        if (alreadyFriends) {
+            alert('Kun riga kun zama Nodes!');
+            return;
+        }
+
+        // Aika request
+        const requestRef = await db.collection('friendRequests').add({
+            from: myUsername,
+            to: targetUsername,
+            status: 'pending',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Aika notification zuwa target user
+        await db.collection('notifications').add({
+            to: targetUsername,
+            from: myUsername,
+            type: 'friend_request',
+            requestId: requestRef.id,
+            message: `${myUsername} ya aiko maka Node Request`,
+            read: false,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Canza button
+        const btn = document.getElementById('add-node-btn');
+        if (btn) {
+            btn.textContent = 'Request Sent';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+        }
+
+        alert('Node Request an aika!');
+
+    } catch (err) {
+        console.error('Friend request kuskure:', err);
+        alert('Kuskure: ' + err.message);
+    }
+}
+
+// Karɓa ko ƙi request
+async function respondToRequest(requestId, fromUsername, accept) {
+    const myUsername = localStorage.getItem('nexus_user_session');
+
+    try {
+        if (accept) {
+            // Ƙirƙiri friendship
+            await db.collection('friends').add({
+                users: [myUsername, fromUsername],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Aika notification zuwa wanda ya aika request
+            await db.collection('notifications').add({
+                to: fromUsername,
+                from: myUsername,
+                type: 'friend_accepted',
+                message: `${myUsername} ya karɓi Node Request ɗinka!`,
+                read: false,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Update stats - kara friend count
+            await db.collection('users').doc(myUsername).update({
+                friendCount: firebase.firestore.FieldValue.increment(1)
+            });
+            await db.collection('users').doc(fromUsername).update({
+                friendCount: firebase.firestore.FieldValue.increment(1)
+            });
+        }
+
+        // Canja status na request
+        await db.collection('friendRequests').doc(requestId).update({
+            status: accept ? 'accepted' : 'rejected'
+        });
+
+        // Goge notification din
+        const notifQuery = await db.collection('notifications')
+            .where('requestId', '==', requestId)
+            .get();
+        notifQuery.forEach(doc => doc.ref.delete());
+
+    } catch (err) {
+        console.error('Response kuskure:', err);
+    }
+}
+
+// ============================================================
+// NOTIFICATIONS SYSTEM - Real-time
+// ============================================================
+function listenToNotifications() {
+    const myUsername = localStorage.getItem('nexus_user_session');
+    if (!myUsername) return;
+
+    db.collection('notifications')
+        .where('to', '==', myUsername)
+        .where('read', '==', false)
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(snapshot => {
+            const count = snapshot.size;
+            
+            // Nuna count a badge
+            const badge = document.getElementById('notif-badge');
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+
+            // Render notifications
+            renderNotifications(snapshot.docs);
+        });
+}
+
+function renderNotifications(docs) {
+    const container = document.getElementById('notifications-list');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (docs.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Babu sabon notification</p>';
+        return;
+    }
+
+    docs.forEach(doc => {
+        const notif = doc.data();
         
+        let actionHTML = '';
+        if (notif.type === 'friend_request') {
+            actionHTML = `
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button onclick="respondToRequest('${notif.requestId}', '${notif.from}', true)" 
+                        style="flex:1; padding:8px; background:#fde08d; color:#000; border:none; border-radius:8px; font-weight:700; cursor:pointer;">
+                        ✅ Karɓa
+                    </button>
+                    <button onclick="respondToRequest('${notif.requestId}', '${notif.from}', false)"
+                        style="flex:1; padding:8px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; cursor:pointer;">
+                        ❌ Ki
+                    </button>
+                </div>`;
+        }
+
+        container.insertAdjacentHTML('beforeend', `
+            <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:5px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#00f2fe,#7000ff); flex-shrink:0;"></div>
+                    <div>
+                        <p style="color:#fff; font-size:13px; margin:0;">${notif.message}</p>
+                        <span style="color:#666; font-size:10px;">Yanzu</span>
+                    </div>
+                </div>
+                ${actionHTML}
+            </div>
+        `);
+    });
+}
+
+// Fara listening idan page ta loda
+listenToNotifications();
+    
+            
         </script>
-        
     </main>
 </body>
     </html>
