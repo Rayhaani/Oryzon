@@ -1306,8 +1306,8 @@ header {
             </div>
 
             <div style="cursor: pointer; display: flex; align-items: baseline; gap: 4px;">
-                <span style="font-size: 14px; font-weight: 700; color: #fff;">2,037</span>
-                <span style="font-size: 12px; color: #71767b;">Friends</span>
+    <span id="stats-friends-count" style="font-size: 14px; font-weight: 700; color: #fff;">0</span>
+    <span style="font-size: 12px; color: #71767b;">Friends</span>
             </div>
 
         </div>
@@ -1737,6 +1737,7 @@ const isOwnProfile = profileUser === username;
         applyUserToProfile(currentUser);
         initFollowButton();
         loadFollowerCount();
+        loadFriendCount();
 
         // Gyara Contact button ya dauki username
 const contactBtn = document.getElementById('contact-btn');
@@ -2083,23 +2084,38 @@ async function toggleFollow() {
     try {
         if (btn.dataset.state === 'following') {
             // === UNFOLLOW ===
-            // Goge daga follows collection
             const snap = await db.collection('follows')
                 .where('follower', '==', myUsername)
                 .where('following', '==', profileUser)
                 .get();
-            
             snap.forEach(doc => doc.ref.delete());
 
-            // Rage follower count by 1
+            // Rage follower count na profileUser
             await db.collection('users').doc(profileUser).update({
                 followerCount: firebase.firestore.FieldValue.increment(-1)
             });
+
+            // Duba ko sun kasance mutual (friends) - idan haka, rage friends count
+            const mutualCheck = await db.collection('follows')
+                .where('follower', '==', profileUser)
+                .where('following', '==', myUsername)
+                .get();
+
+            if (!mutualCheck.empty) {
+                // Suna mutual - rage friends count ga dukkansu
+                await db.collection('users').doc(profileUser).update({
+                    friendCount: firebase.firestore.FieldValue.increment(-1)
+                });
+                await db.collection('users').doc(myUsername).update({
+                    friendCount: firebase.firestore.FieldValue.increment(-1)
+                });
+            }
 
             btn.textContent = 'FOLLOW';
             btn.dataset.state = 'none';
             btn.style.background = '#000';
             btn.style.color = '#fff';
+            btn.style.border = '1px solid rgba(255,255,255,0.2)';
 
         } else {
             // === FOLLOW ===
@@ -2109,20 +2125,46 @@ async function toggleFollow() {
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            // Kara follower count by 1
+            // Kara follower count na profileUser
             await db.collection('users').doc(profileUser).update({
                 followerCount: firebase.firestore.FieldValue.increment(1)
             });
 
-            // Aika notification
-            await db.collection('notifications').add({
-                to: profileUser,
-                from: myUsername,
-                type: 'new_follower',
-                message: `${myUsername} ya fara bin ka`,
-                read: false,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            // Duba ko profileUser yana following myUsername riga (mutual check)
+            const mutualCheck = await db.collection('follows')
+                .where('follower', '==', profileUser)
+                .where('following', '==', myUsername)
+                .get();
+
+            if (!mutualCheck.empty) {
+                // Mutual follow! - Kara friends count ga dukkansu
+                await db.collection('users').doc(profileUser).update({
+                    friendCount: firebase.firestore.FieldValue.increment(1)
+                });
+                await db.collection('users').doc(myUsername).update({
+                    friendCount: firebase.firestore.FieldValue.increment(1)
+                });
+
+                // Aika notification - "Yanzu Abokai ne"
+                await db.collection('notifications').add({
+                    to: profileUser,
+                    from: myUsername,
+                    type: 'new_friend',
+                    message: `${myUsername} ya fara bin ka — yanzu Nodes ne!`,
+                    read: false,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } else {
+                // Follow kawai - ba mutual ba tukuna
+                await db.collection('notifications').add({
+                    to: profileUser,
+                    from: myUsername,
+                    type: 'new_follower',
+                    message: `${myUsername} ya fara bin ka`,
+                    read: false,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
 
             btn.textContent = 'FOLLOWING';
             btn.dataset.state = 'following';
@@ -2137,12 +2179,12 @@ async function toggleFollow() {
         btn.disabled = false;
         btn.style.opacity = '1';
     }
-}
+                                        }
 
 // ============================================================
 // LOAD REAL FOLLOWER COUNT DAGA FIREBASE
 // ============================================================
-function loadFollowerCount() {
+function loadFriendCount() {
     const urlParams = new URLSearchParams(window.location.search);
     const myUsername = localStorage.getItem('nexus_user_session');
     const profileUser = urlParams.get('user') || myUsername;
@@ -2151,10 +2193,9 @@ function loadFollowerCount() {
         .onSnapshot(doc => {
             if (doc.exists) {
                 const data = doc.data();
-                const count = data.followerCount || 0;
-                // Nuna a stats
-                document.getElementById('stats-followers-count').textContent = 
-                    count.toLocaleString();
+                // Friends count
+                document.getElementById('stats-friends-count').textContent =
+                    (data.friendCount || 0).toLocaleString();
             }
         });
 }
