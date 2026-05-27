@@ -287,8 +287,10 @@ window.generatePostHTML = function(post) {
     const savedProfilePic = localStorage.getItem('userProfilePic');
 
     let currentPic = defaultAvatar;
-    if (post.username && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
-        currentPic = savedProfilePic;
+    const currentUsername = typeof currentUser === 'object' ? currentUser?.username : currentUser;
+if (post.username && currentUsername && post.username.toLowerCase() === currentUsername.toLowerCase() && savedProfilePic) {
+   
+       currentPic = savedProfilePic;
     } else {
         currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
     }
