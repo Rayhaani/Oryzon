@@ -117,6 +117,7 @@
             border-top: 1px solid rgba(255, 215, 0, 0.08) !important;
         }
 
+        /* ← GYARAN 1: Cire flex:1 domin save ya koma dama */
         .action-capsules {
             display: flex !important;
             gap: 6px !important;
@@ -140,6 +141,7 @@
 
         .capsule:active { transform: scale(0.93) !important; }
 
+        /* ← GYARAN 2: Icons su koma fari #ffffff ba gold ba */
         .capsule i {
             color: #ffffff !important;
             font-size: 15px !important;
@@ -154,6 +156,7 @@
 
         .capsule.liked i { color: #ff4d6d !important; }
 
+        /* ← GYARAN 3: Save ya zauna dama tare da space */
         .save-capsule {
             margin-left: auto !important;
         }
@@ -287,15 +290,11 @@ window.generatePostHTML = function(post) {
     const savedProfilePic = localStorage.getItem('userProfilePic');
 
     let currentPic = defaultAvatar;
-   const currentUsername = typeof currentUser === 'object' ? currentUser?.username : currentUser;
-const postOwnerPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
-
-if (post.username && currentUsername && post.username.toLowerCase() === currentUsername.toLowerCase() && savedProfilePic) {
-    currentPic = savedProfilePic;
-} else {
-    currentPic = postOwnerPic;
-}
-   
+    if (post.username && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
+        currentPic = savedProfilePic;
+    } else {
+        currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
+    }
     
     const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
     
@@ -314,7 +313,7 @@ if (post.username && currentUsername && post.username.toLowerCase() === currentU
     }
 
     return `
-    <div class="post-card" onclick="if(typeof toggleImmersive === 'function') toggleImmersive(this)">
+    <div class="post-card" onclick="toggleImmersive(this)">
         <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
             <div style="display: flex; align-items: center; gap: 0; flex: 1;">
                 <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
