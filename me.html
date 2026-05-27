@@ -1301,8 +1301,8 @@ header {
             </div>
 
             <div style="cursor: pointer; display: flex; align-items: baseline; gap: 4px; margin-right: 14px;">
-                <span style="font-size: 14px; font-weight: 700; color: #fff;">2,521</span>
-                <span style="font-size: 12px; color: #71767b;">Followers</span>
+    <span id="stats-followers-count" style="font-size: 14px; font-weight: 700; color: #fff;">0</span>
+    <span style="font-size: 12px; color: #71767b;">Followers</span>
             </div>
 
             <div style="cursor: pointer; display: flex; align-items: baseline; gap: 4px;">
@@ -1325,7 +1325,8 @@ header {
                         Wholesaler of Luxury Sudanese Toubs & Traditional Wear.
                     </p>
                     <div class="flex gap-3 mb-6">
-                        <button class="btn-slim btn-black">Follow</button>
+                        
+                    <button id="follow-btn" onclick="toggleFollow()" class="btn-slim btn-black">Follow</button>
                         <a href="chat-interior.html" id="contact-btn" class="btn-slim btn-white flex items-center justify-center">Chat</a>
                     
                     </div>
@@ -1732,7 +1733,10 @@ const isOwnProfile = profileUser === username;
         }
 
         // Apply profile UI
+        // Apply profile UI
         applyUserToProfile(currentUser);
+        initFollowButton();
+        loadFollowerCount();
 
         // Gyara Contact button ya dauki username
 const contactBtn = document.getElementById('contact-btn');
@@ -2030,7 +2034,130 @@ function renderNotifications(docs) {
 
 // Fara listening idan page ta loda
 listenToNotifications();
+
+
+
+            // ============================================================
+// FOLLOW SYSTEM - Complete
+// ============================================================
+async function initFollowButton() {
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUser = urlParams.get('user') || myUsername;
     
+    // Idan nake kallon profile na kaina, boye button
+    if (myUsername === profileUser) {
+        document.getElementById('follow-btn').style.display = 'none';
+        return;
+    }
+
+    // Duba ko ina following shi riga
+    const existingFollow = await db.collection('follows')
+        .where('follower', '==', myUsername)
+        .where('following', '==', profileUser)
+        .get();
+
+    const btn = document.getElementById('follow-btn');
+    if (!existingFollow.empty) {
+        btn.textContent = 'FOLLOWING';
+        btn.dataset.state = 'following';
+        btn.style.background = 'rgba(255,255,255,0.1)';
+        btn.style.color = '#fff';
+    } else {
+        btn.textContent = 'FOLLOW';
+        btn.dataset.state = 'none';
+    }
+}
+
+async function toggleFollow() {
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUser = urlParams.get('user') || myUsername;
+    const btn = document.getElementById('follow-btn');
+
+    if (!myUsername || myUsername === profileUser) return;
+
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+
+    try {
+        if (btn.dataset.state === 'following') {
+            // === UNFOLLOW ===
+            // Goge daga follows collection
+            const snap = await db.collection('follows')
+                .where('follower', '==', myUsername)
+                .where('following', '==', profileUser)
+                .get();
+            
+            snap.forEach(doc => doc.ref.delete());
+
+            // Rage follower count by 1
+            await db.collection('users').doc(profileUser).update({
+                followerCount: firebase.firestore.FieldValue.increment(-1)
+            });
+
+            btn.textContent = 'FOLLOW';
+            btn.dataset.state = 'none';
+            btn.style.background = '#000';
+            btn.style.color = '#fff';
+
+        } else {
+            // === FOLLOW ===
+            await db.collection('follows').add({
+                follower: myUsername,
+                following: profileUser,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Kara follower count by 1
+            await db.collection('users').doc(profileUser).update({
+                followerCount: firebase.firestore.FieldValue.increment(1)
+            });
+
+            // Aika notification
+            await db.collection('notifications').add({
+                to: profileUser,
+                from: myUsername,
+                type: 'new_follower',
+                message: `${myUsername} ya fara bin ka`,
+                read: false,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            btn.textContent = 'FOLLOWING';
+            btn.dataset.state = 'following';
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.color = '#fff';
+        }
+
+    } catch (err) {
+        console.error('Follow kuskure:', err);
+        alert('Kuskure: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}
+
+// ============================================================
+// LOAD REAL FOLLOWER COUNT DAGA FIREBASE
+// ============================================================
+function loadFollowerCount() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const profileUser = urlParams.get('user') || myUsername;
+
+    db.collection('users').doc(profileUser)
+        .onSnapshot(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                const count = data.followerCount || 0;
+                // Nuna a stats
+                document.getElementById('stats-followers-count').textContent = 
+                    count.toLocaleString();
+            }
+        });
+}
             
         </script>
     </main>
