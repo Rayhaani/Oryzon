@@ -1307,7 +1307,7 @@ header {
 
             <div style="cursor: pointer; display: flex; align-items: baseline; gap: 4px;">
     <span id="stats-friends-count" style="font-size: 14px; font-weight: 700; color: #fff;">0</span>
-    <span style="font-size: 12px; color: #71767b;">Friends</span>
+    <span id="stats-third-label" style="font-size: 12px; color: #71767b;">Friends</span>
             </div>
 
         </div>
@@ -1739,6 +1739,17 @@ const isOwnProfile = profileUser === username;
         loadFollowerCount();
         loadFriendCount();
 
+        // Nuna Friends ko Following gwargwadon wace profile ake kallo
+if (isOwnProfile) {
+    // Nuna Friends stat
+    document.getElementById('stats-third-label').textContent = 'Friends';
+    loadFriendCount();
+} else {
+    // Nuna Following stat
+    document.getElementById('stats-third-label').textContent = 'Following';
+    loadFollowingCount(profileUser);
+}
+        
         // Gyara Contact button ya dauki username
 const contactBtn = document.getElementById('contact-btn');
 if (contactBtn) {
@@ -2181,6 +2192,17 @@ async function toggleFollow() {
     }
                                         }
 
+
+    // Ƙara followingCount na myUsername
+await db.collection('users').doc(myUsername).update({
+    followingCount: firebase.firestore.FieldValue.increment(1)
+});
+
+            // Rage followingCount na myUsername
+await db.collection('users').doc(myUsername).update({
+    followingCount: firebase.firestore.FieldValue.increment(-1)
+});
+            
 // ============================================================
 // LOAD REAL FOLLOWER COUNT DAGA FIREBASE
 // ============================================================
@@ -2199,6 +2221,18 @@ function loadFriendCount() {
             }
         });
 }
+
+
+            function loadFollowingCount(profileUser) {
+    db.collection('users').doc(profileUser)
+        .onSnapshot(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                document.getElementById('stats-friends-count').textContent =
+                    (data.followingCount || 0).toLocaleString();
+            }
+        });
+            }
             
         </script>
     </main>
