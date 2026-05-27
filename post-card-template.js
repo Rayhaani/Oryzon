@@ -1,5 +1,5 @@
 /* ============================================================
-   POST CARD TEMPLATE - SHARED SOURCE OF TRUTH
+   POST CARD TEMPLATE - SHARED SOURCE OF TRUTH (GYARARRE)
    ============================================================ */
 
 (function injectPostCardStyles() {
@@ -117,7 +117,6 @@
             border-top: 1px solid rgba(255, 215, 0, 0.08) !important;
         }
 
-        /* ← GYARAN 1: Cire flex:1 domin save ya koma dama */
         .action-capsules {
             display: flex !important;
             gap: 6px !important;
@@ -141,7 +140,6 @@
 
         .capsule:active { transform: scale(0.93) !important; }
 
-        /* ← GYARAN 2: Icons su koma fari #ffffff ba gold ba */
         .capsule i {
             color: #ffffff !important;
             font-size: 15px !important;
@@ -156,7 +154,6 @@
 
         .capsule.liked i { color: #ff4d6d !important; }
 
-        /* ← GYARAN 3: Save ya zauna dama tare da space */
         .save-capsule {
             margin-left: auto !important;
         }
@@ -234,8 +231,8 @@
     document.head.appendChild(style);
 })();
 
-
-window.postCard_toggleVideoSound = function(event, element) {
+// GYARA: Tunda a kasa ana amfani da toggleVideoSound, sunan ya daidaita anan
+window.toggleVideoSound = function(event, element) {
     event.stopPropagation();
     const video = element.previousElementSibling;
     if (video && video.tagName === 'VIDEO') {
@@ -246,7 +243,8 @@ window.postCard_toggleVideoSound = function(event, element) {
     }
 };
 
-window.postCard_toggleLike = function(event, postId) {
+// GYARA: Sunan ya daidaita da triggerPulse ko ka mayar dashi sunan da kake so
+window.triggerPulse = function(event, postId) {
     event.stopPropagation();
     const btn = event.currentTarget;
     const icon = btn.querySelector('i');
@@ -272,9 +270,9 @@ window.postCard_toggleLike = function(event, postId) {
     }
 };
 
-window.postCard_toggleSave = function(event, postId) {
-    event.stopPropagation();
-    const btn = event.currentTarget;
+// GYARA: Sunan ya koma toggleSave don ya dace da na kasa
+window.toggleSave = function(element, postId) {
+    const btn = element;
     const icon = btn.querySelector('i');
     const countEl = btn.querySelector('span');
 
@@ -283,6 +281,17 @@ window.postCard_toggleSave = function(event, postId) {
     if (countEl) countEl.textContent = saved ? 'Saved' : 'Save';
 };
 
+// GYARA: Don kiyaye crash idan babu wadannan functions din a wani wajen
+if (typeof window.toggleImmersive !== 'function') {
+    window.toggleImmersive = function(el) { console.log('Immersive triggered'); };
+}
+if (typeof window.handleFollow !== 'function') {
+    window.handleFollow = function(el) { event.stopPropagation(); console.log('Follow triggered'); };
+}
+if (typeof window.openGiftPanel !== 'function') {
+    window.openGiftPanel = function(username) { event.stopPropagation(); console.log('Gift panel for', username); };
+}
+
 window.generatePostHTML = function(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
     let mediaHTML = '';
@@ -290,7 +299,9 @@ window.generatePostHTML = function(post) {
     const savedProfilePic = localStorage.getItem('userProfilePic');
 
     let currentPic = defaultAvatar;
-    if (post.username && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
+    
+    // GYARA: An saka 'typeof currentUser !== "undefined"' don hana tsayawar kodi idan babu shi
+    if (post.username && typeof currentUser !== 'undefined' && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
         currentPic = savedProfilePic;
     } else {
         currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
@@ -326,7 +337,7 @@ window.generatePostHTML = function(post) {
                     ${vBadge}
                 </div>
             </div>
-            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+            <div class="header-actions" onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 12px;">
                 <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
                 <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
                     <span class="gift-emoji">🎁</span>
@@ -334,16 +345,16 @@ window.generatePostHTML = function(post) {
                 </div>
             </div>
         </div>
-        <div class="post-content" style="padding: 4px 10px;">${post.content}</div>
+        <div class="post-content" style="padding: 4px 10px;">${post.content || ''}</div>
         ${mediaHTML}
-        <div class="interaction-bar" onclick="stopProp(event)">
+        <div class="interaction-bar" onclick="event.stopPropagation()">
             <div class="action-capsules">
-                <div class="capsule" onclick="triggerPulse(this, event)">
+                <div class="capsule" onclick="triggerPulse(event, '${post.id}')">
                     <i class="fa-regular fa-heart"></i>
                     <span>${post.likes || 0}</span>
                 </div>
-                <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
-                <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
+                <div class="capsule"><i class="fa-regular fa-comment"></i><span>0</span></div>
+                <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>0</span></div>
                 <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
             </div>
             <div class="action-capsules save-capsule">
@@ -357,3 +368,4 @@ window.generatePostHTML = function(post) {
 };
 
 console.log('[PostCard] Shared template loaded ✓');
+               
