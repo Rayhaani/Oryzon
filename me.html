@@ -1561,6 +1561,7 @@ function loadTimelinePosts() {
                 const post = doc.data();
                 if (post.category === "normal") { 
                     hasPosts = true;
+                    // Anan mun tilasta masa amfani da ainihin tsarin generatePostHTML dinka na Homepage
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
             });
@@ -1572,6 +1573,7 @@ function loadTimelinePosts() {
             timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Kuskure wajen loda posts.</p>';
         });
 }
+
 
 // ============================================================
 // 2. GENERATE POST HTML (DYNAMIC AVATAR & USERNAME)
@@ -1662,30 +1664,22 @@ const urlParams = new URLSearchParams(window.location.search);
 const targetTimelineUser = urlParams.get('user') || localStorage.getItem("nexus_user_session") || "Sadiq";
 
 function loadUserTimelinePosts() {
-    // Tabbatar ka saka ainihin ID na inda kake son jerin posts din su bayyana a HTML dinka
-    const timelineContainer = document.getElementById('timeline-posts-container');
-    if (!timelineContainer) {
-        console.warn("Bamu sami 'timeline-posts-container' a jikin HTML ba tukunna.");
-        return;
-    }
-
-    timelineContainer.innerHTML = '<p style="text-align:center; padding:30px; color:#666;">Syncing timeline...</p>';
+    // Mun canza sunansa daga 'timeline-posts-container' zuwa 'timeline-area' domin ya dace da HTML dinka
+    const timelineContainer = document.getElementById('timeline-area');
+    if (!timelineContainer) return;
 
     if (typeof db === "undefined") {
         console.error("Firebase Database bai gama lodi ba.");
         return;
     }
 
-    // Dauko posts daga Firebase ba tare da hadaddiyar query ba don gudun Index Error
     db.collection("posts").get()
     .then((querySnapshot) => {
         const userFilteredPosts = [];
 
         querySnapshot.forEach((doc) => {
             const postData = doc.data();
-            
-            // Tace posts na wannan mutumin kadai da kake kallon profile dinsa
-            if (postData.username && postData.username.toLowerCase() === targetTimelineUser.toLowerCase()) {
+            if (postData.username && postData.username.toLowerCase() === targetTimelineUser.toLowerCase() && postData.category === "normal") {
                 userFilteredPosts.push({
                     id: doc.id,
                     ...postData
@@ -1693,38 +1687,26 @@ function loadUserTimelinePosts() {
             }
         });
 
-        // Tsara posts din ta hanyar na karshe da aka dora (JavaScript sorting)
         userFilteredPosts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-        timelineContainer.innerHTML = '';
-
-        if (userFilteredPosts.length === 0) {
-            timelineContainer.innerHTML = '<p style="text-align:center; padding:40px; color:#555; font-size:13px;">No posts yet on this timeline</p>';
-            return;
+        // Idan shafin na wani ne (ba mamakin account ba) kuma yana cikin tab din timeline, a zana posts din
+        const timelineArea = document.getElementById('timeline-area');
+        if (!timelineArea.classList.contains('hidden')) {
+            timelineArea.innerHTML = '';
+            if (userFilteredPosts.length === 0) {
+                timelineArea.innerHTML = '<p style="text-align:center; padding:40px; color:#555; font-size:13px;">No posts yet on this timeline</p>';
+                return;
+            }
+            userFilteredPosts.forEach((post) => {
+                timelineArea.insertAdjacentHTML('beforeend', generatePostHTML(post));
+            });
         }
-
-        // Zana posts din ta hanyar kiran EXACT function dinka na Homepage!
-        userFilteredPosts.forEach((post) => {
-            timelineContainer.insertAdjacentHTML('beforeend', generatePostHTML(post));
-        });
     })
     .catch((error) => {
         console.error("Timeline load error: ", error);
-        timelineContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading timeline</p>';
     });
-}
-
-// Fara aikin lodi da zaran shafin ya kammala
-document.addEventListener("DOMContentLoaded", () => {
-    // Idan Firebase dinka ya riga ya gama lodi, fara kiran aikin
-    if (typeof db !== "undefined") {
-        loadUserTimelinePosts();
-    } else {
-        // Idan bai gama lodi ba, jira sakan guda
-        setTimeout(loadUserTimelinePosts, 1000);
-    }
-});
-
+            }
+            
 // ============================================================
 // 3. LODA SHOWCASE IMAGES (DYNAMIC BASED ON LOGGED IN USER)
 // ============================================================
