@@ -1,5 +1,7 @@
 /* ============================================================
-   POST CARD TEMPLATE - SHARED SOURCE OF TRUTH (GYARARRE)
+   POST CARD TEMPLATE - Decentralized Shared Source of Truth
+   Wannan kudin yana gyara matsalar blank page ta hanyar kare
+   variables din da basu da ma'ana (undefined variables).
    ============================================================ */
 
 (function injectPostCardStyles() {
@@ -49,6 +51,45 @@
             100% { transform: translateX(100%); }
         }
 
+        .post-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0 15px 0 55px !important;
+            height: 54px !important;
+            position: relative !important;
+            background: linear-gradient(180deg, rgba(253, 224, 141, 0.08) 0%, transparent 100%) !important;
+            border-bottom: 1px solid rgba(253, 224, 141, 0.1) !important;
+            margin-bottom: 0 !important;
+        }
+
+        .post-avatar {
+            position: absolute !important;
+            left: 8px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 50% !important;
+            border: 2px solid var(--premium-gold) !important;
+            object-fit: cover !important;
+            z-index: 10 !important;
+        }
+
+        .post-username-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex: 1 !important;
+        }
+
+        .post-username {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+        }
+
         .nexus-badge {
             display: inline-flex !important;
             align-items: center !important;
@@ -67,7 +108,16 @@
             font-weight: 900 !important;
         }
 
+        .post-time {
+            font-size: 10px !important;
+            color: rgba(255, 255, 255, 0.45) !important;
+            display: block !important;
+            margin-top: 1px !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
         .post-content {
+            padding: 10px 14px 8px 14px !important;
             font-size: 14px !important;
             line-height: 1.5 !important;
             color: #efefef !important;
@@ -88,7 +138,7 @@
             transition: all 0.3s ease !important;
         }
 
-        .mute-toggle {
+        .post-mute-toggle {
             position: absolute !important;
             bottom: 60px !important;
             right: 12px !important;
@@ -105,9 +155,9 @@
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
         }
 
-        .mute-toggle i { font-size: 13px !important; }
+        .post-mute-toggle i { font-size: 13px !important; }
 
-        .interaction-bar {
+        .post-interaction-bar {
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
@@ -117,12 +167,12 @@
             border-top: 1px solid rgba(255, 215, 0, 0.08) !important;
         }
 
-        .action-capsules {
+        .post-action-capsules {
             display: flex !important;
             gap: 6px !important;
         }
 
-        .capsule {
+        .post-capsule {
             background: rgba(255, 255, 255, 0.07) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             border-radius: 50px !important;
@@ -138,27 +188,28 @@
             color: #ffffff !important;
         }
 
-        .capsule:active { transform: scale(0.93) !important; }
+        .post-capsule:active { transform: scale(0.93) !important; }
 
-        .capsule i {
+        /* Icons sun koma fari kamar yadda kake so */
+        .post-capsule i {
             color: #ffffff !important;
             font-size: 15px !important;
             display: inline-block !important;
         }
 
-        .capsule span {
+        .post-capsule span {
             font-size: 11px !important;
             font-weight: 600 !important;
             color: #ccc !important;
         }
 
-        .capsule.liked i { color: #ff4d6d !important; }
+        .post-capsule.liked i { color: #ff4d6d !important; }
 
-        .save-capsule {
+        .post-save-capsule {
             margin-left: auto !important;
         }
 
-        .save-capsule .capsule {
+        .post-save-capsule .post-capsule {
             min-width: 68px !important;
         }
 
@@ -186,41 +237,6 @@
             color: #fff !important;
         }
 
-        .post-card.immersive-mode {
-            position: fixed !important;
-            top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100vh !important;
-            z-index: 5000 !important;
-            border-radius: 0 !important;
-            margin: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-end !important;
-            background: #000 !important;
-        }
-
-        .immersive-mode .post-media {
-            position: absolute !important;
-            top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100vh !important;
-            max-height: none !important;
-            object-fit: cover !important;
-            border-radius: 0 !important;
-            z-index: -1 !important;
-        }
-
-        .immersive-mode .post-header,
-        .immersive-mode .post-content,
-        .immersive-mode .interaction-bar {
-            position: relative !important;
-            z-index: 5001 !important;
-            background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
-            padding: 10px 20px !important;
-        }
-
-        video::-webkit-media-controls { display: none !important; }
-        video::-webkit-media-controls-start-playback-button { display: none !important; }
-
         #timeline-area,
         .feed-container {
             padding: 0 10px !important;
@@ -231,8 +247,8 @@
     document.head.appendChild(style);
 })();
 
-// GYARA: Tunda a kasa ana amfani da toggleVideoSound, sunan ya daidaita anan
-window.toggleVideoSound = function(event, element) {
+// Helper Functions (Muted Sound, Like, Save)
+window.postCard_toggleVideoSound = function(event, element) {
     event.stopPropagation();
     const video = element.previousElementSibling;
     if (video && video.tagName === 'VIDEO') {
@@ -243,8 +259,7 @@ window.toggleVideoSound = function(event, element) {
     }
 };
 
-// GYARA: Sunan ya daidaita da triggerPulse ko ka mayar dashi sunan da kake so
-window.triggerPulse = function(event, postId) {
+window.postCard_toggleLike = function(event, postId) {
     event.stopPropagation();
     const btn = event.currentTarget;
     const icon = btn.querySelector('i');
@@ -270,9 +285,9 @@ window.triggerPulse = function(event, postId) {
     }
 };
 
-// GYARA: Sunan ya koma toggleSave don ya dace da na kasa
-window.toggleSave = function(element, postId) {
-    const btn = element;
+window.postCard_toggleSave = function(event, postId) {
+    event.stopPropagation();
+    const btn = event.currentTarget;
     const icon = btn.querySelector('i');
     const countEl = btn.querySelector('span');
 
@@ -281,91 +296,112 @@ window.toggleSave = function(element, postId) {
     if (countEl) countEl.textContent = saved ? 'Saved' : 'Save';
 };
 
-// GYARA: Don kiyaye crash idan babu wadannan functions din a wani wajen
-if (typeof window.toggleImmersive !== 'function') {
-    window.toggleImmersive = function(el) { console.log('Immersive triggered'); };
+// Kare functions din da bamu tabbatar da zamansu a wasu shafukan ba (Safety Guards)
+if (typeof window.openGiftPanel !== 'function') {
+    window.openGiftPanel = function(username) { console.log('Gift clicked for:', username); };
 }
 if (typeof window.handleFollow !== 'function') {
-    window.handleFollow = function(el) { event.stopPropagation(); console.log('Follow triggered'); };
-}
-if (typeof window.openGiftPanel !== 'function') {
-    window.openGiftPanel = function(username) { event.stopPropagation(); console.log('Gift panel for', username); };
+    window.handleFollow = function(el) { console.log('Follow clicked'); };
 }
 
+// MAIN MASTER GENERATOR
 window.generatePostHTML = function(post) {
+    const postId = post.id || '';
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
-    let mediaHTML = '';
-    const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
-    const savedProfilePic = localStorage.getItem('userProfilePic');
 
-    let currentPic = defaultAvatar;
+    // --- Avatar Logic (Kariya daga Undefined Crash) ---
+    const savedProfilePic = localStorage.getItem('userProfilePic');
+    let currentPic = "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
     
-    // GYARA: An saka 'typeof currentUser !== "undefined"' don hana tsayawar kodi idan babu shi
+    // An saka typeof don kare "currentUser is not defined" error
     if (post.username && typeof currentUser !== 'undefined' && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
         currentPic = savedProfilePic;
     } else {
-        currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
+        currentPic = post.userProfilePic || currentPic;
     }
-    
-    const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
-    
+
+    // --- Media Renderer ---
+    let mediaWrapperHTML = '';
     if (post.mediaUrl) {
         if (post.mediaType === 'video') {
-            mediaHTML = `
+            mediaWrapperHTML = `
                 <div style="position:relative; width:100%;">
-                    <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
-                    <div class="mute-toggle" onclick="toggleVideoSound(event, this)">
+                    <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted preload="metadata"></video>
+                    <div class="post-mute-toggle" onclick="postCard_toggleVideoSound(event, this)">
                         <i class="fa-solid fa-volume-xmark"></i>
                     </div>
                 </div>`;
         } else {
-            mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="eager">`;
+            mediaWrapperHTML = `<img src="${post.mediaUrl}" class="post-media" loading="lazy" alt="post image">`;
         }
     }
 
+    // --- Time String ---
+    let timeStr = '';
+    if (post.timestamp) {
+        const ts = post.timestamp.toDate ? post.timestamp.toDate() : new Date(post.timestamp);
+        const diff = Math.floor((Date.now() - ts) / 1000);
+        if (diff < 60)        timeStr = `${diff}s ago`;
+        else if (diff < 3600) timeStr = `${Math.floor(diff/60)}m ago`;
+        else if (diff < 86400)timeStr = `${Math.floor(diff/3600)}h ago`;
+        else                   timeStr = ts.toLocaleDateString();
+    }
+
+    const likes = post.likesCount || post.likes || 0;
+
     return `
-    <div class="post-card" onclick="toggleImmersive(this)">
-        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
-            <div style="display: flex; align-items: center; gap: 0; flex: 1;">
-                <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
-                   ${profilePicHTML} 
-                </a>
-               <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 7px;">
-                   <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">  
-                        <span>${post.username || 'User'}</span>
-                    </a>
-                    ${vBadge}
+    <div class="post-card" data-post-id="${postId}">
+
+        <div class="post-header">
+            <a href="me.html?user=${encodeURIComponent(post.username || '')}"
+               onclick="event.stopPropagation()"
+               style="position:absolute; left:8px; top:50%; transform:translateY(-50%); width:38px; height:38px; display:block; z-index:20;">
+                <img src="${currentPic}" class="post-avatar" alt="${post.username}">
+            </a>
+
+            <div class="post-username-row">
+                <div>
+                    <div style="display:flex; align-items:center; gap:2px;">
+                        <span class="post-username">${post.username || 'unknown'}</span>
+                        ${vBadge}
+                    </div>
+                    ${timeStr ? `<span class="post-time">${timeStr}</span>` : ''}
                 </div>
             </div>
-            <div class="header-actions" onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 12px;">
+
+            <div onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 8px; z-index:25;">
                 <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
                 <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-                    <span class="gift-emoji">🎁</span>
+                    <span>🎁</span>
                     <span style="font-size: 10px;">Gift</span>
                 </div>
             </div>
         </div>
-        <div class="post-content" style="padding: 4px 10px;">${post.content || ''}</div>
-        ${mediaHTML}
-        <div class="interaction-bar" onclick="event.stopPropagation()">
-            <div class="action-capsules">
-                <div class="capsule" onclick="triggerPulse(event, '${post.id}')">
+
+        ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
+
+        ${mediaWrapperHTML}
+
+        <div class="post-interaction-bar" onclick="event.stopPropagation()">
+            <div class="post-action-capsules">
+                <div class="post-capsule" onclick="postCard_toggleLike(event, '${postId}')">
                     <i class="fa-regular fa-heart"></i>
-                    <span>${post.likes || 0}</span>
+                    <span>${likes > 0 ? Number(likes).toLocaleString() : '0'}</span>
                 </div>
-                <div class="capsule"><i class="fa-regular fa-comment"></i><span>0</span></div>
-                <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>0</span></div>
-                <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
+                <div class="post-capsule"><i class="fa-regular fa-comment"></i><span>0</span></div>
+                <div class="post-capsule"><i class="fa-solid fa-arrows-rotate"></i><span>0</span></div>
+                <div class="post-capsule"><i class="fa-regular fa-paper-plane"></i></div>
             </div>
-            <div class="action-capsules save-capsule">
-                <div class="capsule" onclick="toggleSave(this, '${post.id}')">
+
+            <div class="post-save-capsule">
+                <div class="post-capsule" onclick="postCard_toggleSave(event, '${postId}')">
                     <i class="fa-regular fa-bookmark"></i>
                     <span>Save</span>
                 </div>
             </div>
         </div>
+
     </div>`;
 };
 
-console.log('[PostCard] Shared template loaded ✓');
-               
+console.log('[PostCard] Balanced master template loaded ✓');
