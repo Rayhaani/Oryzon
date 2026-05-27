@@ -287,13 +287,15 @@ window.generatePostHTML = function(post) {
     const savedProfilePic = localStorage.getItem('userProfilePic');
 
     let currentPic = defaultAvatar;
-    const currentUsername = typeof currentUser === 'object' ? currentUser?.username : currentUser;
+   const currentUsername = typeof currentUser === 'object' ? currentUser?.username : currentUser;
+const postOwnerPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
+
 if (post.username && currentUsername && post.username.toLowerCase() === currentUsername.toLowerCase() && savedProfilePic) {
+    currentPic = savedProfilePic;
+} else {
+    currentPic = postOwnerPic;
+}
    
-       currentPic = savedProfilePic;
-    } else {
-        currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
-    }
     
     const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
     
