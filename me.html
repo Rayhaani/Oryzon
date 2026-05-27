@@ -2106,6 +2106,11 @@ async function toggleFollow() {
                 followerCount: firebase.firestore.FieldValue.increment(-1)
             });
 
+            // ← GYARAN: Rage followingCount na myUsername
+            await db.collection('users').doc(myUsername).set({
+                followingCount: firebase.firestore.FieldValue.increment(-1)
+            }, { merge: true });
+
             // Duba ko sun kasance mutual (friends) - idan haka, rage friends count
             const mutualCheck = await db.collection('follows')
                 .where('follower', '==', profileUser)
@@ -2113,7 +2118,6 @@ async function toggleFollow() {
                 .get();
 
             if (!mutualCheck.empty) {
-                // Suna mutual - rage friends count ga dukkansu
                 await db.collection('users').doc(profileUser).update({
                     friendCount: firebase.firestore.FieldValue.increment(-1)
                 });
@@ -2141,6 +2145,11 @@ async function toggleFollow() {
                 followerCount: firebase.firestore.FieldValue.increment(1)
             });
 
+            // ← GYARAN: Kara followingCount na myUsername
+            await db.collection('users').doc(myUsername).set({
+                followingCount: firebase.firestore.FieldValue.increment(1)
+            }, { merge: true });
+
             // Duba ko profileUser yana following myUsername riga (mutual check)
             const mutualCheck = await db.collection('follows')
                 .where('follower', '==', profileUser)
@@ -2148,7 +2157,6 @@ async function toggleFollow() {
                 .get();
 
             if (!mutualCheck.empty) {
-                // Mutual follow! - Kara friends count ga dukkansu
                 await db.collection('users').doc(profileUser).update({
                     friendCount: firebase.firestore.FieldValue.increment(1)
                 });
@@ -2156,7 +2164,6 @@ async function toggleFollow() {
                     friendCount: firebase.firestore.FieldValue.increment(1)
                 });
 
-                // Aika notification - "Yanzu Abokai ne"
                 await db.collection('notifications').add({
                     to: profileUser,
                     from: myUsername,
@@ -2166,7 +2173,6 @@ async function toggleFollow() {
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
             } else {
-                // Follow kawai - ba mutual ba tukuna
                 await db.collection('notifications').add({
                     to: profileUser,
                     from: myUsername,
@@ -2190,8 +2196,8 @@ async function toggleFollow() {
         btn.disabled = false;
         btn.style.opacity = '1';
     }
-                                        }
-
+}
+            
 
     
             
