@@ -1,17 +1,13 @@
 /* ============================================================
    POST CARD TEMPLATE - SHARED SOURCE OF TRUTH
-   Ko'ina da aka canja wannan fayil, duka homepage da
-   profile timeline za su karba canjin kai tsaye.
    ============================================================ */
 
-// 1. INJECT SHARED CSS - Duk CSS na post card yana nan kadai
 (function injectPostCardStyles() {
     if (document.getElementById('post-card-shared-styles')) return;
 
     const style = document.createElement('style');
     style.id = 'post-card-shared-styles';
     style.textContent = `
-        /* ===== SYNERGY POST CARD - MASTER STYLES ===== */
         :root {
             --premium-gold: #fde08d;
             --deep-gold: #b8860b;
@@ -23,7 +19,6 @@
             --bg: #050505;
         }
 
-        /* ===== THE POST CARD ITSELF ===== */
         .post-card {
             background: var(--post-bg) !important;
             backdrop-filter: blur(10px) !important;
@@ -39,7 +34,6 @@
             box-sizing: border-box !important;
         }
 
-        /* Gold shimmer line a saman katin */
         .post-card::before {
             content: '';
             position: absolute;
@@ -55,14 +49,6 @@
             100% { transform: translateX(100%); }
         }
 
-        /* ===== POST HEADER ===== */
-        /* Asalin style daga code na farko - inline styles suna sarrafa hakan */
-
-        /* ===== AVATAR - Daidai da asalin code na farko ===== */
-        /* Avatar tana amfani da inline style: position:absolute; top:0; left:0 */
-        /* Kar a sauya ta a nan - HTML din ke sarrafa ta */
-
-        /* ===== VERIFIED BADGE ===== */
         .nexus-badge {
             display: inline-flex !important;
             align-items: center !important;
@@ -81,7 +67,6 @@
             font-weight: 900 !important;
         }
 
-        /* ===== POST CONTENT TEXT ===== */
         .post-content {
             font-size: 14px !important;
             line-height: 1.5 !important;
@@ -90,7 +75,6 @@
             text-justify: inter-word !important;
         }
 
-        /* ===== MEDIA (IMAGE & VIDEO) ===== */
         .post-media {
             width: 100% !important;
             height: auto !important;
@@ -104,7 +88,6 @@
             transition: all 0.3s ease !important;
         }
 
-        /* ===== MUTE TOGGLE ===== */
         .mute-toggle {
             position: absolute !important;
             bottom: 60px !important;
@@ -122,11 +105,8 @@
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
         }
 
-        .mute-toggle i {
-            font-size: 13px !important;
-        }
+        .mute-toggle i { font-size: 13px !important; }
 
-        /* ===== INTERACTION BAR - class names daidai da HTML ===== */
         .interaction-bar {
             display: flex !important;
             justify-content: space-between !important;
@@ -137,13 +117,12 @@
             border-top: 1px solid rgba(255, 215, 0, 0.08) !important;
         }
 
+        /* ← GYARAN 1: Cire flex:1 domin save ya koma dama */
         .action-capsules {
             display: flex !important;
             gap: 6px !important;
-            flex: 1 !important;
         }
 
-        /* ===== CAPSULE BUTTONS - class name daidai da HTML ===== */
         .capsule {
             background: rgba(255, 255, 255, 0.07) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -160,12 +139,11 @@
             color: #ffffff !important;
         }
 
-        .capsule:active {
-            transform: scale(0.93) !important;
-        }
+        .capsule:active { transform: scale(0.93) !important; }
 
+        /* ← GYARAN 2: Icons su koma fari #ffffff ba gold ba */
         .capsule i {
-            color: var(--premium-gold) !important;
+            color: #ffffff !important;
             font-size: 15px !important;
             display: inline-block !important;
         }
@@ -176,12 +154,9 @@
             color: #ccc !important;
         }
 
-        /* Like active state */
-        .capsule.liked i {
-            color: #ff4d6d !important;
-        }
+        .capsule.liked i { color: #ff4d6d !important; }
 
-        /* Save capsule - rightmost */
+        /* ← GYARAN 3: Save ya zauna dama tare da space */
         .save-capsule {
             margin-left: auto !important;
         }
@@ -190,7 +165,6 @@
             min-width: 68px !important;
         }
 
-        /* ===== FOLLOW BUTTON ===== */
         .follow-text-link {
             background: transparent !important;
             border: 1px solid var(--premium-gold) !important;
@@ -202,7 +176,6 @@
             cursor: pointer !important;
         }
 
-        /* ===== GIFT BUTTON ===== */
         .gift-btn-nexus {
             display: flex !important;
             align-items: center !important;
@@ -216,7 +189,6 @@
             color: #fff !important;
         }
 
-        /* ===== IMMERSIVE MODE ===== */
         .post-card.immersive-mode {
             position: fixed !important;
             top: 0 !important; left: 0 !important;
@@ -249,11 +221,9 @@
             padding: 10px 20px !important;
         }
 
-        /* ===== HIDE NATIVE VIDEO CONTROLS ===== */
         video::-webkit-media-controls { display: none !important; }
         video::-webkit-media-controls-start-playback-button { display: none !important; }
 
-        /* ===== FEED CONTAINER ===== */
         #timeline-area,
         .feed-container {
             padding: 0 10px !important;
@@ -265,7 +235,6 @@
 })();
 
 
-// 2. SHARED HELPER - Toggle video sound
 window.postCard_toggleVideoSound = function(event, element) {
     event.stopPropagation();
     const video = element.previousElementSibling;
@@ -277,7 +246,6 @@ window.postCard_toggleVideoSound = function(event, element) {
     }
 };
 
-// 3. SHARED HELPER - Toggle like
 window.postCard_toggleLike = function(event, postId) {
     event.stopPropagation();
     const btn = event.currentTarget;
@@ -285,7 +253,7 @@ window.postCard_toggleLike = function(event, postId) {
     const countEl = btn.querySelector('span');
 
     const liked = btn.classList.toggle('liked');
-    icon.style.color = liked ? '#ff4d6d' : 'var(--premium-gold)';
+    icon.style.color = liked ? '#ff4d6d' : '#ffffff';
 
     let count = parseInt(countEl.textContent.replace(/,/g, '')) || 0;
     countEl.textContent = liked ? (count + 1).toLocaleString() : Math.max(0, count - 1).toLocaleString();
@@ -304,7 +272,6 @@ window.postCard_toggleLike = function(event, postId) {
     }
 };
 
-// 4. SHARED HELPER - Toggle save
 window.postCard_toggleSave = function(event, postId) {
     event.stopPropagation();
     const btn = event.currentTarget;
@@ -312,15 +279,10 @@ window.postCard_toggleSave = function(event, postId) {
     const countEl = btn.querySelector('span');
 
     const saved = btn.classList.toggle('saved');
-    icon.style.color = saved ? '#fde08d' : 'var(--premium-gold)';
+    icon.style.color = saved ? '#fde08d' : '#ffffff';
     if (countEl) countEl.textContent = saved ? 'Saved' : 'Save';
 };
 
-
-// ============================================================
-// 5. MASTER generatePostHTML() — SINGLE SOURCE OF TRUTH
-//    Duka homepage da profile timeline suna amfani da wannan
-// ============================================================
 window.generatePostHTML = function(post) {
     const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
     let mediaHTML = '';
