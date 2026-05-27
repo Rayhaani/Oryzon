@@ -9,6 +9,7 @@
    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+   <script src="post-card-template.js"></script> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
@@ -1576,52 +1577,7 @@ function loadTimelinePosts() {
 // ============================================================
 // 2. GENERATE POST HTML (DYNAMIC AVATAR & USERNAME)
 // ============================================================
-function generatePostHTML(post) {
-    const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
-    let mediaHTML = '';
 
-    const savedProfilePic = localStorage.getItem('userProfilePic');
-    const currentPic = savedProfilePic || post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
-    
-    const optimizedProfilePic = currentPic.includes('cloudinary.com') 
-                                ? currentPic.replace('/upload/', '/upload/f_auto,q_auto,w,100,h_100,c_fill/') 
-                                : currentPic;
-
-    const profilePicHTML = `<img src="${optimizedProfilePic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top: 4px; left: 8px; z-index: 50;" loading="lazy">`;
-        
-    if (post.mediaUrl) {
-        const fastMediaUrl = post.mediaUrl.includes('cloudinary.com') 
-                             ? post.mediaUrl.replace('/upload/', '/upload/f_auto,q_auto,w_600/') 
-                             : post.mediaUrl;
-
-        if (post.mediaType === 'video') {
-            mediaHTML = `
-                <video src="${fastMediaUrl}" class="post-media" loop playsinline autoplay muted preload="metadata"></video>
-                <div class="mute-toggle" onclick="toggleVideoSound(event, this)" style="position: absolute; bottom: 65px; right: 15px; z-index: 100;">
-                    <i class="fa-solid fa-volume-xmark"></i>
-                </div>`;
-        } else {
-            mediaHTML = `<img src="${fastMediaUrl}" class="post-media" loading="lazy">`;
-        }
-    }
-
-    return `
-    <div class="post-card" style="margin-bottom: 8px !important;">
-        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 50px; height: 50px; position: relative;">
-            <div style="display: flex; align-items: center; gap: 0; flex: 1;">
-                <a href="me.html" class="avatar-container" style="position: absolute; left: 0; top: 0; width: 42px; height: 50px; flex-shrink: 0; display: block; z-index: 60;">
-                     ${profilePicHTML} 
-                </a>
-                 <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 0px;">
-                    <span style="color: #fff;">${post.username || 'unknown'}</span>
-                    ${vBadge}
-                </div>
-            </div>
-        </div>
-        <div class="post-content" style="padding: 4px 10px;">${post.content || ''}</div>
-        ${mediaHTML}
-    </div>`;
-}
 
 // ============================================================
 // 3. LODA SHOWCASE IMAGES (DYNAMIC BASED ON LOGGED IN USER)
