@@ -1042,6 +1042,8 @@
       }
 
       
+
+
 function toggleImmersive(card) {
     if (event && event.target.closest('.interaction-bar')) return;
     if (event && event.target.closest('.post-interaction-bar')) return;
@@ -1056,39 +1058,27 @@ function toggleImmersive(card) {
         return;
     }
 
-    // Adana scroll position na yanzu
+    // Adana inda scroll yake
     card._scrollY = window.scrollY;
 
-    // Kunna immersive mode a jikin card din kansa
     card.classList.add('immersive-mode');
 
-    // Maimakon cire video, muna canza style na card din ne ya koma full screen daram
-    card.style.cssText = `
+    // Muna barin video a cikin card, amma muna tura ta gaba (front) ta rufe komai daram
+    video.style.cssText = `
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
-        max-height: 100vh !important;
-        z-index: 2147483647 !important;
-        margin: 0 !important;
-        background: #000 !important;
-        border-radius: 0 !important;
-    `;
-
-    // Saita video din ya cika katin dake full screen din
-    video.style.cssText = `
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
         object-fit: cover !important;
+        z-index: 2147483646 !important; /* Kasa kadan da back button */
+        margin: 0 !important;
         border-radius: 0 !important;
-        z-index: 1 !important;
+        background: #000 !important;
     `;
 
-    // Hana daukacin body din yin scroll don tsaftace kasa
+    // Kulle duka jikin shafin (body) domin magance matsalar baki ko fanko a kasa
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100vh';
 
@@ -1109,7 +1099,8 @@ function toggleImmersive(card) {
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         color: white; font-size: 16px;
-        z-index: 2147483647; cursor: pointer;
+        z-index: 2147483647; /* Mafi daukaka a sama */
+        cursor: pointer;
         border: 1px solid rgba(255,255,255,0.2);
     `;
     backBtn.onclick = function(e) {
@@ -1118,10 +1109,9 @@ function toggleImmersive(card) {
     };
     document.body.appendChild(backBtn);
 
-    // Danna katin ko video ta fita
-    card.onclick = function(e) {
-        // Tabbatar ba a danna back button ba ko interaction bar
-        if (e.target.closest('#immersive-back-btn') || e.target.closest('.post-interaction-bar')) return;
+    // Idan an danna video din ta fita
+    video.onclick = function(e) {
+        e.stopPropagation();
         exitImmersive(card);
     };
 
@@ -1134,20 +1124,16 @@ function exitImmersive(card) {
 
     const video = card.querySelector('video');
     
-    // Dawo da asalin salon katin (card) da bidiyon (video)
-    card.style.cssText = '';
+    // Dawo da asalin salon bidiyon
     if (video) {
         video.style.cssText = '';
+        video.onclick = null;
     }
-    
-    // Dawo da asalin latsawa na katin
-    card.onclick = function() {
-        if(typeof toggleImmersive === 'function') toggleImmersive(this);
-    };
 
     card.classList.remove('immersive-mode');
 
-    // Dawo da damar scrolling na body
+    // Bude damar scrolling na duka shafin
+    document.documentElement.style.overflow = '';
     document.body.style.overflow = '';
     document.body.style.height = '';
 
@@ -1161,12 +1147,13 @@ function exitImmersive(card) {
     const backBtn = document.getElementById('immersive-back-btn');
     if (backBtn) backBtn.remove();
 
-    // Koma daidai inda mai amfani yake tsaye a scroll
+    // Koma scroll inda aka tsaya
     window.scrollTo(0, card._scrollY || 0);
 
     window.onpopstate = null;
 }
         
+ 
 
 
 
