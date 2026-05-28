@@ -1042,27 +1042,26 @@
       }
 
       
-
-      
-     function toggleImmersive(card) {
+function toggleImmersive(card) {
     if (event && event.target.closest('.interaction-bar')) return;
+    if (event && event.target.closest('.post-interaction-bar')) return;
     if (event && event.target.closest('.header-actions')) return;
     if (event && event.target.closest('a')) return;
 
     const video = card.querySelector('video');
     if (!video) return;
 
-    // Idan overlay ɗin yana wanzu, cire shi kawai
     const existingOverlay = document.getElementById('immersive-overlay');
     if (existingOverlay) {
         exitImmersive();
         return;
     }
 
-    // Adana scroll position
     const scrollY = window.scrollY;
+    // ← GYARAN 2: Adana current time DAIDAI kafin overlay
+    const currentTime = video.currentTime;
+    const isMuted = video.muted; // ← GYARAN 1: Adana mute state
 
-    // Ƙirƙiri overlay wanda zai rufe screen
     const overlay = document.createElement('div');
     overlay.id = 'immersive-overlay';
     overlay.style.cssText = `
@@ -1076,25 +1075,35 @@
         justify-content: center;
     `;
 
-    // Kwafi video zuwa overlay — ba mu taba asalin video ba
+    // ← GYARAN 3: Boye header
+    const header = document.querySelector('header');
+    if (header) header.style.display = 'none';
+
     const overlayVideo = document.createElement('video');
     overlayVideo.src = video.src;
-    overlayVideo.currentTime = video.currentTime;
+    overlayVideo.currentTime = currentTime; // ← GYARAN 2: Daidai same time
     overlayVideo.loop = true;
     overlayVideo.playsinline = true;
-    overlayVideo.muted = false;
+    overlayVideo.muted = isMuted; // ← GYARAN 1: Kiyaye mute state
     overlayVideo.style.cssText = `
         width: 100vw;
         height: 100vh;
         object-fit: cover;
+        display: block;
     `;
-    overlayVideo.play().catch(() => {});
+
+    // ← GYARAN 2: Play nan take ba tare da jira ba
+    overlayVideo.addEventListener('canplay', function onCanPlay() {
+        overlayVideo.removeEventListener('canplay', onCanPlay);
+        overlayVideo.play().catch(() => {});
+    });
+
+    // Pause asalin video nan take
+    video.pause();
+    video.muted = true;
 
     overlay.appendChild(overlayVideo);
     document.body.appendChild(overlay);
-
-    // Pause asalin video
-    video.pause();
 
     // Footer hide
     const footer = document.getElementById('instaFooter');
@@ -1121,10 +1130,12 @@
     };
     document.body.appendChild(backBtn);
 
-    // Mute toggle
+    // Mute toggle — nuna state na yanzu
     const muteBtn = document.createElement('div');
     muteBtn.id = 'immersive-mute-btn';
-    muteBtn.innerHTML = `<i class="fa-solid fa-volume-high"></i>`;
+    muteBtn.innerHTML = isMuted
+        ? `<i class="fa-solid fa-volume-xmark"></i>`
+        : `<i class="fa-solid fa-volume-high"></i>`;
     muteBtn.style.cssText = `
         position: fixed; bottom: 80px; right: 15px;
         width: 36px; height: 36px;
@@ -1144,11 +1155,8 @@
     };
     document.body.appendChild(muteBtn);
 
-    // Click overlay ya fita
-    overlay.onclick = function() { exitImmersive(); };
-
-    // Store scroll position
     overlay.dataset.scrollY = scrollY;
+    overlay.dataset.wasMuted = isMuted;
 
     history.pushState({ immersive: true }, '');
     window.onpopstate = function() { exitImmersive(); };
@@ -1162,15 +1170,18 @@ function exitImmersive() {
     if (!overlay) return;
 
     const scrollY = parseInt(overlay.dataset.scrollY || '0');
-
-    // Dawo da scroll position — ba scrollIntoView ba, kawai instant
     const overlayVideo = overlay.querySelector('video');
+
     if (overlayVideo) {
-        // Dawo da time zuwa asalin video
-        const allVideos = document.querySelectorAll('.feed-container video, #timeline-area video');
+        const currentTime = overlayVideo.currentTime;
+        const isMuted = overlayVideo.muted;
+
+        // Dawo da asalin video — same time, same mute state
+        const allVideos = document.querySelectorAll('video.post-media');
         allVideos.forEach(v => {
             if (v.src === overlayVideo.src) {
-                v.currentTime = overlayVideo.currentTime;
+                v.currentTime = currentTime; // ← GYARAN 2: Daidai same time
+                v.muted = isMuted; // ← GYARAN 1: Kiyaye mute state
                 v.play().catch(() => {});
             }
         });
@@ -1182,7 +1193,11 @@ function exitImmersive() {
     if (backBtn) backBtn.remove();
     if (muteBtn) muteBtn.remove();
 
-    // Koma scroll position kai tsaye — ba animation ba
+    // ← GYARAN 3: Dawo da header
+    const header = document.querySelector('header');
+    if (header) header.style.display = '';
+
+    // Koma scroll position
     window.scrollTo(0, scrollY);
 
     // Footer show
@@ -1190,9 +1205,13 @@ function exitImmersive() {
     if (footer) footer.classList.remove('footer-hidden');
 
     window.onpopstate = null;
-}
+        }
+      
+     
+    
 
-        
+
+    
     
 
       function stopProp(e) { e.stopPropagation(); }
