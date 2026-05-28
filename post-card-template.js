@@ -71,8 +71,8 @@
         /* ===== AVATAR ===== */
         .post-avatar {
             position: absolute !important;
-            left: 0px !important;
-            top: 0% !important;
+            left: 8px !important;
+            top: 50% !important;
             transform: translateY(-50%) !important;
             width: 38px !important;
             height: 38px !important;
@@ -149,8 +149,7 @@
         }
 
         /* ===== MUTE TOGGLE ===== */
-        .post-mute-toggle,
-        .mute-toggle {
+        .post-mute-toggle {
             position: absolute !important;
             bottom: 60px !important;
             right: 12px !important;
@@ -167,14 +166,12 @@
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
         }
 
-        .post-mute-toggle i,
-        .mute-toggle i {
+        .post-mute-toggle i {
             font-size: 13px !important;
         }
 
         /* ===== INTERACTION BAR ===== */
-        .post-interaction-bar,
-        .interaction-bar {
+        .post-interaction-bar {
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
@@ -184,16 +181,14 @@
             border-top: 1px solid rgba(255, 215, 0, 0.08) !important;
         }
 
-        .post-action-capsules,
-        .action-capsules {
+        .post-action-capsules {
             display: flex !important;
             gap: 6px !important;
             flex: 1 !important;
         }
 
         /* ===== CAPSULE BUTTONS ===== */
-        .post-capsule,
-        .capsule {
+        .post-capsule {
             background: rgba(255, 255, 255, 0.07) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             border-radius: 50px !important;
@@ -209,39 +204,33 @@
             color: #ffffff !important;
         }
 
-        .post-capsule:active,
-        .capsule:active {
+        .post-capsule:active {
             transform: scale(0.93) !important;
         }
 
-        .post-capsule i,
-        .capsule i {
+        .post-capsule i {
             color: var(--premium-gold) !important;
             font-size: 15px !important;
             display: inline-block !important;
         }
 
-        .post-capsule span,
-        .capsule span {
+        .post-capsule span {
             font-size: 11px !important;
             font-weight: 600 !important;
             color: #ccc !important;
         }
 
         /* Like active state */
-        .post-capsule.liked i,
-        .capsule.liked i {
+        .post-capsule.liked i {
             color: #ff4d6d !important;
         }
 
         /* Save capsule - rightmost */
-        .post-save-capsule,
-        .save-capsule {
+        .post-save-capsule {
             margin-left: auto !important;
         }
 
-        .post-save-capsule .post-capsule,
-        .save-capsule .capsule {
+        .post-save-capsule .post-capsule {
             min-width: 68px !important;
         }
 
@@ -271,8 +260,7 @@
 
         .immersive-mode .post-header,
         .immersive-mode .post-content,
-        .immersive-mode .post-interaction-bar,
-        .immersive-mode .interaction-bar {
+        .immersive-mode .post-interaction-bar {
             position: relative !important;
             z-index: 5001 !important;
             background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
@@ -283,13 +271,20 @@
         video::-webkit-media-controls { display: none !important; }
         video::-webkit-media-controls-start-playback-button { display: none !important; }
 
-        /* ===== HAKKUNAN MAGANCE MATSALAR BLACK SPACE ===== */
-        body:has(video[style*="position: fixed"]) {
-            overflow: hidden !important;
-            height: 100vh !important;
-            max-height: 100vh !important;
-        }
 
+
+        /* ===== HAKKUNAN MAGANCE MATSALAR BLACK SPACE ===== */
+
+/* Lokacin da aka cire video aka saka ta a body, 
+   wannan yana gyara matsalar tsayin body don kar ya haifar da fanko a kasa */
+body:has(video[style*="position: fixed"]) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+}
+
+
+           
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
         .feed-container {
@@ -360,76 +355,106 @@ window.postCard_toggleSave = function(event, postId) {
 //    Duka homepage da profile timeline suna amfani da wannan
 // ============================================================
 window.generatePostHTML = function(post) {
-          const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
-          let mediaHTML = '';
-          const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
-          const savedProfilePic = localStorage.getItem('userProfilePic');
+    const postId = post.id || '';
 
-          let currentPic = defaultAvatar;
-          if (post.username && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
-              currentPic = savedProfilePic;
-          } else {
-              currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
-          }
-          
-          const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
-          
-          if (post.mediaUrl) {
-              if (post.mediaType === 'video') {
-                  mediaHTML = `
-                      <div style="position:relative; width:100%;">
-                          <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
-                          <div class="mute-toggle" onclick="toggleVideoSound(event, this)">
-                              <i class="fa-solid fa-volume-xmark"></i>
-                          </div>
-                      </div>`;
-              } else {
-                  mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="eager">`;
-              }
-          }
+    // --- Avatar ---
+    const savedProfilePic = localStorage.getItem('userProfilePic');
+    const rawPic = savedProfilePic || post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
+    const avatarUrl = rawPic.includes('cloudinary.com')
+        ? rawPic.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/')
+        : rawPic;
 
-          return `
-          <div class="post-card" onclick="toggleImmersive(this)">
-              <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
-                  <div style="display: flex; align-items: center; gap: 0; flex: 1;">
-                      <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
-                         ${profilePicHTML} 
-                      </a>
-                     <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 7px;">
-                         <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">  
-                              <span>${post.username || 'User'}</span>
-                          </a>
-                          ${vBadge}
-                      </div>
-                  </div>
-                  <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-                      <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
-                      <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-                          <span class="gift-emoji">🎁</span>
-                          <span style="font-size: 10px;">Gift</span>
-                      </div>
-                  </div>
-              </div>
-              <div class="post-content" style="padding: 4px 10px;">${post.content}</div>
-              ${mediaHTML}
-              <div class="interaction-bar" onclick="stopProp(event)">
-                  <div class="action-capsules">
-                      <div class="capsule" onclick="triggerPulse(this, event)">
-                          <i class="fa-regular fa-heart"></i>
-                          <span>${post.likes || 0}</span>
-                      </div>
-                      <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
-                      <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
-                      <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
-                  </div>
-                  <div class="action-capsules save-capsule">
-                      <div class="capsule" onclick="toggleSave(this, '${post.id}')">
-                          <i class="fa-regular fa-bookmark"></i>
-                          <span>Save</span>
-                      </div>
-                  </div>
-              </div>
-          </div>`;
-      };
+    // --- Media ---
+    let mediaWrapperHTML = '';
+    if (post.mediaUrl) {
+        const fastUrl = post.mediaUrl.includes('cloudinary.com')
+            ? post.mediaUrl.replace('/upload/', '/upload/f_auto,q_auto,w_700/')
+            : post.mediaUrl;
+
+        if (post.mediaType === 'video') {
+            mediaWrapperHTML = `
+                <div style="position:relative;">
+                    <video src="${fastUrl}"
+                        class="post-media"
+                        loop playsinline autoplay muted preload="metadata">
+                    </video>
+                    <div class="post-mute-toggle"
+                         onclick="postCard_toggleVideoSound(event, this)">
+                        <i class="fa-solid fa-volume-xmark"></i>
+                    </div>
+                </div>`;
+        } else {
+            mediaWrapperHTML = `<img src="${fastUrl}" class="post-media" loading="lazy" alt="post image">`;
+        }
+    }
+
+    // --- Timestamp ---
+    let timeStr = '';
+    if (post.timestamp) {
+        const ts = post.timestamp.toDate ? post.timestamp.toDate() : new Date(post.timestamp);
+        const diff = Math.floor((Date.now() - ts) / 1000);
+        if (diff < 60)        timeStr = `${diff}s ago`;
+        else if (diff < 3600) timeStr = `${Math.floor(diff/60)}m ago`;
+        else if (diff < 86400)timeStr = `${Math.floor(diff/3600)}h ago`;
+        else                   timeStr = ts.toLocaleDateString();
+    }
+
+    // --- Like count ---
+    const likes = post.likesCount || post.likes || 0;
+    const comments = post.commentsCount || post.comments || 0;
+
+    return `
+    <div class="post-card" onclick="if(typeof toggleImmersive === 'function') toggleImmersive(this)">
+        <!-- HEADER -->
+        <div class="post-header">
+            <a href="me.html?user=${encodeURIComponent(post.username || '')}"
+               style="position:absolute; left:0; top:0; width:54px; height:54px; display:block; z-index:20; text-decoration:none;">
+                <img src="${avatarUrl}"
+                     class="post-avatar"
+                     loading="lazy"
+                     alt="${post.username}">
+            </a>
+
+            <div class="post-username-row">
+                <div>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span class="post-username">${post.username || 'unknown'}</span>
+                        <span class="post-verified-badge">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                    </div>
+                    ${timeStr ? `<span class="post-time">${timeStr}</span>` : ''}
+                </div>
+            </div>
+
+            <!-- Three-dot menu (optional) -->
+            <div onclick="event.stopPropagation()"
+                 style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
+                ···
+            </div>
+        </div>
+        <!-- /HEADER -->
+
+        <!-- TEXT CONTENT -->
+        ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
+
+        <!-- MEDIA -->
+        ${mediaWrapperHTML}
+
+        <div class="interaction-bar" onclick="stopProp(event)">
+    <div class="action-capsules">
+        <div class="capsule" onclick="triggerPulse(this, event)">❤️ likes</div>
+        <div class="capsule">💬 12</div>
+        <div class="capsule">🔄 5</div>
+        <div class="capsule">✈️</div>
+    </div>
+    <div class="action-capsules save-capsule">
+        <div class="capsule" onclick="toggleSave(this, post.id)">🔖 Save</div>
+    </div>
+</div>
+        <!-- /INTERACTION BAR -->
+
+    </div>`;
+};
 
 console.log('[PostCard] Shared template loaded ✓');
