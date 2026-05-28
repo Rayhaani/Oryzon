@@ -1042,7 +1042,6 @@
       }
 
       
-
 function toggleImmersive(card) {
         if (event && event.target.closest('.interaction-bar')) return;
         if (event && event.target.closest('.header-actions')) return;
@@ -1054,6 +1053,9 @@ function toggleImmersive(card) {
         const footer = document.getElementById('instaFooter');
 
         if (!card.classList.contains('immersive-mode')) {
+            // [GYARAN MAFI SANTSHI]: Riƙe tsayin katin a asali domin hana sauran katuna motsi gaba ɗaya
+            card.style.minHeight = card.offsetHeight + 'px';
+
             const savedTime = video ? video.currentTime : 0;
             
             // GYARAN MATSALA TA 1: Adana ainihin inda mutum yake (scroll position) kafin shiga
@@ -1071,12 +1073,11 @@ function toggleImmersive(card) {
                     object-fit: cover !important; border-radius: 0 !important;
                     z-index: 4999 !important; background: #000 !important; margin: 0 !important;
                 `;
-                video.currentTime = savedTime;
+                
+                // [GYARAN SAUTI]: Idan bidiyon yana kunne dama, kada a datsa shi, ya ci gaba da tafiya lami lafiya
                 video.muted = false;
                 globalSoundOn = true;
                 
-                setTimeout(() => { video.play().catch(() => {}); }, 50);
-
                 video.onclick = function(e) {
                     e.stopPropagation();
                     if (video.paused) { video.play(); } else { video.pause(); }
@@ -1107,7 +1108,6 @@ function toggleImmersive(card) {
 function exitImmersive(card) {
     const video = card.querySelector('video');
     const footer = document.getElementById('instaFooter');
-    const savedTime = video ? video.currentTime : 0;
 
     card.classList.remove('immersive-mode');
     if (footer) footer.classList.remove('footer-hidden');
@@ -1117,19 +1117,19 @@ function exitImmersive(card) {
 
     if (video) {
         video.style.cssText = '';
-        video.currentTime = savedTime;
         
         // GYARAN MATSALA TA 2: Cire aikin 'onclick' na jikin video gaba daya don ta san an fita!
         video.onclick = null; 
-        
-        setTimeout(() => { video.play().catch(() => {}); }, 50);
     }
+
+    // [GYARAN MAFI SANTSHI]: Cire min-height ɗin katin da muka riƙe bayan an dawo da bidiyon cikinsa lafiya
+    card.style.minHeight = '';
 
     // GYARAN MATSALA TA 1: Maimakon scrollIntoView da yake rikicewa, yanzu muna maida shi daidai pixel din da yake dachu
     if (card._savedScrollTop !== undefined) {
         window.scrollTo({
             top: card._savedScrollTop,
-            behavior: 'auto' // 'auto' zai maida shi nan take ba tare da jinkiri ko rikicewar tsayi ba
+            behavior: 'auto' // Mafi sauri ba tare da girgiza shafi ba
         });
     }
 
@@ -1148,7 +1148,9 @@ window.addEventListener('scroll', () => {
     else { footerNav.classList.remove('footer-hidden'); }
     lastScrollTop = scrollTop;
 });
-        
+                
+
+
 
 
       function stopProp(e) { e.stopPropagation(); }
