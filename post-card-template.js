@@ -390,8 +390,7 @@ window.generatePostHTML = function(post) {
     const comments = post.commentsCount || post.comments || 0;
 
     return `
-    <div class="post-card" data-post-id="${postId}">
-
+    <div class="post-card" onclick="if(typeof toggleImmersive === 'function') toggleImmersive(this)">
         <!-- HEADER -->
         <div class="post-header">
             <a href="me.html?user=${encodeURIComponent(post.username || '')}"
