@@ -1042,8 +1042,6 @@
       }
 
       
-
-
 function toggleImmersive(card) {
     if (event && event.target.closest('.interaction-bar')) return;
     if (event && event.target.closest('.post-interaction-bar')) return;
@@ -1058,14 +1056,26 @@ function toggleImmersive(card) {
         return;
     }
 
-    // Adana scroll position
     card._scrollY = window.scrollY;
+    card._videoParent = video.parentNode;
+    card._videoNextSibling = video.nextSibling;
 
-    // Saka class kawai — CSS ke sarrafa komai
     card.classList.add('immersive-mode');
 
-    // Boye dukkan page sai card
-    document.body.style.overflow = 'hidden';
+    // Cire video daga card, saka a body kai tsaye
+    video.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        object-fit: cover !important;
+        z-index: 2147483647 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        background: #000 !important;
+    `;
+    document.body.appendChild(video);
 
     // Boye header da footer
     const pageHeader = document.querySelector('header');
@@ -1073,7 +1083,7 @@ function toggleImmersive(card) {
     const footer = document.getElementById('instaFooter');
     if (footer) footer.classList.add('footer-hidden');
 
-    // Back button kawai
+    // Back button
     const backBtn = document.createElement('div');
     backBtn.id = 'immersive-back-btn';
     backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
@@ -1093,6 +1103,12 @@ function toggleImmersive(card) {
     };
     document.body.appendChild(backBtn);
 
+    // Danna video ta fita
+    video.onclick = function(e) {
+        e.stopPropagation();
+        exitImmersive(card);
+    };
+
     history.pushState({ immersive: true }, '');
     window.onpopstate = function() { exitImmersive(card); };
 }
@@ -1100,24 +1116,36 @@ function toggleImmersive(card) {
 function exitImmersive(card) {
     if (!card || !card.classList.contains('immersive-mode')) return;
 
-    card.classList.remove('immersive-mode');
-    document.body.style.overflow = '';
+    const video = document.body.querySelector('video[style*="position: fixed"]');
+    
+    if (video && card._videoParent) {
+        // Dawo da video zuwa asalin wurinta
+        video.style.cssText = '';
+        video.onclick = null;
+        if (card._videoNextSibling) {
+            card._videoParent.insertBefore(video, card._videoNextSibling);
+        } else {
+            card._videoParent.appendChild(video);
+        }
+    }
 
+    card.classList.remove('immersive-mode');
+
+    // Dawo da header da footer
     const pageHeader = document.querySelector('header');
     if (pageHeader) pageHeader.style.display = '';
     const footer = document.getElementById('instaFooter');
     if (footer) footer.classList.remove('footer-hidden');
 
+    // Cire back button
     const backBtn = document.getElementById('immersive-back-btn');
     if (backBtn) backBtn.remove();
 
+    // Koma scroll
     window.scrollTo(0, card._scrollY || 0);
+
     window.onpopstate = null;
-}
-    
-    
-
-
+        }
 
 
       function stopProp(e) { e.stopPropagation(); }
