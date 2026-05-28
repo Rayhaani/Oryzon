@@ -1043,7 +1043,6 @@
 
       
 
-
 function toggleImmersive(card) {
     if (event && event.target.closest('.interaction-bar')) return;
     if (event && event.target.closest('.post-interaction-bar')) return;
@@ -1063,7 +1062,7 @@ function toggleImmersive(card) {
 
     card.classList.add('immersive-mode');
 
-    // Muna barin video a cikin card, amma muna tura ta gaba (front) ta rufe komai daram
+    // Bidiyo ya cika screen
     video.style.cssText = `
         position: fixed !important;
         top: 0 !important;
@@ -1071,18 +1070,60 @@ function toggleImmersive(card) {
         width: 100vw !important;
         height: 100vh !important;
         object-fit: cover !important;
-        z-index: 2147483646 !important; /* Kasa kadan da back button */
+        z-index: 2147483640 !important; /* Bidiyo a kasa kadan */
         margin: 0 !important;
         border-radius: 0 !important;
         background: #000 !important;
     `;
 
-    // Kulle duka jikin shafin (body) domin magance matsalar baki ko fanko a kasa
+    // fito da POST HEADER gaba sama da bidiyo
+    const postHeader = card.querySelector('.post-header');
+    if (postHeader) {
+        postHeader.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            z-index: 2147483645 !important;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%) !important;
+            box-sizing: border-box !important;
+        `;
+    }
+
+    // fito da INTERACTION BAR gaba sama da bidiyo (ta koma kasa daidai)
+    const interactionBar = card.querySelector('.post-interaction-bar');
+    if (interactionBar) {
+        interactionBar.style.cssText = `
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            z-index: 2147483645 !important;
+            background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%) !important;
+            box-sizing: border-box !important;
+        `;
+    }
+
+    // fito da POST CONTENT idan akwai shi
+    const postContent = card.querySelector('.post-content');
+    if (postContent) {
+        postContent.style.cssText = `
+            position: fixed !important;
+            bottom: 60px !important; /* Ya zauna sama da interaction bar */
+            left: 0 !important;
+            width: 100vw !important;
+            z-index: 2147483645 !important;
+            background: transparent !important;
+            box-sizing: border-box !important;
+        `;
+    }
+
+    // Kulle duka jikin shafin (body) domin magance matsalar baki
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100vh';
 
-    // Boye header da footer
+    // Boye ainihin babban header na shafi da footer
     const pageHeader = document.querySelector('header');
     if (pageHeader) pageHeader.style.display = 'none';
     const footer = document.getElementById('instaFooter');
@@ -1099,7 +1140,7 @@ function toggleImmersive(card) {
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         color: white; font-size: 16px;
-        z-index: 2147483647; /* Mafi daukaka a sama */
+        z-index: 2147483647; /* Mafi daukaka a duka saman komai */
         cursor: pointer;
         border: 1px solid rgba(255,255,255,0.2);
     `;
@@ -1123,12 +1164,18 @@ function exitImmersive(card) {
     if (!card || !card.classList.contains('immersive-mode')) return;
 
     const video = card.querySelector('video');
+    const postHeader = card.querySelector('.post-header');
+    const interactionBar = card.querySelector('.post-interaction-bar');
+    const postContent = card.querySelector('.post-content');
     
-    // Dawo da asalin salon bidiyon
+    // Dawo da asalin salon kowane abu daban-daban
     if (video) {
         video.style.cssText = '';
         video.onclick = null;
     }
+    if (postHeader) postHeader.style.cssText = '';
+    if (interactionBar) interactionBar.style.cssText = '';
+    if (postContent) postContent.style.cssText = '';
 
     card.classList.remove('immersive-mode');
 
@@ -1137,7 +1184,7 @@ function exitImmersive(card) {
     document.body.style.overflow = '';
     document.body.style.height = '';
 
-    // Dawo da header da footer
+    // Dawo da ainihin header da footer na shafi
     const pageHeader = document.querySelector('header');
     if (pageHeader) pageHeader.style.display = '';
     const footer = document.getElementById('instaFooter');
@@ -1151,9 +1198,10 @@ function exitImmersive(card) {
     window.scrollTo(0, card._scrollY || 0);
 
     window.onpopstate = null;
-}
+        }
         
- 
+
+    
 
 
 
