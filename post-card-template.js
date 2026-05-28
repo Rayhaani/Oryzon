@@ -271,7 +271,27 @@
         video::-webkit-media-controls { display: none !important; }
         video::-webkit-media-controls-start-playback-button { display: none !important; }
 
-        
+
+
+        /* Lokacin da card din yake immersive mode, muna son mu rike tsayinsa na asali */
+.immersive-mode {
+    /* Wannan zai hana sauran abubuwa na shafin su gishirta ko su matse */
+    min-height: 300px; /* Ko kuma tsayin da card dinka ya saba dashi */
+    visibility: hidden; /* Zai boye card din amma zai bar space dinsa don shafin kar ya girgiza */
+}
+
+/* Tabbatar cewa body ba zai yi scrolling ba idan bidiyon yana kunne */
+body:has(.immersive-mode) {
+    overflow: hidden !important;
+    height: 100vh !important;
+}
+
+/* Boye footer yadda ya kamata ba tare da ya bar fanko ba */
+.footer-hidden {
+    display: none !important;
+}
+
+           
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
         .feed-container {
