@@ -427,12 +427,7 @@ window.generatePostHTML = function(post) {
     </div>
 </div>
 
-            <!-- Three-dot menu (optional) -->
-            <div onclick="event.stopPropagation()"
-                 style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
-                ···
-            </div>
-        </div>
+            
         <!-- /HEADER -->
 
         <!-- TEXT CONTENT -->
