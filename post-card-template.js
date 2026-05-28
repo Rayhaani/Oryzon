@@ -441,17 +441,41 @@ window.generatePostHTML = function(post) {
         <!-- MEDIA -->
         ${mediaWrapperHTML}
 
-        <!-- INTERACTION BAR -->
-        <div class="interaction-bar" onclick="stopProp(event)">
-    <div class="action-capsules">
-        <div class="capsule" onclick="triggerPulse(this, event)">❤️ likes</div>
-        <div class="capsule">💬 12</div>
-        <div class="capsule">🔄 5</div>
-        <div class="capsule">✈️</div>
-    </div>
-    <div class="action-capsules save-capsule">
-        <div class="capsule" onclick="toggleSave(this, post.id)">🔖 Save</div>
-    </div>
-</div>
+        <div class="post-interaction-bar">
+            <div class="post-action-capsules">
+
+                <!-- LIKE -->
+                <div class="post-capsule"
+                     onclick="postCard_toggleLike(event, '${postId}')">
+                    <i class="fa-regular fa-heart"></i>
+                    <span>${likes > 0 ? Number(likes).toLocaleString() : ''}</span>
+                </div>
+
+                <!-- COMMENT -->
+                <div class="post-capsule">
+                    <i class="fa-regular fa-comment"></i>
+                    <span>${comments > 0 ? Number(comments).toLocaleString() : ''}</span>
+                </div>
+
+                <!-- SHARE -->
+                <div class="post-capsule">
+                    <i class="fa-regular fa-paper-plane"></i>
+                </div>
+
+            </div>
+
+            <!-- SAVE (dama) -->
+            <div class="post-save-capsule">
+                <div class="post-capsule"
+                     onclick="postCard_toggleSave(event, '${postId}')">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <span>Save</span>
+                </div>
+            </div>
+        </div>
+        <!-- /INTERACTION BAR -->
+
+    </div>`;
+};
 
 console.log('[PostCard] Shared template loaded ✓');
