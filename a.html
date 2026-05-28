@@ -901,6 +901,13 @@
     background-color: #0b0b0b !important;
     border-radius: 12px;
         }
+
+
+        @keyframes shimmer {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+        }
         
     </style>
 </head>
@@ -1096,6 +1103,7 @@
       }
 
       
+    
 function toggleImmersive(card) {
         if (event && event.target.closest('.interaction-bar')) return;
         if (event && event.target.closest('.header-actions')) return;
@@ -1303,8 +1311,14 @@ window.addEventListener('scroll', () => {
               publishBtn.innerText = "Publish Post"; publishBtn.disabled = false;
           }
       }
+
+          async function renderNexusFeed() {
+    showSkeletons(); // ← Nan take — babu jiran Firebase
+    
+
     </script>
 
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
@@ -1348,6 +1362,12 @@ window.addEventListener('scroll', () => {
           }
       });
 
+
+// Zuwa:
+db.collection("posts").orderBy("timestamp", "desc").limit(10).onSnapshot(...)
+
+
+        
       function handleFollow(btn) {
           if (btn.innerText === "Follow") {
               btn.innerText = "Following"; btn.classList.add('active');
@@ -1450,6 +1470,38 @@ window.addEventListener('scroll', () => {
       }
 
       async function renderNexusFeed() {
+
+                            // Saka wannan a farkon renderNexusFeed() ko loadTimelinePosts()
+function showSkeletons() {
+    const feed = document.querySelector('.feed-container') || document.getElementById('timeline-area');
+    if (!feed) return;
+    
+    let skeletons = '';
+    for (let i = 0; i < 3; i++) {
+        skeletons += `
+        <div style="
+            background: rgba(20,20,20,0.95);
+            border: 1px solid #fde08d;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            animation: shimmer 1.5s infinite;
+        ">
+            <div style="display:flex; align-items:center; gap:10px; padding:10px 15px; height:54px;">
+                <div style="width:38px; height:38px; border-radius:50%; background:#333;"></div>
+                <div>
+                    <div style="width:120px; height:12px; background:#333; border-radius:6px; margin-bottom:6px;"></div>
+                    <div style="width:80px; height:10px; background:#222; border-radius:6px;"></div>
+                </div>
+            </div>
+            <div style="width:100%; height:300px; background:#1a1a1a;"></div>
+            <div style="padding:10px; height:50px; background:rgba(10,10,10,0.6);"></div>
+        </div>`;
+    }
+    feed.innerHTML = skeletons;
+      }
+
+          
           const feedContainer = document.querySelector('.feed-container');
           try {
               const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
@@ -1501,6 +1553,7 @@ document.addEventListener('click', function(event) {
         menuBtn.classList.remove('is-active');
     }
 });
+
         
     </script>
 </body>
