@@ -443,13 +443,19 @@ window.generatePostHTML = function(post) {
 
         <div class="interaction-bar" onclick="stopProp(event)">
     <div class="action-capsules">
-        <div class="capsule" onclick="triggerPulse(this, event)">❤️ likes</div>
-        <div class="capsule">💬 12</div>
-        <div class="capsule">🔄 5</div>
-        <div class="capsule">✈️</div>
+        <div class="capsule" onclick="triggerPulse(this, event)">
+            <i class="fa-regular fa-heart"></i>
+            <span>${post.likes || 0}</span>
+        </div>
+        <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
+        <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
+        <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
     </div>
     <div class="action-capsules save-capsule">
-        <div class="capsule" onclick="toggleSave(this, post.id)">🔖 Save</div>
+        <div class="capsule" onclick="toggleSave(this, '${post.id}')">
+            <i class="fa-regular fa-bookmark"></i>
+            <span>Save</span>
+        </div>
     </div>
 </div>
         <!-- /INTERACTION BAR -->
