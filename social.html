@@ -1044,7 +1044,7 @@
       
 
 
-     function toggleImmersive(card) {
+    function toggleImmersive(card) {
     if (event && event.target.closest('.interaction-bar')) return;
     if (event && event.target.closest('.post-interaction-bar')) return;
     if (event && event.target.closest('.header-actions')) return;
@@ -1058,69 +1058,58 @@
         return;
     }
 
-    // Adana scroll position da card rect
-    const scrollY = window.scrollY;
-    const rect = card.getBoundingClientRect();
+    card._scrollY = window.scrollY;
+    card._videoParent = video.parentNode;
+    card._videoNextSibling = video.nextSibling;
 
-    // Saka immersive class
     card.classList.add('immersive-mode');
-    card._scrollY = scrollY;
 
-    // CSS transition kawai — babu copy, babu overlay
-    card.style.cssText = `
+    // Cire video daga card, saka a body kai tsaye
+    video.style.cssText = `
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
+        object-fit: cover !important;
         z-index: 5000 !important;
-        border-radius: 0 !important;
         margin: 0 !important;
-        transition: all 0.3s ease !important;
-        overflow: hidden !important;
+        border-radius: 0 !important;
         background: #000 !important;
     `;
+    document.body.appendChild(video);
 
-    // Video ta cika screen
-    video.style.cssText = `
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        object-fit: cover !important;
-        z-index: 1 !important;
-    `;
-
-    // Boye header na page
+    // Boye header da footer
     const pageHeader = document.querySelector('header');
-    if (pageHeader) pageHeader.style.cssText = 'display:none !important';
-
-    // Boye footer
+    if (pageHeader) pageHeader.style.display = 'none';
     const footer = document.getElementById('instaFooter');
     if (footer) footer.classList.add('footer-hidden');
 
     // Back button
-    if (!document.getElementById('immersive-back-btn')) {
-        const backBtn = document.createElement('div');
-        backBtn.id = 'immersive-back-btn';
-        backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
-        backBtn.style.cssText = `
-            position: fixed; top: 15px; left: 15px;
-            width: 36px; height: 36px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 16px;
-            z-index: 9999; cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.2);
-        `;
-        backBtn.onclick = function(e) {
-            e.stopPropagation();
-            exitImmersive(card);
-        };
-        document.body.appendChild(backBtn);
-    }
+    const backBtn = document.createElement('div');
+    backBtn.id = 'immersive-back-btn';
+    backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+    backBtn.style.cssText = `
+        position: fixed; top: 15px; left: 15px;
+        width: 36px; height: 36px;
+        background: rgba(0,0,0,0.5);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 16px;
+        z-index: 9999; cursor: pointer;
+        border: 1px solid rgba(255,255,255,0.2);
+    `;
+    backBtn.onclick = function(e) {
+        e.stopPropagation();
+        exitImmersive(card);
+    };
+    document.body.appendChild(backBtn);
+
+    // Danna video ta fita
+    video.onclick = function(e) {
+        e.stopPropagation();
+        exitImmersive(card);
+    };
 
     history.pushState({ immersive: true }, '');
     window.onpopstate = function() { exitImmersive(card); };
@@ -1129,23 +1118,24 @@
 function exitImmersive(card) {
     if (!card || !card.classList.contains('immersive-mode')) return;
 
-    const video = card.querySelector('video');
-    const scrollY = card._scrollY || 0;
-
-    // Cire immersive class da styles
-    card.classList.remove('immersive-mode');
-    card.style.cssText = '';
-
-    // Dawo da video style
-    if (video) {
+    const video = document.body.querySelector('video[style*="position: fixed"]');
+    
+    if (video && card._videoParent) {
+        // Dawo da video zuwa asalin wurinta
         video.style.cssText = '';
+        video.onclick = null;
+        if (card._videoNextSibling) {
+            card._videoParent.insertBefore(video, card._videoNextSibling);
+        } else {
+            card._videoParent.appendChild(video);
+        }
     }
 
-    // Dawo da header
-    const pageHeader = document.querySelector('header');
-    if (pageHeader) pageHeader.style.cssText = '';
+    card.classList.remove('immersive-mode');
 
-    // Dawo da footer
+    // Dawo da header da footer
+    const pageHeader = document.querySelector('header');
+    if (pageHeader) pageHeader.style.display = '';
     const footer = document.getElementById('instaFooter');
     if (footer) footer.classList.remove('footer-hidden');
 
@@ -1153,13 +1143,15 @@ function exitImmersive(card) {
     const backBtn = document.getElementById('immersive-back-btn');
     if (backBtn) backBtn.remove();
 
-    // Koma scroll position — kai tsaye ba animation ba
-    window.scrollTo(0, scrollY);
+    // Koma scroll
+    window.scrollTo(0, card._scrollY || 0);
 
     window.onpopstate = null;
-            }
-    
-    
+        } 
+
+
+
+
 
       function stopProp(e) { e.stopPropagation(); }
 
