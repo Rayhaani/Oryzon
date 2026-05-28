@@ -1098,26 +1098,33 @@
         }
       }
 
-      function exitImmersive(card) {
-        const video = card.querySelector('video');
-        const footer = document.getElementById('instaFooter');
-        const savedTime = video ? video.currentTime : 0;
+      
+     function exitImmersive(card) {
+    const video = card.querySelector('video');
+    const footer = document.getElementById('instaFooter');
+    const savedTime = video ? video.currentTime : 0;
 
-        card.classList.remove('immersive-mode');
-        footer.classList.remove('footer-hidden');
+    card.classList.remove('immersive-mode');
+    if (footer) footer.classList.remove('footer-hidden');
 
-        const backBtn = document.querySelector('.immersive-back-btn');
-        if (backBtn) backBtn.remove();
+    const backBtn = document.querySelector('.immersive-back-btn');
+    if (backBtn) backBtn.remove();
 
-        if (video) {
-            video.style.cssText = '';
-            video.currentTime = savedTime;
-            video.onclick = null;
-            setTimeout(() => { video.play().catch(() => {}); }, 50);
-        }
-        window.onpopstate = null;
-      } 
+    if (video) {
+        video.style.cssText = '';
+        video.currentTime = savedTime;
+        setTimeout(() => { video.play().catch(() => {}); }, 50);
+    }
 
+    // ← GYARAN: Scroll zuwa daidai wannan card bayan exit
+    setTimeout(() => {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+
+    window.onpopstate = null;
+     }
+
+        
       const tokenDisplay = document.getElementById('token-count');
       setInterval(() => { tokens += 0.0001; tokenDisplay.innerText = tokens.toFixed(4) + " NT"; }, 5000);
 
