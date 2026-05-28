@@ -1042,6 +1042,7 @@
       }
 
       
+
 function toggleImmersive(card) {
         if (event && event.target.closest('.interaction-bar')) return;
         if (event && event.target.closest('.header-actions')) return;
@@ -1054,6 +1055,10 @@ function toggleImmersive(card) {
 
         if (!card.classList.contains('immersive-mode')) {
             const savedTime = video ? video.currentTime : 0;
+            
+            // GYARAN MATSALA TA 1: Adana ainihin inda mutum yake (scroll position) kafin shiga
+            card._savedScrollTop = window.scrollY || window.pageYOffset;
+
             card.classList.add('immersive-mode');
             footer.classList.add('footer-hidden');
 
@@ -1113,34 +1118,37 @@ function exitImmersive(card) {
     if (video) {
         video.style.cssText = '';
         video.currentTime = savedTime;
+        
+        // GYARAN MATSALA TA 2: Cire aikin 'onclick' na jikin video gaba daya don ta san an fita!
+        video.onclick = null; 
+        
         setTimeout(() => { video.play().catch(() => {}); }, 50);
     }
 
-    // ← GYARAN: Scroll zuwa daidai wannan card bayan exit
-    setTimeout(() => {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 50);
+    // GYARAN MATSALA TA 1: Maimakon scrollIntoView da yake rikicewa, yanzu muna maida shi daidai pixel din da yake dachu
+    if (card._savedScrollTop !== undefined) {
+        window.scrollTo({
+            top: card._savedScrollTop,
+            behavior: 'auto' // 'auto' zai maida shi nan take ba tare da jinkiri ko rikicewar tsayi ba
+        });
+    }
 
     window.onpopstate = null;
-     }
+}
 
 const tokenDisplay = document.getElementById('token-count');
-      setInterval(() => { tokens += 0.0001; tokenDisplay.innerText = tokens.toFixed(4) + " NT"; }, 5000);
+setInterval(() => { tokens += 0.0001; tokenDisplay.innerText = tokens.toFixed(4) + " NT"; }, 5000);
 
-      const footerNav = document.getElementById('instaFooter');
-      let lastScrollTop = 0;
-      window.addEventListener('scroll', () => {
-          if (document.querySelector('.immersive-mode')) return;
-          let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          if (scrollTop > lastScrollTop) { footerNav.classList.add('footer-hidden'); } 
-          else { footerNav.classList.remove('footer-hidden'); }
-          lastScrollTop = scrollTop;
-      });
-
-
-
-
-    
+const footerNav = document.getElementById('instaFooter');
+let lastScrollTop = 0;
+window.addEventListener('scroll', () => {
+    if (document.querySelector('.immersive-mode')) return;
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    if (scrollTop > lastScrollTop) { footerNav.classList.add('footer-hidden'); } 
+    else { footerNav.classList.remove('footer-hidden'); }
+    lastScrollTop = scrollTop;
+});
+        
 
 
       function stopProp(e) { e.stopPropagation(); }
