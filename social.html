@@ -1064,7 +1064,19 @@ function toggleImmersive(card) {
     card.classList.add('immersive-mode');
 
     // Boye card gaba daya
-    card.style.visibility = 'hidden';
+    // Boye dukkan page content
+document.body.style.overflow = 'hidden';
+const overlay = document.createElement('div');
+overlay.id = 'immersive-bg';
+overlay.style.cssText = `
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: #000;
+    z-index: 2147483640;
+`;
+document.body.appendChild(overlay);
+card.style.display = 'none';
 
     // Saka video a body a matsayin fixed
     video.style.cssText = `
@@ -1201,7 +1213,10 @@ function exitImmersive(card) {
     }
 
     card.classList.remove('immersive-mode');
-    card.style.visibility = ''; // ← Dawo da card visibility
+    card.style.display = '';
+document.body.style.overflow = '';
+const bg = document.getElementById('immersive-bg');
+if (bg) bg.remove();
 
     // Dawo da header da footer
     const pageHeader = document.querySelector('header');
