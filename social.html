@@ -1078,6 +1078,20 @@ overlay.style.cssText = `
 document.body.appendChild(overlay);
 card.style.display = 'none';
 
+    // Kara z-index ga post header da interaction bar domin su bayyana a kan video
+const postHeader = card.querySelector('.post-header');
+if (postHeader) {
+    postHeader.style.position = 'relative';
+    postHeader.style.zIndex = '2147483646';
+}
+
+const interactionBar = card.querySelector('.interaction-bar, .post-interaction-bar');
+if (interactionBar) {
+    interactionBar.style.position = 'relative';
+    interactionBar.style.zIndex = '2147483646';
+}
+
+    
     // Saka video a body a matsayin fixed
     video.style.cssText = `
         position: fixed !important;
@@ -1100,39 +1114,7 @@ card.style.display = 'none';
     const footer = document.getElementById('instaFooter');
     if (footer) footer.classList.add('footer-hidden');
 
-    // Interaction bar — fixed a kasa
-    const interactionBar = card.querySelector('.interaction-bar, .post-interaction-bar');
-    if (interactionBar) {
-        interactionBar.style.cssText = `
-            position: fixed !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            z-index: 2147483646 !important;
-            background: linear-gradient(transparent, rgba(0,0,0,0.8)) !important;
-            padding: 20px 10px 15px 10px !important;
-        `;
-        document.body.appendChild(interactionBar);
-        card._interactionBar = interactionBar;
-        card._interactionBarParent = card;
-    }
-
-    // Post header — fixed a sama
-    const postHeader = card.querySelector('.post-header');
-    if (postHeader) {
-        postHeader.style.cssText = `
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            z-index: 2147483646 !important;
-            background: linear-gradient(rgba(0,0,0,0.6), transparent) !important;
-            padding: 10px 15px !important;
-        `;
-        document.body.appendChild(postHeader);
-        card._postHeader = postHeader;
-    }
-
+    
     // Back button
     const backBtn = document.createElement('div');
     backBtn.id = 'immersive-back-btn';
@@ -1200,17 +1182,7 @@ function exitImmersive(card) {
         video.play().catch(() => {});
     }
 
-    // Dawo da interaction bar
-    if (card._interactionBar && card._interactionBarParent) {
-        card._interactionBar.style.cssText = '';
-        card._interactionBarParent.appendChild(card._interactionBar);
-    }
 
-    // Dawo da post header
-    if (card._postHeader) {
-        card._postHeader.style.cssText = '';
-        card.insertBefore(card._postHeader, card.firstChild);
-    }
 
     card.classList.remove('immersive-mode');
     card.style.display = '';
@@ -1218,12 +1190,18 @@ document.body.style.overflow = '';
 const bg = document.getElementById('immersive-bg');
 if (bg) bg.remove();
 
-    // Dawo da header da footer
-    const pageHeader = document.querySelector('header');
-    if (pageHeader) pageHeader.style.display = '';
-    const footer = document.getElementById('instaFooter');
-    if (footer) footer.classList.remove('footer-hidden');
+    const postHeader = card.querySelector('.post-header');
+if (postHeader) {
+    postHeader.style.position = '';
+    postHeader.style.zIndex = '';
+}
 
+const interactionBar = card.querySelector('.interaction-bar, .post-interaction-bar');
+if (interactionBar) {
+    interactionBar.style.position = '';
+    interactionBar.style.zIndex = '';
+}
+    
     // Cire buttons
     const backBtn = document.getElementById('immersive-back-btn');
     if (backBtn) backBtn.remove();
