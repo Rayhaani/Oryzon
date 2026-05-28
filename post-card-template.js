@@ -273,23 +273,35 @@
 
 
 
-        /* Lokacin da card din yake immersive mode, muna son mu rike tsayinsa na asali */
-.immersive-mode {
-    /* Wannan zai hana sauran abubuwa na shafin su gishirta ko su matse */
-    min-height: 300px; /* Ko kuma tsayin da card dinka ya saba dashi */
-    visibility: hidden; /* Zai boye card din amma zai bar space dinsa don shafin kar ya girgiza */
-}
+        /* ===== HAKKUNAN MAGANCE MATSALAR BLACK SPACE ===== */
 
-/* Tabbatar cewa body ba zai yi scrolling ba idan bidiyon yana kunne */
-body:has(.immersive-mode) {
+/* Lokacin da aka cire video aka saka ta a body, 
+   wannan yana gyara matsalar tsayin body don kar ya haifar da fanko a kasa */
+body:has(video[style*="position: fixed"]) {
     overflow: hidden !important;
     height: 100vh !important;
+    max-height: 100vh !important;
+}
+
+/* Wannan kuma zai gyara ainihin katin (card) da bidiyon ya fita daga ciki */
+.post-card:not(:has(video)):not(:has(img)) {
+    min-height: 250px !important; 
+}
+
+/* Tabbatar cewa back button dinka da kake ƙirƙira a JS yana saman komai da gaske */
+#immersive-back-btn {
+    z-index: 2147483647 !important;
 }
 
 /* Boye footer yadda ya kamata ba tare da ya bar fanko ba */
 .footer-hidden {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
+
 
            
         /* ===== FEED CONTAINER ===== */
