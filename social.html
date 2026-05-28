@@ -1041,88 +1041,156 @@
           window.location.href = "login.html";
       }
 
-      function toggleImmersive(card) {
-        if (event && event.target.closest('.interaction-bar')) return;
-        if (event && event.target.closest('.header-actions')) return;
-        if (event && event.target.closest('.follow-text-link')) return;
-        if (event && event.target.closest('.gift-btn-nexus')) return;
-        if (event && event.target.closest('a')) return;
-
-        const video = card.querySelector('video');
-        const footer = document.getElementById('instaFooter');
-
-        if (!card.classList.contains('immersive-mode')) {
-            const savedTime = video ? video.currentTime : 0;
-            card.classList.add('immersive-mode');
-            footer.classList.add('footer-hidden');
-
-            if (video) {
-                video.style.cssText = `
-                    position: fixed !important;
-                    top: 0 !important; left: 0 !important;
-                    width: 100vw !important; height: 100vh !important;
-                    max-height: none !important; min-height: unset !important;
-                    object-fit: cover !important; border-radius: 0 !important;
-                    z-index: 4999 !important; background: #000 !important; margin: 0 !important;
-                `;
-                video.currentTime = savedTime;
-                video.muted = false;
-                globalSoundOn = true;
-                
-                setTimeout(() => { video.play().catch(() => {}); }, 50);
-
-                video.onclick = function(e) {
-                    e.stopPropagation();
-                    if (video.paused) { video.play(); } else { video.pause(); }
-                };
-            }
-
-            if (!card.querySelector('.immersive-back-btn')) {
-                const backBtn = document.createElement('div');
-                backBtn.className = 'immersive-back-btn';
-                backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
-                backBtn.style.cssText = `
-                    position: fixed; top: 15px; left: 15px; width: 36px; height: 36px;
-                    background: rgba(0,0,0,0.6); border-radius: 50%; display: flex;
-                    align-items: center; justify-content: center; color: white; font-size: 16px;
-                    z-index: 9999; cursor: pointer; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);
-                `;
-                backBtn.onclick = function(e) { e.stopPropagation(); exitImmersive(card); };
-                document.body.appendChild(backBtn);
-            }
-
-            history.pushState({ immersive: true }, '');
-            window.onpopstate = function() { exitImmersive(card); };
-        } else {
-            exitImmersive(card);
-        }
-      }
+      
 
       
-     function exitImmersive(card) {
+     function toggleImmersive(card) {
+    if (event && event.target.closest('.interaction-bar')) return;
+    if (event && event.target.closest('.header-actions')) return;
+    if (event && event.target.closest('a')) return;
+
     const video = card.querySelector('video');
-    const footer = document.getElementById('instaFooter');
-    const savedTime = video ? video.currentTime : 0;
+    if (!video) return;
 
-    card.classList.remove('immersive-mode');
-    if (footer) footer.classList.remove('footer-hidden');
-
-    const backBtn = document.querySelector('.immersive-back-btn');
-    if (backBtn) backBtn.remove();
-
-    if (video) {
-        video.style.cssText = '';
-        video.currentTime = savedTime;
-        setTimeout(() => { video.play().catch(() => {}); }, 50);
+    // Idan overlay ɗin yana wanzu, cire shi kawai
+    const existingOverlay = document.getElementById('immersive-overlay');
+    if (existingOverlay) {
+        exitImmersive();
+        return;
     }
 
-    // ← GYARAN: Scroll zuwa daidai wannan card bayan exit
-    setTimeout(() => {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 50);
+    // Adana scroll position
+    const scrollY = window.scrollY;
+
+    // Ƙirƙiri overlay wanda zai rufe screen
+    const overlay = document.createElement('div');
+    overlay.id = 'immersive-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: #000;
+        z-index: 4998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+
+    // Kwafi video zuwa overlay — ba mu taba asalin video ba
+    const overlayVideo = document.createElement('video');
+    overlayVideo.src = video.src;
+    overlayVideo.currentTime = video.currentTime;
+    overlayVideo.loop = true;
+    overlayVideo.playsinline = true;
+    overlayVideo.muted = false;
+    overlayVideo.style.cssText = `
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+    `;
+    overlayVideo.play().catch(() => {});
+
+    overlay.appendChild(overlayVideo);
+    document.body.appendChild(overlay);
+
+    // Pause asalin video
+    video.pause();
+
+    // Footer hide
+    const footer = document.getElementById('instaFooter');
+    if (footer) footer.classList.add('footer-hidden');
+
+    // Back button
+    const backBtn = document.createElement('div');
+    backBtn.id = 'immersive-back-btn';
+    backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+    backBtn.style.cssText = `
+        position: fixed; top: 15px; left: 15px;
+        width: 36px; height: 36px;
+        background: rgba(0,0,0,0.6);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 16px;
+        z-index: 9999; cursor: pointer;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+    `;
+    backBtn.onclick = function(e) {
+        e.stopPropagation();
+        exitImmersive();
+    };
+    document.body.appendChild(backBtn);
+
+    // Mute toggle
+    const muteBtn = document.createElement('div');
+    muteBtn.id = 'immersive-mute-btn';
+    muteBtn.innerHTML = `<i class="fa-solid fa-volume-high"></i>`;
+    muteBtn.style.cssText = `
+        position: fixed; bottom: 80px; right: 15px;
+        width: 36px; height: 36px;
+        background: rgba(0,0,0,0.6);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 14px;
+        z-index: 9999; cursor: pointer;
+        border: 1px solid rgba(255,255,255,0.3);
+    `;
+    muteBtn.onclick = function(e) {
+        e.stopPropagation();
+        overlayVideo.muted = !overlayVideo.muted;
+        muteBtn.innerHTML = overlayVideo.muted
+            ? `<i class="fa-solid fa-volume-xmark"></i>`
+            : `<i class="fa-solid fa-volume-high"></i>`;
+    };
+    document.body.appendChild(muteBtn);
+
+    // Click overlay ya fita
+    overlay.onclick = function() { exitImmersive(); };
+
+    // Store scroll position
+    overlay.dataset.scrollY = scrollY;
+
+    history.pushState({ immersive: true }, '');
+    window.onpopstate = function() { exitImmersive(); };
+}
+
+function exitImmersive() {
+    const overlay = document.getElementById('immersive-overlay');
+    const backBtn = document.getElementById('immersive-back-btn');
+    const muteBtn = document.getElementById('immersive-mute-btn');
+
+    if (!overlay) return;
+
+    const scrollY = parseInt(overlay.dataset.scrollY || '0');
+
+    // Dawo da scroll position — ba scrollIntoView ba, kawai instant
+    const overlayVideo = overlay.querySelector('video');
+    if (overlayVideo) {
+        // Dawo da time zuwa asalin video
+        const allVideos = document.querySelectorAll('.feed-container video, #timeline-area video');
+        allVideos.forEach(v => {
+            if (v.src === overlayVideo.src) {
+                v.currentTime = overlayVideo.currentTime;
+                v.play().catch(() => {});
+            }
+        });
+        overlayVideo.pause();
+    }
+
+    // Cire overlay da buttons
+    overlay.remove();
+    if (backBtn) backBtn.remove();
+    if (muteBtn) muteBtn.remove();
+
+    // Koma scroll position kai tsaye — ba animation ba
+    window.scrollTo(0, scrollY);
+
+    // Footer show
+    const footer = document.getElementById('instaFooter');
+    if (footer) footer.classList.remove('footer-hidden');
 
     window.onpopstate = null;
-     }
+}
 
         
       const tokenDisplay = document.getElementById('token-count');
