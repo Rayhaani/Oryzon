@@ -2290,6 +2290,76 @@ function loadFriendCount() {
             }
         });
             }
+
+
+            function toggleImmersive(card) {
+    if (event && event.target.closest('.interaction-bar')) return;
+    if (event && event.target.closest('.header-actions')) return;
+    if (event && event.target.closest('a')) return;
+
+    const video = card.querySelector('video');
+    const footer = document.getElementById('instaFooter');
+
+    if (!card.classList.contains('immersive-mode')) {
+        const savedTime = video ? video.currentTime : 0;
+        card.classList.add('immersive-mode');
+        if (footer) footer.classList.add('footer-hidden');
+
+        if (video) {
+            video.style.cssText = `
+                position: fixed !important;
+                top: 0 !important; left: 0 !important;
+                width: 100vw !important; height: 100vh !important;
+                max-height: none !important;
+                object-fit: cover !important; border-radius: 0 !important;
+                z-index: 4999 !important; background: #000 !important; margin: 0 !important;
+            `;
+            video.currentTime = savedTime;
+            video.muted = false;
+            setTimeout(() => { video.play().catch(() => {}); }, 50);
+        }
+
+        if (!card.querySelector('.immersive-back-btn')) {
+            const backBtn = document.createElement('div');
+            backBtn.className = 'immersive-back-btn';
+            backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+            backBtn.style.cssText = `
+                position: fixed; top: 15px; left: 15px; width: 36px; height: 36px;
+                background: rgba(0,0,0,0.6); border-radius: 50%; display: flex;
+                align-items: center; justify-content: center; color: white; font-size: 16px;
+                z-index: 9999; cursor: pointer; backdrop-filter: blur(10px); 
+                border: 1px solid rgba(255,255,255,0.3);
+            `;
+            backBtn.onclick = function(e) { e.stopPropagation(); exitImmersive(card); };
+            document.body.appendChild(backBtn);
+        }
+
+        history.pushState({ immersive: true }, '');
+        window.onpopstate = function() { exitImmersive(card); };
+
+    } else {
+        exitImmersive(card);
+    }
+}
+
+function exitImmersive(card) {
+    const video = card.querySelector('video');
+    const footer = document.getElementById('instaFooter');
+    const savedTime = video ? video.currentTime : 0;
+
+    card.classList.remove('immersive-mode');
+    if (footer) footer.classList.remove('footer-hidden');
+
+    const backBtn = document.querySelector('.immersive-back-btn');
+    if (backBtn) backBtn.remove();
+
+    if (video) {
+        video.style.cssText = '';
+        video.currentTime = savedTime;
+        setTimeout(() => { video.play().catch(() => {}); }, 50);
+    }
+    window.onpopstate = null;
+}
             
         </script>
     </main>
