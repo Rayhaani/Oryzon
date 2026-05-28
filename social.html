@@ -1043,8 +1043,7 @@
 
       
 
-
-    function toggleImmersive(card) {
+function toggleImmersive(card) {
     if (event && event.target.closest('.interaction-bar')) return;
     if (event && event.target.closest('.post-interaction-bar')) return;
     if (event && event.target.closest('.header-actions')) return;
@@ -1064,7 +1063,10 @@
 
     card.classList.add('immersive-mode');
 
-    // Cire video daga card, saka a body kai tsaye
+    // Boye card gaba daya
+    card.style.visibility = 'hidden';
+
+    // Saka video a body a matsayin fixed
     video.style.cssText = `
         position: fixed !important;
         top: 0 !important;
@@ -1078,12 +1080,46 @@
         background: #000 !important;
     `;
     document.body.appendChild(video);
+    video.play().catch(() => {});
 
     // Boye header da footer
     const pageHeader = document.querySelector('header');
     if (pageHeader) pageHeader.style.display = 'none';
     const footer = document.getElementById('instaFooter');
     if (footer) footer.classList.add('footer-hidden');
+
+    // Interaction bar — fixed a kasa
+    const interactionBar = card.querySelector('.interaction-bar, .post-interaction-bar');
+    if (interactionBar) {
+        interactionBar.style.cssText = `
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            z-index: 2147483646 !important;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8)) !important;
+            padding: 20px 10px 15px 10px !important;
+        `;
+        document.body.appendChild(interactionBar);
+        card._interactionBar = interactionBar;
+        card._interactionBarParent = card;
+    }
+
+    // Post header — fixed a sama
+    const postHeader = card.querySelector('.post-header');
+    if (postHeader) {
+        postHeader.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            z-index: 2147483646 !important;
+            background: linear-gradient(rgba(0,0,0,0.6), transparent) !important;
+            padding: 10px 15px !important;
+        `;
+        document.body.appendChild(postHeader);
+        card._postHeader = postHeader;
+    }
 
     // Back button
     const backBtn = document.createElement('div');
@@ -1096,7 +1132,7 @@
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         color: white; font-size: 16px;
-        z-index: 9999; cursor: pointer;
+        z-index: 2147483647; cursor: pointer;
         border: 1px solid rgba(255,255,255,0.2);
     `;
     backBtn.onclick = function(e) {
@@ -1105,11 +1141,30 @@
     };
     document.body.appendChild(backBtn);
 
-    // Danna video ta fita
-    video.onclick = function(e) {
+    // Mute button
+    const muteBtn = document.createElement('div');
+    muteBtn.id = 'immersive-mute-btn';
+    muteBtn.innerHTML = video.muted
+        ? `<i class="fa-solid fa-volume-xmark"></i>`
+        : `<i class="fa-solid fa-volume-high"></i>`;
+    muteBtn.style.cssText = `
+        position: fixed; bottom: 80px; right: 15px;
+        width: 36px; height: 36px;
+        background: rgba(0,0,0,0.5);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 14px;
+        z-index: 2147483647; cursor: pointer;
+        border: 1px solid rgba(255,255,255,0.2);
+    `;
+    muteBtn.onclick = function(e) {
         e.stopPropagation();
-        exitImmersive(card);
+        video.muted = !video.muted;
+        muteBtn.innerHTML = video.muted
+            ? `<i class="fa-solid fa-volume-xmark"></i>`
+            : `<i class="fa-solid fa-volume-high"></i>`;
     };
+    document.body.appendChild(muteBtn);
 
     history.pushState({ immersive: true }, '');
     window.onpopstate = function() { exitImmersive(card); };
@@ -1119,19 +1174,34 @@ function exitImmersive(card) {
     if (!card || !card.classList.contains('immersive-mode')) return;
 
     const video = document.body.querySelector('video[style*="position: fixed"]');
-    
+    const isMuted = video ? video.muted : true; // ← GYARAN 3: Adana mute state
+
+    // Dawo da video zuwa asalin wurinta
     if (video && card._videoParent) {
-        // Dawo da video zuwa asalin wurinta
         video.style.cssText = '';
-        video.onclick = null;
         if (card._videoNextSibling) {
             card._videoParent.insertBefore(video, card._videoNextSibling);
         } else {
             card._videoParent.appendChild(video);
         }
+        video.muted = isMuted; // ← GYARAN 3: Kiyaye mute state
+        video.play().catch(() => {});
+    }
+
+    // Dawo da interaction bar
+    if (card._interactionBar && card._interactionBarParent) {
+        card._interactionBar.style.cssText = '';
+        card._interactionBarParent.appendChild(card._interactionBar);
+    }
+
+    // Dawo da post header
+    if (card._postHeader) {
+        card._postHeader.style.cssText = '';
+        card.insertBefore(card._postHeader, card.firstChild);
     }
 
     card.classList.remove('immersive-mode');
+    card.style.visibility = ''; // ← Dawo da card visibility
 
     // Dawo da header da footer
     const pageHeader = document.querySelector('header');
@@ -1139,15 +1209,15 @@ function exitImmersive(card) {
     const footer = document.getElementById('instaFooter');
     if (footer) footer.classList.remove('footer-hidden');
 
-    // Cire back button
+    // Cire buttons
     const backBtn = document.getElementById('immersive-back-btn');
     if (backBtn) backBtn.remove();
+    const muteBtn = document.getElementById('immersive-mute-btn');
+    if (muteBtn) muteBtn.remove();
 
-    // Koma scroll
     window.scrollTo(0, card._scrollY || 0);
-
     window.onpopstate = null;
-        } 
+        }
 
 
 
