@@ -283,25 +283,6 @@ body:has(video[style*="position: fixed"]) {
     max-height: 100vh !important;
 }
 
-/* Wannan kuma zai gyara ainihin katin (card) da bidiyon ya fita daga ciki */
-.post-card:not(:has(video)):not(:has(img)) {
-    min-height: 250px !important; 
-}
-
-/* Tabbatar cewa back button dinka da kake ƙirƙira a JS yana saman komai da gaske */
-#immersive-back-btn {
-    z-index: 2147483647 !important;
-}
-
-/* Boye footer yadda ya kamata ba tare da ya bar fanko ba */
-.footer-hidden {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
 
            
         /* ===== FEED CONTAINER ===== */
