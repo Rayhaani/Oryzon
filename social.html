@@ -1042,168 +1042,105 @@
       }
 
       
-
 function toggleImmersive(card) {
-    if (event && event.target.closest('.interaction-bar')) return;
-    if (event && event.target.closest('.post-interaction-bar')) return;
-    if (event && event.target.closest('.header-actions')) return;
-    if (event && event.target.closest('a')) return;
+        if (event && event.target.closest('.interaction-bar')) return;
+        if (event && event.target.closest('.header-actions')) return;
+        if (event && event.target.closest('.follow-text-link')) return;
+        if (event && event.target.closest('.gift-btn-nexus')) return;
+        if (event && event.target.closest('a')) return;
 
-    const video = card.querySelector('video');
-    if (!video) return;
+        const video = card.querySelector('video');
+        const footer = document.getElementById('instaFooter');
 
-    if (card.classList.contains('immersive-mode')) {
-        exitImmersive(card);
-        return;
-    }
+        if (!card.classList.contains('immersive-mode')) {
+            const savedTime = video ? video.currentTime : 0;
+            card.classList.add('immersive-mode');
+            footer.classList.add('footer-hidden');
 
-    // Adana inda scroll yake
-    card._scrollY = window.scrollY;
+            if (video) {
+                video.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important; left: 0 !important;
+                    width: 100vw !important; height: 100vh !important;
+                    max-height: none !important; min-height: unset !important;
+                    object-fit: cover !important; border-radius: 0 !important;
+                    z-index: 4999 !important; background: #000 !important; margin: 0 !important;
+                `;
+                video.currentTime = savedTime;
+                video.muted = false;
+                globalSoundOn = true;
+                
+                setTimeout(() => { video.play().catch(() => {}); }, 50);
 
-    card.classList.add('immersive-mode');
+                video.onclick = function(e) {
+                    e.stopPropagation();
+                    if (video.paused) { video.play(); } else { video.pause(); }
+                };
+            }
 
-    // Bidiyo ya cika screen
-    video.style.cssText = `
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        object-fit: cover !important;
-        z-index: 2147483640 !important; /* Bidiyo a kasa kadan */
-        margin: 0 !important;
-        border-radius: 0 !important;
-        background: #000 !important;
-    `;
+            if (!card.querySelector('.immersive-back-btn')) {
+                const backBtn = document.createElement('div');
+                backBtn.className = 'immersive-back-btn';
+                backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+                backBtn.style.cssText = `
+                    position: fixed; top: 15px; left: 15px; width: 36px; height: 36px;
+                    background: rgba(0,0,0,0.6); border-radius: 50%; display: flex;
+                    align-items: center; justify-content: center; color: white; font-size: 16px;
+                    z-index: 9999; cursor: pointer; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);
+                `;
+                backBtn.onclick = function(e) { e.stopPropagation(); exitImmersive(card); };
+                document.body.appendChild(backBtn);
+            }
 
-    // fito da POST HEADER gaba sama da bidiyo
-    const postHeader = card.querySelector('.post-header');
-    if (postHeader) {
-        postHeader.style.cssText = `
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            z-index: 2147483645 !important;
-            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%) !important;
-            box-sizing: border-box !important;
-        `;
-    }
-
-    // fito da INTERACTION BAR gaba sama da bidiyo (ta koma kasa daidai)
-    const interactionBar = card.querySelector('.post-interaction-bar');
-    if (interactionBar) {
-        interactionBar.style.cssText = `
-            position: fixed !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            z-index: 2147483645 !important;
-            background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%) !important;
-            box-sizing: border-box !important;
-        `;
-    }
-
-    // fito da POST CONTENT idan akwai shi
-    const postContent = card.querySelector('.post-content');
-    if (postContent) {
-        postContent.style.cssText = `
-            position: fixed !important;
-            bottom: 60px !important; /* Ya zauna sama da interaction bar */
-            left: 0 !important;
-            width: 100vw !important;
-            z-index: 2147483645 !important;
-            background: transparent !important;
-            box-sizing: border-box !important;
-        `;
-    }
-
-    // Kulle duka jikin shafin (body) domin magance matsalar baki
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    document.body.style.height = '100vh';
-
-    // Boye ainihin babban header na shafi da footer
-    const pageHeader = document.querySelector('header');
-    if (pageHeader) pageHeader.style.display = 'none';
-    const footer = document.getElementById('instaFooter');
-    if (footer) footer.classList.add('footer-hidden');
-
-    // Back button
-    const backBtn = document.createElement('div');
-    backBtn.id = 'immersive-back-btn';
-    backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
-    backBtn.style.cssText = `
-        position: fixed; top: 15px; left: 15px;
-        width: 36px; height: 36px;
-        background: rgba(0,0,0,0.5);
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        color: white; font-size: 16px;
-        z-index: 2147483647; /* Mafi daukaka a duka saman komai */
-        cursor: pointer;
-        border: 1px solid rgba(255,255,255,0.2);
-    `;
-    backBtn.onclick = function(e) {
-        e.stopPropagation();
-        exitImmersive(card);
-    };
-    document.body.appendChild(backBtn);
-
-    // Idan an danna video din ta fita
-    video.onclick = function(e) {
-        e.stopPropagation();
-        exitImmersive(card);
-    };
-
-    history.pushState({ immersive: true }, '');
-    window.onpopstate = function() { exitImmersive(card); };
-}
+            history.pushState({ immersive: true }, '');
+            window.onpopstate = function() { exitImmersive(card); };
+        } else {
+            exitImmersive(card);
+        }
+      }
 
 function exitImmersive(card) {
-    if (!card || !card.classList.contains('immersive-mode')) return;
-
     const video = card.querySelector('video');
-    const postHeader = card.querySelector('.post-header');
-    const interactionBar = card.querySelector('.post-interaction-bar');
-    const postContent = card.querySelector('.post-content');
-    
-    // Dawo da asalin salon kowane abu daban-daban
-    if (video) {
-        video.style.cssText = '';
-        video.onclick = null;
-    }
-    if (postHeader) postHeader.style.cssText = '';
-    if (interactionBar) interactionBar.style.cssText = '';
-    if (postContent) postContent.style.cssText = '';
+    const footer = document.getElementById('instaFooter');
+    const savedTime = video ? video.currentTime : 0;
 
     card.classList.remove('immersive-mode');
-
-    // Bude damar scrolling na duka shafin
-    document.documentElement.style.overflow = '';
-    document.body.style.overflow = '';
-    document.body.style.height = '';
-
-    // Dawo da ainihin header da footer na shafi
-    const pageHeader = document.querySelector('header');
-    if (pageHeader) pageHeader.style.display = '';
-    const footer = document.getElementById('instaFooter');
     if (footer) footer.classList.remove('footer-hidden');
 
-    // Cire back button
-    const backBtn = document.getElementById('immersive-back-btn');
+    const backBtn = document.querySelector('.immersive-back-btn');
     if (backBtn) backBtn.remove();
 
-    // Koma scroll inda aka tsaya
-    window.scrollTo(0, card._scrollY || 0);
+    if (video) {
+        video.style.cssText = '';
+        video.currentTime = savedTime;
+        setTimeout(() => { video.play().catch(() => {}); }, 50);
+    }
+
+    // ← GYARAN: Scroll zuwa daidai wannan card bayan exit
+    setTimeout(() => {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
 
     window.onpopstate = null;
-        }
-        
+     }
+
+const tokenDisplay = document.getElementById('token-count');
+      setInterval(() => { tokens += 0.0001; tokenDisplay.innerText = tokens.toFixed(4) + " NT"; }, 5000);
+
+      const footerNav = document.getElementById('instaFooter');
+      let lastScrollTop = 0;
+      window.addEventListener('scroll', () => {
+          if (document.querySelector('.immersive-mode')) return;
+          let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          if (scrollTop > lastScrollTop) { footerNav.classList.add('footer-hidden'); } 
+          else { footerNav.classList.remove('footer-hidden'); }
+          lastScrollTop = scrollTop;
+      });
+
+
+
 
     
-
-
 
 
       function stopProp(e) { e.stopPropagation(); }
