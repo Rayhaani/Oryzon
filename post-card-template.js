@@ -271,64 +271,6 @@
         video::-webkit-media-controls { display: none !important; }
         video::-webkit-media-controls-start-playback-button { display: none !important; }
 
-
-
-     
-       
-       /* IMMERSIVE MODE - CSS ke sarrafa komai */
-.post-card.immersive-mode {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    z-index: 5000 !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-    overflow: hidden !important;
-    background: #000 !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-.post-card.immersive-mode .post-header {
-    position: relative !important;
-    z-index: 10 !important;
-    background: linear-gradient(rgba(0,0,0,0.6), transparent) !important;
-    flex-shrink: 0 !important;
-}
-
-.post-card.immersive-mode video.post-media {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    z-index: 1 !important;
-}
-
-.post-card.immersive-mode .post-header,
-.post-card.immersive-mode .post-content,
-.post-card.immersive-mode .interaction-bar,
-.post-card.immersive-mode .post-interaction-bar {
-    position: relative !important;
-    z-index: 10 !important;
-}
-
-.post-card.immersive-mode .interaction-bar,
-.post-card.immersive-mode .post-interaction-bar {
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    background: linear-gradient(transparent, rgba(0,0,0,0.8)) !important;
-    padding: 20px 10px 15px !important;
-}
-        
-
-
-
         
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
