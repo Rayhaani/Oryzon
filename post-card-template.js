@@ -71,8 +71,8 @@
         /* ===== AVATAR ===== */
         .post-avatar {
             position: absolute !important;
-            left: 8px !important;
-            top: 50% !important;
+            left: 0px !important;
+            top: 0% !important;
             transform: translateY(-50%) !important;
             width: 38px !important;
             height: 38px !important;
