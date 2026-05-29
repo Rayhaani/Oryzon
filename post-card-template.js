@@ -25,7 +25,7 @@
 
         /* ===== THE POST CARD ITSELF ===== */
         .post-card {
-            background: var(--post-bg) !important;
+            background: var(--bg) !important;
             backdrop-filter: blur(10px) !important;
             border: 1px solid var(--post-border) !important;
             border-radius: var(--post-radius) !important;
@@ -61,7 +61,7 @@
             align-items: center !important;
             justify-content: space-between !important;
             padding: 0 15px 0 55px !important;
-            height: 46px !important;
+            height: 45px !important;
             position: relative !important;
             background: linear-gradient(180deg, rgba(253, 224, 141, 0.08) 0%, transparent 100%) !important;
             border-bottom: 3px solid rgba(253, 224, 141, 0.1) !important;
