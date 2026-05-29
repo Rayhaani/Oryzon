@@ -476,20 +476,23 @@ window.postCard_toggleSave = function(event, postId) {
 
         <div class="interaction-bar" onclick="stopProp(event)">
     <div class="action-capsules">
+       
        <div class="capsule" onclick="
     const btn = this;
+    const icon = btn.querySelector('i');
     if(btn.classList.contains('liked')){
         btn.classList.remove('liked');
-        btn.querySelector('i').style.cssText = 'color: var(--premium-gold) !important';
+        icon.className = 'fa-regular fa-heart';
+        icon.style.color = '';
         let c = parseInt(btn.querySelector('span').textContent) || 0;
         btn.querySelector('span').textContent = Math.max(0, c - 1);
     } else {
         btn.classList.add('liked');
-        btn.querySelector('i').style.color = '#ff4d6d';
+        icon.className = 'fa-solid fa-heart';
+        icon.style.color = '#ff4d6d';
         let c = parseInt(btn.querySelector('span').textContent) || 0;
         btn.querySelector('span').textContent = c + 1;
     }
-    triggerPulse(this, event);
 ">
     <i class="fa-regular fa-heart"></i>
     <span>${post.likes || 0}</span>
