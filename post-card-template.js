@@ -34,7 +34,7 @@
             position: relative !important;
             overflow: hidden !important;
             box-shadow: var(--gold-glow) !important;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transition: none !important;
             width: 100% !important;
             box-sizing: border-box !important;
         }
