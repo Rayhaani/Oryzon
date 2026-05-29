@@ -457,11 +457,42 @@ window.postCard_toggleSave = function(event, postId) {
         <div style="position:relative;" ondblclick="
     const btn = this.closest('.post-card').querySelector('.capsule');
     if(btn.classList.contains('liked')) return;
-    btn.classList.add('liked');
-btn.querySelector('i').className = 'fa-solid fa-heart';
-btn.querySelector('i').style.color = '#ff4d6d';
-    let c = parseInt(btn.querySelector('span').textContent) || 0;
-    btn.querySelector('span').textContent = c + 1;
+    
+    <div class="capsule" onclick="
+    const btn = this;
+    const icon = btn.querySelector('i');
+    if(btn.classList.contains('liked')){
+        // UNLIKE - saka nan
+        btn.classList.remove('liked');
+        icon.className = 'fa-regular fa-heart';
+        icon.removeAttribute('style');
+        let c = parseInt(btn.querySelector('span').textContent) || 0;
+        btn.querySelector('span').textContent = Math.max(0, c - 1);
+        if(typeof db !== 'undefined'){
+            const u = localStorage.getItem('nexus_user_session');
+            if(u) db.collection('likes').doc('${postId}_' + u).delete();
+        }
+    } else {
+        // LIKE
+        btn.classList.add('liked');
+        icon.className = 'fa-solid fa-heart';
+        icon.style.color = '#ff4d6d';
+        let c = parseInt(btn.querySelector('span').textContent) || 0;
+        btn.querySelector('span').textContent = c + 1;
+        if(typeof db !== 'undefined'){
+            const u = localStorage.getItem('nexus_user_session');
+            if(u) db.collection('likes').doc('${postId}_' + u).set({
+                postId: '${postId}', user: u,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+    }
+">
+    <i class="fa-regular fa-heart"></i>
+    <span>${post.likes || 0}</span>
+</div>
+
+
     const colors = ['#f953c6','#f7971e','#ff416c','#a18cd1','#00c6ff','#ff4b2b','#ffd200','#b91d73'];
     const col = colors[Math.floor(Math.random() * colors.length)];
     const heart = document.createElement('i');
