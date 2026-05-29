@@ -64,7 +64,7 @@
             height: 54px !important;
             position: relative !important;
             background: linear-gradient(180deg, rgba(253, 224, 141, 0.08) 0%, transparent 100%) !important;
-            border-bottom: 1px solid rgba(253, 224, 141, 0.1) !important;
+            border-bottom: 2px solid rgba(253, 224, 141, 0.1) !important;
             margin-bottom: 0 !important;
         }
 
@@ -72,8 +72,8 @@
         .post-avatar {
             position: absolute !important;
             left: 8px !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
+            top: 6px !important;
+            transform: none !important;
             width: 38px !important;
             height: 38px !important;
             border-radius: 50% !important;
