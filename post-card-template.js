@@ -405,7 +405,7 @@ window.postCard_toggleSave = function(event, postId) {
     const comments = post.commentsCount || post.comments || 0;
 
     return `
-    <div class="post-card" onclick="
+    <div class="post-card" data-post-id="${postId}" onclick="
     const media = this.querySelector('.post-media');
     if(media && media.tagName === 'VIDEO' && typeof toggleImmersive === 'function') toggleImmersive(this);
 ">
