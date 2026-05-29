@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Comment Protocol - Slim Instagram Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Orbitron:wght@600;800&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --quantum-black: #030305;
+            --hologram-cyan: #00f2fe;
+            --hologram-gold: #fde08d;
+            --premium-bronze: #b8860b;
+            --sentiment-positive: rgba(80, 250, 123, 0.15);
+            --sentiment-neutral: rgba(255, 255, 255, 0.05);
+            --sentiment-alert: rgba(255, 71, 87, 0.15);
+            --glass-border: rgba(253, 224, 141, 0.15);
+            --text-primary: #f5f5f7;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--quantum-black);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* ====== MAIN PLATFORM CONTAINER ====== */
+        .nexus-comment-node {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(10, 12, 22, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 2px var(--hologram-gold);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ====== SLIM & SMART INSTAGRAM HEADER ====== */
+        .node-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-bottom: 14px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .node-header::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            width: 35px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+        }
+
+        .node-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+            margin-top: 10px;
+        }
+
+        /* ====== COMMENTS CORE MATRIX ====== */
+        .comments-matrix-feed {
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 5px;
+            scrollbar-width: none;
+        }
+
+        .comments-matrix-feed::-webkit-scrollbar {
+            display: none;
+        }
+
+        .quantum-comment-card {
+            position: relative;
+            padding: 12px 14px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            background: var(--sentiment-neutral);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .quantum-comment-card.positive {
+            background: var(--sentiment-positive);
+            border-right: 3px solid #50fa7b;
+        }
+
+        .quantum-comment-card.alert {
+            background: var(--sentiment-alert);
+            border-right: 3px solid #ff4757;
+        }
+
+        .quantum-comment-card:hover {
+            transform: translateX(4px);
+            border-color: rgba(253, 224, 141, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .comment-core-layout {
+            display: flex;
+            gap: 12px;
+            position: relative;
+        }
+
+        .quantum-avatar-frame {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+        }
+
+        .quantum-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid var(--hologram-cyan);
+            padding: 1px;
+        }
+
+        .user-status-node {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            background: #00f2fe;
+            border-radius: 50%;
+            border: 1.5px solid var(--quantum-black);
+        }
+
+        .comment-body-cluster {
+            flex-grow: 1;
+        }
+
+        .meta-layer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .identity-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-title-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Instagram Style Author Tag */
+        .instagram-author-tag {
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.85);
+            padding: 1px 6px;
+            border-radius: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .timestamp-quantum {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .comment-text-payload {
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 8px;
+            text-align: justify;
+        }
+
+        .interaction-capsule-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .micro-action-trigger {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .micro-action-trigger:hover {
+            color: var(--hologram-gold);
+        }
+
+        .micro-action-trigger.liked i {
+            color: #ff4757;
+            animation: heartPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .quantum-nested-replies {
+            margin-top: 10px;
+            padding-left: 14px;
+            border-left: 1px dashed rgba(253, 224, 141, 0.2);
+            display: none;
+        }
+
+        .quantum-nested-replies.show {
+            display: block;
+        }
+
+        /* ====== INPUT HARNESS ====== */
+        .hologram-input-harness {
+            margin-top: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .current-user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--hologram-gold);
+        }
+
+        .hologram-text-field {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            font-size: 12.5px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .hologram-text-field::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .input-actions-cluster {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .utility-node-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .utility-node-btn:hover {
+            color: var(--hologram-cyan);
+        }
+
+        .quantum-beam-send {
+            background: linear-gradient(135deg, var(--hologram-gold), var(--premium-bronze));
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            color: #000;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(253, 224, 141, 0.4);
+            transition: transform 0.2s;
+        }
+
+        @keyframes heartPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nexus-comment-node">
+        <div class="node-header">
+            <div class="node-title">Comments</div>
+        </div>
+
+        <div class="comments-matrix-feed" id="matrixFeed">
+            
+            <div class="quantum-comment-card positive">
+                <div class="comment-core-layout">
+                    <div class="quantum-avatar-frame">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Kabir" class="quantum-avatar" alt="">
+                        <div class="user-status-node"></div>
+                    </div>
+                    
+                    <div class="comment-body-cluster">
+                        <div class="meta-layer">
+                            <div class="identity-badge">
+                                <span class="user-title-name">Kabir Kano</span>
+                            </div>
+                            <span class="timestamp-quantum">2m</span>
+                        </div>
+                        <p class="comment-text-payload">Wannan tsarin ya dace da canjin zaman katin da muke bukata a Arewacin Najeriya. Tsarin UI din nan yana da matukar santsi!</p>
+                        
+                        <div class="interaction-capsule-bar">
+                            <button class="micro-action-trigger" onclick="pulseLike(this)">
+                                <i class="fa-regular fa-heart"></i> <span class="count">14</span>
+                            </button>
+                            <button class="micro-action-trigger" onclick="toggleReplies('reply-node-1')">
+                                <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
+                            </button>
+                        </div>
+
+                        <div class="quantum-nested-replies" id="reply-node-1">
+                            <div class="quantum-comment-card">
+                                <div class="comment-core-layout">
+                                    <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
+                                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Aliyu" class="quantum-avatar" alt="">
+                                    </div>
+                                    <div class="comment-body-cluster">
+                                        <div class="meta-layer">
+                                            <span class="user-title-name" style="font-size: 11px;">Aliyu Haedar</span>
+                                            <span class="timestamp-quantum">1m</span>
+                                        </div>
+                                        <p class="comment-text-payload" style="font-size: 11.5px;">Gaskiya ne abokina, katin yana motsawa tamkar a shekarar 2050.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="quantum-comment-card">
+                <div class="comment-core-layout">
+                    <div class="quantum-avatar-frame">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sadiya" class="quantum-avatar" alt="">
+                    </div>
+                    
+                    <div class="comment-body-cluster">
+                        <div class="meta-layer">
+                            <div class="identity-badge">
+                                <span class="user-title-name">Sadiya Barka</span>
+                            </div>
+                            <span class="timestamp-quantum">12m</span>
+                        </div>
+                        <p class="comment-text-payload">Ina son yadda kuka hada tsarin samun kudaden Oryzon Rewards a cikin menu na gefe.</p>
+                        
+                        <div class="interaction-capsule-bar">
+                            <button class="micro-action-trigger" onclick="pulseLike(this)">
+                                <i class="fa-regular fa-heart"></i> <span class="count">3</span>
+                            </button>
+                            <button class="micro-action-trigger" onclick="toggleReplies('reply-node-2')">
+                                <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
+                            </button>
+                        </div>
+
+                        <div class="quantum-nested-replies" id="reply-node-2"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="hologram-input-harness">
+            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq" class="current-user-avatar" alt="Sadiq">
+            <input type="text" class="hologram-text-field" id="nexusCommentInput" placeholder="Add quantum contribution...">
+            <div class="input-actions-cluster">
+                <button class="utility-node-btn"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+                <button class="quantum-beam-send" onclick="injectComment()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleReplies(id) {
+            const replyContainer = document.getElementById(id);
+            if (replyContainer) {
+                replyContainer.classList.toggle('show');
+            }
+            if (window.navigator.vibrate) window.navigator.vibrate(10);
+        }
+
+        function pulseLike(btn) {
+            btn.classList.toggle('liked');
+            const icon = btn.querySelector('i');
+            const countSpan = btn.querySelector('.count');
+            let currentCount = parseInt(countSpan.innerText);
+
+            if (btn.classList.contains('liked')) {
+                icon.className = 'fa-solid fa-heart';
+                countSpan.innerText = currentCount + 1;
+                if (window.navigator.vibrate) window.navigator.vibrate([20, 10, 20]);
+            } else {
+                icon.className = 'fa-regular fa-heart';
+                countSpan.innerText = currentCount - 1;
+            }
+        }
+
+        function injectComment() {
+            const inputField = document.getElementById('nexusCommentInput');
+            const feedContainer = document.getElementById('matrixFeed');
+            const commentText = inputField.value.trim();
+
+            if (!commentText) return;
+
+            let sentimentClass = "";
+            if(commentText.includes("murna") || commentText.includes("kyau") || commentText.includes("santsi") || commentText.includes("da kyau")) {
+                sentimentClass = "positive";
+            }
+
+            const uniqueId = 'reply-node-' + Date.now();
+
+            // Updated with Instagram style 'Author' badge
+            const commentHTML = `
+                <div class="quantum-comment-card ${sentimentClass}">
+                    <div class="comment-core-layout">
+                        <div class="quantum-avatar-frame">
+                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq" class="quantum-avatar" alt="">
+                            <div class="user-status-node" style="background: #50fa7b;"></div>
+                        </div>
+                        <div class="comment-body-cluster">
+                            <div class="meta-layer">
+                                <div class="identity-badge">
+                                    <span class="user-title-name">Sadiq Alhassan</span>
+                                    <span class="instagram-author-tag">Author</span>
+                                </div>
+                                <span class="timestamp-quantum">Just now</span>
+                            </div>
+                            <p class="comment-text-payload">${commentText}</p>
+                            <div class="interaction-capsule-bar">
+                                <button class="micro-action-trigger" onclick="pulseLike(this)">
+                                    <i class="fa-regular fa-heart"></i> <span class="count">0</span>
+                                </button>
+                                <button class="micro-action-trigger" onclick="toggleReplies('${uniqueId}')">
+                                    <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
+                                </button>
+                            </div>
+                            <div class="quantum-nested-replies" id="${uniqueId}"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            feedContainer.insertAdjacentHTML('beforeend', commentHTML);
+            inputField.value = "";
+            feedContainer.scrollTop = feedContainer.scrollHeight;
+
+            if (window.navigator.vibrate) window.navigator.vibrate(30);
+        }
+
+        document.getElementById('nexusCommentInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                injectComment();
+            }
+        });
+    </script>
+</body>
+</html>
