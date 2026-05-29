@@ -435,9 +435,7 @@ window.postCard_toggleSave = function(event, postId) {
                     <span>Save</span>
                 </div>
             </div>
-        </div>
-    </div>`;
-};
+        
             
         <!-- /HEADER -->
 
