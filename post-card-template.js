@@ -454,7 +454,20 @@ window.postCard_toggleSave = function(event, postId) {
         ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
 
         <!-- MEDIA -->
-        ${mediaWrapperHTML}
+        <div style="position:relative;" ondblclick="
+    const btn = this.closest('.post-card').querySelector('.capsule');
+    btn.classList.add('liked');
+    btn.querySelector('i').style.color = '#ff4d6d';
+    let c = parseInt(btn.querySelector('span').textContent) || 0;
+    btn.querySelector('span').textContent = c + 1;
+    const heart = document.createElement('i');
+    heart.className = 'fa-solid fa-heart';
+    heart.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:80px;color:#ff4d6d;z-index:99;pointer-events:none;transition:all 0.4s ease;opacity:1;';
+    this.appendChild(heart);
+    setTimeout(() => heart.style.transform = 'translate(-50%,-50%) scale(1)', 10);
+    setTimeout(() => { heart.style.opacity = '0'; heart.style.transform = 'translate(-50%,-50%) scale(1.3)'; }, 400);
+    setTimeout(() => heart.remove(), 800);
+">${mediaWrapperHTML}</div>
 
         <div class="interaction-bar" onclick="stopProp(event)">
     <div class="action-capsules">
