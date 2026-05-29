@@ -61,7 +61,7 @@
             align-items: center !important;
             justify-content: space-between !important;
             padding: 0 15px 0 55px !important;
-            height: 45px !important;
+            height: 46px !important;
             position: relative !important;
             background: transparent !important;
             border-bottom: 3px solid rgba(253, 224, 141, 0.1) !important;
