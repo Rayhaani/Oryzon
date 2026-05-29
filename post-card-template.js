@@ -259,13 +259,17 @@
         }
 
         .immersive-mode .post-header,
-        .immersive-mode .post-content,
-        .immersive-mode .post-interaction-bar {
-            position: relative !important;
-            z-index: 5001 !important;
-            background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
-            padding: 10px 20px !important;
-        }
+.immersive-mode .post-content,
+.immersive-mode .post-interaction-bar {
+    position: relative !important;
+    z-index: 5001 !important;
+    background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
+}
+
+.immersive-mode .post-content,
+.immersive-mode .post-interaction-bar {
+    padding: 10px 20px !important;
+}
 
         /* ===== HIDE NATIVE VIDEO CONTROLS ===== */
         video::-webkit-media-controls { display: none !important; }
