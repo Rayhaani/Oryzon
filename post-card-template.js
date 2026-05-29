@@ -405,7 +405,7 @@ window.postCard_toggleSave = function(event, postId) {
     const comments = post.commentsCount || post.comments || 0;
 
     return `
-    <div class="post-card" onclick="if(typeof toggleImmersive === 'function') toggleImmersive(this)">
+    <div class="post-card"> 
         <!-- HEADER -->
         <div class="post-header">
             <a href="me.html?user=${encodeURIComponent(post.username || '')}"
