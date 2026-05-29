@@ -1556,7 +1556,7 @@ function loadTimelinePosts() {
         .where("username", "==", currentUser.username)
         .orderBy("timestamp", "desc")
         .onSnapshot(snapshot => {
-            timelineArea.innerHTML = '';
+            
             let hasPosts = false;
             snapshot.forEach(doc => {
                 const post = doc.data();
@@ -1565,6 +1565,25 @@ function loadTimelinePosts() {
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
                 }
             });
+
+            const myUsername = localStorage.getItem('nexus_user_session');
+if(myUsername){
+    db.collection('likes').where('user','==',myUsername).get().then(snap=>{
+        snap.forEach(doc=>{
+            const postId = doc.data().postId;
+            const card = timelineArea.querySelector(`.post-card[data-post-id="${postId}"]`);
+            if(card){
+                const likeBtn = card.querySelectorAll('.capsule')[0];
+                if(likeBtn){
+                    likeBtn.classList.add('liked');
+                    likeBtn.querySelector('i').className = 'fa-solid fa-heart';
+                    likeBtn.querySelector('i').style.color = '#ff4d6d';
+                }
+            }
+        });
+    });
+}
+            
             if(!hasPosts) {
                 timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">No posts found on timeline.</p>';
             }
