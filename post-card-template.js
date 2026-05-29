@@ -74,10 +74,10 @@
             left: 0px !important;
             top: 0px !important;
             transform: none !important;
-            width: 38px !important;
-            height: 38px !important;
+            width: 42px !important;
+            height: 42px !important;
             border-radius: 50% !important;
-            border: 2px solid var(--premium-gold) !important;
+            border: 1px solid var(--premium-gold) !important;
             object-fit: cover !important;
             z-index: 10 !important;
         }
