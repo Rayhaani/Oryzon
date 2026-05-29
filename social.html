@@ -1466,8 +1466,31 @@ window.addEventListener('scroll', () => {
                   const post = { id: doc.id, ...doc.data() };
                   allPostsHTML += generatePostHTML(post);
               });
+              
               feedContainer.innerHTML = allPostsHTML;
-              const newVideos = feedContainer.querySelectorAll('video');
+
+              // Check likes daga Firestore
+              const myUsername = localStorage.getItem('nexus_user_session');
+              if(myUsername){
+              db.collection('likes').where('user','==',myUsername).get().then(snap=>{
+              snap.forEach(doc=>{
+            const postId = doc.data().postId;
+            const btn = feedContainer.querySelector(`.capsule[onclick*="${postId}"]`) ||
+                        feedContainer.querySelectorAll('.capsule')[0];
+            const card = feedContainer.querySelector(`.post-card[data-post-id="${postId}"]`);
+            if(card){
+                const likeBtn = card.querySelectorAll('.capsule')[0];
+                if(likeBtn){
+                    likeBtn.classList.add('liked');
+                    likeBtn.querySelector('i').className = 'fa-solid fa-heart';
+                    likeBtn.querySelector('i').style.color = '#ff4d6d';
+                }
+            }
+        });
+    });
+}
+
+const newVideos = feedContainer.querySelectorAll('video');
               newVideos.forEach(v => nexusObserver.observe(v));
               setTimeout(handleVideoPriority, 500);
           });
