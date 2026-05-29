@@ -461,15 +461,17 @@ window.postCard_toggleSave = function(event, postId) {
     btn.querySelector('i').style.color = '#ff4d6d';
     let c = parseInt(btn.querySelector('span').textContent) || 0;
     btn.querySelector('span').textContent = c + 1;
+    const colors = ['#f953c6','#f7971e','#ff416c','#a18cd1','#00c6ff','#ff4b2b','#ffd200','#b91d73'];
+    const col = colors[Math.floor(Math.random() * colors.length)];
     const heart = document.createElement('i');
     heart.className = 'fa-solid fa-heart';
-    heart.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:80px;color:#ff4d6d;z-index:99;pointer-events:none;opacity:1;transition:transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275),opacity 0.3s ease;';
+    heart.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:90px;color:' + col + ';filter:drop-shadow(0 0 12px ' + col + ');z-index:99;pointer-events:none;opacity:1;transition:transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275),opacity 0.3s ease;';
     this.appendChild(heart);
-    setTimeout(() => heart.style.transform = 'translate(-50%,-50%) scale(1.2)', 10);
-    setTimeout(() => heart.style.transform = 'translate(-50%,-50%) scale(0.9)', 200);
-    setTimeout(() => heart.style.transform = 'translate(-50%,-50%) scale(1)', 300);
-    setTimeout(() => { heart.style.opacity = '0'; heart.style.transform = 'translate(-50%,-50%) scale(1.1)'; }, 700);
-    setTimeout(() => heart.remove(), 1000);
+    setTimeout(function(){ heart.style.transform = 'translate(-50%,-50%) scale(1.2)'; }, 10);
+    setTimeout(function(){ heart.style.transform = 'translate(-50%,-50%) scale(0.9)'; }, 200);
+    setTimeout(function(){ heart.style.transform = 'translate(-50%,-50%) scale(1)'; }, 300);
+    setTimeout(function(){ heart.style.opacity = '0'; heart.style.transform = 'translate(-50%,-50%) scale(1.1)'; }, 700);
+    setTimeout(function(){ heart.remove(); }, 1000);
 ">${mediaWrapperHTML}</div>
 
         <div class="interaction-bar" onclick="stopProp(event)">
