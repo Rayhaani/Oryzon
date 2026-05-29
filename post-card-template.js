@@ -455,11 +455,8 @@ window.postCard_toggleSave = function(event, postId) {
 
         <!-- MEDIA -->
         <div style="position:relative;" ondblclick="
-    const btn = this.closest('.post-card').querySelector('.capsule');
-    if(btn.classList.contains('liked')) return;
-    
-   const btn = this;
-const icon = btn.querySelector('i');
+  const btn = this.closest('.post-card').querySelector('.capsule');
+const icon = btn.querySelector('i');  
 if(btn.classList.contains('liked')){
     // UNLIKE
     btn.classList.remove('liked');
