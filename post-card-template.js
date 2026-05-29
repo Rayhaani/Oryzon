@@ -458,6 +458,18 @@ window.postCard_toggleSave = function(event, postId) {
     const btn = this.closest('.post-card').querySelector('.capsule');
     if(btn.classList.contains('liked')) return;
     
+    btn.classList.add('liked');
+icon.className = 'fa-solid fa-heart';
+icon.style.color = '#ff4d6d';
+let c = parseInt(btn.querySelector('span').textContent) || 0;
+btn.querySelector('span').textContent = c + 1;
+if(typeof db !== 'undefined'){
+    const u = localStorage.getItem('nexus_user_session');
+    if(u) db.collection('likes').doc('${postId}_' + u).set({
+        postId: '${postId}', user: u,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
     
 
     const colors = ['#f953c6','#f7971e','#ff416c','#a18cd1','#00c6ff','#ff4b2b','#ffd200','#b91d73'];
