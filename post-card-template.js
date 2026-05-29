@@ -458,19 +458,36 @@ window.postCard_toggleSave = function(event, postId) {
     const btn = this.closest('.post-card').querySelector('.capsule');
     if(btn.classList.contains('liked')) return;
     
+   const btn = this;
+const icon = btn.querySelector('i');
+if(btn.classList.contains('liked')){
+    // UNLIKE
+    btn.classList.remove('liked');
+    icon.className = 'fa-regular fa-heart';
+    icon.removeAttribute('style');
+    let c = parseInt(btn.querySelector('span').textContent) || 0;
+    btn.querySelector('span').textContent = Math.max(0, c - 1);
+    if(typeof db !== 'undefined'){
+        const u = localStorage.getItem('nexus_user_session');
+        const pid = btn.closest('.post-card').dataset.postId;
+        if(u && pid) db.collection('likes').doc(pid + '_' + u).delete();
+    }
+} else {
+    // LIKE
     btn.classList.add('liked');
-icon.className = 'fa-solid fa-heart';
-icon.style.color = '#ff4d6d';
-let c = parseInt(btn.querySelector('span').textContent) || 0;
-btn.querySelector('span').textContent = c + 1;
-if(typeof db !== 'undefined'){
-    const u = localStorage.getItem('nexus_user_session');
-    if(u) db.collection('likes').doc('${postId}_' + u).set({
-        postId: '${postId}', user: u,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    icon.className = 'fa-solid fa-heart';
+    icon.style.color = '#ff4d6d';
+    let c = parseInt(btn.querySelector('span').textContent) || 0;
+    btn.querySelector('span').textContent = c + 1;
+    if(typeof db !== 'undefined'){
+        const u = localStorage.getItem('nexus_user_session');
+        const pid = btn.closest('.post-card').dataset.postId;
+        if(u && pid) db.collection('likes').doc(pid + '_' + u).set({
+            postId: pid, user: u,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
 }
-    
 
     const colors = ['#f953c6','#f7971e','#ff416c','#a18cd1','#00c6ff','#ff4b2b','#ffd200','#b91d73'];
     const col = colors[Math.floor(Math.random() * colors.length)];
