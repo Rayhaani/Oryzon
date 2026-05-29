@@ -480,7 +480,7 @@ window.postCard_toggleSave = function(event, postId) {
     const btn = this;
     if(btn.classList.contains('liked')){
         btn.classList.remove('liked');
-        btn.querySelector('i').style.color = '';
+        btn.querySelector('i').style.cssText = 'color: var(--premium-gold) !important';
         let c = parseInt(btn.querySelector('span').textContent) || 0;
         btn.querySelector('span').textContent = Math.max(0, c - 1);
     } else {
