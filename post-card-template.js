@@ -405,7 +405,11 @@ window.postCard_toggleSave = function(event, postId) {
     const comments = post.commentsCount || post.comments || 0;
 
     return `
-    <div class="post-card"> 
+    <div class="post-card" onclick="
+    const media = this.querySelector('.post-media');
+    if(media && media.tagName === 'VIDEO' && typeof toggleImmersive === 'function') toggleImmersive(this);
+">
+
         <!-- HEADER -->
         <div class="post-header">
             <a href="me.html?user=${encodeURIComponent(post.username || '')}"
