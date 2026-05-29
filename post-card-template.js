@@ -484,7 +484,8 @@ btn.querySelector('i').style.color = '#ff4d6d';
     if(btn.classList.contains('liked')){
         btn.classList.remove('liked');
         icon.className = 'fa-regular fa-heart';
-        icon.style.color = '';
+        icon.className = 'fa-regular fa-heart';
+icon.removeAttribute('style');
         let c = parseInt(btn.querySelector('span').textContent) || 0;
         btn.querySelector('span').textContent = Math.max(0, c - 1);
     } else {
