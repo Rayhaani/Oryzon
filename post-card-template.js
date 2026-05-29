@@ -355,89 +355,79 @@ window.postCard_toggleSave = function(event, postId) {
 //    Duka homepage da profile timeline suna amfani da wannan
 // ============================================================
 
-        window.generatePostHTML = function(post) {
-    const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
-    const postId = post.id || '';
+        function generatePostHTML(post) {
+          const vBadge = `<span class="nexus-badge"><i class="fa-solid fa-check"></i></span>`;
+          let mediaHTML = '';
+          const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
+          const savedProfilePic = localStorage.getItem('userProfilePic');
 
-    // --- Avatar ---
-    const savedProfilePic = localStorage.getItem('userProfilePic');
-    const rawPic = savedProfilePic || post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq";
-    const avatarUrl = rawPic.includes('cloudinary.com')
-        ? rawPic.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/')
-        : rawPic;
+          let currentPic = defaultAvatar;
+          if (post.username && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
+              currentPic = savedProfilePic;
+          } else {
+              currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
+          }
+          
+          const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
+          
+          if (post.mediaUrl) {
+              if (post.mediaType === 'video') {
+                  mediaHTML = `
+                      <div style="position:relative; width:100%;">
+                          <video src="${post.mediaUrl}" class="post-media" loop playsinline autoplay muted></video>
+                          <div class="mute-toggle" onclick="toggleVideoSound(event, this)">
+                              <i class="fa-solid fa-volume-xmark"></i>
+                          </div>
+                      </div>`;
+              } else {
+                  mediaHTML = `<img src="${post.mediaUrl}" class="post-media" loading="eager">`;
+              }
+          }
 
-    let currentPic = avatarUrl;
-    if (post.username && typeof currentUser !== 'undefined' && currentUser && post.username.toLowerCase() === currentUser.toLowerCase() && savedProfilePic) {
-        currentPic = savedProfilePic;
-    } else {
-        currentPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || "User");
-    }
-
-    const profilePicHTML = `<img src="${currentPic}" class="avatar" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fde08d; position: absolute; top:0; left:0;">`;
-
-    // --- Media ---
-    let mediaHTML = '';
-    if (post.mediaUrl) {
-        const fastUrl = post.mediaUrl.includes('cloudinary.com')
-            ? post.mediaUrl.replace('/upload/', '/upload/f_auto,q_auto,w_700/')
-            : post.mediaUrl;
-
-        if (post.mediaType === 'video') {
-            mediaHTML = `
-                <div style="position:relative; width:100%;">
-                    <video src="${fastUrl}" class="post-media" loop playsinline autoplay muted preload="metadata"></video>
-                    <div class="mute-toggle" onclick="toggleVideoSound(event, this)">
-                        <i class="fa-solid fa-volume-xmark"></i>
-                    </div>
-                </div>`;
-        } else {
-            mediaHTML = `<img src="${fastUrl}" class="post-media" loading="eager">`;
+          return `
+          <div class="post-card" onclick="toggleImmersive(this)">
+              <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
+                  <div style="display: flex; align-items: center; gap: 0; flex: 1;">
+                      <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
+                         ${profilePicHTML} 
+                      </a>
+                     <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 7px;">
+                         <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">  
+                              <span>${post.username || 'User'}</span>
+                          </a>
+                          ${vBadge}
+                      </div>
+                  </div>
+                  <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+                      <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
+                      <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
+                          <span class="gift-emoji">🎁</span>
+                          <span style="font-size: 10px;">Gift</span>
+                      </div>
+                  </div>
+              </div>
+              <div class="post-content" style="padding: 4px 10px;">${post.content}</div>
+              ${mediaHTML}
+              <div class="interaction-bar" onclick="stopProp(event)">
+                  <div class="action-capsules">
+                      <div class="capsule" onclick="triggerPulse(this, event)">
+                          <i class="fa-regular fa-heart"></i>
+                          <span>${post.likes || 0}</span>
+                      </div>
+                      <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
+                      <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
+                      <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
+                  </div>
+                  <div class="action-capsules save-capsule">
+                      <div class="capsule" onclick="toggleSave(this, '${post.id}')">
+                          <i class="fa-regular fa-bookmark"></i>
+                          <span>Save</span>
+                      </div>
+                  </div>
+              </div>
+          </div>`;
         }
-    }
-
-    return `
-    <div class="post-card" onclick="toggleImmersive(this)">
-        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
-            <div style="display: flex; align-items: center; gap: 0; flex: 1;">
-                <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
-                   ${profilePicHTML} 
-                </a>
-               <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 7px;">
-                   <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">  
-                        <span>${post.username || 'User'}</span>
-                    </a>
-                    ${vBadge}
-                </div>
-            </div>
-            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-                <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
-                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-                    <span class="gift-emoji">🎁</span>
-                    <span style="font-size: 10px;">Gift</span>
-                </div>
-            </div>
-        </div>
-        <div class="post-content" style="padding: 4px 10px;">${post.content}</div>
-        ${mediaHTML}
-        <div class="interaction-bar" onclick="stopProp(event)">
-            <div class="action-capsules">
-                <div class="capsule" onclick="triggerPulse(this, event)">
-                    <i class="fa-regular fa-heart"></i>
-                    <span>${post.likes || 0}</span>
-                </div>
-                <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
-                <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
-                <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
-            </div>
-            <div class="action-capsules save-capsule">
-                <div class="capsule" onclick="toggleSave(this, '${post.id}')">
-                    <i class="fa-regular fa-bookmark"></i>
-                    <span>Save</span>
-                </div>
-            </div>
-            </div>
-    </div>`;
-};
+    
             
         <!-- /HEADER -->
 
