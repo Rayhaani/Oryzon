@@ -26,7 +26,7 @@
         /* ===== THE POST CARD ITSELF ===== */
         .post-card {
             background: var(--bg) !important;
-            backdrop-filter: blur(10px) !important;
+            backdrop-filter: none !important;
             border: 1px solid var(--post-border) !important;
             border-radius: var(--post-radius) !important;
             margin-bottom: 15px !important;
