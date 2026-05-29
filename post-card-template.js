@@ -458,7 +458,8 @@ window.postCard_toggleSave = function(event, postId) {
     const btn = this.closest('.post-card').querySelector('.capsule');
     if(btn.classList.contains('liked')) return;
     btn.classList.add('liked');
-    btn.querySelector('i').style.color = '#ff4d6d';
+btn.querySelector('i').className = 'fa-solid fa-heart';
+btn.querySelector('i').style.color = '#ff4d6d';
     let c = parseInt(btn.querySelector('span').textContent) || 0;
     btn.querySelector('span').textContent = c + 1;
     const colors = ['#f953c6','#f7971e','#ff416c','#a18cd1','#00c6ff','#ff4b2b','#ffd200','#b91d73'];
