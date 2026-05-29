@@ -61,7 +61,7 @@
             align-items: center !important;
             justify-content: space-between !important;
             padding: 0 15px 0 55px !important;
-            height: 48px !important;
+            height: 46px !important;
             position: relative !important;
             background: linear-gradient(180deg, rgba(253, 224, 141, 0.08) 0%, transparent 100%) !important;
             border-bottom: 3px solid rgba(253, 224, 141, 0.1) !important;
