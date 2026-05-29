@@ -463,16 +463,7 @@ window.postCard_toggleSave = function(event, postId) {
     btn.querySelector('span').textContent = c + 1;
     const heart = document.createElement('i');
     heart.className = 'fa-solid fa-heart';
-    const colors = [
-    'linear-gradient(135deg,#f953c6,#b91d73)',
-    'linear-gradient(135deg,#f7971e,#ffd200)',
-    'linear-gradient(135deg,#ff416c,#ff4b2b)',
-    'linear-gradient(135deg,#a18cd1,#fbc2eb)',
-    'linear-gradient(135deg,#00c6ff,#0072ff)',
-    'linear-gradient(135deg,#f953c6,#ff4b2b)',
-];
-const grad = colors[Math.floor(Math.random() * colors.length)];
-heart.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:90px;background:${grad};-webkit-background-clip:text;-webkit-text-fill-color:transparent;z-index:99;pointer-events:none;opacity:1;transition:transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275),opacity 0.3s ease;`;
+    heart.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:80px;color:#ff4d6d;z-index:99;pointer-events:none;opacity:1;transition:transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275),opacity 0.3s ease;';
     this.appendChild(heart);
     setTimeout(() => heart.style.transform = 'translate(-50%,-50%) scale(1.2)', 10);
     setTimeout(() => heart.style.transform = 'translate(-50%,-50%) scale(0.9)', 200);
