@@ -406,26 +406,34 @@ window.generatePostHTML = function(post) {
     return `
     <div class="post-card" onclick="if(typeof toggleImmersive === 'function') toggleImmersive(this)">
         <!-- HEADER -->
-        <div class="post-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 15px 0 0; height: 50px; position: relative;">
-    <div style="display: flex; align-items: center; gap: 0; flex: 1;">
-        <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" class="avatar-container" style="position: relative; width: 42px; height: 50px; flex-shrink: 0; display: block; cursor: pointer;">
-           ${profilePicHTML} 
-        </a>
-       <div class="username" style="font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-left: 7px;">
-           <a href="me.html?user=${post.username}" onclick="event.stopPropagation()" style="color: inherit; text-decoration: none; display: flex; align-items: center;">  
-                <span>${post.username || 'User'}</span>
+        <div class="post-header">
+            <a href="me.html?user=${encodeURIComponent(post.username || '')}"
+               style="position:absolute; left:0; top:0; width:54px; height:54px; display:block; z-index:20; text-decoration:none;">
+                <img src="${avatarUrl}"
+                     class="post-avatar"
+                     loading="lazy"
+                     alt="${post.username}">
             </a>
-            ${vBadge}
+
+            <div class="post-username-row">
+                <div>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span class="post-username">${post.username || 'unknown'}</span>
+                        <span class="post-verified-badge">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                    </div>
+                    ${timeStr ? `<span class="post-time">${timeStr}</span>` : ''}
+                </div>
+            </div>
+
+
+<!-- Three-dot menu (optional) -->
+            <div onclick="event.stopPropagation()"
+                 style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
+                ···
+            </div>
         </div>
-    </div>
-    <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-        <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
-        <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-            <span class="gift-emoji">🎁</span>
-            <span style="font-size: 10px;">Gift</span>
-        </div>
-    </div>
-</div>
 
             
         <!-- /HEADER -->
