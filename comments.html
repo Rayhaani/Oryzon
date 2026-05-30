@@ -969,41 +969,46 @@ function injectOverlayReply() {
     
 
         function checkReplyCountAndTrigger(containerId) {
-            const container = document.getElementById(containerId);
-            const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
-            if(!container || !viewMoreBtn) return;
+    const container = document.getElementById(containerId);
+    const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
+    if(!container || !viewMoreBtn) return;
 
-            const cardsCount = container.querySelectorAll('.quantum-comment-card').length;
-            if(cardsCount >= 5) {
-                viewMoreBtn.style.display = 'block';
-            } else {
-                viewMoreBtn.style.display = 'none';
-            }
+    const cardsCount = container.querySelectorAll('.quantum-comment-card').length;
+    
+    // DOKARKA: Sai idan replies sun cika 5 sannan "View more" zai bayyana
+    if(cardsCount >= 5) {
+        viewMoreBtn.style.setProperty('display', 'block', 'important');
+    } else {
+        viewMoreBtn.style.setProperty('display', 'none', 'important');
+    }
         }
+    
 
         
-    function handleDynamicVisibility(container) {
+   function handleDynamicVisibility(container) {
     if (!container) return;
 
-    // 1. Nemi duk wani abu da ke cikin container ɗin
     const cards = container.querySelectorAll('.quantum-comment-card');
     
-    // 2. Fara lissafin kowane katin
+    // Sanya wa reply container din iyakar tsayi (Max Height) da scroll
+    // Domin na 4 da na 5 su shiga ciki amma sai anyi scroll a gansu
+    container.style.maxHeight = "180px"; // Kuna iya daidaita px din ya zauna daidai da katunanku guda 3
+    container.style.overflowY = "auto";
+    container.style.display = "block";
+
     cards.forEach((card, index) => {
-        // Idan index 0, 1, ko 2 ne (wato na 1, 2, 3), ka nuna su
-        if (index < 3) {
+        if (index < 5) {
+            // Katunan 1 zuwa 5 duka suna nan a raye a shafin farko
             card.style.setProperty('display', 'block', 'important');
             card.style.opacity = '1';
             card.style.visibility = 'visible';
-        } 
-        // Idan ya wuce 3, ka boye su gaba daya (display: none)
-        else {
+        } else {
+            // Duk abin da ya wuce guda 5 gaba ɗaya a cire shi kada ya fito ko a scroll
             card.style.setProperty('display', 'none', 'important');
-            card.style.opacity = '0';
-            card.style.visibility = 'hidden';
         }
     });
-    }
+   }
+    
     
 
             
