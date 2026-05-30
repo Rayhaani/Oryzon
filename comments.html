@@ -475,20 +475,17 @@
         }
 
 
-
-        /* ====== QUANTUM CONSISTENT OVERLAY VIEW FOR REPLIES ====== */
+/* ====== QUANTUM CONSISTENT OVERLAY VIEW FOR REPLIES ====== */
 .fullscreen-replies-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(10, 12, 22, 0.98);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    background: #000000; /* An mayar da shi baki sosai */
     z-index: 200;
-    padding: 20px;
-    display: none; /* Za mu kunna shi ta JS */
+    padding: 15px;
+    display: none;
     flex-direction: column;
     animation: slideUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
@@ -497,12 +494,12 @@
     display: flex;
 }
 
+/* Siririyar futuristik header a sama */
 .overlay-header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
     align-items: center;
-    gap: 15px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 10px;
     margin-bottom: 15px;
     flex-shrink: 0;
 }
@@ -511,13 +508,18 @@
     background: transparent;
     border: none;
     color: var(--hologram-cyan);
-    font-size: 16px;
+    font-size: 18px;
     cursor: pointer;
-    transition: color 0.2s;
+    justify-self: start;
 }
 
-.back-node-btn:hover {
-    color: var(--hologram-gold);
+.node-title {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .overlay-feed-body {
@@ -531,20 +533,30 @@
     display: none;
 }
 
-/* Katin reply na musamman a cikin overlay */
-.overlay-feed-body .quantum-comment-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    margin-bottom: 10px;
-    opacity: 1 !important;
-    visibility: visible !important;
+/* Tsarin sarari da katin reply a cikin overlay */
+.overlay-replies-holder {
+    position: relative;
+    padding-left: 20px;
+    /* Wannan layin zai fito daidai daga kasan avatar na parent comment */
+    border-left: 2px solid rgba(255, 255, 255, 0.05); 
+    margin-left: 18px;
+    margin-top: -10px;
 }
 
-/* GYARA: Mun cire interaction-capsule-bar anan domin Like button ya fito */
+.overlay-feed-body .quantum-comment-card {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    margin-bottom: 12px; /* Daidai sararin dake tsakanin cards */
+}
+
+/* Tabbatar cewa tsofaffin abubuwan basu fito ba a cikin overlay */
 .overlay-feed-body .quantum-nested-replies,
 .overlay-feed-body .view-more-trigger-btn {
     display: none !important;
-}
+                                }
+        
+        
         
     </style>
 </head>
@@ -686,26 +698,26 @@
             if (window.navigator.vibrate) window.navigator.vibrate(15);
         }
 
-        function launchFullScreenReplies(containerId) {
+        
+    function launchFullScreenReplies(containerId) {
     currentOpenContainerId = containerId;
     const sourceContainer = document.getElementById(containerId);
     const parentCard = sourceContainer.closest('.quantum-comment-card');
     const overlay = document.getElementById('fullscreenRepliesPanel');
     const overlayBody = document.getElementById('overlayFeedBody');
     
-    // 1. DAUKO BAYANAN PARENT COMMENT (Avatar, Suna, Text, Sentiment Class)
+    // 1. DAUKO BAYANAN PARENT COMMENT
     const parentAvatar = parentCard.querySelector('.quantum-avatar').src;
     const parentName = parentCard.querySelector('.user-title-name').innerText;
     const parentText = parentCard.querySelector('.comment-text-payload').innerText;
     const parentTime = parentCard.querySelector('.timestamp-quantum').innerText;
     
-    // Duba ko parent comment din yana da koren border (positive sentiment)
     const isPositive = parentCard.classList.contains('positive') ? 'positive' : '';
     const isAlert = parentCard.classList.contains('alert') ? 'alert' : '';
 
-    // 2. GINA KATIN PARENT COMMENT DOMIN SHI NE ZAI FARA RETURNING A SAMA CHAK
+    // 2. GINA PARENT COMMENT A SAMA (Babu katuwar sarari ko layin raba rubutu)
     let overlayHTML = `
-        <div class="quantum-comment-card ${isPositive} ${isAlert}" style="margin-bottom: 20px; border-bottom: 1px solid rgba(253, 224, 141, 0.1);">
+        <div class="quantum-comment-card ${isPositive} ${isAlert}">
             <div class="comment-core-layout">
                 <div class="quantum-avatar-frame">
                     <img src="${parentAvatar}" class="quantum-avatar">
@@ -724,11 +736,10 @@
             </div>
         </div>
         
-        <div style="font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 12px; padding-left: 5px; font-family: 'Montserrat', sans-serif;">Replies</div>
         <div class="overlay-replies-holder">
     `;
 
-    // 3. DAUKO DUKKAN REPLIES DIN DA KE CIKI NA ASALI (Har wadanda suke boye)
+    // 3. DAUKO DUKKAN REPLIES TARE DA ADDA LIKE DA REPLY BUTTONS
     const replies = sourceContainer.querySelectorAll('.quantum-comment-card');
     
     replies.forEach(reply => {
@@ -737,9 +748,8 @@
         const replyText = reply.querySelector('.comment-text-payload').innerText;
         const replyTime = reply.querySelector('.timestamp-quantum').innerText;
         
-        // Tsara katin kowane reply tare da Like Icon kacal a kansa
         overlayHTML += `
-            <div class="quantum-comment-card" style="opacity: 1 !important; visibility: visible !important; display: block !important; margin-bottom: 10px;">
+            <div class="quantum-comment-card">
                 <div class="comment-core-layout">
                     <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
                         <img src="${replyAvatar}" class="quantum-avatar">
@@ -754,9 +764,12 @@
                         <div class="comment-text-wrap" style="padding-bottom: 0;">
                             <p class="comment-text-payload" style="font-size: 11.5px;">${replyText}</p>
                         </div>
-                        <div class="interaction-capsule-bar" style="margin-top: 6px;">
+                        <div class="interaction-capsule-bar" style="margin-top: 5px;">
                             <button class="micro-action-trigger" onclick="pulseLike(this)">
                                 <i class="fa-regular fa-heart"></i> <span class="count">0</span>
+                            </button>
+                            <button class="micro-action-trigger" onclick="triggerReplyAction('${replyName}', '${containerId}')">
+                                <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
                             </button>
                         </div>
                     </div>
@@ -765,14 +778,15 @@
         `;
     });
 
-    overlayHTML += `</div>`; // Rufe div na overlay-replies-holder
+    overlayHTML += `</div>`; // Rufe overlay-replies-holder
 
-    // 4. JONE TSARIN HAKAN CIKIN OVERLAY BODY SANNAN A BUDE SHI
+    // 4. JONE CIKIN OVERLAY BODY SANNAN A JURAR DA SHI
     overlayBody.innerHTML = overlayHTML;
     overlay.classList.add('active');
     
     if (window.navigator.vibrate) window.navigator.vibrate(25);
-        }
+    }
+        
         
 
         
