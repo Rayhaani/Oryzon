@@ -703,7 +703,8 @@
         
     
         
-        function launchFullScreenReplies(containerId) {
+        
+    function launchFullScreenReplies(containerId) {
     currentOpenContainerId = containerId;
     const sourceContainer = document.getElementById(containerId);
     const parentCard = sourceContainer.closest('.quantum-comment-card');
@@ -719,7 +720,7 @@
     const isPositive = parentCard.classList.contains('positive') ? 'positive' : '';
     const isAlert = parentCard.classList.contains('alert') ? 'alert' : '';
 
-    // Gina Parent Comment (Timestamp dinsa yana nan a sama kamar yadda yake)
+    // GINA PARENT COMMENT (Tare da sanya masa tazarar icons dinsa)
     let overlayHTML = `
         <div class="quantum-comment-card ${isPositive} ${isAlert}">
             <div class="comment-core-layout">
@@ -751,40 +752,58 @@
         <div class="overlay-replies-holder">
     `;
 
-    // 2. DAUKO DUKKAN REPLIES MASU TSARIN PREVIOUS PAGE (Flat & Consistent)
+    // 2. DAUKO REPLIES KUMA A SAKA MUSU BUTTONS DA TIMESTAMP A KASA EXACTLY
     const replies = sourceContainer.querySelectorAll('.quantum-comment-card');
     
     replies.forEach(reply => {
-        // Muna kwaso ainihin innerHTML na katin reply dinka domin kiyaye daidaiton timestamp 100%
-        let replyContent = reply.innerHTML;
+        const replyAvatar = reply.querySelector('.quantum-avatar').src;
+        const replyName = reply.querySelector('.user-title-name').innerText;
+        const replyText = reply.querySelector('.comment-text-payload').innerText;
+        
+        // Muna dauko ainihin timestamp na katin reply dinka daga babban shafin
+        const replyTime = reply.querySelector('.timestamp-quantum') ? reply.querySelector('.timestamp-quantum').innerText : '1m';
         
         overlayHTML += `
             <div class="quantum-comment-card">
-                ${replyContent}
+                <div class="comment-core-layout">
+                    <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
+                        <img src="${replyAvatar}" class="quantum-avatar">
+                    </div>
+                    <div class="comment-body-cluster">
+                        <div class="meta-layer">
+                            <div class="identity-badge">
+                                <span class="user-title-name" style="font-size: 11px;">${replyName}</span>
+                            </div>
+                        </div>
+                        <div class="comment-text-wrap">
+                            <p class="comment-text-payload" style="font-size: 11.5px;">${replyText}</p>
+                            <!-- TIMESTAMP DIN REPLIES ANA DAUKO SHI DAGAN CAN KUMA YANA ZAWNAWA A KASA CHAK -->
+                            <span class="timestamp-quantum" style="margin-top: 4px; display: block;">${replyTime}</span>
+                        </div>
+                        <!-- AN SAKA MUSU ICONS NA LIKE DA REPLY KUMA SUNA AIKI 100% -->
+                        <div class="interaction-capsule-bar" style="margin-top: 5px;">
+                            <button class="micro-action-trigger" onclick="pulseLike(this)">
+                                <i class="fa-regular fa-heart"></i> <span class="count">0</span>
+                            </button>
+                            <button class="micro-action-trigger" onclick="triggerReplyAction('${replyName}', '${containerId}')">
+                                <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     });
 
     overlayHTML += `</div>`;
 
-    // 3. TURA AKWATIN CIKIN PANEL SANNAN A GYARA INTERACTION ACTIONS
+    // 3. SHIGAR DA SHI CIKIN OVERLAY PANEL
     overlayBody.innerHTML = overlayHTML;
-    
-    // Gyara dukkan Reply buttons na cikin overlay din su dinga aiki daidai zuwa babban input field
-    const overlayReplyButtons = overlayBody.querySelectorAll('.overlay-replies-holder .micro-action-trigger');
-    overlayReplyButtons.forEach(btn => {
-        if (btn.innerText.includes('Reply') || btn.querySelector('.fa-comment-dots')) {
-            const card = btn.closest('.quantum-comment-card');
-            const rName = card.querySelector('.user-title-name').innerText;
-            
-            // Sanya masa ainihin trigger action dinka na asali
-            btn.setAttribute('onclick', `triggerReplyAction('${rName}', '${containerId}')`);
-        }
-    });
-
     overlay.classList.add('active');
+    
     if (window.navigator.vibrate) window.navigator.vibrate(25);
         }
+            
         
             
     
