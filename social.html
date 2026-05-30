@@ -1478,6 +1478,19 @@ window.addEventListener('scroll', () => {
               
               feedContainer.innerHTML = allPostsHTML;
 
+        // Ƙidaya comments na kowane post
+snapshot.forEach((doc) => {
+    const postId = doc.id;
+    db.collection("nexus_contributions")
+        .where("postId", "==", postId)
+        .where("parentId", "==", null)
+        .onSnapshot(commentSnap => {
+            const el = document.getElementById(`comment-count-${postId}`);
+            if (el) el.textContent = commentSnap.size;
+        });
+});
+              
+
 // Check likes daga Firestore
 const myUsername = localStorage.getItem('nexus_user_session');
 if(myUsername){
