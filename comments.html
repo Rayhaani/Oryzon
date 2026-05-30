@@ -473,6 +473,21 @@
             from { transform: translateY(100%); }
             to { transform: translateY(0); }
         }
+
+
+        /* Lokacin da babban katin ya girma ya cire har kasan page */
+.quantum-comment-card.expanded-active {
+    height: calc(100% - 40px) !important; /* Zai shimfidu har kasa ya bar ma input fili */
+    margin-bottom: 0 !important;
+    overflow-y: auto !important; /* Domin barin damar yin scrolling */
+}
+
+/* Tabbatar cewa idan katin ya girma, replies dinsa sun saki jiki sun tafi da yawa */
+.quantum-comment-card.expanded-active .quantum-nested-replies {
+    max-height: none !important; /* Mun cire iyakacin 240px din */
+    display: block !important;
+}
+        
     </style>
 </head>
 <body>
@@ -495,11 +510,11 @@
                         <div class="meta-layer">
                             <div class="identity-badge">
                                 <span class="user-title-name">Kabir Kano</span>
+                                <span class="timestamp-quantum" style="position: static; font-size: 10px; margin-left: 8px;">2m</span>
                             </div>
                         </div>
                         <div class="comment-text-wrap">
                             <p class="comment-text-payload">Wannan tsarin ya dace da canjin zaman katin da muke bukata a Arewacin Najeriya. Tsarin UI din nan yana da matukar santsi!</p>
-                            <span class="timestamp-quantum">2m</span>
                         </div>
                         
                         <div class="interaction-capsule-bar">
@@ -529,11 +544,11 @@
                         <div class="meta-layer">
                             <div class="identity-badge">
                                 <span class="user-title-name">Sadiya Barka</span>
+                                <span class="timestamp-quantum" style="position: static; font-size: 10px; margin-left: 8px;">12m</span>
                             </div>
                         </div>
                         <div class="comment-text-wrap">
                             <p class="comment-text-payload">Ina son yadda kuka hada tsarin samun kudaden Oryzon Rewards a cikin menu na gefe.</p>
-                            <span class="timestamp-quantum">12m</span>
                         </div>
                         
                         <div class="interaction-capsule-bar">
@@ -550,6 +565,9 @@
                     </div>
                 </div>
             </div>
+
+        </div>
+        
 
         </div>
 
@@ -610,43 +628,35 @@
             if (window.navigator.vibrate) window.navigator.vibrate(15);
         }
 
-        // UNCHALLENGIBLE FULLSCREEN ENGINE
+        
         function launchFullScreenReplies(containerId) {
-            currentOpenContainerId = containerId;
-            const sourceContainer = document.getElementById(containerId);
-            const overlay = document.getElementById('fullscreenRepliesPanel');
-            const overlayBody = document.getElementById('overlayFeedBody');
-            
-            // Dauko dukkan replies din ba tare da taba komai na kyan katin ba
-            overlayBody.innerHTML = sourceContainer.innerHTML;
-            
-            // Cire dukkan dynamic opacity styles na list 3 don su fito fes
-            const subCards = overlayBody.querySelectorAll('.quantum-comment-card');
-            subCards.forEach(card => {
-                card.style.opacity = '1';
-                card.style.visibility = 'visible';
-            });
-
-            overlay.classList.add('active');
+    // 1. Nemo wannan ainihin reply container din da kuma babban katin da yake cikinsa
+    const replyContainer = document.getElementById(containerId);
+    const parentCard = replyContainer.closest('.quantum-comment-card');
+    const allCards = document.querySelectorAll('#matrixFeed > .quantum-comment-card');
+    
+    // 2. Sanya sauran gaba dayan comments din suyi disappearing (display: none)
+    allCards.forEach(card => {
+        if (card !== parentCard) {
+            card.style.display = 'none';
         }
+    });
 
-        function closeFullScreenReplies() {
-            document.getElementById('fullscreenRepliesPanel').classList.remove('active');
-            currentOpenContainerId = null;
+    // 3. Tsarin container na parent comment ne kawai zai karu ya cire har kasan page
+    parentCard.classList.add('expanded-active');
+
+    // 4. Cire dukkan opacity filters na replies guda 3 don duka su fito visible su cika screen
+    const subCards = replyContainer.querySelectorAll('.quantum-comment-card');
+    subCards.forEach(card => {
+        card.style.opacity = '1';
+        card.style.visibility = 'visible';
+    });
+
+    // 5. Boye madannin "View more replies" tunda an riga an fito da su duka
+    const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
+    if (viewMoreBtn) viewMoreBtn.style.display = 'none';
         }
-
-        function checkReplyCountAndTrigger(containerId) {
-            const container = document.getElementById(containerId);
-            const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
-            if(!container || !viewMoreBtn) return;
-
-            const cardsCount = container.querySelectorAll('.quantum-comment-card').length;
-            if(cardsCount >= 5) {
-                viewMoreBtn.style.display = 'block';
-            } else {
-                viewMoreBtn.style.display = 'none';
-            }
-        }
+        
 
         function handleDynamicVisibility(container) {
             const cards = container.querySelectorAll('.quantum-comment-card');
