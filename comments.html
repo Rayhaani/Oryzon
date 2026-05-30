@@ -473,6 +473,79 @@
             from { transform: translateY(100%); }
             to { transform: translateY(0); }
         }
+
+
+
+        /* ====== QUANTUM CONSISTENT OVERLAY VIEW FOR REPLIES ====== */
+.fullscreen-replies-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 12, 22, 0.98);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    z-index: 200;
+    padding: 20px;
+    display: none; /* Za mu kunna shi ta JS */
+    flex-direction: column;
+    animation: slideUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.fullscreen-replies-overlay.active {
+    display: flex;
+}
+
+.overlay-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+.back-node-btn {
+    background: transparent;
+    border: none;
+    color: var(--hologram-cyan);
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.back-node-btn:hover {
+    color: var(--hologram-gold);
+}
+
+.overlay-feed-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding-bottom: 20px;
+}
+
+.overlay-feed-body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Katin reply na musamman a cikin overlay */
+.overlay-feed-body .quantum-comment-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    margin-bottom: 10px;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* GYARA: Mun cire interaction-capsule-bar anan domin Like button ya fito */
+.overlay-feed-body .quantum-nested-replies,
+.overlay-feed-body .view-more-trigger-btn {
+    display: none !important;
+}
+        
     </style>
 </head>
 <body>
@@ -483,7 +556,6 @@
         </div>
 
         
-
             <div class="comments-matrix-feed" id="matrixFeed">
             
             <div class="quantum-comment-card positive" id="comment-card-1">
@@ -614,31 +686,96 @@
             if (window.navigator.vibrate) window.navigator.vibrate(15);
         }
 
-        // UNCHALLENGIBLE FULLSCREEN ENGINE
         function launchFullScreenReplies(containerId) {
-            currentOpenContainerId = containerId;
-            const sourceContainer = document.getElementById(containerId);
-            const overlay = document.getElementById('fullscreenRepliesPanel');
-            const overlayBody = document.getElementById('overlayFeedBody');
-            
-            // Dauko dukkan replies din ba tare da taba komai na kyan katin ba
-            overlayBody.innerHTML = sourceContainer.innerHTML;
-            
-            // Cire dukkan dynamic opacity styles na list 3 don su fito fes
-            const subCards = overlayBody.querySelectorAll('.quantum-comment-card');
-            subCards.forEach(card => {
-                card.style.opacity = '1';
-                card.style.visibility = 'visible';
-            });
+    currentOpenContainerId = containerId;
+    const sourceContainer = document.getElementById(containerId);
+    const parentCard = sourceContainer.closest('.quantum-comment-card');
+    const overlay = document.getElementById('fullscreenRepliesPanel');
+    const overlayBody = document.getElementById('overlayFeedBody');
+    
+    // 1. DAUKO BAYANAN PARENT COMMENT (Avatar, Suna, Text, Sentiment Class)
+    const parentAvatar = parentCard.querySelector('.quantum-avatar').src;
+    const parentName = parentCard.querySelector('.user-title-name').innerText;
+    const parentText = parentCard.querySelector('.comment-text-payload').innerText;
+    const parentTime = parentCard.querySelector('.timestamp-quantum').innerText;
+    
+    // Duba ko parent comment din yana da koren border (positive sentiment)
+    const isPositive = parentCard.classList.contains('positive') ? 'positive' : '';
+    const isAlert = parentCard.classList.contains('alert') ? 'alert' : '';
 
-            overlay.classList.add('active');
+    // 2. GINA KATIN PARENT COMMENT DOMIN SHI NE ZAI FARA RETURNING A SAMA CHAK
+    let overlayHTML = `
+        <div class="quantum-comment-card ${isPositive} ${isAlert}" style="margin-bottom: 20px; border-bottom: 1px solid rgba(253, 224, 141, 0.1);">
+            <div class="comment-core-layout">
+                <div class="quantum-avatar-frame">
+                    <img src="${parentAvatar}" class="quantum-avatar">
+                </div>
+                <div class="comment-body-cluster">
+                    <div class="meta-layer">
+                        <div class="identity-badge">
+                            <span class="user-title-name">${parentName}</span>
+                        </div>
+                        <span class="timestamp-quantum" style="position: static; font-size: 10px;">${parentTime}</span>
+                    </div>
+                    <div class="comment-text-wrap" style="padding-bottom: 0;">
+                        <p class="comment-text-payload">${parentText}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 12px; padding-left: 5px; font-family: 'Montserrat', sans-serif;">Replies</div>
+        <div class="overlay-replies-holder">
+    `;
+
+    // 3. DAUKO DUKKAN REPLIES DIN DA KE CIKI NA ASALI (Har wadanda suke boye)
+    const replies = sourceContainer.querySelectorAll('.quantum-comment-card');
+    
+    replies.forEach(reply => {
+        const replyAvatar = reply.querySelector('.quantum-avatar').src;
+        const replyName = reply.querySelector('.user-title-name').innerText;
+        const replyText = reply.querySelector('.comment-text-payload').innerText;
+        const replyTime = reply.querySelector('.timestamp-quantum').innerText;
+        
+        // Tsara katin kowane reply tare da Like Icon kacal a kansa
+        overlayHTML += `
+            <div class="quantum-comment-card" style="opacity: 1 !important; visibility: visible !important; display: block !important; margin-bottom: 10px;">
+                <div class="comment-core-layout">
+                    <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
+                        <img src="${replyAvatar}" class="quantum-avatar">
+                    </div>
+                    <div class="comment-body-cluster">
+                        <div class="meta-layer">
+                            <div class="identity-badge">
+                                <span class="user-title-name" style="font-size: 11px;">${replyName}</span>
+                            </div>
+                            <span class="timestamp-quantum" style="position: static; font-size: 9px;">${replyTime}</span>
+                        </div>
+                        <div class="comment-text-wrap" style="padding-bottom: 0;">
+                            <p class="comment-text-payload" style="font-size: 11.5px;">${replyText}</p>
+                        </div>
+                        <div class="interaction-capsule-bar" style="margin-top: 6px;">
+                            <button class="micro-action-trigger" onclick="pulseLike(this)">
+                                <i class="fa-regular fa-heart"></i> <span class="count">0</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    overlayHTML += `</div>`; // Rufe div na overlay-replies-holder
+
+    // 4. JONE TSARIN HAKAN CIKIN OVERLAY BODY SANNAN A BUDE SHI
+    overlayBody.innerHTML = overlayHTML;
+    overlay.classList.add('active');
+    
+    if (window.navigator.vibrate) window.navigator.vibrate(25);
         }
+        
 
-        function closeFullScreenReplies() {
-            document.getElementById('fullscreenRepliesPanel').classList.remove('active');
-            currentOpenContainerId = null;
-        }
-
+        
         function checkReplyCountAndTrigger(containerId) {
             const container = document.getElementById(containerId);
             const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
