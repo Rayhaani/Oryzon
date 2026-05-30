@@ -533,28 +533,26 @@
     display: none;
 }
 
-/* Tsarin sarari da katin reply a cikin overlay */
+
+/* Tsarin sarari na katin reply ba tare da layin hagu ba */
 .overlay-replies-holder {
     position: relative;
-    padding-left: 20px;
-    /* Wannan layin zai fito daidai daga kasan avatar na parent comment */
-    border-left: 2px solid rgba(255, 255, 255, 0.05); 
-    margin-left: 18px;
-    margin-top: -10px;
+    padding-left: 0; /* An cire padding din hagu */
+    margin-top: 10px;
 }
 
 .overlay-feed-body .quantum-comment-card {
     opacity: 1 !important;
     visibility: visible !important;
     display: block !important;
-    margin-bottom: 12px; /* Daidai sararin dake tsakanin cards */
+    margin-bottom: 12px;
 }
 
 /* Tabbatar cewa tsofaffin abubuwan basu fito ba a cikin overlay */
 .overlay-feed-body .quantum-nested-replies,
 .overlay-feed-body .view-more-trigger-btn {
     display: none !important;
-                                }
+}
         
         
         
@@ -715,7 +713,7 @@
     const isPositive = parentCard.classList.contains('positive') ? 'positive' : '';
     const isAlert = parentCard.classList.contains('alert') ? 'alert' : '';
 
-    // 2. GINA PARENT COMMENT A SAMA (Babu katuwar sarari ko layin raba rubutu)
+    // 2. GINA PARENT COMMENT TARE DA LIKE DA REPLY ICONS DUMUTUM ZAI IYA AMFANI DA SU
     let overlayHTML = `
         <div class="quantum-comment-card ${isPositive} ${isAlert}">
             <div class="comment-core-layout">
@@ -732,14 +730,24 @@
                     <div class="comment-text-wrap" style="padding-bottom: 0;">
                         <p class="comment-text-payload">${parentText}</p>
                     </div>
+                    <!-- AN SAKAR WA PARENT COMMENT INTERACTION BAR A NAN -->
+                    <div class="interaction-capsule-bar" style="margin-top: 5px;">
+                        <button class="micro-action-trigger" onclick="pulseLike(this)">
+                            <i class="fa-regular fa-heart"></i> <span class="count">0</span>
+                        </button>
+                        <button class="micro-action-trigger" onclick="triggerReplyAction('${parentName}', '${containerId}')">
+                            <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
         
+        <!-- Akwatin jerawa na musamman (Babu layin hagu kwatakwata) -->
         <div class="overlay-replies-holder">
     `;
 
-    // 3. DAUKO DUKKAN REPLIES TARE DA ADDA LIKE DA REPLY BUTTONS
+    // 3. DAUKO DUKKAN REPLIES KUMA A GYARA REPLY TRIGGER DINSU
     const replies = sourceContainer.querySelectorAll('.quantum-comment-card');
     
     replies.forEach(reply => {
@@ -764,6 +772,7 @@
                         <div class="comment-text-wrap" style="padding-bottom: 0;">
                             <p class="comment-text-payload" style="font-size: 11.5px;">${replyText}</p>
                         </div>
+                        <!-- BUTTONS DINSU SU MA SUNA AIKI ZASU JEDDA SUNAN MAI REPLY KAMAR INSTA/FB -->
                         <div class="interaction-capsule-bar" style="margin-top: 5px;">
                             <button class="micro-action-trigger" onclick="pulseLike(this)">
                                 <i class="fa-regular fa-heart"></i> <span class="count">0</span>
@@ -778,18 +787,17 @@
         `;
     });
 
-    overlayHTML += `</div>`; // Rufe overlay-replies-holder
+    overlayHTML += `</div>`;
 
-    // 4. JONE CIKIN OVERLAY BODY SANNAN A JURAR DA SHI
+    // 4. JONE CIKIN OVERLAY PANEL
     overlayBody.innerHTML = overlayHTML;
     overlay.classList.add('active');
     
     if (window.navigator.vibrate) window.navigator.vibrate(25);
     }
-        
-        
+            
+    
 
-        
         function checkReplyCountAndTrigger(containerId) {
             const container = document.getElementById(containerId);
             const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
