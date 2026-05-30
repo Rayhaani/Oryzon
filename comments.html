@@ -968,28 +968,42 @@ function injectOverlayReply() {
         
     
 
-        function checkReplyCountAndTrigger(containerId) {
-            const container = document.getElementById(containerId);
-            const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
-            if(!container || !viewMoreBtn) return;
+       function checkReplyCountAndTrigger(containerId) {
+    const container = document.getElementById(containerId);
+    const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
+    if(!container || !viewMoreBtn) return;
 
-            const cardsCount = container.querySelectorAll('.quantum-comment-card').length;
-            if(cardsCount >= 5) {
-                viewMoreBtn.style.display = 'block';
-            } else {
-                viewMoreBtn.style.display = 'none';
-            }
-        }
+    const cardsCount = container.querySelectorAll('.quantum-comment-card').length;
+    
+    // Idan adadin replies ya wuce 3 (wato akwai boyayyen reply), nuna View More
+    if(cardsCount > 3) {
+        viewMoreBtn.style.display = 'block';
+    } else {
+        viewMoreBtn.style.display = 'none';
+    }
+       }
 
+    
         function handleDynamicVisibility(container) {
-            const cards = container.querySelectorAll('.quantum-comment-card');
-            if (cards.length <= 3) {
-                cards.forEach(card => {
-                    card.style.opacity = '1';
-                    card.style.visibility = 'visible';
-                });
-                return;
-            }
+    if (!container) return;
+    
+    // Ɗauko duka katunan replies dake cikin wannan container ɗin a shafin farko
+    const cards = container.querySelectorAll('.quantum-comment-card');
+    
+    cards.forEach((card, index) => {
+        if (index < 3) {
+            // Guda 3 na farko kacal za su zauna a buɗe radau (Visible)
+            card.style.display = 'block';
+            card.style.opacity = '1';
+            card.style.visibility = 'visible';
+        } else {
+            // Daga na 4, na 5, da duk wani abu da ya wuce 5 gaba ɗaya a ɓoye su (display: none)
+            // Wannan shi ne zai goge ƙatoton space ɗin kuma ya iyakance adadin na farko
+            card.style.display = 'none';
+        }
+    });
+        }
+    
 
             const containerTop = container.scrollTop;
             const containerBottom = containerTop + container.clientHeight;
