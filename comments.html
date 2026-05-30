@@ -982,20 +982,28 @@ function injectOverlayReply() {
         }
 
         function handleDynamicVisibility(container) {
-    const cards = container.querySelectorAll('.quantum-comment-card');
+    if (!container) return;
+
+    // MAGANIN BACEWAR CARDS: Maimakon mu nemi duka comment cards na shafin, 
+    // Za mu nemi wadanda suke DIRECT children ne kadai a cikin reply container din
+    const cards = container.children;
     
-    cards.forEach((card, index) => {
-        if (index < 3) {
-            // Guda 3 na farko kacal za a gani a shafin farko
-            card.style.display = 'block';
-            card.style.opacity = '1';
-            card.style.visibility = 'visible';
-        } else if (index < 5) {
-            // Katin na 4 da na 5 suna nan a shafin farko amma a boye suke
-            card.style.display = 'none';
-        } else {
-            // Duk katin da aka kwaso daga Firebase wanda ya wuce guda 5, gaba daya a boye shi kada a gansa!
-            card.style.display = 'none';
+    if (!cards || cards.length === 0) return;
+
+    // Maida kowane katin reply zuwa ainihin lissafin da muke bukata
+    Array.from(cards).forEach((card, index) => {
+        // Tabbatar cewa muna aiki ne kawai akan katunan reply
+        if (card.classList.contains('quantum-comment-card')) {
+            if (index < 3) {
+                // Guda 3 na farko kacal za su zauna a bude radau (Visible)
+                card.style.setProperty('display', 'block', 'important');
+                card.style.opacity = '1';
+                card.style.visibility = 'visible';
+            } else {
+                // Daga katin na 4 da na 5, da duk abinda ya wuce, a boye su gaba daya (display: none)
+                // Wannan zai goge katon space din ba tare da ya taba manyan comments ba!
+                card.style.setProperty('display', 'none', 'important');
+            }
         }
     });
         }
