@@ -528,7 +528,7 @@ icon.removeAttribute('style');
     <span>${post.likes || 0}</span>
 </div>
        
-       <div class="capsule" onclick="event.stopPropagation(); window.location.href='comments.html?postId=${post.id}'"><i class="fa-regular fa-comment"></i><span>${post.commentsCount || 0}</span></div> 
+      <div class="capsule" onclick="event.stopPropagation(); window.location.href='comments.html?postId=${post.id}'" id="comment-btn-${post.id}"><i class="fa-regular fa-comment"></i><span id="comment-count-${post.id}">0</span></div>
       <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
         <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
     </div>
