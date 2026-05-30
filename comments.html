@@ -1040,112 +1040,40 @@ function injectOverlayReply() {
             }
         }
 
-        function injectComment() {
-            const feedContainer = document.getElementById('matrixFeed');
-            const commentText = commentInput.value.trim();
+        
+     function injectComment() {
+    const commentText = commentInput.value.trim();
+    if (!commentText) return;
 
-            if (!commentText) return;
+    // 1. Tura danyen bayanai zuwa Firebase (Baza mu sake saka HTML a nan ba)
+    const newContribution = {
+        author: "Sadiq Alhassan",
+        text: commentText,
+        parentId: targetReplyFeedId ? targetReplyFeedId : null, 
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(), 
+        likes: 0
+    };
 
-            let sentimentClass = "";
-            if(commentText.includes("murna") || commentText.includes("kyau") || commentText.includes("santsi") || commentText.includes("da kyau")) {
-                sentimentClass = "positive";
-            }
-
-            const uniqueId = 'reply-node-' + Date.now();
-
-            if (targetReplyFeedId) {
-                const targetFeed = document.getElementById(targetReplyFeedId);
-                
-const replyHTML = `
-    <div class="quantum-comment-card">
-        <div class="comment-core-layout">
-            <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
-                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq" class="quantum-avatar" alt="">
-            </div>
-            <div class="comment-body-cluster">
-                <div class="meta-layer">
-                    <div class="identity-badge">
-                        <span class="user-title-name" style="font-size: 11px;">Sadiq Alhassan</span>
-                        <span class="instagram-author-tag" style="font-size: 7.5px;">Author</span>
-                    </div>
-                </div>
-                <div class="comment-text-wrap" style="padding-bottom: 0;">
-                    <p class="comment-text-payload" style="font-size: 11.5px;">${commentText}</p>
-                </div>
-                <div class="interaction-capsule-bar">
-                    <button class="micro-action-trigger" onclick="pulseLike(this)">
-                        <i class="fa-regular fa-heart"></i> <span class="count">0</span>
-                    </button>
-                    <button class="micro-action-trigger" onclick="triggerReplyAction('Sadiq Alhassan', '${targetReplyFeedId}')">
-                        <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
-                    </button>
-                    <span class="timestamp-quantum" style="font-size: 9px; margin-left: auto; position: static;">Just now</span>
-                </div>
-            </div>
-        </div>
-    </div>
-`;
-                
-                targetFeed.insertAdjacentHTML('beforeend', replyHTML);
-                
-                commentInput.value = `@${activeReplyUser} `; 
-                handleDynamicVisibility(targetFeed);
-                checkReplyCountAndTrigger(targetReplyFeedId);
-
-                // Idan panel overlay din yana bude, mu sabunta shi live
-                if (currentOpenContainerId === targetReplyFeedId) {
-                    launchFullScreenReplies(targetReplyFeedId);
-                }
-
-                targetFeed.scrollTop = targetFeed.scrollHeight; 
-            } else {
-                const commentHTML = `
-                    <div class="quantum-comment-card ${sentimentClass}">
-                        <div class="comment-core-layout">
-                            <div class="quantum-avatar-frame">
-                                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq" class="quantum-avatar" alt="">
-                                <div class="user-status-node" style="background: #50fa7b;"></div>
-                            </div>
-                            <div class="comment-body-cluster">
-                                
-                                                               <div class="meta-layer">
-                                    <div class="identity-badge">
-                                        <span class="user-title-name">Sadiq Alhassan</span>
-                                        <span class="instagram-author-tag">Author</span>
-                                    </div>
-                                    <span class="timestamp-quantum" style="position: static; font-size: 10px;">Just now</span>
-                                </div>
-                                <div class="comment-text-wrap" style="padding-bottom: 0;">
-                                    <p class="comment-text-payload">${commentText}</p>
-                                </div>
-                                
-                                
-                                
-                                <div class="interaction-capsule-bar">
-                                    <button class="micro-action-trigger" onclick="pulseLike(this)">
-                                        <i class="fa-regular fa-heart"></i> <span class="count">0</span>
-                                    </button>
-                                    <button class="micro-action-trigger" onclick="triggerReplyAction('Sadiq Alhassan', '${uniqueId}')">
-                                        <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="quantum-nested-replies" id="${uniqueId}" onscroll="handleDynamicVisibility(this)" style="margin-left: 48px;"></div>
-                        <button class="view-more-trigger-btn" id="viewMoreBtn-${uniqueId}" onclick="launchFullScreenReplies('${uniqueId}')" style="margin-left: 48px;">View more replies</button>
-                    </div>
-                `;
-                feedContainer.insertAdjacentHTML('beforeend', commentHTML);
-                commentInput.value = "";
-            }
-
-            commentInput.style.height = 'auto'; 
-            feedContainer.scrollTop = feedContainer.scrollHeight;
-
-            if (window.navigator.vibrate) window.navigator.vibrate(30);
+    // 2. Adana a Database forever
+    db.collection("nexus_contributions").add(newContribution)
+    .then(() => {
+        if (targetReplyFeedId) {
+            commentInput.value = `@${activeReplyUser} `;
+        } else {
+            commentInput.value = "";
         }
-
-        commentInput.addEventListener('keydown', function (e) {
+        commentInput.style.height = 'auto';
+        if (window.navigator.vibrate) window.navigator.vibrate(30);
+    })
+    .catch((error) => {
+        console.error("Kuskure: ", error);
+    });
+     }
+    
+                                
+    
+    
+    commentInput.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault(); 
                 injectComment();
@@ -1162,44 +1090,133 @@ const replyHTML = `
 
         
         // Setup baseline seed replies don gwajin lissafi a FIRST PAGE
-window.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('reply-node-1');
-    let baselineHTML = '';
-    for(let i=1; i<=6; i++) {
-        baselineHTML += `
-            <div class="quantum-comment-card">
-                <div class="comment-core-layout">
-                    <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=user${i}" class="quantum-avatar">
-                    </div>
-                    <div class="comment-body-cluster">
-                        <div class="meta-layer">
-                            <div class="identity-badge">
-                                <span class="user-title-name" style="font-size: 11px;">Nested User ${i}</span>
+
+    window.addEventListener('DOMContentLoaded', () => {
+    // Saurari duka contributions live daga Firebase
+    db.collection("nexus_contributions")
+      .orderBy("timestamp", "asc")
+      .onSnapshot((snapshot) => {
+          const feedContainer = document.getElementById('matrixFeed');
+          
+          // Clear tsofaffin abubuwan dake kan screen na wucin gadi
+          feedContainer.innerHTML = ""; 
+
+          // Ware manyan comments daban, replies daban
+          let mainComments = [];
+          let repliesMap = {};
+
+          snapshot.forEach((doc) => {
+              let data = doc.data();
+              data.id = doc.id; // Karbi ainihin database unique ID din
+              
+              if (data.parentId) {
+                  if (!repliesMap[data.parentId]) repliesMap[data.parentId] = [];
+                  repliesMap[data.parentId].push(data);
+              } else {
+                  mainComments.push(data);
+              }
+          });
+
+          // Saka manyan comments a shafi tare da gina gurbin replies na kowanne
+          mainComments.forEach((comment) => {
+              let sentimentClass = "";
+              if(comment.text.includes("murna") || comment.text.includes("kyau") || comment.text.includes("santsi")) {
+                  sentimentClass = "positive";
+              }
+
+              let commentHTML = `
+                <div class="quantum-comment-card ${sentimentClass}" id="card-${comment.id}">
+                    <div class="comment-core-layout">
+                        <div class="quantum-avatar-frame">
+                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${comment.author}" class="quantum-avatar">
+                        </div>
+                        <div class="comment-body-cluster">
+                            <div class="meta-layer">
+                                <div class="identity-badge">
+                                    <span class="user-title-name">${comment.author}</span>
+                                    ${comment.author === "Sadiq Alhassan" ? '<span class="instagram-author-tag">Author</span>' : ''}
+                                </div>
+                                <span class="timestamp-quantum" style="position: static; font-size: 10px;">Just now</span>
+                            </div>
+                            <div class="comment-text-wrap" style="padding-bottom: 0;">
+                                <p class="comment-text-payload">${comment.text}</p>
+                            </div>
+                            <div class="interaction-capsule-bar">
+                                <button class="micro-action-trigger" onclick="pulseLike(this)">
+                                    <i class="fa-regular fa-heart"></i> <span class="count">${comment.likes || 0}</span>
+                                </button>
+                                <button class="micro-action-trigger" onclick="triggerReplyAction('${comment.author}', '${comment.id}')">
+                                    <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
+                                </button>
+                                ${comment.author === "Sadiq Alhassan" ? `<button class="micro-action-trigger" style="color:#ff4757; margin-left:10px;" onclick="requestDestruction('${comment.id}')"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                             </div>
                         </div>
-                        <div class="comment-text-wrap" style="padding-bottom: 0;">
-                            <p class="comment-text-payload" style="font-size: 11.5px;">Wannan shi ne reply na ${i} da ke tabbatar da lissafin mu.</p>
-                        </div>
-                        <div class="interaction-capsule-bar">
-                            <button class="micro-action-trigger" onclick="pulseLike(this)">
-                                <i class="fa-regular fa-heart"></i> <span class="count">0</span>
-                            </button>
-                            <button class="micro-action-trigger" onclick="triggerReplyAction('Nested User ${i}', 'reply-node-1')">
-                                <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
-                            </button>
-                            <span class="timestamp-quantum" style="font-size: 9px;">${i}m</span>
-                        </div>
                     </div>
-                </div>
-            </div>`;
-    }
-    container.innerHTML = baselineHTML;
-    container.classList.add('show');
-    handleDynamicVisibility(container);
-    checkReplyCountAndTrigger('reply-node-1');
+                    <div class="quantum-nested-replies show" id="${comment.id}" style="margin-left: 48px;"></div>
+                    <button class="view-more-trigger-btn" id="viewMoreBtn-${comment.id}" onclick="launchFullScreenReplies('${comment.id}')" style="margin-left: 48px;">View more replies</button>
+                </div>`;
+              
+              feedContainer.insertAdjacentHTML('beforeend', commentHTML);
+
+              // Injecting na replies din da ke karkashin wannan comment din
+              const replyContainer = document.getElementById(comment.id);
+              if (repliesMap[comment.id]) {
+                  repliesMap[comment.id].forEach((reply) => {
+                      let replyHTML = `
+                        <div class="quantum-comment-card">
+                            <div class="comment-core-layout">
+                                <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
+                                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${reply.author}" class="quantum-avatar">
+                                </div>
+                                <div class="comment-body-cluster">
+                                    <div class="meta-layer">
+                                        <div class="identity-badge">
+                                            <span class="user-title-name" style="font-size: 11px;">${reply.author}</span>
+                                            ${reply.author === "Sadiq Alhassan" ? '<span class="instagram-author-tag" style="font-size: 7.5px;">Author</span>' : ''}
+                                        </div>
+                                    </div>
+                                    <div class="comment-text-wrap" style="padding-bottom: 0;">
+                                        <p class="comment-text-payload" style="font-size: 11.5px;">${reply.text}</p>
+                                    </div>
+                                    <div class="interaction-capsule-bar">
+                                        <button class="micro-action-trigger" onclick="pulseLike(this)">
+                                            <i class="fa-regular fa-heart"></i> <span class="count">0</span>
+                                        </button>
+                                        <button class="micro-action-trigger" onclick="triggerReplyAction('${reply.author}', '${comment.id}')">
+                                            <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
+                                        </button>
+                                        ${reply.author === "Sadiq Alhassan" ? `<button class="micro-action-trigger" style="color:#ff4757;" onclick="requestDestruction('${reply.id}')"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                                        <span class="timestamp-quantum" style="font-size: 9px; margin-left: auto; position: static;">Just now</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                      replyContainer.insertAdjacentHTML('beforeend', replyHTML);
+                  });
+              }
+              
+              handleDynamicVisibility(replyContainer);
+              checkReplyCountAndTrigger(comment.id);
+          });
+          
+          feedContainer.scrollTop = feedContainer.scrollHeight;
+      });
 });
-        
+    
+
+function requestDestruction(documentId) {
+    if (confirm("Kana da tabbas kana son goge wannan contribution din daga Database gaba daya?")) {
+        db.collection("nexus_contributions").doc(documentId).delete()
+        .then(() => {
+            if (window.navigator.vibrate) window.navigator.vibrate([15, 10, 15]);
+        })
+        .catch((error) => {
+            console.error("An samu matsala wajen gogewa: ", error);
+        });
+    }
+}
+    
+
     </script>
 </body>
 </html>
