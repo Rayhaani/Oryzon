@@ -612,41 +612,33 @@
 
         // UNCHALLENGIBLE FULLSCREEN ENGINE
         function launchFullScreenReplies(containerId) {
-            currentOpenContainerId = containerId;
-            const sourceContainer = document.getElementById(containerId);
-            const overlay = document.getElementById('fullscreenRepliesPanel');
-            const overlayBody = document.getElementById('overlayFeedBody');
-            
-            // Dauko dukkan replies din ba tare da taba komai na kyan katin ba
-            overlayBody.innerHTML = sourceContainer.innerHTML;
-            
-            // Cire dukkan dynamic opacity styles na list 3 don su fito fes
-            const subCards = overlayBody.querySelectorAll('.quantum-comment-card');
-            subCards.forEach(card => {
-                card.style.opacity = '1';
-                card.style.visibility = 'visible';
-            });
-
-            overlay.classList.add('active');
+    // 1. Nemo wannan ainihin reply container din da kuma babban katin da yake cikinsa
+    const replyContainer = document.getElementById(containerId);
+    const parentCard = replyContainer.closest('.quantum-comment-card');
+    const allCards = document.querySelectorAll('#matrixFeed > .quantum-comment-card');
+    
+    // 2. Sanya sauran gaba dayan comments din suyi disappearing (display: none)
+    allCards.forEach(card => {
+        if (card !== parentCard) {
+            card.style.display = 'none';
         }
+    });
 
-        function closeFullScreenReplies() {
-            document.getElementById('fullscreenRepliesPanel').classList.remove('active');
-            currentOpenContainerId = null;
+    // 3. Tsarin container na parent comment ne kawai zai karu ya cire har kasan page
+    parentCard.classList.add('expanded-active');
+
+    // 4. Cire dukkan opacity filters na replies guda 3 don duka su fito visible su cika screen
+    const subCards = replyContainer.querySelectorAll('.quantum-comment-card');
+    subCards.forEach(card => {
+        card.style.opacity = '1';
+        card.style.visibility = 'visible';
+    });
+
+    // 5. Boye madannin "View more replies" tunda an riga an fito da su duka
+    const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
+    if (viewMoreBtn) viewMoreBtn.style.display = 'none';
         }
-
-        function checkReplyCountAndTrigger(containerId) {
-            const container = document.getElementById(containerId);
-            const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
-            if(!container || !viewMoreBtn) return;
-
-            const cardsCount = container.querySelectorAll('.quantum-comment-card').length;
-            if(cardsCount >= 5) {
-                viewMoreBtn.style.display = 'block';
-            } else {
-                viewMoreBtn.style.display = 'none';
-            }
-        }
+        
 
         function handleDynamicVisibility(container) {
             const cards = container.querySelectorAll('.quantum-comment-card');
