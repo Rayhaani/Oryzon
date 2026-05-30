@@ -483,7 +483,8 @@
         </div>
 
         
-    <div class="comments-matrix-feed" id="matrixFeed">
+
+            <div class="comments-matrix-feed" id="matrixFeed">
             
             <div class="quantum-comment-card positive" id="comment-card-1">
                 <div class="comment-core-layout">
@@ -553,7 +554,7 @@
                     </div>
                 </div>
             </div>
-        
+
         </div>
 
         <div class="fullscreen-replies-overlay" id="fullscreenRepliesPanel">
@@ -615,37 +616,41 @@
 
         // UNCHALLENGIBLE FULLSCREEN ENGINE
         function launchFullScreenReplies(containerId) {
-    const replyContainer = document.getElementById(containerId);
-    const parentCard = replyContainer.closest('.quantum-comment-card');
-    
-    // 1. Gano dukkan babban katunan
-    const allCards = document.querySelectorAll('#matrixFeed > .quantum-comment-card');
-    
-    // 2. Boye sauran katunan da ba wannan parentCard din ba
-    allCards.forEach(card => {
-        if (card !== parentCard) {
-            card.style.display = 'none'; 
+            currentOpenContainerId = containerId;
+            const sourceContainer = document.getElementById(containerId);
+            const overlay = document.getElementById('fullscreenRepliesPanel');
+            const overlayBody = document.getElementById('overlayFeedBody');
+            
+            // Dauko dukkan replies din ba tare da taba komai na kyan katin ba
+            overlayBody.innerHTML = sourceContainer.innerHTML;
+            
+            // Cire dukkan dynamic opacity styles na list 3 don su fito fes
+            const subCards = overlayBody.querySelectorAll('.quantum-comment-card');
+            subCards.forEach(card => {
+                card.style.opacity = '1';
+                card.style.visibility = 'visible';
+            });
+
+            overlay.classList.add('active');
         }
-    });
 
-    // 3. Fadada wannan parentCard din
-    parentCard.style.display = 'flex'; // Tabbatar cewa wannan yana nan a bayyane
-    parentCard.classList.add('expanded-active');
-
-    // 4. Bayyanar da replies din
-    const subCards = replyContainer.querySelectorAll('.quantum-comment-card');
-    subCards.forEach(card => {
-        card.style.opacity = '1';
-        card.style.visibility = 'visible';
-    });
-
-    // 5. Maimakon mu boye viewMoreBtn, zamu tabbatar yana nan
-    // Idan har kana son a boye shi, ka bar wannan layin, amma idan ka ga ya bace, 
-    // ka cire wannan layin na kasa:
-    /* const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
-    if (viewMoreBtn) viewMoreBtn.style.display = 'none'; */
+        function closeFullScreenReplies() {
+            document.getElementById('fullscreenRepliesPanel').classList.remove('active');
+            currentOpenContainerId = null;
         }
-        
+
+        function checkReplyCountAndTrigger(containerId) {
+            const container = document.getElementById(containerId);
+            const viewMoreBtn = document.getElementById(`viewMoreBtn-${containerId}`);
+            if(!container || !viewMoreBtn) return;
+
+            const cardsCount = container.querySelectorAll('.quantum-comment-card').length;
+            if(cardsCount >= 5) {
+                viewMoreBtn.style.display = 'block';
+            } else {
+                viewMoreBtn.style.display = 'none';
+            }
+        }
 
         function handleDynamicVisibility(container) {
             const cards = container.querySelectorAll('.quantum-comment-card');
