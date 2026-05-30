@@ -116,6 +116,12 @@
             border-right: 3px solid #50fa7b;
         }
 
+        .quantum-comment-card.pinned-style {
+    background: rgba(255, 255, 255, 0.05) !important; /* Light Ash bango */
+    border-right: 3px solid #50fa7b !important; /* Koren border mai santsi a dama */
+        }
+        
+
         .quantum-comment-card.alert {
             background: var(--sentiment-alert);
             border-right: 3px solid #ff4757;
@@ -643,12 +649,19 @@
                             <p class="comment-text-payload">Wannan tsarin ya dace da canjin zaman katin da muke bukata a Arewacin Najeriya. Tsarin UI din nan yana da matukar santsi!</p>
                         </div>
                         
-                        <div class="interaction-capsule-bar">
+                       <div class="interaction-capsule-bar">
                             <button class="micro-action-trigger" onclick="pulseLike(this)">
                                 <i class="fa-regular fa-heart"></i> <span class="count">14</span>
                             </button>
                             <button class="micro-action-trigger" onclick="triggerReplyAction('Kabir Kano', 'reply-node-1')">
                                 <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
+                            </button>
+                            <!-- SABON PIN BUTTON YA DAWO NAN DAIDAI -->
+                            <button class="micro-action-trigger pin-trigger-btn ${comment.isPinned ? 'pinned' : ''}" 
+                                    style="color: ${comment.isPinned ? '#50fa7b' : 'rgba(255,255,255,0.4)'};" 
+                                    onclick="togglePinComment('${comment.id}', ${comment.isPinned || false})">
+                                <i class="fa-solid fa-thumbtack" style="${comment.isPinned ? 'transform: rotate(45deg);' : ''}"></i> 
+                                <span>${comment.isPinned ? 'Pinned' : 'Pin'}</span>
                             </button>
                         </div>
 
@@ -659,6 +672,7 @@
                     </div>
                 </div>
             </div>
+                
 
             <div class="quantum-comment-card" id="comment-card-2">
                 <div class="comment-core-layout">
@@ -1094,6 +1108,7 @@ function injectOverlayReply() {
     window.addEventListener('DOMContentLoaded', () => {
     // Saurari duka contributions live daga Firebase
     db.collection("nexus_contributions")
+      .orderBy("isPinned", "desc")
       .orderBy("timestamp", "asc")
       .onSnapshot((snapshot) => {
           const feedContainer = document.getElementById('matrixFeed');
@@ -1119,11 +1134,14 @@ function injectOverlayReply() {
 
           // Saka manyan comments a shafi tare da gina gurbin replies na kowanne
           mainComments.forEach((comment) => {
-              let sentimentClass = "";
-              if(comment.text.includes("murna") || comment.text.includes("kyau") || comment.text.includes("santsi")) {
-                  sentimentClass = "positive";
-              }
 
+let sentimentClass = "";
+if (comment.isPinned) {
+    sentimentClass = "pinned-style"; // Yana bashi Light Ash da Koren border a dama
+} else if (comment.text.includes("murna") || comment.text.includes("kyau") || comment.text.includes("santsi") || comment.text.includes("da kyau")) {
+    sentimentClass = "positive"; // Tsarin koriya na asali don sauran kalaman farin ciki
+}
+              
               let commentHTML = `
                 <div class="quantum-comment-card ${sentimentClass}" id="card-${comment.id}">
                     <div class="comment-core-layout">
