@@ -589,6 +589,20 @@
     margin-top: 0 !important; /* Hana haduwar tazarar da CSS na baya */
 }
 
+
+        /* Gyaran tsarin typing bar a cikin overlay domin ta zauna cif kamar shafin farko */
+.fullscreen-replies-overlay .hologram-input-harness {
+    background: #000000 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 12px 0 0 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.fullscreen-replies-overlay .hologram-text-field {
+    flex-grow: 1 !important;
+}
+        
         
     </style>
 </head>
@@ -674,7 +688,7 @@
         </div>
 
         
-              <div class="fullscreen-replies-overlay" id="fullscreenRepliesPanel">
+                  <div class="fullscreen-replies-overlay" id="fullscreenRepliesPanel">
             <div class="overlay-header">
                 <button class="back-node-btn" onclick="closeFullScreenReplies()"><i class="fa-solid fa-arrow-left"></i></button>
                 <div class="node-title" style="margin-top:0;">Replies</div>
@@ -682,10 +696,11 @@
             
             <div class="overlay-feed-body" id="overlayFeedBody"></div>
 
-            <div class="hologram-input-harness" style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); background: #000000; position: static; width: 100%; padding: 10px 0 0 0;">
+            <div class="hologram-input-harness" style="margin-top: auto; position: static; width: 100%; box-sizing: border-box;">
                 <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq" class="current-user-avatar" alt="Sadiq">
                 <textarea class="hologram-text-field" id="overlayCommentInput" rows="1" placeholder="Write a reply..."></textarea>
                 <div class="input-actions-cluster">
+                    <button class="utility-node-btn" id="overlayAiTriggerBtn" onclick="toggleOverlayAiMenu()"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
                     <button class="quantum-beam-send" onclick="injectOverlayReply()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
@@ -706,6 +721,7 @@
             </div>
         </div>
     </div>
+    
     
     <script>
         let targetReplyFeedId = null; 
@@ -835,6 +851,19 @@ function triggerOverlayReplyAction(username) {
     overlayInput.value = `@${username} `;
     overlayInput.focus();
 }
+
+        // Function don kunna AI menu na musamman a shafin overlay
+function toggleOverlayAiMenu() {
+    const mainAiMenu = document.getElementById('aiMatrixMenu');
+    if (mainAiMenu) {
+        // Yana amfani da ainihin menu dinka na farko ba tare da an sake gina wani ba
+        mainAiMenu.classList.toggle('active');
+        
+        // Saita focus zuwa sabon input field na overlay idan za a yi amfani da shi
+        window.currentActiveInputId = 'overlayCommentInput'; 
+    }
+}
+        
 
 // Function da ke inject na reply kai tsaye a cikin overlay da babban shafi lokaci guda
 function injectOverlayReply() {
