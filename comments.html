@@ -559,7 +559,26 @@
         
         
         
-        
+
+       /* Saita interaction bar na replies ya dauki timestamp a layi guda */
+.overlay-replies-holder .interaction-capsule-bar,
+.quantum-nested-replies .interaction-capsule-bar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-top: 8px;
+    gap: 12px;
+}
+
+/* Tura timestamp na kowane reply zuwa can karshen gefen dama saitin icons */
+.overlay-replies-holder .timestamp-quantum,
+.quantum-nested-replies .timestamp-quantum {
+    margin-left: auto; /* Dama-dama karshe */
+    margin-top: 0 !important;
+    display: inline-block;
+    position: static !important;
+}
+ 
     </style>
 </head>
 <body>
@@ -720,7 +739,6 @@
     const isPositive = parentCard.classList.contains('positive') ? 'positive' : '';
     const isAlert = parentCard.classList.contains('alert') ? 'alert' : '';
 
-    // GINA PARENT COMMENT (Tare da sanya masa tazarar icons dinsa)
     let overlayHTML = `
         <div class="quantum-comment-card ${isPositive} ${isAlert}">
             <div class="comment-core-layout">
@@ -741,7 +759,7 @@
                         <button class="micro-action-trigger" onclick="pulseLike(this)">
                             <i class="fa-regular fa-heart"></i> <span class="count">0</span>
                         </button>
-                        <button class="micro-action-trigger" onclick="triggerReplyAction('${parentName}', '${containerId}')">
+                        <button class="micro-action-trigger" onclick="triggerReplyAction('${parentName}', '${containerId}'); closeFullScreenReplies();">
                             <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
                         </button>
                     </div>
@@ -752,57 +770,38 @@
         <div class="overlay-replies-holder">
     `;
 
-    // 2. DAUKO REPLIES KUMA A SAKA MUSU BUTTONS DA TIMESTAMP A KASA EXACTLY
+    // 2. KWASO REPLIES DIN AUTOMATICALLY TUNDA SUN DAIDAITA A FIRST PAGE
     const replies = sourceContainer.querySelectorAll('.quantum-comment-card');
     
     replies.forEach(reply => {
-        const replyAvatar = reply.querySelector('.quantum-avatar').src;
-        const replyName = reply.querySelector('.user-title-name').innerText;
-        const replyText = reply.querySelector('.comment-text-payload').innerText;
-        
-        // Muna dauko ainihin timestamp na katin reply dinka daga babban shafin
-        const replyTime = reply.querySelector('.timestamp-quantum') ? reply.querySelector('.timestamp-quantum').innerText : '1m';
-        
+        let replyContent = reply.innerHTML;
         overlayHTML += `
             <div class="quantum-comment-card">
-                <div class="comment-core-layout">
-                    <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
-                        <img src="${replyAvatar}" class="quantum-avatar">
-                    </div>
-                    <div class="comment-body-cluster">
-                        <div class="meta-layer">
-                            <div class="identity-badge">
-                                <span class="user-title-name" style="font-size: 11px;">${replyName}</span>
-                            </div>
-                        </div>
-                        <div class="comment-text-wrap">
-                            <p class="comment-text-payload" style="font-size: 11.5px;">${replyText}</p>
-                            <!-- TIMESTAMP DIN REPLIES ANA DAUKO SHI DAGAN CAN KUMA YANA ZAWNAWA A KASA CHAK -->
-                            <span class="timestamp-quantum" style="margin-top: 4px; display: block;">${replyTime}</span>
-                        </div>
-                        <!-- AN SAKA MUSU ICONS NA LIKE DA REPLY KUMA SUNA AIKI 100% -->
-                        <div class="interaction-capsule-bar" style="margin-top: 5px;">
-                            <button class="micro-action-trigger" onclick="pulseLike(this)">
-                                <i class="fa-regular fa-heart"></i> <span class="count">0</span>
-                            </button>
-                            <button class="micro-action-trigger" onclick="triggerReplyAction('${replyName}', '${containerId}')">
-                                <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                ${replyContent}
             </div>
         `;
     });
 
     overlayHTML += `</div>`;
-
-    // 3. SHIGAR DA SHI CIKIN OVERLAY PANEL
     overlayBody.innerHTML = overlayHTML;
-    overlay.classList.add('active');
     
-    if (window.navigator.vibrate) window.navigator.vibrate(25);
+    // 3. GYARA DUKKAN REPLY BUTTONS NA REPLIES SU KIRA ASALIN INPUT BAR SANNAN SU RUFE OVERLAY
+    const overlayReplyButtons = overlayBody.querySelectorAll('.overlay-replies-holder .micro-action-trigger');
+    overlayReplyButtons.forEach(btn => {
+        if (btn.innerText.includes('Reply') || btn.querySelector('.fa-comment-dots')) {
+            const card = btn.closest('.quantum-comment-card');
+            const rName = card.querySelector('.user-title-name').innerText;
+            
+            // Sanya aiki: Idan an danna, zai kunna babban input bar sannan ya sauke overlay panel
+            btn.setAttribute('onclick', `triggerReplyAction('${rName}', '${containerId}'); closeFullScreenReplies();`);
         }
+    });
+
+    overlay.classList.add('active');
+    if (window.navigator.vibrate) window.navigator.vibrate(25);
+    }
+        
+    
             
         
             
@@ -999,32 +998,46 @@
             }
         });
 
-        // Setup baseline seed replies don gwajin lissafi
-        window.addEventListener('DOMContentLoaded', () => {
-            const container = document.getElementById('reply-node-1');
-            let baselineHTML = '';
-            for(let i=1; i<=6; i++) {
-                baselineHTML += `
-                    <div class="quantum-comment-card">
-                        <div class="comment-core-layout">
-                            <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
-                                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=user${i}" class="quantum-avatar">
-                            </div>
-                            <div class="comment-body-cluster">
-                                <div class="meta-layer"><span class="user-title-name" style="font-size: 11px;">Nested User ${i}</span></div>
-                                <div class="comment-text-wrap">
-                                    <p class="comment-text-payload" style="font-size: 11.5px;">Wannan shi ne reply na ${i} da ke tabbatar da lissafin mu.</p>
-                                    <span class="timestamp-quantum">${i}m</span>
-                                </div>
+        
+        // Setup baseline seed replies don gwajin lissafi a FIRST PAGE
+window.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('reply-node-1');
+    let baselineHTML = '';
+    for(let i=1; i<=6; i++) {
+        baselineHTML += `
+            <div class="quantum-comment-card">
+                <div class="comment-core-layout">
+                    <div class="quantum-avatar-frame" style="width: 26px; height: 26px;">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=user${i}" class="quantum-avatar">
+                    </div>
+                    <div class="comment-body-cluster">
+                        <div class="meta-layer">
+                            <div class="identity-badge">
+                                <span class="user-title-name" style="font-size: 11px;">Nested User ${i}</span>
                             </div>
                         </div>
-                    </div>`;
-            }
-            container.innerHTML = baselineHTML;
-            container.classList.add('show');
-            handleDynamicVisibility(container);
-            checkReplyCountAndTrigger('reply-node-1');
-        });
+                        <div class="comment-text-wrap" style="padding-bottom: 0;">
+                            <p class="comment-text-payload" style="font-size: 11.5px;">Wannan shi ne reply na ${i} da ke tabbatar da lissafin mu.</p>
+                        </div>
+                        <div class="interaction-capsule-bar">
+                            <button class="micro-action-trigger" onclick="pulseLike(this)">
+                                <i class="fa-regular fa-heart"></i> <span class="count">0</span>
+                            </button>
+                            <button class="micro-action-trigger" onclick="triggerReplyAction('Nested User ${i}', 'reply-node-1')">
+                                <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
+                            </button>
+                            <span class="timestamp-quantum" style="font-size: 9px;">${i}m</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    }
+    container.innerHTML = baselineHTML;
+    container.classList.add('show');
+    handleDynamicVisibility(container);
+    checkReplyCountAndTrigger('reply-node-1');
+});
+        
     </script>
 </body>
 </html>
