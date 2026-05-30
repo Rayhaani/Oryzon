@@ -528,8 +528,8 @@ icon.removeAttribute('style');
     <span>${post.likes || 0}</span>
 </div>
        
-        <div class="capsule"><i class="fa-regular fa-comment"></i><span>12</span></div>
-        <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
+       <div class="capsule" onclick="event.stopPropagation(); window.location.href='comments.html?postId=${post.id}'"><i class="fa-regular fa-comment"></i><span>${post.commentsCount || 0}</span></div> 
+      <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
         <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
     </div>
     <div class="action-capsules save-capsule">
