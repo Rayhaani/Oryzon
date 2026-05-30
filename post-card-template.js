@@ -409,7 +409,7 @@ else {
     const suffix = day===1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
     timeStr = day + suffix + ' ' + months[ts.getMonth()];
 }  
-    
+    }
 
     // --- Like count ---
     const likes = post.likesCount || post.likes || 0;
