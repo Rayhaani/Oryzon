@@ -935,7 +935,8 @@ function injectOverlayReply() {
                         <button class="micro-action-trigger" onclick="triggerOverlayReplyAction('Sadiq Alhassan')">
                             <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
                         </button>
-                        <span class="timestamp-quantum" style="font-size: 9px;">Just now</span>
+                        <span class="timestamp-quantum" style="font-size: 9px; margin-left: auto; position: static;">Just now</span>
+                            
                     </div>
                 </div>
             </div>
@@ -1136,7 +1137,8 @@ function injectOverlayReply() {
                                     <span class="user-title-name">${comment.author}</span>
                                     ${comment.author === "Sadiq Alhassan" ? '<span class="instagram-author-tag">Author</span>' : ''}
                                 </div>
-                                <span class="timestamp-quantum" style="position: static; font-size: 10px;">Just now</span>
+                               <span class="timestamp-quantum" style="position: static; font-size: 10px;">${formatQuantumTimestamp(comment.timestamp)}</span>
+                               
                             </div>
                             <div class="comment-text-wrap" style="padding-bottom: 0;">
                                 <p class="comment-text-payload">${comment.text}</p>
@@ -1186,7 +1188,8 @@ function injectOverlayReply() {
                                             <i class="fa-regular fa-comment-dots"></i> <span>Reply</span>
                                         </button>
                                         ${reply.author === "Sadiq Alhassan" ? `<button class="micro-action-trigger" style="color:#ff4757;" onclick="requestDestruction('${reply.id}')"><i class="fa-solid fa-trash-can"></i></button>` : ''}
-                                        <span class="timestamp-quantum" style="font-size: 9px; margin-left: auto; position: static;">Just now</span>
+                                        <span class="timestamp-quantum" style="font-size: 9px; margin-left: auto; position: static;">${formatQuantumTimestamp(reply.timestamp)}</span>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -1217,9 +1220,13 @@ function requestDestruction(documentId) {
 }
 
 
-    function formatQuantumTimestamp(dateInput) {
+    
+    function formatQuantumTimestamp(timestampInput) {
+    if (!timestampInput) return "Just now";
+    
+    // Idan lokacin daga Firebase yake, mu canza shi zuwa asalin Javascript Date Object
+    let past = timestampInput.toDate ? timestampInput.toDate() : new Date(timestampInput);
     const now = new Date();
-    const past = new Date(dateInput);
     const secondsAgo = Math.floor((now - past) / 1000);
 
     if (secondsAgo < 60) {
