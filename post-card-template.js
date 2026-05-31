@@ -100,22 +100,24 @@
 
         /* ===== VERIFIED BADGE ===== */
         .post-verified-badge {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            width: 15px !important;
-            height: 15px !important;
-            background-color: #1d9bf0 !important;
-            clip-path: polygon(50% 0%, 61% 5%, 72% 0%, 80% 9%, 91% 9%, 91% 20%, 100% 28%, 95% 39%, 100% 50%, 95% 61%, 100% 72%, 91% 80%, 91% 91%, 80% 91%, 72% 100%, 61% 95%, 50% 100%, 39% 95%, 28% 100%, 20% 91%, 9% 91%, 9% 80%, 0% 72%, 5% 61%, 0% 50%, 5% 39%, 0% 28%, 9% 20%, 9% 9%, 20% 9%, 28% 0%, 39% 5%) !important;
-            flex-shrink: 0 !important;
-        }
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    background-color: #1d9bf0 !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+    margin-left: 2px !important;
+}
 
-        .post-verified-badge i {
-            font-size: 8px !important;
-            color: white !important;
-            font-weight: 900 !important;
-        }
+.post-verified-badge i {
+    font-size: 9px !important;
+    color: white !important;
+    font-weight: 900 !important;
+}
 
+        
         /* ===== TIMESTAMP ===== */
         .post-time {
             font-size: 10px !important;
