@@ -436,12 +436,13 @@ else {
 
             <div class="post-username-row">
                 <div>
-                    <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-    <span class="post-username" style="font-size:16px; font-weight:800; color:#fff; line-height:1.2;">${post.username || 'unknown'}</span>
+                   
+                    <div style="display:flex; align-items:center; gap:5px;">
+    <span class="post-username" style="font-size:16px; font-weight:800; color:#fff; line-height:1; margin-bottom:3px; display:block;">${post.username || 'unknown'}</span>
     <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
 </div>
-${timeStr ? `<span class="post-time" style="font-size:12px; color:rgba(255,255,255,0.75); margin-top:2px; display:block; line-height:1; text-transform:capitalize;">${timeStr}</span>` : ''}
-                </div>
+${timeStr ? `<span class="post-time" style="font-size:18px; color:rgba(255,255,255,0.75); margin-top:5px; display:block; line-height:1; text-transform:capitalize;">${timeStr}</span>` : ''}
+              </div>
             </div>
 
           <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
