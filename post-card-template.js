@@ -60,7 +60,7 @@
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            padding: 0 15px 0 55px !important;
+            padding: 0 15px 0 48px !important;
             height: 46px !important;
             position: relative !important;
             background: transparent !important;
@@ -437,7 +437,7 @@ else {
             <div class="post-username-row">
                 <div>
                     <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-    <span class="post-username" style="font-size:15px; font-weight:700; color:#fff; line-height:1.2;">${post.username || 'unknown'}</span>
+    <span class="post-username" style="font-size:16px; font-weight:800; color:#fff; line-height:1.2;">${post.username || 'unknown'}</span>
     <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
 </div>
 ${timeStr ? `<span class="post-time" style="font-size:12px; color:rgba(255,255,255,0.75); margin-top:2px; display:block; line-height:1; text-transform:capitalize;">${timeStr}</span>` : ''}
