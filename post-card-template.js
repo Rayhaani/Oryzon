@@ -84,11 +84,12 @@
 
         /* ===== USERNAME + BADGE ROW ===== */
         .post-username-row {
-            display: flex !important;
-            align-items: center !important;
-            gap: 4px !important;
-            flex: 1 !important;
-        }
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex: 1 !important;
+    padding-left: 4px !important;
+}
 
         .post-username {
             font-size: 13px !important;
@@ -436,10 +437,10 @@ else {
             <div class="post-username-row">
                 <div>
                     <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-    <span class="post-username" style="font-size:14px; font-weight:700; color:#fff; line-height:1.2;">${post.username || 'unknown'}</span>
+    <span class="post-username" style="font-size:15px; font-weight:700; color:#fff; line-height:1.2;">${post.username || 'unknown'}</span>
     <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
 </div>
-${timeStr ? `<span class="post-time" style="font-size:11px; color:rgba(255,255,255,0.45); margin-top:1px; display:block; line-height:1;">${timeStr}</span>` : ''}
+${timeStr ? `<span class="post-time" style="font-size:12px; color:rgba(255,255,255,0.75); margin-top:2px; display:block; line-height:1; text-transform:capitalize;">${timeStr}</span>` : ''}
                 </div>
             </div>
 
