@@ -103,29 +103,29 @@
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 17px !important;
-    height: 17px !important;
+    width: 13px !important;
+    height: 13px !important;
     background-color: #1d9bf0 !important;
     clip-path: polygon(
-        50% 0%, 57% 3%, 65% 0%, 71% 5%,
-        79% 3%, 83% 9%, 91% 9%, 93% 17%,
-        100% 22%, 98% 30%, 103% 37%, 98% 44%,
-        100% 52%, 95% 58%, 97% 66%, 90% 70%,
-        88% 78%, 80% 80%, 76% 87%, 68% 87%,
-        62% 93%, 54% 91%, 47% 95%, 41% 91%,
-        33% 93%, 28% 87%, 20% 86%, 17% 79%,
-        9% 76%, 8% 68%, 2% 62%, 4% 54%,
-        0% 47%, 4% 40%, 1% 32%, 7% 27%,
-        7% 19%, 14% 15%, 17% 7%, 25% 6%,
-        30% 0%, 38% 2%, 44% 0%
+        50% 0%, 61% 5%, 72% 0%,
+        80% 9%, 91% 9%, 91% 20%,
+        100% 28%, 95% 39%, 100% 50%,
+        95% 61%, 100% 72%, 91% 80%,
+        91% 91%, 80% 91%, 72% 100%,
+        61% 95%, 50% 100%, 39% 95%,
+        28% 100%, 20% 91%, 9% 91%,
+        9% 80%, 0% 72%, 5% 61%,
+        0% 50%, 5% 39%, 0% 28%,
+        9% 20%, 9% 9%, 20% 9%,
+        28% 0%, 39% 5%
     ) !important;
     flex-shrink: 0 !important;
     margin-left: 2px !important;
 }
 
 .post-verified-badge i {
-    font-size: 7px !important;
-    color: white !important;
+    font-size: 9px !important;
+    color: #ffffff !important;
     font-weight: 900 !important;
 }
 
