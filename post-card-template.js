@@ -398,17 +398,19 @@ window.postCard_toggleSave = function(event, postId) {
     if (post.timestamp) {
         const ts = post.timestamp.toDate ? post.timestamp.toDate() : new Date(post.timestamp);
         const diff = Math.floor((Date.now() - ts) / 1000);
-      if (diff < 60)           timeStr = `${diff}s ago`;
-else if (diff < 3600)    timeStr = `${Math.floor(diff/60)}m ago`;
-else if (diff < 86400)   timeStr = `${Math.floor(diff/3600)}h ago`;
-else if (diff < 604800)  timeStr = `${Math.floor(diff/86400)}d ago`;
-else if (diff < 2419200) timeStr = `${Math.floor(diff/604800)}w ago`;
+      if (diff < 60)          timeStr = diff + ' seconds ago';
+else if (diff < 120)    timeStr = '1 minute ago';
+else if (diff < 3600)   timeStr = Math.floor(diff/60) + ' minutes ago';
+else if (diff < 7200)   timeStr = '1 hour ago';
+else if (diff < 86400)  timeStr = Math.floor(diff/3600) + ' hours ago';
+else if (diff < 172800) timeStr = '1 day ago';
+else if (diff < 518400) timeStr = Math.floor(diff/86400) + ' days ago';
 else {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const day = ts.getDate();
     const suffix = day===1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
     timeStr = day + suffix + ' ' + months[ts.getMonth()];
-}  
+       }
     }
 
     // --- Like count ---
@@ -433,13 +435,11 @@ else {
 
             <div class="post-username-row">
                 <div>
-                    <div style="display:flex; align-items:center; gap:4px;">
-                        <span class="post-username">${post.username || 'unknown'}</span>
-                        <span class="post-verified-badge">
-                            <i class="fa-solid fa-check"></i>
-                        </span>
-                    </div>
-                    ${timeStr ? `<span class="post-time">${timeStr}</span>` : ''}
+                    <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+    <span class="post-username" style="font-size:14px; font-weight:700; color:#fff; line-height:1.2;">${post.username || 'unknown'}</span>
+    <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
+</div>
+${timeStr ? `<span class="post-time" style="font-size:11px; color:rgba(255,255,255,0.45); margin-top:1px; display:block; line-height:1;">${timeStr}</span>` : ''}
                 </div>
             </div>
 
