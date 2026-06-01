@@ -56,17 +56,25 @@
         }
 
         /* ===== POST HEADER ===== */
-        .post-header {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            padding: 0 15px 0 48px !important;
-            height: 46px !important;
-            position: relative !important;
-            background: transparent !important;
-            border-bottom: 3px solid rgba(253, 224, 141, 0.1) !important;
-            margin-bottom: 0 !important;
-        }
+        .post-header { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    padding: 15px 15px 10px 15px; 
+    margin: 0 0 10px 0;
+
+    /* === GYARAN DAIDAITA DA GENERAL HEADER === */
+    background: rgba(245, 245, 247, 0.08) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4) !important;
+    
+    /* Cire tsoffin styles */
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    position: relative;
+}
 
         /* ===== AVATAR ===== */
         .post-avatar {
