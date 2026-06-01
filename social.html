@@ -659,24 +659,21 @@
 
         /* STORIES STRUCTURE */
         .nexus-stories-container {
-            margin-top: 50px !important; 
-            position: relative !important;
-            z-index: 100 !important;
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: center !important;
-            gap: 8px !important;
-            padding: 10px 14px !important;
-            overflow-x: auto !important;
-            white-space: nowrap !important;
-            scrollbar-width: none !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            background-color: #050505 !important;
-        }
-         
-        .nexus-stories-container::-webkit-scrollbar { display: none !important; }
+    margin-top: 50px !important;
+    position: relative !important;
+    z-index: 100 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background-color: #050505 !important;
+    height: 95px !important;
+            }
 
+        
         .story-card {
             display: inline-flex !important;
             flex-direction: column !important;
@@ -928,7 +925,23 @@
     background-color: #0b0b0b !important;
     border-radius: 12px;
         }
-        
+
+
+
+        #yourStoryAnchor {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 20 !important;
+    background: #050505 !important;
+    padding: 0 6px 0 10px !important;  /* tura zuwa left — rage gap na dama */
+    margin-right: 4px !important;
+    height: 95px !important;
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+        }
     </style>
 </head>
 <body>
@@ -1005,7 +1018,7 @@
     
 
     <div class="nexus-stories-container">
-        <div class="story-card active-user" onclick="openStory('your_story')">
+        <div class="story-card active-user" id="yourStoryAnchor" onclick="openStory('your_story')">
             <div class="story-avatar-wrapper add-story">
                 <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg" alt="" class="story-avatar" id="story-avatar-preview">
                 <div class="add-story-btn">+</div>
@@ -1013,6 +1026,11 @@
             <span class="story-username">Your story</span>
         </div>
 
+
+        <!-- Bayan Your story div, kafin duk wasu story cards -->
+<div id="conveyorBelt" style="display:flex; align-items:center; gap:0; position:absolute; left:90px; top:0; height:95px; will-change:transform;">
+
+    
         <div class="story-card is-live" onclick="openStory('live_now')">
             <div class="story-avatar-wrapper">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_%E8%8B%B1%E8%AA%9E_logo.svg" alt="" class="story-avatar">
@@ -1578,6 +1596,62 @@ document.addEventListener('click', function(event) {
         menuBtn.classList.remove('is-active');
     }
 });
+
+
+
+        (function initConveyor() {
+    const SPEED = 20; // hankali — canja 20 zuwa 30 idan kana so sauri
+    let offset = 0;
+    let lastTime = null;
+    let raf;
+    let paused = false;
+    let beltWidth = 0;
+
+    function setup() {
+        const belt = document.getElementById('conveyorBelt');
+        if (!belt) return;
+
+        // Duplicate cards 3x don seamless loop
+        const original = Array.from(belt.children);
+        beltWidth = original.length * 84; // 84 = card width + gap
+
+        original.forEach(card => belt.appendChild(card.cloneNode(true)));
+        original.forEach(card => belt.appendChild(card.cloneNode(true)));
+
+        // Re-attach onclick bayan clone
+        belt.querySelectorAll('.story-card').forEach(card => {
+            const username = card.querySelector('.story-username')?.innerText || '';
+            card.onclick = () => openStory(username);
+        });
+
+        belt.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+        belt.addEventListener('touchend',   () => { paused = false; lastTime = null; });
+
+        raf = requestAnimationFrame(tick);
+    }
+
+    function tick(ts) {
+        if (!lastTime) lastTime = ts;
+        const dt = (ts - lastTime) / 1000;
+        lastTime = ts;
+
+        if (!paused) {
+            offset -= SPEED * dt;
+            if (Math.abs(offset) >= beltWidth) offset += beltWidth;
+            const belt = document.getElementById('conveyorBelt');
+            if (belt) belt.style.transform = `translateX(${offset}px)`;
+        }
+
+        raf = requestAnimationFrame(tick);
+    }
+
+    // Start after page loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setup);
+    } else {
+        setTimeout(setup, 400);
+    }
+})();
         
     </script>
 </body>
