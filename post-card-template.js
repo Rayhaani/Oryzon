@@ -29,7 +29,7 @@
             backdrop-filter: none !important;
             border: 1px solid var(--post-border) !important;
             border-radius: var(--post-radius) !important;
-            margin-bottom: 15px !important;
+            margin-bottom: 6px !important;
             padding-bottom: 0 !important;
             position: relative !important;
             overflow: hidden !important;
