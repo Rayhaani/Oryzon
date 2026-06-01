@@ -1026,8 +1026,7 @@
         <span class="story-username">Your story</span>
     </div>
 
-    <div id="conveyorBelt" style="display:flex; align-items:center; gap:8px; overflow:hidden; flex:1; height:95px; will-change:transform;">
-
+    <div id="conveyorBelt" style="display:flex; align-items:center; gap:8px; flex:1; height:95px; will-change:transform; min-width:0;">
         <div class="story-card is-live" onclick="openStory('live_now')">
             <div class="story-avatar-wrapper">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_%E8%8B%B1%E8%AA%9E_logo.svg" alt="" class="story-avatar">
@@ -1601,7 +1600,7 @@ document.addEventListener('click', function(event) {
 
 
   (function initConveyor() {
-    const SPEED = 4;
+    const SPEED = 15;
     let offset = 0;
     let lastTime = null;
     let paused = false;
@@ -1611,20 +1610,24 @@ document.addEventListener('click', function(event) {
         const belt = document.getElementById('conveyorBelt');
         if (!belt) return;
 
+        // Auna kowane card daidai
         const originals = Array.from(belt.children);
+        const gap = 8;
+        let measuredWidth = 0;
+        originals.forEach(card => {
+            measuredWidth += card.offsetWidth + gap;
+        });
+        singleSetWidth = measuredWidth;
 
-        // Clone 2x kawai
+        // Clone 3x don loop seamless
         originals.forEach(card => belt.appendChild(card.cloneNode(true)));
         originals.forEach(card => belt.appendChild(card.cloneNode(true)));
-
-        // Auna BAYAN clone — sannan raba da 3 don samun faɗin set ɗaya
-        setTimeout(() => {
-            singleSetWidth = Math.round(belt.scrollWidth / 3);
-            requestAnimationFrame(tick);
-        }, 100);
+        originals.forEach(card => belt.appendChild(card.cloneNode(true)));
 
         belt.addEventListener('touchstart', () => { paused = true; }, { passive: true });
         belt.addEventListener('touchend', () => { paused = false; lastTime = null; }, { passive: true });
+
+        requestAnimationFrame(tick);
     }
 
     function tick(ts) {
@@ -1647,9 +1650,9 @@ document.addEventListener('click', function(event) {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setup);
     } else {
-        setTimeout(setup, 500);
+        setTimeout(setup, 600);
     }
-})();      
+})();
         
     </script>
 </body>
