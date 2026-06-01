@@ -942,6 +942,127 @@
     align-items: center !important;
     justify-content: center !important;
         }
+
+
+
+        /* ===== STORY VIEWER ===== */
+.story-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+  border-radius: 20px;
+}
+.story-viewer.open {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: all;
+  border-radius: 0;
+}
+.story-progress-bar {
+  display: flex;
+  gap: 3px;
+  padding: 12px 12px 6px;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+}
+.progress-segment {
+  flex: 1;
+  height: 2.5px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: #fff;
+  width: 0%;
+  border-radius: 2px;
+}
+.story-header {
+  position: absolute;
+  top: 28px; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+}
+.story-user-info { display: flex; align-items: center; gap: 10px; }
+.story-viewer-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 2px solid #fde08d;
+  object-fit: cover;
+}
+.story-viewer-name {
+  font-weight: 700; font-size: 14px; color: #fff;
+}
+.story-viewer-time {
+  font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 1px;
+}
+.story-close-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; cursor: pointer; border: none;
+  backdrop-filter: blur(10px);
+}
+.story-media-area {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.story-image { width: 100%; height: 100%; object-fit: cover; }
+.story-text-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 80px 20px 120px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  font-size: 15px; line-height: 1.5; color: #fff;
+}
+.story-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 16px;
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+}
+.story-reply-input {
+  flex: 1;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50px;
+  padding: 10px 18px;
+  color: #fff; font-size: 13px; outline: none;
+}
+.story-reply-input::placeholder { color: rgba(255,255,255,0.5); }
+.story-react-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer;
+}
+.story-tap-prev {
+  position: absolute; left: 0; top: 0;
+  width: 35%; height: 100%; z-index: 5; cursor: pointer;
+}
+.story-tap-next {
+  position: absolute; right: 0; top: 0;
+  width: 35%; height: 100%; z-index: 5; cursor: pointer;
+    }
+        
     </style>
 </head>
 <body>
@@ -1065,6 +1186,35 @@
         </div>
 
     </div>
+    </div>
+
+
+
+    <div class="story-viewer" id="storyViewer">
+  <div class="story-progress-bar" id="progressBar"></div>
+  <div class="story-header">
+    <div class="story-user-info">
+      <img src="" class="story-viewer-avatar" id="viewerAvatar">
+      <div>
+        <div class="story-viewer-name" id="viewerName"></div>
+        <div class="story-viewer-time" id="viewerTime"></div>
+      </div>
+    </div>
+    <button class="story-close-btn" onclick="closeStoryViewer()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <div class="story-media-area">
+    <div class="story-tap-prev" onclick="prevStory()"></div>
+    <img src="" class="story-image" id="viewerImage" alt="">
+    <div class="story-text-overlay" id="viewerText"></div>
+    <div class="story-tap-next" onclick="nextStory()"></div>
+  </div>
+  <div class="story-footer">
+    <input class="story-reply-input" type="text" placeholder="Reply to story...">
+    <div class="story-react-btn">❤️</div>
+    <div class="story-react-btn">🎁</div>
+  </div>
     </div>
 
     
@@ -1572,12 +1722,130 @@ const newVideos = feedContainer.querySelectorAll('video');
           clearTimeout(scrollTimeout); scrollTimeout = setTimeout(handleVideoPriority, 150);
       }, { passive: true });
 
-      function openStory(storyId) {
-          if (navigator.vibrate) navigator.vibrate(15);
-          if (storyId === 'live_now') { alert("Shiga tsarin Synergy Live Stream... 🎥🔥"); } 
-          else if (storyId === 'your_story') { alert("Wannan sashin story ɗinka ne! ⚡"); } 
-          else { alert("Ana loda labarin Synergy Story na (" + storyId + ")... ⚡"); }
-      }
+
+
+        // ===== STORY VIEWER LOGIC =====
+let currentStory = null;
+let currentSlide = 0;
+let progressInterval = null;
+const SLIDE_DURATION = 5000;
+
+function openStory(storyId) {
+    // Map existing story IDs zuwa slides
+    const storyMap = {
+        'your_story': {
+            avatar: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=me',
+            name: 'Your Story',
+            time: 'just now',
+            slides: [{ img: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=me', text: 'Your story' }]
+        },
+        'live_now': {
+            avatar: 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_%E8%8B%B1%E8%AA%9E_logo.svg',
+            name: 'aljazeeraeng',
+            time: '🔴 LIVE',
+            slides: [{ img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80', text: 'Breaking: Live coverage now 📡' }]
+        },
+        'trt_afrika': {
+            avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg',
+            name: 'trtafrikaha',
+            time: '10m ago',
+            slides: [
+                { img: 'https://images.unsplash.com/photo-1503891450247-ee5f8ec46dc3?w=600&q=80', text: 'Africa today 🌍' },
+                { img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80', text: 'Stories from the continent ✊' }
+            ]
+        },
+        'bbc_news': {
+            avatar: 'https://upload.wikimedia.org/wikipedia/commons/6/62/BBC_News_2019.svg',
+            name: 'bbcnews',
+            time: '30m ago',
+            slides: [{ img: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=600&q=80', text: 'World news update 🌐' }]
+        },
+        'arewa_tech': {
+            avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg',
+            name: 'arewatech',
+            time: '1h ago',
+            slides: [{ img: 'https://images.unsplash.com/photo-1542296332-3c659bd32e73?w=600&q=80', text: 'Fashion week highlights 👗' }]
+        },
+        'daily_trust': {
+            avatar: 'https://images.pexels.com/photos/14446662/pexels-photo-14446662.jpeg',
+            name: 'dailytrust',
+            time: '2h ago',
+            slides: [{ img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80', text: 'Daily Trust latest news 📰' }]
+        },
+    };
+
+    const story = storyMap[storyId];
+    if (!story) return;
+
+    currentStory = story;
+    currentSlide = 0;
+
+    document.getElementById('viewerAvatar').src = story.avatar;
+    document.getElementById('viewerName').textContent = story.name;
+    document.getElementById('viewerTime').textContent = story.time;
+
+    buildProgressBar(story.slides.length);
+    showSlide(0);
+
+    document.getElementById('storyViewer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    if (navigator.vibrate) navigator.vibrate(15);
+}
+
+function closeStoryViewer() {
+    document.getElementById('storyViewer').classList.remove('open');
+    document.body.style.overflow = '';
+    clearInterval(progressInterval);
+    currentStory = null;
+}
+
+function buildProgressBar(count) {
+    const bar = document.getElementById('progressBar');
+    bar.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+        bar.innerHTML += `<div class="progress-segment"><div class="progress-fill" id="prog-${i}"></div></div>`;
+    }
+}
+
+function showSlide(index) {
+    clearInterval(progressInterval);
+    if (!currentStory) return;
+    const slides = currentStory.slides;
+    if (index < 0 || index >= slides.length) { closeStoryViewer(); return; }
+
+    currentSlide = index;
+    document.getElementById('viewerImage').src = slides[index].img;
+    document.getElementById('viewerText').textContent = slides[index].text;
+
+    slides.forEach((_, i) => {
+        const fill = document.getElementById('prog-' + i);
+        if (fill) fill.style.width = i < index ? '100%' : '0%';
+    });
+
+    const fill = document.getElementById('prog-' + index);
+    if (!fill) return;
+
+    let width = 0;
+    const step = 100 / (SLIDE_DURATION / 100);
+    progressInterval = setInterval(() => {
+        width += step;
+        fill.style.width = Math.min(width, 100) + '%';
+        if (width >= 100) { clearInterval(progressInterval); showSlide(index + 1); }
+    }, 100);
+}
+
+function nextStory() { showSlide(currentSlide + 1); }
+function prevStory() { showSlide(currentSlide - 1); }
+
+// Swipe down don rufe
+let touchStartY = 0;
+document.getElementById('storyViewer').addEventListener('touchstart', e => {
+    touchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.getElementById('storyViewer').addEventListener('touchend', e => {
+    if (e.changedTouches[0].clientY - touchStartY > 80) closeStoryViewer();
+});
 
 
         /* ================= CONTROLLER NA DROPDOWN ================= */
