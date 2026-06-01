@@ -1587,74 +1587,61 @@ document.addEventListener('click', function(event) {
 });
 
 
-
-        (function initConveyor() {
-    const SPEED = 8; // hankali sosai — kamar ruwa
+(function initConveyor() {
+    const SPEED = 20; // hankali — canja 20 zuwa 30 idan kana so sauri
     let offset = 0;
     let lastTime = null;
+    let raf;
     let paused = false;
-    let singleSetWidth = 0;
+    let beltWidth = 0;
 
     function setup() {
         const belt = document.getElementById('conveyorBelt');
         if (!belt) return;
 
-        const originals = Array.from(belt.children);
-        const count = originals.length; // 5 cards
+        // Duplicate cards 3x don seamless loop
+        const original = Array.from(belt.children);
+        beltWidth = original.length * 84; // 84 = card width + gap
 
-        // Auna faɗin set ɗaya KAFIN clone
-        // Dole belt ya kasance visible don auna
-        singleSetWidth = belt.scrollWidth;
+        original.forEach(card => belt.appendChild(card.cloneNode(true)));
+        original.forEach(card => belt.appendChild(card.cloneNode(true)));
 
-        // Clone 3x — don loop ya yi daram ba tare da yankewa ba
-        for (let i = 0; i < 3; i++) {
-            originals.forEach(card => {
-                belt.appendChild(card.cloneNode(true));
-            });
-        }
-
-        // Re-auna bayan clone
-        // singleSetWidth shine faɗin original 5 cards kawai
-        // Mun ɗauke shi kafin clone don daidaito
-
-        belt.addEventListener('touchstart', () => {
-            paused = true;
-        }, { passive: true });
-
-        belt.addEventListener('touchend', () => {
-            paused = false;
-            lastTime = null; // hana jump
+        // Re-attach onclick bayan clone
+        belt.querySelectorAll('.story-card').forEach(card => {
+            const username = card.querySelector('.story-username')?.innerText || '';
+            card.onclick = () => openStory(username);
         });
 
-        requestAnimationFrame(tick);
+        belt.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+        belt.addEventListener('touchend',   () => { paused = false; lastTime = null; });
+
+        raf = requestAnimationFrame(tick);
     }
 
     function tick(ts) {
         if (!lastTime) lastTime = ts;
-        const dt = Math.min((ts - lastTime) / 1000, 0.032); // cap — hana jacking
+        const dt = (ts - lastTime) / 1000;
         lastTime = ts;
 
         if (!paused) {
             offset -= SPEED * dt;
-
-            // Reset seamlessly idan mun wuce set ɗaya
-            if (offset <= -singleSetWidth) {
-                offset += singleSetWidth;
-            }
-
+            if (Math.abs(offset) >= beltWidth) offset += beltWidth;
             const belt = document.getElementById('conveyorBelt');
             if (belt) belt.style.transform = `translateX(${offset}px)`;
         }
 
-        requestAnimationFrame(tick);
+        raf = requestAnimationFrame(tick);
     }
 
+    // Start after page loads
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setup);
     } else {
-        setTimeout(setup, 500); // jira DOM ya daidaita sosai
+        setTimeout(setup, 400);
     }
 })();
+        
+        
         
     </script>
 </body>
