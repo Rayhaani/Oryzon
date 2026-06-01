@@ -1016,56 +1016,46 @@
 </div>
     
     
+<div id="conveyorBelt" style="display:flex; align-items:center; gap:8px; overflow:hidden; flex:1; height:95px;">
 
-<div class="nexus-stories-container">
-    <div class="story-card active-user" id="yourStoryAnchor" onclick="openStory('your_story')">
-        <div class="story-avatar-wrapper add-story">
-            <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg" alt="" class="story-avatar" id="story-avatar-preview">
-            <div class="add-story-btn">+</div>
+    <div class="story-card is-live" onclick="openStory('live_now')">
+        <div class="story-avatar-wrapper">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_%E8%8B%B1%E8%AA%9E_logo.svg" alt="" class="story-avatar">
+            <div class="live-badge">LIVE</div>
         </div>
-        <span class="story-username">Your story</span>
+        <span class="story-username">aljazeeraeng</span>
     </div>
 
-    <div id="conveyorBelt" style="display:flex; align-items:center; gap:8px; overflow:hidden; flex:1; height:95px; will-change:transform;">
-
-        <div class="story-card is-live" onclick="openStory('live_now')">
-            <div class="story-avatar-wrapper">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_%E8%8B%B1%E8%AA%9E_logo.svg" alt="" class="story-avatar">
-                <div class="live-badge">LIVE</div>
-            </div>
-            <span class="story-username">aljazeeraeng</span>
+    <div class="story-card has-story" onclick="openStory('trt_afrika')">
+        <div class="story-avatar-wrapper">
+            <img src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg" alt="" class="story-avatar">
         </div>
-
-        <div class="story-card has-story" onclick="openStory('trt_afrika')">
-            <div class="story-avatar-wrapper">
-                <img src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg" alt="" class="story-avatar">
-            </div>
-            <span class="story-username">trtafrikaha</span>
-        </div>
-
-        <div class="story-card has-story" onclick="openStory('bbc_news')">
-            <div class="story-avatar-wrapper">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/62/BBC_News_2019.svg" alt="" class="story-avatar">
-            </div>
-            <span class="story-username">bbcnews</span>
-        </div>
-
-        <div class="story-card has-story" onclick="openStory('arewa_tech')">
-            <div class="story-avatar-wrapper">
-                <img src="https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg" alt="" class="story-avatar">
-            </div>
-            <span class="story-username">arewatech</span>
-        </div>
-
-        <div class="story-card has-story" onclick="openStory('daily_trust')">
-            <div class="story-avatar-wrapper">
-                <img src="https://images.pexels.com/photos/14446662/pexels-photo-14446662.jpeg" alt="" class="story-avatar">
-            </div>
-            <span class="story-username">dailytrust</span>
-        </div>
-
+        <span class="story-username">trtafrikaha</span>
     </div>
+
+    <div class="story-card has-story" onclick="openStory('bbc_news')">
+        <div class="story-avatar-wrapper">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/62/BBC_News_2019.svg" alt="" class="story-avatar">
+        </div>
+        <span class="story-username">bbcnews</span>
+    </div>
+
+    <div class="story-card has-story" onclick="openStory('arewa_tech')">
+        <div class="story-avatar-wrapper">
+            <img src="https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg" alt="" class="story-avatar">
+        </div>
+        <span class="story-username">arewatech</span>
+    </div>
+
+    <div class="story-card has-story" onclick="openStory('daily_trust')">
+        <div class="story-avatar-wrapper">
+            <img src="https://images.pexels.com/photos/14446662/pexels-photo-14446662.jpeg" alt="" class="story-avatar">
+        </div>
+        <span class="story-username">dailytrust</span>
+    </div>
+
 </div>
+
     
     <div class="feed-container">
         </div>
@@ -1599,56 +1589,68 @@ document.addEventListener('click', function(event) {
 
 
         (function initConveyor() {
-    const SPEED = 20; // hankali — canja 20 zuwa 30 idan kana so sauri
-    let offset = 0;
-    let lastTime = null;
-    let raf;
-    let paused = false;
-    let beltWidth = 0;
-
     function setup() {
         const belt = document.getElementById('conveyorBelt');
         if (!belt) return;
 
-        // Duplicate cards 3x don seamless loop
-        const original = Array.from(belt.children);
-        beltWidth = original.length * 84; // 84 = card width + gap
+        // Ɗauki original cards
+        const originals = Array.from(belt.children);
+        const CARD_W = 84; // width + gap
+        const originalCount = originals.length;
 
-        original.forEach(card => belt.appendChild(card.cloneNode(true)));
-        original.forEach(card => belt.appendChild(card.cloneNode(true)));
+        // Ƙirƙiri inner wrapper wanda zai yi motsi
+        const inner = document.createElement('div');
+        inner.style.cssText = 'display:flex; align-items:center; gap:8px; will-change:transform;';
 
-        // Re-attach onclick bayan clone
-        belt.querySelectorAll('.story-card').forEach(card => {
-            const username = card.querySelector('.story-username')?.innerText || '';
-            card.onclick = () => openStory(username);
-        });
-
-        belt.addEventListener('touchstart', () => { paused = true; }, { passive: true });
-        belt.addEventListener('touchend',   () => { paused = false; lastTime = null; });
-
-        raf = requestAnimationFrame(tick);
-    }
-
-    function tick(ts) {
-        if (!lastTime) lastTime = ts;
-        const dt = (ts - lastTime) / 1000;
-        lastTime = ts;
-
-        if (!paused) {
-            offset -= SPEED * dt;
-            if (Math.abs(offset) >= beltWidth) offset += beltWidth;
-            const belt = document.getElementById('conveyorBelt');
-            if (belt) belt.style.transform = `translateX(${offset}px)`;
+        // Saka cards 4x don loop ya kasance seamless
+        for (let i = 0; i < 4; i++) {
+            originals.forEach(card => {
+                inner.appendChild(card.cloneNode(true));
+            });
         }
 
-        raf = requestAnimationFrame(tick);
+        // Cire originals, saka inner
+        belt.innerHTML = '';
+        belt.appendChild(inner);
+
+        const totalWidth = originalCount * CARD_W; // tsayin set ɗaya
+        let offset = 0;
+        let lastTime = null;
+        let paused = false;
+        const SPEED = 12; // pixels per second — HANKALI SOSAI
+
+        function tick(ts) {
+            if (!lastTime) lastTime = ts;
+            // Smoothing — cap dt don kar jacking ya faru idan tab ta boye
+            const dt = Math.min((ts - lastTime) / 1000, 0.05);
+            lastTime = ts;
+
+            if (!paused) {
+                offset -= SPEED * dt;
+                // Reset silently idan mun wuce set ɗaya
+                if (offset <= -totalWidth) {
+                    offset += totalWidth;
+                }
+                inner.style.transform = `translateX(${offset}px)`;
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        // Pause idan mutum ya taɓa
+        belt.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+        belt.addEventListener('touchend', () => {
+            paused = false;
+            lastTime = null; // reset time don kar ya yi jump bayan ya dawo
+        });
+
+        requestAnimationFrame(tick);
     }
 
-    // Start after page loads
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setup);
     } else {
-        setTimeout(setup, 400);
+        setTimeout(setup, 300);
     }
 })();
         
