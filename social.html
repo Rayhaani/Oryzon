@@ -1599,61 +1599,57 @@ document.addEventListener('click', function(event) {
 });
 
 
-(function initConveyor() {
-    const SPEED = 20; // hankali — canja 20 zuwa 30 idan kana so sauri
+
+  (function initConveyor() {
+    const SPEED = 4;
     let offset = 0;
     let lastTime = null;
-    let raf;
     let paused = false;
-    let beltWidth = 0;
+    let singleSetWidth = 0;
 
     function setup() {
         const belt = document.getElementById('conveyorBelt');
         if (!belt) return;
 
-        // Duplicate cards 3x don seamless loop
-        const original = Array.from(belt.children);
-        beltWidth = original.length * 84; // 84 = card width + gap
+        const originals = Array.from(belt.children);
 
-        original.forEach(card => belt.appendChild(card.cloneNode(true)));
-        original.forEach(card => belt.appendChild(card.cloneNode(true)));
+        // Clone 2x kawai
+        originals.forEach(card => belt.appendChild(card.cloneNode(true)));
+        originals.forEach(card => belt.appendChild(card.cloneNode(true)));
 
-        // Re-attach onclick bayan clone
-        belt.querySelectorAll('.story-card').forEach(card => {
-            const username = card.querySelector('.story-username')?.innerText || '';
-            card.onclick = () => openStory(username);
-        });
+        // Auna BAYAN clone — sannan raba da 3 don samun faɗin set ɗaya
+        setTimeout(() => {
+            singleSetWidth = Math.round(belt.scrollWidth / 3);
+            requestAnimationFrame(tick);
+        }, 100);
 
         belt.addEventListener('touchstart', () => { paused = true; }, { passive: true });
-        belt.addEventListener('touchend',   () => { paused = false; lastTime = null; });
-
-        raf = requestAnimationFrame(tick);
+        belt.addEventListener('touchend', () => { paused = false; lastTime = null; }, { passive: true });
     }
 
     function tick(ts) {
         if (!lastTime) lastTime = ts;
-        const dt = (ts - lastTime) / 1000;
+        const dt = Math.min((ts - lastTime) / 1000, 0.032);
         lastTime = ts;
 
-        if (!paused) {
+        if (!paused && singleSetWidth > 0) {
             offset -= SPEED * dt;
-            if (Math.abs(offset) >= beltWidth) offset += beltWidth;
+            if (offset <= -singleSetWidth) {
+                offset += singleSetWidth;
+            }
             const belt = document.getElementById('conveyorBelt');
             if (belt) belt.style.transform = `translateX(${offset}px)`;
         }
 
-        raf = requestAnimationFrame(tick);
+        requestAnimationFrame(tick);
     }
 
-    // Start after page loads
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setup);
     } else {
-        setTimeout(setup, 400);
+        setTimeout(setup, 500);
     }
-})();
-        
-        
+})();      
         
     </script>
 </body>
