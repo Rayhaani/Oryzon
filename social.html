@@ -1589,60 +1589,62 @@ document.addEventListener('click', function(event) {
 
 
         (function initConveyor() {
+    const SPEED = 8; // hankali sosai — kamar ruwa
+    let offset = 0;
+    let lastTime = null;
+    let paused = false;
+    let singleSetWidth = 0;
+
     function setup() {
         const belt = document.getElementById('conveyorBelt');
         if (!belt) return;
 
-        // Ɗauki original cards
         const originals = Array.from(belt.children);
-        const CARD_W = 84; // width + gap
-        const originalCount = originals.length;
+        const count = originals.length; // 5 cards
 
-        // Ƙirƙiri inner wrapper wanda zai yi motsi
-        const inner = document.createElement('div');
-        inner.style.cssText = 'display:flex; align-items:center; gap:8px; will-change:transform;';
+        // Auna faɗin set ɗaya KAFIN clone
+        // Dole belt ya kasance visible don auna
+        singleSetWidth = belt.scrollWidth;
 
-        // Saka cards 4x don loop ya kasance seamless
-        for (let i = 0; i < 4; i++) {
+        // Clone 3x — don loop ya yi daram ba tare da yankewa ba
+        for (let i = 0; i < 3; i++) {
             originals.forEach(card => {
-                inner.appendChild(card.cloneNode(true));
+                belt.appendChild(card.cloneNode(true));
             });
         }
 
-        // Cire originals, saka inner
-        belt.innerHTML = '';
-        belt.appendChild(inner);
+        // Re-auna bayan clone
+        // singleSetWidth shine faɗin original 5 cards kawai
+        // Mun ɗauke shi kafin clone don daidaito
 
-        const totalWidth = originalCount * CARD_W; // tsayin set ɗaya
-        let offset = 0;
-        let lastTime = null;
-        let paused = false;
-        const SPEED = 12; // pixels per second — HANKALI SOSAI
+        belt.addEventListener('touchstart', () => {
+            paused = true;
+        }, { passive: true });
 
-        function tick(ts) {
-            if (!lastTime) lastTime = ts;
-            // Smoothing — cap dt don kar jacking ya faru idan tab ta boye
-            const dt = Math.min((ts - lastTime) / 1000, 0.05);
-            lastTime = ts;
-
-            if (!paused) {
-                offset -= SPEED * dt;
-                // Reset silently idan mun wuce set ɗaya
-                if (offset <= -totalWidth) {
-                    offset += totalWidth;
-                }
-                inner.style.transform = `translateX(${offset}px)`;
-            }
-
-            requestAnimationFrame(tick);
-        }
-
-        // Pause idan mutum ya taɓa
-        belt.addEventListener('touchstart', () => { paused = true; }, { passive: true });
         belt.addEventListener('touchend', () => {
             paused = false;
-            lastTime = null; // reset time don kar ya yi jump bayan ya dawo
+            lastTime = null; // hana jump
         });
+
+        requestAnimationFrame(tick);
+    }
+
+    function tick(ts) {
+        if (!lastTime) lastTime = ts;
+        const dt = Math.min((ts - lastTime) / 1000, 0.032); // cap — hana jacking
+        lastTime = ts;
+
+        if (!paused) {
+            offset -= SPEED * dt;
+
+            // Reset seamlessly idan mun wuce set ɗaya
+            if (offset <= -singleSetWidth) {
+                offset += singleSetWidth;
+            }
+
+            const belt = document.getElementById('conveyorBelt');
+            if (belt) belt.style.transform = `translateX(${offset}px)`;
+        }
 
         requestAnimationFrame(tick);
     }
@@ -1650,7 +1652,7 @@ document.addEventListener('click', function(event) {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setup);
     } else {
-        setTimeout(setup, 300);
+        setTimeout(setup, 500); // jira DOM ya daidaita sosai
     }
 })();
         
