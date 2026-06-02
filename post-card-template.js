@@ -457,13 +457,19 @@ window.generatePostHTML = function(post) {
                 </div>
             </div>
 
-            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-                <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
+                        <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+                <!-- Sabon Follow Button da aka kwafo daga na Gift Box exact -->
+                <div class="gift-btn-nexus follow-btn-nexus" onclick="handleFollow(this)" style="cursor: pointer;">
+                    <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
+                </div>
+                
+                <!-- Gashi nan na Gift Box dinka na asali kusa da shi -->
                 <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
                     <span class="gift-emoji">🎁</span>
                     <span style="font-size: 10px;">Gift</span>
                 </div>
             </div>
+            
 
             <div onclick="event.stopPropagation()"
                  style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
