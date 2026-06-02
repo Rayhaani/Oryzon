@@ -459,54 +459,35 @@ window.generatePostHTML = function(post) {
             </div>
 
                                 
-            
-                    <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-                                <div class="gift-btn-nexus follow-btn-nexus" 
-                     onclick="
-                        handleFollow(this);
-                        
-                        // Zamu dan dakata kadan (10ms) don jiran handleFollow() ta gama nata shirme, sai mu wanke katsalandan dinta
-                        setTimeout(() => {
-                            const span = this.querySelector('span');
-                            
-                            // Idan text din ya dawo 'Follow', muna tilasta masa goge duk wani kumburi ya koma asali daidai da Gift button
-                            if (span.textContent.trim() === 'Follow') {
-                                this.style.setProperty('width', 'auto', 'important');
-                                this.style.setProperty('padding', '0 10px', 'important');
-                                span.style.setProperty('font-size', '10px', 'important');
-                            } else {
-                                // Idan kuma ya koma 'Following', anan kadai zai dauki size na biyu na expanding
-                                this.style.setProperty('width', '85px', 'important');
-                                this.style.setProperty('padding', '0', 'important');
-                                span.style.setProperty('font-size', '10px', 'important');
-                            }
-                        }, 10);
-                     " 
-                     style="cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
-                    <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
-                </div>
+            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+    <div class="gift-btn-nexus follow-btn-nexus" 
+         onclick="handleFollowBtn(this)" 
+         style="cursor: pointer;">
+        <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
+    </div>
+    
+    <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
+        <span class="gift-emoji">🎁</span>
+        <span style="font-size: 10px;">Gift</span>
+    </div>
+</div>
 
-                
-                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-                    <span class="gift-emoji">🎁</span>
-                    <span style="font-size: 10px;">Gift</span>
-                </div>
-            </div>
-            
-            <div onclick="event.stopPropagation()"
-                 style="font-size: 18px; cursor: pointer; padding: 0 4px; display: flex; align-items: center; gap: 3px;">
-                <span class="dot-item" style="color: #000000; font-weight: 900; display: inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
-                <span class="dot-item" style="color: #000000; font-weight: 900; display: inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay: 0.3s;">•</span>
-                <span class="dot-item" style="color: #000000; font-weight: 900; display: inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay: 0.6s;">•</span>
-            </div>
+<div class="three-dots-breath" onclick="event.stopPropagation()"
+     style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
+    ···
+</div>
 
-            <style>
-                @keyframes dotSequence {
-                    0%, 100% { transform: scale(1); opacity: 0.3; }
-                    50% { transform: scale(1.4); opacity: 1; }
-                }
-            </style>
-            
+<style>
+    @keyframes dotsContinuousBreath {
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.15); opacity: 1; }
+    }
+    .three-dots-breath {
+        display: inline-block !important;
+        animation: dotsContinuousBreath 2s infinite ease-in-out !important;
+    }
+</style>
+                    
 
             
         </div>
@@ -644,6 +625,32 @@ window.generatePostHTML = function(post) {
         animFrame = requestAnimationFrame(animate);
     }
 
+
+
+
+   function handleFollowBtn(btn) {
+    const span = btn.querySelector('span');
+    const isFollowing = span.textContent.trim() === 'Following';
+
+    if (isFollowing) {
+        // Unfollow — dawo exact asali
+        btn.style.width = '';
+        btn.style.padding = '';
+        span.textContent = 'Follow';
+        span.style.fontSize = '10px';
+    } else {
+        // Follow — expand kaɗan kawai
+        btn.style.width = '72px'; // Ƙaramin expanding
+        span.textContent = 'Following';
+        span.style.fontSize = '10px';
+    }
+
+    handleFollow(btn); // Ka kira original function ɗinka
+   }
+
+
+
+   
     function animate(ts) {
         if (!lastTime) lastTime = ts;
         const dt = (ts - lastTime) / 1000;
