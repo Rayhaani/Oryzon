@@ -454,7 +454,7 @@ window.generatePostHTML = function(post) {
                         <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
                     </div>
                     <!-- Timestamp girmansa bai wuce 50% na username ba (Ya koma 9px) kuma ba zai yi breaking ba -->
-                    ${timeStr ? `<span class="post-time" style="font-size:10px !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; text-transform:capitalize; white-space: nowrap !important;">${timeStr}</span>` : ''}
+                    ${timeStr ? `<span class="post-time" style="font-size:10px !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; text-transform: lowercase !important; white-space: nowrap !important;">${timeStr}</span>` : ''}
                 </div>
             </div>
             
