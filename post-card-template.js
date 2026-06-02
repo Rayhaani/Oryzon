@@ -55,23 +55,7 @@
             100% { transform: translateX(100%); }
         }
 
-        /* ===== POST HEADER ===== */
-        .post-header {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            padding: 0 15px 0 48px !important;
-            height: 46px !important;
-            position: relative !important;
-            
-            /* === Kawai wannan biyu aka canza === */
-            background: rgba(245, 245, 247, 0.35) !important;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-            
-            margin-bottom: 0 !important;
-        }
+        
 
         /* ===== AVATAR ===== */
         .post-avatar {
@@ -96,12 +80,6 @@
             padding-left: 4px !important;
         }
 
-        .post-username {
-            font-size: 13px !important;
-            font-weight: 700 !important;
-            color: #ffffff !important;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
-        }
 
         /* ===== VERIFIED BADGE ===== */
         .post-verified-badge {
@@ -134,14 +112,7 @@
             font-weight: 900 !important;
         }
 
-        /* ===== TIMESTAMP ===== */
-        .post-time {
-            font-size: 10px !important;
-            color: rgba(255, 255, 255, 0.45) !important;
-            display: block !important;
-            margin-top: 1px !important;
-            font-family: 'Inter', sans-serif !important;
-        }
+        
 
         /* ===== POST CONTENT TEXT ===== */
         .post-content {
@@ -303,6 +274,157 @@
             height: 100vh !important;
             max-height: 100vh !important;
         }
+
+
+
+                /* ===== POST HEADER ===== */
+        .post-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 8px 12px !important;
+            height: 54px !important;
+            position: relative !important;
+            background: #0d0d0d !important; /* Deep Premium Dark Black */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            margin-bottom: 0 !important;
+            box-sizing: border-box !important;
+        }
+
+        /* ===== AVATAR ZONE ===== */
+        .post-avatar-wrapper {
+            position: relative !important;
+            width: 40px !important;
+            height: 40px !important;
+            flex-shrink: 0 !important;
+            margin-right: 10px !important;
+        }
+
+        .post-avatar {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 50% !important;
+            border: 1.5px solid var(--premium-gold) !important;
+            object-fit: cover !important;
+            display: block !important;
+        }
+
+        /* ===== USERNAME + TIMESTAMP CAPSULE (SHARED GIFT BACKGROUND) ===== */
+        .post-username-row {
+            display: flex !important;
+            flex-direction: column !important; /* Suna a sama, lokaci a kasa */
+            justify-content: center !important;
+            flex: 1 !important;
+            padding: 4px 12px !important;
+            height: 36px !important;
+            /* Cikakken Background na Gift Button */
+            background: linear-gradient(135deg, #1e1e1e 0%, #141414 100%) !important;
+            border: 1px solid rgba(253, 224, 141, 0.2) !important;
+            border-radius: 12px !important;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5) !important;
+            margin-right: 8px !important;
+        }
+
+        .post-username {
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            line-height: 1.2 !important;
+        }
+
+        /* ===== VERIFIED BADGE ===== */
+        .post-verified-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 12px !important;
+            height: 12px !important;
+            background-color: #1d9bf0 !important;
+            clip-path: polygon(
+                50% 0%, 61% 5%, 72% 0%, 80% 9%, 91% 9%, 91% 20%,
+                100% 28%, 95% 39%, 100% 50%, 95% 61%, 100% 72%, 91% 80%,
+                91% 91%, 80% 91%, 72% 100%, 61% 95%, 50% 100%, 39% 95%,
+                28% 100%, 20% 91%, 9% 91%, 9% 80%, 0% 72%, 5% 61%,
+                0% 50%, 5% 39%, 0% 28%, 9% 20%, 9% 9%, 20% 9%, 28% 0%, 39% 5%
+            ) !important;
+            margin-left: 4px !important;
+            transform: translateY(1px) !important;
+        }
+
+        .post-verified-badge i {
+            font-size: 8px !important;
+            color: #ffffff !important;
+            font-weight: 900 !important;
+        }
+
+        /* ===== TIMESTAMP (INSTAGRAM STANDARD) ===== */
+        .post-time {
+            font-size: 10.5px !important;
+            color: rgba(255, 255, 255, 0.5) !important;
+            font-family: 'Inter', sans-serif !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
+            font-weight: 400 !important;
+            text-transform: none !important; /* Cire kowace irin katsalandan */
+        }
+
+        /* ===== ACTIONS ZONE ===== */
+        .header-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+        }
+
+        /* ===== FOLLOW BUTTON (SHARED GIFT BACKGROUND) ===== */
+        .follow-text-link {
+            background: linear-gradient(135deg, #1e1e1e 0%, #141414 100%) !important;
+            border: 1px solid rgba(253, 224, 141, 0.25) !important;
+            border-radius: 12px !important;
+            color: var(--premium-gold) !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            padding: 0 12px !important;
+            height: 36px !important;
+            line-height: 34px !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5) !important;
+            box-sizing: border-box !important;
+        }
+
+        .follow-text-link:active {
+            transform: scale(0.95) !important;
+            opacity: 0.8 !important;
+        }
+
+        /* ===== GIFT BUTTON ===== */
+        .gift-btn-nexus {
+            background: linear-gradient(135deg, #1e1e1e 0%, #141414 100%) !important;
+            border: 1px solid rgba(253, 224, 141, 0.25) !important;
+            border-radius: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            padding: 0 10px !important;
+            height: 36px !important;
+            cursor: pointer !important;
+            box-sizing: border-box !important;
+        }
+
+        .gift-btn-nexus span {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            color: #ffffff !important;
+        }
+        
+        .gift-emoji {
+            font-size: 13px !important;
+        }
+        
            
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
@@ -438,38 +560,44 @@ window.generatePostHTML = function(post) {
         if(media && media.tagName === 'VIDEO' && typeof toggleImmersive === 'function') toggleImmersive(this);
     ">
 
+                <!-- HEADER -->
         <div class="post-header">
-            <a href="me.html?user=${encodeURIComponent(post.username || '')}"
-               style="position:absolute; left:0; top:0; width:54px; height:54px; display:block; z-index:20; text-decoration:none;">
-                <img src="${avatarUrl}"
-                     class="post-avatar"
-                     loading="lazy"
-                     alt="${post.username}">
-            </a>
-
-            <div class="post-username-row">
-                <div>
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <span class="post-username" style="font-size:16px; font-weight:800; color:#fff; line-height:1; margin-bottom:3px; display:block;">${post.username || 'unknown'}</span>
-                        <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
-                    </div>
-                    ${timeStr ? `<span class="post-time" style="font-size:18px; color:rgba(255,255,255,0.75); margin-top:5px; display:block; line-height:1; text-transform:capitalize;">${timeStr}</span>` : ''}
-                </div>
+            
+            <!-- AVATAR RETAINED & SAFELY POSITIONED -->
+            <div class="post-avatar-wrapper">
+                <a href="me.html?user=${encodeURIComponent(post.username || '')}" style="text-decoration:none; display:block; width:100%; height:100%;">
+                    <img src="${avatarUrl}" class="post-avatar" loading="lazy" alt="${post.username}">
+                </a>
             </div>
 
-            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+            <!-- USERNAME AND TIMESTAMP DEEP PREMIUM CAPSULE -->
+            <div class="post-username-row">
+                <div style="display:flex; align-items:center;">
+                    <span class="post-username">${post.username || 'unknown'}</span>
+                    <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
+                </div>
+                ${timeStr ? `<span class="post-time">${timeStr}</span>` : ''}
+            </div>
+
+            <!-- HEADER ACTIONS GROUP -->
+            <div class="header-actions" onclick="stopProp(event)">
                 <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
                 <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
                     <span class="gift-emoji">🎁</span>
-                    <span style="font-size: 10px;">Gift</span>
+                    <span>Gift</span>
                 </div>
             </div>
 
+            <!-- THREE DOTS OPTION -->
             <div onclick="event.stopPropagation()"
-                 style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
+                 style="color:rgba(255,255,255,0.4); font-size:16px; cursor:pointer; padding-left:6px; letter-spacing:1px; display:flex; align-items:center;">
                 ···
             </div>
         </div>
+        <!-- /HEADER -->
+      
+        
+        
         ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
 
         <div style="position:relative;" dblclick="
