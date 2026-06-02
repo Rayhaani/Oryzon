@@ -453,13 +453,19 @@ window.generatePostHTML = function(post) {
                         <span class="post-username" style="font-size:15px !important; font-weight:800; color:#fff; display:block;">${post.username || 'unknown'}</span>
                         <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
                     </div>
-                    <!-- Timestamp girmansa bai wuce 50% na username ba (Ya koma 9px) kuma ba zai yi breaking ba -->
+                    
                                         ${timeStr ? (() => {
-                        // 1. Goge th, nd, st, rd da alamun sassaƙi bayan lambobi
+                        // 1. Da farko, goge st, nd, rd, th gaba daya
                         let cleanTime = timeStr.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1').replace(/,/g, '');
                         
-                        // 2. Mayar da haruffan farko na kowace kalma zuwa Capital Letter (kamar sunan watan)
-                        cleanTime = cleanTime.toLowerCase().replace(/\b[a-z]/g, letter => letter.toUpperCase());
+                        // 2. Mayar da komai zuwa mall letters na asali gaba daya
+                        cleanTime = cleanTime.toLowerCase();
+                        
+                        // 3. IDAN DATE NE (wato yana dauke da sunan wata): Sai mu mayar da farkon watan ya zama Capital Letter
+                        // Wannan zai bar irin su 'minutes ago', 'hours ago' a completely small letters
+                        if (!cleanTime.includes('minute') && !cleanTime.includes('hour') && !cleanTime.includes('second') && !cleanTime.includes('day') && !cleanTime.includes('week')) {
+                            cleanTime = cleanTime.replace(/\b[a-z]/g, letter => letter.toUpperCase());
+                        }
                         
                         return `<span class="post-time" style="font-size:9px !important; font-weight: 700 !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; white-space: nowrap !important;">${cleanTime}</span>`;
                     })() : ''}
