@@ -304,7 +304,19 @@
             max-height: 100vh !important;
         }
 
-           
+
+
+           /* ===== FOLLOW BUTTON - IDENTICAL TO GIFT BUTTON ===== */
+.follow-btn-nexus {
+    min-width: 60px;
+    justify-content: center;
+}
+
+.follow-btn-nexus.following {
+    min-width: 80px;
+}
+
+
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
         .feed-container {
@@ -459,16 +471,15 @@ window.generatePostHTML = function(post) {
             </div>
 
                                 
-                     <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-                <div class="gift-btn-nexus follow-btn-nexus" 
-                     onclick="
-                        handleFollow(this);
-                        const span = this.querySelector('span');
-                        span.style.fontSize = '10px';
-                     " 
-                     style="cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
-                    <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
-                </div>
+                     
+                <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+    <div class="gift-btn-nexus follow-btn-nexus" 
+         onclick="handleFollowBtn(this)"
+         style="cursor: pointer;">
+        <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
+    </div>
+    
+
                 
                 <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
                     <span class="gift-emoji">🎁</span>
@@ -628,6 +639,25 @@ window.generatePostHTML = function(post) {
         animFrame = requestAnimationFrame(animate);
     }
 
+
+
+   // SHARED - Follow button handler
+window.handleFollowBtn = function(btn) {
+    const span = btn.querySelector('span');
+    const isFollowing = span.textContent.trim() === 'Following';
+
+    if (isFollowing) {
+        // Unfollow — dawo exact asali
+        span.textContent = 'Follow';
+        btn.classList.remove('following');
+    } else {
+        // Follow — expand kaɗan
+        span.textContent = 'Following';
+        btn.classList.add('following');
+    }
+
+    if (navigator.vibrate) navigator.vibrate(10);
+};
 
 
    
