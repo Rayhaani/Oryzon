@@ -460,20 +460,14 @@ window.generatePostHTML = function(post) {
 
                                 
             
-                       <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+                    <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
                 <div class="gift-btn-nexus follow-btn-nexus" 
                      onclick="
                         handleFollow(this);
                         const span = this.querySelector('span');
-                        if (span.textContent.trim() === 'Follow') {
-                            this.style.width = ''; // Yana goge tsayin expanding ya koma asali daidai da Gift button
-                            span.style.fontSize = '10px';
-                        } else {
-                            this.style.width = '85px'; // Dan takaitaccen expanding kadai lokacin Following
-                            span.style.fontSize = '10px';
-                        }
+                        span.style.fontSize = '10px';
                      " 
-                     style="cursor: pointer;">
+                     style="cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
                     <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
                 </div>
                 
@@ -483,19 +477,17 @@ window.generatePostHTML = function(post) {
                 </div>
             </div>
             
-            <div class="three-dots-breath" onclick="event.stopPropagation()"
-                 style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
-                ···
+            <div onclick="event.stopPropagation()"
+                 style="font-size: 18px; cursor: pointer; padding: 0 4px; display: flex; align-items: center; gap: 3px;">
+                <span class="dot-item" style="color: #000000; font-weight: 900; display: inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
+                <span class="dot-item" style="color: #000000; font-weight: 900; display: inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay: 0.3s;">•</span>
+                <span class="dot-item" style="color: #000000; font-weight: 900; display: inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay: 0.6s;">•</span>
             </div>
 
             <style>
-                @keyframes dotsContinuousBreath {
+                @keyframes dotSequence {
                     0%, 100% { transform: scale(1); opacity: 0.3; }
-                    50% { transform: scale(1.15); opacity: 1; }
-                }
-                .three-dots-breath {
-                    display: inline-block !important;
-                    animation: dotsContinuousBreath 2s infinite ease-in-out !important;
+                    50% { transform: scale(1.4); opacity: 1; }
                 }
             </style>
             
