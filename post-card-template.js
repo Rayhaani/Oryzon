@@ -446,11 +446,11 @@ window.generatePostHTML = function(post) {
                      alt="${post.username}">
             </a>
 
-                       <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 0 0 5px !important;">
+                       <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 0 0 4px !important;">
                 <div>
                     <!-- Username an kara masa girma da 2px (Ya koma 18px) -->
                     <div style="display:flex; align-items:center; gap:5px; line-height:1.2;">
-                        <span class="post-username" style="font-size:17px !important; font-weight:800; color:#fff; display:block;">${post.username || 'unknown'}</span>
+                        <span class="post-username" style="font-size:14px !important; font-weight:800; color:#fff; display:block;">${post.username || 'unknown'}</span>
                         <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
                     </div>
                     <!-- Timestamp girmansa bai wuce 50% na username ba (Ya koma 9px) kuma ba zai yi breaking ba -->
