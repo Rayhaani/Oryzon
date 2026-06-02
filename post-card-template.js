@@ -69,6 +69,9 @@
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     border-bottom: 1px solid rgba(255, 255, 244, 0.12) !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4) !important;
+        } 
+
     
     margin-bottom: 0 !important;
 }
