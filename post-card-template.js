@@ -459,34 +459,7 @@ window.generatePostHTML = function(post) {
             </div>
 
                                 
-            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-    <div class="gift-btn-nexus follow-btn-nexus" 
-         onclick="handleFollowBtn(this)" 
-         style="cursor: pointer;">
-        <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
-    </div>
-    
-    <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-        <span class="gift-emoji">🎁</span>
-        <span style="font-size: 10px;">Gift</span>
-    </div>
-</div>
-
-<div class="three-dots-breath" onclick="event.stopPropagation()"
-     style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
-    ···
-</div>
-
-<style>
-    @keyframes dotsContinuousBreath {
-        0%, 100% { transform: scale(1); opacity: 0.3; }
-        50% { transform: scale(1.15); opacity: 1; }
-    }
-    .three-dots-breath {
-        display: inline-block !important;
-        animation: dotsContinuousBreath 2s infinite ease-in-out !important;
-    }
-</style>
+            
                     
 
             
@@ -624,29 +597,6 @@ window.generatePostHTML = function(post) {
         cancelAnimationFrame(animFrame);
         animFrame = requestAnimationFrame(animate);
     }
-
-
-
-
-   function handleFollowBtn(btn) {
-    const span = btn.querySelector('span');
-    const isFollowing = span.textContent.trim() === 'Following';
-
-    if (isFollowing) {
-        // Unfollow — dawo exact asali
-        btn.style.width = '';
-        btn.style.padding = '';
-        span.textContent = 'Follow';
-        span.style.fontSize = '10px';
-    } else {
-        // Follow — expand kaɗan kawai
-        btn.style.width = '72px'; // Ƙaramin expanding
-        span.textContent = 'Following';
-        span.style.fontSize = '10px';
-    }
-
-    handleFollow(btn); // Ka kira original function ɗinka
-   }
 
 
 
