@@ -446,17 +446,17 @@ window.generatePostHTML = function(post) {
                      alt="${post.username}">
             </a>
 
-            
-                                <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 0 0 54px !important;">
+                       <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 0 0 5px !important;">
                 <div>
+                    <!-- Username an kara masa girma da 2px (Ya koma 18px) -->
                     <div style="display:flex; align-items:center; gap:5px; line-height:1.2;">
-                        <span class="post-username" style="font-size:18px !important; font-weight:800; color:#fff; display:block;">${post.username || 'unknown'}</span>
+                        <span class="post-username" style="font-size:17px !important; font-weight:800; color:#fff; display:block;">${post.username || 'unknown'}</span>
                         <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
                     </div>
-                    ${timeStr ? `<span class="post-time" style="font-size:9px !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; text-transform:capitalize; white-space: nowrap !important;">${timeStr}</span>` : ''}
+                    <!-- Timestamp girmansa bai wuce 50% na username ba (Ya koma 9px) kuma ba zai yi breaking ba -->
+                    ${timeStr ? `<span class="post-time" style="font-size:10px !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; text-transform:capitalize; white-space: nowrap !important;">${timeStr}</span>` : ''}
                 </div>
             </div>
-            
             
             
                         
