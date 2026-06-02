@@ -182,11 +182,12 @@
             justify-content: space-between !important;
             align-items: center !important;
             padding: 10px 10px !important;
-            background: rgba(10, 10, 10, 0.6) !important;
-            backdrop-filter: blur(10px) !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
             border-top: 1px solid rgba(255, 215, 0, 0.08) !important;
         }
-
+        
         .post-action-capsules, .action-capsules {
             display: flex !important;
             gap: 6px !important;
