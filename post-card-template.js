@@ -182,7 +182,7 @@
             align-items: center !important;
             padding: 10px 10px !important;
             
-            /* Sanya ta hau saman kowane hoto ko bidiyo na dindindin */
+            /* Sanya shi ya hau kan hoton ko bidiyon da yake ciki */
             position: absolute !important;
             bottom: 0 !important;
             left: 0 !important;
@@ -190,13 +190,14 @@
             box-sizing: border-box !important;
             z-index: 20 !important;
 
-            /* Hasken Glassmorphism mai nuna abubuwan da ke kasa ba tare da komawa ash ba */
+            /* Salon Glassmorphism na gaskiya */
             background: rgba(0, 0, 0, 0.4) !important;
             backdrop-filter: blur(20px) !important;
             -webkit-backdrop-filter: blur(20px) !important;
             
             border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
+        
         
         
         
