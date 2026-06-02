@@ -303,6 +303,41 @@
             height: 100vh !important;
             max-height: 100vh !important;
         }
+
+
+
+
+                /* ===== GIFT & FOLLOW BUTTONS (EXACT IDENTICAL STYLE) ===== */
+        .gift-btn-nexus {
+            background: linear-gradient(135deg, #1e1e1e 0%, #141414 100%) !important;
+            border: 1px solid rgba(253, 224, 141, 0.25) !important;
+            border-radius: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            padding: 0 10px !important;
+            height: 36px !important;
+            box-sizing: border-box !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .gift-btn-nexus:active {
+            transform: scale(0.95) !important;
+            opacity: 0.8 !important;
+        }
+
+        .gift-btn-nexus span {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            color: #ffffff !important;
+        }
+        
+        .gift-emoji {
+            font-size: 13px !important;
+        }
+        
            
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
