@@ -88,21 +88,7 @@
         }
 
         /* ===== USERNAME + BADGE ROW ===== */
-        .post-username-row {
-            display: flex !important;
-            align-items: center !important;
-            gap: 4px !important;
-            flex: 1 !important;
-            padding-left: 4px !important;
-        }
-
-        .post-username {
-            font-size: 13px !important;
-            font-weight: 700 !important;
-            color: #ffffff !important;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
-        }
-
+        
         /* ===== VERIFIED BADGE ===== */
         .post-verified-badge {
             display: inline-flex !important;
@@ -451,25 +437,23 @@ window.generatePostHTML = function(post) {
         if(media && media.tagName === 'VIDEO' && typeof toggleImmersive === 'function') toggleImmersive(this);
     ">
 
-        <div class="post-header">
-            <a href="me.html?user=${encodeURIComponent(post.username || '')}"
-               style="position:absolute; left:0; top:0; width:54px; height:54px; display:block; z-index:20; text-decoration:none;">
-                <img src="${avatarUrl}"
-                     class="post-avatar"
-                     loading="lazy"
-                     alt="${post.username}">
-            </a>
-
-            <div class="post-username-row">
-                <div>
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <span class="post-username" style="font-size:16px; font-weight:800; color:#fff; line-height:1; margin-bottom:3px; display:block;">${post.username || 'unknown'}</span>
-                        <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
-                    </div>
-                    ${timeStr ? `<span class="post-time" style="font-size:18px; color:rgba(255,255,255,0.75); margin-top:5px; display:block; line-height:1; text-transform:capitalize;">${timeStr}</span>` : ''}
-                </div>
+                  <div class="post-header" style="display: flex; align-items: center; position: relative; padding: 8px 12px; box-sizing: border-box;">
+            
+            <div class="post-avatar-wrapper" style="position: relative; width: 40px; height: 40px; flex-shrink: 0; margin-right: 10px; z-index: 20;">
+                <a href="me.html?user=${encodeURIComponent(post.username || '')}" style="text-decoration:none; display:block; width:100%; height:100%;">
+                    <img src="${avatarUrl}" class="post-avatar" loading="lazy" alt="${post.username}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
+                </a>
             </div>
 
+            <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 !important;">
+                <div style="display: flex; align-items: center; line-height: 1.2;">
+                    <span class="post-username" style="font-size: 14px !important; font-weight: 700 !important; color: #ffffff !important; font-family: 'Plus Jakarta Sans', sans-serif !important;">${post.username || 'unknown'}</span>
+                    <span class="post-verified-badge" style="margin-left: 4px; display: inline-flex; align-items: center;"><i class="fa-solid fa-check" style="font-size: 9px; color: #1d9bf0;"></i></span>
+                </div>
+                ${timeStr ? `<span class="post-time" style="font-size: 11px !important; color: rgba(255, 255, 255, 0.45) !important; font-family: 'Inter', sans-serif !important; margin-top: 2px !important; font-weight: 400 !important; line-height: 1.2 !important; white-space: nowrap !important;">${timeStr}</span>` : ''}
+            </div>
+            
+            
                                 
                      
                 <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
