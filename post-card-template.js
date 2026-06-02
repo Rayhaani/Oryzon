@@ -461,15 +461,31 @@ window.generatePostHTML = function(post) {
                                 
             
                     <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
-                <div class="gift-btn-nexus follow-btn-nexus" 
+                                <div class="gift-btn-nexus follow-btn-nexus" 
                      onclick="
                         handleFollow(this);
-                        const span = this.querySelector('span');
-                        span.style.fontSize = '10px';
+                        
+                        // Zamu dan dakata kadan (10ms) don jiran handleFollow() ta gama nata shirme, sai mu wanke katsalandan dinta
+                        setTimeout(() => {
+                            const span = this.querySelector('span');
+                            
+                            // Idan text din ya dawo 'Follow', muna tilasta masa goge duk wani kumburi ya koma asali daidai da Gift button
+                            if (span.textContent.trim() === 'Follow') {
+                                this.style.setProperty('width', 'auto', 'important');
+                                this.style.setProperty('padding', '0 10px', 'important');
+                                span.style.setProperty('font-size', '10px', 'important');
+                            } else {
+                                // Idan kuma ya koma 'Following', anan kadai zai dauki size na biyu na expanding
+                                this.style.setProperty('width', '85px', 'important');
+                                this.style.setProperty('padding', '0', 'important');
+                                span.style.setProperty('font-size', '10px', 'important');
+                            }
+                        }, 10);
                      " 
                      style="cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
                     <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
                 </div>
+
                 
                 <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
                     <span class="gift-emoji">🎁</span>
