@@ -454,7 +454,16 @@ window.generatePostHTML = function(post) {
                         <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
                     </div>
                     <!-- Timestamp girmansa bai wuce 50% na username ba (Ya koma 9px) kuma ba zai yi breaking ba -->
-                    ${timeStr ? `<span class="post-time" style="font-size:10px !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; text-transform: lowercase !important; white-space: nowrap !important;">${timeStr}</span>` : ''}
+                                        ${timeStr ? (() => {
+                        // 1. Goge th, nd, st, rd da alamun sassaƙi bayan lambobi
+                        let cleanTime = timeStr.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1').replace(/,/g, '');
+                        
+                        // 2. Mayar da haruffan farko na kowace kalma zuwa Capital Letter (kamar sunan watan)
+                        cleanTime = cleanTime.toLowerCase().replace(/\b[a-z]/g, letter => letter.toUpperCase());
+                        
+                        return `<span class="post-time" style="font-size:9px !important; font-weight: 700 !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; white-space: nowrap !important;">${cleanTime}</span>`;
+                    })() : ''}
+                    
                 </div>
             </div>
             
