@@ -454,19 +454,20 @@ window.generatePostHTML = function(post) {
                         <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
                     </div>
                     
-                                         ${timeStr ? (() => {
+                    
+                                        ${timeStr ? (() => {
                         // 1. Goge th, nd, st, rd da alamun sassaƙi
                         let cleanTime = timeStr.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1').replace(/,/g, '');
                         
-                        // 2. Mayar da komai zuwa small letters na asali gaba daya
+                        // 2. Mayar da komai zuwa small letters gaba ɗaya da farko
                         cleanTime = cleanTime.toLowerCase();
                         
-                        // 3. GYARA MAFI AMINCI: Idan babu kalmar 'ago', to tabbas DATE ne! Sai mu sanya Capital Letter a farkon watan
-                        if (!cleanTime.includes('ago')) {
-                            cleanTime = cleanTime.replace(/\b[a-z]/g, letter => letter.toUpperCase());
-                        }
+                        // 3. Raba salon CSS text-transform ya danganta da 'ago'
+                        // Idan babu 'ago', muna so harafin farko na Month ya zama babban harafi (Capitalize)
+                        // Idan da 'ago', muna so ya zama completely small letters (lowercase)
+                        let transformStyle = !cleanTime.includes('ago') ? 'capitalize' : 'lowercase';
                         
-                        return `<span class="post-time" style="font-size:9px !important; font-weight: 700 !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; white-space: nowrap !important;">${cleanTime}</span>`;
+                        return `<span class="post-time" style="font-size:9px !important; font-weight: 700 !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; white-space: nowrap !important; text-transform: ${transformStyle} !important;">${cleanTime}</span>`;
                     })() : ''}
                     
                     
