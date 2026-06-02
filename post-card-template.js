@@ -175,30 +175,28 @@
             font-size: 13px !important;
         }
 
+      
         /* ===== INTERACTION BAR ===== */
-        .post-interaction-bar, .interaction-bar {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            padding: 10px 10px !important;
-            
-            /* Sanya shi ya hau kan hoton ko bidiyon da yake ciki */
-            position: absolute !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            z-index: 20 !important;
+.post-interaction-bar, .interaction-bar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 10px !important;
+    
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    z-index: 20 !important;
 
-            /* Salon Glassmorphism na gaskiya */
-            background: rgba(0, 0, 0, 0.4) !important;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            
-            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }
-        
-        
+    /* ✅ CANJE-CANJE KE NAN - Full transparent glass */
+    background: rgba(0, 0, 0, 0.08) !important;
+    backdrop-filter: blur(2px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(2px) saturate(180%) !important;
+    
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
         
         
         .post-action-capsules, .action-capsules {
