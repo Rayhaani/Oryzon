@@ -57,21 +57,21 @@
 
         /* ===== POST HEADER ===== */
         .post-header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 0 15px 0 48px !important;
-    height: 46px !important;
-    position: relative !important;
-    
-    /* === Kawai wannan biyu aka canza === */
-    background: rgba(245, 245, 247, 0.35) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-    
-    margin-bottom: 0 !important;
-}
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0 15px 0 48px !important;
+            height: 46px !important;
+            position: relative !important;
+            
+            /* === Kawai wannan biyu aka canza === */
+            background: rgba(245, 245, 247, 0.35) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+            
+            margin-bottom: 0 !important;
+        }
 
         /* ===== AVATAR ===== */
         .post-avatar {
@@ -89,12 +89,12 @@
 
         /* ===== USERNAME + BADGE ROW ===== */
         .post-username-row {
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    flex: 1 !important;
-    padding-left: 4px !important;
-}
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex: 1 !important;
+            padding-left: 4px !important;
+        }
 
         .post-username {
             font-size: 13px !important;
@@ -105,36 +105,35 @@
 
         /* ===== VERIFIED BADGE ===== */
         .post-verified-badge {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 13px !important;
-    height: 13px !important;
-    background-color: #1d9bf0 !important;
-    clip-path: polygon(
-        50% 0%, 61% 5%, 72% 0%,
-        80% 9%, 91% 9%, 91% 20%,
-        100% 28%, 95% 39%, 100% 50%,
-        95% 61%, 100% 72%, 91% 80%,
-        91% 91%, 80% 91%, 72% 100%,
-        61% 95%, 50% 100%, 39% 95%,
-        28% 100%, 20% 91%, 9% 91%,
-        9% 80%, 0% 72%, 5% 61%,
-        0% 50%, 5% 39%, 0% 28%,
-        9% 20%, 9% 9%, 20% 9%,
-        28% 0%, 39% 5%
-    ) !important;
-    flex-shrink: 0 !important;
-    margin-left: 2px !important;
-}
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 13px !important;
+            height: 13px !important;
+            background-color: #1d9bf0 !important;
+            clip-path: polygon(
+                50% 0%, 61% 5%, 72% 0%,
+                80% 9%, 91% 9%, 91% 20%,
+                100% 28%, 95% 39%, 100% 50%,
+                95% 61%, 100% 72%, 91% 80%,
+                91% 91%, 80% 91%, 72% 100%,
+                61% 95%, 50% 100%, 39% 95%,
+                28% 100%, 20% 91%, 9% 91%,
+                9% 80%, 0% 72%, 5% 61%,
+                0% 50%, 5% 39%, 0% 28%,
+                9% 20%, 9% 9%, 20% 9%,
+                28% 0%, 39% 5%
+            ) !important;
+            flex-shrink: 0 !important;
+            margin-left: 2px !important;
+        }
 
-.post-verified-badge i {
-    font-size: 9px !important;
-    color: #ffffff !important;
-    font-weight: 900 !important;
-}
+        .post-verified-badge i {
+            font-size: 9px !important;
+            color: #ffffff !important;
+            font-weight: 900 !important;
+        }
 
-        
         /* ===== TIMESTAMP ===== */
         .post-time {
             font-size: 10px !important;
@@ -191,7 +190,8 @@
         }
 
         /* ===== INTERACTION BAR ===== */
-        .post-interaction-bar {
+        /* An gyara nan don ya dace da ainihin classes din HTML gaba daya */
+        .post-interaction-bar, .interaction-bar {
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
@@ -201,14 +201,14 @@
             border-top: 1px solid rgba(255, 215, 0, 0.08) !important;
         }
 
-        .post-action-capsules {
+        .post-action-capsules, .action-capsules {
             display: flex !important;
             gap: 6px !important;
             flex: 1 !important;
         }
 
         /* ===== CAPSULE BUTTONS ===== */
-        .post-capsule {
+        .post-capsule, .capsule {
             background: rgba(255, 255, 255, 0.07) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             border-radius: 50px !important;
@@ -224,33 +224,33 @@
             color: #ffffff !important;
         }
 
-        .post-capsule:active {
+        .post-capsule:active, .capsule:active {
             transform: scale(0.93) !important;
         }
 
-        .post-capsule i {
+        .post-capsule i, .capsule i {
             color: var(--premium-gold) !important;
             font-size: 15px !important;
             display: inline-block !important;
         }
 
-        .post-capsule span {
+        .post-capsule span, .capsule span {
             font-size: 11px !important;
             font-weight: 600 !important;
             color: #ccc !important;
         }
 
         /* Like active state */
-        .post-capsule.liked i {
+        .post-capsule.liked i, .capsule.liked i {
             color: #ff4d6d !important;
         }
 
         /* Save capsule - rightmost */
-        .post-save-capsule {
+        .post-save-capsule, .save-capsule {
             margin-left: auto !important;
         }
 
-        .post-save-capsule .post-capsule {
+        .post-save-capsule .post-capsule, .save-capsule .capsule {
             min-width: 68px !important;
         }
 
@@ -279,35 +279,30 @@
         }
 
         .immersive-mode .post-header,
-.immersive-mode .post-content,
-.immersive-mode .post-interaction-bar {
-    position: relative !important;
-    z-index: 5001 !important;
-    background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
-}
+        .immersive-mode .post-content,
+        .immersive-mode .post-interaction-bar,
+        .immersive-mode .interaction-bar {
+            position: relative !important;
+            z-index: 5001 !important;
+            background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
+        }
 
-.immersive-mode .post-content,
-.immersive-mode .post-interaction-bar {
-    padding: 10px 20px !important;
-}
+        .immersive-mode .post-content,
+        .immersive-mode .post-interaction-bar,
+        .immersive-mode .interaction-bar {
+            padding: 10px 20px !important;
+        }
 
         /* ===== HIDE NATIVE VIDEO CONTROLS ===== */
         video::-webkit-media-controls { display: none !important; }
         video::-webkit-media-controls-start-playback-button { display: none !important; }
 
-
-
         /* ===== HAKKUNAN MAGANCE MATSALAR BLACK SPACE ===== */
-
-/* Lokacin da aka cire video aka saka ta a body, 
-   wannan yana gyara matsalar tsayin body don kar ya haifar da fanko a kasa */
-body:has(video[style*="position: fixed"]) {
-    overflow: hidden !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-}
-
-
+        body:has(video[style*="position: fixed"]) {
+            overflow: hidden !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+        }
            
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
@@ -379,7 +374,7 @@ window.postCard_toggleSave = function(event, postId) {
 //    Duka homepage da profile timeline suna amfani da wannan
 // ============================================================
 
-        window.generatePostHTML = function(post) {
+window.generatePostHTML = function(post) {
     const postId = post.id || '';
 
     // --- Avatar ---
@@ -418,19 +413,19 @@ window.postCard_toggleSave = function(event, postId) {
     if (post.timestamp) {
         const ts = post.timestamp.toDate ? post.timestamp.toDate() : new Date(post.timestamp);
         const diff = Math.floor((Date.now() - ts) / 1000);
-      if (diff < 60)          timeStr = diff + ' seconds ago';
-else if (diff < 120)    timeStr = '1 minute ago';
-else if (diff < 3600)   timeStr = Math.floor(diff/60) + ' minutes ago';
-else if (diff < 7200)   timeStr = '1 hour ago';
-else if (diff < 86400)  timeStr = Math.floor(diff/3600) + ' hours ago';
-else if (diff < 172800) timeStr = '1 day ago';
-else if (diff < 518400) timeStr = Math.floor(diff/86400) + ' days ago';
-else {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const day = ts.getDate();
-    const suffix = day===1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
-    timeStr = day + suffix + ' ' + months[ts.getMonth()];
-       }
+        if (diff < 60)          timeStr = diff + ' seconds ago';
+        else if (diff < 120)    timeStr = '1 minute ago';
+        else if (diff < 3600)   timeStr = Math.floor(diff/60) + ' minutes ago';
+        else if (diff < 7200)   timeStr = '1 hour ago';
+        else if (diff < 86400)  timeStr = Math.floor(diff/3600) + ' hours ago';
+        else if (diff < 172800) timeStr = '1 day ago';
+        else if (diff < 518400) timeStr = Math.floor(diff/86400) + ' days ago';
+        else {
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const day = ts.getDate();
+            const suffix = day===1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
+            timeStr = day + suffix + ' ' + months[ts.getMonth()];
+        }
     }
 
     // --- Like count ---
@@ -439,11 +434,10 @@ else {
 
     return `
     <div class="post-card" data-post-id="${postId}" onclick="
-    const media = this.querySelector('.post-media');
-    if(media && media.tagName === 'VIDEO' && typeof toggleImmersive === 'function') toggleImmersive(this);
-">
+        const media = this.querySelector('.post-media');
+        if(media && media.tagName === 'VIDEO' && typeof toggleImmersive === 'function') toggleImmersive(this);
+    ">
 
-        <!-- HEADER -->
         <div class="post-header">
             <a href="me.html?user=${encodeURIComponent(post.username || '')}"
                style="position:absolute; left:0; top:0; width:54px; height:54px; display:block; z-index:20; text-decoration:none;">
@@ -455,16 +449,15 @@ else {
 
             <div class="post-username-row">
                 <div>
-                   
                     <div style="display:flex; align-items:center; gap:5px;">
-    <span class="post-username" style="font-size:16px; font-weight:800; color:#fff; line-height:1; margin-bottom:3px; display:block;">${post.username || 'unknown'}</span>
-    <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
-</div>
-${timeStr ? `<span class="post-time" style="font-size:18px; color:rgba(255,255,255,0.75); margin-top:5px; display:block; line-height:1; text-transform:capitalize;">${timeStr}</span>` : ''}
-              </div>
+                        <span class="post-username" style="font-size:16px; font-weight:800; color:#fff; line-height:1; margin-bottom:3px; display:block;">${post.username || 'unknown'}</span>
+                        <span class="post-verified-badge"><i class="fa-solid fa-check"></i></span>
+                    </div>
+                    ${timeStr ? `<span class="post-time" style="font-size:18px; color:rgba(255,255,255,0.75); margin-top:5px; display:block; line-height:1; text-transform:capitalize;">${timeStr}</span>` : ''}
+                </div>
             </div>
 
-          <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+            <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
                 <button class="follow-text-link" onclick="handleFollow(this)">Follow</button>
                 <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
                     <span class="gift-emoji">🎁</span>
@@ -472,104 +465,98 @@ ${timeStr ? `<span class="post-time" style="font-size:18px; color:rgba(255,255,2
                 </div>
             </div>
 
-            
-<!-- Three-dot menu (optional) -->
             <div onclick="event.stopPropagation()"
                  style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
                 ···
             </div>
         </div>
-            
-        <!-- /HEADER -->
-
-        <!-- TEXT CONTENT -->
         ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
 
-        <!-- MEDIA -->
-        <div style="position:relative;" ondblclick="
-  const btn = this.closest('.post-card').querySelector('.capsule');
-const icon = btn.querySelector('i');  
-if(btn.classList.contains('liked')){
-    // UNLIKE
-    btn.classList.remove('liked');
-    icon.className = 'fa-regular fa-heart';
-    icon.removeAttribute('style');
-    let c = parseInt(btn.querySelector('span').textContent) || 0;
-    btn.querySelector('span').textContent = Math.max(0, c - 1);
-    if(typeof db !== 'undefined'){
-        const u = localStorage.getItem('nexus_user_session');
-        const pid = btn.closest('.post-card').dataset.postId;
-        if(u && pid) db.collection('likes').doc(pid + '_' + u).delete();
-    }
-} else {
-    // LIKE
-    btn.classList.add('liked');
-    icon.className = 'fa-solid fa-heart';
-    icon.style.color = '#ff4d6d';
-    let c = parseInt(btn.querySelector('span').textContent) || 0;
-    btn.querySelector('span').textContent = c + 1;
-    if(typeof db !== 'undefined'){
-        const u = localStorage.getItem('nexus_user_session');
-        const pid = btn.closest('.post-card').dataset.postId;
-        if(u && pid) db.collection('likes').doc(pid + '_' + u).set({
-            postId: pid, user: u,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-    }
-}
+        <div style="position:relative;" dblclick="
+            const btn = this.closest('.post-card').querySelector('.post-capsule, .capsule');
+            const icon = btn.querySelector('i');  
+            if(btn.classList.contains('liked')){
+                // UNLIKE
+                btn.classList.remove('liked');
+                icon.className = 'fa-regular fa-heart';
+                icon.removeAttribute('style');
+                let c = parseInt(btn.querySelector('span').textContent) || 0;
+                btn.querySelector('span').textContent = Math.max(0, c - 1);
+                if(typeof db !== 'undefined'){
+                    const u = localStorage.getItem('nexus_user_session');
+                    const pid = btn.closest('.post-card').dataset.postId;
+                    if(u && pid) db.collection('likes').doc(pid + '_' + u).delete();
+                }
+            } else {
+                // LIKE
+                btn.classList.add('liked');
+                icon.className = 'fa-solid fa-heart';
+                icon.style.color = '#ff4d6d';
+                let c = parseInt(btn.querySelector('span').textContent) || 0;
+                btn.querySelector('span').textContent = c + 1;
+                if(typeof db !== 'undefined'){
+                    const u = localStorage.getItem('nexus_user_session');
+                    const pid = btn.closest('.post-card').dataset.postId;
+                    if(u && pid) db.collection('likes').doc(pid + '_' + u).set({
+                        postId: pid, user: u,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            }
 
-    const colors = ['#f953c6','#f7971e','#ff416c','#a18cd1','#00c6ff','#ff4b2b','#ffd200','#b91d73'];
-    const col = colors[Math.floor(Math.random() * colors.length)];
-    const heart = document.createElement('i');
-    heart.className = 'fa-solid fa-heart';
-    heart.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:90px;color:' + col + ';filter:drop-shadow(0 0 12px ' + col + ');z-index:99;pointer-events:none;opacity:1;transition:transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275),opacity 0.3s ease;';
-    this.appendChild(heart);
-    setTimeout(function(){ heart.style.transform = 'translate(-50%,-50%) scale(1.2)'; }, 10);
-    setTimeout(function(){ heart.style.transform = 'translate(-50%,-50%) scale(0.9)'; }, 200);
-    setTimeout(function(){ heart.style.transform = 'translate(-50%,-50%) scale(1)'; }, 300);
-    setTimeout(function(){ heart.style.opacity = '0'; heart.style.transform = 'translate(-50%,-50%) scale(1.1)'; }, 700);
-    setTimeout(function(){ heart.remove(); }, 1000);
-">${mediaWrapperHTML}</div>
+            const colors = ['#f953c6','#f7971e','#ff416c','#a18cd1','#00c6ff','#ff4b2b','#ffd200','#b91d73'];
+            const col = colors[Math.floor(Math.random() * colors.length)];
+            const heart = document.createElement('i');
+            heart.className = 'fa-solid fa-heart';
+            heart.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:90px;color:' + col + ';filter:drop-shadow(0 0 12px ' + col + ');z-index:99;pointer-events:none;opacity:1;transition:transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275),opacity 0.3s ease;';
+            this.appendChild(heart);
+            setTimeout(function(){ heart.style.transform = 'translate(-50%,-50%) scale(1.2)'; }, 10);
+            setTimeout(function(){ heart.style.transform = 'translate(-50%,-50%) scale(0.9)'; }, 200);
+            setTimeout(function(){ heart.style.transform = 'translate(-50%,-50%) scale(1)'; }, 300);
+            setTimeout(function(){ heart.style.opacity = '0'; heart.style.transform = 'translate(-50%,-50%) scale(1.1)'; }, 700);
+            setTimeout(function(){ heart.remove(); }, 1000);
+        ">${mediaWrapperHTML}</div>
 
-        <div class="interaction-bar" onclick="stopProp(event)">
-    <div class="action-capsules">
-       
-       <div class="capsule" onclick="
-    const btn = this;
-    const icon = btn.querySelector('i');
-    if(btn.classList.contains('liked')){
-        btn.classList.remove('liked');
-        icon.className = 'fa-regular fa-heart';
-        icon.className = 'fa-regular fa-heart';
-icon.removeAttribute('style');
-        let c = parseInt(btn.querySelector('span').textContent) || 0;
-        btn.querySelector('span').textContent = Math.max(0, c - 1);
-    } else {
-        btn.classList.add('liked');
-        icon.className = 'fa-solid fa-heart';
-        icon.style.color = '#ff4d6d';
-        let c = parseInt(btn.querySelector('span').textContent) || 0;
-        btn.querySelector('span').textContent = c + 1;
-    }
-">
-    <i class="fa-regular fa-heart"></i>
-    <span>${post.likes || 0}</span>
-</div>
-       
-      <div class="capsule" onclick="event.stopPropagation(); window.location.href='comments.html?postId=${post.id}'" id="comment-btn-${post.id}"><i class="fa-regular fa-comment"></i><span id="comment-count-${post.id}">0</span></div>
-      <div class="capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
-        <div class="capsule"><i class="fa-regular fa-paper-plane"></i></div>
-    </div>
-    <div class="action-capsules save-capsule">
-        <div class="capsule" onclick="toggleSave(this, '${post.id}')">
-            <i class="fa-regular fa-bookmark"></i>
-            <span>Save</span>
+        <div class="post-interaction-bar" onclick="stopProp(event)">
+            <div class="post-action-capsules">
+               
+                <div class="post-capsule" onclick="
+                    const btn = this;
+                    const icon = btn.querySelector('i');
+                    if(btn.classList.contains('liked')){
+                        btn.classList.remove('liked');
+                        icon.className = 'fa-regular fa-heart';
+                        icon.removeAttribute('style');
+                        let c = parseInt(btn.querySelector('span').textContent) || 0;
+                        btn.querySelector('span').textContent = Math.max(0, c - 1);
+                    } else {
+                        btn.classList.add('liked');
+                        icon.className = 'fa-solid fa-heart';
+                        icon.style.color = '#ff4d6d';
+                        let c = parseInt(btn.querySelector('span').textContent) || 0;
+                        btn.querySelector('span').textContent = c + 1;
+                    }
+                ">
+                    <i class="fa-regular fa-heart"></i>
+                    <span>${likes}</span>
+                </div>
+               
+                <div class="post-capsule" onclick="event.stopPropagation(); window.location.href='comments.html?postId=${post.id}'" id="comment-btn-${post.id}">
+                    <i class="fa-regular fa-comment"></i>
+                    <span id="comment-count-${post.id}">${comments}</span>
+                </div>
+                <div class="post-capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
+                <div class="post-capsule"><i class="fa-regular fa-paper-plane"></i></div>
+            </div>
+            
+            <div class="post-action-capsules post-save-capsule">
+                <div class="post-capsule" onclick="toggleSave(this, '${post.id}')">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <span>Save</span>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-        <!-- /INTERACTION BAR -->
-
-    </div>`;
+        </div>`;
 };
 
 
