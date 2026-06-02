@@ -176,17 +176,28 @@
         }
 
         /* ===== INTERACTION BAR ===== */
-        /* An gyara nan don ya dace da ainihin classes din HTML gaba daya */
         .post-interaction-bar, .interaction-bar {
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
             padding: 10px 10px !important;
-            background: rgba(255, 255, 255, 0.06) !important;
-            backdrop-filter: blur(15px) !important;
-            -webkit-backdrop-filter: blur(15px) !important;
-            border-top: 1px solid rgba(255, 215, 0, 0.08) !important;
+            
+            /* Sanya shi ya hau saman hoto/bidiyo maimakon zama a kasansa */
+            position: absolute !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            z-index: 20 !important;
+
+            /* Amfani da duhu mai gaskiya (transparent dark) don magance kalar ash da ba da glassmorphism */
+            background: rgba(0, 0, 0, 0.4) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            
+            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
+        
         
         .post-action-capsules, .action-capsules {
             display: flex !important;
