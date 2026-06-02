@@ -458,51 +458,49 @@ window.generatePostHTML = function(post) {
                 </div>
             </div>
 
-                                <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
+                                
+            
+                       <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 12px;">
                 <div class="gift-btn-nexus follow-btn-nexus" 
                      onclick="
                         handleFollow(this);
-                        // Gyara na musamman don kiyaye ainihin girma da font ko da an danna unfollow
                         const span = this.querySelector('span');
                         if (span.textContent.trim() === 'Follow') {
-                            this.style.width = '65px';
+                            this.style.width = ''; // Yana goge tsayin expanding ya koma asali daidai da Gift button
                             span.style.fontSize = '10px';
                         } else {
-                            this.style.width = '85px'; // Dan takaitaccen expanding kadai zai yi na Following
+                            this.style.width = '85px'; // Dan takaitaccen expanding kadai lokacin Following
                             span.style.fontSize = '10px';
                         }
                      " 
-                     style="cursor: pointer; width: 65px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0 !important; box-sizing: border-box;">
-                    <span style="font-size: 10px; font-weight: 600; color: #ffffff; display: inline-block;">Follow</span>
+                     style="cursor: pointer;">
+                    <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
                 </div>
                 
-                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')" 
-                     style="cursor: pointer; width: 65px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0 !important; box-sizing: border-box;">
-                    <span class="gift-emoji" style="font-size: 13px; margin-right: 2px;">🎁</span>
-                    <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Gift</span>
+                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
+                    <span class="gift-emoji">🎁</span>
+                    <span style="font-size: 10px;">Gift</span>
                 </div>
             </div>
-
-            <div onclick="event.stopPropagation()"
-                 style="background: linear-gradient(135deg, #1e1e1e 0%, #141414 100%); border: 1px solid rgba(253, 224, 141, 0.25); border-radius: 12px; height: 36px; padding: 0 12px; display: flex; align-items: center; gap: 3px; cursor: pointer; box-sizing: border-box;">
-                <span class="dot-breath" style="width: 4px; height: 4px; background-color: #ffffff; border-radius: 50%; display: inline-block; animation: breath 1.2s infinite ease-in-out;"></span>
-                <span class="dot-breath" style="width: 4px; height: 4px; background-color: #ffffff; border-radius: 50%; display: inline-block; animation: breath 1.2s infinite ease-in-out; animation-delay: 0.2s;"></span>
-                <span class="dot-breath" style="width: 4px; height: 4px; background-color: #ffffff; border-radius: 50%; display: inline-block; animation: breath 1.2s infinite ease-in-out; animation-delay: 0.4s;"></span>
-            </div>
-
-            <style>
-                @keyframes breath {
-                    0%, 100% { transform: scale(1); opacity: 0.3; }
-                    50% { transform: scale(1.6); opacity: 1; }
-                }
-            </style>
             
-            
-
-            <div onclick="event.stopPropagation()"
+            <div class="three-dots-breath" onclick="event.stopPropagation()"
                  style="color:rgba(255,255,255,0.3); font-size:18px; cursor:pointer; padding:0 4px; letter-spacing:2px;">
                 ···
             </div>
+
+            <style>
+                @keyframes dotsContinuousBreath {
+                    0%, 100% { transform: scale(1); opacity: 0.3; }
+                    50% { transform: scale(1.15); opacity: 1; }
+                }
+                .three-dots-breath {
+                    display: inline-block !important;
+                    animation: dotsContinuousBreath 2s infinite ease-in-out !important;
+                }
+            </style>
+            
+
+            
         </div>
         ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
 
