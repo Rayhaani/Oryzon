@@ -178,6 +178,7 @@
       
       
         /* ===== INTERACTION BAR ===== */
+       /* ===== INTERACTION BAR ===== */
 .post-interaction-bar, .interaction-bar {
     display: flex !important;
     justify-content: space-between !important;
@@ -191,11 +192,11 @@
     box-sizing: border-box !important;
     z-index: 20 !important;
 
-    /* ✅ SOLUTION 1 — Glassmorphism bar */
-    background: rgba(0, 0, 0, 0.35) !important;
-    backdrop-filter: blur(12px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    /* ✅ SOLUTION 2 — Glow Borders */
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-top: 1px solid rgba(201, 168, 76, 0.15) !important;
 }
 
         
@@ -303,31 +304,33 @@
         }
 
 
-
-/* ===== CAPSULE BUTTONS ===== */
+     /* ===== CAPSULE BUTTONS ===== */
 .post-capsule, .capsule {
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
     padding: 6px 14px !important;
     border-radius: 20px !important;
-    
-    /* ✅ SOLUTION 1 — Frosted glass capsules */
-    background: rgba(255, 255, 255, 0.10) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.18) !important;
-    
+
+    /* ✅ SOLUTION 2 — Glow Borders */
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border: 1px solid rgba(201, 168, 76, 0.45) !important;
+    box-shadow: 0 0 8px rgba(201, 168, 76, 0.2),
+                inset 0 0 6px rgba(201, 168, 76, 0.05) !important;
+
     color: #ffffff !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
-    transition: all 0.2s ease !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+    transition: all 0.25s ease !important;
     min-width: 48px !important;
     height: 33px !important;
     cursor: pointer !important;
 }
 
 .post-capsule:active, .capsule:active {
-    background: rgba(255, 255, 255, 0.18) !important;
+    border-color: rgba(201, 168, 76, 0.8) !important;
+    box-shadow: 0 0 14px rgba(201, 168, 76, 0.45),
+                inset 0 0 8px rgba(201, 168, 76, 0.1) !important;
     transform: scale(0.95) !important;
 }
 
@@ -341,7 +344,6 @@
     font-weight: 600 !important;
     color: rgba(255, 255, 255, 0.9) !important;
 }
-
 
 
            /* ===== FOLLOW BUTTON - IDENTICAL TO GIFT BUTTON ===== */
