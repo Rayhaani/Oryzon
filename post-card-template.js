@@ -303,79 +303,61 @@
             max-height: 100vh !important;
         }
 
-
-           /* ===== CAPSULE BUTTONS — Clean inside pill ===== */
-.post-capsule, .capsule {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    padding: 5px 12px !important;
-    border-radius: 20px !important;
-
-    /* ✅ Transparent inside — pill container handles the glass */
-     /* Pill container → dark */
-.post-action-capsules, .action-capsules,
-.post-save-capsule, .save-capsule {
-    background: rgba(0, 0, 0, 0.55) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-}
-
-
-
-    color: #ffffff !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
-    transition: all 0.2s ease !important;
-    min-width: 44px !important;
-    height: 30px !important;
-    cursor: pointer !important;
-}
-
-.post-capsule:active, .capsule:active {
-    background: rgba(255, 255, 255, 0.12) !important;
-    transform: scale(0.95) !important;
-}
-
-.post-capsule i, .capsule i {
-    color: var(--premium-gold) !important;
-    font-size: 14px !important;
-}
-
-.post-capsule span, .capsule span {
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-}
-             
-
-
-    /* ===== ACTION CAPSULES WRAPPER — Pill Container ===== */
+     
+     
+     /* ===== PILL CONTAINERS ===== */
 .post-action-capsules, .action-capsules {
     display: flex !important;
     gap: 4px !important;
     flex: 1 !important;
-
-    /* ✅ SOLUTION 3 — Frosted pill wraps ALL buttons together */
-    background: rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
     border-radius: 30px !important;
     padding: 3px !important;
 }
 
-/* Save capsule wrapper — nata pill daban */
 .post-save-capsule, .save-capsule {
-    background: rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
     border-radius: 30px !important;
     padding: 3px !important;
     margin-left: 6px !important;
 }
 
+/* ===== CAPSULE BUTTONS ===== */
+.post-capsule, .capsule {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 6px 13px !important;
+    border-radius: 20px !important;
+    background: transparent !important;
+    border: none !important;
+    min-width: 44px !important;
+    height: 34px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.post-capsule:active, .capsule:active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(0.95) !important;
+}
+
+.post-capsule i, .capsule i {
+    color: var(--premium-gold) !important;
+    font-size: 15px !important;
+}
+
+.post-capsule span, .capsule span {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+.post-capsule.liked i, .capsule.liked i {
+    color: #ff4d6d !important;
+}
+          
 
 /* ===== FORCE BLACK CAPSULES ===== */
 .post-action-capsules, .action-capsules,
