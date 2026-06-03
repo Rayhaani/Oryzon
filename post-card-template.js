@@ -183,7 +183,7 @@
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 6px 8px !important;
+    padding: 10px 10px !important;
     
     position: absolute !important;
     bottom: 0 !important;
@@ -192,11 +192,17 @@
     box-sizing: border-box !important;
     z-index: 20 !important;
 
-    /* ✅ SOLUTION 3 — Fully transparent bar */
-    background: transparent !important;
+    /* ✅ SOLUTION 4 — Dark gradient fade */
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.4) 60%,
+        rgba(0, 0, 0, 0.0) 100%
+    ) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     border-top: none !important;
+    padding-top: 20px !important;
 }
         
         .post-action-capsules, .action-capsules {
@@ -302,64 +308,37 @@
             max-height: 100vh !important;
         }
 
-
-      /* ===== ACTION CAPSULES WRAPPER — Pill Container ===== */
-.post-action-capsules, .action-capsules {
-    display: flex !important;
-    gap: 4px !important;
-    flex: 1 !important;
-
-    /* ✅ SOLUTION 3 — Frosted pill wraps ALL buttons together */
-    background: rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 30px !important;
-    padding: 3px !important;
-}
-
-/* Save capsule wrapper — nata pill daban */
-.post-save-capsule, .save-capsule {
-    background: rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 30px !important;
-    padding: 3px !important;
-    margin-left: 6px !important;
-}
-
-
-/* ===== CAPSULE BUTTONS — Clean inside pill ===== */
+           
+       /* ===== CAPSULE BUTTONS ===== */
 .post-capsule, .capsule {
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
-    padding: 5px 12px !important;
+    padding: 6px 14px !important;
     border-radius: 20px !important;
 
-    /* ✅ Transparent inside — pill container handles the glass */
-    background: transparent !important;
+    /* ✅ SOLUTION 4 — Simple dark tint */
+    background: rgba(0, 0, 0, 0.45) !important;
     backdrop-filter: none !important;
-    border: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     box-shadow: none !important;
 
     color: #ffffff !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9) !important;
     transition: all 0.2s ease !important;
-    min-width: 44px !important;
-    height: 30px !important;
+    min-width: 48px !important;
+    height: 33px !important;
     cursor: pointer !important;
 }
 
 .post-capsule:active, .capsule:active {
-    background: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(0, 0, 0, 0.65) !important;
     transform: scale(0.95) !important;
 }
 
 .post-capsule i, .capsule i {
     color: var(--premium-gold) !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
 }
 
 .post-capsule span, .capsule span {
