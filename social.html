@@ -1097,15 +1097,15 @@
         
  .story-header {
   position: absolute;
-  top: 14px; left: 0; right: 0;
+  top: 18px; /* Rage daga 28px zuwa 18px */
+  left: 0; right: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 6px 14px; /* Rage padding */
   z-index: 10;
   background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
  }
-
 
         .story-footer {
   position: absolute;
@@ -1929,59 +1929,62 @@ const newVideos = feedContainer.querySelectorAll('video');
 
 
         // ===== STORY VIEWER LOGIC =====
+
+    
 let currentStory = null;
 let currentSlide = 0;
 let progressInterval = null;
+let isPaused = false;
+let progressWidth = 0;
 const SLIDE_DURATION = 5000;
 
-function openStory(storyId) {
-    const storyMap = {
-        'your_story': {
-            avatar: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=me',
-            name: 'Your Story',
-            time: 'just now',
-            slides: [{ img: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=me', text: 'Your story' }]
-        },
-        'live_now': {
-            avatar: 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_%E8%8B%B1%E8%AA%9E_logo.svg',
-            name: 'aljazeeraeng',
-            time: '🔴 LIVE',
-            slides: [{ img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80', text: 'Breaking: Live coverage now 📡' }]
-        },
-        'trt_afrika': {
-            avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg',
-            name: 'trtafrikaha',
-            time: '10m ago',
-            slides: [
-                { img: 'https://images.unsplash.com/photo-1503891450247-ee5f8ec46dc3?w=600&q=80', text: 'Africa today 🌍' },
-                { img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80', text: 'Stories from the continent ✊' }
-            ]
-        },
-        'bbc_news': {
-            avatar: 'https://upload.wikimedia.org/wikipedia/commons/6/62/BBC_News_2019.svg',
-            name: 'bbcnews',
-            time: '30m ago',
-            slides: [{ img: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=600&q=80', text: 'World news update 🌐' }]
-        },
-        'arewa_tech': {
-            avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg',
-            name: 'arewatech',
-            time: '1h ago',
-            slides: [{ img: 'https://images.unsplash.com/photo-1542296332-3c659bd32e73?w=600&q=80', text: 'Fashion week highlights 👗' }]
-        },
-        'daily_trust': {
-            avatar: 'https://images.pexels.com/photos/14446662/pexels-photo-14446662.jpeg',
-            name: 'dailytrust',
-            time: '2h ago',
-            slides: [{ img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80', text: 'Daily Trust latest news 📰' }]
-        },
-    };
+// Jerin dukan members a order
+const storyOrder = ['your_story','live_now','trt_afrika','bbc_news','arewa_tech','daily_trust'];
 
+const storyMap = {
+    'your_story': {
+        avatar: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=me',
+        name: 'Your Story', time: 'just now',
+        slides: [{ img: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=me', text: 'Your story' }]
+    },
+    'live_now': {
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_%E8%8B%B1%E8%AA%9E_logo.svg',
+        name: 'aljazeeraeng', time: '🔴 LIVE',
+        slides: [{ img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80', text: 'Breaking: Live coverage now 📡' }]
+    },
+    'trt_afrika': {
+        avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg',
+        name: 'trtafrikaha', time: '10m ago',
+        slides: [
+            { img: 'https://images.unsplash.com/photo-1503891450247-ee5f8ec46dc3?w=600&q=80', text: 'Africa today 🌍' },
+            { img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80', text: 'Stories from the continent ✊' }
+        ]
+    },
+    'bbc_news': {
+        avatar: 'https://upload.wikimedia.org/wikipedia/commons/6/62/BBC_News_2019.svg',
+        name: 'bbcnews', time: '30m ago',
+        slides: [{ img: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=600&q=80', text: 'World news update 🌐' }]
+    },
+    'arewa_tech': {
+        avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg',
+        name: 'arewatech', time: '1h ago',
+        slides: [{ img: 'https://images.unsplash.com/photo-1542296332-3c659bd32e73?w=600&q=80', text: 'Fashion week highlights 👗' }]
+    },
+    'daily_trust': {
+        avatar: 'https://images.pexels.com/photos/14446662/pexels-photo-14446662.jpeg',
+        name: 'dailytrust', time: '2h ago',
+        slides: [{ img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80', text: 'Daily Trust latest news 📰' }]
+    }
+};
+
+function openStory(storyId) {
     const story = storyMap[storyId];
     if (!story) return;
 
     currentStory = story;
+    currentStory._id = storyId;
     currentSlide = 0;
+    isPaused = false;
 
     document.getElementById('viewerAvatar').src = story.avatar;
     document.getElementById('viewerName').textContent = story.name;
@@ -1992,18 +1995,19 @@ function openStory(storyId) {
 
     document.getElementById('storyViewer').classList.add('open');
     document.body.style.overflow = 'hidden';
-    document.getElementById('instaFooter').style.display = 'none'; // ✅ ƁOYE FOOTER
+    document.getElementById('instaFooter').style.display = 'none';
 
     if (navigator.vibrate) navigator.vibrate(15);
 }
-    
-      function closeStoryViewer() {
+
+function closeStoryViewer() {
     document.getElementById('storyViewer').classList.remove('open');
     document.body.style.overflow = '';
     clearInterval(progressInterval);
     currentStory = null;
-    document.getElementById('instaFooter').style.display = 'flex'; // ✅ MAYAR DA FOOTER
-      }  
+    isPaused = false;
+    document.getElementById('instaFooter').style.display = 'flex';
+}
 
 function buildProgressBar(count) {
     const bar = document.getElementById('progressBar');
@@ -2016,40 +2020,109 @@ function buildProgressBar(count) {
 function showSlide(index) {
     clearInterval(progressInterval);
     if (!currentStory) return;
+
     const slides = currentStory.slides;
-    if (index < 0 || index >= slides.length) { closeStoryViewer(); return; }
+
+    // Idan slides din wannan member sun kare, je next member
+    if (index >= slides.length) {
+        goToNextMember();
+        return;
+    }
+    // Idan ya koma baya fiye da kashi na farko, rufe
+    if (index < 0) {
+        closeStoryViewer();
+        return;
+    }
 
     currentSlide = index;
+    isPaused = false;
+
     document.getElementById('viewerImage').src = slides[index].img;
     document.getElementById('viewerText').textContent = slides[index].text;
 
+    // Cike bars da suka gabata, share na gaba
     slides.forEach((_, i) => {
         const fill = document.getElementById('prog-' + i);
         if (fill) fill.style.width = i < index ? '100%' : '0%';
     });
 
+    // Fara progress na wannan slide
+    progressWidth = 0;
     const fill = document.getElementById('prog-' + index);
     if (!fill) return;
 
-    let width = 0;
     const step = 100 / (SLIDE_DURATION / 100);
     progressInterval = setInterval(() => {
-        width += step;
-        fill.style.width = Math.min(width, 100) + '%';
-        if (width >= 100) { clearInterval(progressInterval); showSlide(index + 1); }
+        if (isPaused) return; // ← PAUSE yana aiki nan
+        progressWidth += step;
+        fill.style.width = Math.min(progressWidth, 100) + '%';
+        if (progressWidth >= 100) {
+            clearInterval(progressInterval);
+            showSlide(index + 1);
+        }
     }, 100);
+}
+
+function goToNextMember() {
+    const currentIndex = storyOrder.indexOf(currentStory._id);
+    const nextId = storyOrder[currentIndex + 1];
+    if (nextId && storyMap[nextId]) {
+        openStory(nextId);
+    } else {
+        closeStoryViewer(); // Karshen dukan stories
+    }
 }
 
 function nextStory() { showSlide(currentSlide + 1); }
 function prevStory() { showSlide(currentSlide - 1); }
 
+// ===== TAP TO PAUSE / RESUME =====
+// Mun cire tap zones na prev/next, mun sanya hold logic a maimakon
+const viewer = document.getElementById('storyViewer');
+
+let holdTimer = null;
+let isHolding = false;
+
+viewer.addEventListener('touchstart', (e) => {
+    // Kar a pause idan suna danna close btn ko input
+    if (e.target.closest('.story-close-btn') || e.target.closest('.hud-footer-capsule')) return;
+    
+    holdTimer = setTimeout(() => {
+        isHolding = true;
+        isPaused = true; // ← PAUSE
+    }, 150); // Hold 150ms = pause
+}, { passive: true });
+
+viewer.addEventListener('touchend', (e) => {
+    clearTimeout(holdTimer);
+    
+    if (isHolding) {
+        // Saki yatsa = resume
+        isPaused = false;
+        isHolding = false;
+        return;
+    }
+
+    // Gajeren danna = prev/next
+    if (e.target.closest('.story-close-btn') || e.target.closest('.hud-footer-capsule')) return;
+
+    const x = e.changedTouches[0].clientX;
+    const halfScreen = window.innerWidth / 2;
+    if (x < halfScreen) {
+        prevStory();
+    } else {
+        nextStory();
+    }
+}, { passive: true });
+
 // Swipe down don rufe
 let touchStartY = 0;
-document.getElementById('storyViewer').addEventListener('touchstart', e => {
+viewer.addEventListener('touchstart', e => {
     touchStartY = e.touches[0].clientY;
 }, { passive: true });
-document.getElementById('storyViewer').addEventListener('touchend', e => {
-    if (e.changedTouches[0].clientY - touchStartY > 80) closeStoryViewer();
+viewer.addEventListener('touchend', e => {
+    const swipeDown = e.changedTouches[0].clientY - touchStartY;
+    if (swipeDown > 80 && !isHolding) closeStoryViewer();
 });
 
 
