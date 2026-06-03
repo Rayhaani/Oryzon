@@ -458,10 +458,10 @@ window.postCard_toggleSave = function(event, postId) {
 window.generatePostHTML = function(post) {
     const postId = post.id || '';
 
-    // --- Avatar ---
-    const savedProfilePic = localStorage.getItem('userProfilePic');
-    const rawPic = savedProfilePic || post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=mamba";
-    const avatarUrl = rawPic.includes('cloudinary.com')
+    
+       // --- Avatar ---
+const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || 'user');
+        const avatarUrl = rawPic.includes('cloudinary.com')
         ? rawPic.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/')
         : rawPic;
 
@@ -605,7 +605,7 @@ window.generatePostHTML = function(post) {
         </div>
         ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
 
-        <div style="position:relative;" dblclick="
+            <div style="position:relative;" ondblclick="
             const btn = this.closest('.post-card').querySelector('.post-capsule, .capsule');
             const icon = btn.querySelector('i');  
             if(btn.classList.contains('liked')){
