@@ -313,10 +313,16 @@
     border-radius: 20px !important;
 
     /* ✅ Transparent inside — pill container handles the glass */
-    background: transparent !important;
-    backdrop-filter: none !important;
-    border: none !important;
-    box-shadow: none !important;
+     /* Pill container → dark */
+.post-action-capsules, .action-capsules,
+.post-save-capsule, .save-capsule {
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+
 
     color: #ffffff !important;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
