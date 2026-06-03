@@ -179,79 +179,7 @@
       
 
         /* ===== INTERACTION BAR ===== */
-.post-interaction-bar, .interaction-bar {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 6px 8px !important;
-    
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    z-index: 20 !important;
 
-    /* ✅ SOLUTION 3 — Fully transparent bar */
-    background: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border-top: none !important;
-}
-        
-        
-        .post-action-capsules, .action-capsules {
-            display: flex !important;
-            gap: 6px !important;
-            flex: 1 !important;
-        }
-
-        /* ===== CAPSULE BUTTONS ===== */
-        .post-capsule, .capsule {
-            background: rgba(255, 255, 255, 0.07) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            border-radius: 50px !important;
-            padding: 6px 13px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 5px !important;
-            min-width: 48px !important;
-            height: 33px !important;
-            cursor: pointer !important;
-            transition: all 0.25s ease !important;
-            color: #ffffff !important;
-        }
-
-        .post-capsule:active, .capsule:active {
-            transform: scale(0.93) !important;
-        }
-
-        .post-capsule i, .capsule i {
-            color: var(--premium-gold) !important;
-            font-size: 15px !important;
-            display: inline-block !important;
-        }
-
-        .post-capsule span, .capsule span {
-            font-size: 11px !important;
-            font-weight: 600 !important;
-            color: #ccc !important;
-        }
-
-        /* Like active state */
-        .post-capsule.liked i, .capsule.liked i {
-            color: #ff4d6d !important;
-        }
-
-        /* Save capsule - rightmost */
-        .post-save-capsule, .save-capsule {
-            margin-left: auto !important;
-        }
-
-        .post-save-capsule .post-capsule, .save-capsule .capsule {
-            min-width: 68px !important;
-        }
 
         /* ===== FULL SCREEN / IMMERSIVE MODE ===== */
         .post-card.immersive-mode {
@@ -375,6 +303,99 @@
     padding: 3px !important;
     margin-left: 6px !important;
 }
+         
+          
+          /* ===== INTERACTION BAR ===== */
+.post-interaction-bar, .interaction-bar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 6px 8px !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    z-index: 20 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-top: none !important;
+}
+
+/* ===== PILL CONTAINERS ===== */
+.post-action-capsules, .action-capsules {
+    display: flex !important;
+    gap: 4px !important;
+    flex: 1 !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 30px !important;
+    padding: 3px !important;
+}
+
+.post-save-capsule, .save-capsule {
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 30px !important;
+    padding: 3px !important;
+    margin-left: 6px !important;
+}
+
+/* ===== CAPSULE BUTTONS ===== */
+.post-capsule, .capsule {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 6px 13px !important;
+    border-radius: 20px !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    min-width: 44px !important;
+    height: 34px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-shadow: none !important;
+}
+
+.post-capsule:active, .capsule:active {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(0.95) !important;
+}
+
+/* Icons — gold */
+.post-capsule i, .capsule i {
+    color: var(--premium-gold) !important;
+    font-size: 15px !important;
+    display: inline-block !important;
+}
+
+/* Text — fari */
+.post-capsule span, .capsule span {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+/* Like active */
+.post-capsule.liked i, .capsule.liked i {
+    color: #ff4d6d !important;
+}
+
+/* Save min-width */
+.post-save-capsule .post-capsule,
+.save-capsule .capsule {
+    min-width: 68px !important;
+}
+
 
         
         /* ===== FEED CONTAINER ===== */
