@@ -664,10 +664,11 @@ window.generatePostHTML = function(post) {
                     <i class="fa-regular fa-comment"></i>
                     <span id="comment-count-${post.id}">${comments}</span>
                 </div>
-                <div class="post-capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
-                <div class="post-capsule"><i class="fa-regular fa-paper-plane"></i></div>
-            </div>
-            
+                
+            <div class="post-capsule">
+    <i class="fa-solid fa-share"></i>
+    <span>5</span>
+</div>
             <div class="post-action-capsules post-save-capsule">
                 <div class="post-capsule" onclick="toggleSave(this, '${post.id}')">
                     <i class="fa-regular fa-bookmark"></i>
