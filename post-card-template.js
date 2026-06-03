@@ -183,7 +183,7 @@
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 10px 10px !important;
+    padding: 6px 8px !important;
     
     position: absolute !important;
     bottom: 0 !important;
@@ -192,13 +192,12 @@
     box-sizing: border-box !important;
     z-index: 20 !important;
 
-    /* ✅ SOLUTION 2 — Glow Borders */
+    /* ✅ SOLUTION 3 — Fully transparent bar */
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    border-top: 1px solid rgba(201, 168, 76, 0.15) !important;
+    border-top: none !important;
 }
-
         
         .post-action-capsules, .action-capsules {
             display: flex !important;
@@ -304,39 +303,63 @@
         }
 
 
-     /* ===== CAPSULE BUTTONS ===== */
+      /* ===== ACTION CAPSULES WRAPPER — Pill Container ===== */
+.post-action-capsules, .action-capsules {
+    display: flex !important;
+    gap: 4px !important;
+    flex: 1 !important;
+
+    /* ✅ SOLUTION 3 — Frosted pill wraps ALL buttons together */
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 30px !important;
+    padding: 3px !important;
+}
+
+/* Save capsule wrapper — nata pill daban */
+.post-save-capsule, .save-capsule {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 30px !important;
+    padding: 3px !important;
+    margin-left: 6px !important;
+}
+
+
+/* ===== CAPSULE BUTTONS — Clean inside pill ===== */
 .post-capsule, .capsule {
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
-    padding: 6px 14px !important;
+    padding: 5px 12px !important;
     border-radius: 20px !important;
 
-    /* ✅ SOLUTION 2 — Glow Borders */
+    /* ✅ Transparent inside — pill container handles the glass */
     background: transparent !important;
     backdrop-filter: none !important;
-    border: 1px solid rgba(201, 168, 76, 0.45) !important;
-    box-shadow: 0 0 8px rgba(201, 168, 76, 0.2),
-                inset 0 0 6px rgba(201, 168, 76, 0.05) !important;
+    border: none !important;
+    box-shadow: none !important;
 
     color: #ffffff !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
-    transition: all 0.25s ease !important;
-    min-width: 48px !important;
-    height: 33px !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+    transition: all 0.2s ease !important;
+    min-width: 44px !important;
+    height: 30px !important;
     cursor: pointer !important;
 }
 
 .post-capsule:active, .capsule:active {
-    border-color: rgba(201, 168, 76, 0.8) !important;
-    box-shadow: 0 0 14px rgba(201, 168, 76, 0.45),
-                inset 0 0 8px rgba(201, 168, 76, 0.1) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
     transform: scale(0.95) !important;
 }
 
 .post-capsule i, .capsule i {
     color: var(--premium-gold) !important;
-    font-size: 15px !important;
+    font-size: 14px !important;
 }
 
 .post-capsule span, .capsule span {
@@ -346,15 +369,7 @@
 }
 
 
-           /* ===== FOLLOW BUTTON - IDENTICAL TO GIFT BUTTON ===== */
-.follow-btn-nexus {
-    min-width: 60px;
-    justify-content: center;
-}
 
-.follow-btn-nexus.following {
-    min-width: 80px;
-}
 
 
         /* ===== FEED CONTAINER ===== */
