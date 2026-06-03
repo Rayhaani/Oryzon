@@ -176,6 +176,7 @@
         }
 
       
+      
         /* ===== INTERACTION BAR ===== */
 .post-interaction-bar, .interaction-bar {
     display: flex !important;
@@ -190,14 +191,13 @@
     box-sizing: border-box !important;
     z-index: 20 !important;
 
-    /* ✅ CANJE-CANJE KE NAN - Full transparent glass */
-    background: rgba(0, 0, 0, 0.08) !important;
-    backdrop-filter: blur(2px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(2px) saturate(180%) !important;
-    
-    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    /* ✅ SOLUTION 1 — Glassmorphism bar */
+    background: rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(12px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
-        
+
         
         .post-action-capsules, .action-capsules {
             display: flex !important;
@@ -304,7 +304,7 @@
 
 
 
-/* ===== CAPSULES WORLD STANDARD GLASS LOOK ===== */
+/* ===== CAPSULE BUTTONS ===== */
 .post-capsule, .capsule {
     display: inline-flex !important;
     align-items: center !important;
@@ -312,31 +312,35 @@
     padding: 6px 14px !important;
     border-radius: 20px !important;
     
-    /* Hikimar da zata fito da buttons din radau akan kowane hoto */
-    background: rgba(0, 0, 0, 0.4) !important; 
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    /* ✅ SOLUTION 1 — Frosted glass capsules */
+    background: rgba(255, 255, 255, 0.10) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
     
-    /* Tabbatar da kalar rubutu da inuwa mai fito da kyalli */
-    color: #ffd700 !important; /* Kalar jallon dake kai */
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
     transition: all 0.2s ease !important;
+    min-width: 48px !important;
+    height: 33px !important;
+    cursor: pointer !important;
 }
 
-/* Idan anyi hover ko an taba button din ya dan kara haske */
 .post-capsule:active, .capsule:active {
-    background: rgba(0, 0, 0, 0.6) !important;
+    background: rgba(255, 255, 255, 0.18) !important;
     transform: scale(0.95) !important;
 }
 
-/* Gyara na musamman ga sassan Save Capsule shi ma ya dauka */
-.post-save-capsule .post-capsule {
-    color: #ffd700 !important;
+.post-capsule i, .capsule i {
+    color: var(--premium-gold) !important;
+    font-size: 15px !important;
 }
 
-
-
+.post-capsule span, .capsule span {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
 
 
 
