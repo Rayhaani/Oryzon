@@ -1701,6 +1701,22 @@ window.addEventListener('scroll', () => {
               
               feedContainer.innerHTML = allPostsHTML;
 
+              // Load avatar na kowane poster daga users collection
+snapshot.forEach((doc) => {
+    const post = doc.data();
+    if (!post.username) return;
+    db.collection('users').doc(post.username).get().then(userDoc => {
+        if (!userDoc.exists) return;
+        const pic = userDoc.data().userProfilePic;
+        if (!pic) return;
+        const card = feedContainer.querySelector(`.post-card[data-post-id="${doc.id}"]`);
+        if (card) {
+            const avatar = card.querySelector('.post-avatar');
+            if (avatar) avatar.src = pic;
+        }
+    });
+});
+
 
         // Ƙidaya comments na kowane post
 snapshot.forEach((doc) => {
