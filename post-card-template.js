@@ -304,6 +304,42 @@
 
 
 
+/* ===== CAPSULES WORLD STANDARD GLASS LOOK ===== */
+.post-capsule, .capsule {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 6px 14px !important;
+    border-radius: 20px !important;
+    
+    /* Hikimar da zata fito da buttons din radau akan kowane hoto */
+    background: rgba(0, 0, 0, 0.4) !important; 
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    
+    /* Tabbatar da kalar rubutu da inuwa mai fito da kyalli */
+    color: #ffd700 !important; /* Kalar jallon dake kai */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Idan anyi hover ko an taba button din ya dan kara haske */
+.post-capsule:active, .capsule:active {
+    background: rgba(0, 0, 0, 0.6) !important;
+    transform: scale(0.95) !important;
+}
+
+/* Gyara na musamman ga sassan Save Capsule shi ma ya dauka */
+.post-save-capsule .post-capsule {
+    color: #ffd700 !important;
+}
+
+
+
+
+
+
            /* ===== FOLLOW BUTTON - IDENTICAL TO GIFT BUTTON ===== */
 .follow-btn-nexus {
     min-width: 60px;
