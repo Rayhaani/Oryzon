@@ -437,6 +437,36 @@ window.postCard_toggleLike = function(event, postId) {
     }
 };
 
+
+// SHARED HELPER - Restore likes bayan page load
+window.postCard_restoreLikes = function(container) {
+    const myUsername = localStorage.getItem('nexus_user_session');
+    if (!myUsername || typeof db === 'undefined') return;
+
+    db.collection('likes').where('user', '==', myUsername).get().then(snap => {
+        snap.forEach(likeDoc => {
+            const postId = likeDoc.data().postId;
+            const card = container.querySelector(`.post-card[data-post-id="${postId}"]`);
+            if (!card) return;
+
+            const allBtns = card.querySelectorAll('.post-capsule, .capsule');
+            allBtns.forEach(btn => {
+                const icon = btn.querySelector('i');
+                if (icon && icon.classList.contains('fa-heart')) {
+                    btn.classList.add('liked');
+                    icon.className = 'fa-solid fa-heart';
+                    icon.style.color = '#ff4d6d';
+
+                    db.collection('likes').where('postId', '==', postId).get().then(countSnap => {
+                        const countEl = btn.querySelector('span');
+                        if (countEl) countEl.textContent = countSnap.size > 0 ? countSnap.size : '0';
+                    });
+                }
+            });
+        });
+    });
+};
+
 // 4. SHARED HELPER - Toggle save
 window.postCard_toggleSave = function(event, postId) {
     event.stopPropagation();
