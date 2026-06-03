@@ -1567,6 +1567,17 @@ function loadTimelinePosts() {
                     hasPosts = true;
                     
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
+                    
+                    db.collection('users').doc(post.username).get().then(userDoc => {
+    if (!userDoc.exists) return;
+    const pic = userDoc.data().userProfilePic;
+    if (!pic) return;
+    const card = timelineArea.querySelector(`.post-card[data-post-id="${doc.id}"]`);
+    if (card) {
+        const avatar = card.querySelector('.post-avatar');
+        if (avatar) avatar.src = pic;
+    }
+});
 
 // Ƙidaya comments na kowane post
 db.collection("nexus_contributions")
