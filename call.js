@@ -166,21 +166,26 @@ const NexusCall = (() => {
     //  INCOMING CALLS LISTENER
     // ══════════════════════════════════════════════
     function listenForIncomingCalls() {
-        const myId = getMyId();
-        if (!myId) return;
-        getDB().collection('nexusCalls')
-            .where('calleeId', '==', myId)
-            .where('status', '==', 'ringing')
-            .onSnapshot(snap => {
-                snap.docChanges().forEach(change => {
-                    if (change.type === 'added') {
-                        const data = change.doc.data();
-                        if (Date.now() - data.createdAt < 60000) {
-                            showIncomingCallUI({ callerId: data.callerId, docId: change.doc.id });
-                        }
+    const myId = getMyId();
+    if (!myId) return;
+    getDB().collection('nexusCalls')
+        .where('calleeId', '==', myId)
+        .where('status', '==', 'ringing')
+        .onSnapshot(snap => {
+            snap.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    const data = change.doc.data();
+                    if (Date.now() - data.createdAt < 60000) {
+                        showIncomingCallUI({ callerId: data.callerId, docId: change.doc.id });
+                        getDB().collection('users').doc(data.callerId).get().then(doc => {
+                            const name = doc.exists ? (doc.data().fullName || doc.data().username || data.callerId) : data.callerId;
+                            const avatar = doc.exists && doc.data().userProfilePic ? doc.data().userProfilePic : `https://api.dicebear.com/7.x/bottts/svg?seed=${data.callerId}`;
+                            NexusNotify.showCallNotification({ callerName: name, callerAvatar: avatar, docId: change.doc.id, callType: 'audio' });
+                        });
                     }
-                });
+                }
             });
+        });
     }
 
     function declineCall(docId) {
@@ -774,5 +779,48 @@ const NexusCall = (() => {
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof firebase !== 'undefined' && localStorage.getItem('nexus_user_session')) {
         NexusCall.init();
+        NexusNotify.init();
     }
 });
+
+
+// ═══════════════════════════════════════════
+//  NEXUS Notification Manager
+// ═══════════════════════════════════════════
+const NexusNotify = (() => {
+    let swReg = null;
+
+    async function init() {
+        if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
+        try {
+            swReg = await navigator.serviceWorker.register('/Oryzon/sw.js');
+            await Notification.requestPermission();
+            navigator.serviceWorker.addEventListener('message', e => {
+                const d = e.data;
+                if (d.type === 'ACCEPT_CALL') NexusCall.answerCall(d.docId, d.callerName, d.callerAvatar);
+                if (d.type === 'DECLINE_CALL') NexusCall.declineCall(d.docId);
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    async function showCallNotification({ callerName, callerAvatar, docId, callType }) {
+        if (Notification.permission !== 'granted') return;
+        if (document.visibilityState === 'visible') return;
+        if (swReg?.active) {
+            swReg.active.postMessage({ type: 'INCOMING_CALL', callerName, callerAvatar, docId, callType });
+        } else {
+            new Notification(`${callerName} is calling...`, {
+                body: '📞 Incoming Voice Call',
+                icon: callerAvatar,
+                tag: 'nexus-call',
+                requireInteraction: true,
+            });
+        }
+    }
+
+    function cancelCallNotification() {
+        swReg?.active?.postMessage({ type: 'CALL_ENDED' });
+    }
+
+    return { init, showCallNotification, cancelCallNotification };
+})();
