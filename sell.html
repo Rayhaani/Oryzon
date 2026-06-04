@@ -171,7 +171,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </div>
         <div class="header-title">NEW LISTING</div>
-        <div class="header-action">Deploy</div>
+        <div class="header-action" onclick="uploadProduct()">Deploy</div>
     </header>
 
     <div class="listing-container">
@@ -189,13 +189,13 @@
 
         <div class="input-group">
             <span class="label">Product Identity</span>
-            <input type="text" placeholder="What are you selling?">
+            <input type="text" id="productName" placeholder="What are you selling?">
         </div>
 
         <div class="dual-input">
             <div class="input-group">
                 <span class="label">Category Sector</span>
-                <select>
+                <select id="productCategory">
                     <option>Electronics</option>
                     <option>Fashion</option>
                     <option>Home Gear</option>
@@ -204,29 +204,29 @@
             </div>
             <div class="input-group">
                 <span class="label">Valuation (₦)</span>
-                <input type="number" placeholder="0.00">
+                <input type="number" id="productPrice" placeholder="0.00">
             </div>
         </div>
 
         <div class="input-group">
             <span class="label">Deployment Location</span>
-            <input type="text" value="Kano, Nigeria">
+            <input type="text" id="productLocation" value="Kano, Nigeria">
         </div>
 
         <div class="input-group">
             <span class="label">Operational Description</span>
-            <textarea rows="4" placeholder="Brief the marketplace about this asset..."></textarea>
+            <textarea id="productDescription" rows="4" placeholder="Brief the marketplace about this asset..."></textarea>
         </div>
 
         <div class="input-group">
             <span class="label">Availability Status</span>
-            <select>
+            <select id="productStatus">
                 <option>Single Unit Deployment</option>
                 <option>In-Stock Protocol</option>
             </select>
         </div>
 
-        <button class="publish-btn">PUBLISH LISTING</button>
+        <button class="publish-btn" onclick="uploadProduct()">PUBLISH LISTING</button>
     </div>
 
     <script>
@@ -250,10 +250,9 @@
                 reader.readAsDataURL(file);
             }
         });
+    </script>
 
-
-
-            <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
@@ -273,25 +272,36 @@
 
         // Function din da zai tura kaya zuwa Firestore
         async function uploadProduct() {
-            // Kamfato bayanai daga cikin Form dinka (Tabbatar IDs din nan sun yi daidai da na Form dinka)
             const name = document.getElementById('productName').value;
             const price = document.getElementById('productPrice').value;
             const location = document.getElementById('productLocation').value;
-            const imageUrl = document.getElementById('productImage').value; // URL na hoto
+            const description = document.getElementById('productDescription').value;
+            const category = document.getElementById('productCategory').value;
+            const status = document.getElementById('productStatus').value;
+            
+            // Dauko hoton da ke kan Preview idan akwai
+            const imagePreviewSrc = document.getElementById('imagePreview').src;
+            const imageUrl = imagePreviewSrc && document.getElementById('imagePreview').style.display !== 'none' ? imagePreviewSrc : '';
 
             if(!name || !price) {
                 alert("Don Allah cika sunan kaya da farashi!");
                 return;
             }
 
+            // Gyara farashi ya fito da alamar '₦' kafin adana shi
+            const formattedPrice = "₦" + Number(price).toLocaleString();
+
             try {
                 // Tura bayanan zuwa collection mai suna "products"
                 await addDoc(collection(db, "products"), {
                     name: name,
-                    price: price,
-                    location: location || "Kano",
+                    price: formattedPrice,
+                    location: location || "Kano, Nigeria",
+                    description: description || "",
+                    category: category,
+                    status: status,
                     image: imageUrl || 'https://via.placeholder.com/300/111/00F2FF?text=Nexus+Item',
-                    createdAt: serverTimestamp() // Lokacin da aka dora kaya (Muhimmi ga jerawa)
+                    createdAt: serverTimestamp()
                 });
                 
                 // Idan ya yi nasara, zai tafi shafin shop.html otomatis
@@ -304,8 +314,6 @@
 
         // Sanya function din ya zama ana iya kiransa daga wajen script din (Global Scope)
         window.uploadProduct = uploadProduct;
-
     </script>
 </body>
-              </html>
-              
+</html>
