@@ -186,74 +186,69 @@
    </div>
     
 
-    <div class="market-grid">
-        <div class="product-card" onclick="window.location.href='products-page.html'" style="cursor: pointer;">
-            <div class="image-container">
-                <img src="https://via.placeholder.com/300/111/00F2FF?text=Item+1" class="product-image">
-                <div class="price-badge">₦25,000</div>
-            </div>
-            <div class="product-footer">
-                <span class="product-name">Neural VR Headset Gen-5</span>
-                <span class="product-location">Kano</span>
-            </div>
-        </div>
+            <div class="market-grid" id="marketGrid"></div>
 
-        <div class="product-card" onclick="window.location.href='products-page.html'" style="cursor: pointer;">
-            <div class="image-container">
-                <img src="https://via.placeholder.com/300/111/50FA7B?text=Item+2" class="product-image">
-                <div class="price-badge">₦150,000</div>
-            </div>
-            <div class="product-footer">
-                <span class="product-name">Quantum Mining Core</span>
-                <span class="product-location">Zaria</span>
-            </div>
-        </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-        <div class="product-card" onclick="window.location.href='products-page.html'" style="cursor: pointer;">
-            <div class="image-container">
-                <img src="https://via.placeholder.com/300/111/ffffff?text=Item+3" class="product-image">
-                <div class="price-badge">₦45,000</div>
-            </div>
-            <div class="product-footer">
-                <span class="product-name">Cyber Suit v2.0 Limited</span>
-                <span class="product-location">Lagos</span>
-            </div>
-        </div>
+        // Config dinka na Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+            authDomain: "oryzon-50ea4.firebaseapp.com",
+            projectId: "oryzon-50ea4",
+            storageBucket: "oryzon-50ea4.firebasestorage.app",
+            messagingSenderId: "782106742622",
+            appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+            measurementId: "G-K5085DLL2W"
+        };
 
-        <div class="product-card" onclick="window.location.href='products-page.html'" style="cursor: pointer;">
-            <div class="image-container">
-                <img src="https://via.placeholder.com/300/111/FFD700?text=Item+4" class="product-image">
-                <div class="price-badge">₦10,000</div>
-            </div>
-            <div class="product-footer">
-                <span class="product-name">Master AI Access Key</span>
-                <span class="product-location">Abuja</span>
-            </div>
-        </div>
+        // Initialize Firebase & Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        <div class="product-card" onclick="window.location.href='products-page.html'" style="cursor: pointer;">
-            <div class="image-container">
-                <img src="https://via.placeholder.com/300/111/FF5555?text=Item+5" class="product-image">
-                <div class="price-badge">₦85,000</div>
-            </div>
-            <div class="product-footer">
-                <span class="product-name">Core X Processor</span>
-                <span class="product-location">Kano</span>
-            </div>
-        </div>
+        // Dauko kayayyaki lokacin da shafi ya gama loading
+        document.addEventListener("DOMContentLoaded", async function() {
+            const marketGrid = document.getElementById('marketGrid');
+            
+            try {
+                // Jera kayan ta amfani da 'createdAt' a yanayin 'asc' (Daga na farko zuwa na karshe)
+                // Wannan zai sa sabon kaya (Latest) ya dawo karshe (Last) dindindin
+                const q = query(collection(db, "products"), orderBy("createdAt", "asc"));
+                const querySnapshot = await getDocs(q);
+                
+                // Share komai da ke cikin grid din
+                marketGrid.innerHTML = "";
 
-        <div class="product-card" onclick="window.location.href='products-page.html'" style="cursor: pointer;">
-            <div class="image-container">
-                <img src="https://via.placeholder.com/300/111/BD93F9?text=Item+6" class="product-image">
-                <div class="price-badge">₦60,000</div>
-            </div>
-            <div class="product-footer">
-                <span class="product-name">Surveillance Drone</span>
-                <span class="product-location">Kaduna</span>
-            </div>
-        </div>
-    </div>
-    
+                // Saka kayayyakin daya bayan daya
+                querySnapshot.forEach((doc) => {
+                    const product = doc.data();
+                    
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    card.style.cursor = 'pointer';
+                    card.onclick = function() { window.location.href = 'products-page.html'; };
+
+                    card.innerHTML = `
+                        <div class="image-container">
+                            <img src="${product.image}" class="product-image">
+                            <div class="price-badge">${product.price}</div>
+                        </div>
+                        <div class="product-footer">
+                            <span class="product-name">${product.name}</span>
+                            <span class="product-location">${product.location}</span>
+                        </div>
+                    `;
+                    
+                    marketGrid.appendChild(card);
+                });
+            } catch (error) {
+                console.error("An samu matsala wajen dauko kaya: ", error);
+            }
+        });
+    </script>
+        
+
 
     <nav class="nexus-footer" id="instaFooter">
         <div class="footer-icon active"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L4 9v12h5v-7h6v7h5V9l-8-6z"/></svg></div>
