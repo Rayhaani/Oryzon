@@ -206,25 +206,27 @@
         const db = getFirestore(app);
         const marketGrid = document.getElementById('marketGrid');
 
-        // Tsoffin kayayyaki na asali (Backup Products idan Firebase ya sami matsala ko babu komai a ciki)
+        // Tsoffin kayayyaki na asali
         const defaultProducts = [
-            { name: "Neural VR Headset Gen-5", price: "₦25,000", location: "Kano", image: "https://via.placeholder.com/300/111/00F2FF?text=Item+1" },
-            { name: "Quantum Mining Core", price: "₦150,000", location: "Zaria", image: "https://via.placeholder.com/300/111/50FA7B?text=Item+2" },
-            { name: "Cyber Suit v2.0 Limited", price: "₦45,000", location: "Lagos", image: "https://via.placeholder.com/300/111/ffffff?text=Item+3" },
-            { name: "Master AI Access Key", price: "₦10,000", location: "Abuja", image: "https://via.placeholder.com/300/111/FFD700?text=Item+4" },
-            { name: "Core X Processor", price: "₦85,000", location: "Kano", image: "https://via.placeholder.com/300/111/FF5555?text=Item+5" },
-            { name: "Surveillance Drone", price: "₦60,000", location: "Kaduna", image: "https://via.placeholder.com/300/111/BD93F9?text=Item+6" }
+            { id: "def1", name: "Neural VR Headset Gen-5", price: "₦25,000", location: "Kano", image: "https://via.placeholder.com/300/111/00F2FF?text=Item+1" },
+            { id: "def2", name: "Quantum Mining Core", price: "₦150,000", location: "Zaria", image: "https://via.placeholder.com/300/111/50FA7B?text=Item+2" },
+            { id: "def3", name: "Cyber Suit v2.0 Limited", price: "₦45,000", location: "Lagos", image: "https://via.placeholder.com/300/111/ffffff?text=Item+3" },
+            { id: "def4", name: "Master AI Access Key", price: "₦10,000", location: "Abuja", image: "https://via.placeholder.com/300/111/FFD700?text=Item+4" },
+            { id: "def5", name: "Core X Processor", price: "₦85,000", location: "Kano", image: "https://via.placeholder.com/300/111/FF5555?text=Item+5" },
+            { id: "def6", name: "Surveillance Drone", price: "₦60,000", location: "Kaduna", image: "https://via.placeholder.com/300/111/BD93F9?text=Item+6" }
         ];
 
-        // Rukunin sanya kaya a HTML
+        // Rukunin sanya kaya a HTML (An gyara don dacewa da ID na kowane kaya)
         function renderProducts(productsList) {
             marketGrid.innerHTML = "";
             productsList.forEach((product) => {
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.style.cursor = 'pointer';
+                
+                // Gyara: Yanzu zai dauki ainihin ID ko na bogi ba tare da ya kawo Error ba
                 card.onclick = function() { 
-                window.location.href = `products-page.html?id=${doc.id}`; 
+                    window.location.href = `products-page.html?id=${product.id}`; 
                 };
                 
                 card.innerHTML = `
@@ -243,16 +245,15 @@
 
         async function loadMarketplace() {
             try {
-                // Kokarin dauko kaya daga Firestore
                 const q = query(collection(db, "products"), orderBy("createdAt", "asc"));
                 const querySnapshot = await getDocs(q);
                 
                 let firebaseProducts = [];
                 querySnapshot.forEach((doc) => {
-                    firebaseProducts.push(doc.data());
+                    // Muna hada ainihin bayanan kaya (doc.data()) tare da ID dinsa (doc.id)
+                    firebaseProducts.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Idan an samo kaya a Firestore, nuna su. Idan babu komai, nuna na asali
                 if(firebaseProducts.length > 0) {
                     renderProducts(firebaseProducts);
                 } else {
@@ -261,12 +262,10 @@
 
             } catch (error) {
                 console.warn("Firebase Sandbox Blocked ko babu kaya, an nuna default products:", error);
-                // Idan aka sami kuskuren iframe ko network, nuna tsoffin kayan
                 renderProducts(defaultProducts);
             }
         }
 
-        // Fara lodi
         loadMarketplace();
     </script>
         
@@ -290,4 +289,3 @@
     </script>
 </body>
 </html>
-                                             
