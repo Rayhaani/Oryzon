@@ -1254,18 +1254,78 @@ document.addEventListener('DOMContentLoaded', function() {
 let popTimer;
 
 // A. DATA SYNC
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // 1. Karbo ID na kayan da aka danna daga jikin URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
+
+    if (!productId) {
+        console.warn("Babu ID a jikin URL, ana duba LocalStorage...");
+        loadFromLocalStorage();
+        return;
+    }
+
+    // 2. Tambayi Firebase ya fito da takamaiman hoton da farashin kayan
+    try {
+        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
+        
+        const docRef = doc(db, "products", productId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const product = docSnap.data();
+            const productImg = product.image || product.img;
+            
+            // Sanya ainihin Hoton da aka janyo daga Firebase
+            document.getElementById('dynamic-img').src = productImg;
+            
+            // Sabon Gyara: Sanya hoton cropped-view dinka
+            const croppedImg = document.querySelector('.cropped-view img');
+            if (croppedImg) croppedImg.src = productImg;
+            
+            // Sanya Sunan Kayan da Farashi
+            document.querySelector('h1').innerHTML = product.name;
+            document.querySelector('.price-tag').innerText = product.price.startsWith('₦') ? product.price : "₦" + Number(product.price).toLocaleString();
+
+            // Sanya hotuna a sauran fuskokin shafin (Stacks da Holos)
+            document.querySelectorAll('.stack-img').forEach(img => img.src = productImg);
+            document.querySelectorAll('.holo-img').forEach(img => img.src = productImg);
+            
+            // Adana shi a LocalStorage don kariya
+            localStorage.setItem('selectedProduct', JSON.stringify({
+                name: product.name,
+                price: product.price.toString().replace(/[^\d]/g, ''),
+                img: productImg
+            }));
+
+            console.log("Firebase Product Sync Complete! ID:", productId);
+        } else {
+            console.error("Babu wannan ID din a Firebase, an koma kan backup.");
+            loadFromLocalStorage();
+        }
+    } catch (error) {
+        console.error("An samu matsala wajen kiran Firebase:", error);
+        loadFromLocalStorage();
+    }
+});
+
+// Tsarin kariya idan internet ya matsa lamba
+function loadFromLocalStorage() {
     const data = localStorage.getItem('selectedProduct');
     if (data) {
         const product = JSON.parse(data);
         document.getElementById('dynamic-img').src = product.img;
-        document.querySelector('.cropped-view img').src = product.img;
+        
+        const croppedImg = document.querySelector('.cropped-view img');
+        if (croppedImg) croppedImg.src = product.img;
+        
         document.querySelector('h1').innerHTML = product.name;
         document.querySelector('.price-tag').innerText = "₦" + Number(product.price).toLocaleString();
         document.querySelectorAll('.stack-img').forEach(img => img.src = product.img);
         document.querySelectorAll('.holo-img').forEach(img => img.src = product.img);
     }
-});
+    }
+    
 
 // B. CHAT FUNCTION
 function openChat() { window.location.href = 'chat-room.html'; }
