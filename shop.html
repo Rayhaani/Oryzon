@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+                           <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -186,13 +186,12 @@
    </div>
     
 
-            <div class="market-grid" id="marketGrid"></div>
+    <div class="market-grid" id="marketGrid"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
         import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-        // Config dinka na Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
             authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -203,52 +202,72 @@
             measurementId: "G-K5085DLL2W"
         };
 
-        // Initialize Firebase & Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const marketGrid = document.getElementById('marketGrid');
 
-        // Dauko kayayyaki lokacin da shafi ya gama loading
-        document.addEventListener("DOMContentLoaded", async function() {
-            const marketGrid = document.getElementById('marketGrid');
-            
+        // Tsoffin kayayyaki na asali (Backup Products idan Firebase ya sami matsala ko babu komai a ciki)
+        const defaultProducts = [
+            { name: "Neural VR Headset Gen-5", price: "₦25,000", location: "Kano", image: "https://via.placeholder.com/300/111/00F2FF?text=Item+1" },
+            { name: "Quantum Mining Core", price: "₦150,000", location: "Zaria", image: "https://via.placeholder.com/300/111/50FA7B?text=Item+2" },
+            { name: "Cyber Suit v2.0 Limited", price: "₦45,000", location: "Lagos", image: "https://via.placeholder.com/300/111/ffffff?text=Item+3" },
+            { name: "Master AI Access Key", price: "₦10,000", location: "Abuja", image: "https://via.placeholder.com/300/111/FFD700?text=Item+4" },
+            { name: "Core X Processor", price: "₦85,000", location: "Kano", image: "https://via.placeholder.com/300/111/FF5555?text=Item+5" },
+            { name: "Surveillance Drone", price: "₦60,000", location: "Kaduna", image: "https://via.placeholder.com/300/111/BD93F9?text=Item+6" }
+        ];
+
+        // Rukunin sanya kaya a HTML
+        function renderProducts(productsList) {
+            marketGrid.innerHTML = "";
+            productsList.forEach((product) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.style.cursor = 'pointer';
+                card.onclick = function() { window.location.href = 'products-page.html'; };
+
+                card.innerHTML = `
+                    <div class="image-container">
+                        <img src="${product.image}" class="product-image">
+                        <div class="price-badge">${product.price}</div>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-name">${product.name}</span>
+                        <span class="product-location">${product.location}</span>
+                    </div>
+                `;
+                marketGrid.appendChild(card);
+            });
+        }
+
+        async function loadMarketplace() {
             try {
-                // Jera kayan ta amfani da 'createdAt' a yanayin 'asc' (Daga na farko zuwa na karshe)
-                // Wannan zai sa sabon kaya (Latest) ya dawo karshe (Last) dindindin
+                // Kokarin dauko kaya daga Firestore
                 const q = query(collection(db, "products"), orderBy("createdAt", "asc"));
                 const querySnapshot = await getDocs(q);
                 
-                // Share komai da ke cikin grid din
-                marketGrid.innerHTML = "";
-
-                // Saka kayayyakin daya bayan daya
+                let firebaseProducts = [];
                 querySnapshot.forEach((doc) => {
-                    const product = doc.data();
-                    
-                    const card = document.createElement('div');
-                    card.className = 'product-card';
-                    card.style.cursor = 'pointer';
-                    card.onclick = function() { window.location.href = 'products-page.html'; };
-
-                    card.innerHTML = `
-                        <div class="image-container">
-                            <img src="${product.image}" class="product-image">
-                            <div class="price-badge">${product.price}</div>
-                        </div>
-                        <div class="product-footer">
-                            <span class="product-name">${product.name}</span>
-                            <span class="product-location">${product.location}</span>
-                        </div>
-                    `;
-                    
-                    marketGrid.appendChild(card);
+                    firebaseProducts.push(doc.data());
                 });
+
+                // Idan an samo kaya a Firestore, nuna su. Idan babu komai, nuna na asali
+                if(firebaseProducts.length > 0) {
+                    renderProducts(firebaseProducts);
+                } else {
+                    renderProducts(defaultProducts);
+                }
+
             } catch (error) {
-                console.error("An samu matsala wajen dauko kaya: ", error);
+                console.warn("Firebase Sandbox Blocked ko babu kaya, an nuna default products:", error);
+                // Idan aka sami kuskuren iframe ko network, nuna tsoffin kayan
+                renderProducts(defaultProducts);
             }
-        });
+        }
+
+        // Fara lodi
+        loadMarketplace();
     </script>
         
-
 
     <nav class="nexus-footer" id="instaFooter">
         <div class="footer-icon active"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L4 9v12h5v-7h6v7h5V9l-8-6z"/></svg></div>
@@ -268,5 +287,5 @@
         }
     </script>
 </body>
-                                                                                 </html>
-                                                                                 
+</html>
+                                             
