@@ -250,6 +250,61 @@
                 reader.readAsDataURL(file);
             }
         });
+
+
+
+            <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+        // Config dinka na Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+            authDomain: "oryzon-50ea4.firebaseapp.com",
+            projectId: "oryzon-50ea4",
+            storageBucket: "oryzon-50ea4.firebasestorage.app",
+            messagingSenderId: "782106742622",
+            appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+            measurementId: "G-K5085DLL2W"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Function din da zai tura kaya zuwa Firestore
+        async function uploadProduct() {
+            // Kamfato bayanai daga cikin Form dinka (Tabbatar IDs din nan sun yi daidai da na Form dinka)
+            const name = document.getElementById('productName').value;
+            const price = document.getElementById('productPrice').value;
+            const location = document.getElementById('productLocation').value;
+            const imageUrl = document.getElementById('productImage').value; // URL na hoto
+
+            if(!name || !price) {
+                alert("Don Allah cika sunan kaya da farashi!");
+                return;
+            }
+
+            try {
+                // Tura bayanan zuwa collection mai suna "products"
+                await addDoc(collection(db, "products"), {
+                    name: name,
+                    price: price,
+                    location: location || "Kano",
+                    image: imageUrl || 'https://via.placeholder.com/300/111/00F2FF?text=Nexus+Item',
+                    createdAt: serverTimestamp() // Lokacin da aka dora kaya (Muhimmi ga jerawa)
+                });
+                
+                // Idan ya yi nasara, zai tafi shafin shop.html otomatis
+                window.location.href = 'shop.html';
+            } catch (e) {
+                console.error("An samu matsala wajen dora kaya: ", e);
+                alert("Kuskure wajen tura kaya, duba console dinka.");
+            }
+        }
+
+        // Sanya function din ya zama ana iya kiransa daga wajen script din (Global Scope)
+        window.uploadProduct = uploadProduct;
+
     </script>
 </body>
               </html>
