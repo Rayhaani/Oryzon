@@ -994,8 +994,8 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                     <span>${likes}</span>
                 </div>
                
-                <div class="post-capsule" onclick="event.stopPropagation(); window.location.href='comments.html?postId=${post.id}'" id="comment-btn-${post.id}">
-                    <i class="fa-regular fa-comment"></i>
+                    <div class="post-capsule" onclick="event.stopPropagation(); openSplitView('${post.id}', event)" id="comment-btn-${post.id}">
+                     <i class="fa-regular fa-comment"></i>
                     <span id="comment-count-${post.id}">${comments}</span>
                 </div>
 
