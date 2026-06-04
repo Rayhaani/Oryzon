@@ -384,6 +384,247 @@
     border-radius: 30px !important;
     padding: 3px !important;
 }
+
+
+/* ===== SPLIT-VIEW COMMENT SYSTEM ===== */
+.sv-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 8000;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+}
+.sv-overlay.sv-open {
+    pointer-events: all;
+    opacity: 1;
+}
+.sv-video-half {
+    flex: 0 0 42%;
+    position: relative;
+    background: #000;
+    overflow: hidden;
+}
+.sv-video-half video,
+.sv-video-half img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.sv-mini-info {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 10px 14px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.75));
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sv-mini-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid #fde08d;
+    object-fit: cover;
+}
+.sv-mini-username {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+.sv-close-half {
+    position: absolute;
+    top: 10px; left: 12px;
+    width: 30px; height: 30px;
+    background: rgba(0,0,0,0.55);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    z-index: 10;
+}
+.sv-comments-half {
+    flex: 1;
+    background: rgba(10,10,18,0.97);
+    backdrop-filter: blur(24px);
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(253,224,141,0.15);
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.sv-overlay.sv-open .sv-comments-half {
+    transform: translateY(0);
+}
+.sv-comments-header {
+    padding: 10px 16px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sv-comments-title {
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    display: flex; align-items: center; gap: 8px;
+}
+.sv-count-badge {
+    background: rgba(253,224,141,0.15);
+    color: #fde08d;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(253,224,141,0.3);
+}
+.sv-sort-row {
+    display: flex;
+    gap: 7px;
+    padding: 8px 16px;
+    flex-shrink: 0;
+}
+.sv-sort-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 4px 13px;
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.sv-sort-btn.active {
+    background: rgba(253,224,141,0.15);
+    border-color: rgba(253,224,141,0.4);
+    color: #fde08d;
+}
+.sv-comments-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 14px 8px;
+    scrollbar-width: none;
+}
+.sv-comment-row {
+    display: flex;
+    gap: 9px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+}
+.sv-c-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#fde08d,#b8860b);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+    border: 1.5px solid rgba(253,224,141,0.25);
+    object-fit: cover;
+}
+.sv-c-name {
+    color: #fff; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; gap: 4px;
+}
+.sv-c-verified {
+    font-size: 10px;
+}
+.sv-c-time {
+    color: rgba(255,255,255,0.35);
+    font-size: 10px;
+    margin-left: 4px;
+}
+.sv-c-text {
+    color: rgba(255,255,255,0.82);
+    font-size: 13px;
+    line-height: 1.4;
+    margin-top: 3px;
+}
+.sv-c-actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 6px;
+    align-items: center;
+}
+.sv-c-reply-btn, .sv-c-like-btn {
+    background: none; border: none;
+    color: rgba(255,255,255,0.38);
+    font-size: 11px; font-weight: 600;
+    cursor: pointer; padding: 0;
+    display: flex; align-items: center; gap: 3px;
+}
+.sv-reactions-bar {
+    display: flex;
+    gap: 7px;
+    padding: 6px 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+.sv-react-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 4px 9px;
+    font-size: 17px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.sv-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px 20px;
+    align-items: center;
+    flex-shrink: 0;
+    background: rgba(10,10,18,0.98);
+}
+.sv-my-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid rgba(253,224,141,0.4);
+    flex-shrink: 0;
+}
+.sv-input-wrap {
+    flex: 1;
+    display: flex;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    overflow: hidden;
+    align-items: center;
+}
+.sv-input {
+    flex: 1; background: none; border: none; outline: none;
+    color: #fff; font-size: 13px;
+    padding: 9px 13px;
+    caret-color: #fde08d;
+    font-family: 'Inter', sans-serif;
+}
+.sv-input::placeholder { color: rgba(255,255,255,0.35); }
+.sv-send-btn {
+    background: linear-gradient(135deg,#fde08d,#b8860b);
+    border: none; border-radius: 50%;
+    width: 30px; height: 30px;
+    margin: 4px;
+    cursor: pointer;
+    color: #000;
+    font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+
+@keyframes sv-float {
+    0%   { opacity:1; transform:translateX(-50%) scale(.5); }
+    50%  { opacity:1; transform:translateX(-50%) scale(1.35) translateY(-18px); }
+    100% { opacity:0; transform:translateX(-50%) scale(1) translateY(-55px); }
+}
+
         
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
@@ -631,6 +872,55 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
             
                     
 
+
+
+<!-- ===== NEXUS SPLIT-VIEW COMMENTS ===== -->
+<div class="sv-overlay" id="svOverlay">
+    <!-- Video half -->
+    <div class="sv-video-half" id="svVideoHalf">
+        <button class="sv-close-half" onclick="closeSplitView()">&#8249;</button>
+        <div id="svMediaSlot"></div>
+        <div class="sv-mini-info">
+            <img src="" class="sv-mini-avatar" id="svMiniAvatar">
+            <span class="sv-mini-username" id="svMiniUsername"></span>
+        </div>
+    </div>
+
+    <!-- Comments half -->
+    <div class="sv-comments-half">
+        <div class="sv-comments-header">
+            <div class="sv-comments-title">
+                Comments
+                <span class="sv-count-badge" id="svCommentCount">0</span>
+            </div>
+        </div>
+        <div class="sv-sort-row">
+            <button class="sv-sort-btn active">Top</button>
+            <button class="sv-sort-btn">Recent</button>
+            <button class="sv-sort-btn">Creators</button>
+        </div>
+        <div class="sv-comments-list" id="svCommentsList"></div>
+        <div class="sv-reactions-bar">
+            <button class="sv-react-btn" onclick="svSendReaction('❤️')">❤️</button>
+            <button class="sv-react-btn" onclick="svSendReaction('🔥')">🔥</button>
+            <button class="sv-react-btn" onclick="svSendReaction('😂')">😂</button>
+            <button class="sv-react-btn" onclick="svSendReaction('😮')">😮</button>
+            <button class="sv-react-btn" onclick="svSendReaction('👏')">👏</button>
+            <button class="sv-react-btn" onclick="svSendReaction('😍')">😍</button>
+            <button class="sv-react-btn" onclick="svSendReaction('😢')">😢</button>
+        </div>
+        <div class="sv-input-row">
+            <img src="" class="sv-my-avatar" id="svMyAvatar">
+            <div class="sv-input-wrap">
+                <input class="sv-input" id="svInput" placeholder="Add a comment..." 
+                    onkeydown="if(event.key==='Enter') svSubmitComment()">
+                <button class="sv-send-btn" id="svSendBtn" onclick="svSubmitComment()" style="display:none">↑</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
             
         </div>
         ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
@@ -788,6 +1078,177 @@ window.handleFollowBtn = function(btn) {
 
     if (navigator.vibrate) navigator.vibrate(10);
 };
+
+
+
+
+   // ===== NEXUS SPLIT-VIEW COMMENTS ENGINE =====
+let svCurrentPostId = null;
+let svUnsub = null;
+
+function openSplitView(postId, event) {
+    if (event) event.stopPropagation();
+
+    svCurrentPostId = postId;
+    const overlay = document.getElementById('svOverlay');
+    const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+    if (!card) return;
+
+    // Sanya media (video ko image) a cikin split view
+    const mediaSlot = document.getElementById('svMediaSlot');
+    mediaSlot.innerHTML = '';
+    const origVideo = card.querySelector('video');
+    const origImg = card.querySelector('img.post-media');
+
+    if (origVideo) {
+        const cloneVid = document.createElement('video');
+        cloneVid.src = origVideo.src || origVideo.currentSrc;
+        cloneVid.autoplay = true;
+        cloneVid.loop = true;
+        cloneVid.muted = false;
+        cloneVid.playsInline = true;
+        cloneVid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        mediaSlot.appendChild(cloneVid);
+        cloneVid.play().catch(()=>{});
+    } else if (origImg) {
+        const cloneImg = document.createElement('img');
+        cloneImg.src = origImg.src;
+        cloneImg.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        mediaSlot.appendChild(cloneImg);
+    }
+
+    // Avatar da username
+    const avatarEl = card.querySelector('.post-avatar') || card.querySelector('.avatar');
+    const usernameEl = card.querySelector('.post-username') || card.querySelector('.username');
+    document.getElementById('svMiniAvatar').src = avatarEl ? avatarEl.src : '';
+    document.getElementById('svMiniUsername').textContent = usernameEl ? usernameEl.textContent.trim() : '';
+
+    // Avatar na mai rubutu comment
+    const myPic = localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=me';
+    document.getElementById('svMyAvatar').src = myPic;
+
+    // Show/hide send button
+    const svInput = document.getElementById('svInput');
+    const svSendBtn = document.getElementById('svSendBtn');
+    svInput.addEventListener('input', () => {
+        svSendBtn.style.display = svInput.value.trim() ? 'flex' : 'none';
+    });
+
+    // Bude overlay
+    overlay.classList.add('sv-open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('instaFooter').classList.add('footer-hidden');
+
+    // Load comments daga Firestore
+    svLoadComments(postId);
+    if (navigator.vibrate) navigator.vibrate([15, 10, 15]);
+}
+
+function closeSplitView() {
+    document.getElementById('svOverlay').classList.remove('sv-open');
+    document.body.style.overflow = '';
+    document.getElementById('instaFooter').classList.remove('footer-hidden');
+    
+    // Stop cloned video
+    const vid = document.querySelector('#svMediaSlot video');
+    if (vid) { vid.pause(); vid.src = ''; }
+
+    if (svUnsub) { svUnsub(); svUnsub = null; }
+    svCurrentPostId = null;
+}
+
+function svLoadComments(postId) {
+    const list = document.getElementById('svCommentsList');
+    list.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;font-size:13px;">Loading...</div>';
+
+    if (svUnsub) svUnsub();
+
+    svUnsub = db.collection('nexus_contributions')
+        .where('postId', '==', postId)
+        .where('parentId', '==', null)
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(snap => {
+            document.getElementById('svCommentCount').textContent = snap.size;
+            if (snap.empty) {
+                list.innerHTML = '<div style="color:rgba(255,255,255,0.25);text-align:center;padding:30px;font-size:13px;">No comments yet.<br>Be the first! 💬</div>';
+                return;
+            }
+            list.innerHTML = '';
+            snap.forEach(doc => {
+                const c = doc.data();
+                const row = document.createElement('div');
+                row.className = 'sv-comment-row';
+                row.innerHTML = `
+                    <div class="sv-c-avatar">${c.userAvatar ? `<img src="${c.userAvatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : '👤'}</div>
+                    <div style="flex:1">
+                        <div class="sv-c-name">
+                            ${c.username || 'User'}
+                            <span class="sv-c-verified">✅</span>
+                            <span class="sv-c-time">${svTimeAgo(c.timestamp)}</span>
+                        </div>
+                        <div class="sv-c-text">${c.text || ''}</div>
+                        <div class="sv-c-actions">
+                            <button class="sv-c-reply-btn">↩ Reply</button>
+                            <button class="sv-c-like-btn">🤍 ${c.likes || 0}</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+        }, err => {
+            list.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;font-size:12px;">Could not load comments.</div>';
+        });
+}
+
+async function svSubmitComment() {
+    const input = document.getElementById('svInput');
+    const text = input.value.trim();
+    if (!text || !svCurrentPostId) return;
+
+    const myUser = localStorage.getItem('nexus_user_session') || 'anonymous';
+    const myPic = localStorage.getItem('userProfilePic') || '';
+
+    input.value = '';
+    document.getElementById('svSendBtn').style.display = 'none';
+
+    try {
+        await db.collection('nexus_contributions').add({
+            postId: svCurrentPostId,
+            parentId: null,
+            username: myUser,
+            userAvatar: myPic,
+            text: text,
+            likes: 0,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Update comment count a kan post
+        await db.collection('posts').doc(svCurrentPostId).update({
+            commentCount: firebase.firestore.FieldValue.increment(1)
+        });
+    } catch(e) {
+        console.error('Comment error:', e);
+    }
+}
+
+function svSendReaction(emoji) {
+    const half = document.getElementById('svVideoHalf');
+    const el = document.createElement('div');
+    el.textContent = emoji;
+    el.style.cssText = `position:absolute;bottom:30%;left:50%;font-size:52px;
+        animation:sv-float 0.9s ease-out forwards;pointer-events:none;z-index:99;`;
+    half.appendChild(el);
+    setTimeout(() => el.remove(), 950);
+}
+
+function svTimeAgo(ts) {
+    if (!ts) return 'now';
+    const secs = Math.floor((Date.now() - ts.toMillis()) / 1000);
+    if (secs < 60) return 'just now';
+    if (secs < 3600) return Math.floor(secs/60) + 'm';
+    if (secs < 86400) return Math.floor(secs/3600) + 'h';
+    return Math.floor(secs/86400) + 'd';
+}
 
 
    
