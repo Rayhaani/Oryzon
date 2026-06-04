@@ -1251,9 +1251,156 @@ document.addEventListener('DOMContentLoaded', function() {
     window.location.href = 'chat-room.html';
     }
 
+
+<script>
 let popTimer;
 
-// A. DATA SYNC
+function openChat() { window.location.href = 'chat-room.html'; }
+
+function addToCartFunction() {
+    const selectedColor = document.querySelector('.color-dot.active');
+    const hasColorOptions = document.querySelectorAll('.color-dot').length > 0;
+    if (hasColorOptions && !selectedColor) {
+        const overlay = document.getElementById('infinity-overlay');
+        if(overlay) { overlay.style.display = 'flex'; setTimeout(() => overlay.classList.add('active'), 10); }
+    } else {
+        const data = localStorage.getItem('selectedProduct');
+        if (data) {
+            let cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+            cart.push(JSON.parse(data));
+            localStorage.setItem('cartItems', JSON.stringify(cart));
+        }
+        openModal();
+    }
+}
+
+function openModal() {
+    const modal = document.getElementById('cart-modal');
+    const prog = document.getElementById('progress');
+    const num = document.getElementById('num');
+    const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const promoGrid = document.querySelector('.promo-grid');
+    if (promoGrid && cart.length > 0) {
+        promoGrid.innerHTML = cart.slice(-12).reverse().map(item => `
+            <div class="promo-item">
+                <div class="item-box"><img src="${item.img}"></div>
+                <div class="stock-label">In Cart</div>
+                <div class="price-label">₦${Number(item.price).toLocaleString()}</div>
+            </div>
+        `).join('');
+    }
+    const checkoutBtn = document.querySelector('.btn-checkout');
+    if (checkoutBtn) checkoutBtn.innerText = `Check out these items (${cart.length})`;
+    modal.classList.add('active');
+    clearInterval(popTimer);
+    let time = 5;
+    if(prog) prog.style.strokeDashoffset = 88;
+    const runTimer = () => {
+        if(num) num.innerText = time + 's';
+        if(prog) prog.style.strokeDashoffset = 88 - (88 * (5 - time) / 5);
+        if(time <= 0) { clearInterval(popTimer); closeModal(); }
+        time--;
+    };
+    runTimer();
+    popTimer = setInterval(runTimer, 1000);
+}
+
+function closeModal() {
+    clearInterval(popTimer);
+    document.getElementById('cart-modal').classList.remove('active');
+    setTimeout(() => {
+        const bar = document.getElementById('dynamic-bar');
+        if (bar) {
+            bar.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 5px;">
+                    <button onclick="window.location.href='cart.html'" style="background:transparent;border:1.5px solid white;color:white;border-radius:50px;padding:8px 15px;font-size:10px;font-weight:800;text-transform:uppercase;cursor:pointer;">Go to Cart</button>
+                    <div style="text-align:center;">
+                        <small style="color:#ffcc33;font-size:9px;font-weight:800;display:block;text-transform:uppercase;">${(JSON.parse(localStorage.getItem('cartItems'))||[]).length} Items</small>
+                        <b style="color:white;font-size:16px;font-weight:700;">Cart</b>
+                    </div>
+                    <button onclick="window.location.href='checkout.html'" style="background:#ff5e00;border:none;color:white;border-radius:50px;padding:10px 20px;font-size:11px;font-weight:800;text-transform:uppercase;cursor:pointer;">Checkout</button>
+                </div>`;
+            bar.style.background = "rgba(0,0,0,0.95)";
+            bar.style.height = "75px";
+            bar.style.border = "1px solid rgba(255,255,255,0.2)";
+        }
+    }, 400);
+}
+
+let selectedStars = 0;
+let currentUser = { name: "Sadiq Developer" };
+
+function rate(n) {
+    selectedStars = n;
+    const stars = document.querySelectorAll('#star-box span');
+    stars.forEach((s, index) => { s.style.color = index < n ? '#FFB800' : '#e0e0e0'; });
+    const btn = document.getElementById('submit-review');
+    btn.disabled = false;
+    btn.style.background = '#1A0F0D';
+    btn.style.cursor = 'pointer';
+}
+
+function postReview() {
+    const text = document.getElementById('review-text').value;
+    if(!text) return;
+    const feed = document.getElementById('reviews-feed');
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    const reviewHTML = `
+        <div style="background:white;border-radius:20px;padding:15px;margin:10px 15px;font-family:'Quicksand';">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <div style="width:32px;height:32px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#888;">${currentUser.name[0]}</div>
+                <div style="flex-grow:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <h4 style="font-size:12px;font-weight:800;margin:0;color:#1A0F0D;">${currentUser.name}</h4>
+                        <span style="font-size:10px;color:#bbb;">${dateStr}</span>
+                    </div>
+                    <div style="color:#FFB800;font-size:8px;">${"★".repeat(selectedStars)}</div>
+                </div>
+            </div>
+            <p style="font-size:12px;color:#555;line-height:1.4;margin-left:42px;">${text}</p>
+            <div style="background:#F8F5F0;border-left:3px solid #1A0F0D;margin:10px 0 0 42px;padding:8px 12px;border-radius:10px;font-size:11px;">
+                <span style="font-weight:800;color:#1A0F0D;display:block;">KanoMart Reply:</span>
+                <span style="color:#777;">Mun gode kwarai!</span>
+            </div>
+        </div>`;
+    feed.insertAdjacentHTML('afterbegin', reviewHTML);
+    document.getElementById('review-text').value = "";
+    selectedStars = 0; rate(0);
+    const btn = document.getElementById('submit-review');
+    btn.disabled = true;
+    btn.style.background = '#ccc';
+}
+
+function openVisualProofFS(startIndex) {
+    const images = document.querySelectorAll('.visual-proof-img');
+    const imageUrls = Array.from(images).map(img => img.src).filter(src => src && src.trim() !== "");
+    if(imageUrls.length === 0) return;
+    openFS(imageUrls);
+    setTimeout(() => {
+        document.getElementById('fsSlider').scrollTo({ left: window.innerWidth * startIndex, behavior: "instant" });
+    }, 50);
+}
+
+let qty = 1;
+function updateQty(change) {
+    qty += change;
+    if (qty < 1) qty = 1;
+    document.getElementById('qty-display').innerText = qty;
+}
+
+function showStack() {
+    const croppedView = document.getElementById('croppedView');
+    const tripleStack = document.getElementById('tripleStack');
+    if (croppedView && tripleStack) {
+        croppedView.style.display = 'none';
+        tripleStack.classList.remove('hidden');
+        tripleStack.style.display = 'block';
+    }
+}
+</script>
+
+<!-- FIREBASE MODULE — Wannan dole ya kasance SEPARATE, KASAN dukan scripts -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
@@ -1273,11 +1420,7 @@ const db = getFirestore(app);
 async function loadProduct() {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id');
-
-    if (!productId) {
-        console.warn("Babu Product ID a URL!");
-        return;
-    }
+    if (!productId) return;
 
     try {
         const docRef = doc(db, "products", productId);
@@ -1285,65 +1428,27 @@ async function loadProduct() {
 
         if (docSnap.exists()) {
             const p = docSnap.data();
-
-            // Hoton kayan (base64 ne naka)
             const img = p.image || "";
 
-            // Hero Image
-            const heroImg = document.getElementById('dynamic-img');
-            if (heroImg) heroImg.src = img;
-
-            // Hologram
+            document.getElementById('dynamic-img').src = img;
+            document.getElementById('visual-main-img').src = img;
             document.querySelectorAll('.holo-img').forEach(el => el.src = img);
-
-            // Visual Proof main image
-            const visualMain = document.getElementById('visual-main-img');
-            if (visualMain) visualMain.src = img;
-
-            // Stack images (triple proof)
             document.querySelectorAll('.stack-img').forEach(el => el.src = img);
 
-            // Suna
             const nameEl = document.querySelector('.floating-card h1');
             if (nameEl) nameEl.innerHTML = p.name || "Product";
 
-            // Farashi — naka yana da ₦ a ciki tuni
             const priceEl = document.querySelector('.price-tag');
             if (priceEl) priceEl.innerText = p.price || "₦0";
 
-            // Description — idan akwai wuri a shafin
-            const descEl = document.getElementById('product-description');
-            if (descEl) descEl.innerText = p.description || "";
-
-            console.log("✅ An loda:", p.name, "| Location:", p.location);
-
-        } else {
-            console.error("❌ Babu wannan product. ID:", productId);
+            console.log("✅ Loaded:", p.name);
         }
-
     } catch (err) {
         console.error("❌ Firebase Error:", err);
     }
 }
 
 
-// Tsarin kariya idan internet ya matsa lamba
-function loadFromLocalStorage() {
-    const data = localStorage.getItem('selectedProduct');
-    if (data) {
-        const product = JSON.parse(data);
-        document.getElementById('dynamic-img').src = product.img;
-        
-        const croppedImg = document.querySelector('.cropped-view img');
-        if (croppedImg) croppedImg.src = product.img;
-        
-        document.querySelector('h1').innerHTML = product.name;
-        document.querySelector('.price-tag').innerText = "₦" + Number(product.price).toLocaleString();
-        document.querySelectorAll('.stack-img').forEach(img => img.src = product.img);
-        document.querySelectorAll('.holo-img').forEach(img => img.src = product.img);
-    }
-    }
-    
 
 // B. CHAT FUNCTION
 function openChat() { window.location.href = 'chat-room.html'; }
