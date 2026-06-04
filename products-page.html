@@ -1254,60 +1254,78 @@ document.addEventListener('DOMContentLoaded', function() {
 let popTimer;
 
 // A. DATA SYNC
-document.addEventListener('DOMContentLoaded', async function() {
-    // 1. Karbo ID na kayan da aka danna daga jikin URL
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadProduct() {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id');
 
     if (!productId) {
-        console.warn("Babu ID a jikin URL, ana duba LocalStorage...");
-        loadFromLocalStorage();
+        console.warn("Babu Product ID a URL!");
         return;
     }
 
-    // 2. Tambayi Firebase ya fito da takamaiman hoton da farashin kayan
     try {
-        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
-        
         const docRef = doc(db, "products", productId);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            const product = docSnap.data();
-            const productImg = product.image || product.img;
-            
-            // Sanya ainihin Hoton da aka janyo daga Firebase
-            document.getElementById('dynamic-img').src = productImg;
-            
-            // Sabon Gyara: Sanya hoton cropped-view dinka
-            const croppedImg = document.querySelector('.cropped-view img');
-            if (croppedImg) croppedImg.src = productImg;
-            
-            // Sanya Sunan Kayan da Farashi
-            document.querySelector('h1').innerHTML = product.name;
-            document.querySelector('.price-tag').innerText = product.price.startsWith('₦') ? product.price : "₦" + Number(product.price).toLocaleString();
+            const p = docSnap.data();
 
-            // Sanya hotuna a sauran fuskokin shafin (Stacks da Holos)
-            document.querySelectorAll('.stack-img').forEach(img => img.src = productImg);
-            document.querySelectorAll('.holo-img').forEach(img => img.src = productImg);
-            
-            // Adana shi a LocalStorage don kariya
-            localStorage.setItem('selectedProduct', JSON.stringify({
-                name: product.name,
-                price: product.price.toString().replace(/[^\d]/g, ''),
-                img: productImg
-            }));
+            // Hoton kayan (base64 ne naka)
+            const img = p.image || "";
 
-            console.log("Firebase Product Sync Complete! ID:", productId);
+            // Hero Image
+            const heroImg = document.getElementById('dynamic-img');
+            if (heroImg) heroImg.src = img;
+
+            // Hologram
+            document.querySelectorAll('.holo-img').forEach(el => el.src = img);
+
+            // Visual Proof main image
+            const visualMain = document.getElementById('visual-main-img');
+            if (visualMain) visualMain.src = img;
+
+            // Stack images (triple proof)
+            document.querySelectorAll('.stack-img').forEach(el => el.src = img);
+
+            // Suna
+            const nameEl = document.querySelector('.floating-card h1');
+            if (nameEl) nameEl.innerHTML = p.name || "Product";
+
+            // Farashi — naka yana da ₦ a ciki tuni
+            const priceEl = document.querySelector('.price-tag');
+            if (priceEl) priceEl.innerText = p.price || "₦0";
+
+            // Description — idan akwai wuri a shafin
+            const descEl = document.getElementById('product-description');
+            if (descEl) descEl.innerText = p.description || "";
+
+            console.log("✅ An loda:", p.name, "| Location:", p.location);
+
         } else {
-            console.error("Babu wannan ID din a Firebase, an koma kan backup.");
-            loadFromLocalStorage();
+            console.error("❌ Babu wannan product. ID:", productId);
         }
-    } catch (error) {
-        console.error("An samu matsala wajen kiran Firebase:", error);
-        loadFromLocalStorage();
+
+    } catch (err) {
+        console.error("❌ Firebase Error:", err);
     }
-});
+}
+
 
 // Tsarin kariya idan internet ya matsa lamba
 function loadFromLocalStorage() {
