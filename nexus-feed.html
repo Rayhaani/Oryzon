@@ -16,9 +16,9 @@
             --text-secondary: #8a8a8a;
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            margin: 0;
-            padding: 0;
             background-color: var(--quantum-bg);
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -34,7 +34,6 @@
             min-height: 100vh;
             position: relative;
             padding-bottom: 80px;
-            box-sizing: border-box;
         }
 
         /* ===== HEADER ===== */
@@ -77,7 +76,6 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 4px;
             padding: 4px;
-            box-sizing: border-box;
         }
 
         .quantum-tile {
@@ -114,8 +112,6 @@
             display: flex;
             align-items: flex-end;
             padding: 10px;
-            box-sizing: border-box;
-            transform: translateZ(20px);
             z-index: 5;
         }
 
@@ -128,7 +124,6 @@
             gap: 5px;
         }
 
-        /* Video play icon */
         .video-indicator {
             position: absolute;
             top: 8px; right: 8px;
@@ -141,7 +136,6 @@
             color: #fff;
         }
 
-        /* Skeleton loader */
         .quantum-skeleton {
             background: linear-gradient(90deg, #0a0a0a 25%, #141414 50%, #0a0a0a 75%);
             background-size: 200% 100%;
@@ -157,145 +151,216 @@
 
         .hidden-neural-payload { display: none; }
 
-        /* ===== MODAL ===== */
-        .neural-fluid-modal {
+        /* ===== IMMERSIVE MODAL — exact match to social.html style ===== */
+        .immersive-overlay {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.96);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
+            inset: 0;
             z-index: 10000;
+            background: #000;
             display: none;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
             opacity: 0;
-            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            touch-action: none;
+            overflow: hidden;
         }
-        .neural-fluid-modal.active {
+        .immersive-overlay.active {
             display: flex;
             opacity: 1;
         }
 
-        .modal-quantum-card {
-            width: 90%;
-            max-width: 380px;
-            background: #0f0f0f;
-            border-radius: 24px;
-            overflow: hidden;
+        /* Media full screen */
+        .immersive-media-wrap {
             position: relative;
-            display: flex;
-            flex-direction: column;
-            transform: scale(0.9) translateY(20px);
-            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border: 1.5px solid var(--active-glow);
-            box-shadow: 0 0 30px var(--active-glow);
-        }
-        .neural-fluid-modal.active .modal-quantum-card {
-            transform: scale(1) translateY(0);
-        }
-
-        .quantum-close-trigger {
-            position: absolute;
-            top: 14px; right: 14px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            font-size: 16px;
-            cursor: pointer;
-            z-index: 100;
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-viewport {
             width: 100%;
-            aspect-ratio: 1 / 1.15;
-            background: #000000;
+            flex: 1;
             overflow: hidden;
+            background: #000;
         }
-        .modal-viewport img,
-        .modal-viewport video {
+        .immersive-media-wrap img,
+        .immersive-media-wrap video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
 
-        .modal-meta-zone {
-            padding: 18px;
-            background: #0f0f0f;
+        /* Gradient over media */
+        .immersive-gradient-top {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 120px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 3;
         }
-        .quantum-user-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
+        .immersive-gradient-bottom {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 180px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 3;
         }
-        .quantum-user-row img {
+
+        /* Close button */
+        .immersive-close-btn {
+            position: absolute;
+            top: 14px; left: 14px;
+            z-index: 10;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
             width: 36px; height: 36px;
             border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        .quantum-user-row h4 {
-            color: #ffffff;
-            margin: 0;
-            font-size: 14.5px;
-            font-weight: 600;
-        }
-        .modal-user-time {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 2px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
         }
 
-        .quantum-caption-field p {
-            color: #e5e5e5;
-            font-size: 14px;
-            line-height: 1.5;
-            margin: 0 0 16px 0;
+        /* Scroll nav arrows */
+        .immersive-nav-up,
+        .immersive-nav-down {
+            position: absolute;
+            right: 14px;
+            z-index: 10;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.2s;
+        }
+        .immersive-nav-up { top: 14px; }
+        .immersive-nav-down { top: 58px; }
+        .immersive-nav-up.hidden,
+        .immersive-nav-down.hidden { opacity: 0; pointer-events: none; }
+
+        /* Post counter */
+        .immersive-counter {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 11.5px;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.5px;
         }
 
-        .quantum-control-dock {
+        /* Bottom info panel */
+        .immersive-info-panel {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            z-index: 5;
+            padding: 16px 16px 20px;
+        }
+
+        .immersive-user-row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding-top: 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            gap: 10px;
+            margin-bottom: 8px;
         }
-        .dock-capsules {
+        .immersive-user-row img {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid rgba(255,255,255,0.25);
+        }
+        .immersive-username {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .immersive-time {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .immersive-caption {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.5;
+            margin-bottom: 14px;
+            max-height: 54px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* Action bar */
+        .immersive-action-bar {
             display: flex;
-            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
         }
-        .quantum-action-node {
-            display: inline-flex;
+        .immersive-actions-left {
+            display: flex;
+            gap: 18px;
+        }
+        .immersive-action-btn {
+            display: flex;
             align-items: center;
             gap: 6px;
-            color: #ffffff;
-            font-size: 13.5px;
+            color: #fff;
+            font-size: 13px;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
-        .quantum-action-node i { font-size: 18px; }
-        .quantum-action-node.node-liked i {
-            color: #ff4d6d !important;
-            text-shadow: 0 0 10px rgba(255, 77, 109, 0.4);
+        .immersive-action-btn i { font-size: 20px; }
+        .immersive-action-btn.liked i {
+            color: #ff4d6d;
+            text-shadow: 0 0 12px rgba(255,77,109,0.5);
         }
-
-        /* Comment btn sa'an nan redirect */
-        .modal-comment-btn {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 6px 16px;
+        .immersive-comment-btn {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 22px;
+            padding: 7px 16px;
             color: #fff;
             font-size: 12px;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 6px;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Swipe transition animation */
+        .immersive-media-wrap.slide-up {
+            animation: slideInFromBottom 0.3s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+        }
+        .immersive-media-wrap.slide-down {
+            animation: slideInFromTop 0.3s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+        }
+        @keyframes slideInFromBottom {
+            from { transform: translateY(40px); opacity: 0; }
+            to   { transform: translateY(0);   opacity: 1; }
+        }
+        @keyframes slideInFromTop {
+            from { transform: translateY(-40px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
+        /* Glow border on immersive */
+        .immersive-glow-line {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 2px;
+            z-index: 6;
+            transition: background 0.4s;
         }
 
         /* ===== FOOTER ===== */
@@ -323,21 +388,19 @@
         }
         .nav-item.active { opacity: 1; }
 
-        /* Empty state */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: var(--text-secondary);
             grid-column: 1 / -1;
         }
-        .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+        .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: 0.3; display: block; }
         .empty-state p { font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="nexus-2050-wrapper">
-    
     <div class="neural-header">
         <div class="neural-search-box">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -345,9 +408,7 @@
         </div>
     </div>
 
-    <!-- GRID — posts za su loda nan -->
     <div class="hologram-grid-canvas" id="quantumGrid">
-        <!-- Skeleton loaders -->
         <div class="quantum-skeleton"></div>
         <div class="quantum-skeleton"></div>
         <div class="quantum-skeleton"></div>
@@ -375,38 +436,48 @@
     </div>
 </div>
 
-<!-- MODAL -->
-<div class="neural-fluid-modal" id="quantumModal" onclick="closeQuantumModal()">
-    <div class="modal-quantum-card" id="modalTargetCard" onclick="event.stopPropagation()">
-        <button class="quantum-close-trigger" onclick="closeQuantumModal()">&times;</button>
-        
-        <div class="modal-viewport" id="modalMediaContainer"></div>
-        
-        <div class="modal-meta-zone">
-            <div class="quantum-user-row">
-                <img src="" id="modalUserAvatar" alt="Avatar" />
+<!-- ===== IMMERSIVE MODAL ===== -->
+<div class="immersive-overlay" id="immersiveOverlay">
+    <div class="immersive-media-wrap" id="immersiveMediaWrap">
+        <!-- media loads here -->
+        <div class="immersive-gradient-top"></div>
+        <div class="immersive-gradient-bottom"></div>
+        <div class="immersive-glow-line" id="immersiveGlowLine"></div>
+
+        <!-- Top controls -->
+        <button class="immersive-close-btn" onclick="closeImmersive()">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <div class="immersive-counter" id="immersiveCounter">1 / 1</div>
+        <button class="immersive-nav-up" id="immersiveNavUp" onclick="navigateImmersive(-1)">
+            <i class="fa-solid fa-chevron-up"></i>
+        </button>
+        <button class="immersive-nav-down" id="immersiveNavDown" onclick="navigateImmersive(1)">
+            <i class="fa-solid fa-chevron-down"></i>
+        </button>
+
+        <!-- Bottom info -->
+        <div class="immersive-info-panel">
+            <div class="immersive-user-row">
+                <img src="" id="immersiveAvatar" alt="">
                 <div>
-                    <h4 id="modalUsername">User Node</h4>
-                    <div class="modal-user-time" id="modalUserTime"></div>
+                    <div class="immersive-username" id="immersiveUsername">Username</div>
+                    <div class="immersive-time" id="immersiveTime"></div>
                 </div>
             </div>
-            
-            <div class="quantum-caption-field">
-                <p id="modalCaptionText"></p>
-            </div>
-            
-            <div class="quantum-control-dock">
-                <div class="dock-capsules">
-                    <div class="quantum-action-node" id="modalLikeBtn" onclick="toggleNodeLike(this)">
+            <div class="immersive-caption" id="immersiveCaption"></div>
+            <div class="immersive-action-bar">
+                <div class="immersive-actions-left">
+                    <div class="immersive-action-btn" id="immersiveLikeBtn" onclick="toggleImmersiveLike()">
                         <i class="fa-regular fa-heart"></i>
-                        <span id="modalLikeCount">0</span>
+                        <span id="immersiveLikeCount">0</span>
                     </div>
-                    <div class="quantum-action-node" id="modalCommentBtn">
+                    <div class="immersive-action-btn" id="immersiveCommentBtn">
                         <i class="fa-regular fa-comment"></i>
-                        <span id="modalCommentCount">0</span>
+                        <span id="immersiveCommentCount">0</span>
                     </div>
                 </div>
-                <button class="modal-comment-btn" id="modalGoComments">
+                <button class="immersive-comment-btn" id="immersiveGoComments">
                     <i class="fa-regular fa-message"></i> Comments
                 </button>
             </div>
@@ -419,7 +490,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-    // ===== FIREBASE SETUP =====
+    // ===== FIREBASE =====
     const firebaseConfig = {
         apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
         authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -432,25 +503,21 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ===== AUTH CHECK =====
     const currentUser = localStorage.getItem('nexus_user_session');
     if (!currentUser) window.location.href = 'login.html';
 
-    // ===== GLOW COLORS — random don kowane post =====
+    // ===== GLOW PALETTE =====
     const glowPalette = [
-        'rgba(255, 115, 0, 0.45)',
-        'rgba(0, 191, 255, 0.45)',
-        'rgba(186, 85, 211, 0.45)',
-        'rgba(255, 0, 60, 0.45)',
-        'rgba(255, 215, 0, 0.45)',
-        'rgba(0, 230, 118, 0.45)',
-        'rgba(255, 64, 129, 0.45)',
-        'rgba(0, 229, 255, 0.45)',
+        'rgba(255, 115, 0, 0.6)',
+        'rgba(0, 191, 255, 0.6)',
+        'rgba(186, 85, 211, 0.6)',
+        'rgba(255, 0, 60, 0.6)',
+        'rgba(255, 215, 0, 0.6)',
+        'rgba(0, 230, 118, 0.6)',
+        'rgba(255, 64, 129, 0.6)',
+        'rgba(0, 229, 255, 0.6)',
     ];
-
-    function getGlow(index) {
-        return glowPalette[index % glowPalette.length];
-    }
+    function getGlow(i) { return glowPalette[i % glowPalette.length]; }
 
     function formatTime(ts) {
         if (!ts) return '';
@@ -464,13 +531,14 @@
 
     function formatCount(n) {
         n = parseInt(n) || 0;
-        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n/1000).toFixed(1) + 'K';
         return n.toString();
     }
 
-    // ===== LOAD POSTS DAGA FIREBASE =====
+    // ===== DATA =====
     let allPosts = [];
+    let activeVideoTiles = new Map(); // tile el => IntersectionObserver entry
 
     window.addEventListener('DOMContentLoaded', () => {
         db.collection('posts')
@@ -482,57 +550,56 @@
                 renderGrid();
             }, err => {
                 console.error('Firebase error:', err);
-                renderGrid(); // render empty state
+                renderGrid();
             });
-
-        // Load user avatars daga users collection
-        loadUserAvatars();
     });
-
-    function loadUserAvatars() {
-        // Za a loda avatar daga users collection bayan posts sun fito
-    }
 
     // ===== RENDER GRID =====
     function renderGrid() {
         const grid = document.getElementById('quantumGrid');
 
         if (allPosts.length === 0) {
-            grid.innerHTML = `
-                <div class="empty-state">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <p>No posts yet in the matrix</p>
-                </div>`;
+            grid.innerHTML = `<div class="empty-state">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <p>No posts yet in the matrix</p>
+            </div>`;
             return;
         }
 
         grid.innerHTML = allPosts.map((post, index) => {
             const avatar = post.userProfilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${post.username}`;
             const likes = formatCount(post.likes || 0);
-            const glow = getGlow(index);
-            const timeStr = formatTime(post.timestamp);
             const isVideo = post.mediaType === 'video';
 
             let mediaHTML = '';
             if (post.mediaUrl) {
                 if (isVideo) {
-                    mediaHTML = `<video src="${post.mediaUrl}" muted loop playsinline preload="metadata"></video>
-                                 <div class="video-indicator"><i class="fa-solid fa-play"></i></div>`;
+                    // Video: autoplay muted loop — kamar Instagram
+                    mediaHTML = `<video 
+                        src="${post.mediaUrl}" 
+                        muted 
+                        loop 
+                        playsinline 
+                        preload="metadata"
+                        class="grid-video"
+                        data-src="${post.mediaUrl}">
+                    </video>
+                    <div class="video-indicator"><i class="fa-solid fa-play"></i></div>`;
                 } else {
                     mediaHTML = `<img src="${post.mediaUrl}" loading="lazy" alt="">`;
                 }
             } else {
-                // Text-only post — nuna background tare da rubutu
-                mediaHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;background:linear-gradient(145deg,#0d0d0d,#1a1a1a);">
-                    <p style="font-size:11px;color:rgba(255,255,255,0.7);text-align:center;line-height:1.4;">${(post.content || '').substring(0, 60)}${post.content && post.content.length > 60 ? '...' : ''}</p>
+                mediaHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:12px;background:linear-gradient(145deg,#0d0d0d,#1a1a1a);">
+                    <p style="font-size:11px;color:rgba(255,255,255,0.7);text-align:center;line-height:1.4;">${(post.content||'').substring(0,60)}${post.content&&post.content.length>60?'...':''}</p>
                 </div>`;
             }
 
             return `
             <div class="quantum-tile"
-                onmousemove="runParallaxEngine(event, this)"
+                data-index="${index}"
+                onmousemove="runParallaxEngine(event,this)"
                 onmouseleave="resetParallaxEngine(this)"
-                onclick="openQuantumModal(this)">
+                onclick="openImmersive(${index})">
                 ${mediaHTML}
                 <div class="quantum-overlay">
                     <div class="quantum-badge">
@@ -542,162 +609,274 @@
                 </div>
                 <div class="hidden-neural-payload"
                     data-post-id="${post.id}"
-                    data-user="${post.username || 'unknown'}"
+                    data-user="${post.username||'unknown'}"
                     data-avatar="${avatar}"
-                    data-caption="${(post.content || '').replace(/"/g, '&quot;')}"
-                    data-glow="${glow}"
-                    data-time="${timeStr}"
-                    data-likes="${post.likes || 0}"
-                    data-comments="${post.commentCount || 0}"
-                    data-media-url="${post.mediaUrl || ''}"
-                    data-media-type="${post.mediaType || 'image'}">
+                    data-caption="${(post.content||'').replace(/"/g,'&quot;')}"
+                    data-glow="${getGlow(index)}"
+                    data-time="${formatTime(post.timestamp)}"
+                    data-likes="${post.likes||0}"
+                    data-comments="${post.commentCount||0}"
+                    data-media-url="${post.mediaUrl||''}"
+                    data-media-type="${post.mediaType||'image'}">
                 </div>
             </div>`;
         }).join('');
 
-        // Loda avatars na gaskiya daga users collection
+        // Auto-play videos using IntersectionObserver
+        setupVideoAutoPlay();
+
+        // Load real avatars
         allPosts.forEach(post => {
             if (!post.username) return;
             db.collection('users').doc(post.username).get().then(userDoc => {
                 if (!userDoc.exists) return;
                 const pic = userDoc.data().userProfilePic;
                 if (!pic) return;
-                // Update hidden payload avatar
-                const tiles = document.querySelectorAll('.quantum-tile');
-                tiles.forEach(tile => {
+                document.querySelectorAll('.quantum-tile').forEach(tile => {
                     const payload = tile.querySelector('.hidden-neural-payload');
                     if (payload && payload.dataset.user === post.username) {
                         payload.dataset.avatar = pic;
                     }
                 });
-            }).catch(() => {});
+            }).catch(()=>{});
         });
     }
 
-    // ===== PARALLAX ENGINE =====
+    // ===== AUTO PLAY VIDEOS (IntersectionObserver — kamar Instagram) =====
+    let videoObserver = null;
+
+    function setupVideoAutoPlay() {
+        if (videoObserver) videoObserver.disconnect();
+
+        videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                    video.play().catch(()=>{});
+                } else {
+                    video.pause();
+                    video.currentTime = 0;
+                }
+            });
+        }, {
+            threshold: [0, 0.5, 1.0],
+            rootMargin: '0px'
+        });
+
+        document.querySelectorAll('.grid-video').forEach(video => {
+            videoObserver.observe(video);
+        });
+    }
+
+    // ===== PARALLAX =====
     function runParallaxEngine(event, tile) {
-        const boundingBox = tile.getBoundingClientRect();
-        const axisX = event.clientX - boundingBox.left - (boundingBox.width / 2);
-        const axisY = event.clientY - boundingBox.top - (boundingBox.height / 2);
-        const computeTiltX = -(axisY / (boundingBox.height / 2)) * 14;
-        const computeTiltY = (axisX / (boundingBox.width / 2)) * 14;
-        tile.style.transform = `rotateX(${computeTiltX}deg) rotateY(${computeTiltY}deg) scale(1.03)`;
-        const graphicLayer = tile.querySelector('img, video');
-        if (graphicLayer) {
-            graphicLayer.style.transform = `scale(1.08) translateX(${-axisX*0.06}px) translateY(${-axisY*0.06}px)`;
-        }
+        const bb = tile.getBoundingClientRect();
+        const ax = event.clientX - bb.left - bb.width/2;
+        const ay = event.clientY - bb.top - bb.height/2;
+        tile.style.transform = `rotateX(${-(ay/(bb.height/2))*14}deg) rotateY(${(ax/(bb.width/2))*14}deg) scale(1.03)`;
+        const g = tile.querySelector('img, video');
+        if (g) g.style.transform = `scale(1.08) translateX(${-ax*0.06}px) translateY(${-ay*0.06}px)`;
     }
-
     function resetParallaxEngine(tile) {
-        tile.style.transform = `rotateX(0deg) rotateY(0deg) scale(1)`;
-        const graphicLayer = tile.querySelector('img, video');
-        if (graphicLayer) {
-            graphicLayer.style.transform = `scale(1) translateX(0px) translateY(0px)`;
-        }
+        tile.style.transform = '';
+        const g = tile.querySelector('img, video');
+        if (g) g.style.transform = '';
     }
 
-    // ===== OPEN MODAL =====
+    // ===== IMMERSIVE MODAL =====
+    let currentIndex = -1;
     let currentPostId = null;
+    let touchStartY = 0;
 
-    function openQuantumModal(tileElement) {
-        const modal = document.getElementById('quantumModal');
-        const targetCard = document.getElementById('modalTargetCard');
-        const mediaViewport = document.getElementById('modalMediaContainer');
-        const payload = tileElement.querySelector('.hidden-neural-payload');
+    function openImmersive(index) {
+        currentIndex = index;
+        renderImmersivePost(index, null);
 
-        const username = payload.dataset.user;
-        const avatar = payload.dataset.avatar;
-        const caption = payload.dataset.caption;
-        const targetColorGlow = payload.dataset.glow;
-        const timeStr = payload.dataset.time;
-        const likes = payload.dataset.likes;
-        const comments = payload.dataset.comments;
-        const mediaUrl = payload.dataset.mediaUrl;
-        const mediaType = payload.dataset.mediaType;
-        currentPostId = payload.dataset.postId;
+        const overlay = document.getElementById('immersiveOverlay');
+        overlay.style.display = 'flex';
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            overlay.classList.add('active');
+        });
 
-        document.getElementById('modalUsername').textContent = username;
-        document.getElementById('modalUserAvatar').src = avatar;
-        document.getElementById('modalCaptionText').textContent = caption;
-        document.getElementById('modalUserTime').textContent = timeStr;
-        document.getElementById('modalLikeCount').textContent = formatCount(parseInt(likes));
-        document.getElementById('modalCommentCount').textContent = comments;
+        if (navigator.vibrate) navigator.vibrate(15);
 
-        // Dynamic glow color
-        targetCard.style.borderColor = targetColorGlow;
-        targetCard.style.boxShadow = `0 0 30px ${targetColorGlow}`;
+        // Swipe gestures
+        overlay.addEventListener('touchstart', onTouchStart, { passive: true });
+        overlay.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
 
-        // Media
-        mediaViewport.innerHTML = '';
-        if (mediaUrl) {
-            if (mediaType === 'video') {
-                const vid = document.createElement('video');
-                vid.src = mediaUrl;
-                vid.autoplay = true;
-                vid.loop = true;
-                vid.muted = false;
-                vid.playsInline = true;
-                vid.controls = false;
-                vid.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-                mediaViewport.appendChild(vid);
-                vid.play().catch(() => {});
-            } else {
-                const img = document.createElement('img');
-                img.src = mediaUrl;
-                img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-                mediaViewport.appendChild(img);
-            }
-        } else {
-            // Text post
-            mediaViewport.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:linear-gradient(145deg,#0d0d0d,#1a1a1a);">
-                <p style="font-size:16px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.6;">${caption}</p>
-            </div>`;
-        }
+    function closeImmersive() {
+        const overlay = document.getElementById('immersiveOverlay');
+        overlay.style.opacity = '0';
+        stopImmersiveMedia();
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            overlay.classList.remove('active');
+        }, 260);
 
-        // Comment button redirect
-        document.getElementById('modalGoComments').onclick = () => {
-            closeQuantumModal();
+        overlay.removeEventListener('touchstart', onTouchStart);
+        overlay.removeEventListener('touchend', onTouchEnd);
+    }
+
+    function renderImmersivePost(index, direction) {
+        if (index < 0 || index >= allPosts.length) return;
+
+        const post = allPosts[index];
+        currentPostId = post.id;
+
+        const avatar = (() => {
+            const tiles = document.querySelectorAll('.quantum-tile');
+            const tile = tiles[index];
+            return tile ? tile.querySelector('.hidden-neural-payload').dataset.avatar
+                : (post.userProfilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${post.username}`);
+        })();
+
+        const payload = (() => {
+            const tiles = document.querySelectorAll('.quantum-tile');
+            return tiles[index] ? tiles[index].querySelector('.hidden-neural-payload') : null;
+        })();
+
+        // Fill info
+        document.getElementById('immersiveAvatar').src = avatar;
+        document.getElementById('immersiveUsername').textContent = post.username || 'unknown';
+        document.getElementById('immersiveTime').textContent = formatTime(post.timestamp);
+        document.getElementById('immersiveCaption').textContent = post.content || '';
+        document.getElementById('immersiveLikeCount').textContent = formatCount(post.likes || 0);
+        document.getElementById('immersiveCommentCount').textContent = payload ? payload.dataset.comments : '0';
+
+        // Counter
+        document.getElementById('immersiveCounter').textContent = `${index + 1} / ${allPosts.length}`;
+
+        // Nav arrows
+        document.getElementById('immersiveNavUp').classList.toggle('hidden', index === 0);
+        document.getElementById('immersiveNavDown').classList.toggle('hidden', index === allPosts.length - 1);
+
+        // Glow
+        const glow = getGlow(index);
+        document.getElementById('immersiveGlowLine').style.background = glow;
+
+        // Comments redirect
+        document.getElementById('immersiveGoComments').onclick = () => {
+            closeImmersive();
             window.location.href = `comments.html?postId=${currentPostId}`;
         };
 
-        // Check like status
-        checkLikeStatus(currentPostId);
+        // Check like
+        checkImmersiveLike(post.id);
 
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('active'), 20);
-        if (navigator.vibrate) navigator.vibrate(15);
+        // Load media with slide animation
+        loadImmersiveMedia(post, direction);
     }
 
-    function closeQuantumModal() {
-        const modal = document.getElementById('quantumModal');
-        modal.classList.remove('active');
-        // Stop any playing video
-        const vid = modal.querySelector('video');
+    function loadImmersiveMedia(post, direction) {
+        stopImmersiveMedia();
+
+        const wrap = document.getElementById('immersiveMediaWrap');
+
+        // Remove old media el
+        const oldMedia = wrap.querySelector('.immersive-media-el');
+        if (oldMedia) oldMedia.remove();
+
+        let mediaEl;
+        if (post.mediaUrl) {
+            if (post.mediaType === 'video') {
+                mediaEl = document.createElement('video');
+                mediaEl.src = post.mediaUrl;
+                mediaEl.autoplay = true;
+                mediaEl.loop = true;
+                mediaEl.muted = false;
+                mediaEl.playsInline = true;
+                mediaEl.controls = false;
+                mediaEl.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;';
+                mediaEl.play().catch(()=>{});
+            } else {
+                mediaEl = document.createElement('img');
+                mediaEl.src = post.mediaUrl;
+                mediaEl.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;';
+            }
+        } else {
+            // Text post
+            mediaEl = document.createElement('div');
+            mediaEl.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:32px;position:absolute;top:0;left:0;z-index:1;background:linear-gradient(145deg,#0d0d0d,#1a1a1a);';
+            mediaEl.innerHTML = `<p style="font-size:20px;font-weight:600;color:rgba(255,255,255,0.9);text-align:center;line-height:1.6;">${post.content||''}</p>`;
+        }
+
+        mediaEl.classList.add('immersive-media-el');
+        wrap.insertBefore(mediaEl, wrap.querySelector('.immersive-gradient-top'));
+
+        // Slide animation
+        if (direction === 'down') {
+            mediaEl.style.animation = 'slideInFromBottom 0.3s cubic-bezier(0.34,1.2,0.64,1) forwards';
+        } else if (direction === 'up') {
+            mediaEl.style.animation = 'slideInFromTop 0.3s cubic-bezier(0.34,1.2,0.64,1) forwards';
+        }
+    }
+
+    function stopImmersiveMedia() {
+        const wrap = document.getElementById('immersiveMediaWrap');
+        const vid = wrap.querySelector('video.immersive-media-el');
         if (vid) { vid.pause(); vid.src = ''; }
-        setTimeout(() => modal.style.display = 'none', 250);
     }
+
+    // Navigate prev / next
+    function navigateImmersive(dir) {
+        // dir: -1 = up (prev post), +1 = down (next post)
+        const newIndex = currentIndex + dir;
+        if (newIndex < 0 || newIndex >= allPosts.length) return;
+        currentIndex = newIndex;
+        renderImmersivePost(newIndex, dir === 1 ? 'down' : 'up');
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    // ===== TOUCH SWIPE =====
+    function onTouchStart(e) {
+        touchStartY = e.touches[0].clientY;
+    }
+    function onTouchEnd(e) {
+        const diff = touchStartY - e.changedTouches[0].clientY;
+        if (Math.abs(diff) < 50) return; // too small
+        if (diff > 0) {
+            // Swipe up → next post (down)
+            navigateImmersive(1);
+        } else {
+            // Swipe down → prev post (up)
+            navigateImmersive(-1);
+        }
+    }
+
+    // ===== KEYBOARD ARROWS =====
+    document.addEventListener('keydown', e => {
+        const overlay = document.getElementById('immersiveOverlay');
+        if (overlay.style.display !== 'flex') return;
+        if (e.key === 'ArrowDown') navigateImmersive(1);
+        if (e.key === 'ArrowUp') navigateImmersive(-1);
+        if (e.key === 'Escape') closeImmersive();
+    });
 
     // ===== LIKE SYSTEM =====
-    function checkLikeStatus(postId) {
-        const likeBtn = document.getElementById('modalLikeBtn');
-        const icon = likeBtn.querySelector('i');
-        likeBtn.classList.remove('node-liked');
+    function checkImmersiveLike(postId) {
+        const btn = document.getElementById('immersiveLikeBtn');
+        const icon = btn.querySelector('i');
+        btn.classList.remove('liked');
         icon.className = 'fa-regular fa-heart';
 
+        if (!currentUser || !postId) return;
         db.collection('likes').doc(`${postId}_${currentUser}`).get().then(doc => {
             if (doc.exists) {
-                likeBtn.classList.add('node-liked');
+                btn.classList.add('liked');
                 icon.className = 'fa-solid fa-heart';
             }
-        }).catch(() => {});
+        }).catch(()=>{});
     }
 
-    function toggleNodeLike(btn) {
+    function toggleImmersiveLike() {
         if (!currentPostId) return;
+        const btn = document.getElementById('immersiveLikeBtn');
         const icon = btn.querySelector('i');
-        const countEl = document.getElementById('modalLikeCount');
-        const liked = btn.classList.toggle('node-liked');
-        let count = parseInt(countEl.textContent.replace(/[KM]/g, m => m === 'K' ? '000' : '000000')) || 0;
+        const countEl = document.getElementById('immersiveLikeCount');
+        const liked = btn.classList.toggle('liked');
+        const count = parseInt(countEl.textContent) || 0;
 
         if (liked) {
             icon.className = 'fa-solid fa-heart';
@@ -706,16 +885,29 @@
                 postId: currentPostId,
                 user: currentUser,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(() => {});
+            }).catch(()=>{});
         } else {
             icon.className = 'fa-regular fa-heart';
             countEl.textContent = formatCount(Math.max(0, count - 1));
-            db.collection('likes').doc(`${currentPostId}_${currentUser}`).delete().catch(() => {});
+            db.collection('likes').doc(`${currentPostId}_${currentUser}`).delete().catch(()=>{});
         }
 
         if (navigator.vibrate) navigator.vibrate(30);
     }
-</script>
 
+    // ===== CSS KEYFRAMES for media slide (injected) =====
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        @keyframes slideInFromBottom {
+            from { transform: translateY(60px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes slideInFromTop {
+            from { transform: translateY(-60px); opacity: 0; }
+            to   { transform: translateY(0);     opacity: 1; }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+</script>
 </body>
 </html>
