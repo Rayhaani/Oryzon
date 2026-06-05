@@ -1291,13 +1291,9 @@ window.openImmersiveSplitComments = function(postId, card) {
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
         videoHalf.appendChild(img);
        img.onclick = () => {
-          document.getElementById('instaFooter').classList.remove('footer-hidden');
-document.getElementById('cyberMenu').style.display = '';
-          
     splitDiv.remove();
     document.body.style.overflow = '';
 };
-    }
 
     // Mini info a kasan video
     const avatarEl = card.querySelector('.post-avatar');
@@ -1404,6 +1400,18 @@ commentsHalf.addEventListener('touchend', (e) => {
     splitDiv.appendChild(videoHalf);
     splitDiv.appendChild(commentsHalf);
     document.body.appendChild(splitDiv);
+       // Kama Android back button — kar ya fita page
+history.pushState({ splitView: true }, '');
+window.addEventListener('popstate', function onPop(e) {
+    window.removeEventListener('popstate', onPop);
+    const sv = document.getElementById('nexusSplitView');
+    if (sv) {
+        sv.remove();
+        document.body.style.overflow = '';
+        document.getElementById('instaFooter').classList.add('footer-hidden');
+        document.getElementById('cyberMenu').style.display = 'none';
+    }
+});
     document.body.style.overflow = 'hidden';
 // Boye footer da header
 document.getElementById('instaFooter').classList.add('footer-hidden');
