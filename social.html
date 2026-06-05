@@ -1524,26 +1524,22 @@ function toggleImmersive(card) {
 
             history.pushState({ immersive: true }, '');
 window.onpopstate = function() {
-    // Idan split-view tana a bude, rufe ita kawai
     const sv = document.getElementById('nexusSplitView');
     if (sv) {
         sv.remove();
         document.body.style.overflow = '';
         document.getElementById('instaFooter').classList.add('footer-hidden');
         document.getElementById('cyberMenu').style.display = 'none';
-        // Maido pushState domin back button na immersive ya ci gaba
         history.pushState({ immersive: true }, '');
-history.pushState({ immersive: true }, ''); // ← ƙara na biyu
+        window.onpopstate = function() {
+            exitImmersive(card);
+            window.onpopstate = null;
+        };
         return;
     }
-    // Babu split-view — fita immersive kamar yadda yake
     exitImmersive(card);
+    window.onpopstate = null;
 };
-            
-        } else {
-            exitImmersive(card);
-        }
-      }
 
 function exitImmersive(card) {
     const video = card.querySelector('video');
