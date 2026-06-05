@@ -674,7 +674,93 @@
 } 
 
 
+        .header-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        
+        /* ===== FOLLOW BUTTON ===== */
+           .follow-text-link {
+            position: relative;
+            padding: 6px 18px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: #fde08d;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+            border: 1.5px solid #fde08d;
+            border-radius: 50px; 
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
 
+        .follow-text-link::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(253, 224, 141, 0.2) 0%, transparent 70%);
+            opacity: 0; transition: 0.8s;
+        }
+
+        .follow-text-link:hover {
+            color: #111; background: #fde08d; transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(253, 224, 141, 0.6); letter-spacing: 4px;
+        }
+
+        .follow-text-link:hover::after { opacity: 1; transform: scale(1); }
+
+
+        /* ===== GIFT BUTTON ===== */
+
+.gift-btn-nexus {
+            display: flex; align-items: center; gap: 5px;
+            background: linear-gradient(145deg, #1a1a1a, #0d0d0d); 
+            border: 1px solid rgba(253, 224, 141, 0.2); 
+            padding: 0 10px; height: 28px; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .gift-btn-nexus:active { transform: scale(0.92); }
+        .gift-emoji { font-size: 14px; filter: drop-shadow(0 0 4px rgba(253, 224, 141, 0.5)); animation: giftWobble 4s infinite; }
+        .gift-btn-nexus span:last-child { font-size: 10px; color: #ffffff; font-weight: 600; letter-spacing: 0.2px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+
+        @keyframes giftWobble {
+            0%, 90%, 100% { transform: rotate(0deg); }
+            92% { transform: rotate(15deg); }
+            95% { transform: rotate(-15deg); }
+            98% { transform: rotate(15deg); }
+        }
+
+        .gift-btn-nexus span { white-space: nowrap; }
+        .post-username {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    margin-top: 4px !important;
+    display: block !important;
+        }
+
+        /* ===== FORCE CAPSULE COLORS — FINAL OVERRIDE ===== */
+.post-card .post-capsule i,
+.post-card .capsule i {
+    color: #ffffff !important;
+    font-size: 15px !important;
+}
+
+.post-card .post-capsule span,
+.post-card .capsule span {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+}
+
+.post-card .post-capsule.liked i,
+.post-card .capsule.liked i {
+    color: #ff4d6d !important;
+}
+        
+        
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
         .feed-container {
