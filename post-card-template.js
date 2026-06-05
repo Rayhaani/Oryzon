@@ -625,7 +625,54 @@
     100% { opacity:0; transform:translateX(-50%) scale(1) translateY(-55px); }
 }
 
-        
+       /* ===== IMMERSIVE BACK BUTTON ===== */
+.immersive-back-btn {
+    position: fixed;
+    top: 15px; left: 15px;
+    width: 36px; height: 36px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    z-index: 9999;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* ===== POST MEDIA — FULL PORTRAIT ===== */
+.post-media {
+    min-height: 600px !important;
+    aspect-ratio: 9/16 !important;
+    object-fit: cover !important;
+    background-color: #0b0b0b !important;
+}
+
+/* ===== MUTE TOGGLE — UNIFIED ===== */
+.mute-toggle, .post-mute-toggle {
+    position: absolute !important;
+    bottom: 60px !important;
+    right: 12px !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: rgba(0,0,0,0.65) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    z-index: 50 !important;
+    cursor: pointer !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+.mute-toggle i, .post-mute-toggle i {
+    font-size: 13px !important;
+} 
+
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
         .feed-container {
