@@ -1333,13 +1333,10 @@ document.getElementById('cyberMenu').style.display = '';
     closeBtn.onclick = () => {
     splitDiv.remove();
     document.body.style.overflow = '';
-    document.getElementById('instaFooter').classList.remove('footer-hidden');
-    document.getElementById('cyberMenu').style.display = '';
-    // Fita immersive mode ma
-    const immersiveCard = document.querySelector('.post-card.immersive-mode');
-    if (immersiveCard && typeof exitImmersive === 'function') {
-        exitImmersive(immersiveCard);
-    }
+    // Kar a taɓa footer ko menu — immersive mode yana nan har sai an danna back button na immersive
+    // Boye footer da menu sake domin immersive yana nan
+    document.getElementById('instaFooter').classList.add('footer-hidden');
+    document.getElementById('cyberMenu').style.display = 'none';
 };
 
     videoHalf.appendChild(closeBtn);
