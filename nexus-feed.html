@@ -506,78 +506,74 @@
             });
     });
 
+    
     // ===== RENDER GRID =====
-    function renderGrid() {
-        const grid = document.getElementById('quantumGrid');
+function renderGrid() {
+    const grid = document.getElementById('quantumGrid');
 
-        if (allPosts.length === 0) {
-            grid.innerHTML = `<div class="empty-state">
-                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                <p>No posts yet in the matrix</p>
+    if (allPosts.length === 0) {
+        grid.innerHTML = `<div class="empty-state">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <p>No posts yet in the matrix</p>
+        </div>`;
+        return;
+    }
+
+    grid.innerHTML = allPosts.map((post, index) => {
+        const avatar = post.userProfilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${post.username}`;
+        const likes = formatCount(post.likes || 0);
+        const isVideo = post.mediaType === 'video';
+
+        let mediaHTML = '';
+        if (post.mediaUrl) {
+            if (isVideo) {
+                mediaHTML = `<video 
+                    src="${post.mediaUrl}" 
+                    muted loop playsinline 
+                    preload="metadata"
+                    class="grid-video">
+                </video>
+                <div class="video-indicator"><i class="fa-solid fa-play"></i></div>`;
+            } else {
+                mediaHTML = `<img src="${post.mediaUrl}" loading="lazy" alt="">`;
+            }
+        } else {
+            mediaHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:12px;background:linear-gradient(145deg,#0d0d0d,#1a1a1a);">
+                <p style="font-size:11px;color:rgba(255,255,255,0.7);text-align:center;line-height:1.4;">${(post.content||'').substring(0,60)}${post.content&&post.content.length>60?'...':''}</p>
             </div>`;
-            return;
         }
 
-        grid.innerHTML = allPosts.map((post, index) => {
-            const avatar = post.userProfilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${post.username}`;
-            const likes = formatCount(post.likes || 0);
-            const isVideo = post.mediaType === 'video';
+        return `
+        <div class="quantum-tile"
+            data-index="${index}"
+            onmousemove="runParallaxEngine(event,this)"
+            onmouseleave="resetParallaxEngine(this)"
+            onclick="openImmersiveFromGrid(${index})">
+            ${mediaHTML}
+            <div class="quantum-overlay">
+                <div class="quantum-badge">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>${likes}</span>
+                </div>
+            </div>
+            <div class="hidden-neural-payload"
+                data-post-id="${post.id}"
+                data-user="${post.username||'unknown'}"
+                data-avatar="${avatar}"
+                data-caption="${(post.content||'').replace(/"/g,'&quot;')}"
+                data-glow="${getGlow(index)}"
+                data-time="${formatTime(post.timestamp)}"
+                data-likes="${post.likes||0}"
+                data-comments="${post.commentCount||0}"
+                data-media-url="${post.mediaUrl||''}"
+                data-media-type="${post.mediaType||'image'}">
+            </div>
+        </div>`;
+    }).join('');
 
-            let mediaHTML = '';
-            if (post.mediaUrl) {
-                if (isVideo) {
-                    // Video: autoplay muted loop — kamar Instagram
-                    mediaHTML = `<video 
-                        src="${post.mediaUrl}" 
-                        muted 
-                        loop 
-                        playsinline 
-                        preload="metadata"
-                        class="grid-video"
-                        data-src="${post.mediaUrl}">
-                    </video>
-                    <div class="video-indicator"><i class="fa-solid fa-play"></i></div>`;
-                } else {
-                    mediaHTML = `<img src="${post.mediaUrl}" loading="lazy" alt="">`;
-                }
-            } else {
-                mediaHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:12px;background:linear-gradient(145deg,#0d0d0d,#1a1a1a);">
-                    <p style="font-size:11px;color:rgba(255,255,255,0.7);text-align:center;line-height:1.4;">${(post.content||'').substring(0,60)}${post.content&&post.content.length>60?'...':''}</p>
-                </div>`;
-            }
-
-            return `
-<div class="quantum-tile"
-    data-index="${index}"
-    onmousemove="runParallaxEngine(event,this)"
-    onmouseleave="resetParallaxEngine(this)"
-    onclick="openImmersive(${index})">
-    ${mediaHTML}
+    setupVideoAutoPlay();
+}
     
-                <div class="quantum-overlay">
-                    <div class="quantum-badge">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span>${likes}</span>
-                    </div>
-                </div>
-                <div class="hidden-neural-payload"
-                    data-post-id="${post.id}"
-                    data-user="${post.username||'unknown'}"
-                    data-avatar="${avatar}"
-                    data-caption="${(post.content||'').replace(/"/g,'&quot;')}"
-                    data-glow="${getGlow(index)}"
-                    data-time="${formatTime(post.timestamp)}"
-                    data-likes="${post.likes||0}"
-                    data-comments="${post.commentCount||0}"
-                    data-media-url="${post.mediaUrl||''}"
-                    data-media-type="${post.mediaType||'image'}">
-                </div>
-            </div>`;
-        }).join('');
-
-        // Auto-play videos using IntersectionObserver
-        setupVideoAutoPlay();
-
         // Load real avatars
         allPosts.forEach(post => {
             if (!post.username) return;
@@ -598,6 +594,49 @@
     // ===== AUTO PLAY VIDEOS (IntersectionObserver — kamar Instagram) =====
     let videoObserver = null;
 
+
+
+    // ===== OPEN IMMERSIVE FROM GRID =====
+// Wannan yana gina ainihin .post-card structure
+// sannan yana kiran toggleImmersive() na template.js
+function openImmersiveFromGrid(index) {
+    const post = allPosts[index];
+    if (!post) return;
+
+    // Goge tsohon card idan yana nan
+    const existing = document.getElementById('nexus-immersive-card');
+    if (existing) existing.remove();
+
+    // Gina post-card HTML ta amfani da generatePostHTML() na template.js
+    if (typeof generatePostHTML !== 'function') {
+        console.error('template.js ba a load ba');
+        return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.id = 'nexus-immersive-card';
+    wrapper.innerHTML = generatePostHTML(post);
+    document.body.appendChild(wrapper);
+
+    const card = wrapper.querySelector('.post-card');
+    if (!card) return;
+
+    // Kira toggleImmersive() nan take
+    if (typeof toggleImmersive === 'function') {
+        toggleImmersive(card);
+    }
+
+    // Bayan immersive ya rufe, goge wrapper
+    const observer = new MutationObserver(() => {
+        if (!card.classList.contains('immersive-mode')) {
+            setTimeout(() => wrapper.remove(), 400);
+            observer.disconnect();
+        }
+    });
+    observer.observe(card, { attributes: true, attributeFilter: ['class'] });
+}
+
+    
     function setupVideoAutoPlay() {
         if (videoObserver) videoObserver.disconnect();
 
@@ -635,7 +674,8 @@
         const g = tile.querySelector('img, video');
         if (g) g.style.transform = '';
     }
+
     
-</script>
+<script src="template.js"></script>
 </body>
 </html>
