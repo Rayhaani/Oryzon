@@ -1279,11 +1279,19 @@ window.openImmersiveSplitComments = function(postId, card) {
         vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
         videoHalf.appendChild(vid);
         vid.play().catch(()=>{});
+vid.onclick = () => {
+    splitDiv.remove();
+    document.body.style.overflow = '';
+};
     } else if (origImg) {
         const img = document.createElement('img');
         img.src = origImg.src;
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
         videoHalf.appendChild(img);
+       img.onclick = () => {
+    splitDiv.remove();
+    document.body.style.overflow = '';
+};
     }
 
     // Mini info a kasan video
@@ -1339,6 +1347,28 @@ window.openImmersiveSplitComments = function(postId, card) {
         background:#000;
     `;
     commentsHalf.appendChild(iframe);
+   let startY = 0;
+let isDragging = false;
+
+commentsHalf.addEventListener('touchstart', (e) => {
+    startY = e.touches[0].clientY;
+    isDragging = true;
+}, { passive: true });
+
+commentsHalf.addEventListener('touchend', (e) => {
+    if (!isDragging) return;
+    const endY = e.changedTouches[0].clientY;
+    const swipeUp = startY - endY;
+    
+    if (swipeUp > 60) {
+        // Ja sama → cika screen da comments.html gaba daya
+        splitDiv.remove();
+        document.body.style.overflow = '';
+        window.location.href = `comments.html?postId=${postId}`;
+    }
+    isDragging = false;
+}, { passive: true });
+   
 
     splitDiv.appendChild(videoHalf);
     splitDiv.appendChild(commentsHalf);
