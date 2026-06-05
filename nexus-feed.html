@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Nexus Dimension Feed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold: #fde08d;
+            --deep-gold: #b8860b;
+            --neon: #00f2fe;
+            --black: #050505;
+            --card-gap: 10px;
+
+            /* Mood colors */
+            --mood-normal: #050505;
+            --mood-fast: #0a0a1a;
+            --mood-night: #000008;
+            --mood-cinema: #0d0005;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: var(--black);
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 70px;
+            transition: background 0.8s ease;
+        }
+
+        /* ===== MOOD INDICATOR ===== */
+        .mood-hud {
+            position: fixed;
+            top: 60px;
+            right: 14px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            pointer-events: none;
+        }
+
+        .mood-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.5);
+            backdrop-filter: blur(10px);
+            transition: all 0.5s ease;
+        }
+
+        .mood-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #555;
+            transition: all 0.5s ease;
+        }
+
+        body.mood-fast .mood-badge { color: #ff6b35; border-color: rgba(255,107,53,0.3); }
+        body.mood-fast .mood-dot { background: #ff6b35; box-shadow: 0 0 8px #ff6b35; }
+
+        body.mood-cinema .mood-badge { color: var(--gold); border-color: rgba(253,224,141,0.3); }
+        body.mood-cinema .mood-dot { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+        body.mood-night .mood-badge { color: var(--neon); border-color: rgba(0,242,254,0.3); }
+        body.mood-night .mood-dot { background: var(--neon); box-shadow: 0 0 8px var(--neon); }
+
+        /* ===== HEADER ===== */
+        .nx-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 52px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            background: rgba(5,5,5,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(253,224,141,0.1);
+            transition: all 0.5s ease;
+        }
+
+        .nx-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            background: linear-gradient(90deg, #fff 0%, var(--gold) 50%, var(--deep-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nx-header-tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 3px;
+        }
+
+        .nx-tab {
+            padding: 5px 14px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+        }
+
+        .nx-tab.active {
+            background: linear-gradient(135deg, var(--gold), var(--deep-gold));
+            color: #000;
+        }
+
+        /* ===== FEED CONTAINER ===== */
+        .nx-feed {
+            margin-top: 52px;
+            padding: var(--card-gap);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== MODE: VERTICAL (Default) ===== */
+        .nx-feed.mode-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: var(--card-gap);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ===== MODE: GRID ===== */
+        .nx-feed.mode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            padding: 3px;
+            max-width: 100%;
+        }
+
+        /* ===== MODE: CINEMA (Fullscreen TikTok) ===== */
+        .nx-feed.mode-cinema {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            padding: 0;
+            margin-top: 0;
+        }
+
+        /* ===== POST CARD — VERTICAL MODE ===== */
+        .nx-card {
+            background: rgba(15,15,20,0.95);
+            border: 1px solid rgba(253,224,141,0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(253,224,141,0.05);
+        }
+
+        .nx-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            animation: shimmer 3s infinite;
+            z-index: 5;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* GRID MODE card */
+        .mode-grid .nx-card {
+            border-radius: 4px;
+            border: none;
+            aspect-ratio: 9/16;
+        }
+
+        .mode-grid .nx-card::before { display: none; }
+        .mode-grid .nx-card-header { display: none; }
+        .mode-grid .nx-card-footer { display: none; }
+        .mode-grid .nx-card-text { display: none; }
+
+        /* CINEMA MODE card */
+        .mode-cinema .nx-card {
+            width: 100vw;
+            height: 100dvh;
+            border-radius: 0;
+            border: none;
+            flex-shrink: 0;
+            snap-align: start;
+        }
+
+        .mode-cinema .nx-card::before { display: none; }
+
+        /* ===== CARD HEADER ===== */
+        .nx-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(245,245,247,0.08);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .nx-user-info { display: flex; align-items: center; gap: 10px; }
+
+        .nx-avatar {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            border: 1.5px solid var(--gold);
+            object-fit: cover;
+        }
+
+        .nx-username {
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .nx-time {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 1px;
+        }
+
+        .nx-follow-btn {
+            padding: 5px 14px;
+            border: 1.5px solid var(--gold);
+            border-radius: 20px;
+            background: none;
+            color: var(--gold);
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Syne', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .nx-follow-btn:active {
+            background: var(--gold);
+            color: #000;
+        }
+
+        /* ===== CARD MEDIA ===== */
+        .nx-card-media {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nx-media {
+            width: 100%;
+            display: block;
+            object-fit: cover;
+            background: #111;
+            transition: all 0.5s ease;
+        }
+
+        .mode-vertical .nx-media {
+            max-height: 500px;
+            min-height: 200px;
+            aspect-ratio: 4/5;
+        }
+
+        .mode-grid .nx-media {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+        }
+
+        .mode-cinema .nx-media {
+            width: 100vw;
+            height: 100dvh;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+        }
+
+        /* Grid view count overlay */
+        .nx-grid-overlay {
+            position: absolute;
+            bottom: 6px; left: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+            display: none;
+        }
+
+        .mode-grid .nx-grid-overlay { display: flex; }
+
+        /* Cinema overlay */
+        .nx-cinema-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background: linear-gradient(transparent 40%, rgba(0,0,0,0.9) 100%);
+            padding: 20px 16px 30px;
+            display: none;
+            z-index: 10;
+        }
+
+        .mode-cinema .nx-cinema-overlay { display: flex; }
+        .mode-cinema .nx-card-header { display: none; }
+        .mode-cinema .nx-card-footer { display: none; }
+        .mode-cinema .nx-card-text { display: none; }
+
+        .nx-cinema-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .nx-cinema-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+        }
+
+        .nx-cinema-username {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .nx-cinema-follow {
+            padding: 4px 12px;
+            border: 1.5px solid #fff;
+            border-radius: 16px;
+            background: none;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+
+        .nx-cinema-caption {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .nx-cinema-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nx-cinema-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .nx-cinema-action i { font-size: 22px; }
+
+        /* ===== CARD TEXT ===== */
+        .nx-card-text {
+            padding: 10px 14px 8px;
+            font-size: 13.5px;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.5;
+        }
+
+        /* ===== CARD FOOTER ===== */
+        .nx-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+        }
+
+        .nx-actions {
+            display: flex;
+            gap: 5px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 30px;
+            padding: 4px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .nx-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            border-radius: 20px;
+            border: none;
+            background: none;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Syne', sans-serif;
+        }
+
+        .nx-action-btn i { font-size: 14px; color: var(--gold); }
+        .nx-action-btn.liked i { color: #ff4d6d; }
+        .nx-action-btn:active { transform: scale(0.92); }
+
+        .nx-save-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: none;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.08);
+            font-family: 'Syne', sans-serif;
+        }
+
+        .nx-save-btn i { font-size: 14px; color: var(--gold); }
+
+        /* ===== MOOD TRANSITION EFFECTS ===== */
+        body.mood-fast {
+            background: var(--mood-fast);
+        }
+
+        body.mood-fast .nx-card {
+            border-color: rgba(255,107,53,0.3);
+            box-shadow: 0 0 20px rgba(255,107,53,0.05);
+        }
+
+        body.mood-cinema {
+            background: var(--mood-cinema);
+        }
+
+        body.mood-night {
+            background: var(--mood-night);
+        }
+
+        body.mood-night .nx-card {
+            border-color: rgba(0,242,254,0.2);
+            box-shadow: 0 0 20px rgba(0,242,254,0.05);
+        }
+
+        /* ===== SCROLL SNAP FOR CINEMA ===== */
+        .mode-cinema {
+            height: 100dvh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            margin-top: 0 !important;
+            padding: 0 !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .mode-cinema .nx-card {
+            scroll-snap-align: start;
+        }
+
+        /* ===== SPEED INDICATOR ===== */
+        .speed-bar {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 4px;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .speed-bar.visible { opacity: 1; }
+
+        .speed-dot {
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .speed-dot.active {
+            background: #ff6b35;
+            box-shadow: 0 0 6px #ff6b35;
+            transform: scale(1.5);
+        }
+
+        /* ===== FOOTER NAV ===== */
+        .nx-footer {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(5,5,5,0.95);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            transition: transform 0.4s ease;
+        }
+
+        .nx-footer.hidden { transform: translateY(100%); }
+
+        .nx-footer-icon {
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            font-size: 20px;
+        }
+
+        .nx-footer-icon.active {
+            color: var(--gold);
+            filter: drop-shadow(0 0 6px var(--gold));
+        }
+
+        /* ===== MOOD TRANSITION OVERLAY ===== */
+        .mood-transition {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mood-transition.flash { opacity: 0.15; }
+
+        /* ===== MUTE BUTTON CINEMA ===== */
+        .nx-mute-btn {
+            position: absolute;
+            bottom: 100px; right: 16px;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 20;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .mode-cinema .nx-mute-btn { display: flex; }
+
+        /* ===== LOADING SKELETON ===== */
+        @keyframes skeletonPulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.4; }
+        }
+
+        .nx-skeleton {
+            background: rgba(255,255,255,0.06);
+            border-radius: 20px;
+            height: 400px;
+            animation: skeletonPulse 1.5s infinite;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mood transition flash -->
+    <div class="mood-transition" id="moodFlash"></div>
+
+    <!-- HEADER -->
+    <header class="nx-header" id="nxHeader">
+        <div class="nx-logo">Nexus</div>
+        <div class="nx-header-tabs">
+            <button class="nx-tab active" onclick="switchTab('feed', this)">Feed</button>
+            <button class="nx-tab" onclick="switchTab('discover', this)">Discover</button>
+            <button class="nx-tab" onclick="switchTab('live', this)">Live</button>
+        </div>
+    </header>
+
+    <!-- MOOD HUD -->
+    <div class="mood-hud">
+        <div class="mood-badge">
+            <div class="mood-dot"></div>
+            <span id="moodLabel">NORMAL</span>
+        </div>
+    </div>
+
+    <!-- SPEED INDICATOR -->
+    <div class="speed-bar" id="speedBar">
+        <div class="speed-dot"></div>
+        <div class="speed-dot"></div>
+        <div class="speed-dot active"></div>
+        <div class="speed-dot"></div>
+        <div class="speed-dot"></div>
+    </div>
+
+    <!-- MAIN FEED -->
+    <div class="nx-feed mode-vertical" id="nxFeed">
+        <!-- Posts za su loda daga Firebase -->
+        <div class="nx-skeleton"></div>
+        <div class="nx-skeleton" style="height:300px;"></div>
+        <div class="nx-skeleton" style="height:450px;"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <nav class="nx-footer" id="nxFooter">
+        <div class="nx-footer-icon active" onclick="window.location.href='social.html'">
+            <i class="fa-solid fa-house"></i>
+        </div>
+        <div class="nx-footer-icon" onclick="setMode('grid')">
+            <i class="fa-solid fa-grid-2"></i>
+        </div>
+        <div class="nx-footer-icon" onclick="window.location.href='social.html'">
+            <i class="fa-solid fa-plus"></i>
+        </div>
+        <div class="nx-footer-icon" onclick="setMode('cinema')">
+            <i class="fa-solid fa-clapperboard"></i>
+        </div>
+        <div class="nx-footer-icon">
+            <i class="fa-solid fa-user"></i>
+        </div>
+    </nav>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ===== FIREBASE =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+            authDomain: "oryzon-50ea4.firebaseapp.com",
+            projectId: "oryzon-50ea4",
+            storageBucket: "oryzon-50ea4.firebasestorage.app",
+            messagingSenderId: "782106742622",
+            appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ===== STATE =====
+        let currentMode = 'vertical';
+        let currentMood = 'normal';
+        let scrollSpeeds = [];
+        let lastScrollTime = Date.now();
+        let lastScrollY = 0;
+        let scrollSpeedTimer = null;
+        let isNight = new Date().getHours() >= 20 || new Date().getHours() < 6;
+        let posts = [];
+
+        // ===== LOAD POSTS =====
+        window.addEventListener('DOMContentLoaded', () => {
+            const user = localStorage.getItem('nexus_user_session');
+            if (!user) { window.location.href = 'login.html'; return; }
+
+            // Set night mode immediately if it's night
+            if (isNight) {
+                setTimeout(() => applyMood('night'), 1000);
+            }
+
+            loadPosts();
+            initScrollDetection();
+        });
+
+        async function loadPosts() {
+            const feed = document.getElementById('nxFeed');
+
+            db.collection('posts').orderBy('timestamp', 'desc').limit(20).onSnapshot(snap => {
+                posts = [];
+                snap.forEach(doc => posts.push({ id: doc.id, ...doc.data() }));
+                renderFeed();
+            });
+        }
+
+        // ===== RENDER FEED =====
+        function renderFeed() {
+            const feed = document.getElementById('nxFeed');
+            if (posts.length === 0) {
+                feed.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);font-size:14px;">Babu posts tukuna</div>';
+                return;
+            }
+
+            feed.innerHTML = posts.map(post => buildCard(post)).join('');
+
+            // Observe videos
+            feed.querySelectorAll('video').forEach(v => {
+                v.muted = true;
+                videoObserver.observe(v);
+            });
+        }
+
+        function buildCard(post) {
+            const avatar = post.userProfilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${post.username}`;
+            const timeStr = formatTime(post.timestamp);
+            const likes = post.likes || 0;
+
+            let mediaHTML = '';
+            if (post.mediaUrl) {
+                if (post.mediaType === 'video') {
+                    mediaHTML = `
+                        <div class="nx-card-media">
+                            <video class="nx-media" src="${post.mediaUrl}" loop playsinline muted preload="metadata"></video>
+                            <div class="nx-grid-overlay"><i class="fa-solid fa-play" style="font-size:10px;"></i> ${formatCount(post.views || 0)}</div>
+                            <button class="nx-mute-btn" onclick="toggleMute(this)"><i class="fa-solid fa-volume-xmark"></i></button>
+                        </div>`;
+                } else {
+                    mediaHTML = `
+                        <div class="nx-card-media">
+                            <img class="nx-media" src="${post.mediaUrl}" loading="lazy" alt="">
+                            <div class="nx-grid-overlay"><i class="fa-solid fa-image" style="font-size:10px;"></i></div>
+                        </div>`;
+                }
+            }
+
+            const cinemaOverlay = `
+                <div class="nx-cinema-overlay">
+                    <div class="nx-cinema-user">
+                        <img class="nx-cinema-avatar" src="${avatar}" alt="">
+                        <span class="nx-cinema-username">${post.username || 'user'}</span>
+                        <button class="nx-cinema-follow">Follow</button>
+                    </div>
+                    <div class="nx-cinema-caption">${post.content || ''}</div>
+                    <div class="nx-cinema-actions">
+                        <button class="nx-cinema-action" onclick="toggleLike(this, '${post.id}')">
+                            <i class="fa-regular fa-heart"></i>
+                            <span>${formatCount(likes)}</span>
+                        </button>
+                        <button class="nx-cinema-action" onclick="window.location.href='comments.html?postId=${post.id}'">
+                            <i class="fa-regular fa-comment"></i>
+                            <span>${post.comments || 0}</span>
+                        </button>
+                        <button class="nx-cinema-action">
+                            <i class="fa-regular fa-paper-plane"></i>
+                            <span>Share</span>
+                        </button>
+                        <button class="nx-cinema-action">
+                            <i class="fa-regular fa-bookmark"></i>
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </div>`;
+
+            return `
+            <div class="nx-card" data-post-id="${post.id}">
+                <div class="nx-card-header">
+                    <div class="nx-user-info">
+                        <img class="nx-avatar" src="${avatar}" alt="">
+                        <div>
+                            <div class="nx-username">${post.username || 'user'}</div>
+                            <div class="nx-time">${timeStr}</div>
+                        </div>
+                    </div>
+                    <button class="nx-follow-btn" onclick="this.textContent=this.textContent==='Follow'?'Following':'Follow'">Follow</button>
+                </div>
+                ${mediaHTML}
+                ${cinemaOverlay}
+                ${post.content ? `<div class="nx-card-text">${post.content}</div>` : ''}
+                <div class="nx-card-footer">
+                    <div class="nx-actions">
+                        <button class="nx-action-btn" onclick="toggleLike(this, '${post.id}')">
+                            <i class="fa-regular fa-heart"></i>
+                            <span>${formatCount(likes)}</span>
+                        </button>
+                        <button class="nx-action-btn" onclick="window.location.href='comments.html?postId=${post.id}'">
+                            <i class="fa-regular fa-comment"></i>
+                            <span>${post.comments || 0}</span>
+                        </button>
+                        <button class="nx-action-btn">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>5</span>
+                        </button>
+                        <button class="nx-action-btn">
+                            <i class="fa-regular fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <button class="nx-save-btn">
+                        <i class="fa-regular fa-bookmark"></i>
+                        <span>Save</span>
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        // ===== VIDEO OBSERVER =====
+        const videoObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                const vid = entry.target;
+                if (entry.isIntersecting) {
+                    vid.play().catch(() => {});
+                } else {
+                    vid.pause();
+                    vid.currentTime = 0;
+                }
+            });
+        }, { threshold: 0.5 });
+
+        function toggleMute(btn) {
+            const video = btn.previousElementSibling;
+            if (!video) return;
+            video.muted = !video.muted;
+            btn.innerHTML = video.muted
+                ? '<i class="fa-solid fa-volume-xmark"></i>'
+                : '<i class="fa-solid fa-volume-high"></i>';
+        }
+
+        // ===== LIKE =====
+        function toggleLike(btn, postId) {
+            const liked = btn.classList.toggle('liked');
+            const icon = btn.querySelector('i');
+            const count = btn.querySelector('span');
+            icon.className = liked ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+            if (icon.classList.contains('fa-solid')) icon.style.color = '#ff4d6d';
+            else icon.style.color = '';
+            let c = parseInt(count.textContent.replace(/[KM]/g, match => match === 'K' ? '000' : '000000')) || 0;
+            count.textContent = formatCount(liked ? c + 1 : Math.max(0, c - 1));
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        // ===== MODE SWITCHING =====
+        function setMode(mode) {
+            const feed = document.getElementById('nxFeed');
+            const footer = document.getElementById('nxFooter');
+            const header = document.getElementById('nxHeader');
+
+            feed.className = 'nx-feed mode-' + mode;
+            currentMode = mode;
+
+            if (mode === 'cinema') {
+                footer.classList.add('hidden');
+                header.style.display = 'none';
+                document.body.style.overflow = 'hidden';
+            } else {
+                footer.classList.remove('hidden');
+                header.style.display = '';
+                document.body.style.overflow = '';
+            }
+
+            // Flash transition
+            flashMoodTransition(mode === 'cinema' ? '#fde08d' : mode === 'grid' ? '#00f2fe' : '#ffffff');
+
+            // Re-observe videos
+            setTimeout(() => {
+                document.querySelectorAll('video').forEach(v => {
+                    v.muted = true;
+                    videoObserver.observe(v);
+                });
+            }, 300);
+        }
+
+        // ===== MOOD DETECTION =====
+        function initScrollDetection() {
+            let scrollCount = 0;
+            let lastScrollTime = Date.now();
+            let scrollVelocities = [];
+
+            window.addEventListener('scroll', () => {
+                const now = Date.now();
+                const dt = now - lastScrollTime;
+                const dy = Math.abs(window.scrollY - lastScrollY);
+                const velocity = dy / Math.max(dt, 1);
+
+                scrollVelocities.push(velocity);
+                if (scrollVelocities.length > 5) scrollVelocities.shift();
+
+                const avgVelocity = scrollVelocities.reduce((a, b) => a + b, 0) / scrollVelocities.length;
+
+                lastScrollTime = now;
+                lastScrollY = window.scrollY;
+
+                clearTimeout(scrollSpeedTimer);
+
+                // Fast scrolling → Grid mode suggestion
+                if (avgVelocity > 3 && currentMode === 'vertical') {
+                    applyMood('fast');
+                    document.getElementById('speedBar').classList.add('visible');
+                    scrollSpeedTimer = setTimeout(() => {
+                        applyMood(isNight ? 'night' : 'normal');
+                        document.getElementById('speedBar').classList.remove('visible');
+                    }, 2000);
+                } else if (avgVelocity < 0.5 && currentMode === 'vertical') {
+                    // Slow / stopped → Cinema suggestion
+                    scrollSpeedTimer = setTimeout(() => {
+                        if (isNight) applyMood('night');
+                        else applyMood('cinema');
+                    }, 3000);
+                }
+            }, { passive: true });
+        }
+
+        function applyMood(mood) {
+            if (currentMood === mood) return;
+            currentMood = mood;
+
+            const body = document.body;
+            body.classList.remove('mood-fast', 'mood-cinema', 'mood-night');
+
+            const labels = {
+                normal: 'NORMAL',
+                fast: 'FAST MODE',
+                cinema: 'CINEMA',
+                night: 'NIGHT MODE'
+            };
+
+            document.getElementById('moodLabel').textContent = labels[mood] || 'NORMAL';
+
+            if (mood !== 'normal') {
+                body.classList.add('mood-' + mood);
+            }
+
+            // Auto switch to cinema mode when mood is cinema
+            if (mood === 'cinema' && currentMode === 'vertical') {
+                setTimeout(() => {
+                    if (currentMood === 'cinema') setMode('cinema');
+                }, 1500);
+            }
+
+            // Auto switch back to vertical from cinema when fast scrolling
+            if (mood === 'fast' && currentMode === 'cinema') {
+                setMode('vertical');
+            }
+        }
+
+        function flashMoodTransition(color) {
+            const flash = document.getElementById('moodFlash');
+            flash.style.background = color;
+            flash.classList.add('flash');
+            setTimeout(() => flash.classList.remove('flash'), 300);
+        }
+
+        // ===== TAB SWITCHING =====
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.nx-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // ===== HELPERS =====
+        function formatTime(ts) {
+            if (!ts) return '';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            const diff = Math.floor((Date.now() - d) / 1000);
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+            return Math.floor(diff / 86400) + 'd';
+        }
+
+        function formatCount(n) {
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return n.toString();
+        }
+    </script>
+</body>
+</html>
