@@ -1280,13 +1280,11 @@ window.openImmersiveSplitComments = function(postId, card) {
         videoHalf.appendChild(vid);
         vid.play().catch(()=>{});
 
-      vid.onclick = () => {
-    splitDiv.remove();
-    document.body.style.overflow = '';
-}; 
+     vid.onclick = () => {
     splitDiv.remove();
     document.body.style.overflow = '';
 };
+    
     } else if (origImg) {
         const img = document.createElement('img');
         img.src = origImg.src;
