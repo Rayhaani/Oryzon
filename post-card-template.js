@@ -1402,23 +1402,8 @@ commentsHalf.addEventListener('touchend', (e) => {
     splitDiv.appendChild(videoHalf);
     splitDiv.appendChild(commentsHalf);
     document.body.appendChild(splitDiv);
-       // Kama Android back button — kar ya fita page
-history.pushState({ splitView: true }, '');
-window.addEventListener('popstate', function onPop(e) {
-    window.removeEventListener('popstate', onPop);
-    const sv = document.getElementById('nexusSplitView');
-    if (sv) {
-        sv.remove();
-        document.body.style.overflow = '';
-        // Koma immersive — pushState don immersive ya ci gaba
-        document.getElementById('instaFooter').classList.add('footer-hidden');
-        document.getElementById('cyberMenu').style.display = 'none';
-        // Tabbatar immersive yana nan, ƙara history entry domin back button na immersive ya yi aiki
-        history.pushState({ immersive: true }, '');
-    }
-});
-    document.body.style.overflow = 'hidden';
-// Boye footer da header
+document.body.style.overflow = 'hidden';
+   // Boye footer da header
 document.getElementById('instaFooter').classList.add('footer-hidden');
 document.getElementById('cyberMenu').style.display = 'none';
 document.getElementById('CyberDropdown').classList.remove('Active');
