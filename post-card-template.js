@@ -1410,8 +1410,11 @@ window.addEventListener('popstate', function onPop(e) {
     if (sv) {
         sv.remove();
         document.body.style.overflow = '';
+        // Koma immersive — pushState don immersive ya ci gaba
         document.getElementById('instaFooter').classList.add('footer-hidden');
         document.getElementById('cyberMenu').style.display = 'none';
+        // Tabbatar immersive yana nan, ƙara history entry domin back button na immersive ya yi aiki
+        history.pushState({ immersive: true }, '');
     }
 });
     document.body.style.overflow = 'hidden';
