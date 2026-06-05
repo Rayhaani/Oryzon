@@ -1509,5 +1509,108 @@ window.exitImmersive = function(card) {
 
     window.onpopstate = null;
 };       
-    
+
+
+
+// ============================================================
+// 8. VIDEO OBSERVER & SOUND CONTROL — Central Command
+// ============================================================
+
+window.nexusVideoObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const vid = entry.target;
+        const card = vid.closest('.post-card');
+        if (entry.isIntersecting) {
+            if (window.nexusCurrentVideo && window.nexusCurrentVideo !== vid) {
+                window.nexusCurrentVideo.pause();
+                window.nexusCurrentVideo.muted = true;
+                window.nexusCurrentVideo.currentTime = 0;
+                const prevCard = window.nexusCurrentVideo.closest('.post-card');
+                if (prevCard) {
+                    const prevIcon = prevCard.querySelector('.post-mute-toggle i');
+                    if (prevIcon) prevIcon.className = 'fa-solid fa-volume-xmark';
+                }
+            }
+            vid.muted = !window.nexusGlobalSound;
+            vid.play().catch(() => {});
+            window.nexusCurrentVideo = vid;
+            if (card) {
+                const icon = card.querySelector('.post-mute-toggle i');
+                if (icon) icon.className = window.nexusGlobalSound
+                    ? 'fa-solid fa-volume-high'
+                    : 'fa-solid fa-volume-xmark';
+            }
+        } else {
+            vid.pause(); vid.muted = true; vid.currentTime = 0;
+            if (card) {
+                const icon = card.querySelector('.post-mute-toggle i');
+                if (icon) icon.className = 'fa-solid fa-volume-xmark';
+            }
+            if (window.nexusCurrentVideo === vid) window.nexusCurrentVideo = null;
+        }
+    });
+}, { threshold: [0, 0.1] });
+
+// Global sound state
+window.nexusGlobalSound = false;
+window.nexusCurrentVideo = null;
+
+// Toggle sound — ana kiran sa daga post card mute button
+window.postCard_toggleVideoSound = function(event, element) {
+    event.stopPropagation();
+    const video = element.previousElementSibling;
+    if (!video || video.tagName !== 'VIDEO') return;
+
+    const card = element.closest('.post-card');
+    const icon = element.querySelector('i');
+    window.nexusGlobalSound = !window.nexusGlobalSound;
+
+    if (window.nexusGlobalSound) {
+        // Mute duk sauran videos
+        document.querySelectorAll('video').forEach(other => {
+            if (other !== video) {
+                other.muted = true;
+                const otherIcon = other.closest('.post-card')?.querySelector('.post-mute-toggle i');
+                if (otherIcon) otherIcon.className = 'fa-solid fa-volume-xmark';
+            }
+        });
+        video.muted = false;
+        if (icon) icon.className = 'fa-solid fa-volume-high';
+    } else {
+        video.muted = true;
+        if (icon) icon.className = 'fa-solid fa-volume-xmark';
+    }
+};
+
+// Observe videos bayan an render posts
+window.postCard_observeVideos = function() {
+    window.nexusVideoObserver.disconnect();
+    document.querySelectorAll('video.post-media, video').forEach(vid => {
+        vid.muted = true;
+        window.nexusVideoObserver.observe(vid);
+    });
+};
+
+// Priority — video mafi kusa da tsakiyar screen ya yi play
+window.postCard_handleVideoPriority = function() {
+    const videos = document.querySelectorAll('.post-media');
+    let focusVideo = null;
+    let minDistance = Infinity;
+    const screenCenter = window.innerHeight / 2;
+
+    videos.forEach(video => {
+        if (video.tagName !== 'VIDEO') return;
+        const rect = video.getBoundingClientRect();
+        const videoCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(screenCenter - videoCenter);
+        if (rect.top < window.innerHeight && rect.bottom > 0 && distance < minDistance) {
+            minDistance = distance;
+            focusVideo = video;
+        }
+        if (video !== focusVideo) video.pause();
+    });
+
+    if (focusVideo) focusVideo.play().catch(() => {});
+};
+
 console.log('[PostCard] Shared template loaded ✓');
