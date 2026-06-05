@@ -870,7 +870,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                 }
             </style>
             
-
+   
             
         </div>
         ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
@@ -944,7 +944,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                     <span>${likes}</span>
                 </div>
                
-                    <div class="post-capsule" onclick="event.stopPropagation(); openSplitView('${post.id}', event)" id="comment-btn-${post.id}">
+                    <div class="post-capsule" onclick="event.stopPropagation(); handleCommentBtn('${post.id}', event)" id="comment-btn-${post.id}">
                      <i class="fa-regular fa-comment"></i>
                     <span id="comment-count-${post.id}">${comments}</span>
                 </div>
@@ -1036,7 +1036,7 @@ window.handleFollowBtn = function(btn) {
 let svCurrentPostId = null;
 let svUnsub = null;
 
-window.openSplitView = function(postId, event) {
+function openSplitView(postId, event) {
     if (event) event.stopPropagation();
 
     svCurrentPostId = postId;
@@ -1094,7 +1094,7 @@ window.openSplitView = function(postId, event) {
     if (navigator.vibrate) navigator.vibrate([15, 10, 15]);
 }
 
-window.closeSplitView = function() {
+function closeSplitView() {
     document.getElementById('svOverlay').classList.remove('sv-open');
     document.body.style.overflow = '';
     document.getElementById('instaFooter').classList.remove('footer-hidden');
@@ -1107,7 +1107,7 @@ window.closeSplitView = function() {
     svCurrentPostId = null;
 }
 
-window.svLoadComments = function(postId) {
+function svLoadComments(postId) {
     const list = document.getElementById('svCommentsList');
     list.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;font-size:13px;">Loading...</div>';
 
@@ -1150,7 +1150,7 @@ window.svLoadComments = function(postId) {
         });
 }
 
-window.svSubmitComment = async function() {
+async function svSubmitComment() {
     const input = document.getElementById('svInput');
     const text = input.value.trim();
     if (!text || !svCurrentPostId) return;
@@ -1181,7 +1181,7 @@ window.svSubmitComment = async function() {
     }
 }
 
-window.svSendReaction = function(emoji) {
+function svSendReaction(emoji) {
     const half = document.getElementById('svVideoHalf');
     const el = document.createElement('div');
     el.textContent = emoji;
@@ -1191,7 +1191,7 @@ window.svSendReaction = function(emoji) {
     setTimeout(() => el.remove(), 950);
 }
 
-window.svTimeAgo = function(ts) {
+function svTimeAgo(ts) {
     if (!ts) return 'now';
     const secs = Math.floor((Date.now() - ts.toMillis()) / 1000);
     if (secs < 60) return 'just now';
@@ -1234,4 +1234,247 @@ window.svTimeAgo = function(ts) {
 
 })();
 
+
+
+window.handleCommentBtn = function(postId, event) {
+    if (event) event.stopPropagation();
+    
+    // Duba ko muna immersive mode
+    const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+    const isImmersive = card && card.classList.contains('immersive-mode');
+    
+    if (!isImmersive) {
+        // NORMAL MODE → je comments.html kamar yadda yake
+        window.location.href = `comments.html?postId=${postId}`;
+        return;
+    }
+    
+    // IMMERSIVE MODE → buɗe split-view tare da ainihin comments.html content
+    openImmersiveSplitComments(postId, card);
+};
+
+window.openImmersiveSplitComments = function(postId, card) {
+    // Idan split-view yana a bude, rufe shi
+    const existing = document.getElementById('nexusSplitView');
+    if (existing) { existing.remove(); return; }
+    
+    // Rage video zuwa 42% na sama
+    const video = card.querySelector('video');
+    
+    // Gina split container
+    const splitDiv = document.createElement('div');
+    splitDiv.id = 'nexusSplitView';
+    splitDiv.style.cssText = `
+        position: fixed;
+        inset: 0;
+        z-index: 9000;
+        display: flex;
+        flex-direction: column;
+        background: #000;
+    `;
+    
+    // ===== VIDEO HALF (42%) =====
+    const videoHalf = document.createElement('div');
+    videoHalf.style.cssText = `
+        flex: 0 0 42%;
+        position: relative;
+        background: #000;
+        overflow: hidden;
+    `;
+    
+    // Clone video ko image
+    const origVideo = card.querySelector('video');
+    const origImg = card.querySelector('img.post-media');
+    
+    if (origVideo) {
+        const vid = document.createElement('video');
+        vid.src = origVideo.src || origVideo.currentSrc;
+        vid.autoplay = true; vid.loop = true;
+        vid.muted = false; vid.playsInline = true;
+        vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        videoHalf.appendChild(vid);
+        vid.play().catch(()=>{});
+    } else if (origImg) {
+        const img = document.createElement('img');
+        img.src = origImg.src;
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        videoHalf.appendChild(img);
+    }
+    
+    // Username + avatar a kasan video
+    const avatarEl = card.querySelector('.post-avatar');
+    const usernameEl = card.querySelector('.post-username');
+    const miniInfo = document.createElement('div');
+    miniInfo.style.cssText = `
+        position:absolute; bottom:0; left:0; right:0;
+        padding:10px 14px;
+        background:linear-gradient(transparent,rgba(0,0,0,0.8));
+        display:flex; align-items:center; gap:8px;
+    `;
+    miniInfo.innerHTML = `
+        <img src="${avatarEl ? avatarEl.src : ''}" style="width:26px;height:26px;border-radius:50%;border:1.5px solid #fde08d;object-fit:cover;">
+        <span style="color:#fff;font-size:12px;font-weight:700;">${usernameEl ? usernameEl.textContent.trim() : ''}</span>
+    `;
+    videoHalf.appendChild(miniInfo);
+    
+    // Close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '&#8249;';
+    closeBtn.style.cssText = `
+        position:absolute; top:10px; left:12px;
+        width:30px; height:30px; border-radius:50%;
+        background:rgba(0,0,0,0.6); border:none;
+        color:#fff; font-size:20px; cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        z-index:10; backdrop-filter:blur(8px);
+    `;
+    closeBtn.onclick = () => {
+        splitDiv.remove();
+        document.body.style.overflow = '';
+    };
+    videoHalf.appendChild(closeBtn);
+    
+    // ===== COMMENTS HALF (58%) — ainihin comments.html design =====
+    const commentsHalf = document.createElement('div');
+    commentsHalf.style.cssText = `
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: rgba(10, 12, 22, 0.98);
+        backdrop-filter: blur(25px);
+        border-top: 1px solid rgba(253,224,141,0.2);
+        overflow: hidden;
+    `;
+    
+    // Header
+    commentsHalf.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;padding:10px 16px 6px;position:relative;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div style="width:35px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;position:absolute;top:5px;left:50%;transform:translateX(-50%);"></div>
+            <span style="font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600;color:#fff;margin-top:8px;">Comments</span>
+            <span id="splitCommentCount" style="background:rgba(253,224,141,0.15);color:#fde08d;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid rgba(253,224,141,0.3);margin-left:8px;margin-top:8px;">0</span>
+        </div>
+        
+        <!-- Sort bar -->
+        <div style="display:flex;gap:7px;padding:8px 14px;flex-shrink:0;">
+            <button style="background:rgba(253,224,141,0.15);border:1px solid rgba(253,224,141,0.4);border-radius:20px;padding:4px 13px;color:#fde08d;font-size:11px;font-weight:600;cursor:pointer;">Top</button>
+            <button style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:4px 13px;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;">Recent</button>
+            <button style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:4px 13px;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;">Creators</button>
+        </div>
+        
+        <!-- Comments feed — ainihin design na comments.html -->
+        <div id="splitCommentsFeed" style="flex:1;overflow-y:auto;padding:0 14px 8px;scrollbar-width:none;">
+            <p style="text-align:center;color:#555;padding:20px;font-size:13px;">Loading...</p>
+        </div>
+        
+        <!-- Input — ainihin design na comments.html -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(253,224,141,0.15);border-radius:16px;margin:8px 12px 20px;padding:8px 12px;display:flex;align-items:center;gap:10px;box-shadow:inset 0 0 10px rgba(0,0,0,0.5);">
+            <img id="splitMyAvatar" src="${localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=user'}" style="width:28px;height:28px;border-radius:50%;border:1px solid #fde08d;">
+            <textarea id="splitCommentInput" placeholder="Add a comment..." rows="1" style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:12.5px;font-family:'Inter',sans-serif;resize:none;max-height:80px;overflow-y:auto;scrollbar-width:none;line-height:1.5;padding:4px 0;"></textarea>
+            <button id="splitSendBtn" onclick="splitSubmitComment('${postId}')" style="background:linear-gradient(135deg,#fde08d,#b8860b);border:none;width:28px;height:28px;border-radius:50%;color:#000;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 10px rgba(253,224,141,0.4);">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    `;
+    
+    splitDiv.appendChild(videoHalf);
+    splitDiv.appendChild(commentsHalf);
+    document.body.appendChild(splitDiv);
+    document.body.style.overflow = 'hidden';
+    
+    // Loda comments daga Firestore
+    splitLoadComments(postId);
+    
+    if (navigator.vibrate) navigator.vibrate([15,10,15]);
+};
+
+window.splitLoadComments = function(postId) {
+    const feed = document.getElementById('splitCommentsFeed');
+    const countEl = document.getElementById('splitCommentCount');
+    if (!feed || typeof db === 'undefined') return;
+    
+    db.collection('nexus_contributions')
+        .where('postId', '==', postId)
+        .where('parentId', '==', null)
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(snap => {
+            if (countEl) countEl.textContent = snap.size;
+            if (snap.empty) {
+                feed.innerHTML = '<p style="text-align:center;color:#555;padding:30px;font-size:13px;">Babu comments tukuna. Ka zama na farko! 💬</p>';
+                return;
+            }
+            feed.innerHTML = '';
+            snap.forEach(doc => {
+                const c = doc.data();
+                const myUser = localStorage.getItem('nexus_user_session') || '';
+                
+                // Ainihin design na comments.html quantum-comment-card
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    position:relative; padding:12px 14px 10px;
+                    border-radius:16px; margin-bottom:12px;
+                    background:rgba(255,255,255,0.05);
+                    border:1px solid rgba(255,255,255,0.04);
+                `;
+                card.innerHTML = `
+                    <div style="display:flex;gap:12px;">
+                        <div style="position:relative;width:36px;height:36px;flex-shrink:0;">
+                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${c.author || c.username}" 
+                                style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:1.5px solid #00f2fe;padding:1px;">
+                            <div style="position:absolute;bottom:0;right:0;width:8px;height:8px;background:#00f2fe;border-radius:50%;border:1.5px solid #000;"></div>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                                <span style="font-size:12px;font-weight:600;color:#fff;font-family:'Montserrat',sans-serif;">${c.author || c.username || 'User'}</span>
+                                <span style="font-size:9px;color:rgba(255,255,255,0.5);">${splitTimeAgo(c.timestamp)}</span>
+                            </div>
+                            <p style="font-size:12.5px;line-height:1.5;color:rgba(255,255,255,0.9);word-break:break-word;">${c.text || ''}</p>
+                            <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+                                <button onclick="this.classList.toggle('liked');const i=this.querySelector('i');const s=this.querySelector('span');i.className=this.classList.contains('liked')?'fa-solid fa-heart':'fa-regular fa-heart';i.style.color=this.classList.contains('liked')?'#ff4757':'';s.textContent=this.classList.contains('liked')?parseInt(s.textContent)+1:Math.max(0,parseInt(s.textContent)-1);"
+                                    style="background:transparent;border:none;color:rgba(255,255,255,0.6);font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                    <i class="fa-regular fa-heart"></i><span>0</span>
+                                </button>
+                                <button onclick="document.getElementById('splitCommentInput').value='@${c.author || c.username} ';document.getElementById('splitCommentInput').focus();"
+                                    style="background:transparent;border:none;color:rgba(255,255,255,0.6);font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+                                    <i class="fa-regular fa-comment-dots"></i><span>Reply</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                feed.appendChild(card);
+            });
+        }, err => {
+            if (feed) feed.innerHTML = '<p style="text-align:center;color:#555;padding:20px;font-size:12px;">Could not load comments.</p>';
+        });
+};
+
+window.splitSubmitComment = async function(postId) {
+    const input = document.getElementById('splitCommentInput');
+    const text = input.value.trim();
+    if (!text || typeof db === 'undefined') return;
+    
+    const myUser = localStorage.getItem('nexus_user_session') || 'anonymous';
+    input.value = '';
+    
+    try {
+        await db.collection('nexus_contributions').add({
+            postId: postId,
+            parentId: null,
+            author: myUser,
+            username: myUser,
+            text: text,
+            likes: 0,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch(e) { console.error('Comment error:', e); }
+};
+
+window.splitTimeAgo = function(ts) {
+    if (!ts) return 'Just now';
+    const secs = Math.floor((Date.now() - (ts.toMillis ? ts.toMillis() : ts)) / 1000);
+    if (secs < 60) return 'Just now';
+    if (secs < 3600) return Math.floor(secs/60) + 'm';
+    if (secs < 86400) return Math.floor(secs/3600) + 'h';
+    return Math.floor(secs/86400) + 'd';
+};
 console.log('[PostCard] Shared template loaded ✓');
