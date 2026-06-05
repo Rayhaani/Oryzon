@@ -1294,7 +1294,9 @@ window.openImmersiveSplitComments = function(postId, card) {
     splitDiv.remove();
     document.body.style.overflow = '';
 };
+    }  // ← wannan closing brace na else if block
 
+    
     // Mini info a kasan video
     const avatarEl = card.querySelector('.post-avatar');
     const usernameEl = card.querySelector('.post-username');
