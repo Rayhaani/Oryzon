@@ -870,56 +870,6 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                 }
             </style>
             
-                    
-
-
-
-<!-- ===== NEXUS SPLIT-VIEW COMMENTS ===== -->
-<div class="sv-overlay" id="svOverlay">
-    <!-- Video half -->
-    <div class="sv-video-half" id="svVideoHalf">
-        <button class="sv-close-half" onclick="closeSplitView()">&#8249;</button>
-        <div id="svMediaSlot"></div>
-        <div class="sv-mini-info">
-            <img src="" class="sv-mini-avatar" id="svMiniAvatar">
-            <span class="sv-mini-username" id="svMiniUsername"></span>
-        </div>
-    </div>
-
-    <!-- Comments half -->
-    <div class="sv-comments-half">
-        <div class="sv-comments-header">
-            <div class="sv-comments-title">
-                Comments
-                <span class="sv-count-badge" id="svCommentCount">0</span>
-            </div>
-        </div>
-        <div class="sv-sort-row">
-            <button class="sv-sort-btn active">Top</button>
-            <button class="sv-sort-btn">Recent</button>
-            <button class="sv-sort-btn">Creators</button>
-        </div>
-        <div class="sv-comments-list" id="svCommentsList"></div>
-        <div class="sv-reactions-bar">
-            <button class="sv-react-btn" onclick="svSendReaction('❤️')">❤️</button>
-            <button class="sv-react-btn" onclick="svSendReaction('🔥')">🔥</button>
-            <button class="sv-react-btn" onclick="svSendReaction('😂')">😂</button>
-            <button class="sv-react-btn" onclick="svSendReaction('😮')">😮</button>
-            <button class="sv-react-btn" onclick="svSendReaction('👏')">👏</button>
-            <button class="sv-react-btn" onclick="svSendReaction('😍')">😍</button>
-            <button class="sv-react-btn" onclick="svSendReaction('😢')">😢</button>
-        </div>
-        <div class="sv-input-row">
-            <img src="" class="sv-my-avatar" id="svMyAvatar">
-            <div class="sv-input-wrap">
-                <input class="sv-input" id="svInput" placeholder="Add a comment..." 
-                    onkeydown="if(event.key==='Enter') svSubmitComment()">
-                <button class="sv-send-btn" id="svSendBtn" onclick="svSubmitComment()" style="display:none">↑</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 
             
         </div>
@@ -1086,7 +1036,7 @@ window.handleFollowBtn = function(btn) {
 let svCurrentPostId = null;
 let svUnsub = null;
 
-function openSplitView(postId, event) {
+window.openSplitView = function(postId, event) {
     if (event) event.stopPropagation();
 
     svCurrentPostId = postId;
@@ -1144,7 +1094,7 @@ function openSplitView(postId, event) {
     if (navigator.vibrate) navigator.vibrate([15, 10, 15]);
 }
 
-function closeSplitView() {
+window.closeSplitView = function() {
     document.getElementById('svOverlay').classList.remove('sv-open');
     document.body.style.overflow = '';
     document.getElementById('instaFooter').classList.remove('footer-hidden');
@@ -1157,7 +1107,7 @@ function closeSplitView() {
     svCurrentPostId = null;
 }
 
-function svLoadComments(postId) {
+window.svLoadComments = function(postId) {
     const list = document.getElementById('svCommentsList');
     list.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:20px;font-size:13px;">Loading...</div>';
 
@@ -1200,7 +1150,7 @@ function svLoadComments(postId) {
         });
 }
 
-async function svSubmitComment() {
+window.svSubmitComment = async function() {
     const input = document.getElementById('svInput');
     const text = input.value.trim();
     if (!text || !svCurrentPostId) return;
@@ -1231,7 +1181,7 @@ async function svSubmitComment() {
     }
 }
 
-function svSendReaction(emoji) {
+window.svSendReaction = function(emoji) {
     const half = document.getElementById('svVideoHalf');
     const el = document.createElement('div');
     el.textContent = emoji;
@@ -1241,7 +1191,7 @@ function svSendReaction(emoji) {
     setTimeout(() => el.remove(), 950);
 }
 
-function svTimeAgo(ts) {
+window.svTimeAgo = function(ts) {
     if (!ts) return 'now';
     const secs = Math.floor((Date.now() - ts.toMillis()) / 1000);
     if (secs < 60) return 'just now';
