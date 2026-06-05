@@ -1279,10 +1279,11 @@ window.openImmersiveSplitComments = function(postId, card) {
         vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
         videoHalf.appendChild(vid);
         vid.play().catch(()=>{});
-vid.onclick = () => {
-   document.getElementById('instaFooter').classList.remove('footer-hidden');
-document.getElementById('cyberMenu').style.display = '';
-   
+
+      vid.onclick = () => {
+    splitDiv.remove();
+    document.body.style.overflow = '';
+}; 
     splitDiv.remove();
     document.body.style.overflow = '';
 };
@@ -1336,7 +1337,13 @@ document.getElementById('cyberMenu').style.display = '';
     document.body.style.overflow = '';
     document.getElementById('instaFooter').classList.remove('footer-hidden');
     document.getElementById('cyberMenu').style.display = '';
+    // Fita immersive mode ma
+    const immersiveCard = document.querySelector('.post-card.immersive-mode');
+    if (immersiveCard && typeof exitImmersive === 'function') {
+        exitImmersive(immersiveCard);
+    }
 };
+
     videoHalf.appendChild(closeBtn);
 
     // ===== COMMENTS HALF (58%) — IFRAME na ainihin comments.html =====
@@ -1369,10 +1376,31 @@ commentsHalf.addEventListener('touchend', (e) => {
     const swipeUp = startY - endY;
     
     if (swipeUp > 60) {
-        // Ja sama → cika screen da comments.html gaba daya
-        splitDiv.remove();
-        document.body.style.overflow = '';
-        window.location.href = `comments.html?postId=${postId}`;
+        // Faɗaɗa iframe ya cika screen
+        videoHalf.style.transition = 'flex 0.3s ease';
+        videoHalf.style.flex = '0 0 0%';
+        videoHalf.style.overflow = 'hidden';
+        commentsHalf.style.transition = 'flex 0.3s ease';
+        commentsHalf.style.flex = '1';
+
+        // Chevron-down don koma split-view
+        const backToSplit = document.createElement('button');
+        backToSplit.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
+        backToSplit.style.cssText = `
+            position:absolute; top:10px; left:12px;
+            width:32px; height:32px; border-radius:50%;
+            background:rgba(0,0,0,0.5); border:none;
+            color:#fde08d; font-size:14px; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            z-index:999; backdrop-filter:blur(8px);
+        `;
+        backToSplit.onclick = () => {
+            videoHalf.style.flex = '0 0 42%';
+            videoHalf.style.overflow = 'hidden';
+            commentsHalf.style.flex = '1';
+            backToSplit.remove();
+        };
+        commentsHalf.appendChild(backToSplit);
     }
     isDragging = false;
 }, { passive: true });
