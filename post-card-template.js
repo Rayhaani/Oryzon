@@ -1280,6 +1280,9 @@ window.openImmersiveSplitComments = function(postId, card) {
         videoHalf.appendChild(vid);
         vid.play().catch(()=>{});
 vid.onclick = () => {
+   document.getElementById('instaFooter').classList.remove('footer-hidden');
+document.getElementById('cyberMenu').style.display = '';
+   
     splitDiv.remove();
     document.body.style.overflow = '';
 };
@@ -1289,6 +1292,9 @@ vid.onclick = () => {
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
         videoHalf.appendChild(img);
        img.onclick = () => {
+          document.getElementById('instaFooter').classList.remove('footer-hidden');
+document.getElementById('cyberMenu').style.display = '';
+          
     splitDiv.remove();
     document.body.style.overflow = '';
 };
@@ -1326,9 +1332,11 @@ vid.onclick = () => {
         border:1px solid rgba(255,255,255,0.2);
     `;
     closeBtn.onclick = () => {
-        splitDiv.remove();
-        document.body.style.overflow = '';
-    };
+    splitDiv.remove();
+    document.body.style.overflow = '';
+    document.getElementById('instaFooter').classList.remove('footer-hidden');
+    document.getElementById('cyberMenu').style.display = '';
+};
     videoHalf.appendChild(closeBtn);
 
     // ===== COMMENTS HALF (58%) — IFRAME na ainihin comments.html =====
@@ -1374,6 +1382,10 @@ commentsHalf.addEventListener('touchend', (e) => {
     splitDiv.appendChild(commentsHalf);
     document.body.appendChild(splitDiv);
     document.body.style.overflow = 'hidden';
+// Boye footer da header
+document.getElementById('instaFooter').classList.add('footer-hidden');
+document.getElementById('cyberMenu').style.display = 'none';
+document.getElementById('CyberDropdown').classList.remove('Active');
 
     if (navigator.vibrate) navigator.vibrate([15,10,15]);
 };
