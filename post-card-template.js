@@ -759,6 +759,20 @@
 .post-card .capsule.liked i {
     color: #ff4d6d !important;
 }
+
+
+        .post-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            padding: 15px 15px 10px 15px; 
+            margin: 0 0 10px 0;
+            background: linear-gradient(180deg, rgba(253, 224, 141, 0.12) 0%, transparent 100%);
+            border-bottom-left-radius: 40px 15px; 
+            border-bottom-right-radius: 40px 15px;
+            border-bottom: 1px solid rgba(253, 224, 141, 0.2);
+            position: relative;
+        }
         
         
         /* ===== FEED CONTAINER ===== */
