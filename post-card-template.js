@@ -775,14 +775,6 @@
         }
         
 
-        /* ===== NEXUS IMMERSIVE SCROLL ===== */
-#nexusImmersiveScroll { animation: nis-in 0.25s ease; }
-@keyframes nis-in { from { opacity:0; } to { opacity:1; } }
-.nis-slide .post-header { background:transparent!important; backdrop-filter:none!important; border-bottom:none!important; }
-.nis-slide .post-capsule, .nis-slide .capsule { background:rgba(0,0,0,0.45)!important; backdrop-filter:blur(12px)!important; }
-.nis-slide .post-action-capsules, .nis-slide .post-save-capsule { background:rgba(0,0,0,0.40)!important; backdrop-filter:blur(12px)!important; }
-
-
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
         .feed-container {
