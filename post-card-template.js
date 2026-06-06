@@ -774,7 +774,15 @@
             position: relative;
         }
         
-        
+
+        /* ===== NEXUS IMMERSIVE SCROLL ===== */
+#nexusImmersiveScroll { animation: nis-in 0.25s ease; }
+@keyframes nis-in { from { opacity:0; } to { opacity:1; } }
+.nis-slide .post-header { background:transparent!important; backdrop-filter:none!important; border-bottom:none!important; }
+.nis-slide .post-capsule, .nis-slide .capsule { background:rgba(0,0,0,0.45)!important; backdrop-filter:blur(12px)!important; }
+.nis-slide .post-action-capsules, .nis-slide .post-save-capsule { background:rgba(0,0,0,0.40)!important; backdrop-filter:blur(12px)!important; }
+
+
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
         .feed-container {
@@ -1566,75 +1574,20 @@ document.getElementById('CyberDropdown').classList.remove('Active');
 // ============================================================
 
 window.toggleImmersive = function(card) {
-    if (event && event.target.closest('.interaction-bar')) return;
-    if (event && event.target.closest('.post-interaction-bar')) return;
-    if (event && event.target.closest('.header-actions')) return;
-    if (event && event.target.closest('.follow-text-link')) return;
-    if (event && event.target.closest('.gift-btn-nexus')) return;
-    if (event && event.target.closest('a')) return;
-
-    const video = card.querySelector('video');
-    const footer = document.getElementById('instaFooter');
-
-    if (!card.classList.contains('immersive-mode')) {
-        card.style.minHeight = card.offsetHeight + 'px';
-        card._savedScrollTop = window.scrollY || window.pageYOffset;
-        card.classList.add('immersive-mode');
-
-        if (footer) footer.classList.add('footer-hidden');
-
-        if (video) {
-            video.style.cssText = `
-                position: fixed !important;
-                top: 0 !important; left: 0 !important;
-                width: 100vw !important; height: 100vh !important;
-                max-height: none !important; min-height: unset !important;
-                object-fit: cover !important; border-radius: 0 !important;
-                z-index: 4999 !important; background: #000 !important; margin: 0 !important;
-            `;
-            video.muted = false;
-            video.onclick = function(e) {
-                e.stopPropagation();
-                if (video.paused) { video.play(); } else { video.pause(); }
-            };
-        }
-
-        if (!card.querySelector('.immersive-back-btn')) {
-            const backBtn = document.createElement('div');
-            backBtn.className = 'immersive-back-btn';
-            backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
-            backBtn.style.cssText = `
-                position: fixed; top: 15px; left: 15px;
-                width: 36px; height: 36px;
-                background: rgba(0,0,0,0.6); border-radius: 50%;
-                display: flex; align-items: center; justify-content: center;
-                color: white; font-size: 16px;
-                z-index: 9999; cursor: pointer;
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255,255,255,0.3);
-            `;
-            backBtn.onclick = function(e) { e.stopPropagation(); window.exitImmersive(card); };
-            document.body.appendChild(backBtn);
-        }
-
-        history.pushState({ immersive: true }, '');
-        window.onpopstate = function() {
-            const sv = document.getElementById('nexusSplitView');
-            if (sv) {
-                sv.remove();
-                document.body.style.overflow = '';
-                if (footer) footer.classList.add('footer-hidden');
-                history.pushState({ immersive: true }, '');
-                return;
-            }
-            window.exitImmersive(card);
-        };
-
-    } else {
-        window.exitImmersive(card);
+    if (event) {
+        if (event.target.closest('.post-interaction-bar')) return;
+        if (event.target.closest('.interaction-bar'))      return;
+        if (event.target.closest('.header-actions'))       return;
+        if (event.target.closest('.follow-text-link'))     return;
+        if (event.target.closest('.gift-btn-nexus'))       return;
+        if (event.target.closest('a'))                     return;
+        if (event.target.closest('.post-mute-toggle'))     return;
     }
+
+    buildImmersiveScroll(card);
 };
 
+        
 window.exitImmersive = function(card) {
     const video = card.querySelector('video');
     const footer = document.getElementById('instaFooter');
@@ -1816,6 +1769,235 @@ window.toggleSave = async function(btn, postId) {
             } catch(e) { console.error("Error removing:", e); }
         }
     }
+};
+
+window.buildImmersiveScroll = function(triggeredCard) {
+    // Goge tsoho idan akwai
+    const old = document.getElementById('nexusImmersiveScroll');
+    if (old) {
+        document.querySelectorAll('.nis-slide video').forEach(v => { v.pause(); v.src = ''; });
+        old.remove();
+        window._nisActive = false;
+        document.getElementById('instaFooter')?.classList.remove('footer-hidden');
+        return;
+    }
+
+    // Detect page — nexus-feed = duka posts, sauran = video kawai
+    const isNexusFeed = window.location.pathname.includes('nexus-feed')
+        || window.location.pathname.includes('index')
+        || window.location.pathname.endsWith('/');
+
+    const allCards = Array.from(document.querySelectorAll('.post-card'));
+    const posts    = isNexusFeed ? allCards : allCards.filter(c => c.querySelector('video'));
+    if (!posts.length) return;
+
+    let idx = posts.indexOf(triggeredCard);
+    if (idx === -1) idx = 0;
+
+    window._nisActive = true;
+    window._nisPosts  = posts;
+    window._nisIdx    = idx;
+
+    // ===== WRAPPER =====
+    const wrap = document.createElement('div');
+    wrap.id = 'nexusImmersiveScroll';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:6000;background:#000;overflow:hidden;touch-action:none;opacity:0;transition:opacity 0.25s ease;';
+    document.body.appendChild(wrap);
+    requestAnimationFrame(() => { wrap.style.opacity = '1'; });
+
+    // ===== TRACK =====
+    const track = document.createElement('div');
+    track.id = 'nisTrack';
+    track.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;will-change:transform;';
+    wrap.appendChild(track);
+
+    // ===== BUILD SLIDES =====
+    posts.forEach((card, i) => {
+        const slide = document.createElement('div');
+        slide.style.cssText = `position:absolute;top:${i * 100}vh;left:0;width:100vw;height:100vh;overflow:hidden;background:#000;`;
+
+        // Media
+        const vid = card.querySelector('video');
+        const img = card.querySelector('img.post-media');
+
+        if (vid) {
+            const v = document.createElement('video');
+            v.src = vid.src || vid.currentSrc || '';
+            v.loop = true; v.playsInline = true; v.muted = true; v.preload = 'metadata';
+            v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;';
+            v.onclick = e => { e.stopPropagation(); v.paused ? v.play() : v.pause(); };
+            slide.appendChild(v);
+
+            const muteBtn = document.createElement('div');
+            muteBtn.style.cssText = 'position:absolute;bottom:80px;right:14px;width:34px;height:34px;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;z-index:30;cursor:pointer;border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(8px);';
+            muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+            muteBtn.onclick = e => {
+                e.stopPropagation();
+                v.muted = !v.muted;
+                window.nexusGlobalSound = !v.muted;
+                muteBtn.querySelector('i').className = v.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+                document.querySelectorAll('.nis-slide-vid').forEach(other => {
+                    if (other !== v) { other.muted = true; }
+                });
+            };
+            v.classList.add('nis-slide-vid');
+            slide.appendChild(muteBtn);
+
+        } else if (img) {
+            const im = document.createElement('img');
+            im.src = img.src;
+            im.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;';
+            slide.appendChild(im);
+        }
+
+        // Gradient
+        const grad = document.createElement('div');
+        grad.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:55%;background:linear-gradient(transparent,rgba(0,0,0,0.88));z-index:2;pointer-events:none;';
+        slide.appendChild(grad);
+
+        // Bottom overlay — header + content + interaction bar
+        const bottom = document.createElement('div');
+        bottom.style.cssText = 'position:absolute;bottom:0;left:0;right:0;z-index:10;padding:0 14px 14px;';
+
+        const hdr = card.querySelector('.post-header');
+        if (hdr) {
+            const h = hdr.cloneNode(true);
+            h.style.cssText = 'background:transparent!important;backdrop-filter:none!important;border-bottom:none!important;padding:0 0 8px 52px!important;position:relative!important;margin-bottom:0!important;';
+            const fBtn = h.querySelector('.gift-btn-nexus.follow-btn-nexus');
+            if (fBtn) fBtn.onclick = e => { e.stopPropagation(); window.handleFollowBtn?.(fBtn); };
+            bottom.appendChild(h);
+        }
+
+        const cnt = card.querySelector('.post-content');
+        if (cnt) {
+            const c = cnt.cloneNode(true);
+            c.style.cssText = 'padding:4px 0 8px 0!important;font-size:13px!important;color:rgba(255,255,255,0.88)!important;text-shadow:0 1px 4px rgba(0,0,0,0.8)!important;line-height:1.45!important;max-height:60px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;';
+            bottom.appendChild(c);
+        }
+
+        const bar = card.querySelector('.post-interaction-bar');
+        if (bar) {
+            const b = bar.cloneNode(true);
+            b.style.cssText = 'position:relative!important;bottom:auto!important;width:100%!important;padding:6px 0!important;background:transparent!important;';
+            const postId = card.dataset.postId;
+            const likeBtn = b.querySelector('.post-capsule');
+            if (likeBtn) likeBtn.onclick = e => {
+                e.stopPropagation();
+                const icon = likeBtn.querySelector('i');
+                const span = likeBtn.querySelector('span');
+                const liked = likeBtn.classList.toggle('liked');
+                icon.className = liked ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+                icon.style.color = liked ? '#ff4d6d' : '';
+                let c = parseInt(span?.textContent) || 0;
+                if (span) span.textContent = liked ? c + 1 : Math.max(0, c - 1);
+            };
+            b.querySelectorAll('.post-capsule').forEach(btn => {
+                const ic = btn.querySelector('i');
+                if (ic?.classList.contains('fa-comment')) {
+                    btn.onclick = e => { e.stopPropagation(); window.openImmersiveSplitComments?.(postId, card); };
+                }
+            });
+            bottom.appendChild(b);
+        }
+
+        slide.appendChild(bottom);
+        track.appendChild(slide);
+    });
+
+    // ===== BACK BUTTON =====
+    const back = document.createElement('button');
+    back.style.cssText = 'position:fixed;top:16px;left:16px;width:38px;height:38px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.25);border-radius:50%;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:7000;backdrop-filter:blur(12px);';
+    back.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+    back.onclick = () => window.buildImmersiveScroll(null);
+    wrap.appendChild(back);
+
+    // ===== PROGRESS DOTS =====
+    const dotsWrap = document.createElement('div');
+    dotsWrap.id = 'nisDots';
+    dotsWrap.style.cssText = 'position:fixed;top:22px;right:16px;display:flex;gap:4px;z-index:7000;align-items:center;';
+
+    if (posts.length <= 7) {
+        posts.forEach((_, i) => {
+            const d = document.createElement('div');
+            d.className = 'nis-dot';
+            d.style.cssText = `width:${i === idx ? '18px' : '6px'};height:6px;border-radius:3px;background:${i === idx ? '#fde08d' : 'rgba(255,255,255,0.3)'};transition:all 0.3s ease;`;
+            dotsWrap.appendChild(d);
+        });
+    } else {
+        const ctr = document.createElement('div');
+        ctr.id = 'nisCounter';
+        ctr.style.cssText = 'color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;font-family:Inter,sans-serif;background:rgba(0,0,0,0.4);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);';
+        ctr.textContent = `${idx + 1} / ${posts.length}`;
+        dotsWrap.appendChild(ctr);
+    }
+    wrap.appendChild(dotsWrap);
+
+    // ===== JUMP + PLAY =====
+    function goTo(i, animate) {
+        window._nisIdx = Math.max(0, Math.min(i, posts.length - 1));
+        track.style.transition = animate ? 'transform 0.38s cubic-bezier(0.4,0,0.2,1)' : 'none';
+        track.style.transform  = `translateY(${-window._nisIdx * 100}vh)`;
+
+        document.querySelectorAll('.nis-slide-vid').forEach((v, vi) => {
+            if (vi === window._nisIdx) { v.muted = !window.nexusGlobalSound; v.currentTime = 0; v.play().catch(()=>{}); }
+            else { v.pause(); v.muted = true; }
+        });
+
+        if (posts.length <= 7) {
+            document.querySelectorAll('.nis-dot').forEach((d, di) => {
+                d.style.width      = di === window._nisIdx ? '18px' : '6px';
+                d.style.background = di === window._nisIdx ? '#fde08d' : 'rgba(255,255,255,0.3)';
+            });
+        } else {
+            const ctr = document.getElementById('nisCounter');
+            if (ctr) ctr.textContent = `${window._nisIdx + 1} / ${posts.length}`;
+        }
+        if (animate && navigator.vibrate) navigator.vibrate(8);
+    }
+
+    window._nisGoTo = goTo;
+    goTo(idx, false);
+
+    // ===== TOUCH =====
+    let ty = 0, tt = 0, busy = false;
+    wrap.addEventListener('touchstart', e => { ty = e.touches[0].clientY; tt = Date.now(); }, { passive: true });
+    wrap.addEventListener('touchmove',  e => e.preventDefault(), { passive: false });
+    wrap.addEventListener('touchend',   e => {
+        if (busy) return;
+        const dy = ty - e.changedTouches[0].clientY;
+        const vel = Math.abs(dy) / (Date.now() - tt);
+        if (Math.abs(dy) < 45 && vel < 0.3) return;
+        busy = true;
+        if (dy > 0) goTo(window._nisIdx + 1, true);
+        else        goTo(window._nisIdx - 1, true);
+        setTimeout(() => { busy = false; }, 420);
+    }, { passive: true });
+
+    // ===== WHEEL =====
+    let wt = null;
+    wrap.addEventListener('wheel', e => {
+        e.preventDefault();
+        clearTimeout(wt);
+        wt = setTimeout(() => { e.deltaY > 20 ? goTo(window._nisIdx + 1, true) : goTo(window._nisIdx - 1, true); }, 50);
+    }, { passive: false });
+
+    // ===== KEYBOARD =====
+    const onKey = e => {
+        if (e.key === 'ArrowDown')  { e.preventDefault(); goTo(window._nisIdx + 1, true); }
+        if (e.key === 'ArrowUp')    { e.preventDefault(); goTo(window._nisIdx - 1, true); }
+        if (e.key === 'Escape')     window.buildImmersiveScroll(null);
+    };
+    document.addEventListener('keydown', onKey);
+    wrap._cleanup = () => document.removeEventListener('keydown', onKey);
+
+    // ===== HISTORY =====
+    history.pushState({ nis: true }, '');
+    const onPop = () => { window.buildImmersiveScroll(null); window.removeEventListener('popstate', onPop); };
+    window.addEventListener('popstate', onPop);
+
+    // ===== HIDE FOOTER =====
+    document.getElementById('instaFooter')?.classList.add('footer-hidden');
+    document.getElementById('cyberMenu') && (document.getElementById('cyberMenu').style.display = 'none');
 };
 
 console.log('[PostCard] Shared template loaded ✓');
