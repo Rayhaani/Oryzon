@@ -124,18 +124,36 @@
         }
 
         async function loadFirestoreProducts() {
-            const track = document.getElementById('product-slider');
-            const snapshot = await db.collection('products').get();
-            let list = [];
-            snapshot.forEach(doc => { if (doc.data().img) list.push(doc.data()); });
-            if (list.length > 0) {
-                track.innerHTML = [...list, ...list].map(p => `
-                    <div class="slide-card" onclick="pick('${p.name || 'Atamfa'}', '${p.img}')">
-                        <img src="${p.img}">
-                    </div>`).join('');
-            }
+    const track = document.getElementById('product-slider');
+    
+    try {
+        const snapshot = await db.collection('products').get();
+        let list = [];
+        
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            const imgUrl = d.image || d.img || d.imageUrl || d.photo || '';
+            const name   = d.name  || d.title || 'Atamfa';
+            if (imgUrl) list.push({ img: imgUrl, name: name });
+        });
+
+        console.log('Products found:', list.length); // Don duba a console
+
+        if (list.length > 0) {
+            track.innerHTML = [...list, ...list].map(p => `
+                <div class="slide-card" onclick="pick('${p.name}', '${p.img}')">
+                    <img src="${p.img}" onerror="this.style.display='none'">
+                </div>`).join('');
+        } else {
+            console.warn('Babu products — duba field names a Firebase');
+        }
+        
+    } catch(err) {
+        console.error('Firebase error:', err);
+    }
         }
 
+        
         function toggleInputUI(el) {
             el.style.height = 'auto';
             el.style.height = (el.scrollHeight) + 'px';
