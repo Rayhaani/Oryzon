@@ -1564,19 +1564,73 @@ document.getElementById('CyberDropdown').classList.remove('Active');
  // ============================================================
 // 7. SHARED toggleImmersive — Don dukkan pages su iya amfani
 // ============================================================
-
 window.toggleImmersive = function(card) {
-    if (event) {
-        if (event.target.closest('.post-interaction-bar')) return;
-        if (event.target.closest('.interaction-bar'))      return;
-        if (event.target.closest('.header-actions'))       return;
-        if (event.target.closest('.follow-text-link'))     return;
-        if (event.target.closest('.gift-btn-nexus'))       return;
-        if (event.target.closest('a'))                     return;
-        if (event.target.closest('.post-mute-toggle'))     return;
-    }
+    if (event && event.target.closest('.interaction-bar')) return;
+    if (event && event.target.closest('.post-interaction-bar')) return;
+    if (event && event.target.closest('.header-actions')) return;
+    if (event && event.target.closest('.follow-text-link')) return;
+    if (event && event.target.closest('.gift-btn-nexus')) return;
+    if (event && event.target.closest('a')) return;
 
-    buildImmersiveScroll(card);
+    const video = card.querySelector('video');
+    const footer = document.getElementById('instaFooter');
+
+    if (!card.classList.contains('immersive-mode')) {
+        card.style.minHeight = card.offsetHeight + 'px';
+        card._savedScrollTop = window.scrollY || window.pageYOffset;
+        card.classList.add('immersive-mode');
+
+        if (footer) footer.classList.add('footer-hidden');
+
+        if (video) {
+            video.style.cssText = `
+                position: fixed !important;
+                top: 0 !important; left: 0 !important;
+                width: 100vw !important; height: 100vh !important;
+                max-height: none !important; min-height: unset !important;
+                object-fit: cover !important; border-radius: 0 !important;
+                z-index: 4999 !important; background: #000 !important; margin: 0 !important;
+            `;
+            video.muted = false;
+            video.onclick = function(e) {
+                e.stopPropagation();
+                if (video.paused) { video.play(); } else { video.pause(); }
+            };
+        }
+if (!card.querySelector('.immersive-back-btn')) {
+            const backBtn = document.createElement('div');
+            backBtn.className = 'immersive-back-btn';
+            backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+            backBtn.style.cssText = `
+                position: fixed; top: 15px; left: 15px;
+                width: 36px; height: 36px;
+                background: rgba(0,0,0,0.6); border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                color: white; font-size: 16px;
+                z-index: 9999; cursor: pointer;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.3);
+            `;
+            backBtn.onclick = function(e) { e.stopPropagation(); window.exitImmersive(card); };
+            document.body.appendChild(backBtn);
+        }
+
+        history.pushState({ immersive: true }, '');
+        window.onpopstate = function() {
+            const sv = document.getElementById('nexusSplitView');
+            if (sv) {
+                sv.remove();
+                document.body.style.overflow = '';
+                if (footer) footer.classList.add('footer-hidden');
+                history.pushState({ immersive: true }, '');
+                return;
+            }
+            window.exitImmersive(card);
+        };
+
+    } else {
+        window.exitImmersive(card);
+    }
 };
 
         
