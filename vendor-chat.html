@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Infinity Luxury | Final Stable Build</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+
+        body {
+            background: #E3DAC9; 
+            font-family: 'Outfit', sans-serif;
+            height: 100dvh; overflow: hidden;
+            display: flex; flex-direction: column; margin: 0;
+            position: fixed; width: 100%;
+        }
+
+        /* 1. SLIDER BOXES */
+        .slim-slider {
+            height: 110px; background: #E3DAC9; overflow: hidden;
+            position: relative; border-bottom: 1px solid rgba(212, 175, 55, 0.2); flex-shrink: 0;
+        }
+        .slide-track { display: flex; width: max-content; animation: scroll 40s linear infinite; height: 100%; align-items: center; }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .slide-card { 
+            width: 140px; height: 85px; margin: 0 10px; border-radius: 12px; overflow: hidden; flex-shrink: 0; 
+            border: 1px solid rgba(212, 175, 55, 0.4); background: #FDF5E6; cursor: pointer;
+        }
+        .slide-card img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; }
+
+        /* 2. CHAT AREA WITH GOLD BORDER */
+        .chat-space { flex: 1; padding: 15px; overflow-y: auto; scrollbar-width: none; padding-bottom: 140px; }
+        .bubble { max-width: 82%; padding: 11px 15px; margin-bottom: 12px; font-size: 14.5px; line-height: 1.4; position: relative; }
+        .v-bubble { background: #1A0F0D; color: #D4AF37; border-radius: 4px 18px 18px 18px; border-left: 5px solid #FFD700; }
+        .u-bubble { 
+            background: #FFFFFF; color: #333; border-radius: 18px 18px 4px 18px; 
+            margin-left: auto; border: 1px solid #EAEAEA; border-right: 5px solid #D4AF37;
+            box-shadow: 0 2px 5px rgba(212, 175, 55, 0.2);
+        }
+
+        /* 3. WHATSAPP BAR SHAPE & LOGIC */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: #E3DAC9; padding: 10px 10px 25px; 
+            display: flex; align-items: flex-end; gap: 8px; z-index: 1000; 
+        }
+        
+.input-container {
+    flex: 1; background: #E3DAC9; border-radius: 25px;
+    display: flex; align-items: flex-end; padding: 5px 12px;
+    box-shadow: inset 4px 4px 8px #c9c2b3, inset -4px -4px 8px #fdf2df;
+}
+                 
+
+        .icon-btn { color: #888; font-size: 22px; padding: 10px 5px; cursor: pointer; display: flex; align-items: center; }
+
+        #userInput {
+            flex: 1; background: transparent; border: none !important; outline: none !important;
+            padding: 10px 8px; max-height: 120px; font-size: 16px; font-family: 'Outfit', sans-serif;
+            resize: none; color: #000;
+        }
+
+        .action-circle {
+            width: 50px; height: 50px; background: #1A0F0D; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: #D4AF37; font-size: 20px; flex-shrink: 0; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <section class="slim-slider">
+        <div class="slide-track" id="product-slider"></div>
+    </section>
+
+    <main class="chat-space" id="chat">
+        <div class="bubble v-bubble">Sannu abokina! Ina fatan kayan sun iso lafiya.</div>
+    </main>
+
+    <footer class="bottom-nav">
+        <div class="input-container">
+            <div class="icon-btn"><i class="fa-regular fa-face-smile"></i></div>
+            <textarea id="userInput" placeholder="Message" rows="1" oninput="toggleInputUI(this)"></textarea>
+            
+            <div class="icon-btn" onclick="document.getElementById('galleryInput').click()"><i class="fa-solid fa-paperclip"></i></div>
+            <div class="icon-btn" id="camBtn"><i class="fa-solid fa-camera"></i></div>
+            <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleImage(this)">
+        </div>
+        
+        <div id="actionBtn" class="action-circle" onclick="handleAction()">
+            <i id="actionIcon" class="fa-solid fa-microphone"></i>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJfUePiQV5R1YAcnq-zvfd3ty4lbzDs1M",
+            authDomain: "global-market-admin.firebaseapp.com",
+            projectId: "global-market-admin",
+            storageBucket: "global-market-admin.firebasestorage.app",
+            appId: "1:259715265619:web:313919773f57cc5fb9c2a6"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 1. RESTORED PICK FUNCTION (Gyarar Slide Interaction)
+        function pick(name, img) {
+            const chat = document.getElementById('chat');
+            chat.innerHTML += `
+                <div class="u-bubble bubble">
+                    <div style="background:rgba(212,175,55,0.08); padding:8px; border-radius:10px; display:flex; align-items:center; gap:10px; border-left:3px solid #D4AF37; margin-bottom:8px;">
+                        <img src="${img}" style="width:45px; height:45px; border-radius:8px; object-fit:cover;">
+                        <span style="font-size:12px; font-weight:600; color:#B8860B;">${name}</span>
+                    </div>
+                    Ina son wannan...
+                </div>`;
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        async function loadFirestoreProducts() {
+            const track = document.getElementById('product-slider');
+            const snapshot = await db.collection('products').get();
+            let list = [];
+            snapshot.forEach(doc => { if (doc.data().img) list.push(doc.data()); });
+            if (list.length > 0) {
+                track.innerHTML = [...list, ...list].map(p => `
+                    <div class="slide-card" onclick="pick('${p.name || 'Atamfa'}', '${p.img}')">
+                        <img src="${p.img}">
+                    </div>`).join('');
+            }
+        }
+
+        function toggleInputUI(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+            const icon = document.getElementById('actionIcon');
+            const cam = document.getElementById('camBtn');
+            if (el.value.trim() !== "") {
+                icon.className = "fa-solid fa-paper-plane";
+                cam.style.display = "none";
+            } else {
+                icon.className = "fa-solid fa-microphone";
+                cam.style.display = "flex";
+            }
+        }
+
+        function handleImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('chat').innerHTML += `<div class="bubble u-bubble"><img src="${e.target.result}" style="max-width:100%; border-radius:10px;"></div>`;
+                    document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function handleAction() {
+            const icon = document.getElementById('actionIcon');
+            if (icon.classList.contains('fa-paper-plane')) sendMessage();
+            else alert("Voice...");
+        }
+
+        function sendMessage() {
+            let input = document.getElementById('userInput');
+            if(input.value.trim() !== "") {
+                document.getElementById('chat').innerHTML += `<div class="bubble u-bubble">${input.value}</div>`;
+                input.value = ""; input.style.height = 'auto';
+                toggleInputUI(input);
+                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadFirestoreProducts);
+    </script>
+</body>
+    </html>
+    
