@@ -1762,4 +1762,60 @@ window.postCard_handleVideoPriority = function() {
     if (focusVideo) focusVideo.play().catch(() => {});
 };
 
+window.stopProp = function(e) { e.stopPropagation(); };
+
+window.triggerPulse = function(btn, e) {
+    if (e) e.stopPropagation();
+    const icon = btn.querySelector('i');
+    const tokenDisplay = document.getElementById('token-count');
+    if (icon.classList.contains('fa-regular')) {
+        icon.classList.replace('fa-regular', 'fa-solid');
+        icon.style.color = "#ff4757";
+        if (navigator.vibrate) navigator.vibrate(50);
+        if (tokenDisplay) {
+            let t = parseFloat(tokenDisplay.innerText) || 0;
+            t += 0.0005;
+            tokenDisplay.innerText = t.toFixed(4) + " NT";
+        }
+    } else {
+        icon.classList.replace('fa-solid', 'fa-regular');
+        icon.style.color = "#fff";
+    }
+};
+
+window.openGiftPanel = function(username) {
+    alert("Congratulations, you have successfully gifted" + username);
+};
+
+
+window.toggleSave = async function(btn, postId) {
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+    icon.classList.toggle('fa-solid');
+    icon.classList.toggle('fa-regular');
+
+    const myUser = localStorage.getItem('nexus_user_session') || 'Sadiq_Alhassan';
+
+    if (icon.classList.contains('fa-solid')) {
+        text.innerText = "Saved";
+        btn.style.color = "var(--premium-gold)";
+        if (typeof db !== 'undefined') {
+            try {
+                await db.collection("saved_posts").doc(`${myUser}_${postId}`).set({
+                    userId: myUser, postId: postId,
+                    savedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch(e) { console.error("Error saving:", e); }
+        }
+    } else {
+        text.innerText = "Save";
+        btn.style.color = "#fff";
+        if (typeof db !== 'undefined') {
+            try {
+                await db.collection("saved_posts").doc(`${myUser}_${postId}`).delete();
+            } catch(e) { console.error("Error removing:", e); }
+        }
+    }
+};
+
 console.log('[PostCard] Shared template loaded ✓');
