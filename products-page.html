@@ -593,6 +593,62 @@ function updateQty(change) {
     document.getElementById('qty-display').innerText = qty;
 }
 
+    function sendVendorMsg() {
+    const input = document.getElementById('vendorMsgInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    // Samu product info don tag
+    const productName  = document.querySelector('.floating-card h1')?.innerText || '';
+    const productPrice = document.getElementById('main-price')?.innerText || '';
+    const productImg   = document.getElementById('dynamic-img')?.src || '';
+
+    // Adana a localStorage don vendor-chat.html ya karba
+    localStorage.setItem('vc_msg',   msg);
+    localStorage.setItem('vc_name',  productName);
+    localStorage.setItem('vc_price', productPrice);
+    localStorage.setItem('vc_img',   productImg);
+
+    // Nuna "See Conversation" state
+    document.getElementById('cv-before').style.display = 'none';
+    document.getElementById('cv-after').style.display  = 'block';
+
+    // Adana a localStorage don page ta tuna state
+    localStorage.setItem('vc_sent', 'true');
+
+    // Je vendor-chat.html
+    setTimeout(() => {
+        window.location.href = 'vendor-chat.html';
+    }, 400);
+}
+
+// Duba state da page ta buɗe — idan an riga an aika
+(function checkVendorState() {
+    if (localStorage.getItem('vc_sent') === 'true') {
+        const before = document.getElementById('cv-before');
+        const after  = document.getElementById('cv-after');
+        if (before) before.style.display = 'none';
+        if (after)  after.style.display  = 'block';
+    }
+})();
+
+
+        // Saka selected pill a cikin input
+function selectQuickMsg(pill) {
+    document.getElementById('vendorMsgInput').value = pill.innerText.trim();
+    document.querySelectorAll('.quick-pill').forEach(p => {
+        p.style.background = 'rgba(255,255,255,0.07)';
+        p.style.border = '1px solid rgba(255,255,255,0.12)';
+        p.style.color = '#F5F5DC';
+    });
+    pill.style.background = 'rgba(253,224,141,0.15)';
+    pill.style.border = '1.5px solid rgba(253,224,141,0.5)';
+    pill.style.color = '#fde08d';
+}
+
+
+    
+
 function showStack() {
     document.getElementById('croppedView').style.display = 'none';
     const stack = document.getElementById('tripleStack');
@@ -815,57 +871,6 @@ function toggleFollow(btn) {
 }
     
 
-    // Saka selected pill a cikin input
-function selectQuickMsg(pill) {
-    document.getElementById('vendorMsgInput').value = pill.innerText.trim();
-    document.querySelectorAll('.quick-pill').forEach(p => {
-        p.style.background = 'rgba(255,255,255,0.07)';
-        p.style.border = '1px solid rgba(255,255,255,0.12)';
-        p.style.color = '#F5F5DC';
-    });
-    pill.style.background = 'rgba(253,224,141,0.15)';
-    pill.style.border = '1.5px solid rgba(253,224,141,0.5)';
-    pill.style.color = '#fde08d';
-}
-
-function sendVendorMsg() {
-    const input = document.getElementById('vendorMsgInput');
-    const msg = input.value.trim();
-    if (!msg) return;
-
-    // Samu product info don tag
-    const productName  = document.querySelector('.floating-card h1')?.innerText || '';
-    const productPrice = document.getElementById('main-price')?.innerText || '';
-    const productImg   = document.getElementById('dynamic-img')?.src || '';
-
-    // Adana a localStorage don vendor-chat.html ya karba
-    localStorage.setItem('vc_msg',   msg);
-    localStorage.setItem('vc_name',  productName);
-    localStorage.setItem('vc_price', productPrice);
-    localStorage.setItem('vc_img',   productImg);
-
-    // Nuna "See Conversation" state
-    document.getElementById('cv-before').style.display = 'none';
-    document.getElementById('cv-after').style.display  = 'block';
-
-    // Adana a localStorage don page ta tuna state
-    localStorage.setItem('vc_sent', 'true');
-
-    // Je vendor-chat.html
-    setTimeout(() => {
-        window.location.href = 'vendor-chat.html';
-    }, 400);
-}
-
-// Duba state da page ta buɗe — idan an riga an aika
-(function checkVendorState() {
-    if (localStorage.getItem('vc_sent') === 'true') {
-        const before = document.getElementById('cv-before');
-        const after  = document.getElementById('cv-after');
-        if (before) before.style.display = 'none';
-        if (after)  after.style.display  = 'block';
-    }
-})();
 
     
 function applyProductData(name, price, img) {
