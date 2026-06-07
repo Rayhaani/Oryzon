@@ -1347,8 +1347,44 @@ header {
                     <div class="flex gap-3 mb-6">
                         
                     <button id="follow-btn" onclick="toggleFollow()" class="btn-slim btn-black">Follow</button>
-                        <a href="chat-interior.html" id="contact-btn" class="btn-slim btn-white flex items-center justify-center">Chat</a>
-                    
+
+                    <button id="contact-btn" onclick="handleChatBtn()" class="btn-slim btn-white flex items-center justify-center">Chat</button>
+
+<!-- Dropdown menu -->
+<div id="chat-dropdown" style="
+    display:none;
+    position:absolute;
+    background:#111;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;
+    overflow:hidden;
+    z-index:9999;
+    min-width:200px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    backdrop-filter:blur(20px);
+">
+    <div onclick="window.location.href='chat-interior.html?with='+getProfileUser()" style="
+        padding:14px 18px;
+        display:flex; align-items:center; gap:10px;
+        border-bottom:1px solid rgba(255,255,255,0.06);
+        cursor:pointer;
+        font-size:13px; font-weight:600; color:#fff;
+    ">
+        <i class="fa-regular fa-comment" style="color:#00f2fe; font-size:16px;"></i>
+        Personal Chat
+    </div>
+    <div onclick="window.location.href='vendor-chat.html?vendorId='+getProfileUser()" style="
+        padding:14px 18px;
+        display:flex; align-items:center; gap:10px;
+        cursor:pointer;
+        font-size:13px; font-weight:600; color:#fff;
+    ">
+        <i class="fa-solid fa-store" style="color:#fde08d; font-size:16px;"></i>
+        Business Chat
+    </div>
+</div>
+
+                        
                     </div>
                     <div class="smart-box-highlights">
     <div class="highlights-scroll">
@@ -2414,6 +2450,51 @@ function exitImmersive(card) {
         setTimeout(() => { video.play().catch(() => {}); }, 50);
     }
     window.onpopstate = null;
+}
+
+
+    function getProfileUser() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('user') || localStorage.getItem('nexus_user_session') || '';
+}
+
+async function handleChatBtn() {
+    const profileUser = getProfileUser();
+    
+    // Duba ko user ɗin yana da products a Firebase
+    try {
+        const snap = await db.collection('products')
+            .where('vendorId', '==', profileUser)
+            .limit(1)
+            .get();
+
+        if (snap.empty) {
+            // Babu products — je personal chat kai tsaye
+            window.location.href = `chat-interior.html?with=${profileUser}`;
+        } else {
+            // Yana da products — nuna dropdown
+            const dropdown = document.getElementById('chat-dropdown');
+            const btn = document.getElementById('contact-btn');
+            const rect = btn.getBoundingClientRect();
+            
+            dropdown.style.display = 'block';
+            dropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+            dropdown.style.left = rect.left + 'px';
+
+            // Rufe idan an danna waje
+            setTimeout(() => {
+                document.addEventListener('click', function closeDD(e) {
+                    if (!dropdown.contains(e.target) && e.target !== btn) {
+                        dropdown.style.display = 'none';
+                        document.removeEventListener('click', closeDD);
+                    }
+                });
+            }, 100);
+        }
+    } catch(err) {
+        console.error(err);
+        window.location.href = `chat-interior.html?with=${profileUser}`;
+    }
 }
             
         </script>
