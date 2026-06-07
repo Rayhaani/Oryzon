@@ -241,7 +241,9 @@
     </div>
    </div>
 
-    <!-- TRENDING ITEMS -->
+    <div class="market-grid" id="marketGrid"></div>
+
+        <!-- TRENDING ITEMS -->
 <div id="trending-section" style="margin-top: 24px;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
         <div style="font-size:14px; font-weight:700; color:#fff;">Trending Items</div>
@@ -253,8 +255,6 @@
         <!-- Products load here -->
     </div>
 </div>
-
-    <div class="market-grid" id="marketGrid"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
@@ -335,6 +335,64 @@
         }
 
         loadMarketplace();
+
+        // TRENDING - Live daga Firebase
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+let allProducts = [];
+let filteredProducts = [];
+let sortAsc = false;
+
+const trendingUnsub = onSnapshot(
+    query(collection(db, "products"), orderBy("createdAt", "desc")),
+    (snapshot) => {
+        allProducts = [];
+        snapshot.forEach(doc => {
+            allProducts.push({ id: doc.id, ...doc.data() });
+        });
+        filteredProducts = [...allProducts];
+        renderTrending(filteredProducts);
+    },
+    (err) => console.error('Trending error:', err)
+);
+
+function renderTrending(products) {
+    const grid = document.getElementById('trending-grid');
+    if (!products.length) {
+        grid.innerHTML = `<div style="grid-column:span 2; text-align:center; padding:40px; color:#555; font-size:13px;">No products listed yet.</div>`;
+        return;
+    }
+    grid.innerHTML = products.map(p => `
+        <div class="product-card" onclick="window.location.href='products-page.html?id=${p.id}'">
+            <div class="product-img">
+                ${p.image && !p.image.includes('placeholder')
+                    ? `<img src="${p.image}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'>📦</div>'">`
+                    : `<div class="no-img">📦</div>`}
+            </div>
+            <div class="product-info">
+                <div class="product-name">${p.name}</div>
+                <div class="product-price">${p.price}</div>
+                <div class="product-location">
+                    <i class="fa-solid fa-location-dot" style="font-size:9px; color:#00F2FF;"></i>
+                    ${p.location || 'Nigeria'}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.toggleSort = function() {
+    sortAsc = !sortAsc;
+    document.getElementById('sort-icon').className =
+        sortAsc ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+    filteredProducts.sort((a, b) => {
+        const pa = parseFloat((a.price || '0').replace(/[^0-9.]/g, ''));
+        const pb = parseFloat((b.price || '0').replace(/[^0-9.]/g, ''));
+        return sortAsc ? pa - pb : pb - pa;
+    });
+    renderTrending(filteredProducts);
+        }
+        
     </script>
         
 
@@ -356,52 +414,6 @@
         }
 
 
-        // ── TRENDING — paste these variables at the top of your script ──
-let allProducts      = [];
-let filteredProducts = [];
-let sortAsc          = false;
-
-// ── LOAD PRODUCTS FROM FIREBASE ──
-function loadTrendingProducts() {
-    db.collection('products')
-        .orderBy('createdAt', 'desc')
-        .onSnapshot(snapshot => {
-            allProducts = [];
-            snapshot.forEach(doc => {
-                allProducts.push({ id: doc.id, ...doc.data() });
-            });
-            filteredProducts = [...allProducts];
-            renderTrending(filteredProducts);
-        }, err => {
-            console.error('Error:', err);
-        });
-}
-
-// ── RENDER ──
-function renderTrending(products) {
-    const grid = document.getElementById('trending-grid');
-    if (!products.length) {
-        grid.innerHTML = `<div style="grid-column:span 2; text-align:center; padding:40px; color:#555; font-size:13px;">No products listed yet.</div>`;
-        return;
-    }
-    grid.innerHTML = products.map(p => `
-        <div class="product-card" onclick="window.location.href='product.html?id=${p.id}'">
-            <div class="product-img">
-                ${p.image && !p.image.includes('placeholder')
-                    ? `<img src="${p.image}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'>📦</div>'">`
-                    : `<div class="no-img">📦</div>`}
-            </div>
-            <div class="product-info">
-                <div class="product-name">${p.name}</div>
-                <div class="product-price">${p.price}</div>
-                <div class="product-location">
-                    <i class="fa-solid fa-location-dot" style="font-size:9px; color:#00F2FF;"></i>
-                    ${p.location || 'Nigeria'}
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
 
 // ── SORT ──
 function toggleSort() {
