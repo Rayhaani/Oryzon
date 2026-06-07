@@ -307,14 +307,108 @@ await addDoc(collection(db, "products"), {
     vendorId: currentUser
 });
                 
-                // Idan ya yi nasara, zai tafi shafin shop.html otomatis
-                window.location.href = 'shop.html';
+                // Nuna notification
+showPostToFeedNotif(docRef.id, imageUrl, name);
             } catch (e) {
                 console.error("An samu matsala wajen dora kaya: ", e);
                 alert("Kuskure wajen tura kaya, duba console dinka.");
             }
         }
 
+        function showPostToFeedNotif(productId, imgUrl, productName) {
+    // Ƙirƙiri notification div
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+        position: fixed;
+        bottom: 30px; left: 50%;
+        transform: translateX(-50%);
+        background: #111;
+        border: 1px solid rgba(253,224,141,0.4);
+        border-radius: 20px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 9999;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        min-width: 280px;
+        max-width: 90vw;
+        animation: slideUp 0.4s ease;
+    `;
+
+    notif.innerHTML = `
+        <img src="${imgUrl}" style="width:44px; height:44px; border-radius:10px; object-fit:cover; flex-shrink:0;">
+        <div style="flex:1;">
+            <div style="font-size:12px; font-weight:700; color:#fff; margin-bottom:3px;">Kaya ya tafi shop ✅</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.5);">Kuma za ka so ya bayyana a social feed?</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+            <button id="yes-post-btn" style="
+                background:linear-gradient(135deg,#fde08d,#b8860b);
+                border:none; border-radius:10px;
+                padding:7px 14px;
+                font-size:11px; font-weight:800;
+                color:#000; cursor:pointer;
+                white-space:nowrap;
+            ">Post to Feed</button>
+            <button id="no-post-btn" style="
+                background:rgba(255,255,255,0.08);
+                border:1px solid rgba(255,255,255,0.1);
+                border-radius:10px;
+                padding:7px 14px;
+                font-size:11px; font-weight:600;
+                color:#fff; cursor:pointer;
+            ">Skip</button>
+        </div>
+    `;
+
+    // Saka animation style
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideUp {
+            from { opacity:0; transform:translateX(-50%) translateY(20px); }
+            to   { opacity:1; transform:translateX(-50%) translateY(0); }
+        }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(notif);
+
+    // Yes button
+    document.getElementById('yes-post-btn').onclick = async () => {
+        notif.remove();
+        await postToSocialFeed(productId, imgUrl, productName);
+    };
+
+    // Skip button
+    document.getElementById('no-post-btn').onclick = () => {
+        notif.remove();
+        window.location.href = 'shop.html';
+    };
+}
+
+async function postToSocialFeed(productId, imgUrl, productName) {
+    const username = localStorage.getItem('nexus_user_session') || '';
+
+    try {
+        await addDoc(collection(db, "posts"), {
+            username: username,
+            content: productName,
+            mediaUrl: imgUrl,
+            mediaType: 'image',
+            category: 'business',        // ← Showcase ne
+            productId: productId,
+            likesCount: 0,
+            commentsCount: 0,
+            timestamp: serverTimestamp()
+        });
+
+        window.location.href = 'shop.html';
+
+    } catch(err) {
+        console.error('Post to feed kuskure:', err);
+        window.location.href = 'shop.html';
+    }
+}
         // Sanya function din ya zama ana iya kiransa daga wajen script din (Global Scope)
         window.uploadProduct = uploadProduct;
     </script>
