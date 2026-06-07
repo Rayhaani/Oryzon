@@ -123,36 +123,55 @@
             chat.scrollTop = chat.scrollHeight;
         }
 
+        
         async function loadFirestoreProducts() {
     const track = document.getElementById('product-slider');
-    
+    const vendorId = localStorage.getItem('currentVendorId') || '';
+
     try {
-        const snapshot = await db.collection('products').get();
+        let snapshot;
+
+        if (vendorId) {
+            // Filter by vendor kawai
+            snapshot = await db.collection('products')
+                .where('vendorId', '==', vendorId)
+                .get();
+
+            // Idan babu results, gwada sauran field names
+            if (snapshot.empty) {
+                snapshot = await db.collection('products')
+                    .where('vendor', '==', vendorId)
+                    .get();
+            }
+            if (snapshot.empty) {
+                snapshot = await db.collection('products')
+                    .where('sellerId', '==', vendorId)
+                    .get();
+            }
+        } else {
+            // Fallback — babu vendor ID, karɓa duka (temporary)
+            snapshot = await db.collection('products').limit(10).get();
+        }
+
         let list = [];
-        
         snapshot.forEach(doc => {
             const d = doc.data();
-            const imgUrl = d.image || d.img || d.imageUrl || d.photo || '';
-            const name   = d.name  || d.title || 'Atamfa';
-            if (imgUrl) list.push({ img: imgUrl, name: name });
+            const imgUrl = d.image || d.img || d.imageUrl || '';
+            const name   = d.name || d.title || 'Product';
+            if (imgUrl) list.push({ img: imgUrl, name });
         });
-
-        console.log('Products found:', list.length); // Don duba a console
 
         if (list.length > 0) {
             track.innerHTML = [...list, ...list].map(p => `
                 <div class="slide-card" onclick="pick('${p.name}', '${p.img}')">
                     <img src="${p.img}" onerror="this.style.display='none'">
                 </div>`).join('');
-        } else {
-            console.warn('Babu products — duba field names a Firebase');
         }
-        
+
     } catch(err) {
         console.error('Firebase error:', err);
     }
         }
-
         
         function toggleInputUI(el) {
             el.style.height = 'auto';
