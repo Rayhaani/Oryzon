@@ -9,23 +9,19 @@
         :root {
             --obsidian: #050505;
             --cyan-neon: #00F2FF;
-            --emerald-pulse: #50FA7B;
             --glass-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
             --input-bg: rgba(255, 255, 255, 0.05);
         }
 
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--obsidian);
             background-image: radial-gradient(circle at 50% 0%, rgba(0, 242, 255, 0.05), transparent);
             color: white;
             font-family: 'Inter', sans-serif;
-            height: 100vh;
+            min-height: 100vh;
             overflow-y: auto;
         }
 
@@ -45,33 +41,22 @@
             border: 1px solid var(--glass-border);
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .header-back:active {
-            border-color: var(--cyan-neon);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            cursor: pointer; transition: 0.3s;
         }
 
         .header-title {
-            font-family: 'Orbitron', sans-serif; 
-            font-size: 13px;
-            letter-spacing: 3px; 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px; letter-spacing: 3px;
             background: linear-gradient(90deg, #fff, var(--cyan-neon));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
         }
 
         .header-action {
             font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            color: var(--cyan-neon);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            padding: 5px 12px;
+            font-size: 10px; color: var(--cyan-neon);
+            text-transform: uppercase; letter-spacing: 1px;
+            cursor: pointer; padding: 5px 12px;
             border-radius: 8px;
             background: rgba(0, 242, 255, 0.05);
             border: 1px solid rgba(0, 242, 255, 0.2);
@@ -79,7 +64,7 @@
 
         .listing-container {
             margin-top: 75px;
-            padding: 0 20px 20px 20px;
+            padding: 0 20px 40px 20px;
             max-width: 500px;
             margin-left: auto; margin-right: auto;
         }
@@ -91,31 +76,20 @@
             border-radius: 20px;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            margin-bottom: 25px;
-            transition: 0.3s;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
+            margin-bottom: 25px; transition: 0.3s;
+            cursor: pointer; overflow: hidden; position: relative;
         }
 
         #imagePreview {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            display: none;
-            position: absolute;
-            top: 0; left: 0;
-        }
-
-        .upload-zone:active {
-            border-color: var(--cyan-neon);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            width: 100%; height: 100%; object-fit: cover;
+            display: none; position: absolute; top: 0; left: 0;
         }
 
         .upload-icon { font-size: 24px; color: var(--cyan-neon); margin-bottom: 8px; }
         .upload-text { font-size: 10px; color: #888; font-family: 'Orbitron'; }
 
         .input-group { margin-bottom: 18px; }
-        
+
         .label {
             font-family: 'Montserrat', sans-serif;
             font-size: 11px; color: #aaa;
@@ -131,9 +105,7 @@
             padding: 12px 15px;
             color: white;
             font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            outline: none;
-            transition: 0.3s;
+            font-size: 13px; outline: none; transition: 0.3s;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -141,25 +113,139 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
-        .dual-input {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-        }
+        select option { background: #111; color: white; }
+
+        .dual-input { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
         .publish-btn {
             width: 100%;
             background: linear-gradient(45deg, #00F2FF, #0072ff);
-            border: none; border-radius: 12px;
-            padding: 15px;
+            border: none; border-radius: 12px; padding: 15px;
             color: white; font-family: 'Orbitron', sans-serif;
-            font-size: 12px; font-weight: bold;
-            letter-spacing: 2px;
+            font-size: 12px; font-weight: bold; letter-spacing: 2px;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 242, 255, 0.3);
-            margin-top: 10px;
+            margin-top: 10px; transition: 0.3s;
         }
 
         .publish-btn:active { transform: scale(0.98); opacity: 0.9; }
+        .publish-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* ═══════════════════════════════════════
+           NOTIFICATION - CENTER SCREEN MODAL
+        ═══════════════════════════════════════ */
+        @keyframes notifAppear {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+            to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes shimmerMove {
+            0%   { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .notif-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 9998;
+        }
+
+        .notif-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            width: min(88vw, 360px);
+
+            background: linear-gradient(145deg, #141414, #0d0d0d);
+            border-radius: 28px;
+            padding: 28px 22px 22px;
+            border: 1px solid rgba(253, 224, 141, 0.25);
+            box-shadow:
+                0 0 0 1px rgba(253, 224, 141, 0.08),
+                0 30px 80px rgba(0, 0, 0, 0.8),
+                0 0 60px rgba(253, 224, 141, 0.08);
+            animation: notifAppear 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            overflow: hidden;
+        }
+
+        /* shimmer line a sama */
+        .notif-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(253, 224, 141, 0.9) 40%,
+                rgba(255, 255, 255, 1) 50%,
+                rgba(253, 224, 141, 0.9) 60%,
+                transparent 100%);
+            background-size: 200% auto;
+            animation: shimmerMove 2.5s linear infinite;
+        }
+
+        .notif-product-img {
+            width: 72px; height: 72px;
+            border-radius: 18px;
+            object-fit: cover;
+            border: 2px solid rgba(253, 224, 141, 0.3);
+            flex-shrink: 0;
+        }
+
+        .notif-success-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+            flex-shrink: 0;
+        }
+
+        .notif-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px; font-weight: 700;
+            color: #fff; letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .notif-sub {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.4;
+        }
+
+        .notif-btn-yes {
+            flex: 1;
+            background: linear-gradient(135deg, #fde08d, #b8860b);
+            border: none; border-radius: 14px;
+            padding: 13px 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px; font-weight: 800;
+            color: #000; cursor: pointer;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(253, 224, 141, 0.3);
+            transition: 0.2s;
+        }
+
+        .notif-btn-yes:active { transform: scale(0.96); }
+
+        .notif-btn-skip {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 13px 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px; font-weight: 600;
+            color: #888; cursor: pointer;
+            letter-spacing: 1px; transition: 0.2s;
+        }
+
+        .notif-btn-skip:active { transform: scale(0.96); }
     </style>
 </head>
 <body>
@@ -174,12 +260,16 @@
 
     <div class="listing-container">
         <input type="file" id="fileInput" accept="image/*" style="display: none;">
-        
+
         <div class="upload-zone" id="uploadZone">
             <img id="imagePreview" src="" alt="Preview">
             <div id="uploadPlaceholder" style="text-align: center;">
                 <div class="upload-icon">
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                    </svg>
                 </div>
                 <div class="upload-text">INITIALIZE MEDIA</div>
             </div>
@@ -224,35 +314,37 @@
             </select>
         </div>
 
-        <button class="publish-btn" onclick="uploadProduct()">PUBLISH LISTING</button>
+        <button class="publish-btn" id="publishBtn" onclick="uploadProduct()">PUBLISH LISTING</button>
     </div>
 
+    <!-- IMAGE PREVIEW SCRIPT -->
     <script>
         const uploadZone = document.getElementById('uploadZone');
-        const fileInput = document.getElementById('fileInput');
+        const fileInput  = document.getElementById('fileInput');
         const imagePreview = document.getElementById('imagePreview');
         const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 
         uploadZone.addEventListener('click', () => fileInput.click());
 
-        fileInput.addEventListener('change', function() {
+        fileInput.addEventListener('change', function () {
             const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                    uploadPlaceholder.style.display = 'none';
-                    uploadZone.style.borderStyle = 'solid';
-                }
-                reader.readAsDataURL(file);
-            }
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadPlaceholder.style.display = 'none';
+                uploadZone.style.borderStyle = 'solid';
+            };
+            reader.readAsDataURL(file);
         });
     </script>
 
+    <!-- FIREBASE + UPLOAD LOGIC -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+        import { initializeApp }     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp }
+            from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
@@ -265,19 +357,20 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db  = getFirestore(app);
 
+        /* ─── UPLOAD PRODUCT ─── */
         async function uploadProduct() {
-            const name = document.getElementById('productName').value;
-            const price = document.getElementById('productPrice').value;
-            const location = document.getElementById('productLocation').value;
+            const name        = document.getElementById('productName').value.trim();
+            const price       = document.getElementById('productPrice').value;
+            const location    = document.getElementById('productLocation').value;
             const description = document.getElementById('productDescription').value;
-            const category = document.getElementById('productCategory').value;
-            const status = document.getElementById('productStatus').value;
-            
+            const category    = document.getElementById('productCategory').value;
+            const status      = document.getElementById('productStatus').value;
+
             const imagePreviewEl = document.getElementById('imagePreview');
-            const imageUrl = imagePreviewEl && imagePreviewEl.style.display !== 'none' 
-                ? imagePreviewEl.src 
+            const imageUrl = (imagePreviewEl && imagePreviewEl.style.display !== 'none' && imagePreviewEl.src)
+                ? imagePreviewEl.src
                 : 'https://via.placeholder.com/300/111/00F2FF?text=Nexus+Item';
 
             if (!name || !price) {
@@ -285,117 +378,112 @@
                 return;
             }
 
+            const btn = document.getElementById('publishBtn');
+            btn.disabled = true;
+            btn.textContent = 'UPLOADING...';
+
             const formattedPrice = "₦" + Number(price).toLocaleString();
 
             try {
-                // ✅ FIX: Adana docRef daidai
+                // ✅ adana docRef daidai
                 const docRef = await addDoc(collection(db, "products"), {
-                    name: name,
-                    price: formattedPrice,
-                    location: location || "Kano, Nigeria",
+                    name:        name,
+                    price:       formattedPrice,
+                    location:    location || "Kano, Nigeria",
                     description: description || "",
-                    category: category,
-                    status: status,
-                    image: imageUrl,
-                    createdAt: serverTimestamp(),
-                    vendorId: localStorage.getItem('nexus_user_session') || ''
+                    category:    category,
+                    status:      status,
+                    image:       imageUrl,
+                    createdAt:   serverTimestamp(),
+                    vendorId:    localStorage.getItem('nexus_user_session') || ''
                 });
 
-                // ✅ Yanzu docRef.id yana aiki daidai
-                showPostToFeedNotif(docRef.id, imageUrl, name);
+                // ✅ Nuna notification a tsakiyar page
+                showPostToFeedNotif(docRef.id, imageUrl, name, db);
 
             } catch (e) {
-                console.error("An samu matsala wajen dora kaya: ", e);
-                alert("Kuskure wajen tura kaya, duba console dinka.");
+                console.error("Upload kuskure:", e);
+                alert("Kuskure wajen tura kaya: " + e.message);
+                btn.disabled = false;
+                btn.textContent = 'PUBLISH LISTING';
             }
         }
 
-        function showPostToFeedNotif(productId, imgUrl, productName) {
-            const notif = document.createElement('div');
-            notif.style.cssText = `
-                position: fixed;
-                bottom: 30px; left: 50%;
-                transform: translateX(-50%);
-                background: #111;
-                border: 1px solid rgba(253,224,141,0.4);
-                border-radius: 20px;
-                padding: 14px 18px;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                z-index: 9999;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-                min-width: 280px;
-                max-width: 90vw;
-                animation: slideUp 0.4s ease;
-            `;
+        /* ─── CENTER-SCREEN NOTIFICATION ─── */
+        function showPostToFeedNotif(productId, imgUrl, productName, db) {
 
-            notif.innerHTML = `
-                <img src="${imgUrl}" style="width:44px; height:44px; border-radius:10px; object-fit:cover; flex-shrink:0;">
-                <div style="flex:1;">
-                    <div style="font-size:12px; font-weight:700; color:#fff; margin-bottom:3px;">Kaya ya tafi shop ✅</div>
-                    <div style="font-size:11px; color:rgba(255,255,255,0.5);">Kuma za ka so ya bayyana a social feed?</div>
+            // Backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'notif-backdrop';
+            document.body.appendChild(backdrop);
+
+            // Card
+            const card = document.createElement('div');
+            card.className = 'notif-card';
+            card.innerHTML = `
+                <!-- Top row: icon + image + text -->
+                <div style="display:flex; align-items:center; gap:14px; margin-bottom:22px;">
+                    <div class="notif-success-icon">✅</div>
+                    <img class="notif-product-img"
+                         src="${imgUrl && imgUrl !== 'https://via.placeholder.com/300/111/00F2FF?text=Nexus+Item'
+                             ? imgUrl
+                             : 'https://via.placeholder.com/72/111/00F2FF?text=N'}"
+                         onerror="this.src='https://via.placeholder.com/72/111/00F2FF?text=N'">
+                    <div style="flex:1; min-width:0;">
+                        <div class="notif-title">LISTED ✓</div>
+                        <div class="notif-sub" style="
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        ">${productName}</div>
+                        <div class="notif-sub" style="margin-top:4px;">
+                            Kayan sun shiga shop. Kuma za ka so su bayyana a feed?
+                        </div>
+                    </div>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
-                    <button id="yes-post-btn" style="
-                        background:linear-gradient(135deg,#fde08d,#b8860b);
-                        border:none; border-radius:10px;
-                        padding:7px 14px;
-                        font-size:11px; font-weight:800;
-                        color:#000; cursor:pointer;
-                        white-space:nowrap;
-                    ">Post to Feed</button>
-                    <button id="no-post-btn" style="
-                        background:rgba(255,255,255,0.08);
-                        border:1px solid rgba(255,255,255,0.1);
-                        border-radius:10px;
-                        padding:7px 14px;
-                        font-size:11px; font-weight:600;
-                        color:#fff; cursor:pointer;
-                    ">Skip</button>
+
+                <!-- Buttons -->
+                <div style="display:flex; gap:10px;">
+                    <button class="notif-btn-yes" id="notif-yes">POST TO FEED</button>
+                    <button class="notif-btn-skip" id="notif-skip">SKIP</button>
                 </div>
             `;
+            document.body.appendChild(card);
 
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideUp {
-                    from { opacity:0; transform:translateX(-50%) translateY(20px); }
-                    to   { opacity:1; transform:translateX(-50%) translateY(0); }
-                }
-            `;
-            document.head.appendChild(style);
-            document.body.appendChild(notif);
-
-            document.getElementById('yes-post-btn').onclick = async () => {
-                notif.remove();
-                await postToSocialFeed(productId, imgUrl, productName);
+            // Event listeners
+            document.getElementById('notif-yes').onclick = async () => {
+                card.remove();
+                backdrop.remove();
+                await postToSocialFeed(productId, imgUrl, productName, db);
             };
 
-            document.getElementById('no-post-btn').onclick = () => {
-                notif.remove();
+            document.getElementById('notif-skip').onclick = () => {
+                card.remove();
+                backdrop.remove();
                 window.location.href = 'shop.html';
             };
         }
 
-        async function postToSocialFeed(productId, imgUrl, productName) {
+        /* ─── POST TO SOCIAL FEED ─── */
+        async function postToSocialFeed(productId, imgUrl, productName, db) {
             const username = localStorage.getItem('nexus_user_session') || '';
 
             try {
                 await addDoc(collection(db, "posts"), {
-                    username: username,
-                    content: productName,
-                    mediaUrl: imgUrl,
-                    mediaType: 'image',
-                    category: 'showcase',   // ✅ 'showcase' ba 'business' ba
-                    productId: productId,
-                    likesCount: 0,
+                    username:      username,
+                    content:       productName,
+                    mediaUrl:      imgUrl,
+                    mediaType:     'image',
+                    category:      'showcase',   // ✅ showcase — daidai da me.html filter
+                    productId:     productId,
+                    likesCount:    0,
                     commentsCount: 0,
-                    timestamp: serverTimestamp()
+                    timestamp:     serverTimestamp()
                 });
 
-                window.location.href = 'social.html';  // ✅ Zuwa social.html
+                window.location.href = 'social.html';
 
-            } catch(err) {
+            } catch (err) {
                 console.error('Post to feed kuskure:', err);
                 window.location.href = 'shop.html';
             }
