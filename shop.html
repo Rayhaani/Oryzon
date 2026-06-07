@@ -147,6 +147,62 @@
         .footer-icon { color: #fff; opacity: 0.5; cursor: pointer; }
         .footer-icon.active { opacity: 1; filter: drop-shadow(0 0 5px var(--cyan-neon)); }
         .profile-img { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #fff; }
+    
+    
+    .trending-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.product-card {
+    background: #0e0e0e;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.product-card:active { transform: scale(0.97); }
+
+.product-img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    background: #111;
+    overflow: hidden;
+}
+
+.product-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+
+.product-img .no-img {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+}
+
+.product-info { padding: 8px 10px 10px; }
+
+.product-name {
+    font-size: 12px; font-weight: 600; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+.product-price {
+    font-size: 13px; font-weight: 800;
+    color: #00F2FF;
+}
+
+.product-location {
+    font-size: 10px; color: #888;
+    margin-top: 3px;
+    display: flex; align-items: center; gap: 3px;
+                             }
+        
     </style>
 </head>
 <body class="pos-shop">
@@ -184,7 +240,19 @@
         <span class="pill-text">Search</span>
     </div>
    </div>
-    
+
+    <!-- TRENDING ITEMS -->
+<div id="trending-section" style="margin-top: 24px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <div style="font-size:14px; font-weight:700; color:#fff;">Trending Items</div>
+        <div id="sort-btn" onclick="toggleSort()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.07); border-radius:20px; padding:5px 12px; font-size:11px; color:#888; cursor:pointer; display:flex; align-items:center; gap:4px;">
+            Sort by <i class="fa-solid fa-chevron-down" id="sort-icon" style="font-size:10px;"></i>
+        </div>
+    </div>
+    <div class="trending-grid" id="trending-grid">
+        <!-- Products load here -->
+    </div>
+</div>
 
     <div class="market-grid" id="marketGrid"></div>
 
@@ -286,6 +354,70 @@
                 if (dest === 'earn') window.location.href = 'earn.html';
             }, 300);
         }
+
+
+        // ── TRENDING — paste these variables at the top of your script ──
+let allProducts      = [];
+let filteredProducts = [];
+let sortAsc          = false;
+
+// ── LOAD PRODUCTS FROM FIREBASE ──
+function loadTrendingProducts() {
+    db.collection('products')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+            allProducts = [];
+            snapshot.forEach(doc => {
+                allProducts.push({ id: doc.id, ...doc.data() });
+            });
+            filteredProducts = [...allProducts];
+            renderTrending(filteredProducts);
+        }, err => {
+            console.error('Error:', err);
+        });
+}
+
+// ── RENDER ──
+function renderTrending(products) {
+    const grid = document.getElementById('trending-grid');
+    if (!products.length) {
+        grid.innerHTML = `<div style="grid-column:span 2; text-align:center; padding:40px; color:#555; font-size:13px;">No products listed yet.</div>`;
+        return;
+    }
+    grid.innerHTML = products.map(p => `
+        <div class="product-card" onclick="window.location.href='product.html?id=${p.id}'">
+            <div class="product-img">
+                ${p.image && !p.image.includes('placeholder')
+                    ? `<img src="${p.image}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'>📦</div>'">`
+                    : `<div class="no-img">📦</div>`}
+            </div>
+            <div class="product-info">
+                <div class="product-name">${p.name}</div>
+                <div class="product-price">${p.price}</div>
+                <div class="product-location">
+                    <i class="fa-solid fa-location-dot" style="font-size:9px; color:#00F2FF;"></i>
+                    ${p.location || 'Nigeria'}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── SORT ──
+function toggleSort() {
+    sortAsc = !sortAsc;
+    document.getElementById('sort-icon').className =
+        sortAsc ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+    filteredProducts.sort((a, b) => {
+        const pa = parseFloat((a.price || '0').replace(/[^0-9.]/g, ''));
+        const pb = parseFloat((b.price || '0').replace(/[^0-9.]/g, ''));
+        return sortAsc ? pa - pb : pb - pa;
+    });
+    renderTrending(filteredProducts);
+}
+
+// ── CALL IT ──
+loadTrendingProducts();
     </script>
 </body>
 </html>
