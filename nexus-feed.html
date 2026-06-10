@@ -217,7 +217,8 @@
     const currentUser = localStorage.getItem('nexus_user_session');
     if (!currentUser) window.location.href = 'login.html';
 
-     function openImmersiveFromGrid(index) {
+     
+function openImmersiveFromGrid(index) {
     const post = allPosts[index];
     if (!post) return;
 
@@ -236,17 +237,17 @@
 
     const footer = document.getElementById('instaFooter');
 
-    // ← GYARAN SCROLL: Lock page scroll kafin immersive ya bude
-    const scrollY = window.scrollY;
+    // ===== GYARAN SCROLL NA GASKIYA =====
+    // Maimakon mu canza body ya koma fixed (wanda ke janyo matsalar rabon hoto),
+    // Zamu kulle tsayin body ne kawai sannan mu boye scrollbar din.
+    const scrollY = window.scrollY; 
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
 
     card.classList.add('immersive-mode');
     if (footer) footer.classList.add('footer-hidden');
 
-    // Fix hoto ya cika screen
+    // Fix hoto ya cika screen (An saka top: 0 da left: 0 don kada scroll na baya ya shafe shi)
     const img = card.querySelector('img.post-media');
     if (img) {
         img.style.cssText = `
@@ -298,11 +299,9 @@
         if (img) img.style.cssText = '';
         if (video) { video.style.cssText = ''; video.pause(); }
 
-        // ← Maida scroll baya
+        // ===== MAIDA SCROLL BAYA =====
+        document.documentElement.style.overflow = '';
         document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
         window.scrollTo(0, scrollY);
 
         setTimeout(() => wrapper.remove(), 300);
@@ -315,7 +314,8 @@
         backBtn.click();
         window.onpopstate = null;
     };
-     }
+}
+    
     
     
     // ===== GLOW PALETTE =====
