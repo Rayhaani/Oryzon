@@ -278,20 +278,28 @@
         }
 
         .immersive-mode .post-header,
-        .immersive-mode .post-content,
-        .immersive-mode .post-interaction-bar,
-        .immersive-mode .interaction-bar {
+        .immersive-mode .post-content {
             position: relative !important;
             z-index: 5001 !important;
             background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
         }
 
-        .immersive-mode .post-content,
-        .immersive-mode .post-interaction-bar,
-        .immersive-mode .interaction-bar {
+        .immersive-mode .post-content {
             padding: 10px 20px !important;
         }
 
+        .immersive-mode .post-interaction-bar,
+        .immersive-mode .interaction-bar {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            z-index: 5001 !important;
+            background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
+            padding: 10px 20px 25px !important;
+        }
+
+        
         /* ===== HIDE NATIVE VIDEO CONTROLS ===== */
         video::-webkit-media-controls { display: none !important; }
         video::-webkit-media-controls-start-playback-button { display: none !important; }
