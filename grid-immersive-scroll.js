@@ -109,10 +109,10 @@
     }
 
     // ── Touch handlers ──
-    function onTouchStart(e) {
-        // Kar a gauraye da swipe na cikin card (comments, etc)
-        if (e.target.closest('#nexusSplitView')) return;
-        touchStartY = e.touches[0].clientY;
+   function onTouchStart(e) {
+    console.log('[DEBUG] touch detected');
+    if (e.target.closest('#nexusSplitView')) return; 
+    touchStartY = e.touches[0].clientY;
         touchStartX = e.touches[0].clientX;
         isSwiping   = false;
     }
