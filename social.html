@@ -1238,119 +1238,37 @@
 
     
 
-           window.addEventListener('DOMContentLoaded', () => {
-          // An kashe render na gida tunda yana cikin immersive script dinka
-          loadFooterProfile();
-          
-          const savedProfile = localStorage.getItem('userProfilePic');
-          const storyAvatar = document.getElementById('story-avatar-preview');
-          if (savedProfile && storyAvatar) { storyAvatar.src = savedProfile; }
-          observeVideos();
+         window.addEventListener('DOMContentLoaded', () => {
+    // Mun kunna kiran aikin dake cikin immersive script dinka na waje
+    renderNexusFeed(); 
+    
+    loadFooterProfile();
+    
+    const savedProfile = localStorage.getItem('userProfilePic');
+    const storyAvatar = document.getElementById('story-avatar-preview');
+    if (savedProfile && storyAvatar) { storyAvatar.src = savedProfile; }
+    observeVideos();
 
-          if (currentUser) {
-              db.collection("users").doc(currentUser).get()
-              .then((doc) => {
-                  if (doc.exists) {
-                      const data = doc.data();
-                      if (document.getElementById("userProfileName")) {
-                          document.getElementById("userProfileName").innerText = data.fullName;
-                      }
-                  }
-              }).catch((err) => { console.error("Error fetching user data:", err); });
-          }
-      });
+    if (currentUser) {
+        db.collection("users").doc(currentUser).get()
+        .then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                if (document.getElementById("userProfileName")) {
+                    document.getElementById("userProfileName").innerText = data.fullName;
+                }
+            }
+        }).catch((err) => { console.error("Error fetching user data:", err); });
+    }
+});
 
+function loadFooterProfile() {
+    const savedPic = localStorage.getItem('userProfilePic');
+    const footerImg = document.getElementById('footerProfileImg');
+    if (savedPic && footerImg) { footerImg.src = savedPic; } else { if(footerImg) footerImg.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq"; }
+}
 
-      function loadFooterProfile() {
-          const savedPic = localStorage.getItem('userProfilePic');
-          const footerImg = document.getElementById('footerProfileImg');
-          if (savedPic && footerImg) { footerImg.src = savedPic; } else { if(footerImg) footerImg.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq"; }
-      }
-
-      // Wannan shi ne asalin gyaran kuskuren kiran da ya karye:
-      async function renderNexusFeed() {
-          const feedContainer = document.querySelector('.feed-container');
-          try {
-              const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get(); //
-              window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
-          } catch(e) { console.log("Saved posts error:", e); }
-
-          db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-              let allPostsHTML = ''; 
-              if (snapshot.empty) {
-                  feedContainer.innerHTML = '<div class="empty-feed" style="text-align:center; padding:20px; color:#aaa;">No posts yet...</div>';
-                  return;
-              }
-              snapshot.forEach((doc) => {
-                  const post = { id: doc.id, ...doc.data() };
-                  allPostsHTML += generatePostHTML(post);
-              });
-              
-              feedContainer.innerHTML = allPostsHTML;
-
-              setTimeout(() => postCard_restoreLikes(feedContainer), 500);
-
-              // Load avatar na kowane poster daga users collection
-              snapshot.forEach((doc) => {
-                  const post = doc.data();
-                  if (!post.username) return;
-                  db.collection('users').doc(post.username).get().then(userDoc => {
-                      if (!userDoc.exists) return;
-                      const pic = userDoc.data().userProfilePic;
-                      if (!pic) return;
-                      const card = feedContainer.querySelector(`.post-card[data-post-id="${doc.id}"]`);
-                      if (card) {
-                          const avatar = card.querySelector('.post-avatar');
-                          if (avatar) avatar.src = pic;
-                      }
-                  });
-              });
-
-              // Ƙidaya comments na kowane post
-              snapshot.forEach((doc) => {
-                  const postId = doc.id;
-                  db.collection("nexus_contributions")
-                      .where("postId", "==", postId)
-                      .where("parentId", "==", null)
-                      .onSnapshot(commentSnap => {
-                          const el = document.getElementById(`comment-count-${postId}`);
-                          if (el) el.textContent = commentSnap.size;
-                      });
-              });
-              
-
-              // Check likes daga Firestore
-              const myUsername = localStorage.getItem('nexus_user_session');
-              if(myUsername){
-                  db.collection('likes').where('user','==',myUsername).get().then(snap=>{
-                      snap.forEach(doc=>{
-                          const postId = doc.data().postId;
-                          const card = feedContainer.querySelector(`.post-card[data-post-id="${postId}"]`);
-                          if(card){
-                              const likeBtn = card.querySelectorAll('.capsule')[0];
-                            
-                              if(likeBtn){
-                                  likeBtn.classList.add('liked');
-                                  likeBtn.querySelector('i').className = 'fa-solid fa-heart';
-                                  likeBtn.querySelector('i').style.color = '#ff4d6d';
-                                  
-                                  db.collection('likes')
-                                      .where('postId', '==', postId)
-                                      .get().then(countSnap => {
-                                          const countEl = likeBtn.querySelector('span');
-                                          if(countEl) countEl.textContent = countSnap.size > 0 ? countSnap.size : '';
-                                      });
-                              } 
-                          }
-                      });
-                  });
-              }
-
-              window.postCard_observeVideos();
-              setTimeout(window.postCard_handleVideoPriority, 500);
-          });
-      } // Mun rufe aikin a nan yanzu lafiya lau
-
+         
          
 
       window.addEventListener('scroll', () => {
