@@ -1203,6 +1203,271 @@
       const storage = firebase.storage();
       const analytics = firebase.analytics();
 
+
+    // ===== IMMERSIVE SCROLL LOGIC =====
+let immLastDoc = null;
+let immFirstDoc = null;
+let immLoading = false;
+let immMuted = true;
+let immObserver = null;
+
+// Override toggleImmersive don fara scroll mode
+const _origToggleImmersive = window.toggleImmersive;
+window.toggleImmersive = function(card) {
+    const video = card.querySelector('video');
+    if (!video) return;
+    
+    // Kira asalin toggleImmersive don buɗe immersive mode
+    _origToggleImmersive.call(this, card);
+    
+    // Sai mu fara scroll engine
+    setTimeout(() => initImmersiveScroll(card), 100);
+};
+
+async function initImmersiveScroll(triggerCard) {
+    const postId = triggerCard.dataset.postId;
+    const feed = document.querySelector('.feed-container');
+    
+    // Cire duk wani post da ba video ba
+    document.querySelectorAll('.post-card').forEach(c => {
+        if (!c.querySelector('video')) {
+            c.style.display = 'none';
+        }
+    });
+
+    // Loda videos daga Firestore — baya (older) da gaba (newer)
+    await immLoadAround(postId);
+    
+    // Scroll zuwa triggerCard
+    triggerCard.scrollIntoView({ behavior: 'instant', block: 'start' });
+    
+    // Sanya snap scroll a feed container
+    feed.style.cssText += `
+        overflow-y: scroll;
+        scroll-snap-type: y mandatory;
+        height: 100dvh;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        padding: 0;
+    `;
+    
+    document.querySelectorAll('.post-card').forEach(c => {
+        if (c.querySelector('video')) {
+            c.style.scrollSnapAlign = 'start';
+            c.style.scrollSnapStop = 'always';
+            c.style.height = '100dvh';
+            c.style.marginBottom = '0';
+        }
+    });
+    
+    // Fara video observer
+    startImmVideoObserver();
+    
+    // Sanya scroll listener don load more
+    feed.addEventListener('scroll', onImmScroll, { passive: true });
+}
+
+// Load videos kafin da bayan wannan post
+async function immLoadAround(postId) {
+    if (immLoading) return;
+    immLoading = true;
+    
+    try {
+        // Samu timestamp na wannan post don pagination
+        const currentDoc = await db.collection('posts').doc(postId).get();
+        if (!currentDoc.exists) { immLoading = false; return; }
+        
+        immFirstDoc = currentDoc; // Newest boundary
+        immLastDoc = currentDoc;  // Oldest boundary
+        
+        // Load 5 videos kafin (older)
+        const olderSnap = await db.collection('posts')
+            .where('mediaType', '==', 'video')
+            .orderBy('timestamp', 'desc')
+            .startAfter(currentDoc)
+            .limit(5)
+            .get();
+        
+        olderSnap.docs.forEach(doc => {
+            immLastDoc = doc;
+            appendVideoCard({ id: doc.id, ...doc.data() }, 'bottom');
+        });
+        
+    } catch(e) {
+        console.error('immLoadAround:', e);
+    }
+    
+    immLoading = false;
+}
+
+// Append sabon video card
+function appendVideoCard(post, position = 'bottom') {
+    const feed = document.querySelector('.feed-container');
+    const existing = document.querySelector(`.post-card[data-post-id="${post.id}"]`);
+    if (existing) return; // Kar a saka sau biyu
+    
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = generatePostHTML(post);
+    const newCard = tempDiv.firstElementChild;
+    
+    newCard.style.scrollSnapAlign = 'start';
+    newCard.style.scrollSnapStop = 'always';
+    newCard.style.height = '100dvh';
+    newCard.style.marginBottom = '0';
+    
+    if (position === 'bottom') {
+        feed.appendChild(newCard);
+    } else {
+        feed.insertBefore(newCard, feed.firstElementChild);
+    }
+    
+    // Observe new video
+    const vid = newCard.querySelector('video');
+    if (vid && immObserver) immObserver.observe(vid);
+    
+    // Load avatar
+    if (post.username) {
+        db.collection('users').doc(post.username).get().then(userDoc => {
+            if (!userDoc.exists) return;
+            const pic = userDoc.data().userProfilePic;
+            if (!pic) return;
+            const avatar = newCard.querySelector('.post-avatar');
+            if (avatar) avatar.src = pic;
+        });
+    }
+}
+
+// Scroll listener — load more idan ya kai kusa da karshe ko farko
+let immScrollTimer = null;
+function onImmScroll() {
+    clearTimeout(immScrollTimer);
+    immScrollTimer = setTimeout(async () => {
+        if (immLoading) return;
+        const feed = document.querySelector('.feed-container');
+        const distBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight;
+        const distTop = feed.scrollTop;
+        
+        // Kusa da kasa — load older videos
+        if (distBottom < window.innerHeight * 1.5) {
+            await loadOlderVideos();
+        }
+        
+        // Kusa da sama — load newer videos
+        if (distTop < window.innerHeight * 0.5) {
+            await loadNewerVideos();
+        }
+    }, 150);
+}
+
+// Load older videos (scroll down)
+async function loadOlderVideos() {
+    if (immLoading || !immLastDoc) return;
+    immLoading = true;
+    
+    try {
+        const snap = await db.collection('posts')
+            .where('mediaType', '==', 'video')
+            .orderBy('timestamp', 'desc')
+            .startAfter(immLastDoc)
+            .limit(5)
+            .get();
+        
+        if (!snap.empty) {
+            immLastDoc = snap.docs[snap.docs.length - 1];
+            snap.docs.forEach(doc => {
+                appendVideoCard({ id: doc.id, ...doc.data() }, 'bottom');
+            });
+        }
+    } catch(e) { console.error('loadOlderVideos:', e); }
+    
+    immLoading = false;
+}
+
+// Load newer videos (scroll up — newest uploaded)
+async function loadNewerVideos() {
+    if (immLoading || !immFirstDoc) return;
+    immLoading = true;
+    
+    try {
+        const snap = await db.collection('posts')
+            .where('mediaType', '==', 'video')
+            .orderBy('timestamp', 'asc')
+            .startAfter(immFirstDoc)
+            .limit(5)
+            .get();
+        
+        if (!snap.empty) {
+            immFirstDoc = snap.docs[snap.docs.length - 1];
+            const feed = document.querySelector('.feed-container');
+            const prevHeight = feed.scrollHeight;
+            
+            snap.docs.forEach(doc => {
+                appendVideoCard({ id: doc.id, ...doc.data() }, 'top');
+            });
+            
+            // Maintain scroll position bayan prepend
+            feed.scrollTop += feed.scrollHeight - prevHeight;
+        }
+    } catch(e) { console.error('loadNewerVideos:', e); }
+    
+    immLoading = false;
+}
+
+// Video observer — autoplay/pause
+function startImmVideoObserver() {
+    if (immObserver) immObserver.disconnect();
+    
+    immObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const vid = entry.target;
+            if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+                // Pause duk sauran
+                document.querySelectorAll('.imm-slide video, .post-card video').forEach(v => {
+                    if (v !== vid) { v.pause(); v.muted = true; }
+                });
+                vid.muted = immMuted;
+                vid.play().catch(() => {});
+            } else {
+                vid.pause();
+                vid.muted = true;
+            }
+        });
+    }, { threshold: 0.6 });
+    
+    // Observe duk videos da ke a feed
+    document.querySelectorAll('.post-card video').forEach(v => {
+        immObserver.observe(v);
+    });
+}
+
+// Clean up idan an rufe immersive
+const _origExitImmersive = window.exitImmersive;
+window.exitImmersive = function(card) {
+    const feed = document.querySelector('.feed-container');
+    
+    // Reset feed styles
+    feed.style.cssText = '';
+    feed.removeEventListener('scroll', onImmScroll);
+    
+    // Nuna duk posts da aka boye
+    document.querySelectorAll('.post-card').forEach(c => {
+        c.style.display = '';
+        c.style.scrollSnapAlign = '';
+        c.style.scrollSnapStop = '';
+        c.style.height = '';
+        c.style.marginBottom = '';
+    });
+    
+    if (immObserver) { immObserver.disconnect(); immObserver = null; }
+    immLastDoc = null;
+    immFirstDoc = null;
+    immLoading = false;
+    
+    // Kira asalin exitImmersive
+    _origExitImmersive.call(this, card);
+};
+
+
         
 
       window.addEventListener('DOMContentLoaded', () => {
