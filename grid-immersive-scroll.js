@@ -94,12 +94,12 @@
                 const card = wrapper.querySelector('.post-card');
 
                 // Use template.js toggleImmersive to close cleanly
-                if (card && typeof toggleImmersive === 'function') {
-                    toggleImmersive(card);
-                } else {
-                    wrapper.remove();
-                }
-
+                const footer = document.getElementById('instaFooter');
+if (card) card.classList.remove('immersive-mode');
+if (footer) footer.classList.remove('footer-hidden');
+if (wrapper) wrapper.remove();
+document.documentElement.style.overflow = '';
+document.body.style.overflow = '';
                 // Open next/prev after a short delay
                 setTimeout(() => {
                     const _orig = window.__originalOpenImmersive || window.openImmersiveFromGrid;
@@ -313,8 +313,8 @@
         const upBtn   = document.getElementById('nsiUp');
         const downBtn = document.getElementById('nsiDown');
 
-        if (upBtn)   upBtn.addEventListener('click',   () => { if (typeof goToFromIndicator === 'function') goToFromIndicator(currentIndex - 1); });
-        if (downBtn) downBtn.addEventListener('click', () => { if (typeof goToFromIndicator === 'function') goToFromIndicator(currentIndex + 1); });
+     if (upBtn)   upBtn.addEventListener('click',   () => goTo(currentIndex - 1));
+if (downBtn) downBtn.addEventListener('click', () => goTo(currentIndex + 1));   
     }
 
     /* The indicator buttons need access to goTo, expose via closure */
@@ -332,16 +332,17 @@
         isAnimating  = true;
         currentIndex = newIndex;
 
-        if (card && typeof toggleImmersive === 'function') {
-            toggleImmersive(card);
-        } else {
-            wrapper.remove();
-        }
+        const footer2 = document.getElementById('instaFooter');
+if (card) card.classList.remove('immersive-mode');
+if (footer2) footer2.classList.remove('footer-hidden');
+if (wrapper) wrapper.remove();
+document.documentElement.style.overflow = '';
+document.body.style.overflow = '';
 
-        setTimeout(() => {
-            window.openImmersiveFromGrid(newIndex);
-            isAnimating = false;
-        }, 80);
+setTimeout(() => {
+    window.openImmersiveFromGrid(newIndex);
+    isAnimating = false;
+}, 80);
     };
 
     /* ─────────────────────────────────────────────
