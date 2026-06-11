@@ -134,6 +134,7 @@ document.body.style.overflow = '';
 
         // ── Touch handlers ──
         function onTouchStart(e) {
+            console.log('[DEBUG] immersive opened, index:', index);
             touchStartY = e.touches[0].clientY;
             touchStartX = e.touches[0].clientX;
             isSwiping   = false;
