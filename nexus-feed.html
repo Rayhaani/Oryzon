@@ -442,20 +442,23 @@ function renderGrid() {
     
         // Load real avatars
         allPosts.forEach(post => {
-            if (!post.username) return;
-            db.collection('users').doc(post.username).get().then(userDoc => {
-                if (!userDoc.exists) return;
-                const pic = userDoc.data().userProfilePic;
-                if (!pic) return;
-                document.querySelectorAll('.quantum-tile').forEach(tile => {
-                    const payload = tile.querySelector('.hidden-neural-payload');
-                    if (payload && payload.dataset.user === post.username) {
-                        payload.dataset.avatar = pic;
-                    }
-                });
-            }).catch(()=>{});
+    if (!post.username) return;
+    db.collection('users').doc(post.username).get().then(userDoc => {
+        if (!userDoc.exists) return;
+        const pic = userDoc.data().userProfilePic;
+        if (!pic) return;
+
+        // ← GYARAN: Update allPosts kai tsaye
+        post.userProfilePic = pic;
+
+        document.querySelectorAll('.quantum-tile').forEach(tile => {
+            const payload = tile.querySelector('.hidden-neural-payload');
+            if (payload && payload.dataset.user === post.username) {
+                payload.dataset.avatar = pic;
+            }
         });
-    }
+    }).catch(()=>{});
+});
 
     // ===== AUTO PLAY VIDEOS (IntersectionObserver — kamar Instagram) =====
     let videoObserver = null;
