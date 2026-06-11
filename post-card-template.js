@@ -255,17 +255,17 @@
 
         /* ===== FULL SCREEN / IMMERSIVE MODE ===== */
         .post-card.immersive-mode {
-            position: fixed !important;
-            top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100vh !important;
-            z-index: 5000 !important;
-            border-radius: 0 !important;
-            margin: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-end !important;
-            background: #000 !important;
-        }
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 100vw !important; height: 100dvh !important;
+    z-index: 5000 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    background: #000 !important;
+}
 
         .immersive-mode .post-media {
             position: absolute !important;
