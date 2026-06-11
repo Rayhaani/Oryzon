@@ -238,10 +238,13 @@
 
     // ── Override openImmersiveFromGrid ──
     function init() {
-        if (typeof window.openImmersiveFromGrid === 'undefined') {
-            setTimeout(init, 50);
-            return;
-        }
+    console.log('[DEBUG] init called, openImmersiveFromGrid:', typeof window.openImmersiveFromGrid);
+    if (typeof window.openImmersiveFromGrid === 'undefined') {
+        setTimeout(init, 50);
+        return;
+    }
+    console.log('[DEBUG] patching openImmersiveFromGrid');
+        
 
         // Save original
         window.__gridOpenOriginal = window.openImmersiveFromGrid;
