@@ -15,28 +15,27 @@
 
     // ── Saita listeners bayan immersive ya bude ──
     function attachSwipeListeners() {
-    detachSwipeListeners();
-    const el = document.getElementById('nexus-immersive-card') || document.body;
-    el.addEventListener('touchstart',  onTouchStart, { passive: true });
-    el.addEventListener('touchmove',   onTouchMove,  { passive: false });
-    el.addEventListener('touchend',    onTouchEnd,   { passive: true });
-    el.addEventListener('wheel',       onWheel,      { passive: false });
-    document.addEventListener('keydown', onKeyDown);
-    window._nexusSwipeEl = el;
-}
+        detachSwipeListeners();
+        const el = document.getElementById('nexus-immersive-card') || document.body;
+        el.addEventListener('touchstart',  onTouchStart, { passive: true });
+        el.addEventListener('touchmove',   onTouchMove,  { passive: false });
+        el.addEventListener('touchend',    onTouchEnd,   { passive: true });
+        el.addEventListener('wheel',       onWheel,      { passive: false });
+        document.addEventListener('keydown', onKeyDown);
+        window._nexusSwipeEl = el;
+    }
 
-function detachSwipeListeners() {
-    const el = window._nexusSwipeEl || document.body;
-    el.removeEventListener('touchstart',  onTouchStart);
-    el.removeEventListener('touchmove',   onTouchMove);
-    el.removeEventListener('touchend',    onTouchEnd);
-    el.removeEventListener('wheel',       onWheel);
-    document.removeEventListener('keydown', onKeyDown);
-    window._nexusSwipeEl = null;
-}
-    
+    function detachSwipeListeners() {
+        const el = window._nexusSwipeEl || document.body;
+        el.removeEventListener('touchstart',  onTouchStart);
+        el.removeEventListener('touchmove',   onTouchMove);
+        el.removeEventListener('touchend',    onTouchEnd);
+        el.removeEventListener('wheel',       onWheel);
+        document.removeEventListener('keydown', onKeyDown);
+        window._nexusSwipeEl = null;
+    }
 
-    // ── Navigatе zuwa wani post ──
+    // ── Navigate zuwa wani post ──
     function goTo(newIndex) {
         if (isAnimating) return;
         if (!window.allPosts || newIndex < 0 || newIndex >= window.allPosts.length) return;
@@ -56,25 +55,16 @@ function detachSwipeListeners() {
         }
 
         setTimeout(() => {
-            // Rufe current — kamar backBtn click amma ba tare da scroll restore ba
-            if (backBtn) {
-                // Cire onclick na backBtn na wucin gadi don mu sarrafa kanmu
-                const origOnclick = backBtn.onclick;
-                backBtn.onclick = null;
+            // Tsaftace DOM
+            const footer = document.getElementById('instaFooter');
+            if (card) card.classList.remove('immersive-mode');
+            if (footer) footer.classList.remove('footer-hidden');
+            if (backBtn) backBtn.remove();
+            if (wrapper) wrapper.remove();
 
-                // Tsaftace DOM kai tsaye
-                const footer = document.getElementById('instaFooter');
-                if (card) card.classList.remove('immersive-mode');
-                if (footer) footer.classList.remove('footer-hidden');
-                backBtn.remove();
-                if (wrapper) wrapper.remove();
-
-                // Maida overflow
-                document.documentElement.style.overflow = '';
-                document.body.style.overflow = '';
-            } else if (wrapper) {
-                wrapper.remove();
-            }
+            // Maida overflow
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
 
             // Cire nav indicator
             const indicator = document.getElementById('nexus-scroll-indicator');
@@ -87,7 +77,7 @@ function detachSwipeListeners() {
                 window.__gridOpenOriginal(currentIndex);
             }
 
-            // Jira immersive ya bude sannan mu sake saka listeners
+            // ✅ GYARAN ASALI: Jira wrapper ya bayyana a DOM — ba class check ba
             waitForImmersive(() => {
                 updateNavIndicator();
                 isAnimating = false;
@@ -97,28 +87,25 @@ function detachSwipeListeners() {
         }, 250);
     }
 
-    // ── Jira immersive card ya bayyana a DOM ──
+    // ── ✅ GYARAN: Jira #nexus-immersive-card ya bayyana a DOM ──
+    // Ba mu duba immersive-mode class ba — explore.html ba ya amfani da ita
     function waitForImmersive(cb, attempt = 0) {
-    const wrapper = document.getElementById('nexus-immersive-card');
-    const card    = wrapper && wrapper.querySelector('.post-card');
-    console.log('[DEBUG] waiting...', attempt, card ? card.classList.contains('immersive-mode') : 'no card');
-
-    if (card && card.classList.contains('immersive-mode')) {
-        console.log('[DEBUG] immersive found! attaching listeners');
-        cb();
-    } else if (attempt < 50) {
-        setTimeout(() => waitForImmersive(cb, attempt + 1), 10);
-    } else {
-        console.log('[DEBUG] gave up waiting');
-        isAnimating = false;
-    }
+        const wrapper = document.getElementById('nexus-immersive-card');
+        // Isa ne wrapper ya kasance a DOM — ba sai class ba
+        if (wrapper) {
+            cb();
+        } else if (attempt < 50) {
+            setTimeout(() => waitForImmersive(cb, attempt + 1), 20);
+        } else {
+            console.warn('[Nexus Scroll] waitForImmersive timed out');
+            isAnimating = false;
+        }
     }
 
     // ── Touch handlers ──
-   function onTouchStart(e) {
-    console.log('[DEBUG] touch detected');
-    if (e.target.closest('#nexusSplitView')) return; 
-    touchStartY = e.touches[0].clientY;
+    function onTouchStart(e) {
+        if (e.target.closest('#nexusSplitView')) return;
+        touchStartY = e.touches[0].clientY;
         touchStartX = e.touches[0].clientX;
         isSwiping   = false;
     }
@@ -241,16 +228,13 @@ function detachSwipeListeners() {
 
     // ── Override openImmersiveFromGrid ──
     function init() {
-    if (window.__nexusScrollReady) return; // Hana double-init
-    console.log('[DEBUG] init called, openImmersiveFromGrid:', typeof window.openImmersiveFromGrid);
-    if (typeof window.openImmersiveFromGrid === 'undefined') {
-        setTimeout(init, 50);
-        return;
-    }
-    window.__nexusScrollReady = true;
-    console.log('[DEBUG] patching openImmersiveFromGrid');
+        if (window.__nexusScrollReady) return;
+        if (typeof window.openImmersiveFromGrid === 'undefined') {
+            setTimeout(init, 50);
+            return;
+        }
+        window.__nexusScrollReady = true;
 
-        
         // Save original
         window.__gridOpenOriginal = window.openImmersiveFromGrid;
 
@@ -258,20 +242,16 @@ function detachSwipeListeners() {
         window.openImmersiveFromGrid = function(index) {
             currentIndex = index;
 
-            // Cire old listeners da indicator
             detachSwipeListeners();
             const old = document.getElementById('nexus-scroll-indicator');
             if (old) old.remove();
 
-            // Kira asali
             window.__gridOpenOriginal(index);
 
-            // Jira immersive ya bude sannan inject
+            // ✅ Jira wrapper ya kasance a DOM — nan take attach listeners
             waitForImmersive(() => {
                 updateNavIndicator();
                 attachSwipeListeners();
-
-                // Kuma watch backBtn — idan aka rufe, detach listeners
                 watchForClose();
             });
         };
@@ -302,4 +282,4 @@ function detachSwipeListeners() {
     }
 
 })();
-                
+    
