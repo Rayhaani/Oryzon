@@ -18,18 +18,16 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        
-            body {
-    background-color: var(--quantum-bg);
-    color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    overflow-x: hidden;
-}
+        body {
+            background-color: var(--quantum-bg);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+        }
 
-.hologram-grid-canvas {
-    perspective: 1000px;
-}
-            
+        .hologram-grid-canvas {
+            perspective: 1000px;
+        }
 
         .nexus-2050-wrapper {
             width: 100%;
@@ -154,31 +152,69 @@
             100% { background-position: -200% 0; }
         }
 
-        .hidden-neural-payload { display: none; }
+        /* ===== SABBIN CSS NA GYARAN IMMERSIVE SWIPE (REELS STYLE) ===== */
+        #nexus-immersive-slider {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            height: 100dvh !important;
+            background: #000000 !important;
+            z-index: 8000 !important;
+            overflow-y: scroll !important;
+            overflow-x: hidden !important;
+            scroll-snap-type: y mandatory !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
 
-        /* ===== IMMERSIVE FIX — EXPLORE PAGE ONLY ===== */
-#nexus-immersive-card {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    z-index: 8000 !important;
-    background: #000 !important;
-    overflow: hidden !important;
-}
+        #nexus-immersive-slider::-webkit-scrollbar {
+            display: none !important; /* boye scrollbar */
+        }
 
-#nexus-immersive-card .post-card {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100dvh !important;
-    z-index: 8001 !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-}
-        
+        .immersive-snap-item {
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            scroll-snap-align: start !important;
+            scroll-snap-stop: always !important;
+            position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        /* Daidaita katin da ke ciki ya zauna da kyau */
+        .immersive-snap-item .post-card {
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            background: #000 !important;
+            position: relative !important;
+        }
+
+        /* Gyaran Maɓallin Koma Baya */
+        .immersive-back-btn {
+            position: fixed !important; 
+            top: 15px !important; 
+            left: 15px !important;
+            width: 38px !important; 
+            height: 38px !important;
+            background: rgba(0, 0, 0, 0.5) !important; 
+            border-radius: 50% !important;
+            display: flex !important; 
+            align-items: center !important; 
+            justify-content: center !important;
+            color: #ffffff !important; 
+            font-size: 16px !important;
+            z-index: 9999 !important; 
+            cursor: pointer !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .footer-hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -199,7 +235,7 @@
         <div class="quantum-skeleton"></div>
         <div class="quantum-skeleton"></div>
     </div>
-
+</div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -222,135 +258,139 @@
     const currentUser = localStorage.getItem('nexus_user_session');
     if (!currentUser) window.location.href = 'login.html';
 
-     
-// ===== MULTI-POST IMMERSIVE SCROLL SYSTEM =====
-function openImmersiveFromGrid(selectedIndex) {
-    console.log('[DEBUG] Opening immersive matrix slide at index:', selectedIndex);
-    
-    const existing = document.getElementById('nexus-immersive-slider');
-    if (existing) existing.remove();
-
-    if (typeof generatePostHTML !== 'function') {
-        console.error('Template engine generatePostHTML missing.');
-        return;
-    }
-
-    // Maƙala Babban gado na posts (Slider Container)
-    const slider = document.createElement('div');
-    slider.id = 'nexus-immersive-slider';
-    
-    // Zuba duka posts a matsayin snap items ta amfani da ainihin template dinka
-    slider.innerHTML = allPosts.map((post, idx) => {
-        return `<div class="immersive-snap-item" data-item-index="${idx}">
-            ${generatePostHTML(post)}
-        </div>`;
-    }).join('');
-
-    document.body.appendChild(slider);
-
-    // Tsarin hana babban jikin bango yin gudu (Body Scroll Prevention)
-    const scrollY = window.scrollY;
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-
-    const footer = document.getElementById('instaFooter');
-    if (footer) footer.classList.add('footer-hidden');
-
-    // Sanya styles na musamman ga kowane katin hoto ko bidiyo da ke ciki
-    slider.querySelectorAll('.post-card').forEach(card => {
-        card.classList.add('immersive-mode');
+    // ===== MULTI-POST IMMERSIVE SCROLL SYSTEM =====
+    function openImmersiveFromGrid(selectedIndex) {
+        console.log('[DEBUG] Opening immersive matrix slide at index:', selectedIndex);
         
-        const img = card.querySelector('img.post-media');
-        if (img) {
-            img.style.cssText = `
-                width: 100vw !important; height: 100vh !important;
-                object-fit: cover !important; border-radius: 0 !important;
-                margin: 0 !important;
-            `;
+        const existing = document.getElementById('nexus-immersive-slider');
+        if (existing) existing.remove();
+
+        const existingBtn = document.querySelector('.immersive-back-btn');
+        if (existingBtn) existingBtn.remove();
+
+        if (typeof generatePostHTML !== 'function') {
+            console.error('Template engine generatePostHTML missing.');
+            return;
         }
-        const video = card.querySelector('video');
-        if (video) {
-            video.style.cssText = `
-                width: 100vw !important; height: 100vh !important;
-                object-fit: cover !important; border-radius: 0 !important;
-                margin: 0 !important;
-            `;
-            video.muted = false;
-            video.loop = true;
-            video.removeAttribute('controls');
-        }
-    });
 
-    // Dirowa kai tsaye zuwa katin da aka danna a grid
-    const targetElement = slider.querySelector(`[data-item-index="${selectedIndex}"]`);
-    if (targetElement) {
-        setTimeout(() => {
-            targetElement.scrollIntoView({ behavior: 'auto' });
-            manageImmersiveMediaTracks(slider); // Fara kunna bidiyon da aka danna
-        }, 50);
-    }
-
-    // Kula da canjin swipe (Scroll Event Listening)
-    slider.addEventListener('scroll', () => {
-        manageImmersiveMediaTracks(slider);
-    });
-
-    // Maɓallin Koma Baya (Back Button System)
-    const backBtn = document.createElement('div');
-    backBtn.className = 'immersive-back-btn';
-    backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
-    document.body.appendChild(backBtn);
-
-    backBtn.onclick = function(e) {
-        e.stopPropagation();
+        // Maƙala Babban gado na posts (Slider Container)
+        const slider = document.createElement('div');
+        slider.id = 'nexus-immersive-slider';
         
-        // Kashe duka bidiyoyi kafin a fita
-        slider.querySelectorAll('video').forEach(v => v.pause());
+        // Jera duka posts a matsayin snap items
+        slider.innerHTML = allPosts.map((post, idx) => {
+            return `<div class="immersive-snap-item" data-item-index="${idx}">
+                ${generatePostHTML(post)}
+            </div>`;
+        }).join('');
 
-        if (footer) footer.classList.remove('footer-hidden');
-        backBtn.remove();
-        
-        document.documentElement.style.overflow = '';
-        document.body.style.overflow = '';
-        window.scrollTo(0, scrollY);
-        
-        slider.remove();
-    };
+        document.body.appendChild(slider);
 
-    // Kula da Back button na waya/browser
-    history.pushState({ immersive: true }, '');
-    window.onpopstate = function() {
-        backBtn.click();
-        window.onpopstate = null;
-    };
-}
+        // Kulle tsohon scroll na bango (Body Scroll Prevention)
+        const scrollY = window.scrollY;
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
 
-// ===== IMMERSIVE VIDEO AUTOPLAY & TRACK MANAGER =====
-function manageImmersiveMediaTracks(slider) {
-    const items = slider.querySelectorAll('.immersive-snap-item');
+        const footer = document.getElementById('instaFooter');
+        if (footer) footer.classList.add('footer-hidden');
 
-    items.forEach(item => {
-        const box = item.getBoundingClientRect();
-        const video = item.querySelector('video');
-        
-        // Idan wannan katin shi ne yake tsakiyar fuska duka (Visible Frame)
-        if (box.top >= -10 && box.top <= 10) {
+        // Daidaita hotuna ko bidiyoyi da ke cikin ainihin katinka na asali (su cika duka screen radau)
+        slider.querySelectorAll('.post-card').forEach(card => {
+            card.classList.add('immersive-mode');
+            
+            const img = card.querySelector('img.post-media');
+            if (img) {
+                img.style.cssText = `
+                    width: 100vw !important; height: 100vh !important;
+                    height: 100dvh !important;
+                    object-fit: cover !important; border-radius: 0 !important;
+                    margin: 0 !important; display: block !important;
+                `;
+            }
+            const video = card.querySelector('video');
             if (video) {
-                if (video.paused) {
-                    video.play().catch(() => {});
+                video.style.cssText = `
+                    width: 100vw !important; height: 100vh !important;
+                    height: 100dvh !important;
+                    object-fit: cover !important; border-radius: 0 !important;
+                    margin: 0 !important; display: block !important;
+                `;
+                video.muted = false;
+                video.loop = true;
+                video.removeAttribute('controls');
+            }
+        });
+
+        // Dirowa kai tsaye zuwa katin da aka danna a grid
+        const targetElement = slider.querySelector(`[data-item-index="${selectedIndex}"]`);
+        if (targetElement) {
+            setTimeout(() => {
+                targetElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+                manageImmersiveMediaTracks(slider); // Kunna bidiyo na farko
+            }, 60);
+        }
+
+        // Kula da canjin swipe (Scroll Listener)
+        slider.addEventListener('scroll', () => {
+            manageImmersiveMediaTracks(slider);
+        });
+
+        // Maɓallin Koma Baya (Back Button System)
+        const backBtn = document.createElement('div');
+        backBtn.className = 'immersive-back-btn';
+        backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+        document.body.appendChild(backBtn);
+
+        backBtn.onclick = function(e) {
+            e.stopPropagation();
+            
+            // Kashe duka bidiyoyi kafin a fita
+            slider.querySelectorAll('video').forEach(v => v.pause());
+
+            if (footer) footer.classList.remove('footer-hidden');
+            backBtn.remove();
+            
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+            window.scrollTo(0, scrollY);
+            
+            slider.remove();
+        };
+
+        // Kula da Back button na waya/browser
+        history.pushState({ immersive: true }, '');
+        window.onpopstate = function() {
+            backBtn.click();
+            window.onpopstate = null;
+        };
+    }
+
+    // ===== IMMERSIVE VIDEO AUTOPLAY & TRACK MANAGER =====
+    function manageImmersiveMediaTracks(slider) {
+        const items = slider.querySelectorAll('.immersive-snap-item');
+        const sliderBounds = slider.getBoundingClientRect();
+
+        items.forEach(item => {
+            const box = item.getBoundingClientRect();
+            const video = item.querySelector('video');
+            
+            // Duba idan katin yana daidai tsakiyar fuskar slider (Reels Active Detection)
+            const isVisible = (box.top >= sliderBounds.top - 20 && box.top <= sliderBounds.top + 20);
+
+            if (isVisible) {
+                if (video) {
+                    if (video.paused) {
+                        video.play().catch(() => {});
+                    }
+                }
+            } else {
+                if (video && !video.paused) {
+                    video.pause();
+                    video.currentTime = 0;
                 }
             }
-        } else {
-            // Idan ya fita daga tsakiyar fuska, a tsayar da shi
-            if (video && !video.paused) {
-                video.pause();
-                video.currentTime = 0;
-            }
-        }
-    });
-}
-    
-    
+        });
+    }
     
     // ===== GLOW PALETTE =====
     const glowPalette = [
@@ -384,7 +424,6 @@ function manageImmersiveMediaTracks(slider) {
 
     // ===== DATA =====
     let allPosts = [];
-    let activeVideoTiles = new Map(); // tile el => IntersectionObserver entry
 
     window.addEventListener('DOMContentLoaded', () => {
         db.collection('posts')
@@ -400,99 +439,84 @@ function manageImmersiveMediaTracks(slider) {
             });
     });
 
-    
     // ===== RENDER GRID =====
-// ===== RENDER GRID =====
-function renderGrid() {
-    const grid = document.getElementById('quantumGrid');
+    function renderGrid() {
+        const grid = document.getElementById('quantumGrid');
 
-    if (allPosts.length === 0) {
-        grid.innerHTML = `<div class="empty-state">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <p>No posts yet in the matrix</p>
-        </div>`;
-        return;
-    }
-
-    grid.innerHTML = allPosts.map((post, index) => {
-        const likes = formatCount(post.likes || 0);
-        const isVideo = post.mediaType === 'video';
-
-        let mediaHTML = '';
-        if (post.mediaUrl) {
-            if (isVideo) {
-                mediaHTML = `<video 
-                    src="${post.mediaUrl}" 
-                    muted loop playsinline 
-                    preload="metadata"
-                    class="grid-video">
-                </video>
-                <div class="video-indicator"><i class="fa-solid fa-play"></i></div>`;
-            } else {
-                mediaHTML = `<img src="${post.mediaUrl}" loading="lazy" alt="">`;
-            }
-        } else {
-            mediaHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:12px;background:linear-gradient(145deg,#0d0d0d,#1a1a1a);">
-                <p style="font-size:11px;color:rgba(255,255,255,0.7);text-align:center;line-height:1.4;">${(post.content||'').substring(0,60)}${post.content&&post.content.length>60?'...':''}</p>
+        if (allPosts.length === 0) {
+            grid.innerHTML = `<div class="empty-state">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <p>No posts yet in the matrix</p>
             </div>`;
+            return;
         }
 
-        return `
-        <div class="quantum-tile"
-            data-index="${index}"
-            onmousemove="runParallaxEngine(event,this)"
-            onmouseleave="resetParallaxEngine(this)"
-            onclick="openImmersiveFromGrid(${index})">
-            ${mediaHTML}
-            <div class="quantum-overlay">
-                <div class="quantum-badge">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span>${likes}</span>
-                </div>
-            </div>
-        </div>`;
-    }).join('');
+        grid.innerHTML = allPosts.map((post, index) => {
+            const likes = formatCount(post.likes || 0);
+            const isVideo = post.mediaType === 'video';
 
-    setupGridVideoAutoPlay();
-    fetchRealAvatars();
-} 
-
-function fetchRealAvatars() {
-    allPosts.forEach(post => {
-        if (!post.username) return;
-        db.collection('users').doc(post.username).get().then(userDoc => {
-            if (!userDoc.exists) return;
-            const pic = userDoc.data().userProfilePic;
-            if (!pic) return;
-            post.userProfilePic = pic;
-        }).catch(()=>{});
-    });
-}
-
-    
-    // ===== AUTO PLAY VIDEOS (IntersectionObserver — kamar Instagram) =====
-    let videoObserver = null;
-    
-    function setupVideoAutoPlay() {
-        if (videoObserver) videoObserver.disconnect();
-
-        videoObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const video = entry.target;
-                if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-                    video.play().catch(()=>{});
+            let mediaHTML = '';
+            if (post.mediaUrl) {
+                if (isVideo) {
+                    mediaHTML = `<video 
+                        src="${post.mediaUrl}" 
+                        muted loop playsinline 
+                        preload="metadata"
+                        class="grid-video">
+                    </video>
+                    <div class="video-indicator"><i class="fa-solid fa-play"></i></div>`;
                 } else {
-                    video.pause();
-                    video.currentTime = 0;
+                    mediaHTML = `<img src="${post.mediaUrl}" loading="lazy" alt="">`;
+                }
+            } else {
+                mediaHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:12px;background:linear-gradient(145deg,#0d0d0d,#1a1a1a);">
+                    <p style="font-size:11px;color:rgba(255,255,255,0.7);text-align:center;line-height:1.4;">${(post.content||'').substring(0,60)}${post.content&&post.content.length>60?'...':''}</p>
+                </div>`;
+            }
+
+            return `
+            <div class="quantum-tile"
+                data-index="${index}"
+                onmousemove="runParallaxEngine(event,this)"
+                onmouseleave="resetParallaxEngine(this)"
+                onclick="openImmersiveFromGrid(${index})">
+                ${mediaHTML}
+                <div class="quantum-overlay">
+                    <div class="quantum-badge">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>${likes}</span>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        setupGridVideoAutoPlay();
+        fetchRealAvatars();
+    } 
+
+    function setupGridVideoAutoPlay() {
+        const videos = document.querySelectorAll('.grid-video');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.play().catch(()=>{});
+                } else {
+                    entry.target.pause();
                 }
             });
-        }, {
-            threshold: [0, 0.5, 1.0],
-            rootMargin: '0px'
-        });
+        }, { threshold: 0.5 });
+        videos.forEach(v => observer.observe(v));
+    }
 
-        document.querySelectorAll('.grid-video').forEach(video => {
-            videoObserver.observe(video);
+    function fetchRealAvatars() {
+        allPosts.forEach(post => {
+            if (!post.username) return;
+            db.collection('users').doc(post.username).get().then(userDoc => {
+                if (!userDoc.exists) return;
+                const pic = userDoc.data().userProfilePic;
+                if (!pic) return;
+                post.userProfilePic = pic;
+            }).catch(()=>{});
         });
     }
 
