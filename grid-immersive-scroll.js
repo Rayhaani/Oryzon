@@ -96,16 +96,19 @@
 
     // ── Jira immersive card ya bayyana a DOM ──
     function waitForImmersive(cb, attempt = 0) {
-        const wrapper = document.getElementById('nexus-immersive-card');
-        const card    = wrapper && wrapper.querySelector('.post-card');
+    const wrapper = document.getElementById('nexus-immersive-card');
+    const card    = wrapper && wrapper.querySelector('.post-card');
+    console.log('[DEBUG] waiting...', attempt, card ? card.classList.contains('immersive-mode') : 'no card');
 
-        if (card && card.classList.contains('immersive-mode')) {
-            cb();
-        } else if (attempt < 50) {
-            setTimeout(() => waitForImmersive(cb, attempt + 1), 10);
-        } else {
-            isAnimating = false;
-        }
+    if (card && card.classList.contains('immersive-mode')) {
+        console.log('[DEBUG] immersive found! attaching listeners');
+        cb();
+    } else if (attempt < 50) {
+        setTimeout(() => waitForImmersive(cb, attempt + 1), 10);
+    } else {
+        console.log('[DEBUG] gave up waiting');
+        isAnimating = false;
+    }
     }
 
     // ── Touch handlers ──
