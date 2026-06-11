@@ -238,14 +238,16 @@
 
     // ── Override openImmersiveFromGrid ──
     function init() {
+    if (window.__nexusScrollReady) return; // Hana double-init
     console.log('[DEBUG] init called, openImmersiveFromGrid:', typeof window.openImmersiveFromGrid);
     if (typeof window.openImmersiveFromGrid === 'undefined') {
         setTimeout(init, 50);
         return;
     }
+    window.__nexusScrollReady = true;
     console.log('[DEBUG] patching openImmersiveFromGrid');
-        
 
+        
         // Save original
         window.__gridOpenOriginal = window.openImmersiveFromGrid;
 
