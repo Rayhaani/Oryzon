@@ -15,23 +15,26 @@
 
     // ── Saita listeners bayan immersive ya bude ──
     function attachSwipeListeners() {
-        // Cire tsohuwar listeners kafin a ƙara sabuwa
-        detachSwipeListeners();
+    detachSwipeListeners();
+    const el = document.getElementById('nexus-immersive-card') || document.body;
+    el.addEventListener('touchstart',  onTouchStart, { passive: true });
+    el.addEventListener('touchmove',   onTouchMove,  { passive: false });
+    el.addEventListener('touchend',    onTouchEnd,   { passive: true });
+    el.addEventListener('wheel',       onWheel,      { passive: false });
+    document.addEventListener('keydown', onKeyDown);
+    window._nexusSwipeEl = el;
+}
 
-        document.addEventListener('touchstart',  onTouchStart, { passive: true });
-        document.addEventListener('touchmove',   onTouchMove,  { passive: false });
-        document.addEventListener('touchend',    onTouchEnd,   { passive: true });
-        document.addEventListener('wheel',       onWheel,      { passive: false });
-        document.addEventListener('keydown',     onKeyDown);
-    }
-
-    function detachSwipeListeners() {
-        document.removeEventListener('touchstart',  onTouchStart);
-        document.removeEventListener('touchmove',   onTouchMove);
-        document.removeEventListener('touchend',    onTouchEnd);
-        document.removeEventListener('wheel',       onWheel);
-        document.removeEventListener('keydown',     onKeyDown);
-    }
+function detachSwipeListeners() {
+    const el = window._nexusSwipeEl || document.body;
+    el.removeEventListener('touchstart',  onTouchStart);
+    el.removeEventListener('touchmove',   onTouchMove);
+    el.removeEventListener('touchend',    onTouchEnd);
+    el.removeEventListener('wheel',       onWheel);
+    document.removeEventListener('keydown', onKeyDown);
+    window._nexusSwipeEl = null;
+}
+    
 
     // ── Navigatе zuwa wani post ──
     function goTo(newIndex) {
