@@ -1649,7 +1649,6 @@ window.exitImmersive = function(card) {
     card.classList.remove('immersive-mode');
     if (footer) footer.classList.remove('footer-hidden');
 
-    // Tsayar da immersive video scroll
     if (typeof window.nexusImmersiveStop === 'function') {
         window.nexusImmersiveStop();
     }
@@ -1662,6 +1661,10 @@ window.exitImmersive = function(card) {
         document.removeEventListener('touchstart', card._immersiveTouchStartHandler);
         card._immersiveTouchStartHandler = null;
     }
+
+    // Cire swipe overlay ← ANAN ciki
+    const overlay = document.getElementById('nexus-swipe-overlay');
+    if (overlay) overlay.remove();
    
     const backBtn = document.querySelector('.immersive-back-btn');
     if (backBtn) backBtn.remove();
@@ -1678,10 +1681,7 @@ window.exitImmersive = function(card) {
     }
 
     window.onpopstate = null;
-};       
-
-
-
+};
 // ============================================================
 // 8. VIDEO OBSERVER & SOUND CONTROL — Central Command
 // ============================================================
@@ -1890,8 +1890,28 @@ window.toggleSave = async function(btn, postId) {
 
         card._immersiveScrollHandler = onTouchMove;
         card._immersiveTouchStartHandler = onTouchStart;
-    };  // ← RUFE nexusImmersiveStart
 
+        // Sanya transparent overlay a saman video don catch swipes
+        let swipeOverlay = document.getElementById('nexus-swipe-overlay');
+        if (!swipeOverlay) {
+            swipeOverlay = document.createElement('div');
+            swipeOverlay.id = 'nexus-swipe-overlay';
+            swipeOverlay.style.cssText = `
+                position: fixed;
+                top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                z-index: 6000;
+                background: transparent;
+            `;
+            document.body.appendChild(swipeOverlay);
+        }
+
+        swipeOverlay.addEventListener('touchstart', onTouchStart, { passive: true });
+        swipeOverlay.addEventListener('touchmove', onTouchMove, { passive: true });
+        card._swipeOverlay = swipeOverlay;
+
+    };  // ← RUFE nexusImmersiveStart
+   
     window.nexusImmersiveStop = function() {
         S.isFetchingOld = false;
         S.isFetchingNew = false;
