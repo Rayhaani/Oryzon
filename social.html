@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Nexus Protocol - Debug Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <title>The Nexus Protocol - 2050 Balanced Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- Mun saka kariya ga scripts din waje idan basu yi lodi ba -->
+    <script src="post-card-template.js" onerror="console.warn('post-card-template.js ba zai iya loduwa ba')"></script>
+    
     <style>
         :root {
             --obsidian: #050505;
@@ -14,66 +20,298 @@
             --glass-bg: rgba(10, 10, 10, 0.8); 
             --glass-border: rgba(253, 224, 141, 0.2); 
             --premium-gold: #ffd700;
+            --gold-glow: 0 0 15px rgba(226, 176, 74, 0.3);
         }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             background-color: #050505 !important; 
             color: white;
             font-family: 'Inter', sans-serif;
             margin: 0;
-            padding-bottom: 60px;
+            padding: 0;
             overflow-x: hidden;
+            padding-bottom: 60px;
         } 
+
         header {
-            position: fixed; top: 0; width: 100vw; height: 50px; z-index: 5000;
-            display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
-            background: rgba(245, 245, 247, 0.35) !important; backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important; border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+            position: fixed;
+            top: 0;
+            width: 100vw; 
+            height: 50px; 
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-sizing: border-box;
+            background: rgba(245, 245, 247, 0.35) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4) !important;
         }     
-        .logo { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: #fff; }
-        .feed-container { margin-top: 70px; padding: 0 10px; max-width: 500px; margin-left: auto; margin-right: auto; }
+            
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            line-height: 30px; 
+            height: 30px; 
+            display: flex;
+            align-items: center;
+            background: linear-gradient(90deg, #FFFFFF 0%, #FDE08D 50%, #B8860B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .neural-switch-wrapper {
+            display: flex;
+            align-items: center;
+            height: 30px;
+        }
+
+        .neural-switch {
+            width: 135px;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            box-shadow: 0 0 15px rgba(253, 224, 141, 0.1);
+        }
+
+        .switch-blob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 42px;
+            height: 24px;
+            background: linear-gradient(45deg, #FDE08D, #B8860B);
+            border-radius: 20px;
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1;
+        }
+
+        .switch-label {
+            flex: 1;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 8px;
+            letter-spacing: 0.5px;
+            text-align: center;
+            line-height: 28px;
+            z-index: 2;
+            color: #fff;
+            mix-blend-mode: overlay;
+        }
+
+        .header-right-cluster {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .earning-tracker {
+            background: rgba(80, 250, 123, 0.05);
+            border: 1px solid var(--emerald-pulse);
+            padding: 0px 10px;
+            height: 30px; 
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--emerald-pulse);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .menu-container {
+            position: relative; width: 32px; height: 32px;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(253, 224, 141, 0.2);
+            border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer;
+        }
+
+        .menu-trigger {
+            position: relative; width: 18px; height: 14px; display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .menu-line {
+            display: block; height: 2px; background: linear-gradient(90deg, #ffffff, #FDE08D); border-radius: 10px; transition: all 0.4s;
+        }
+
+        .line-top { width: 65%; align-self: flex-start; }
+        .line-middle { width: 100%; }
+        .line-bottom { width: 65%; align-self: flex-end; }
+
+        .menu-container.is-active .line-top { transform: translateY(6px) rotate(45deg); width: 100%; }
+        .menu-container.is-active .line-middle { opacity: 0; width: 0%; }
+        .menu-container.is-active .line-bottom { transform: translateY(-6px) rotate(-45deg); width: 100%; }
+
+        .feed-container {
+            margin-top: 10px;
+            padding: 0 10px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         .nexus-footer {
             position: fixed; bottom: 0; width: 100%; height: 50px; 
             background: rgba(5, 5, 5, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex; justify-content: space-around; align-items: center; z-index: 9999;
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 9999; backdrop-filter: blur(10px);
         }
-        .footer-icon { color: #fff; opacity: 0.5; cursor: pointer; }
-        .footer-icon.active { opacity: 1; }
-        .error-log-box { background: #ff0055; color: white; padding: 10px; border-radius: 5px; margin: 10px 0; display: none; font-family: monospace; font-size: 12px; }
+        .footer-icon { color: #fff; opacity: 0.5; cursor: pointer; height: 100%; width: 50px; display: flex; align-items: center; justify-content: center; }
+        .footer-icon.active { opacity: 1; filter: drop-shadow(0 0 5px var(--cyan-neon)); }
+        .profile-img { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #fff; object-fit: cover; }
+        
+        /* Cyber Dropdown */
+        .Cyber-Dropdown {
+            position: fixed; top: 75px; right: -300px; width: 260px;
+            background: rgba(10, 15, 28, 0.85); border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px; padding: 16px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 999;
+            transition: all 0.3s ease; opacity: 0;
+        }
+
+        .Cyber-Dropdown.Active { right: 15px; opacity: 1; }
+        .Drop-User-Section { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); margin-bottom: 12px; }
+        .Drop-User-Meta h5 { color: #ffffff; margin: 0; font-size: 0.9rem; }
+        .Drop-User-Meta span { color: #00f2fe; font-size: 0.7rem; display: block; }
+        .Drop-Links-Grid { display: flex; flex-direction: column; gap: 6px; }
+        .Drop-Item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; text-decoration: none; transition: 0.2s; }
+        .Drop-Item:hover { background: rgba(255, 255, 255, 0.03); border-left: 2px solid #00f2fe; }
+        .Drop-Text { color: rgba(255, 255, 255, 0.85); font-size: 0.85rem; }
+
+        /* Stories styles */
+        .nexus-stories-container {
+            margin-top: 55px !important;
+            display: flex !important;
+            align-items: center !important;
+            padding: 5px 0 !important;
+            overflow-x: auto !important;
+            width: 100% !important;
+            background-color: #050505 !important;
+            height: 95px !important;
+            gap: 10px;
+        }
+        .story-card { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 75px; cursor: pointer; }
+        .story-avatar-wrapper { width: 65px; height: 65px; border-radius: 50%; padding: 2px; border: 2px solid #fde08d; }
+        .story-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .story-username { font-size: 10px; color: #fff; text-align: center; margin-top: 4px; display: block; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* Post Overlay */
+        .post-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px);
+            display: none; justify-content: center; align-items: center; z-index: 6000;
+        }
+        .overlay-content {
+            background: var(--obsidian); width: 90%; max-width: 450px;
+            border: 1px solid var(--glass-border); border-radius: 25px; padding: 20px;
+        }
+        #postText { width: 100%; height: 100px; background: rgba(255, 255, 255, 0.05); border: none; border-radius: 15px; color: white; padding: 15px; }
+        .publish-btn { width: 100%; padding: 15px; background: linear-gradient(45deg, #FDE08D, #B8860B); border: none; border-radius: 30px; font-weight: bold; cursor: pointer; color: black; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo">Nexus</div>
-    <div style="font-size: 12px; color: var(--emerald-pulse);">System Live</div>
+    <div class="neural-switch-wrapper">
+        <div class="neural-switch" id="nexusSwitch">
+            <div class="switch-blob"></div>
+            <div class="switch-label" onclick="window.location.href='social.html'">SOCIAL</div>
+        </div>
+    </div>
+    
+    <div class="header-right-cluster">
+        <div class="earning-tracker">
+            <div class="pulse-dot"></div>
+            <span id="token-count" style="font-family: 'Orbitron'; font-size: 11px;">0.0000 NT</span>
+        </div>
+        
+        <div class="menu-container" id="cyberMenu" onclick="this.classList.toggle('is-active'); toggleMinimalMenu();">
+            <div class="menu-trigger">
+                <span class="menu-line line-top"></span>
+                <span class="menu-line line-middle"></span>
+                <span class="menu-line line-bottom"></span>
+            </div>
+        </div>
+    </div>
 </header>
 
-<div class="feed-container">
-    <div id="errorLog" class="error-log-box"></div>
-    <h2 style="font-family: 'Orbitron'; font-size: 16px; margin-bottom: 15px;">Nexus Feed Container</h2>
-    <p style="color: #aaa; font-size: 14px;">Idan kana ganin wannan rubutun, to shafin ya buɗe lafiya lau. Matsalar tana cikin loda posts ne daga Firebase ko kuma wani script na waje.</p>
+<div id="CyberDropdown" class="Cyber-Dropdown">
+    <div class="Drop-User-Section">
+        <div class="Drop-User-Meta">
+            <h5 id="userDropdownName">User</h5>
+            <span>Node Active</span>
+        </div>
+    </div>
+    <div class="Drop-Links-Grid">
+        <a href="social.html" class="Drop-Item"><span class="Drop-Text">💬 Messages</span></a>
+        <a href="earn.html" class="Drop-Item"><span class="Drop-Text">⚡ Oryzon Rewards</span></a>
+    </div>
 </div>
 
-<nav class="nexus-footer">
-    <div class="footer-icon active"><i class="fa-solid fa-house"></i></div>
-    <div class="footer-icon"><i class="fa-solid fa-comment"></i></div>
-    <div class="footer-icon"><i class="fa-solid fa-plus"></i></div>
-    <div class="footer-icon"><i class="fa-solid fa-compass"></i></div>
-    <div class="footer-icon"><i class="fa-solid fa-user"></i></div>
-</nav>
+<div class="nexus-stories-container">
+    <div class="story-card">
+        <div class="story-avatar-wrapper">
+            <img src="https://via.placeholder.com/150" alt="" class="story-avatar" id="story-avatar-preview">
+        </div>
+        <span class="story-username">Your story</span>
+    </div>
+</div>
+        
+<div class="feed-container" id="nexusFeedContainer">
+    <!-- Posts zasu fito anan -->
+</div>
 
+<nav class="nexus-footer" id="instaFooter">
+    <div class="footer-icon active" onclick="window.location.href='social.html'"><i class="fa-solid fa-house"></i></div>
+    <div class="footer-icon" onclick="openPostOverlay()"><i class="fa-solid fa-circle-plus"></i></div>
+    <div class="footer-icon" onclick="window.location.href='me.html'">
+        <img src="https://via.placeholder.com/150" alt="Me" class="profile-img" id="footerProfileImg">
+    </div>
+</nav>
+    
+<div id="postOverlay" class="post-overlay">
+    <div class="overlay-content">
+        <h3 style="margin-bottom: 15px;">Create New Post</h3>
+        <textarea id="postText" placeholder="Mene ne a ranka?"></textarea>
+        <button onclick="publishPost()" class="publish-btn" style="margin-top: 15px;">Publish Post</button>
+        <button onclick="closePostOverlay()" style="background:none; border:none; color:white; margin-top:10px; width:100%; cursor:pointer;">Cancel</button>
+    </div>
+</div>
+
+<!-- FIREBASE SCRIPTS -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-  // Kama ko wane irin kuskure ne kafin komai ya mutu
-  window.onerror = function(message, source, lineno, colno, error) {
-      const errorBox = document.getElementById('errorLog');
-      if(errorBox) {
-          errorBox.style.display = 'block';
-          errorBox.innerHTML = `<strong>Error Detected:</strong> ${message} <br>Line: ${lineno} in ${source}`;
-      }
-      return false;
+  // Kariya daga dukkan wata matsala ta tsayawar JS
+  window.onerror = function(msg, url, line) {
+      console.log("Error caught safely: " + msg + " at line " + line);
+      return true; 
   };
 
   const firebaseConfig = {
@@ -85,17 +323,72 @@
     appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
   };
 
-  try {
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      console.log("Firebase Connected Successfully!");
-  } catch(e) {
-      console.error("Firebase Init Error:", e);
-  }
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const currentUser = localStorage.getItem("nexus_user_session") || "Guest";
 
   window.addEventListener('DOMContentLoaded', () => {
-      console.log("DOM Fully Loaded and Parsed.");
+      loadUserProfile();
+      loadFeedPosts();
   });
+
+  function loadUserProfile() {
+      const savedPic = localStorage.getItem('userProfilePic') || "https://api.dicebear.com/7.x/bottts/svg?seed=" + currentUser;
+      if(document.getElementById('footerProfileImg')) document.getElementById('footerProfileImg').src = savedPic;
+      if(document.getElementById('story-avatar-preview')) document.getElementById('story-avatar-preview').src = savedPic;
+      
+      if (currentUser !== "Guest") {
+          db.collection("users").doc(currentUser).get().then(doc => {
+              if (doc.exists && document.getElementById("userDropdownName")) {
+                  document.getElementById("userDropdownName").innerText = doc.data().fullName;
+              }
+          }).catch(e => console.log("User fetch bypassed"));
+      }
+  }
+
+  function loadFeedPosts() {
+      const feedBox = document.getElementById("nexusFeedContainer");
+      if(!feedBox) return;
+
+      // Idan kana amfani da post-card-template.js dake da renderNexusFeed
+      if (typeof renderNexusFeed === 'function') {
+          try {
+              renderNexusFeed();
+              return;
+          } catch(e) { console.log("Template layout error, switching to native loader"); }
+      }
+
+      // Loader na cikin gida idan external script din ya gaza
+      db.collection("posts").orderBy("timestamp", "desc").limit(10).get().then(snapshot => {
+          feedBox.innerHTML = "";
+          if(snapshot.empty) {
+              feedBox.innerHTML = "<p style='text-align:center; color:#666; margin-top:20px;'>No posts available yet.</p>";
+              return;
+          }
+          snapshot.forEach(doc => {
+              const post = doc.data();
+              const card = document.createElement("div");
+              card.style.background = "rgba(255,255,255,0.03)";
+              card.style.padding = "15px";
+              card.style.borderRadius = "12px";
+              card.style.marginBottom = "15px";
+              card.style.border = "1px solid rgba(255,255,255,0.05)";
+              card.innerHTML = `
+                  <div style="font-weight:bold; color:#FDE08D; margin-bottom:5px;">@${post.username || 'anonymous'}</div>
+                  <p style="font-size:14px; line-height:1.4;">${post.content || ''}</p>
+              `;
+              feedBox.appendChild(card);
+          });
+      }).catch(err => {
+          feedBox.innerHTML = "<p style='color:red;'>Failed to load feed from Firestore.</p>";
+      });
+  }
+
+  function openPostOverlay() { document.getElementById('postOverlay').style.display = 'flex'; }
+  function closePostOverlay() { document.getElementById('postOverlay').style.display = 'none'; }
+  function toggleMinimalMenu() { document.getElementById('CyberDropdown').classList.toggle('Active'); }
 </script>
+<!-- Wannan zai yi lodi a karshe don kada ya dakatar da komai -->
+<script src="nexus-immersive-scroll.js" onerror="console.warn('Scroll script omitted')"></script>
 </body>
 </html>
