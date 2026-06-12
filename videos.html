@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Videos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="post-card-template.js"></script>
+
+    <style>
+        :root {
+            --obsidian: #050505;
+            --cyan-neon: #FDE08D;
+            --emerald-pulse: #50FA7B;
+            --glass-bg: rgba(10, 10, 10, 0.8);
+            --glass-border: rgba(253, 224, 141, 0.2);
+            --premium-gold: #ffd700;
+            --gold-glow: 0 0 15px rgba(226, 176, 74, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #050505 !important;
+            background-image: none !important;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 60px;
+        }
+
+        /* ====== HEADER ====== */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100vw;
+            height: 50px;
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-sizing: border-box;
+            background: rgba(245, 245, 247, 0.35) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(90deg, #FFFFFF 0%, #FDE08D 50%, #B8860B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Videos tab indicator */
+        .videos-tab-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: rgba(253, 224, 141, 0.8);
+            text-transform: uppercase;
+            border: 1px solid rgba(253, 224, 141, 0.3);
+            border-radius: 20px;
+            padding: 3px 10px;
+            background: rgba(253, 224, 141, 0.06);
+        }
+
+        /* Earning tracker */
+        .header-right-cluster {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .earning-tracker {
+            background: rgba(80, 250, 123, 0.05);
+            border: 1px solid var(--emerald-pulse);
+            padding: 0px 10px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 10px rgba(80, 250, 123, 0.1);
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--emerald-pulse);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%   { transform: scale(1); opacity: 1; }
+            50%  { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ====== MENU ICON ====== */
+        .menu-container {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(253, 224, 141, 0.2);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .menu-container::before {
+            content: '';
+            position: absolute;
+            inset: -1.5px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #00f2fe, #FDE08D, #050505, #00f2fe);
+            background-size: 300% 300%;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease, filter 0.4s ease;
+        }
+
+        .menu-trigger {
+            position: relative;
+            width: 18px;
+            height: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .menu-line {
+            display: block;
+            height: 2px;
+            background: linear-gradient(90deg, #ffffff, #FDE08D);
+            border-radius: 10px;
+            transition: all 0.4s cubic-bezier(0.68, -0.60, 0.32, 1.60);
+        }
+
+        .line-top    { width: 65%; align-self: flex-start; }
+        .line-middle { width: 100%; background: linear-gradient(90deg, #FDE08D, #B8860B); }
+        .line-bottom { width: 65%; align-self: flex-end; }
+
+        .menu-container:hover { transform: scale(1.05); border-color: rgba(253, 224, 141, 0.5); }
+        .menu-container:hover .line-top,
+        .menu-container:hover .line-bottom { width: 100%; }
+
+        .menu-container.is-active .line-top    { width: 100%; transform: translateY(6px) rotate(45deg); }
+        .menu-container.is-active .line-middle { width: 0%; opacity: 0; transform: translateX(-10px); }
+        .menu-container.is-active .line-bottom { width: 100%; transform: translateY(-6px) rotate(-45deg); }
+
+        /* ====== DROPDOWN ====== */
+        .Cyber-Dropdown {
+            position: fixed;
+            top: 65px;
+            right: -300px;
+            width: 260px;
+            background: rgba(10, 15, 28, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4),
+                        inset 0 0 1px rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 999;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+        .Cyber-Dropdown.Active { right: 15px; opacity: 1; }
+
+        .Drop-User-Section {
+            display: flex; align-items: center; gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 12px;
+        }
+        .Drop-Avatar-Wrapper {
+            position: relative; width: 32px; height: 32px;
+            background: rgba(255, 255, 255, 0.05); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+        }
+        .Drop-Avatar-Pulse {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 50%; background: rgba(0, 242, 254, 0.1);
+            animation: avatarPulse 2s infinite;
+        }
+        @keyframes avatarPulse {
+            0%   { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+        .Drop-Avatar-Icon { font-size: 14px; z-index: 1; }
+        .Drop-User-Meta h5 { color: #fff; margin: 0; font-size: 0.9rem; font-weight: 500; }
+        .Drop-User-Meta span { color: #00f2fe; font-size: 0.7rem; display: block; letter-spacing: 0.5px; }
+
+        .Drop-Links-Grid { display: flex; flex-direction: column; gap: 6px; }
+        .Drop-Item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px; border-radius: 10px;
+            text-decoration: none; background: transparent;
+            transition: all 0.2s ease;
+        }
+        .Drop-Item:hover { background: rgba(255,255,255,0.03); border-left: 2px solid #00f2fe; padding-left: 16px; }
+        .Drop-Icon  { font-size: 16px; opacity: 0.8; }
+        .Drop-Text  { color: rgba(255,255,255,0.85); font-size: 0.85rem; font-weight: 400; }
+        .Drop-Footer {
+            text-align: center; font-size: 0.65rem;
+            color: rgba(255,255,255,0.2); margin-top: 12px;
+            padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);
+            letter-spacing: 0.5px;
+        }
+
+        /* ====== FILTER TABS ====== */
+        .videos-filter-bar {
+            position: fixed;
+            top: 50px;
+            left: 0; right: 0;
+            z-index: 4000;
+            display: flex;
+            gap: 8px;
+            padding: 8px 14px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(253, 224, 141, 0.08);
+        }
+        .videos-filter-bar::-webkit-scrollbar { display: none; }
+
+        .filter-chip {
+            flex-shrink: 0;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .filter-chip.active {
+            color: #000;
+            background: linear-gradient(135deg, #FDE08D, #B8860B);
+            border-color: transparent;
+            box-shadow: 0 0 12px rgba(253,224,141,0.35);
+        }
+
+        /* ====== FEED ====== */
+        .feed-container {
+            margin-top: 90px; /* header (50) + filter-bar (40) */
+            padding: 0 10px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+        }
+
+        /* ====== LOAD MORE SPINNER ====== */
+        .load-more-trigger {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            gap: 8px;
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+        .spinner-ring {
+            width: 20px; height: 20px;
+            border: 2px solid rgba(253,224,141,0.2);
+            border-top-color: #FDE08D;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ====== EMPTY STATE ====== */
+        .empty-videos {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.25);
+        }
+        .empty-videos i {
+            font-size: 48px;
+            color: rgba(253,224,141,0.2);
+            margin-bottom: 14px;
+            display: block;
+        }
+        .empty-videos p {
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* ====== FOOTER NAV ====== */
+        .nexus-footer {
+            position: fixed; bottom: 0; width: 100%; height: 50px;
+            background: rgba(5, 5, 5, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 9999; padding: 0;
+            transition: transform 0.4s ease;
+            backdrop-filter: blur(10px);
+        }
+        .footer-hidden { transform: translateY(100%); }
+        .footer-icon {
+            color: #fff; opacity: 0.5; cursor: pointer;
+            height: 100%; width: 50px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .footer-icon.active {
+            opacity: 1;
+            filter: drop-shadow(0 0 5px var(--cyan-neon));
+        }
+        .profile-img {
+            width: 26px; height: 26px;
+            border-radius: 50%; border: 1.5px solid #fff;
+            object-fit: cover;
+        }
+
+        /* ====== POST CARD GAP OVERRIDE ====== */
+        .post-card {
+            margin-bottom: 12px !important;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ====== HEADER ====== -->
+<header>
+    <div class="logo">Nexus</div>
+    <div class="videos-tab-label">Videos</div>
+    <div class="header-right-cluster">
+        <div class="earning-tracker">
+            <div class="pulse-dot"></div>
+            <span id="token-count" style="font-family:'Orbitron';font-size:11px;">0.0000 NT</span>
+        </div>
+        <div class="menu-container" id="cyberMenu"
+             onclick="this.classList.toggle('is-active'); toggleMinimalMenu(); if(navigator.vibrate) navigator.vibrate([25,15,25]);">
+            <div class="menu-trigger">
+                <span class="menu-line line-top"></span>
+                <span class="menu-line line-middle"></span>
+                <span class="menu-line line-bottom"></span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ====== DROPDOWN ====== -->
+<div id="CyberDropdown" class="Cyber-Dropdown">
+    <div class="Drop-User-Section">
+        <div class="Drop-Avatar-Wrapper">
+            <div class="Drop-Avatar-Pulse"></div>
+            <span class="Drop-Avatar-Icon">👤</span>
+        </div>
+        <div class="Drop-User-Meta">
+            <h5>Aliyu Haedar</h5>
+            <span>Node Active</span>
+        </div>
+    </div>
+    <div class="Drop-Links-Grid">
+        <a href="social.html"  class="Drop-Item"><span class="Drop-Icon">💬</span><span class="Drop-Text">Messages</span></a>
+        <a href="social.html"  class="Drop-Item"><span class="Drop-Icon">🌐</span><span class="Drop-Text">Synergy Network</span></a>
+        <a href="earn.html"    class="Drop-Item"><span class="Drop-Icon">⚡</span><span class="Drop-Text">Oryzon Rewards</span></a>
+        <a href="#"            class="Drop-Item"><span class="Drop-Icon">🛡️</span><span class="Drop-Text">Matrix Protocol</span></a>
+        <a href="earn.html"    class="Drop-Item"><span class="Drop-Icon">📈</span><span class="Drop-Text">Adsterra Tasks</span></a>
+        <a href="#"            class="Drop-Item"><span class="Drop-Icon">⚙️</span><span class="Drop-Text">Core Settings</span></a>
+    </div>
+    <div class="Drop-Footer">Nexus OS v2.0</div>
+</div>
+
+<!-- ====== FILTER BAR ====== -->
+<div class="videos-filter-bar" id="filterBar">
+    <div class="filter-chip active" data-filter="all"      onclick="setFilter(this,'all')">All</div>
+    <div class="filter-chip"        data-filter="trending" onclick="setFilter(this,'trending')">Trending</div>
+    <div class="filter-chip"        data-filter="news"     onclick="setFilter(this,'news')">News</div>
+    <div class="filter-chip"        data-filter="tech"     onclick="setFilter(this,'tech')">Tech</div>
+    <div class="filter-chip"        data-filter="business" onclick="setFilter(this,'business')">Business</div>
+    <div class="filter-chip"        data-filter="comedy"   onclick="setFilter(this,'comedy')">Comedy</div>
+    <div class="filter-chip"        data-filter="sports"   onclick="setFilter(this,'sports')">Sports</div>
+</div>
+
+<!-- ====== FEED ====== -->
+<div class="feed-container" id="videoFeed"></div>
+
+<!-- ====== LOAD MORE TRIGGER ====== -->
+<div class="load-more-trigger" id="loadMoreTrigger" style="display:none;">
+    <div class="spinner-ring"></div>
+    <span>Loading</span>
+</div>
+
+<!-- ====== FOOTER NAV ====== -->
+<nav class="nexus-footer" id="instaFooter">
+    <div class="footer-icon" onclick="window.location.href='social.html'">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L4 9v12h5v-7h6v7h5V9l-8-6z"/></svg>
+    </div>
+    <div class="footer-icon" onclick="window.location.href='chats.html'">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 11-7.6-12.7 8.38 8.38 0 013.8.9L21 3z"/></svg>
+    </div>
+    <div class="footer-icon" onclick="window.location.href='social.html'">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v8M8 12h8"/>
+        </svg>
+    </div>
+    <!-- Videos icon — active -->
+    <div class="footer-icon active">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 10l4.553-2.069A1 1 0 0121 8.882v6.236a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+        </svg>
+    </div>
+    <div class="footer-icon" onclick="window.location.href='index.html'">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="5"/>
+            <path d="M16 2v20M8 2v20M2 12h20"/>
+        </svg>
+    </div>
+    <div class="footer-icon" onclick="window.location.href='me.html'">
+        <img src="https://via.placeholder.com/150" alt="Me" class="profile-img" id="footerProfileImg">
+    </div>
+</nav>
+
+<!-- ====== FIREBASE SDK ====== -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+
+<script>
+// ====== FIREBASE INIT ======
+const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+    measurementId: "G-K5085DLL2W"
+};
+firebase.initializeApp(firebaseConfig);
+const db       = firebase.firestore();
+const storage  = firebase.storage();
+const analytics = firebase.analytics();
+
+// ====== AUTH GUARD ======
+const currentUser = localStorage.getItem('nexus_user_session');
+if (!currentUser) window.location.href = 'login.html';
+
+// ====== STATE ======
+let activeFilter      = 'all';
+let lastVisible       = null;   // Firestore cursor for pagination
+let isLoading         = false;
+let allLoaded         = false;
+const PAGE_SIZE       = 8;
+
+// ====== DOM ======
+const feedEl          = document.getElementById('videoFeed');
+const loadMoreTrigger = document.getElementById('loadMoreTrigger');
+
+// ====== INIT ======
+window.addEventListener('DOMContentLoaded', () => {
+    loadFooterProfile();
+    loadVideos(true);
+    setupInfiniteScroll();
+});
+
+// ====== FOOTER PROFILE ======
+function loadFooterProfile() {
+    const savedPic = localStorage.getItem('userProfilePic');
+    const img      = document.getElementById('footerProfileImg');
+    if (savedPic && img) img.src = savedPic;
+    else if (img)        img.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq';
+}
+
+// ====== FILTER ======
+window.setFilter = function(chip, filter) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeFilter = filter;
+
+    // Reset & reload
+    lastVisible = null;
+    allLoaded   = false;
+    feedEl.innerHTML = '';
+    loadVideos(true);
+};
+
+// ====== FIRESTORE QUERY BUILDER ======
+function buildQuery() {
+    // Base query — only posts where mediaType == 'video'
+    let q = db.collection('posts')
+               .where('mediaType', '==', 'video')
+               .orderBy('timestamp', 'desc');
+
+    // Filter by category unless 'all'
+    if (activeFilter !== 'all') {
+        q = db.collection('posts')
+               .where('mediaType', '==', 'video')
+               .where('category', '==', activeFilter)
+               .orderBy('timestamp', 'desc');
+    }
+
+    return q;
+}
+
+// ====== LOAD VIDEOS (paginated) ======
+async function loadVideos(reset = false) {
+    if (isLoading || allLoaded) return;
+    isLoading = true;
+    loadMoreTrigger.style.display = 'flex';
+
+    try {
+        let q = buildQuery().limit(PAGE_SIZE);
+        if (!reset && lastVisible) q = q.startAfter(lastVisible);
+
+        const snapshot = await q.get();
+
+        if (snapshot.empty) {
+            allLoaded = true;
+            loadMoreTrigger.style.display = 'none';
+
+            if (reset) {
+                feedEl.innerHTML = `
+                    <div class="empty-videos">
+                        <i class="fa-solid fa-video-slash"></i>
+                        <p>Babu videos har yanzu.<br>Zama na farko da kai!</p>
+                    </div>`;
+            }
+            return;
+        }
+
+        // Cursor for next page
+        lastVisible = snapshot.docs[snapshot.docs.length - 1];
+
+        // Render
+        let html = '';
+        snapshot.forEach(doc => {
+            const post = { id: doc.id, ...doc.data() };
+            html += generatePostHTML(post);
+        });
+        feedEl.insertAdjacentHTML('beforeend', html);
+
+        // Restore likes & load avatars
+        setTimeout(() => {
+            if (typeof window.postCard_restoreLikes === 'function') {
+                window.postCard_restoreLikes(feedEl);
+            }
+        }, 400);
+
+        // Load individual avatars from users collection
+        snapshot.forEach(doc => {
+            const post = doc.data();
+            if (!post.username) return;
+            db.collection('users').doc(post.username).get().then(userDoc => {
+                if (!userDoc.exists) return;
+                const pic = userDoc.data().userProfilePic;
+                if (!pic) return;
+                const card = feedEl.querySelector(`.post-card[data-post-id="${doc.id}"]`);
+                if (card) {
+                    const avatar = card.querySelector('.post-avatar');
+                    if (avatar) avatar.src = pic;
+                }
+            });
+        });
+
+        // Comment counts
+        snapshot.forEach(doc => {
+            db.collection('nexus_contributions')
+              .where('postId', '==', doc.id)
+              .where('parentId', '==', null)
+              .onSnapshot(snap => {
+                  const el = document.getElementById(`comment-count-${doc.id}`);
+                  if (el) el.textContent = snap.size;
+              });
+        });
+
+        // Observe new videos
+        if (typeof window.postCard_observeVideos === 'function') {
+            window.postCard_observeVideos();
+        }
+        setTimeout(() => {
+            if (typeof window.postCard_handleVideoPriority === 'function') {
+                window.postCard_handleVideoPriority();
+            }
+        }, 500);
+
+        // Hide trigger if fewer results than page size
+        if (snapshot.size < PAGE_SIZE) {
+            allLoaded = true;
+            loadMoreTrigger.style.display = 'none';
+        } else {
+            loadMoreTrigger.style.display = 'none'; // hide until scroll triggers it
+        }
+
+    } catch (err) {
+        console.error('loadVideos error:', err);
+        loadMoreTrigger.style.display = 'none';
+    } finally {
+        isLoading = false;
+    }
+}
+
+// ====== INFINITE SCROLL (IntersectionObserver) ======
+function setupInfiniteScroll() {
+    const sentinel = document.createElement('div');
+    sentinel.id = 'scroll-sentinel';
+    sentinel.style.height = '1px';
+    document.body.appendChild(sentinel);
+
+    const observer = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && !isLoading && !allLoaded) {
+            loadVideos(false);
+        }
+    }, { rootMargin: '200px' });
+
+    observer.observe(sentinel);
+}
+
+// ====== SCROLL → VIDEO PRIORITY ======
+let scrollTimeout;
+window.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        if (typeof window.postCard_handleVideoPriority === 'function') {
+            window.postCard_handleVideoPriority();
+        }
+    }, 150);
+}, { passive: true });
+
+// ====== DROPDOWN CONTROLLER ======
+function toggleMinimalMenu() {
+    document.getElementById('CyberDropdown').classList.toggle('Active');
+}
+
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('CyberDropdown');
+    const menuBtn  = document.getElementById('cyberMenu');
+    if (!dropdown.contains(e.target) && !menuBtn.contains(e.target)) {
+        dropdown.classList.remove('Active');
+        menuBtn.classList.remove('is-active');
+    }
+});
+</script>
+</body>
+</html>
