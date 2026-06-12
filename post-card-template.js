@@ -1888,8 +1888,8 @@ window.toggleSave = async function(btn, postId) {
 if (totalSwipe > 80) {
     goToPreviousVideo(card);
 } 
-        
-
+        }
+       
         document.addEventListener('touchstart', onTouchStart, { passive: true });
         document.addEventListener('touchmove', onTouchMove, { passive: true });
 
