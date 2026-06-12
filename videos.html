@@ -458,17 +458,14 @@ window.setFilter = function(chip, filter) {
 // ── QUERY BUILDER ──
 function buildQuery() {
     let q = db.collection('posts')
-              .where('mediaType', '==', 'video')
-              .orderBy('timestamp', 'desc');
+              .where('mediaType', '==', 'video');
+    
     if (activeFilter !== 'all') {
-        q = db.collection('posts')
-              .where('mediaType', '==', 'video')
-              .where('category',  '==', activeFilter)
-              .orderBy('timestamp', 'desc');
+        q = q.where('category', '==', activeFilter);
     }
+    
     return q;
 }
-
 // ── LOAD VIDEOS ──
 async function loadVideos(reset = false) {
     if (isLoading || allLoaded) return;
@@ -481,6 +478,13 @@ async function loadVideos(reset = false) {
 
         const snap = await q.get();
 
+        // Sort client-side (babu index needed)
+        const docs = snap.docs.sort((a, b) => {
+            const tA = a.data().timestamp?.seconds || 0;
+            const tB = b.data().timestamp?.seconds || 0;
+            return tB - tA;
+        });
+
         if (snap.empty) {
             allLoaded = true;
             loadMoreTrigger.style.display = 'none';
@@ -492,8 +496,8 @@ async function loadVideos(reset = false) {
             return;
         }
 
-        lastVisible = snap.docs[snap.docs.length - 1];
-
+        lastVisible = docs[docs.length - 1];
+        
         // ✅ Use template.js generatePostHTML — exactly as social.html does
         let html = '';
         snap.forEach(doc => html += generatePostHTML({ id: doc.id, ...doc.data() }));
