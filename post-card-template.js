@@ -1599,7 +1599,8 @@ window.toggleImmersive = function(card) {
                 if (video.paused) { video.play(); } else { video.pause(); }
             };
         }
-if (!card.querySelector('.immersive-back-btn')) {
+
+        if (!card.querySelector('.immersive-back-btn')) {
             const backBtn = document.createElement('div');
             backBtn.className = 'immersive-back-btn';
             backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
@@ -1617,6 +1618,11 @@ if (!card.querySelector('.immersive-back-btn')) {
             document.body.appendChild(backBtn);
         }
 
+        // ← WANNAN NE AKA ƘARA — Fara immersive scroll idan video ne
+        if (video && typeof window.nexusImmersiveStart === 'function') {
+            window.nexusImmersiveStart(card);
+        }
+
         history.pushState({ immersive: true }, '');
         window.onpopstate = function() {
             const sv = document.getElementById('nexusSplitView');
@@ -1624,12 +1630,6 @@ if (!card.querySelector('.immersive-back-btn')) {
                 sv.remove();
                 document.body.style.overflow = '';
                 if (footer) footer.classList.add('footer-hidden');
-
-               // Fara immersive video scroll KAWAI idan video ne
-        if (video && typeof window.nexusImmersiveStart === 'function') {
-            window.nexusImmersiveStart(card);
-        }
-               
                 history.pushState({ immersive: true }, '');
                 return;
             }
