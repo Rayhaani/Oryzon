@@ -1624,6 +1624,12 @@ if (!card.querySelector('.immersive-back-btn')) {
                 sv.remove();
                 document.body.style.overflow = '';
                 if (footer) footer.classList.add('footer-hidden');
+
+               // Fara immersive video scroll KAWAI idan video ne
+        if (video && typeof window.nexusImmersiveStart === 'function') {
+            window.nexusImmersiveStart(card);
+        }
+               
                 history.pushState({ immersive: true }, '');
                 return;
             }
@@ -1642,6 +1648,16 @@ window.exitImmersive = function(card) {
 
     card.classList.remove('immersive-mode');
     if (footer) footer.classList.remove('footer-hidden');
+
+    // Tsayar da immersive video scroll
+    if (typeof window.nexusImmersiveStop === 'function') {
+        window.nexusImmersiveStop();
+    }
+    if (card._immersiveScrollHandler) {
+        window.removeEventListener('scroll', card._immersiveScrollHandler);
+        card._immersiveScrollHandler = null;
+    }
+   
 
     const backBtn = document.querySelector('.immersive-back-btn');
     if (backBtn) backBtn.remove();
