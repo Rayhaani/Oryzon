@@ -1,353 +1,267 @@
 /* ============================================================
-   NEXUS INFINITE SCROLL ENGINE — Instagram-Style
+   NEXUS IMMERSIVE VIDEO SCROLL ENGINE
    
-   YADDA YAKE AIKI:
-   • Scroll UP   → Fetch older posts (before oldest in view)
-   • Scroll DOWN → Fetch newest posts (real-time refresh)
-   • Deduplication → Post ɗaya ba zai zo sau biyu ba
-   • Batch size → 5 posts per fetch (kamar Instagram)
-   • Preload threshold → Yana fetch kafin ka kai ƙarshen list
+   Yana aiki KAWAI a immersive mode — videos alone
+   • Scroll UP   → Fetch older videos daga Firebase
+   • Scroll DOWN → Fetch newer videos daga Firebase
+   • Hotuna — ba a taɓa su ba, suna feed kamar yadda suke
    ============================================================ */
 
-(function NexusInfiniteScroll() {
+(function NexusImmersiveScroll() {
 
     // ============================================================
-    // 1. STATE MANAGEMENT
+    // STATE
     // ============================================================
-    const STATE = {
-        // Cursor din mafi tsoho (oldest) post da muke da shi
-        oldestCursor:       null,
-        // Cursor din mafi sabo (newest) post da muke da shi
-        newestCursor:       null,
-
-        isFetchingOlder:    false,   // Guard - kar a double-fetch sama
-        isFetchingNewer:    false,   // Guard - kar a double-fetch kasa
-        hasMoreOlder:       true,    // Idan false, babu wasu posts ƙari sama
-        
-        seenPostIds:        new Set(), // Deduplication registry
-        BATCH_SIZE:         5,         // Posts per fetch — exactly kamar Instagram
-        
-        // Preload threshold: Fara fetch idan 2 cards suka rage
-        PRELOAD_THRESHOLD:  2,
-        
-        lastScrollY:        0,
-        scrollDirection:    null,     // 'up' ko 'down'
-        
-        // Real-time listener handle
-        newPostsUnsubscribe: null,
-        
-        // Container da muke saka posts ciki
-        feedContainer:      null,
+    const S = {
+        oldestCursor:    null,   // Last doc na mafi tsoho
+        newestCursor:    null,   // Last doc na mafi sabo
+        isFetchingOld:   false,
+        isFetchingNew:   false,
+        hasMoreOld:      true,
+        seenIds:         new Set(),
+        BATCH:           5,
+        activeCard:      null,   // Post card da yake immersive yanzu
     };
 
 
     // ============================================================
-    // 2. SCROLL DIRECTION DETECTOR
-    //    Yana gane ko ana tafi sama ko kasa, yana kiran
-    //    handler ɗin da ya dace
+    // ENTRY POINT — Ana kira daga toggleImmersive() idan VIDEO
     // ============================================================
-    function initScrollDetector() {
+    window.nexusImmersiveStart = function(card) {
+        S.activeCard = card;
+
+        // Tara dukan video post IDs da ke feed ɗin yanzu
+        const allCards = Array.from(
+            document.querySelectorAll('.post-card[data-post-id]')
+        ).filter(c => c.querySelector('video'));
+
+        // Cika seenIds da posts da ke a DOM yanzu
+        S.seenIds.clear();
+        allCards.forEach(c => S.seenIds.add(c.dataset.postId));
+
+        // Set cursors daga Firebase snapshot da ke a DOM
+        // Mafi sabo = farkon jerin, mafi tsoho = ƙarshen jerin
+        const ids = allCards.map(c => c.dataset.postId);
+        if (ids.length > 0) {
+            S.newestCursor = ids[0];
+            S.oldestCursor = ids[ids.length - 1];
+        }
+
+        // Fara listening ga scroll a immersive mode
+        attachImmersiveScroll(card);
+    };
+
+
+    // ============================================================
+    // STOP — Ana kira idan user ya fita immersive
+    // ============================================================
+    window.nexusImmersiveStop = function() {
+        S.activeCard = null;
+        S.isFetchingOld = false;
+        S.isFetchingNew = false;
+    };
+
+
+    // ============================================================
+    // SCROLL LISTENER — A kan immersive card ɗin kanta
+    // ============================================================
+    function attachImmersiveScroll(card) {
+        let lastY = 0;
         let ticking = false;
 
-        window.addEventListener('scroll', () => {
+        function onScroll() {
             if (ticking) return;
             ticking = true;
 
             requestAnimationFrame(() => {
-                const currentScrollY = window.scrollY;
-
-                // Gane direction
-                if (currentScrollY < STATE.lastScrollY) {
-                    STATE.scrollDirection = 'up';
-                } else if (currentScrollY > STATE.lastScrollY) {
-                    STATE.scrollDirection = 'down';
+                // Idan ba immersive mode ba, dakatar
+                if (!card.classList.contains('immersive-mode')) {
+                    ticking = false;
+                    return;
                 }
 
-                STATE.lastScrollY = currentScrollY;
+                const currentY = window.scrollY;
+                const direction = currentY < lastY ? 'up' : 'down';
+                lastY = currentY;
 
-                // --- CHECK: Kusa da sama? Fetch older ---
-                if (STATE.scrollDirection === 'up') {
-                    const distanceFromTop = currentScrollY;
-                    const cardHeight = estimateCardHeight();
+                const distFromTop = currentY;
+                const distFromBottom = document.documentElement.scrollHeight
+                    - currentY - window.innerHeight;
 
-                    // Idan mun zo kusa da saman feed (threshold cards suka rage)
-                    if (distanceFromTop < (cardHeight * STATE.PRELOAD_THRESHOLD)) {
-                        fetchOlderPosts();
-                    }
+                // SCROLL UP → Fetch older videos
+                if (direction === 'up' && distFromTop < 300) {
+                    fetchOlderVideos();
                 }
 
-                // --- CHECK: Kusa da kasa? Mana ne yake handling newer ---
-                // Newer posts ana handling su ta real-time listener,
-                // amma idan user ya scroll kasa ƙwarai, muna trigger manual refresh
-                if (STATE.scrollDirection === 'down') {
-                    const distanceFromBottom =
-                        document.documentElement.scrollHeight
-                        - window.scrollY
-                        - window.innerHeight;
-
-                    if (distanceFromBottom < 200) {
-                        // Ƙarshen feed — show "you're up to date" indicator
-                        showUpToDateIndicator();
-                    }
+                // SCROLL DOWN → Fetch newer videos
+                if (direction === 'down' && distFromBottom < 300) {
+                    fetchNewerVideos();
                 }
 
                 ticking = false;
             });
-        }, { passive: true });
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        // Save reference don cire listener idan ya fita immersive
+        card._immersiveScrollHandler = onScroll;
     }
 
 
     // ============================================================
-    // 3. FETCH OLDER POSTS (Scroll UP)
-    //    → Query Firestore: posts da timestamp ƙanƙara da mafi tsoho
-    //      da muke da shi a yanzu
+    // FETCH OLDER VIDEOS (Scroll UP)
     // ============================================================
-    async function fetchOlderPosts() {
-        // Guards
-        if (STATE.isFetchingOlder) return;
-        if (!STATE.hasMoreOlder) return;
-        if (!STATE.oldestCursor) return;
+    async function fetchOlderVideos() {
+        if (S.isFetchingOld || !S.hasMoreOld) return;
         if (typeof db === 'undefined') return;
+        if (!S.oldestCursor) return;
 
-        STATE.isFetchingOlder = true;
-        showSkeletonLoader('top');
+        S.isFetchingOld = true;
+        showLoader('top');
 
         try {
+            // Je Firestore — kawo videos da suka gabaci mafi tsohon cursor
+            const oldestDoc = await db.collection('posts')
+                .doc(S.oldestCursor).get();
+
             const snapshot = await db.collection('posts')
+                .where('mediaType', '==', 'video')   // Videos KAWAI
                 .orderBy('timestamp', 'desc')
-                // Bayan mafi tsoho cursor — wato posts da suka gabace shi
-                .startAfter(STATE.oldestCursor)
-                .limit(STATE.BATCH_SIZE)
+                .startAfter(oldestDoc)
+                .limit(S.BATCH)
                 .get();
 
-            removeSkeletonLoader('top');
+            hideLoader('top');
 
-            if (snapshot.empty || snapshot.docs.length < STATE.BATCH_SIZE) {
-                STATE.hasMoreOlder = false;
-                if (snapshot.empty) {
-                    showEndOfFeedIndicator();
-                    STATE.isFetchingOlder = false;
-                    return;
-                }
+            if (snapshot.empty) {
+                S.hasMoreOld = false;
+                S.isFetchingOld = false;
+                return;
             }
 
-            // Adana scroll position kafin mu saka posts a sama
-            const scrollAnchor = document.documentElement.scrollHeight;
+            // Adana scroll height kafin prepend
+            const prevHeight = document.documentElement.scrollHeight;
 
-            // Saka posts a SAMA (prepend) — kamar Instagram
-            const fragment = document.createDocumentFragment();
+            // Prepend posts a SAMA da feed
+            const feed = document.querySelector('.feed-container');
             const newCards = [];
 
             snapshot.docs.forEach(doc => {
-                if (STATE.seenPostIds.has(doc.id)) return; // Skip duplicates
-
-                const post = { id: doc.id, ...doc.data() };
-                STATE.seenPostIds.add(doc.id);
-                newCards.push({ doc, post });
+                if (S.seenIds.has(doc.id)) return;
+                S.seenIds.add(doc.id);
+                newCards.push({ id: doc.id, ...doc.data() });
             });
 
-            // Reverse saboda muna prepend — oldest ya zo sama, newest ƙasa
-            newCards.reverse().forEach(({ doc, post }) => {
-                const wrapper = createPostWrapper(post);
-                STATE.feedContainer.insertBefore(wrapper, STATE.feedContainer.firstChild);
+            // Reverse — oldest ya zo sama
+            newCards.reverse().forEach(post => {
+                const wrapper = document.createElement('div');
+                wrapper.style.marginBottom = '12px';
+                wrapper.innerHTML = window.generatePostHTML(post);
+                feed.insertBefore(wrapper, feed.firstChild);
             });
 
-            // Update oldest cursor zuwa last doc na wannan batch
-            if (snapshot.docs.length > 0) {
-                STATE.oldestCursor = snapshot.docs[snapshot.docs.length - 1];
-            }
+            // Update oldest cursor
+            S.oldestCursor = snapshot.docs[snapshot.docs.length - 1].id;
 
-            // Maintain scroll position — kar user ya "jump"
-            // Instagram trick: adjust scrollY ta bambancin height da aka ƙara
-            const heightAdded = document.documentElement.scrollHeight - scrollAnchor;
+            // Maintain scroll position — kar user ya jump
+            const heightAdded = document.documentElement.scrollHeight - prevHeight;
             window.scrollBy({ top: heightAdded, behavior: 'instant' });
+
+            // Load avatars na posts ɗin da aka ƙara
+            loadAvatars(snapshot);
 
             // Observe videos ɗin da aka ƙara
             if (typeof window.postCard_observeVideos === 'function') {
                 window.postCard_observeVideos();
             }
 
-        } catch (error) {
-            console.error('[Nexus Scroll] fetchOlderPosts error:', error);
-            removeSkeletonLoader('top');
+        } catch (err) {
+            console.error('[Immersive Scroll] fetchOlderVideos error:', err);
+            hideLoader('top');
         }
 
-        STATE.isFetchingOlder = false;
+        S.isFetchingOld = false;
     }
 
 
     // ============================================================
-    // 4. REAL-TIME NEW POSTS LISTENER (Scroll DOWN / Refresh)
-    //    → Firestore onSnapshot — yana listening live
-    //    → Idan akwai sabon post, yana append a ƙasa feed
-    //      kuma yana nuna "New posts available ↑" badge
-    //      (kamar Instagram's "New posts" pill)
+    // FETCH NEWER VIDEOS (Scroll DOWN)
     // ============================================================
-    function initNewPostsListener() {
+    async function fetchNewerVideos() {
+        if (S.isFetchingNew) return;
         if (typeof db === 'undefined') return;
-        if (STATE.newPostsUnsubscribe) STATE.newPostsUnsubscribe();
+        if (!S.newestCursor) return;
 
-        // Listen kawai daga mafi sabbin cursor zuwa gaba
-        let query = db.collection('posts').orderBy('timestamp', 'desc');
-
-        if (STATE.newestCursor) {
-            query = query.endBefore(STATE.newestCursor);
-        }
-
-        STATE.newPostsUnsubscribe = query
-            .limit(STATE.BATCH_SIZE)
-            .onSnapshot(snapshot => {
-                const genuinelyNew = [];
-
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === 'added') {
-                        const doc = change.doc;
-                        if (!STATE.seenPostIds.has(doc.id)) {
-                            genuinelyNew.push({ id: doc.id, ...doc.data(), _doc: doc });
-                        }
-                    }
-                });
-
-                if (genuinelyNew.length === 0) return;
-
-                // Update newest cursor
-                STATE.newestCursor = genuinelyNew[0]._doc;
-
-                // Idan user yana sama (top of feed), auto-prepend silently
-                const isAtTop = window.scrollY < 100;
-
-                if (isAtTop) {
-                    // Auto-inject a gaba — user zai ganta nan da nan
-                    genuinelyNew.forEach(post => {
-                        if (STATE.seenPostIds.has(post.id)) return;
-                        STATE.seenPostIds.add(post.id);
-                        const wrapper = createPostWrapper(post);
-                        STATE.feedContainer.insertBefore(wrapper, STATE.feedContainer.firstChild);
-                    });
-
-                    if (typeof window.postCard_observeVideos === 'function') {
-                        window.postCard_observeVideos();
-                    }
-
-                } else {
-                    // User yana ƙasa — nuna "New Posts" pill
-                    // (Kamar Instagram's blue "New posts" button)
-                    showNewPostsPill(genuinelyNew.length, genuinelyNew);
-                }
-            }, error => {
-                console.error('[Nexus Scroll] Real-time listener error:', error);
-            });
-    }
-
-
-    // ============================================================
-    // 5. INITIAL LOAD — Farkon load na page
-    //    Yana kiran wannan function ɗin daga social.html
-    //    maimakon direct db.collection() call
-    // ============================================================
-    window.nexusInitFeed = async function(container) {
-        STATE.feedContainer = container || document.querySelector('.feed-container');
-        if (!STATE.feedContainer) {
-            console.error('[Nexus Scroll] Feed container not found!');
-            return;
-        }
-        if (typeof db === 'undefined') {
-            console.error('[Nexus Scroll] Firebase db not initialized!');
-            return;
-        }
-
-        // Show initial skeletons
-        showSkeletonLoader('initial');
+        S.isFetchingNew = true;
+        showLoader('bottom');
 
         try {
+            const newestDoc = await db.collection('posts')
+                .doc(S.newestCursor).get();
+
             const snapshot = await db.collection('posts')
+                .where('mediaType', '==', 'video')   // Videos KAWAI
                 .orderBy('timestamp', 'desc')
-                .limit(STATE.BATCH_SIZE)
+                .endBefore(newestDoc)
+                .limitToLast(S.BATCH)
                 .get();
 
-            removeSkeletonLoader('initial');
+            hideLoader('bottom');
 
             if (snapshot.empty) {
-                STATE.feedContainer.innerHTML = `
-                    <div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);">
-                        No posts yet. Be the first! 🚀
-                    </div>`;
+                S.isFetchingNew = false;
                 return;
             }
 
-            // Render initial batch
-            snapshot.docs.forEach(doc => {
-                const post = { id: doc.id, ...doc.data() };
-                if (STATE.seenPostIds.has(doc.id)) return;
-                STATE.seenPostIds.add(doc.id);
+            const feed = document.querySelector('.feed-container');
+            const newCards = [];
 
-                const wrapper = createPostWrapper(post);
-                STATE.feedContainer.appendChild(wrapper);
+            snapshot.docs.forEach(doc => {
+                if (S.seenIds.has(doc.id)) return;
+                S.seenIds.add(doc.id);
+                newCards.push({ id: doc.id, ...doc.data() });
             });
 
-            // Set cursors
-            STATE.newestCursor = snapshot.docs[0];
-            STATE.oldestCursor = snapshot.docs[snapshot.docs.length - 1];
+            // Append a ƘASA — newest posts
+            newCards.forEach(post => {
+                const wrapper = document.createElement('div');
+                wrapper.style.marginBottom = '12px';
+                wrapper.innerHTML = window.generatePostHTML(post);
+                feed.appendChild(wrapper);
+            });
 
-            // Start engines
-            initScrollDetector();
-            initNewPostsListener();
+            // Update newest cursor zuwa mafi sabo
+            S.newestCursor = snapshot.docs[0].id;
 
-            // Observe videos
+            loadAvatars(snapshot);
+
             if (typeof window.postCard_observeVideos === 'function') {
-                setTimeout(window.postCard_observeVideos, 300);
+                window.postCard_observeVideos();
             }
 
-            // Load avatars daga users collection
-            loadAvatarsForCards(snapshot);
-
-            // Load comment counts
-            loadCommentCounts(snapshot);
-
-            // Restore likes
-            if (typeof window.postCard_restoreLikes === 'function') {
-                setTimeout(() => window.postCard_restoreLikes(STATE.feedContainer), 500);
-            }
-
-        } catch (error) {
-            console.error('[Nexus Scroll] Initial load error:', error);
-            removeSkeletonLoader('initial');
-            STATE.feedContainer.innerHTML = `
-                <div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);">
-                    Could not load posts. Check connection.
-                </div>`;
+        } catch (err) {
+            console.error('[Immersive Scroll] fetchNewerVideos error:', err);
+            hideLoader('bottom');
         }
-    };
 
-
-    // ============================================================
-    // 6. HELPER — Create post wrapper node
-    // ============================================================
-    function createPostWrapper(post) {
-        // Spacing wrapper — kamar yadda feed din kake da shi
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'margin-bottom: 12px;';
-        wrapper.innerHTML = window.generatePostHTML(post);
-        return wrapper;
+        S.isFetchingNew = false;
     }
 
 
     // ============================================================
-    // 7. HELPER — Load avatars bayan render
+    // LOAD AVATARS bayan render
     // ============================================================
-    function loadAvatarsForCards(snapshot) {
+    function loadAvatars(snapshot) {
+        const feed = document.querySelector('.feed-container');
         snapshot.forEach(doc => {
             const post = doc.data();
             if (!post.username) return;
-
             db.collection('users').doc(post.username).get().then(userDoc => {
                 if (!userDoc.exists) return;
                 const pic = userDoc.data().userProfilePic;
                 if (!pic) return;
-
-                const card = STATE.feedContainer.querySelector(
-                    `.post-card[data-post-id="${doc.id}"]`
-                );
+                const card = feed.querySelector(`.post-card[data-post-id="${doc.id}"]`);
                 if (card) {
                     const avatar = card.querySelector('.post-avatar');
                     if (avatar) avatar.src = pic;
@@ -358,289 +272,39 @@
 
 
     // ============================================================
-    // 8. HELPER — Load comment counts
+    // LOADERS — Masu sauki, ba CSS ɗin da zai taɓa design ɗinka ba
     // ============================================================
-    function loadCommentCounts(snapshot) {
-        snapshot.forEach(doc => {
-            const postId = doc.id;
-            db.collection('nexus_contributions')
-                .where('postId', '==', postId)
-                .where('parentId', '==', null)
-                .onSnapshot(snap => {
-                    const el = document.getElementById(`comment-count-${postId}`);
-                    if (el) el.textContent = snap.size;
-                });
-        });
-    }
+    function showLoader(position) {
+        const id = `immersive-loader-${position}`;
+        if (document.getElementById(id)) return;
 
-
-    // ============================================================
-    // 9. "NEW POSTS" PILL — Instagram-style notification
-    //    Ana nuna shi idan akwai sabbin posts amma user yana kasa
-    // ============================================================
-    function showNewPostsPill(count, posts) {
-        // Remove existing pill
-        const existing = document.getElementById('nexus-new-posts-pill');
-        if (existing) existing.remove();
-
-        const pill = document.createElement('div');
-        pill.id = 'nexus-new-posts-pill';
-        pill.innerHTML = `
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5">
-                <path d="M18 15l-6-6-6 6"/>
-            </svg>
-            ${count} new post${count > 1 ? 's' : ''}
-        `;
-        pill.style.cssText = `
-            position: fixed;
-            top: 64px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-10px);
-            background: rgba(30, 30, 40, 0.92);
-            border: 1px solid rgba(253, 224, 141, 0.4);
-            color: #fde08d;
+        const loader = document.createElement('div');
+        loader.id = id;
+        loader.style.cssText = `
+            text-align: center;
+            padding: 16px;
+            color: rgba(253, 224, 141, 0.6);
+            font-size: 12px;
             font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            padding: 8px 18px;
-            border-radius: 50px;
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            cursor: pointer;
-            z-index: 4999;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 15px rgba(253,224,141,0.15);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
-            opacity: 0;
+            letter-spacing: 1px;
         `;
+        loader.textContent = 'Loading...';
 
-        document.body.appendChild(pill);
-
-        // Animate in
-        requestAnimationFrame(() => {
-            pill.style.opacity = '1';
-            pill.style.transform = 'translateX(-50%) translateY(0)';
-        });
-
-        // Click → scroll to top & inject posts
-        pill.addEventListener('click', () => {
-            // Inject new posts a sama
-            const fragment = document.createDocumentFragment();
-            posts.reverse().forEach(post => {
-                if (STATE.seenPostIds.has(post.id)) return;
-                STATE.seenPostIds.add(post.id);
-                const wrapper = createPostWrapper(post);
-                STATE.feedContainer.insertBefore(wrapper, STATE.feedContainer.firstChild);
-            });
-
-            // Smooth scroll zuwa sama
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            if (typeof window.postCard_observeVideos === 'function') {
-                setTimeout(window.postCard_observeVideos, 400);
-            }
-
-            // Remove pill
-            pill.style.opacity = '0';
-            pill.style.transform = 'translateX(-50%) translateY(-10px)';
-            setTimeout(() => pill.remove(), 300);
-        });
-
-        // Auto-dismiss bayan 8 seconds
-        setTimeout(() => {
-            if (document.getElementById('nexus-new-posts-pill')) {
-                pill.style.opacity = '0';
-                pill.style.transform = 'translateX(-50%) translateY(-10px)';
-                setTimeout(() => pill.remove(), 300);
-            }
-        }, 8000);
-    }
-
-
-    // ============================================================
-    // 10. SKELETON LOADER — Show while fetching
-    //     Kamar Instagram's grey placeholder cards
-    // ============================================================
-    function showSkeletonLoader(position) {
-        const existing = document.getElementById(`nexus-skeleton-${position}`);
-        if (existing) return;
-
-        const skeletonCount = position === 'initial' ? 3 : 1;
-        const wrapper = document.createElement('div');
-        wrapper.id = `nexus-skeleton-${position}`;
-
-        for (let i = 0; i < skeletonCount; i++) {
-            wrapper.innerHTML += `
-                <div style="
-                    background: rgba(255,255,255,0.03);
-                    border: 1px solid rgba(253,224,141,0.1);
-                    border-radius: 20px;
-                    margin-bottom: 12px;
-                    overflow: hidden;
-                    animation: nexusSkelPulse 1.5s ease-in-out infinite;
-                ">
-                    <!-- Header skeleton -->
-                    <div style="
-                        display:flex; align-items:center; gap:10px;
-                        padding: 12px 14px;
-                        background: rgba(255,255,255,0.02);
-                        border-bottom: 1px solid rgba(255,255,255,0.04);
-                    ">
-                        <div style="width:42px;height:42px;border-radius:50%;
-                            background:rgba(255,255,255,0.06);flex-shrink:0;"></div>
-                        <div style="flex:1;">
-                            <div style="width:35%;height:10px;border-radius:6px;
-                                background:rgba(255,255,255,0.07);margin-bottom:6px;"></div>
-                            <div style="width:20%;height:8px;border-radius:6px;
-                                background:rgba(255,255,255,0.04);"></div>
-                        </div>
-                    </div>
-                    <!-- Media skeleton -->
-                    <div style="width:100%;height:400px;
-                        background: linear-gradient(135deg,
-                            rgba(255,255,255,0.03) 0%,
-                            rgba(253,224,141,0.04) 50%,
-                            rgba(255,255,255,0.03) 100%);
-                        background-size: 200% 200%;
-                        animation: nexusSkelShimmer 2s linear infinite;
-                    "></div>
-                    <!-- Actions skeleton -->
-                    <div style="display:flex;gap:8px;padding:10px 12px;">
-                        <div style="width:60px;height:28px;border-radius:20px;
-                            background:rgba(255,255,255,0.05);"></div>
-                        <div style="width:60px;height:28px;border-radius:20px;
-                            background:rgba(255,255,255,0.05);"></div>
-                        <div style="width:44px;height:28px;border-radius:20px;
-                            background:rgba(255,255,255,0.05);"></div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Inject skeleton CSS once
-        if (!document.getElementById('nexus-skeleton-css')) {
-            const style = document.createElement('style');
-            style.id = 'nexus-skeleton-css';
-            style.textContent = `
-                @keyframes nexusSkelPulse {
-                    0%, 100% { opacity: 0.6; }
-                    50% { opacity: 1; }
-                }
-                @keyframes nexusSkelShimmer {
-                    0% { background-position: 200% 0; }
-                    100% { background-position: -200% 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
+        const feed = document.querySelector('.feed-container');
         if (position === 'top') {
-            STATE.feedContainer.insertBefore(wrapper, STATE.feedContainer.firstChild);
+            feed.insertBefore(loader, feed.firstChild);
         } else {
-            STATE.feedContainer.appendChild(wrapper);
+            feed.appendChild(loader);
         }
     }
 
-    function removeSkeletonLoader(position) {
-        const el = document.getElementById(`nexus-skeleton-${position}`);
+    function hideLoader(position) {
+        const el = document.getElementById(`immersive-loader-${position}`);
         if (el) el.remove();
     }
 
-
-    // ============================================================
-    // 11. "You're all caught up" indicator
-    //     Ana nuna shi idan user ya kai ƙarshen older posts
-    // ============================================================
-    function showEndOfFeedIndicator() {
-        if (document.getElementById('nexus-end-indicator')) return;
-
-        const indicator = document.createElement('div');
-        indicator.id = 'nexus-end-indicator';
-        indicator.innerHTML = `
-            <div style="
-                text-align: center;
-                padding: 30px 20px;
-                color: rgba(255,255,255,0.25);
-                font-family: 'Inter', sans-serif;
-                font-size: 12px;
-            ">
-                <div style="
-                    width: 40px; height: 1px;
-                    background: rgba(255,255,255,0.1);
-                    margin: 0 auto 14px;
-                "></div>
-                You've seen all posts
-            </div>
-        `;
-
-        STATE.feedContainer.insertBefore(indicator, STATE.feedContainer.firstChild);
-    }
-
-    // "Up to date" indicator idan user ya kai ƙarshen feed kasa
-    let upToDateShown = false;
-    function showUpToDateIndicator() {
-        if (upToDateShown) return;
-        if (document.getElementById('nexus-uptodate')) return;
-        upToDateShown = true;
-
-        const el = document.createElement('div');
-        el.id = 'nexus-uptodate';
-        el.innerHTML = `
-            <div style="
-                text-align:center; padding:20px;
-                color:rgba(255,255,255,0.25);
-                font-size:11px; font-family:'Inter';
-            ">
-                You're all caught up ✓
-            </div>
-        `;
-        STATE.feedContainer.appendChild(el);
-
-        setTimeout(() => {
-            if (el.parentNode) el.remove();
-            upToDateShown = false;
-        }, 3000);
-    }
-
-
-    // ============================================================
-    // 12. HELPER — Estimate card height for threshold calculation
-    // ============================================================
-    function estimateCardHeight() {
-        const firstCard = STATE.feedContainer.querySelector('.post-card');
-        if (firstCard) return firstCard.offsetHeight + 12;
-        return 600; // Default estimate
-    }
-
-
-    // ============================================================
-    // 13. CLEANUP — Call this if user leaves page
-    // ============================================================
-    window.nexusDestroyFeed = function() {
-        if (STATE.newPostsUnsubscribe) {
-            STATE.newPostsUnsubscribe();
-            STATE.newPostsUnsubscribe = null;
-        }
-    };
-
-    // Cleanup on page hide
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            // Pause real-time listener don battery/data saving
-            if (STATE.newPostsUnsubscribe) {
-                STATE.newPostsUnsubscribe();
-                STATE.newPostsUnsubscribe = null;
-            }
-        } else {
-            // Resume idan user ya koma page
-            initNewPostsListener();
-        }
-    });
-
-    console.log('[Nexus Scroll] Engine initialized ✓');
+    console.log('[Nexus] Immersive Video Scroll ready ✓');
 
 })();
+
+
