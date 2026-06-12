@@ -1844,107 +1844,6 @@ window.toggleSave = async function(btn, postId) {
     }
 };
 
-// ============================================================
-// IMMERSIVE VIDEO SCROLL ENGINE
-// ============================================================
-
-    function swapImmersiveVideo(oldCard, newCard) {
-        window.exitImmersive(oldCard);
-        setTimeout(() => {
-            window.toggleImmersive(newCard);
-        }, 50);
-    }
-
-    async function fetchOlderVideos() {
-        if (S.isFetchingOld || !S.hasMoreOld || typeof db === 'undefined') return;
-        S.isFetchingOld = true;
-        try {
-            const lastDoc = await db.collection('posts').doc(S.oldestCursor).get();
-            const snap = await db.collection('posts')
-                .orderBy('timestamp', 'desc')
-                .startAfter(lastDoc)
-                .limit(S.BATCH)
-                .get();
-
-            if (snap.empty) {
-                S.hasMoreOld = false;
-                return;
-            }
-            const container = document.getElementById('timeline-area') || document.querySelector('.feed-container');
-            if (!container) return;
-
-            snap.forEach(doc => {
-                const postData = doc.data();
-                postData.id = doc.id;
-                if (!S.seenIds.has(doc.id)) {
-                    S.seenIds.add(doc.id);
-                    if (postData.mediaType === 'video') {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = window.generatePostHTML(postData);
-                        container.appendChild(tempDiv.firstElementChild);
-                    }
-                }
-            });
-            const updatedCards = Array.from(container.querySelectorAll('.post-card[data-post-id]'));
-            if (updatedCards.length > 0) {
-                S.oldestCursor = updatedCards[updatedCards.length - 1].dataset.postId;
-            }
-            window.postCard_observeVideos();
-        } catch(e) {
-            console.error("Error loading older videos:", e);
-        } {
-            S.isFetchingOld = false;
-        }
-    }
-
-    async function fetchNewerVideos() {
-        if (S.isFetchingNew || typeof db === 'undefined') return;
-        S.isFetchingNew = true;
-        try {
-            const firstDoc = await db.collection('posts').doc(S.newestCursor).get();
-            const snap = await db.collection('posts')
-                .orderBy('timestamp', 'desc')
-                .endBefore(firstDoc)
-                .get();
-
-            if (snap.empty) return;
-            const container = document.getElementById('timeline-area') || document.querySelector('.feed-container');
-            if (!container) return;
-
-            snap.forEach(doc => {
-                const postData = doc.data();
-                postData.id = doc.id;
-                if (!S.seenIds.has(doc.id)) {
-                    S.seenIds.add(doc.id);
-                    if (postData.mediaType === 'video') {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = window.generatePostHTML(postData);
-                        container.insertBefore(tempDiv.firstElementChild, container.firstChild);
-                    }
-                }
-            });
-            const updatedCards = Array.from(container.querySelectorAll('.post-card[data-post-id]'));
-            if (updatedCards.length > 0) {
-                S.newestCursor = updatedCards[0].dataset.postId;
-            }
-            window.postCard_observeVideos();
-        } catch(e) {
-            console.error("Error loading newer videos:", e);
-        } {
-            S.isFetchingNew = false;
-        }
-    }
-})(); // Wannan shi ne rufe baki dayan babban block din
-           
-  
-       
-
-
-
-
-
-console.log('[PostCard] Shared template loaded ✓');
-
 
 // IMMERSIVE VIDEO SCROLL ENGINE - UP/DOWN SWIPE AUTOMATION
 (function() {
@@ -2009,3 +1908,6 @@ console.log('[PostCard] Shared template loaded ✓');
         }
     }
 })();
+
+console.log('[PostCard] Shared template loaded ✓');
+
