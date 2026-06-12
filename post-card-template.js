@@ -1888,14 +1888,15 @@ window.toggleSave = async function(btn, postId) {
             touchLastY = currentY;
             const totalSwipe = currentY - touchStartY;
 
-          // Swipe UP (yatsa sama) = je next video (kasa a feed)
+
+       // Gyara: Swipe UP (Motsa yatsa sama) = Next Video (Kasa a Feed)
 if (totalSwipe < -80 && !S._swiping) {
     S._swiping = true;
     goToNextVideo(card);
     setTimeout(() => { S._swiping = false; }, 600);
 }
 
-// Swipe DOWN (yatsa kasa) = je previous video (sama a feed)
+// Gyara: Swipe DOWN (Motsa yatsa kasa) = Previous Video (Sama a Feed)
 if (totalSwipe > 80 && !S._swiping) {
     S._swiping = true;
     goToPreviousVideo(card);
@@ -1973,137 +1974,111 @@ if (totalSwipe > 80 && !S._swiping) {
     swapImmersiveVideo(currentCard, nextCard);
 }
 
-function goToPreviousVideo(currentCard) {
-    const cards = Array.from(
-        document.querySelectorAll('.post-card[data-post-id]')
-    ).filter(c => c.querySelector('video'));
 
-    // Nemo ta postId — mafi aminci
-    const currentPostId = currentCard.dataset.postId;
-    const currentIndex = cards.findIndex(c => c.dataset.postId === currentPostId);
+    function goToPreviousVideo(currentCard) {
+        const cards = Array.from(
+            document.querySelectorAll('.post-card[data-post-id]')
+        ).filter(c => c.querySelector('video'));
 
-    if (currentIndex === -1) return;
+        const currentPostId = currentCard.dataset.postId;
+        const currentIndex = cards.findIndex(c => c.dataset.postId === currentPostId);
 
-    const prevCard = cards[currentIndex - 1];
+        if (currentIndex <= 0) return; 
+        const prevCard = cards[currentIndex - 1];
 
-    if (!prevCard) {
-        fetchNewerVideos().then(() => {
-            const updated = Array.from(
-                document.querySelectorAll('.post-card[data-post-id]')
-            ).filter(c => c.querySelector('video'));
-            const newPrev = updated[currentIndex - 1];
-            if (newPrev) swapImmersiveVideo(currentCard, newPrev);
-        });
-        return;
-    }
-    swapImmersiveVideo(currentCard, prevCard);
-}  
-
-
-   function swapImmersiveVideo(oldCard, newCard) {
-    const currentVideo = document.querySelector('video[style*="position: fixed"]');
-    const newVideo = newCard.querySelector('video');
-    if (!currentVideo || !newVideo) return;
-
-    const newSrc = newVideo.src || newVideo.currentSrc;
-    currentVideo.src = newSrc;
-    currentVideo.load();
-    currentVideo.play().catch(() => {});
-
-    const immersiveCard = document.querySelector('.post-card.immersive-mode');
-    if (!immersiveCard) return;
-
-    const oldAvatar = immersiveCard.querySelector('.post-avatar');
-    const oldUsername = immersiveCard.querySelector('.post-username');
-    const oldTime = immersiveCard.querySelector('.post-time');
-    const newAvatar = newCard.querySelector('.post-avatar');
-    const newUsername = newCard.querySelector('.post-username');
-    const newTime = newCard.querySelector('.post-time');
-
-    if (oldAvatar && newAvatar) oldAvatar.src = newAvatar.src;
-    if (oldUsername && newUsername) oldUsername.textContent = newUsername.textContent;
-    if (oldTime && newTime) oldTime.textContent = newTime.textContent;
-
-    immersiveCard.dataset.postId = newCard.dataset.postId;
-
-    // Update savedScrollTop ← ANAN CIKI
-    immersiveCard._savedScrollTop = newCard.getBoundingClientRect().top + window.scrollY - 100;
-
-    if (typeof window.nexusImmersiveStart === 'function') {
-        if (immersiveCard._immersiveScrollHandler) {
-            document.removeEventListener('touchmove', immersiveCard._immersiveScrollHandler);
+        if (prevCard) {
+            swapImmersiveVideo(currentCard, prevCard);
         }
-        if (immersiveCard._immersiveTouchStartHandler) {
-            document.removeEventListener('touchstart', immersiveCard._immersiveTouchStartHandler);
-        }
-        const overlay = document.getElementById('nexus-swipe-overlay');
-        if (overlay) overlay.remove();
-        window.nexusImmersiveStart(immersiveCard);
     }
 
-    if (navigator.vibrate) navigator.vibrate(15);
-}  // ← RUFE function ANAN
-   
-  
-       async function fetchOlderVideos() {
-        if (S.isFetchingOld || !S.hasMoreOld || !S.oldestCursor) return;
-        if (typeof db === 'undefined') return;
+    function swapImmersiveVideo(oldCard, newCard) {
+        window.exitImmersive(oldCard);
+        setTimeout(() => {
+            window.toggleImmersive(newCard);
+        }, 50);
+    }
+
+    async function fetchOlderVideos() {
+        if (S.isFetchingOld || !S.hasMoreOld || typeof db === 'undefined') return;
         S.isFetchingOld = true;
         try {
-            const oldestDoc = await db.collection('posts').doc(S.oldestCursor).get();
-            const snapshot = await db.collection('posts')
-                .where('mediaType', '==', 'video')
+            const lastDoc = await db.collection('posts').doc(S.oldestCursor).get();
+            const snap = await db.collection('posts')
                 .orderBy('timestamp', 'desc')
-                .startAfter(oldestDoc)
+                .startAfter(lastDoc)
                 .limit(S.BATCH)
                 .get();
-            if (snapshot.empty) { S.hasMoreOld = false; S.isFetchingOld = false; return; }
-            const prevHeight = document.documentElement.scrollHeight;
-            const feed = document.querySelector('.feed-container');
-            snapshot.docs.forEach(doc => {
-                if (S.seenIds.has(doc.id)) return;
-                S.seenIds.add(doc.id);
-                const wrapper = document.createElement('div');
-                wrapper.style.marginBottom = '12px';
-                wrapper.innerHTML = window.generatePostHTML({ id: doc.id, ...doc.data() });
-                feed.insertBefore(wrapper, feed.firstChild);
+
+            if (snap.empty) {
+                S.hasMoreOld = false;
+                return;
+            }
+            const container = document.getElementById('timeline-area') || document.querySelector('.feed-container');
+            if (!container) return;
+
+            snap.forEach(doc => {
+                const postData = doc.data();
+                postData.id = doc.id;
+                if (!S.seenIds.has(doc.id)) {
+                    S.seenIds.add(doc.id);
+                    if (postData.mediaType === 'video') {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = window.generatePostHTML(postData);
+                        container.appendChild(tempDiv.firstElementChild);
+                    }
+                }
             });
-            S.oldestCursor = snapshot.docs[snapshot.docs.length - 1].id;
-            const heightAdded = document.documentElement.scrollHeight - prevHeight;
-            window.scrollBy({ top: heightAdded, behavior: 'instant' });
-            if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
-        } catch(e) { console.error('[Immersive] fetchOlder error:', e); }
-        S.isFetchingOld = false;
+            const updatedCards = Array.from(container.querySelectorAll('.post-card[data-post-id]'));
+            if (updatedCards.length > 0) {
+                S.oldestCursor = updatedCards[updatedCards.length - 1].dataset.postId;
+            }
+            window.postCard_observeVideos();
+        } catch(e) {
+            console.error("Error loading older videos:", e);
+        } {
+            S.isFetchingOld = false;
+        }
     }
 
     async function fetchNewerVideos() {
-        if (S.isFetchingNew || !S.newestCursor) return;
-        if (typeof db === 'undefined') return;
+        if (S.isFetchingNew || typeof db === 'undefined') return;
         S.isFetchingNew = true;
         try {
-            const newestDoc = await db.collection('posts').doc(S.newestCursor).get();
-            const snapshot = await db.collection('posts')
-                .where('mediaType', '==', 'video')
+            const firstDoc = await db.collection('posts').doc(S.newestCursor).get();
+            const snap = await db.collection('posts')
                 .orderBy('timestamp', 'desc')
-                .endBefore(newestDoc)
-                .limitToLast(S.BATCH)
+                .endBefore(firstDoc)
                 .get();
-            if (snapshot.empty) { S.isFetchingNew = false; return; }
-            const feed = document.querySelector('.feed-container');
-            snapshot.docs.forEach(doc => {
-                if (S.seenIds.has(doc.id)) return;
-                S.seenIds.add(doc.id);
-                const wrapper = document.createElement('div');
-                wrapper.style.marginBottom = '12px';
-                wrapper.innerHTML = window.generatePostHTML({ id: doc.id, ...doc.data() });
-                feed.appendChild(wrapper);
+
+            if (snap.empty) return;
+            const container = document.getElementById('timeline-area') || document.querySelector('.feed-container');
+            if (!container) return;
+
+            snap.forEach(doc => {
+                const postData = doc.data();
+                postData.id = doc.id;
+                if (!S.seenIds.has(doc.id)) {
+                    S.seenIds.add(doc.id);
+                    if (postData.mediaType === 'video') {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = window.generatePostHTML(postData);
+                        container.insertBefore(tempDiv.firstElementChild, container.firstChild);
+                    }
+                }
             });
-            S.newestCursor = snapshot.docs[0].id;
-            if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
-        } catch(e) { console.error('[Immersive] fetchNewer error:', e); }
-        S.isFetchingNew = false;
+            const updatedCards = Array.from(container.querySelectorAll('.post-card[data-post-id]'));
+            if (updatedCards.length > 0) {
+                S.newestCursor = updatedCards[0].dataset.postId;
+            }
+            window.postCard_observeVideos();
+        } catch(e) {
+            console.error("Error loading newer videos:", e);
+        } {
+            S.isFetchingNew = false;
+        }
     }
-
-})();  // ← RUFE IIFE
-
+})(); // Wannan shi ne rufe baki dayan babban block din
+           
+  
+       
 console.log('[PostCard] Shared template loaded ✓');
