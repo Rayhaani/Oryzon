@@ -812,24 +812,20 @@ window.exitImmersive = function(card) {
     const backBtn = document.querySelector('.immersive-back-btn');
     if (backBtn) backBtn.remove();
 
+    // WANNAN SHI NE KACAL ABIN DA ZAI TSAYAR DA BIDIYON IDAN AN WUCE KO AN FITA
     if (video) {
-        video.pause(); // TSAYAR DA BIDIYON NAN TAKE
+        video.pause();         // Tsayar da bidiyon nan take
         video.currentTime = 0; // Maida bidiyon farko
-        video.muted = true; // Kulle sauti duka
+        video.muted = true;    // Kulle sauti duka
         video.style.cssText = '';
         video.onclick = null;
-        
-        // Gyara icon din sauti zuwa xmark
-        const muteIcon = card.querySelector('.post-mute-toggle i');
-        if (muteIcon) {
-            muteIcon.className = 'fa-solid fa-volume-xmark';
-        }
     }
     card.style.minHeight = '';
     if (card._savedScrollTop !== undefined) {
         window.scrollTo({ top: card._savedScrollTop, behavior: 'auto' });
     }
 };
+
 
 
 // 8. VIDEO OBSERVER - Auto play/pause lokacin scrolling na gari
