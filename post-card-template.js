@@ -1947,16 +1947,20 @@ if (totalSwipe > 80 && !S._swiping) {
    
 
    
-   function goToNextVideo(currentCard) {
+ function goToNextVideo(currentCard) {
     const cards = Array.from(
         document.querySelectorAll('.post-card[data-post-id]')
     ).filter(c => c.querySelector('video'));
 
-    const currentIndex = cards.indexOf(currentCard);
+    // Nemo ta postId — mafi aminci
+    const currentPostId = currentCard.dataset.postId;
+    const currentIndex = cards.findIndex(c => c.dataset.postId === currentPostId);
+
+    if (currentIndex === -1) return;
+
     const nextCard = cards[currentIndex + 1];
 
     if (!nextCard) {
-        // Babu next — fetch older videos silently
         fetchOlderVideos().then(() => {
             const updated = Array.from(
                 document.querySelectorAll('.post-card[data-post-id]')
@@ -1974,7 +1978,12 @@ function goToPreviousVideo(currentCard) {
         document.querySelectorAll('.post-card[data-post-id]')
     ).filter(c => c.querySelector('video'));
 
-    const currentIndex = cards.indexOf(currentCard);
+    // Nemo ta postId — mafi aminci
+    const currentPostId = currentCard.dataset.postId;
+    const currentIndex = cards.findIndex(c => c.dataset.postId === currentPostId);
+
+    if (currentIndex === -1) return;
+
     const prevCard = cards[currentIndex - 1];
 
     if (!prevCard) {
@@ -1988,7 +1997,7 @@ function goToPreviousVideo(currentCard) {
         return;
     }
     swapImmersiveVideo(currentCard, prevCard);
-}
+}  
 
 
    function swapImmersiveVideo(oldCard, newCard) {
