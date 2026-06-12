@@ -801,7 +801,6 @@ window.toggleImmersive = function(card) {
     }
 };
 
-
 window.exitImmersive = function(card) {
     const video = card.querySelector('video');
     const footer = document.getElementById('instaFooter');
@@ -812,11 +811,7 @@ window.exitImmersive = function(card) {
     const backBtn = document.querySelector('.immersive-back-btn');
     if (backBtn) backBtn.remove();
 
-    // WANNAN SHI NE KACAL ABIN DA ZAI TSAYAR DA BIDIYON IDAN AN WUCE KO AN FITA
     if (video) {
-        video.pause();         // Tsayar da bidiyon nan take
-        video.currentTime = 0; // Maida bidiyon farko
-        video.muted = true;    // Kulle sauti duka
         video.style.cssText = '';
         video.onclick = null;
     }
@@ -826,36 +821,30 @@ window.exitImmersive = function(card) {
     }
 };
 
-
-
-// 8. VIDEO OBSERVER - Auto play/pause lokacin scrolling na gari
+// 8. VIDEO OBSERVER
 window.nexusVideoObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const vid = entry.target;
-        const card = vid.closest('.post-card');
-        
-        // Idan bidiyon tana cikin Immersive Mode, kar wannan observer din ya fasa mata aiki
-        if (card && card.classList.contains('immersive-mode')) return;
-
         if (entry.isIntersecting) {
-            // Kunna idan tana rabi ko fiye a allo
             vid.play().catch(() => {});
         } else {
-            // Tsayar da ita dundum idan ta fita daga allo
             vid.pause();
         }
     });
-}, { 
-    root: null,
-    threshold: 0.5 // Dole 50% na bidiyon ya bayyana kafin ta yi play, idan ta fita kasa da haka zata tsaya.
-});
+}, { threshold: [0, 0.1] });
 
-// Tabbatar an sanya duka bidiyoyin cikin Observer idan an duba su
-document.querySelectorAll('.post-card video').forEach(v => window.nexusVideoObserver.observe(v));
+window.stopProp = function(e) { e.stopPropagation(); };
+window.openGiftPanel = function(username) { alert("Congratulations, you have successfully gifted " + username); };
 
+window.toggleSave = async function(btn, postId) {
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+    icon.classList.toggle('fa-solid');
+    icon.classList.toggle('fa-regular');
+    text.innerText = icon.classList.contains('fa-solid') ? "Saved" : "Save";
+};
 
-
-// IMMERSIVE VIDEO SCROLL ENGINE - UP/DOWN SWIPE AUTOMATION
+// IMMERSIVE VIDEO SCROLL ENGINE
 (function() {
     const S = { _swiping: false };
 
@@ -887,15 +876,7 @@ document.querySelectorAll('.post-card video').forEach(v => window.nexusVideoObse
     function goToNextVideo(currentCard) {
         const cards = Array.from(document.querySelectorAll('.post-card')).filter(c => c.querySelector('video'));
         const currentIndex = cards.indexOf(currentCard);
-        
         if (currentIndex !== -1 && cards[currentIndex + 1]) {
-            // 1. Kashe bidiyon yanzu kafin a tsallaka
-            const currentVid = currentCard.querySelector('video');
-            if (currentVid) {
-                currentVid.pause();
-                currentVid.muted = true;
-            }
-            
             window.exitImmersive(currentCard);
             window.toggleImmersive(cards[currentIndex + 1]);
         }
@@ -904,15 +885,7 @@ document.querySelectorAll('.post-card video').forEach(v => window.nexusVideoObse
     function goToPreviousVideo(currentCard) {
         const cards = Array.from(document.querySelectorAll('.post-card')).filter(c => c.querySelector('video'));
         const currentIndex = cards.indexOf(currentCard);
-        
         if (currentIndex > 0) {
-            // 1. Kashe bidiyon yanzu kafin a koma baya
-            const currentVid = currentCard.querySelector('video');
-            if (currentVid) {
-                currentVid.pause();
-                currentVid.muted = true;
-            }
-            
             window.exitImmersive(currentCard);
             window.toggleImmersive(cards[currentIndex - 1]);
         }
