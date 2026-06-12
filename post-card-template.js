@@ -1867,10 +1867,7 @@ window.toggleSave = async function(btn, postId) {
             S.oldestCursor = ids[ids.length - 1];
         }
 
-        let lastY = window.scrollY;
-        let ticking = false;
-
-  let touchStartY = 0;
+        let touchStartY = 0;
         let touchLastY = 0;
 
         function onTouchStart(e) {
@@ -1880,31 +1877,20 @@ window.toggleSave = async function(btn, postId) {
 
         function onTouchMove(e) {
             if (!card.classList.contains('immersive-mode')) return;
-
             const currentY = e.touches[0].clientY;
             const direction = currentY > touchLastY ? 'up' : 'down';
             touchLastY = currentY;
-
             const totalSwipe = currentY - touchStartY;
-
-            // Scroll UP (yatsa yana tafi sama = swipe up = older videos)
-            if (direction === 'up' && totalSwipe < -80) {
-                fetchOlderVideos();
-            }
-
-            // Scroll DOWN (yatsa yana tafi kasa = swipe down = newer videos)
-            if (direction === 'down' && totalSwipe > 80) {
-                fetchNewerVideos();
-            }
+            if (direction === 'up' && totalSwipe < -80) fetchOlderVideos();
+            if (direction === 'down' && totalSwipe > 80) fetchNewerVideos();
         }
 
         document.addEventListener('touchstart', onTouchStart, { passive: true });
         document.addEventListener('touchmove', onTouchMove, { passive: true });
 
-        // Save handlers don cire su idan ya fita immersive
         card._immersiveScrollHandler = onTouchMove;
         card._immersiveTouchStartHandler = onTouchStart;
-       
+    };  // ← RUFE nexusImmersiveStart
 
     window.nexusImmersiveStop = function() {
         S.isFetchingOld = false;
@@ -1915,7 +1901,6 @@ window.toggleSave = async function(btn, postId) {
         if (S.isFetchingOld || !S.hasMoreOld || !S.oldestCursor) return;
         if (typeof db === 'undefined') return;
         S.isFetchingOld = true;
-
         try {
             const oldestDoc = await db.collection('posts').doc(S.oldestCursor).get();
             const snapshot = await db.collection('posts')
@@ -1924,12 +1909,9 @@ window.toggleSave = async function(btn, postId) {
                 .startAfter(oldestDoc)
                 .limit(S.BATCH)
                 .get();
-
             if (snapshot.empty) { S.hasMoreOld = false; S.isFetchingOld = false; return; }
-
             const prevHeight = document.documentElement.scrollHeight;
             const feed = document.querySelector('.feed-container');
-
             snapshot.docs.forEach(doc => {
                 if (S.seenIds.has(doc.id)) return;
                 S.seenIds.add(doc.id);
@@ -1938,13 +1920,10 @@ window.toggleSave = async function(btn, postId) {
                 wrapper.innerHTML = window.generatePostHTML({ id: doc.id, ...doc.data() });
                 feed.insertBefore(wrapper, feed.firstChild);
             });
-
             S.oldestCursor = snapshot.docs[snapshot.docs.length - 1].id;
             const heightAdded = document.documentElement.scrollHeight - prevHeight;
             window.scrollBy({ top: heightAdded, behavior: 'instant' });
-
             if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
-
         } catch(e) { console.error('[Immersive] fetchOlder error:', e); }
         S.isFetchingOld = false;
     }
@@ -1953,7 +1932,6 @@ window.toggleSave = async function(btn, postId) {
         if (S.isFetchingNew || !S.newestCursor) return;
         if (typeof db === 'undefined') return;
         S.isFetchingNew = true;
-
         try {
             const newestDoc = await db.collection('posts').doc(S.newestCursor).get();
             const snapshot = await db.collection('posts')
@@ -1962,11 +1940,8 @@ window.toggleSave = async function(btn, postId) {
                 .endBefore(newestDoc)
                 .limitToLast(S.BATCH)
                 .get();
-
             if (snapshot.empty) { S.isFetchingNew = false; return; }
-
             const feed = document.querySelector('.feed-container');
-
             snapshot.docs.forEach(doc => {
                 if (S.seenIds.has(doc.id)) return;
                 S.seenIds.add(doc.id);
@@ -1975,14 +1950,12 @@ window.toggleSave = async function(btn, postId) {
                 wrapper.innerHTML = window.generatePostHTML({ id: doc.id, ...doc.data() });
                 feed.appendChild(wrapper);
             });
-
             S.newestCursor = snapshot.docs[0].id;
             if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
-
         } catch(e) { console.error('[Immersive] fetchNewer error:', e); }
         S.isFetchingNew = false;
     }
 
-})();
+})();  // ← RUFE IIFE
 
 console.log('[PostCard] Shared template loaded ✓');
