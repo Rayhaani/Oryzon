@@ -1922,8 +1922,8 @@ if (totalSwipe > 80) {
         S.isFetchingNew = false;
     };
 
-     
-       function goToNextVideo(currentCard){
+  
+   function goToNextVideo(currentCard){
 
     const cards = Array.from(
         document.querySelectorAll('.post-card[data-post-id]')
@@ -1935,12 +1935,15 @@ if (totalSwipe > 80) {
 
     if(!nextCard) return;
 
-    switchImmersiveVideo(currentCard, nextCard);
-       }
+    window.exitImmersive(currentCard);
+
+    setTimeout(()=>{
+        window.toggleImmersive(nextCard);
+    },100);
+     }
 
 
-   
-   function goToPreviousVideo(currentCard){
+  function goToPreviousVideo(currentCard){
 
     const cards = Array.from(
         document.querySelectorAll('.post-card[data-post-id]')
@@ -1952,29 +1955,12 @@ if (totalSwipe > 80) {
 
     if(!prevCard) return;
 
-    switchImmersiveVideo(currentCard, prevCard);
-   }
+    window.exitImmersive(currentCard);
 
-   
-
-   function switchImmersiveVideo(currentCard, targetCard){
-
-    currentCard.classList.remove('immersive-mode');
-
-    targetCard.classList.add('immersive-mode');
-
-    const currentVideo = currentCard.querySelector('video');
-    const targetVideo = targetCard.querySelector('video');
-
-    if(currentVideo){
-        currentVideo.pause();
-    }
-
-    if(targetVideo){
-        targetVideo.play().catch(()=>{});
-    }
-   }
-   
+    setTimeout(()=>{
+        window.toggleImmersive(prevCard);
+    },100);
+  } 
   
        async function fetchOlderVideos() {
         if (S.isFetchingOld || !S.hasMoreOld || !S.oldestCursor) return;
