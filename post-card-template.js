@@ -1922,45 +1922,102 @@ if (totalSwipe > 80) {
         S.isFetchingNew = false;
     };
 
-  
-   function goToNextVideo(currentCard){
 
+   
+   function goToNextVideo(currentCard) {
     const cards = Array.from(
         document.querySelectorAll('.post-card[data-post-id]')
     ).filter(c => c.querySelector('video'));
 
     const currentIndex = cards.indexOf(currentCard);
-
     const nextCard = cards[currentIndex + 1];
 
-    if(!nextCard) return;
+    if (!nextCard) {
+        // Babu next — fetch older videos silently
+        fetchOlderVideos().then(() => {
+            const updated = Array.from(
+                document.querySelectorAll('.post-card[data-post-id]')
+            ).filter(c => c.querySelector('video'));
+            const newNext = updated[currentIndex + 1];
+            if (newNext) swapImmersiveVideo(currentCard, newNext);
+        });
+        return;
+    }
+    swapImmersiveVideo(currentCard, nextCard);
+}
 
-    window.exitImmersive(currentCard);
-
-    setTimeout(()=>{
-        window.toggleImmersive(nextCard);
-    },100);
-     }
-
-
-  function goToPreviousVideo(currentCard){
-
+function goToPreviousVideo(currentCard) {
     const cards = Array.from(
         document.querySelectorAll('.post-card[data-post-id]')
     ).filter(c => c.querySelector('video'));
 
     const currentIndex = cards.indexOf(currentCard);
-
     const prevCard = cards[currentIndex - 1];
 
-    if(!prevCard) return;
+    if (!prevCard) {
+        fetchNewerVideos().then(() => {
+            const updated = Array.from(
+                document.querySelectorAll('.post-card[data-post-id]')
+            ).filter(c => c.querySelector('video'));
+            const newPrev = updated[currentIndex - 1];
+            if (newPrev) swapImmersiveVideo(currentCard, newPrev);
+        });
+        return;
+    }
+    swapImmersiveVideo(currentCard, prevCard);
+}
 
-    window.exitImmersive(currentCard);
+function swapImmersiveVideo(oldCard, newCard) {
+    // 1. Samo current immersive video element
+    const currentVideo = document.querySelector('video[style*="position: fixed"]');
+    const newVideo = newCard.querySelector('video');
+    if (!currentVideo || !newVideo) return;
 
-    setTimeout(()=>{
-        window.toggleImmersive(prevCard);
-    },100);
-  } 
+    // 2. Swap source — instant, babu animation
+    const newSrc = newVideo.src || newVideo.currentSrc;
+    currentVideo.src = newSrc;
+    currentVideo.load();
+    currentVideo.play().catch(() => {});
+
+    // 3. Update header info (username, avatar, timestamp)
+    const immersiveCard = document.querySelector('.post-card.immersive-mode');
+    if (!immersiveCard) return;
+
+    const oldAvatar = immersiveCard.querySelector('.post-avatar');
+    const oldUsername = immersiveCard.querySelector('.post-username');
+    const oldTime = immersiveCard.querySelector('.post-time');
+
+    const newAvatar = newCard.querySelector('.post-avatar');
+    const newUsername = newCard.querySelector('.post-username');
+    const newTime = newCard.querySelector('.post-time');
+
+    if (oldAvatar && newAvatar) oldAvatar.src = newAvatar.src;
+    if (oldUsername && newUsername) oldUsername.textContent = newUsername.textContent;
+    if (oldTime && newTime) oldTime.textContent = newTime.textContent;
+
+    // 4. Update card reference don immersive scroll ya san wane card yake
+    immersiveCard.dataset.postId = newCard.dataset.postId;
+
+    // 5. Reset swipe threshold
+    if (typeof window.nexusImmersiveStart === 'function') {
+        // Cire old handlers
+        if (immersiveCard._immersiveScrollHandler) {
+            document.removeEventListener('touchmove', immersiveCard._immersiveScrollHandler);
+        }
+        if (immersiveCard._immersiveTouchStartHandler) {
+            document.removeEventListener('touchstart', immersiveCard._immersiveTouchStartHandler);
+        }
+        const overlay = document.getElementById('nexus-swipe-overlay');
+        if (overlay) overlay.remove();
+
+        // Saka sabbin handlers
+        window.nexusImmersiveStart(immersiveCard);
+    }
+
+    if (navigator.vibrate) navigator.vibrate(15);
+}
+   
+   
   
        async function fetchOlderVideos() {
         if (S.isFetchingOld || !S.hasMoreOld || !S.oldestCursor) return;
