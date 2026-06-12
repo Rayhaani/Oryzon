@@ -1641,7 +1641,7 @@ window.toggleImmersive = function(card) {
     }
 };
 
-        
+
 window.exitImmersive = function(card) {
     const video = card.querySelector('video');
     const footer = document.getElementById('instaFooter');
@@ -1661,11 +1661,15 @@ window.exitImmersive = function(card) {
         document.removeEventListener('touchstart', card._immersiveTouchStartHandler);
         card._immersiveTouchStartHandler = null;
     }
+    if (card._immersiveTouchEndHandler) {
+        document.removeEventListener('touchend', card._immersiveTouchEndHandler);
+        card._immersiveTouchEndHandler = null;
+    }
 
-    // Cire swipe overlay ← ANAN ciki
+    // Cire swipe overlay
     const overlay = document.getElementById('nexus-swipe-overlay');
     if (overlay) overlay.remove();
-   
+
     const backBtn = document.querySelector('.immersive-back-btn');
     if (backBtn) backBtn.remove();
 
@@ -1682,6 +1686,7 @@ window.exitImmersive = function(card) {
 
     window.onpopstate = null;
 };
+
 // ============================================================
 // 8. VIDEO OBSERVER & SOUND CONTROL — Central Command
 // ============================================================
@@ -1875,20 +1880,29 @@ window.toggleSave = async function(btn, postId) {
             touchLastY = touchStartY;
         }
 
-        function onTouchMove(e) {
+       
+    function onTouchMove(e) {
             if (!card.classList.contains('immersive-mode')) return;
             const currentY = e.touches[0].clientY;
             const direction = currentY > touchLastY ? 'up' : 'down';
             touchLastY = currentY;
             const totalSwipe = currentY - touchStartY;
-           if (totalSwipe < -80) {
+
+          // Swipe UP (yatsa sama) = je next video (kasa a feed)
+if (totalSwipe < -80 && !S._swiping) {
+    S._swiping = true;
     goToNextVideo(card);
+    setTimeout(() => { S._swiping = false; }, 600);
 }
 
-if (totalSwipe > 80) {
+// Swipe DOWN (yatsa kasa) = je previous video (sama a feed)
+if (totalSwipe > 80 && !S._swiping) {
+    S._swiping = true;
     goToPreviousVideo(card);
+    setTimeout(() => { S._swiping = false; }, 600);
 } 
         }
+
        
         document.addEventListener('touchstart', onTouchStart, { passive: true });
         document.addEventListener('touchmove', onTouchMove, { passive: true });
@@ -1915,13 +1929,22 @@ if (totalSwipe > 80) {
         swipeOverlay.addEventListener('touchmove', onTouchMove, { passive: true });
         card._swipeOverlay = swipeOverlay;
 
+        function onTouchEnd() {
+            touchStartY = 0;
+            touchLastY = 0;
+        }
+
+        document.addEventListener('touchend', onTouchEnd, { passive: true });
+        swipeOverlay.addEventListener('touchend', onTouchEnd, { passive: true });
+        card._immersiveTouchEndHandler = onTouchEnd;
+
     };  // ← RUFE nexusImmersiveStart
    
     window.nexusImmersiveStop = function() {
         S.isFetchingOld = false;
         S.isFetchingNew = false;
     };
-
+   
 
    
    function goToNextVideo(currentCard) {
@@ -1967,26 +1990,23 @@ function goToPreviousVideo(currentCard) {
     swapImmersiveVideo(currentCard, prevCard);
 }
 
-function swapImmersiveVideo(oldCard, newCard) {
-    // 1. Samo current immersive video element
+
+   function swapImmersiveVideo(oldCard, newCard) {
     const currentVideo = document.querySelector('video[style*="position: fixed"]');
     const newVideo = newCard.querySelector('video');
     if (!currentVideo || !newVideo) return;
 
-    // 2. Swap source — instant, babu animation
     const newSrc = newVideo.src || newVideo.currentSrc;
     currentVideo.src = newSrc;
     currentVideo.load();
     currentVideo.play().catch(() => {});
 
-    // 3. Update header info (username, avatar, timestamp)
     const immersiveCard = document.querySelector('.post-card.immersive-mode');
     if (!immersiveCard) return;
 
     const oldAvatar = immersiveCard.querySelector('.post-avatar');
     const oldUsername = immersiveCard.querySelector('.post-username');
     const oldTime = immersiveCard.querySelector('.post-time');
-
     const newAvatar = newCard.querySelector('.post-avatar');
     const newUsername = newCard.querySelector('.post-username');
     const newTime = newCard.querySelector('.post-time');
@@ -1995,12 +2015,12 @@ function swapImmersiveVideo(oldCard, newCard) {
     if (oldUsername && newUsername) oldUsername.textContent = newUsername.textContent;
     if (oldTime && newTime) oldTime.textContent = newTime.textContent;
 
-    // 4. Update card reference don immersive scroll ya san wane card yake
     immersiveCard.dataset.postId = newCard.dataset.postId;
 
-    // 5. Reset swipe threshold
+    // Update savedScrollTop ← ANAN CIKI
+    immersiveCard._savedScrollTop = newCard.getBoundingClientRect().top + window.scrollY - 100;
+
     if (typeof window.nexusImmersiveStart === 'function') {
-        // Cire old handlers
         if (immersiveCard._immersiveScrollHandler) {
             document.removeEventListener('touchmove', immersiveCard._immersiveScrollHandler);
         }
@@ -2009,14 +2029,11 @@ function swapImmersiveVideo(oldCard, newCard) {
         }
         const overlay = document.getElementById('nexus-swipe-overlay');
         if (overlay) overlay.remove();
-
-        // Saka sabbin handlers
         window.nexusImmersiveStart(immersiveCard);
     }
 
     if (navigator.vibrate) navigator.vibrate(15);
-}
-   
+}  // ← RUFE function ANAN
    
   
        async function fetchOlderVideos() {
