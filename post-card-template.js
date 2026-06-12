@@ -1653,12 +1653,16 @@ window.exitImmersive = function(card) {
     if (typeof window.nexusImmersiveStop === 'function') {
         window.nexusImmersiveStop();
     }
+    
     if (card._immersiveScrollHandler) {
-        window.removeEventListener('scroll', card._immersiveScrollHandler);
+        document.removeEventListener('touchmove', card._immersiveScrollHandler);
         card._immersiveScrollHandler = null;
     }
+    if (card._immersiveTouchStartHandler) {
+        document.removeEventListener('touchstart', card._immersiveTouchStartHandler);
+        card._immersiveTouchStartHandler = null;
+    }
    
-
     const backBtn = document.querySelector('.immersive-back-btn');
     if (backBtn) backBtn.remove();
 
@@ -1866,31 +1870,41 @@ window.toggleSave = async function(btn, postId) {
         let lastY = window.scrollY;
         let ticking = false;
 
-        function onScroll() {
-            if (ticking) return;
-            ticking = true;
-            requestAnimationFrame(() => {
-                if (!card.classList.contains('immersive-mode')) {
-                    ticking = false;
-                    return;
-                }
-                const currentY = window.scrollY;
-                const direction = currentY < lastY ? 'up' : 'down';
-                lastY = currentY;
+  let touchStartY = 0;
+        let touchLastY = 0;
 
-                const distFromTop = currentY;
-                const distFromBottom = document.documentElement.scrollHeight - currentY - window.innerHeight;
-
-                if (direction === 'up' && distFromTop < 300) fetchOlderVideos();
-                if (direction === 'down' && distFromBottom < 300) fetchNewerVideos();
-
-                ticking = false;
-            });
+        function onTouchStart(e) {
+            touchStartY = e.touches[0].clientY;
+            touchLastY = touchStartY;
         }
 
-        window.addEventListener('scroll', onScroll, { passive: true });
-        card._immersiveScrollHandler = onScroll;
-    };
+        function onTouchMove(e) {
+            if (!card.classList.contains('immersive-mode')) return;
+
+            const currentY = e.touches[0].clientY;
+            const direction = currentY > touchLastY ? 'up' : 'down';
+            touchLastY = currentY;
+
+            const totalSwipe = currentY - touchStartY;
+
+            // Scroll UP (yatsa yana tafi sama = swipe up = older videos)
+            if (direction === 'up' && totalSwipe < -80) {
+                fetchOlderVideos();
+            }
+
+            // Scroll DOWN (yatsa yana tafi kasa = swipe down = newer videos)
+            if (direction === 'down' && totalSwipe > 80) {
+                fetchNewerVideos();
+            }
+        }
+
+        document.addEventListener('touchstart', onTouchStart, { passive: true });
+        document.addEventListener('touchmove', onTouchMove, { passive: true });
+
+        // Save handlers don cire su idan ya fita immersive
+        card._immersiveScrollHandler = onTouchMove;
+        card._immersiveTouchStartHandler = onTouchStart;
+       
 
     window.nexusImmersiveStop = function() {
         S.isFetchingOld = false;
