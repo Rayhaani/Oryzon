@@ -1881,9 +1881,14 @@ window.toggleSave = async function(btn, postId) {
             const direction = currentY > touchLastY ? 'up' : 'down';
             touchLastY = currentY;
             const totalSwipe = currentY - touchStartY;
-            if (direction === 'up' && totalSwipe < -80) fetchOlderVideos();
-            if (direction === 'down' && totalSwipe > 80) fetchNewerVideos();
-        }
+           if (totalSwipe < -80) {
+    goToNextVideo(card);
+}
+
+if (totalSwipe > 80) {
+    goToPreviousVideo(card);
+} 
+        
 
         document.addEventListener('touchstart', onTouchStart, { passive: true });
         document.addEventListener('touchmove', onTouchMove, { passive: true });
@@ -1917,7 +1922,48 @@ window.toggleSave = async function(btn, postId) {
         S.isFetchingNew = false;
     };
 
-    async function fetchOlderVideos() {
+     
+       function goToNextVideo(currentCard){
+
+    const cards = Array.from(
+        document.querySelectorAll('.post-card[data-post-id]')
+    ).filter(c => c.querySelector('video'));
+
+    const currentIndex = cards.indexOf(currentCard);
+
+    const nextCard = cards[currentIndex + 1];
+
+    if(!nextCard) return;
+
+    window.exitImmersive(currentCard);
+
+    setTimeout(()=>{
+        window.toggleImmersive(nextCard);
+    },100);
+       }
+
+
+       function goToPreviousVideo(currentCard){
+
+    const cards = Array.from(
+        document.querySelectorAll('.post-card[data-post-id]')
+    ).filter(c => c.querySelector('video'));
+
+    const currentIndex = cards.indexOf(currentCard);
+
+    const prevCard = cards[currentIndex - 1];
+
+    if(!prevCard) return;
+
+    window.exitImmersive(currentCard);
+
+    setTimeout(()=>{
+        window.toggleImmersive(prevCard);
+    },100);
+       }
+       
+  
+       async function fetchOlderVideos() {
         if (S.isFetchingOld || !S.hasMoreOld || !S.oldestCursor) return;
         if (typeof db === 'undefined') return;
         S.isFetchingOld = true;
