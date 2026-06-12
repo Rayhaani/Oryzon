@@ -1182,153 +1182,60 @@
               
     </script>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-        authDomain: "oryzon-50ea4.firebaseapp.com",
-        projectId: "oryzon-50ea4",
-        storageBucket: "oryzon-50ea4.firebasestorage.app",
-        messagingSenderId: "782106742622",
-        appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
-        measurementId: "G-K5085DLL2W"
-      };
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+    measurementId: "G-K5085DLL2W"
+  };
 
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      const storage = firebase.storage();
-      const analytics = firebase.analytics();
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+  const analytics = firebase.analytics();
 
+  window.addEventListener('DOMContentLoaded', () => {
+      
+      nexusInitFeed(document.querySelector('.feed-container')); // ← SAKA WANNAN
 
+      loadFooterProfile();
+      
+      const savedProfile = localStorage.getItem('userProfilePic');
+      const storyAvatar = document.getElementById('story-avatar-preview');
+      if (savedProfile && storyAvatar) { storyAvatar.src = savedProfile; }
+      observeVideos();
 
-      window.addEventListener('DOMContentLoaded', () => {
-          renderNexusFeed();
-          loadFooterProfile();
-          
-          const savedProfile = localStorage.getItem('userProfilePic');
-          const storyAvatar = document.getElementById('story-avatar-preview');
-          if (savedProfile && storyAvatar) { storyAvatar.src = savedProfile; }
-          observeVideos();
-
-          if (currentUser) {
-              db.collection("users").doc(currentUser).get()
-              .then((doc) => {
-                  if (doc.exists) {
-                      const data = doc.data();
-                      if (document.getElementById("userProfileName")) {
-                          document.getElementById("userProfileName").innerText = data.fullName;
-                      }
+      if (currentUser) {
+          db.collection("users").doc(currentUser).get()
+          .then((doc) => {
+              if (doc.exists) {
+                  const data = doc.data();
+                  if (document.getElementById("userProfileName")) {
+                      document.getElementById("userProfileName").innerText = data.fullName;
                   }
-              }).catch((err) => { console.error("Error fetching user data:", err); });
-          }
-      });
-
-
-      function loadFooterProfile() {
-          const savedPic = localStorage.getItem('userProfilePic');
-          const footerImg = document.getElementById('footerProfileImg');
-          if (savedPic && footerImg) { footerImg.src = savedPic; } else { if(footerImg) footerImg.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq"; }
-      }
-
-    
-
-      async function renderNexusFeed() {
-          const feedContainer = document.querySelector('.feed-container');
-          try {
-              const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
-              window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
-          } catch(e) { console.log("Saved posts error:", e); }
-
-          db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-              let allPostsHTML = ''; 
-              if (snapshot.empty) {
-                  feedContainer.innerHTML = '<div class="empty-feed" style="text-align:center; padding:20px; color:#aaa;">No posts yet...</div>';
-                  return;
               }
-              snapshot.forEach((doc) => {
-                  const post = { id: doc.id, ...doc.data() };
-                  allPostsHTML += generatePostHTML(post);
-              });
-              
-              
-              feedContainer.innerHTML = allPostsHTML;
+          }).catch((err) => { console.error("Error fetching user data:", err); });
+      }
+  });
 
-              setTimeout(() => postCard_restoreLikes(feedContainer), 500);
+  function loadFooterProfile() {
+      const savedPic = localStorage.getItem('userProfilePic');
+      const footerImg = document.getElementById('footerProfileImg');
+      if (savedPic && footerImg) { footerImg.src = savedPic; } else { if(footerImg) footerImg.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq"; }
+  }
 
-              // Load avatar na kowane poster daga users collection
-snapshot.forEach((doc) => {
-    const post = doc.data();
-    if (!post.username) return;
-    db.collection('users').doc(post.username).get().then(userDoc => {
-        if (!userDoc.exists) return;
-        const pic = userDoc.data().userProfilePic;
-        if (!pic) return;
-        const card = feedContainer.querySelector(`.post-card[data-post-id="${doc.id}"]`);
-        if (card) {
-            const avatar = card.querySelector('.post-avatar');
-            if (avatar) avatar.src = pic;
-        }
-    });
-});
+</script> 
 
-
-        // Ƙidaya comments na kowane post
-snapshot.forEach((doc) => {
-    const postId = doc.id;
-    db.collection("nexus_contributions")
-        .where("postId", "==", postId)
-        .where("parentId", "==", null)
-        .onSnapshot(commentSnap => {
-            const el = document.getElementById(`comment-count-${postId}`);
-            if (el) el.textContent = commentSnap.size;
-        });
-});
-              
-
-// Check likes daga Firestore
-const myUsername = localStorage.getItem('nexus_user_session');
-if(myUsername){
-    db.collection('likes').where('user','==',myUsername).get().then(snap=>{
-        snap.forEach(doc=>{
-            const postId = doc.data().postId;
-            const btn = feedContainer.querySelector(`.capsule[onclick*="${postId}"]`) ||
-                        feedContainer.querySelectorAll('.capsule')[0];
-            const card = feedContainer.querySelector(`.post-card[data-post-id="${postId}"]`);
-            if(card){
-                const likeBtn = card.querySelectorAll('.capsule')[0];
-              
-                if(likeBtn){
-    likeBtn.classList.add('liked');
-    likeBtn.querySelector('i').className = 'fa-solid fa-heart';
-    likeBtn.querySelector('i').style.color = '#ff4d6d';
-    
-    // Restore like count daga Firestore
-    db.collection('likes')
-        .where('postId', '==', postId)
-        .get().then(countSnap => {
-            const countEl = likeBtn.querySelector('span');
-            if(countEl) countEl.textContent = countSnap.size > 0 ? countSnap.size : '';
-        });
-      } 
-                
-            }
-        });
-    });
-}
-
-          window.postCard_observeVideos();
-setTimeout(window.postCard_handleVideoPriority, 500);
-          });
-    }
-
-      window.addEventListener('scroll', () => {
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(window.postCard_handleVideoPriority, 150);
-}, { passive: true });
+<script src="nexus-infinite-scroll.js"></script> <!-- ← SAKA WANNAN A ƘASA -->
 
 
 
