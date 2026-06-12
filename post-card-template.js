@@ -1835,5 +1835,140 @@ window.toggleSave = async function(btn, postId) {
     }
 };
 
-       
+// ============================================================
+// IMMERSIVE VIDEO SCROLL ENGINE
+// ============================================================
+(function() {
+    const S = {
+        oldestCursor: null,
+        newestCursor: null,
+        isFetchingOld: false,
+        isFetchingNew: false,
+        hasMoreOld: true,
+        seenIds: new Set(),
+        BATCH: 5,
+    };
+
+    window.nexusImmersiveStart = function(card) {
+        const allCards = Array.from(
+            document.querySelectorAll('.post-card[data-post-id]')
+        ).filter(c => c.querySelector('video'));
+
+        S.seenIds.clear();
+        allCards.forEach(c => S.seenIds.add(c.dataset.postId));
+
+        const ids = allCards.map(c => c.dataset.postId);
+        if (ids.length > 0) {
+            S.newestCursor = ids[0];
+            S.oldestCursor = ids[ids.length - 1];
+        }
+
+        let lastY = window.scrollY;
+        let ticking = false;
+
+        function onScroll() {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+                if (!card.classList.contains('immersive-mode')) {
+                    ticking = false;
+                    return;
+                }
+                const currentY = window.scrollY;
+                const direction = currentY < lastY ? 'up' : 'down';
+                lastY = currentY;
+
+                const distFromTop = currentY;
+                const distFromBottom = document.documentElement.scrollHeight - currentY - window.innerHeight;
+
+                if (direction === 'up' && distFromTop < 300) fetchOlderVideos();
+                if (direction === 'down' && distFromBottom < 300) fetchNewerVideos();
+
+                ticking = false;
+            });
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        card._immersiveScrollHandler = onScroll;
+    };
+
+    window.nexusImmersiveStop = function() {
+        S.isFetchingOld = false;
+        S.isFetchingNew = false;
+    };
+
+    async function fetchOlderVideos() {
+        if (S.isFetchingOld || !S.hasMoreOld || !S.oldestCursor) return;
+        if (typeof db === 'undefined') return;
+        S.isFetchingOld = true;
+
+        try {
+            const oldestDoc = await db.collection('posts').doc(S.oldestCursor).get();
+            const snapshot = await db.collection('posts')
+                .where('mediaType', '==', 'video')
+                .orderBy('timestamp', 'desc')
+                .startAfter(oldestDoc)
+                .limit(S.BATCH)
+                .get();
+
+            if (snapshot.empty) { S.hasMoreOld = false; S.isFetchingOld = false; return; }
+
+            const prevHeight = document.documentElement.scrollHeight;
+            const feed = document.querySelector('.feed-container');
+
+            snapshot.docs.forEach(doc => {
+                if (S.seenIds.has(doc.id)) return;
+                S.seenIds.add(doc.id);
+                const wrapper = document.createElement('div');
+                wrapper.style.marginBottom = '12px';
+                wrapper.innerHTML = window.generatePostHTML({ id: doc.id, ...doc.data() });
+                feed.insertBefore(wrapper, feed.firstChild);
+            });
+
+            S.oldestCursor = snapshot.docs[snapshot.docs.length - 1].id;
+            const heightAdded = document.documentElement.scrollHeight - prevHeight;
+            window.scrollBy({ top: heightAdded, behavior: 'instant' });
+
+            if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
+
+        } catch(e) { console.error('[Immersive] fetchOlder error:', e); }
+        S.isFetchingOld = false;
+    }
+
+    async function fetchNewerVideos() {
+        if (S.isFetchingNew || !S.newestCursor) return;
+        if (typeof db === 'undefined') return;
+        S.isFetchingNew = true;
+
+        try {
+            const newestDoc = await db.collection('posts').doc(S.newestCursor).get();
+            const snapshot = await db.collection('posts')
+                .where('mediaType', '==', 'video')
+                .orderBy('timestamp', 'desc')
+                .endBefore(newestDoc)
+                .limitToLast(S.BATCH)
+                .get();
+
+            if (snapshot.empty) { S.isFetchingNew = false; return; }
+
+            const feed = document.querySelector('.feed-container');
+
+            snapshot.docs.forEach(doc => {
+                if (S.seenIds.has(doc.id)) return;
+                S.seenIds.add(doc.id);
+                const wrapper = document.createElement('div');
+                wrapper.style.marginBottom = '12px';
+                wrapper.innerHTML = window.generatePostHTML({ id: doc.id, ...doc.data() });
+                feed.appendChild(wrapper);
+            });
+
+            S.newestCursor = snapshot.docs[0].id;
+            if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
+
+        } catch(e) { console.error('[Immersive] fetchNewer error:', e); }
+        S.isFetchingNew = false;
+    }
+
+})();
+
 console.log('[PostCard] Shared template loaded ✓');
