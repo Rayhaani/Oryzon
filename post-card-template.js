@@ -1847,149 +1847,6 @@ window.toggleSave = async function(btn, postId) {
 // ============================================================
 // IMMERSIVE VIDEO SCROLL ENGINE
 // ============================================================
-(function() {
-    const S = {
-        oldestCursor: null,
-        newestCursor: null,
-        isFetchingOld: false,
-        isFetchingNew: false,
-        hasMoreOld: true,
-        seenIds: new Set(),
-        BATCH: 5,
-    };
-
-    window.nexusImmersiveStart = function(card) {
-        const allCards = Array.from(
-            document.querySelectorAll('.post-card[data-post-id]')
-        ).filter(c => c.querySelector('video'));
-
-        S.seenIds.clear();
-        allCards.forEach(c => S.seenIds.add(c.dataset.postId));
-
-        const ids = allCards.map(c => c.dataset.postId);
-        if (ids.length > 0) {
-            S.newestCursor = ids[0];
-            S.oldestCursor = ids[ids.length - 1];
-        }
-
-        let touchStartY = 0;
-        let touchLastY = 0;
-
-        function onTouchStart(e) {
-            touchStartY = e.touches[0].clientY;
-            touchLastY = touchStartY;
-        }
-
-       
-    function onTouchMove(e) {
-            if (!card.classList.contains('immersive-mode')) return;
-            const currentY = e.touches[0].clientY;
-            const direction = currentY > touchLastY ? 'up' : 'down';
-            touchLastY = currentY;
-            const totalSwipe = currentY - touchStartY;
-
-
-       // Gyara: Swipe UP (Motsa yatsa sama) = Next Video (Kasa a Feed)
-if (totalSwipe < -80 && !S._swiping) {
-    S._swiping = true;
-    goToNextVideo(card);
-    setTimeout(() => { S._swiping = false; }, 600);
-}
-
-// Gyara: Swipe DOWN (Motsa yatsa kasa) = Previous Video (Sama a Feed)
-if (totalSwipe > 80 && !S._swiping) {
-    S._swiping = true;
-    goToPreviousVideo(card);
-    setTimeout(() => { S._swiping = false; }, 600);
-} 
-        }
-
-       
-        document.addEventListener('touchstart', onTouchStart, { passive: true });
-        document.addEventListener('touchmove', onTouchMove, { passive: true });
-
-        card._immersiveScrollHandler = onTouchMove;
-        card._immersiveTouchStartHandler = onTouchStart;
-
-        // Sanya transparent overlay a saman video don catch swipes
-        let swipeOverlay = document.getElementById('nexus-swipe-overlay');
-        if (!swipeOverlay) {
-            swipeOverlay = document.createElement('div');
-            swipeOverlay.id = 'nexus-swipe-overlay';
-            swipeOverlay.style.cssText = `
-                position: fixed;
-                top: 0; left: 0;
-                width: 100vw; height: 100vh;
-                z-index: 6000;
-                background: transparent;
-            `;
-            document.body.appendChild(swipeOverlay);
-        }
-
-        swipeOverlay.addEventListener('touchstart', onTouchStart, { passive: true });
-        swipeOverlay.addEventListener('touchmove', onTouchMove, { passive: true });
-        card._swipeOverlay = swipeOverlay;
-
-        function onTouchEnd() {
-            touchStartY = 0;
-            touchLastY = 0;
-        }
-
-        document.addEventListener('touchend', onTouchEnd, { passive: true });
-        swipeOverlay.addEventListener('touchend', onTouchEnd, { passive: true });
-        card._immersiveTouchEndHandler = onTouchEnd;
-
-    };  // ← RUFE nexusImmersiveStart
-   
-    window.nexusImmersiveStop = function() {
-        S.isFetchingOld = false;
-        S.isFetchingNew = false;
-    };
-   
-
-   
- function goToNextVideo(currentCard) {
-    const cards = Array.from(
-        document.querySelectorAll('.post-card[data-post-id]')
-    ).filter(c => c.querySelector('video'));
-
-    // Nemo ta postId — mafi aminci
-    const currentPostId = currentCard.dataset.postId;
-    const currentIndex = cards.findIndex(c => c.dataset.postId === currentPostId);
-
-    if (currentIndex === -1) return;
-
-    const nextCard = cards[currentIndex + 1];
-
-    if (!nextCard) {
-        fetchOlderVideos().then(() => {
-            const updated = Array.from(
-                document.querySelectorAll('.post-card[data-post-id]')
-            ).filter(c => c.querySelector('video'));
-            const newNext = updated[currentIndex + 1];
-            if (newNext) swapImmersiveVideo(currentCard, newNext);
-        });
-        return;
-    }
-    swapImmersiveVideo(currentCard, nextCard);
-}
-
-
-    function goToPreviousVideo(currentCard) {
-        const cards = Array.from(
-            document.querySelectorAll('.post-card[data-post-id]')
-        ).filter(c => c.querySelector('video'));
-
-        const currentPostId = currentCard.dataset.postId;
-        const currentIndex = cards.findIndex(c => c.dataset.postId === currentPostId);
-
-        if (currentIndex <= 0) return; 
-        const prevCard = cards[currentIndex - 1];
-
-        if (prevCard) {
-            swapImmersiveVideo(currentCard, prevCard);
-        }
-    }
 
     function swapImmersiveVideo(oldCard, newCard) {
         window.exitImmersive(oldCard);
@@ -2081,4 +1938,74 @@ if (totalSwipe > 80 && !S._swiping) {
            
   
        
+
+
+
+
+
 console.log('[PostCard] Shared template loaded ✓');
+
+
+// IMMERSIVE VIDEO SCROLL ENGINE - UP/DOWN SWIPE AUTOMATION
+(function() {
+    const S = { _swiping: false };
+
+    window.nexusImmersiveStart = function(card) {
+        let touchStartY = 0;
+        function onTouchStart(e) { touchStartY = e.touches[0].clientY; }
+       
+        function onTouchMove(e) {
+            if (!card.classList.contains('immersive-mode')) return;
+            const currentY = e.touches[0].clientY;
+            const totalSwipe = currentY - touchStartY;
+
+            if (totalSwipe < -80 && !S._swiping) {
+                S._swiping = true;
+                goToNextVideo(card);
+                setTimeout(() => { S._swiping = false; }, 600);
+            }
+            if (totalSwipe > 80 && !S._swiping) {
+                S._swiping = true;
+                goToPreviousVideo(card);
+                setTimeout(() => { S._swiping = false; }, 600);
+            } 
+        }
+
+        document.addEventListener('touchstart', onTouchStart, { passive: true });
+        document.addEventListener('touchmove', onTouchMove, { passive: true });
+    };
+
+    function goToNextVideo(currentCard) {
+        const cards = Array.from(document.querySelectorAll('.post-card')).filter(c => c.querySelector('video'));
+        const currentIndex = cards.indexOf(currentCard);
+        
+        if (currentIndex !== -1 && cards[currentIndex + 1]) {
+            // 1. Kashe bidiyon yanzu kafin a tsallaka
+            const currentVid = currentCard.querySelector('video');
+            if (currentVid) {
+                currentVid.pause();
+                currentVid.muted = true;
+            }
+            
+            window.exitImmersive(currentCard);
+            window.toggleImmersive(cards[currentIndex + 1]);
+        }
+    }
+
+    function goToPreviousVideo(currentCard) {
+        const cards = Array.from(document.querySelectorAll('.post-card')).filter(c => c.querySelector('video'));
+        const currentIndex = cards.indexOf(currentCard);
+        
+        if (currentIndex > 0) {
+            // 1. Kashe bidiyon yanzu kafin a koma baya
+            const currentVid = currentCard.querySelector('video');
+            if (currentVid) {
+                currentVid.pause();
+                currentVid.muted = true;
+            }
+            
+            window.exitImmersive(currentCard);
+            window.toggleImmersive(cards[currentIndex - 1]);
+        }
+    }
+})();
