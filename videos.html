@@ -306,7 +306,7 @@
 <body>
 
 <!-- ── FEED ── -->
-<div id="videoFeed"></div>
+<div id="videoFeed" style="visibility:hidden;"></div>
 
 <!-- ── LOAD MORE (sentinel) ── -->
 <div class="load-more-trigger" id="loadMoreTrigger" style="display:none;">
@@ -523,22 +523,19 @@ window.addEventListener('scroll', () => {
 
 
 // ===== AUTO-IMMERSIVE: Fara reels kamar social.html =====
-// Bari template.js toggleImmersive ya yi duk aiki — mu kira shi kawai
-
 function startFirstImmersive() {
     const cards = document.querySelectorAll('#videoFeed .post-card');
     if (!cards.length) {
-        feedEl.classList.add('ready');
+        feedEl.style.visibility = 'visible';
         return;
     }
 
     if (typeof window.toggleImmersive === 'function') {
         window.toggleImmersive(cards[0]);
     }
-    feedEl.classList.add('ready');
+    feedEl.style.visibility = 'visible';
 
     setTimeout(() => {
-        // Override popstate (hardware/gesture back)
         window.onpopstate = function() {
             const sv = document.getElementById('nexusSplitView');
             if (sv) {
@@ -551,7 +548,6 @@ function startFirstImmersive() {
             window.location.replace('social.html');
         };
 
-        // Override chevron back-icon (top-left)
         const backBtn = document.querySelector('.immersive-back-btn');
         if (backBtn) {
             backBtn.onclick = function(e) {
