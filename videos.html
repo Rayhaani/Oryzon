@@ -227,7 +227,13 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-        }
+         }.     
+         #videoFeed {
+         visibility: hidden;
+         }
+         #videoFeed.ready {
+         visibility: visible;
+         }
 
         /* Ensure proper spacing between cards */
         #videoFeed .post-card { margin-bottom: 0 !important; }
@@ -521,13 +527,29 @@ window.addEventListener('scroll', () => {
 
 function startFirstImmersive() {
     const cards = document.querySelectorAll('#videoFeed .post-card');
-    if (!cards.length) return;
-    
-    // Kira toggleImmersive na template.js akan card na farko
-    const firstCard = cards[0];
-    if (typeof window.toggleImmersive === 'function') {
-        window.toggleImmersive(firstCard);
+    if (!cards.length) {
+        feedEl.classList.add('ready');
+        return;
     }
+
+    if (typeof window.toggleImmersive === 'function') {
+        window.toggleImmersive(cards[0]);
+    }
+    feedEl.classList.add('ready');
+
+    setTimeout(() => {
+        window.onpopstate = function() {
+            const sv = document.getElementById('nexusSplitView');
+            if (sv) {
+                sv.remove();
+                document.body.style.overflow = '';
+                document.getElementById('instaFooter').classList.add('footer-hidden');
+                history.pushState({ immersive: true }, '');
+                return;
+            }
+            window.location.replace('social.html');
+        };
+    }, 100);
 }
 
 // Kira bayan videos sun loda
