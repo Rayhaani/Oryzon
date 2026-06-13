@@ -18,17 +18,19 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            background-color: var(--quantum-bg);
-            color: var(--text-primary);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow-x: hidden;
-        }
+        
+            body {
+    background-color: var(--quantum-bg);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+}
 
-        .hologram-grid-canvas {
-            perspective: 1000px;
-        }
+.hologram-grid-canvas {
+    perspective: 1000px;
+}
             
+
         .nexus-2050-wrapper {
             width: 100%;
             max-width: 500px;
@@ -154,75 +156,99 @@
 
         .hidden-neural-payload { display: none; }
 
-        /* ===== HARDCORE OVERRIDING CSS FOR INSTAGRAM REELS SMOOTH SCROLL ===== */
-        #nexus-immersive-card {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100dvh !important;
-            z-index: 99999 !important; /* Na fi gaban kowa */
-            background: #000000 !important;
-            overflow-y: scroll !important;
-            overflow-x: hidden !important;
-            scroll-snap-type: y mandatory !important; /* TikTok/Instagram snap */
-            -webkit-overflow-scrolling: touch !important;
-            scroll-behavior: auto !important;
-        }
+        /* ===== IMMERSIVE FIX — EXPLORE PAGE ONLY ===== */
+#nexus-immersive-card {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    z-index: 8000 !important;
+    background: #000 !important;
+    overflow: hidden !important;
+}
+#nexus-immersive-card .post-card {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 8001 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+}
 
-        /* Wannan yana dake duka matsalar blank page ta hanyar gyara post card */
-        #nexus-immersive-card .post-card {
-            position: relative !important;
-            width: 100vw !important;
-            height: 100dvh !important;
-            min-height: 100dvh !important;
-            max-height: 100dvh !important;
-            scroll-snap-align: start !important;
-            scroll-snap-stop: always !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-end !important;
-            background: #000000 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border-radius: 0 !important;
-            overflow: hidden !important;
-            transform: none !important; /* Kashe duk wani tsohon JS transform dake tura hoton gefe */
-        }
 
-        /* Tabbatar da hoto ko bidiyo ya zauna radau ba tare da ya tafi baki ba */
-        #nexus-immersive-card .post-media,
-        #nexus-immersive-card img,
-        #nexus-immersive-card video {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            min-height: 100% !important;
-            max-height: 100% !important;
-            object-fit: cover !important;
-            z-index: 1 !important;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            transform: none !important;
-        }
+        #nexus-immersive-card .post-media {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    aspect-ratio: unset !important;
+    object-fit: cover !important;
+    z-index: -1 !important;
+}
 
-        
+#nexus-immersive-card .post-header,
+#nexus-immersive-card .post-content,
+#nexus-immersive-card .post-interaction-bar,
+#nexus-immersive-card .interaction-bar {
+    position: relative !important;
+    z-index: 2 !important;
+}
 
-        /* Fitowa da rubutu, avatar da interaction buttons saman hoto */
-        #nexus-immersive-card .post-header,
-        #nexus-immersive-card .post-content,
-        #nexus-immersive-card .post-interaction-bar,
-        #nexus-immersive-card .interaction-bar,
-        #nexus-immersive-card .post-footer {
-            position: relative !important;
-            z-index: 10 !important;
-            pointer-events: auto !important;
-        }
 
-        
+        #nexus-immersive-card{
+
+    overflow:hidden !important;
+
+}
+
+.ig-stack{
+
+    position:absolute;
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    touch-action:none;
+    will-change:transform;
+}
+
+.ig-card{
+
+    position:absolute;
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    overflow:hidden;
+}
+
+.ig-current{
+
+    transform:translateY(0);
+}
+
+.ig-next{
+
+    transform:translateY(100%);
+}
+
+.ig-prev{
+
+    transform:translateY(-100%);
+}
+
     </style>
 </head>
 <body>
@@ -243,6 +269,7 @@
         <div class="quantum-skeleton"></div>
         <div class="quantum-skeleton"></div>
     </div>
+
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -267,62 +294,73 @@
 
      
 function openImmersiveFromGrid(index) {
-    console.log('[DEBUG] Opening Full Immersive, Target Index:', index);
-    
+    console.log('[DEBUG] function called, index:', index);
+    const post = allPosts[index];
+    if (!post) return;
+
     const existing = document.getElementById('nexus-immersive-card');
     if (existing) existing.remove();
 
-    if (typeof generatePostHTML !== 'function') {
-        console.error('generatePostHTML template function is missing.');
-        return;
-    }
+    if (typeof generatePostHTML !== 'function') return;
 
-    // Kirkirar duka shafin kallo daya bayan daya na duka posts
     const wrapper = document.createElement('div');
     wrapper.id = 'nexus-immersive-card';
-    wrapper.innerHTML = allPosts.map(post => generatePostHTML(post)).join('');
+    wrapper.innerHTML = generatePostHTML(post);
     document.body.appendChild(wrapper);
+    setTimeout(()=>{
 
-    // Kulle scroll na shafin baya radau
+    enableExploreScroll(index);
+
+},50);
+
+    const card = wrapper.querySelector('.post-card');
+    if (!card) return;
+
+    const footer = document.getElementById('instaFooter');
+
+    // ===== GYARAN SCROLL NA GASKIYA =====
+    // Maimakon mu canza body ya koma fixed (wanda ke janyo matsalar rabon hoto),
+    // Zamu kulle tsayin body ne kawai sannan mu boye scrollbar din.
     const scrollY = window.scrollY; 
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
 
-    // Tsallakar da mai amfani zuwa daidai post din da ya danna cikin santsi
-    const targetCard = wrapper.children[index];
-    if (targetCard) {
-        setTimeout(() => {
-            targetCard.scrollIntoView({ behavior: 'auto', block: 'start' });
-        }, 10);
+    card.classList.add('immersive-mode');
+    card.style.height = '100dvh';
+    if (footer) footer.classList.add('footer-hidden');
+    console.log('[DEBUG] immersive opened, index:', index);
+
+    // Fix hoto ya cika screen (An saka top: 0 da left: 0 don kada scroll na baya ya shafe shi)
+    const img = card.querySelector('img.post-media');
+    if (img) {
+        img.style.cssText = `
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            object-fit: cover !important;
+            border-radius: 0 !important;
+            z-index: 4999 !important;
+            margin: 0 !important;
+        `;
     }
 
-    // Sarrafa Kunna duka bidiyoyi ta hanyar tafiya (Auto Play on Scroll)
-    function handleImmersiveVideoPlayback() {
-        const cards = wrapper.children;
-        const wrapperBounds = wrapper.getBoundingClientRect();
-        
-        for (let i = 0; i < cards.length; i++) {
-            const card = cards[i];
-            const video = card.querySelector('video');
-            if (!video) continue;
-            
-            const rect = card.getBoundingClientRect();
-            // Idan katin yana tsakiyar kallo daidai
-            if (rect.top >= -50 && rect.top <= 50) {
-                video.muted = false;
-                video.play().catch(()=>{});
-            } else {
-                video.pause();
-                video.currentTime = 0;
-            }
-        }
+    // Fix video ya cika screen
+    const video = card.querySelector('video');
+    if (video) {
+        video.style.cssText = `
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            object-fit: cover !important;
+            border-radius: 0 !important;
+            z-index: 4999 !important;
+            margin: 0 !important;
+        `;
+        video.muted = false;
+        video.play().catch(()=>{});
     }
-    
-    // Kunna na farko a take, sannan ka sanya mata mai kula lokacin scroll
-    setTimeout(handleImmersiveVideoPlayback, 50);
-    wrapper.addEventListener('scroll', handleImmersiveVideoPlayback);
 
-    // Back Button mai daukar launi
+    // Back button
     const backBtn = document.createElement('div');
     backBtn.className = 'immersive-back-btn';
     backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
@@ -332,33 +370,37 @@ function openImmersiveFromGrid(index) {
         background: rgba(0,0,0,0.6); border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         color: white; font-size: 16px;
-        z-index: 999999; cursor: pointer;
+        z-index: 9999; cursor: pointer;
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,0.3);
     `;
-    
     backBtn.onclick = function(e) {
-        e.stopPropagation();
-        
-        wrapper.querySelectorAll('video').forEach(v => v.pause());
+    e.stopPropagation();
+    card.classList.remove('immersive-mode');
+    if (footer) footer.classList.remove('footer-hidden');
+    backBtn.remove();
+    if (img) img.style.cssText = '';
+    if (video) { video.style.cssText = ''; video.pause(); }
 
-        // Bude babban shafin baya
-        document.documentElement.style.overflow = '';
-        document.body.style.overflow = '';
-        window.scrollTo(0, scrollY);
+    // Maida scroll
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    window.scrollTo(0, scrollY);
 
-        wrapper.remove();
-        backBtn.remove();
+    card.style.height = '';
+wrapper.remove();
     };
     document.body.appendChild(backBtn);
 
-    // Browser navigation back fix
+    // Back button na browser
     history.replaceState({ immersive: true }, '');
     window.onpopstate = function() {
         backBtn.click();
         window.onpopstate = null;
     };
 }
+    
+    
     
     // ===== GLOW PALETTE =====
     const glowPalette = [
@@ -392,7 +434,7 @@ function openImmersiveFromGrid(index) {
 
     // ===== DATA =====
     let allPosts = [];
-    let activeVideoTiles = new Map();
+    let activeVideoTiles = new Map(); // tile el => IntersectionObserver entry
 
     window.addEventListener('DOMContentLoaded', () => {
         db.collection('posts')
@@ -408,6 +450,7 @@ function openImmersiveFromGrid(index) {
             });
     });
 
+    
     // ===== RENDER GRID =====
 function renderGrid() {
     const grid = document.getElementById('quantumGrid');
@@ -474,26 +517,28 @@ function renderGrid() {
 
     setupVideoAutoPlay();
     
-    allPosts.forEach(post => {
-        if (!post.username) return;
-        db.collection('users').doc(post.username).get().then(userDoc => {
-            if (!userDoc.exists) return;
-            const pic = userDoc.data().userProfilePic;
-            if (!pic) return;
+        // Load real avatars
+        allPosts.forEach(post => {
+    if (!post.username) return;
+    db.collection('users').doc(post.username).get().then(userDoc => {
+        if (!userDoc.exists) return;
+        const pic = userDoc.data().userProfilePic;
+        if (!pic) return;
 
-            post.userProfilePic = pic;
+        // ← GYARAN: Update allPosts kai tsaye
+        post.userProfilePic = pic;
 
-            document.querySelectorAll('.quantum-tile').forEach(tile => {
-                const payload = tile.querySelector('.hidden-neural-payload');
-                if (payload && payload.dataset.user === post.username) {
-                    payload.dataset.avatar = pic;
-                }
-            });
-        }).catch(()=>{});
-    });
+        document.querySelectorAll('.quantum-tile').forEach(tile => {
+            const payload = tile.querySelector('.hidden-neural-payload');
+            if (payload && payload.dataset.user === post.username) {
+                payload.dataset.avatar = pic;
+            }
+        });
+    }).catch(()=>{});
+});
 } 
     
-    // ===== AUTO PLAY VIDEOS =====
+    // ===== AUTO PLAY VIDEOS (IntersectionObserver — kamar Instagram) =====
     let videoObserver = null;
     
     function setupVideoAutoPlay() {
