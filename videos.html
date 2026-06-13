@@ -526,16 +526,17 @@ window.addEventListener('scroll', () => {
 function startFirstImmersive() {
     const cards = document.querySelectorAll('#videoFeed .post-card');
     if (!cards.length) {
-        feedEl.style.visibility = 'visible';
+        feedEl.classList.add('ready');
         return;
     }
 
     if (typeof window.toggleImmersive === 'function') {
         window.toggleImmersive(cards[0]);
     }
-    feedEl.style.visibility = 'visible';
+    feedEl.classList.add('ready');
 
     setTimeout(() => {
+        // Override popstate (hardware/gesture back)
         window.onpopstate = function() {
             const sv = document.getElementById('nexusSplitView');
             if (sv) {
@@ -548,6 +549,7 @@ function startFirstImmersive() {
             window.location.replace('social.html');
         };
 
+        // Override chevron back-icon (top-left)
         const backBtn = document.querySelector('.immersive-back-btn');
         if (backBtn) {
             backBtn.onclick = function(e) {
