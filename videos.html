@@ -522,7 +522,6 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 
-
 function startFirstImmersive() {
     const cards = document.querySelectorAll('#videoFeed .post-card');
     if (!cards.length) {
@@ -535,30 +534,36 @@ function startFirstImmersive() {
     }
     feedEl.classList.add('ready');
 
-    setTimeout(() => {
-        // Override popstate (hardware/gesture back)
-        window.onpopstate = function() {
-            const sv = document.getElementById('nexusSplitView');
-            if (sv) {
-                sv.remove();
-                document.body.style.overflow = '';
-                document.getElementById('instaFooter').classList.add('footer-hidden');
-                history.pushState({ immersive: true }, '');
-                return;
-            }
-            window.location.replace('social.html');
-        };
+    // ── HAKO BACK BUTTON NA WAYA (HARDWARE/GESTURE BACK) ──
+    // Muna tura sabon state domin ko da template.js zai yi tura nasa, mu muna saman stack
+    history.pushState({ immersive: true }, '');
+    
+    window.onpopstate = function(event) {
+        // Ko ma meye ke cikin history stack, matukar an danna back, mu wuce social.html kai tsaye
+        window.location.replace('social.html');
+    };
 
-        // Override chevron back-icon (top-left)
-        const backBtn = document.querySelector('.immersive-back-btn');
+    // ── HAKO BACK ICON NA AKAN SCREEN (CHEVRON/ARROW BACK) ──
+    // Za mu rinka duba akai-akai ko an samar da Back Icon din a DOM don mu canza masa aiki
+    const backBtnInterval = setInterval(() => {
+        const backBtn = document.querySelector('.immersive-back-btn') || document.querySelector('[class*="back-btn"]');
         if (backBtn) {
-            backBtn.onclick = function(e) {
+            // Muna cire tsofaffin events ta hanyar clone
+            const newBackBtn = backBtn.cloneNode(true);
+            newBackBtn.onclick = function(e) {
+                e.preventDefault();
                 e.stopPropagation();
                 window.location.replace('social.html');
             };
+            backBtn.parentNode.replaceChild(newBackBtn, backBtn);
+            clearInterval(backBtnInterval); // Mu dakatar da binciken tunda mun gyara
         }
-    }, 100);
+    }, 200);
+
+    // Idan bayan dakika 5 ba a sameshi ba, mu dakatar da interval din
+    setTimeout(() => clearInterval(backBtnInterval), 5000);
 }
+
 // Kira bayan videos sun loda
 const _origInsertAdj = HTMLElement.prototype.insertAdjacentHTML;
 HTMLElement.prototype.insertAdjacentHTML = function(pos, html) {
@@ -572,7 +577,18 @@ HTMLElement.prototype.insertAdjacentHTML = function(pos, html) {
         }, 700);
     }
 };
-    
+
+// JIRAN SCROLLING: Ceto back button kowane lokaci da aka canza video
+window.addEventListener('scroll', () => {
+    // Tabbatar cewa duk sanda aka yi scroll browser ba zata manta `onpopstate` dinmu ba
+    window.onpopstate = function() {
+        window.location.replace('social.html');
+    };
+}, { passive: true });
+                
+
+
+        
 </script>
 </body>
 </html>
