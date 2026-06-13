@@ -131,15 +131,17 @@ function attachTouch(){
 
 function touchStart(e){
 
-    startTime = Date.now();
-    
     if(animating) return;
 
-    dragging = true;
+startTime = Date.now();
 
-    startY =
-    e.touches[0].clientY;
+dragging = true;
 
+startY =
+e.touches[0].clientY;
+
+currentY = startY; 
+    
 }
 
 function touchMove(e){
@@ -242,49 +244,103 @@ function resetPosition(){
     'transform .25s ease';
 
     prev.style.transform =
-    'translateY(-100%)';
+'translate3d(0,-100%,0)';
 
-    current.style.transform =
-    'translateY(0)';
+current.style.transform =
+'translate3d(0,0,0)';
 
-    next.style.transform =
-    'translateY(100%)';
+next.style.transform =
+'translate3d(0,100%,0)';
 }
 
 function goNext(){
 
-    if(currentIndex >=
-        allPosts.length-1){
-
+    if(currentIndex >= allPosts.length - 1){
         resetPosition();
         return;
     }
 
-    animateTo(-window.innerHeight,
-    ()=>{
+    animateTo(-window.innerHeight, ()=>{
+
         currentIndex++;
-        renderCards();
+
+        const prev =
+        stack.querySelector('.ig-prev');
+
+        const current =
+        stack.querySelector('.ig-current');
+
+        const next =
+        stack.querySelector('.ig-next');
+
+        // recycle cards
+        prev.innerHTML =
+        current.innerHTML;
+
+        current.innerHTML =
+        next.innerHTML;
+
+        // build ONE card only
+        const newIndex =
+        currentIndex + 1;
+
+        next.innerHTML =
+        newIndex < allPosts.length
+        ? generatePostHTML(
+            allPosts[newIndex]
+          )
+        : '';
+
+        autoPlayVideos();
+
         resetPosition();
     });
-
 }
-
+    
 function goPrev(){
 
     if(currentIndex <= 0){
-
         resetPosition();
         return;
     }
 
-    animateTo(window.innerHeight,
-    ()=>{
+    animateTo(window.innerHeight, ()=>{
+
         currentIndex--;
-        renderCards();
+
+        const prev =
+        stack.querySelector('.ig-prev');
+
+        const current =
+        stack.querySelector('.ig-current');
+
+        const next =
+        stack.querySelector('.ig-next');
+
+        // recycle cards
+        next.innerHTML =
+        current.innerHTML;
+
+        current.innerHTML =
+        prev.innerHTML;
+
+        // build ONE card only
+        const newIndex =
+        currentIndex - 1;
+
+        prev.innerHTML =
+        newIndex >= 0
+        ? generatePostHTML(
+            allPosts[newIndex]
+          )
+        : '';
+
+        autoPlayVideos();
+
         resetPosition();
     });
-
 }
+    
 
 function animateTo(y,callback){
 
@@ -305,17 +361,21 @@ function animateTo(y,callback){
     'transform .28s ease';
 
     current.style.transform =
-    `translateY(${y}px)`;
+`translate3d(0,${y}px,0)`;
 
-    prev.style.transform =
-    `translateY(${
-        -window.innerHeight+y
-    }px)`;
+prev.style.transform =
+`translate3d(
+    0,
+    ${-window.innerHeight + y}px,
+    0
+)`;
 
-    next.style.transform =
-    `translateY(${
-        window.innerHeight+y
-    }px)`;
+next.style.transform =
+`translate3d(
+    0,
+    ${window.innerHeight + y}px,
+    0
+)`;
 
     setTimeout(()=>{
 
