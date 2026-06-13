@@ -228,13 +228,13 @@
             flex-direction: column;
             gap: 12px;
          }.     
-         #videoFeed {
-         visibility: hidden;
-         }
-         #videoFeed.ready {
-         visibility: visible;
-         }
 
+        #videoFeed {
+    visibility: hidden !important;
+}
+#videoFeed.ready {
+    visibility: visible !important;
+}
         /* Ensure proper spacing between cards */
         #videoFeed .post-card { margin-bottom: 0 !important; }
 
@@ -538,6 +538,7 @@ function startFirstImmersive() {
     feedEl.classList.add('ready');
 
     setTimeout(() => {
+        // Override popstate (hardware/gesture back)
         window.onpopstate = function() {
             const sv = document.getElementById('nexusSplitView');
             if (sv) {
@@ -549,9 +550,17 @@ function startFirstImmersive() {
             }
             window.location.replace('social.html');
         };
+
+        // Override chevron back-icon (top-left)
+        const backBtn = document.querySelector('.immersive-back-btn');
+        if (backBtn) {
+            backBtn.onclick = function(e) {
+                e.stopPropagation();
+                window.location.replace('social.html');
+            };
+        }
     }, 100);
 }
-
 // Kira bayan videos sun loda
 const _origInsertAdj = HTMLElement.prototype.insertAdjacentHTML;
 HTMLElement.prototype.insertAdjacentHTML = function(pos, html) {
