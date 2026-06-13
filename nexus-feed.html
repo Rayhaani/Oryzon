@@ -154,35 +154,43 @@
 
         .hidden-neural-payload { display: none; }
 
-        /* ===== INGANTACCEN IMMERSIVE FIX (KAMAR INSTAGRAM REELS) ===== */
+        /* ===== HARDCORE OVERRIDING CSS FOR INSTAGRAM REELS SMOOTH SCROLL ===== */
         #nexus-immersive-card {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             width: 100vw !important;
             height: 100dvh !important;
-            z-index: 8000 !important;
-            background: #000 !important;
+            z-index: 99999 !important; /* Na fi gaban kowa */
+            background: #000000 !important;
             overflow-y: scroll !important;
-            scroll-snap-type: y mandatory !important; /* Kulle kowane card radau */
-            -webkit-overflow-scrolling: touch;
+            overflow-x: hidden !important;
+            scroll-snap-type: y mandatory !important; /* TikTok/Instagram snap */
+            -webkit-overflow-scrolling: touch !important;
+            scroll-behavior: auto !important;
         }
 
+        /* Wannan yana dake duka matsalar blank page ta hanyar gyara post card */
         #nexus-immersive-card .post-card {
-            width: 100% !important;
-            height: 100dvh !important;
-            scroll-snap-align: start !important; /* Tabbatar ya tsaya daidai screen */
-            scroll-snap-stop: always !important;
             position: relative !important;
+            width: 100vw !important;
+            height: 100dvh !important;
+            min-height: 100dvh !important;
+            max-height: 100dvh !important;
+            scroll-snap-align: start !important;
+            scroll-snap-stop: always !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: flex-end !important;
-            background: #000 !important;
+            background: #000000 !important;
             margin: 0 !important;
+            padding: 0 !important;
             border-radius: 0 !important;
+            overflow: hidden !important;
+            transform: none !important; /* Kashe duk wani tsohon JS transform dake tura hoton gefe */
         }
 
-        /* Maganin Blank Page dake gyara tsayuwar hoto ko bidiyo */
+        /* Tabbatar da hoto ko bidiyo ya zauna radau ba tare da ya tafi baki ba */
         #nexus-immersive-card .post-media,
         #nexus-immersive-card img,
         #nexus-immersive-card video {
@@ -191,17 +199,25 @@
             left: 0 !important;
             width: 100% !important;
             height: 100% !important;
+            min-height: 100% !important;
+            max-height: 100% !important;
             object-fit: cover !important;
             z-index: 1 !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            transform: none !important;
         }
 
-        /* Tabbatar da bayanan rubutu sun fito a sama */
+        /* Fitowa da rubutu, avatar da interaction buttons saman hoto */
         #nexus-immersive-card .post-header,
         #nexus-immersive-card .post-content,
         #nexus-immersive-card .post-interaction-bar,
-        #nexus-immersive-card .interaction-bar {
+        #nexus-immersive-card .interaction-bar,
+        #nexus-immersive-card .post-footer {
             position: relative !important;
-            z-index: 5 !important;
+            z-index: 10 !important;
+            pointer-events: auto !important;
         }
     </style>
 </head>
@@ -247,38 +263,62 @@
 
      
 function openImmersiveFromGrid(index) {
-    console.log('[DEBUG] function called, index:', index);
+    console.log('[DEBUG] Opening Full Immersive, Target Index:', index);
     
     const existing = document.getElementById('nexus-immersive-card');
     if (existing) existing.remove();
 
-    if (typeof generatePostHTML !== 'function') return;
+    if (typeof generatePostHTML !== 'function') {
+        console.error('generatePostHTML template function is missing.');
+        return;
+    }
 
-    // Kirkirar container daya dake dauke da duka posts na matrix dinmu
+    // Kirkirar duka shafin kallo daya bayan daya na duka posts
     const wrapper = document.createElement('div');
     wrapper.id = 'nexus-immersive-card';
     wrapper.innerHTML = allPosts.map(post => generatePostHTML(post)).join('');
     document.body.appendChild(wrapper);
 
-    // Kulle gungurawa na asali na Grid page dake baya
+    // Kulle scroll na shafin baya radau
     const scrollY = window.scrollY; 
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
 
-    // Kai mai amfani kai tsaye zuwa katin da ya taba
+    // Tsallakar da mai amfani zuwa daidai post din da ya danna cikin santsi
     const targetCard = wrapper.children[index];
     if (targetCard) {
-        targetCard.scrollIntoView();
+        setTimeout(() => {
+            targetCard.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }, 10);
     }
 
-    // Kunna bidiyo idan katin farko bidiyo ne
-    const video = targetCard?.querySelector('video');
-    if (video) {
-        video.muted = false;
-        video.play().catch(()=>{});
+    // Sarrafa Kunna duka bidiyoyi ta hanyar tafiya (Auto Play on Scroll)
+    function handleImmersiveVideoPlayback() {
+        const cards = wrapper.children;
+        const wrapperBounds = wrapper.getBoundingClientRect();
+        
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            const video = card.querySelector('video');
+            if (!video) continue;
+            
+            const rect = card.getBoundingClientRect();
+            // Idan katin yana tsakiyar kallo daidai
+            if (rect.top >= -50 && rect.top <= 50) {
+                video.muted = false;
+                video.play().catch(()=>{});
+            } else {
+                video.pause();
+                video.currentTime = 0;
+            }
+        }
     }
+    
+    // Kunna na farko a take, sannan ka sanya mata mai kula lokacin scroll
+    setTimeout(handleImmersiveVideoPlayback, 50);
+    wrapper.addEventListener('scroll', handleImmersiveVideoPlayback);
 
-    // Kirkirar sabon Back Button mai tsabta
+    // Back Button mai daukar launi
     const backBtn = document.createElement('div');
     backBtn.className = 'immersive-back-btn';
     backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
@@ -288,7 +328,7 @@ function openImmersiveFromGrid(index) {
         background: rgba(0,0,0,0.6); border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         color: white; font-size: 16px;
-        z-index: 9999; cursor: pointer;
+        z-index: 999999; cursor: pointer;
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,0.3);
     `;
@@ -296,10 +336,9 @@ function openImmersiveFromGrid(index) {
     backBtn.onclick = function(e) {
         e.stopPropagation();
         
-        // Tsayar da duk wani bidiye dake kunne kafin a fita
         wrapper.querySelectorAll('video').forEach(v => v.pause());
 
-        // Maida tsohon tsarin scroll na shafin baya
+        // Bude babban shafin baya
         document.documentElement.style.overflow = '';
         document.body.style.overflow = '';
         window.scrollTo(0, scrollY);
@@ -309,7 +348,7 @@ function openImmersiveFromGrid(index) {
     };
     document.body.appendChild(backBtn);
 
-    // Sarrafa maɓallin dawo baya na burauza
+    // Browser navigation back fix
     history.replaceState({ immersive: true }, '');
     window.onpopstate = function() {
         backBtn.click();
