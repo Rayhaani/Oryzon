@@ -1,3 +1,6 @@
+let startTime = 0;
+let velocity = 0;
+
 (function(){
 
 let currentIndex = 0;
@@ -83,7 +86,8 @@ function autoPlayVideos(){
     .querySelectorAll('video')
     .forEach(v=>{
 
-        v.pause();
+       v.pause();
+v.muted = true; 
 
     });
 
@@ -127,6 +131,8 @@ function attachTouch(){
 
 function touchStart(e){
 
+    startTime = Date.now();
+    
     if(animating) return;
 
     dragging = true;
@@ -160,18 +166,18 @@ function moveCards(delta){
     const next =
     stack.querySelector('.ig-next');
 
-    prev.style.transition='none';
-    current.style.transition='none';
-    next.style.transition='none';
-
-    current.style.transform =
-    `translateY(${delta}px)`;
+    prev.style.transition = 'none';
+    current.style.transition = 'none';
+    next.style.transition = 'none';
 
     prev.style.transform =
-    `translateY(${-window.innerHeight + delta}px)`;
+    `translate3d(0,${-window.innerHeight + delta}px,0)`;
+
+    current.style.transform =
+    `translate3d(0,${delta}px,0)`;
 
     next.style.transform =
-    `translateY(${window.innerHeight + delta}px)`;
+    `translate3d(0,${window.innerHeight + delta}px,0)`;
 }
 
 function touchEnd(){
@@ -180,19 +186,33 @@ function touchEnd(){
 
     dragging = false;
 
-    const delta =
-    currentY - startY;
+    const delta = currentY - startY;
+
+    const elapsed =
+    Date.now() - startTime;
+
+    velocity =
+    Math.abs(delta) / elapsed;
 
     const threshold =
     window.innerHeight * 0.18;
 
-    if(delta < -threshold){
+    const fastSwipe =
+    velocity > 0.55;
+
+    if(
+        delta < -threshold ||
+        (delta < -40 && fastSwipe)
+    ){
 
         goNext();
 
     }
 
-    else if(delta > threshold){
+    else if(
+        delta > threshold ||
+        (delta > 40 && fastSwipe)
+    ){
 
         goPrev();
 
