@@ -381,14 +381,36 @@ const PAGE_SIZE  = 8;
 const feedEl          = document.getElementById('videoFeed');
 const loadMoreTrigger = document.getElementById('loadMoreTrigger');
 
+
+// ── 🔴 HIJACKING BACK BUTTON (KAFIN TEMPLATE.JS YA TAƁA SHI) ──
+window.addEventListener('popstate', function(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    window.location.replace('social.html');
+}, true);
+
+document.addEventListener('click', function(event) {
+    const backBtn = event.target.closest('.immersive-back-btn') || 
+                    event.target.closest('[class*="back-btn"]') ||
+                    event.target.closest('.fa-arrow-left') ||
+                    event.target.closest('.fa-chevron-left');
+                    
+    if (backBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        window.location.replace('social.html');
+    }
+}, true);
+
+
 // ── BOOT ──
 window.addEventListener('DOMContentLoaded', () => {
-    // Footer profile pic
     const savedPic = localStorage.getItem('userProfilePic');
     const img = document.getElementById('footerProfileImg');
     const u = localStorage.getItem('nexus_user_session') || 'user';
-if (savedPic && img) img.src = savedPic;
-else if (img) img.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${u}`;
+    if (savedPic && img) img.src = savedPic;
+    else if (img) img.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${u}`;
     loadVideos(true);
     setupInfiniteScroll();
 });
@@ -406,15 +428,13 @@ window.setFilter = function(chip, filter) {
 
 // ── QUERY BUILDER ──
 function buildQuery() {
-    let q = db.collection('posts')
-              .where('mediaType', '==', 'video');
-    
+    let q = db.collection('posts').where('mediaType', '==', 'video');
     if (activeFilter !== 'all') {
         q = q.where('category', '==', activeFilter);
     }
-    
     return q;
 }
+
 // ── LOAD VIDEOS ──
 async function loadVideos(reset = false) {
     if (isLoading || allLoaded) return;
@@ -426,8 +446,6 @@ async function loadVideos(reset = false) {
         if (!reset && lastVisible) q = q.startAfter(lastVisible);
 
         const snap = await q.get();
-
-        // Sort client-side (babu index needed)
         const docs = snap.docs.sort((a, b) => {
             const tA = a.data().timestamp?.seconds || 0;
             const tB = b.data().timestamp?.seconds || 0;
@@ -447,17 +465,14 @@ async function loadVideos(reset = false) {
 
         lastVisible = docs[docs.length - 1];
         
-        // ✅ Use template.js generatePostHTML — exactly as social.html does
         let html = '';
         snap.forEach(doc => html += generatePostHTML({ id: doc.id, ...doc.data() }));
         feedEl.insertAdjacentHTML('beforeend', html);
 
-        // Restore likes
         setTimeout(() => {
             if (typeof postCard_restoreLikes === 'function') postCard_restoreLikes(feedEl);
         }, 400);
 
-        // Load real avatars from users collection
         snap.forEach(doc => {
             const post = doc.data();
             if (!post.username) return;
@@ -473,7 +488,6 @@ async function loadVideos(reset = false) {
             });
         });
 
-        // Live comment counts
         snap.forEach(doc => {
             db.collection('nexus_contributions')
               .where('postId',   '==', doc.id)
@@ -484,7 +498,6 @@ async function loadVideos(reset = false) {
               });
         });
 
-        // ✅ Observe new videos (template.js IntersectionObserver)
         if (typeof postCard_observeVideos === 'function') postCard_observeVideos();
         setTimeout(() => {
             if (typeof postCard_handleVideoPriority === 'function') postCard_handleVideoPriority();
@@ -521,7 +534,6 @@ window.addEventListener('scroll', () => {
     }, 150);
 }, { passive: true });
 
-
 function startFirstImmersive() {
     const cards = document.querySelectorAll('#videoFeed .post-card');
     if (!cards.length) {
@@ -534,30 +546,11 @@ function startFirstImmersive() {
     }
     feedEl.classList.add('ready');
 
-    setTimeout(() => {
-        // Override popstate (hardware/gesture back)
-        window.onpopstate = function() {
-            const sv = document.getElementById('nexusSplitView');
-            if (sv) {
-                sv.remove();
-                document.body.style.overflow = '';
-                document.getElementById('instaFooter').classList.add('footer-hidden');
-                history.pushState({ immersive: true }, '');
-                return;
-            }
-            window.location.replace('social.html');
-        };
-
-        // Override chevron back-icon (top-left)
-        const backBtn = document.querySelector('.immersive-back-btn');
-        if (backBtn) {
-            backBtn.onclick = function(e) {
-                e.stopPropagation();
-                window.location.replace('social.html');
-            };
-        }
-    }, 100);
+    if (!history.state || !history.state.immersive) {
+        history.pushState({ immersive: true }, '');
+    }
 }
+
 // Kira bayan videos sun loda
 const _origInsertAdj = HTMLElement.prototype.insertAdjacentHTML;
 HTMLElement.prototype.insertAdjacentHTML = function(pos, html) {
