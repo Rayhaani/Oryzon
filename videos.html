@@ -523,49 +523,55 @@ window.addEventListener('scroll', () => {
 
 
 
-function applyVideosPageOverrides() {
-    window.onpopstate = function() {
-        const sv = document.getElementById('nexusSplitView');
-        if (sv) {
-            sv.remove();
-            document.body.style.overflow = '';
-            document.getElementById('instaFooter').classList.add('footer-hidden');
-            history.pushState({ immersive: true }, '');
-            return;
-        }
-        window.location.replace('social.html');
-    };
-
-    const backBtn = document.querySelector('.immersive-back-btn');
-    if (backBtn) {
-        backBtn.onclick = function(e) {
-            e.stopPropagation();
-            window.location.replace('social.html');
-        };
-    }
-}
-
-if (!window._videosToggleWrapped && typeof window.toggleImmersive === 'function') {
-    const _origToggleImmersive = window.toggleImmersive;
-    window.toggleImmersive = function(card) {
-        _origToggleImmersive(card);
-        setTimeout(applyVideosPageOverrides, 100);
-    };
-    window._videosToggleWrapped = true;
-}
-
 function startFirstImmersive() {
     const cards = document.querySelectorAll('#videoFeed .post-card');
     if (!cards.length) {
-        feedEl.style.visibility = 'visible';
+        feedEl.classList.add('ready');
         return;
     }
 
     if (typeof window.toggleImmersive === 'function') {
         window.toggleImmersive(cards[0]);
     }
-    feedEl.style.visibility = 'visible';
+    feedEl.classList.add('ready');
+
+    setTimeout(() => {
+        // Override popstate (hardware/gesture back)
+        window.onpopstate = function() {
+            const sv = document.getElementById('nexusSplitView');
+            if (sv) {
+                sv.remove();
+                document.body.style.overflow = '';
+                document.getElementById('instaFooter').classList.add('footer-hidden');
+                history.pushState({ immersive: true }, '');
+                return;
+            }
+            window.location.replace('social.html');
+        };
+
+        // Override chevron back-icon (top-left)
+        const backBtn = document.querySelector('.immersive-back-btn');
+        if (backBtn) {
+            backBtn.onclick = function(e) {
+                e.stopPropagation();
+                window.location.replace('social.html');
+            };
+        }
+    }, 100);
 }
+// Kira bayan videos sun loda
+const _origInsertAdj = HTMLElement.prototype.insertAdjacentHTML;
+HTMLElement.prototype.insertAdjacentHTML = function(pos, html) {
+    _origInsertAdj.call(this, pos, html);
+    if (this.id === 'videoFeed') {
+        clearTimeout(window._reelStartTimer);
+        window._reelStartTimer = setTimeout(() => {
+            if (!document.querySelector('.post-card.immersive-mode')) {
+                startFirstImmersive();
+            }
+        }, 700);
+    }
+};
     
 </script>
 </body>
