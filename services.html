@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abokina - Shafi na Musamman</title>
+    
+    <!-- React da ReactDOM Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel domin fassara JSX kai tsaye a browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* CSS STYLES */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* Tace scrollbar domin kyawun tsari */
+        ::-webkit-scrollbar {
+            width: 0px;
+            height: 0px;
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .5; transform: scale(1.3); }
+        }
+
+        .slide-up {
+            animation: slideUp 0.35s ease forwards;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .pulsing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        .spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Modal open animation */
+        @keyframes slideModal {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-content {
+            animation: slideModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <!-- REACT COMPONENTS & LOGIC USING BABEL -->
+    <script type="text/transform" data-plugins="transform-modules-umd"></script>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // DATA: Categories
+        const CATEGORIES = [
+            { id: "plumber", label: "Plumber", icon: "🔧", hausa: "Maƙeran Bututu" },
+            { id: "electrician", label: "Electrician", icon: "⚡", hausa: "Masu Lantarki" },
+            { id: "carpenter", label: "Carpenter", icon: "🪚", hausa: "Masu Katako" },
+            { id: "painter", label: "Painter", icon: "🎨", hausa: "Masu Fenti" },
+            { id: "mason", label: "Mason / Gini", icon: "🧱", hausa: "Masu Gini" },
+            { id: "welder", label: "Welder", icon: "🔩", hausa: "Masu Walda" },
+            { id: "ac_tech", label: "AC Technician", icon: "❄️", hausa: "Masu AC" },
+            { id: "tailor", label: "Tailor", icon: "🧵", hausa: "Masu Dinki" },
+        ];
+
+        // DATA: Professionals
+        const PROS = [
+            {
+                id: 1, name: "Malam Sule Ibrahim", category: "plumber", hausa_cat: "Maƙeran Bututu",
+                rating: 4.9, reviews: 134, distance: 0.8, city: "Kano", verified: true,
+                avatar: "SI", color: "#1a6b3c", jobs: 312, price: "₦3,500", bio: "Ƙwararre mai shekaru 12 a aikin bututu na zamani.",
+                skills: ["Leak Repair", "Pipe Installation", "Drainage"], online: true,
+            },
+            {
+                id: 2, name: "Alhaji Bello Musa", category: "electrician", hausa_cat: "Masu Lantarki",
+                rating: 4.8, reviews: 98, distance: 1.2, city: "Abuja", verified: true,
+                avatar: "BM", color: "#c47d00", jobs: 245, price: "₦5,000", bio: "Injiniyan lantarki tare da takarda ta tabbatar da ƙwarewa.",
+                skills: ["Wiring", "Solar Install", "Generator"], online: true,
+            },
+            {
+                id: 3, name: "Usman Garba", category: "carpenter", hausa_cat: "Masu Katako",
+                rating: 4.7, reviews: 76, distance: 2.1, city: "Kaduna", verified: false,
+                avatar: "UG", color: "#7c3d00", jobs: 189, price: "₦4,200", bio: "Ƙwararre a yin furniture na alfarma da kofofin katako.",
+                skills: ["Furniture", "Doors & Windows", "Roofing"], online: false,
+            },
+            {
+                id: 4, name: "Hassan Yusuf", category: "mason", hausa_cat: "Masu Gini",
+                rating: 4.9, reviews: 211, distance: 0.5, city: "Lagos", verified: true,
+                avatar: "HY", color: "#3d1a6b", jobs: 401, price: "₦6,000", bio: "Tsohon ɗan gini mai ƙarfi, kwarewa da amana.",
+                skills: ["Block Laying", "Plastering", "Tiling"], online: true,
+            },
+            {
+                id: 5, name: "Fatima Abdullahi", category: "tailor", hausa_cat: "Masu Dinki",
+                rating: 5.0, reviews: 302, distance: 0.3, city: "Kano", verified: true,
+                avatar: "FA", color: "#6b1a3d", jobs: 520, price: "₦2,500", bio: "Ƙwarriyyar dinki tufafi na Hausa dana zamani na mata da maza.",
+                skills: ["Native Wear", "Fashion", "Alterations"], online: true,
+            },
+            {
+                id: 6, name: "Chidi Okonkwo", category: "painter", hausa_cat: "Masu Fenti",
+                rating: 4.6, reviews: 55, distance: 3.4, city: "Port Harcourt", verified: true,
+                avatar: "CO", color: "#1a4b6b", jobs: 143, price: "₦3,000", bio: "Ƙwararre a fentin gida na gari da zane-zanen bango.",
+                skills: ["Interior", "Exterior", "Wallpaper"], online: false,
+            },
+        ];
+
+        // Component: Star Rating
+        function StarRating({ rating }) {
+            return (
+                <span style={{ color: "#f59e0b", fontSize: 13, letterSpacing: -1 }}>
+                    {"★".repeat(Math.floor(rating))}{"☆".repeat(5 - Math.floor(rating))}
+                    <span style={{ color: "#64748b", marginLeft: 4, fontSize: 12 }}>{rating}</span>
+                </span>
+            );
+        }
+
+        // Component: Avatar
+        function Avatar({ initials, color, size = 44, online }) {
+            return (
+                <div style={{ position: "relative", display: "inline-block" }}>
+                    <div style={{
+                        width: size, height: size, borderRadius: "50%", background: color,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#fff", fontWeight: 800, fontSize: size * 0.32,
+                        boxShadow: `0 0 0 2px #fff, 0 0 0 4px ${color}33`, flexShrink: 0
+                    }}>
+                        {initials}
+                    </div>
+                    {online !== undefined && (
+                        <span style={{
+                            position: "absolute", bottom: 1, right: 1,
+                            width: size * 0.27, height: size * 0.27, borderRadius: "50%",
+                            background: online ? "#22c55e" : "#94a3b8",
+                            border: "2px solid #fff"
+                        }} />
+                    )}
+                </div>
+            );
+        }
+
+        // Component: Professional Card
+        function ProCard({ pro, onClick }) {
+            const [liked, setLiked] = useState(false);
+            return (
+                <div onClick={() => onClick(pro)} style={{
+                    background: "#fff", borderRadius: 20, padding: "18px 18px 14px",
+                    boxShadow: "0 2px 16px #00000005", cursor: "pointer",
+                    border: "1.5px solid #f1f5f9", transition: "all .2s",
+                    display: "flex", flexDirection: "column", gap: 10,
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-3px)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "none"}>
+                    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                        <Avatar initials={pro.avatar} color={pro.color} size={50} online={pro.online} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <span style={{ fontWeight: 800, fontSize: 15, color: "#0f172a" }}>{pro.name}</span>
+                                {pro.verified && <span style={{ fontSize: 14 }}>✅</span>}
+                            </div>
+                            <div style={{ color: "#16a34a", fontSize: 12, fontWeight: 700, marginTop: 1 }}>{pro.hausa_cat}</div>
+                            <div style={{ marginTop: 3 }}><StarRating rating={pro.rating} /> <span style={{ color: "#94a3b8", fontSize: 11 }}>({pro.reviews} reviews)</span></div>
+                        </div>
+                        <button onClick={e => { e.stopPropagation(); setLiked(l => !l); }} style={{
+                            background: liked ? "#fef2f2" : "#f8fafc", border: "none", borderRadius: 10,
+                            padding: "6px 9px", cursor: "pointer", fontSize: 16,
+                            color: liked ? "#ef4444" : "#94a3b8", transition: "all .2s"
+                        }}>{liked ? "❤️" : "🤍"}</button>
+                    </div>
+                    <p style={{ fontSize: 12.5, color: "#64748b", margin: 0, lineHeight: 1.5 }}>{pro.bio}</p>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {pro.skills.map(s => (
+                            <span key={s} style={{ background: "#f0fdf4", color: "#16a34a", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 600 }}>{s}</span>
+                        ))}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
+                        <div style={{ display: "flex", gap: 14 }}>
+                            <span style={{ fontSize: 12, color: "#64748b" }}>📍 {pro.distance}km</span>
+                            <span style={{ fontSize: 12, color: "#64748b" }}>💼 {pro.jobs} jobs</span>
+                            {pro.online && <span style={{ fontSize: 11, color: "#22c55e", display: "flex", alignItems: "center", gap: 5, fontWeight: 600 }}><span className="pulsing-dot"/>Online</span>}
+                        </div>
+                        <div style={{ background: "#0f172a", color: "#fff", borderRadius: 10, padding: "5px 14px", fontSize: 12, fontWeight: 700 }}>
+                            {pro.price}/hr
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Component: Detailed Modal
+        function ProModal({ pro, onClose }) {
+            if (!pro) return null;
+            return (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={onClose}>
+                    <div className="modal-content" style={{ background: "#fff", borderRadius: "28px 28px 0 0", width: "100%", maxWidth: 430, maxHeight: "85vh", overflowY: "auto", padding: "28px 24px 40px" }} onClick={e => e.stopPropagation()}>
+                        <div style={{ width: 40, height: 4, background: "#e2e8f0", borderRadius: 2, margin: "0 auto 24px" }} />
+                        <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 20 }}>
+                            <Avatar initials={pro.avatar} color={pro.color} size={64} online={pro.online} />
+                            <div>
+                                <div style={{ fontWeight: 800, fontSize: 20, color: "#0f172a" }}>{pro.name} {pro.verified && "✅"}</div>
+                                <div style={{ color: "#16a34a", fontWeight: 700, fontSize: 14 }}>{pro.hausa_cat}</div>
+                                <StarRating rating={pro.rating} />
+                            </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+                            {[["Ayyuka", pro.jobs], ["Reviews", pro.reviews], ["Nisa", `${pro.distance}km`]].map(([label, val]) => (
+                                <div key={label} style={{ background: "#f8fafc", borderRadius: 14, padding: "12px 8px", textAlign: "center", border: "1px solid #f1f5f9" }}>
+                                    <div style={{ fontWeight: 800, fontSize: 18, color: "#0f172a" }}>{val}</div>
+                                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{label}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ marginBottom: 20 }}>
+                            <div style={{ fontWeight: 700, fontSize: 12, color: "#94a3b8", marginBottom: 6, textTransform: "uppercase" }}>Game da Mai Sana'ar</div>
+                            <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.6, margin: 0 }}>{pro.bio}</p>
+                        </div>
+                        <div style={{ marginBottom: 28 }}>
+                            <div style={{ fontWeight: 700, fontSize: 12, color: "#94a3b8", marginBottom: 8, textTransform: "uppercase" }}>Abubuwan da ya ƙware</div>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                {pro.skills.map(s => <span key={s} style={{ background: "#f0fdf4", color: "#16a34a", borderRadius: 20, padding: "5px 14px", fontSize: 12, fontWeight: 600 }}>{s}</span>)}
+                            </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 10 }}>
+                            <button style={{ flex: 1, background: "#0f172a", color: "#fff", border: "none", borderRadius: 16, padding: "16px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
+                                📩 Tuntuba
+                            </button>
+                            <button style={{ flex: 1, background: "#16a34a", color: "#fff", border: "none", borderRadius: 16, padding: "16px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
+                                📞 Kira Yanzu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Component: Search Input Field
+        function SearchBar({ query, setQuery, onSearch }) {
+            return (
+                <div style={{ position: "relative", width: "100%" }}>
+                    <input
+                        value={query}
+                        onChange={e => setQuery(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && onSearch()}
+                        placeholder="Nemi sana'a... misali: Plumber ko Gini"
+                        style={{
+                            width: "100%", padding: "16px 20px 16px 48px", borderRadius: 18,
+                            border: "2px solid #e2e8f0", fontSize: 14, outline: "none",
+                            background: "#f8fafc", boxSizing: "border-box", transition: "border .2s"
+                        }}
+                        onFocus={e => e.target.style.borderColor = "#16a34a"}
+                        onBlur={e => e.target.style.borderColor = "#e2e8f0"}
+                    />
+                    <span style={{ position: "absolute", left: 18, top: "50%", transform: "translateY(-50%)", fontSize: 16, opacity: 0.5 }}>🔍</span>
+                    <button onClick={onSearch} style={{
+                        position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+                        background: "#16a34a", color: "#fff", border: "none", borderRadius: 12,
+                        padding: "8px 16px", fontWeight: 700, fontSize: 13, cursor: "pointer"
+                    }}>Nema</button>
+                </div>
+            );
+        }
+
+        // Main App Component
+        function App() {
+            const [view, setView] = useState("main"); // main ko results
+            const [query, setQuery] = useState("");
+            const [selectedCat, setSelectedCat] = useState(null);
+            const [selectedPro, setSelectedPro] = useState(null);
+            const [nearMeActive, setNearMeActive] = useState(false);
+            const [locating, setLocating] = useState(false);
+
+            // Filter system
+            const filteredPros = PROS.filter(p => {
+                if (selectedCat && p.category !== selectedCat) return false;
+                if (query) {
+                    const q = query.toLowerCase();
+                    return p.name.toLowerCase().includes(q) || 
+                           p.category.toLowerCase().includes(q) || 
+                           p.hausa_cat.toLowerCase().includes(q);
+                }
+                return true;
+            });
+
+            function handleSearch() {
+                setView("results");
+                const q = query.toLowerCase();
+                const match = CATEGORIES.find(c => q.includes(c.label.toLowerCase()) || q.includes(c.id));
+                if (match) setSelectedCat(match.id);
+            }
+
+            function handleNearMe() {
+                setLocating(true);
+                setTimeout(() => {
+                    setLocating(false);
+                    setNearMeActive(true);
+                    setView("results");
+                }, 1800);
+            }
+
+            function resetFilters() {
+                setSelectedCat(null);
+                setQuery("");
+                setNearMeActive(false);
+                setView("main");
+            }
+
+            return (
+                <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "#f8fafc", position: "relative", paddingBottom: 40, boxShadow: "0 0 30px rgba(0,0,0,0.05)" }}>
+                    
+                    {/* VIEW 1: HOME PAGE */}
+                    {view === "main" && (
+                        <div className="fade-in">
+                           
+                          
+                          {/* VIEW 1: PREMIUM QUANTUM HERO SECTION */}
+<div style={{
+    background: "linear-gradient(135deg, #090d16 0%, #0d2116 50%, #0a1910 100%)",
+    padding: "40px 24px 32px",
+    color: "#fff",
+    position: "relative",
+    overflow: "hidden",
+    borderBottom: "1px solid rgba(34, 197, 94, 0.15)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
+}}>
+    {/* Futuristic Background Blur Nodes */}
+    <div style={{ position: "absolute", top: "-50px", right: "-30px", width: "150px", height: "150px", background: "rgba(22, 163, 74, 0.2)", filter: "blur(50px)", borderRadius: "50%", pointerEvents: "none" }} />
+    <div style={{ position: "absolute", bottom: "-20px", left: "-40px", width: "120px", height: "120px", background: "rgba(59, 130, 246, 0.15)", filter: "blur(40px)", borderRadius: "50%", pointerEvents: "none" }} />
+
+    {/* Header Top Layer */}
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, position: "relative", zIndex: 2 }}>
+        <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                <span className="pulsing-dot" style={{ backgroundColor: "#22c55e" }} />
+                <span style={{ fontSize: 10, letterSpacing: "1.5px", color: "#4ade80", fontWeight: 800, textTransform: "uppercase" }}>Global Service Hub</span>
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 950, letterSpacing: "-1.5px", background: "linear-gradient(120deg, #ffffff, #a7f3d0)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Abokina<span style={{ color: "#22c55e" }}>.</span>
+            </div>
+        </div>
+        
+        {/* Real-time Status Badge */}
+        <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.08)", padding: "6px 12px", borderRadius: "12px", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 12 }}>⚡</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#e2e8f0" }}>300+ Online</span>
+        </div>
+    </div>
+
+    {/* Dual Mode Switch Tabs */}
+    <div style={{ display: "flex", background: "rgba(0, 0, 0, 0.3)", padding: "4px", borderRadius: "14px", marginBottom: 24, border: "1px solid rgba(255,255,255,0.05)" }}>
+        <button style={{ flex: 1, background: "rgba(255,255,255,0.08)", border: "none", color: "#fff", padding: "10px 0", borderRadius: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+            🔍 Nemi Ma'aikata
+        </button>
+        <button style={{ flex: 1, background: "none", border: "none", color: "#94a3b8", padding: "10px 0", borderRadius: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer" }} onClick={() => alert('Sashen Masu Ma\'aikata yana tafe kwanan nan!')}>
+            💼 Sami Aiki (CPA)
+        </button>
+    </div>
+
+    {/* Main Sub-Headline */}
+    <p style={{ fontSize: 14, color: "#94a3b8", marginBottom: 24, lineHeight: "1.6", fontWeight: 400 }}>
+        Gano kwararru da amintattun hukumomi da suka fi kusa da kai domin kammala ayyukanku cikin tsaro.
+    </p>
+
+    {/* World-Class Integrated Search Matrix */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(20px)" }}>
+        
+        {/* Search Input Input */}
+        <div style={{ position: "relative", width: "100%" }}>
+            <input
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSearch()}
+                placeholder="Wace sana'a kake nema yanzu?..."
+                style={{
+                    width: "100%", padding: "16px 16px 16px 44px", borderRadius: "14px",
+                    border: "1px solid rgba(255,255,255,0.1)", fontSize: 14, outline: "none",
+                    background: "rgba(0,0,0,0.2)", color: "#fff", boxSizing: "border-box"
+                }}
+            />
+            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontSize: 16, opacity: 0.6 }}>🛠️</span>
+        </div>
+
+        {/* Action Controls Side-by-Side */}
+        <div style={{ display: "flex", gap: 8 }}>
+            {/* GPS Button */}
+            <button onClick={handleNearMe} disabled={locating} style={{
+                flex: 1, background: locating ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.07)",
+                color: "#fff", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", padding: "14px 0",
+                fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center", gap: 6, transition: "all .2s"
+            }}>
+                {locating ? (
+                    <><span className="spinner" style={{ fontSize: 12 }}>🔄</span> Dubawa...</>
+                ) : (
+                    <><span>📍</span> Kusa da Ni</>
+                )}
+            </button>
+
+            {/* Main Submit Search Button */}
+            <button onClick={handleSearch} style={{
+                flex: 1.2, background: "linear-gradient(135deg, #22c55e 0%, #15803d 100%)",
+                color: "#fff", border: "none", borderRadius: "14px", padding: "14px 0",
+                fontWeight: 800, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 15px rgba(34, 197, 94, 0.3)"
+            }}>
+                Bincika Yanzu 🚀
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+                          
+
+                            {/* Categories Grid */}
+                            <div style={{ padding: "24px 20px 0" }}>
+                                <div style={{ fontWeight: 800, fontSize: 16, color: "#0f172a", marginBottom: 14 }}>Fannonin Sana'a</div>
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+                                    {CATEGORIES.map(cat => (
+                                        <button key={cat.id} onClick={() => { setSelectedCat(cat.id); setView("results"); }} style={{
+                                            background: "#fff", border: "1.5px solid #f1f5f9",
+                                            borderRadius: 16, padding: "14px 4px", cursor: "pointer",
+                                            display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                                            boxShadow: "0 2px 8px rgba(0,0,0,0.01)"
+                                        }}>
+                                            <span style={{ fontSize: 24 }}>{cat.icon}</span>
+                                            <span style={{ fontSize: 10, fontWeight: 700, color: "#0f172a", textAlign: "center" }}>{cat.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Top Professionals */}
+                            <div style={{ padding: "28px 20px 0" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                                    <div style={{ fontWeight: 800, fontSize: 16, color: "#0f172a" }}>⭐ Fitattun Masu Sana'a</div>
+                                    <button onClick={() => setView("results")} style={{ background: "none", border: "none", color: "#16a34a", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Duba Duk</button>
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                                    {PROS.slice(0, 3).map((pro, idx) => (
+                                        <div key={pro.id} className="slide-up" style={{ animationDelay: `${idx * 100}ms` }}>
+                                            <ProCard pro={pro} onClick={setSelectedPro} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* VIEW 2: SEARCH & FILTER RESULTS */}
+                    {view === "results" && (
+                        <div className="fade-in">
+                            {/* Header back bar */}
+                            <div style={{ padding: "24px 20px 16px", background: "#fff", borderBottom: "1px solid #f1f5f9", sticky: "top" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                                    <button onClick={resetFilters} style={{ background: "#f1f5f9", border: "none", width: 36, height: 36, borderRadius: "50%", cursor: "pointer", fontSize: 16, fontWeight: "bold" }}>‹</button>
+                                    <SearchBar query={query} setQuery={setQuery} onSearch={handleSearch} />
+                                </div>
+
+                                {/* Horizontal Categories Filter Bar */}
+                                <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+                                    <button onClick={() => setSelectedCat(null)} style={{
+                                        flexShrink: 0, background: !selectedCat ? "#0f172a" : "#f8fafc",
+                                        color: !selectedCat ? "#fff" : "#64748b", border: `1.5px solid ${!selectedCat ? "#0f172a" : "#e2e8f0"}`,
+                                        borderRadius: 20, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer"
+                                    }}>Duk Sana'o'i</button>
+                                    {CATEGORIES.map(cat => (
+                                        <button key={cat.id} onClick={() => setSelectedCat(cat.id)} style={{
+                                            flexShrink: 0, background: selectedCat === cat.id ? "#0f172a" : "#f8fafc",
+                                            color: selectedCat === cat.id ? "#fff" : "#64748b",
+                                            border: `1.5px solid ${selectedCat === cat.id ? "#0f172a" : "#e2e8f0"}`,
+                                            borderRadius: 20, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer"
+                                        }}>{cat.icon} {cat.label}</button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* GPS Near Me Simulation Indicator */}
+                            {nearMeActive && (
+                                <div style={{ margin: "16px 20px 0", background: "#f0fdf4", borderRadius: 14, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, border: "1px solid #bbf7d0" }}>
+                                    <span style={{ fontSize: 18 }}>📍</span>
+                                    <div>
+                                        <div style={{ fontWeight: 800, fontSize: 13, color: "#16a34a" }}>An kunna GPS (Kusa da kai)</div>
+                                        <div style={{ fontSize: 11, color: "#64748b" }}>Ana nuna masu gyara dake kusa da tazarar tafiya.</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Results Section */}
+                            <div style={{ padding: "16px 20px 0" }}>
+                                <div style={{ fontWeight: 700, fontSize: 12, color: "#94a3b8", marginBottom: 14, textTransform: "uppercase" }}>
+                                    An Samo Masu Sana'a ({filteredPros.length})
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                                    {filteredPros.length > 0 ? filteredPros.map((pro, idx) => (
+                                        <div key={pro.id} className="slide-up" style={{ animationDelay: `${idx * 50}ms` }}>
+                                            <ProCard pro={pro} onClick={setSelectedPro} />
+                                        </div>
+                                    )) : (
+                                        <div style={{ textAlign: "center", padding: "60px 20px" }}>
+                                            <div style={{ fontSize: 40 }}>🔍</div>
+                                            <div style={{ fontWeight: 800, fontSize: 16, color: "#0f172a", marginTop: 12 }}>Ba a samu kowa ba</div>
+                                            <div style={{ color: "#94a3b8", fontSize: 13, marginTop: 4 }}>Gwada rubuta wata sana'ar daban ko canza tacewa.</div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Global Professional Detail Modal */}
+                    <ProModal pro={selectedPro} onClose={() => setSelectedPro(null)} />
+
+                </div>
+            );
+        }
+
+        // Render to Root Element
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
