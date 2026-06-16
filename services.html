@@ -1142,39 +1142,43 @@
 
         // IMMERSIVE STORIES ENGINE CONTROLLER MECHANICS
         function openStoryDeck(index) {
-            state.activeStoryIndex = index;
-            state.storyProgress = 0;
-            state.isStoryPaused = false;
-            
-            const overlay = document.getElementById("story-overlay-deck");
-            overlay.style.display = "flex";
-            
-            updateStoryOverlayUi();
-            startStoryInterval();
+    state.activeStoryIndex = index;
+    state.storyProgress = 0;
+    state.isStoryPaused = false;
+    
+    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
+    
+    const overlay = document.getElementById("story-overlay-deck");
+    overlay.style.display = "flex";
+    
+    updateStoryOverlayUi();
+    startStoryInterval();
         }
 
         function startStoryInterval() {
-            if (state.storyIntervalId) clearInterval(state.storyIntervalId);
-            const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
-            
-            state.storyIntervalId = setInterval(() => {
-                if (!state.isStoryPaused) {
-                    state.storyProgress += increment;
-                    if (state.storyProgress >= 100) {
-                        state.storyProgress = 0;
-                        const nextIndex = state.activeStoryIndex + 1;
-                        if (nextIndex < LOCAL_STORY_PRODUCTS.length) {
-                            state.activeStoryIndex = nextIndex;
-                            updateStoryOverlayUi();
-                        } else {
-                            closeStoryDeck();
-                        }
-                    } else {
-                        updateStoryProgressBarOnly();
-                    }
-                }
-            }, STORY_TICK_MS);
+    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
+    const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
+    
+    state.storyIntervalId = setInterval(() => {
+        if (state.isStoryPaused) return;
+        
+        state.storyProgress += increment;
+        
+        if (state.storyProgress >= 100) {
+            state.storyProgress = 0;
+            const nextIndex = state.activeStoryIndex + 1;
+            if (nextIndex < LOCAL_STORY_PRODUCTS.length) {
+                state.activeStoryIndex = nextIndex;
+                updateStoryOverlayUi();
+                // Interval yana ci gaba — ba a sake farawa ba
+            } else {
+                closeStoryDeck(); // Duk cards sun gama
+            }
+        } else {
+            updateStoryProgressBarOnly();
         }
+    }, STORY_TICK_MS);
+                }
 
         function updateStoryProgressBarOnly() {
             LOCAL_STORY_PRODUCTS.forEach((item, idx) => {
