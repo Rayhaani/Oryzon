@@ -646,12 +646,12 @@
         ];
 
         const LOCAL_STORY_PRODUCTS = [
-    { id: 1, name: "Malam Sule - Plumbing", icon: "🔧", proId: 1, distance: "0.8km", price: "₦3,500" },
-    { id: 2, name: "Bello - Solar Setup", icon: "⚡", proId: 2, distance: "1.2km", price: "₦5,000" },
-    { id: 3, name: "Usman - Wardrobe", icon: "🪚", proId: 3, distance: "2.1km", price: "₦4,200" },
-    { id: 4, name: "Chef Amara - Jollof", icon: "🍛", proId: 4, distance: "0.5km", price: "₦2,200" },
-    { id: 5, name: "Chef Amara - Danwake", icon: "🥣", proId: 4, distance: "0.5km", price: "₦1,500" }
-];
+            { id: 1, name: "Danwake Hot", icon: "🥣", proId: 4, distance: "0.5km", price: "₦1,500" },
+            { id: 2, name: "Fried Rice", icon: "🍛", proId: 4, distance: "0.5km", price: "₦2,200" },
+            { id: 3, name: "Tuwon Shinkafa", icon: "🌾", proId: 4, distance: "0.5km", price: "₦1,800" },
+            { id: 4, name: "Miyan Taushe", icon: "🍲", proId: 4, distance: "0.5km", price: "₦1,200" },
+            { id: 5, name: "Jollof Box", icon: "🍱", proId: 4, distance: "0.5km", price: "₦2,500" }
+        ];
 
         const PROS = [
             {
@@ -784,10 +784,12 @@
             const [activeStoryIndex, setActiveStoryIndex] = useState(null);
             const [storyProgress, setStoryProgress] = useState(0);
             const [storyPaused, setStoryPaused] = useState(false);
-            const pauseRef = React.useRef(false);
+            const storyPausedRef = React.useRef(false);
             const [nearMeActive, setNearMeActive] = useState(false);
             const [locating, setLocating] = useState(false);
-            const [showSearchRouter, setShowSearchRouter] = useState(false);const activeStoryFood = activeStoryIndex !== null ? LOCAL_STORY_PRODUCTS[activeStoryIndex] : null;
+            const [showSearchRouter, setShowSearchRouter] = useState(false);
+
+            const activeStoryFood = activeStoryIndex !== null ? LOCAL_STORY_PRODUCTS[activeStoryIndex] : null;
             const STORY_DURATION_MS = 5000;
             const STORY_TICK_MS = 50;
 
@@ -795,7 +797,7 @@
     if (activeStoryIndex === null) return;
     const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
     const interval = setInterval(() => {
-        if (!pauseRef.current) {
+        if (!storyPausedRef.current) {
             setStoryProgress(prev => Math.min(prev + increment, 100));
         }
     }, STORY_TICK_MS);
@@ -938,34 +940,23 @@
                         
                            <div
     className="instagram-story-overlay fade-in"
-    onPointerDown={e => {
+    onPointerDown={e => { if (e.target.closest('button')) return; setStoryPaused(true); }}
+    onPointerUp={e => {
         if (e.target.closest('button')) return;
-        pauseRef.current = true;
-        
+        setStoryPaused(false);
         const x = e.clientX;
         const half = window.innerWidth / 2;
         if (x >= half) {
             const next = activeStoryIndex + 1;
-            if (next < LOCAL_STORY_PRODUCTS.length) { 
-                setActiveStoryIndex(next); 
-                setStoryProgress(0); 
-            } else { 
-                setActiveStoryIndex(null); 
-                setStoryProgress(0); 
-            }
+            if (next < LOCAL_STORY_PRODUCTS.length) { setActiveStoryIndex(next); setStoryProgress(0); }
+            else { setActiveStoryIndex(null); setStoryProgress(0); }
         } else {
             const prev = activeStoryIndex - 1;
-            if (prev >= 0) { 
-                setActiveStoryIndex(prev); 
-                setStoryProgress(0); 
-            }
+            if (prev >= 0) { setActiveStoryIndex(prev); setStoryProgress(0); }
         }
     }}
-    onPointerLeave={() => { 
-        pauseRef.current = false; 
-    }}
->
-                               
+    onPointerLeave={() => setStoryPaused(false)}
+> 
       
                                {/* Standard Top HUD Navigation bar placed cleanly over content */}
                             <div className="story-header-area">
