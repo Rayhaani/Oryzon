@@ -408,7 +408,6 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            height: 100dvh; 
             background: #090d16;
             z-index: 9999;
             display: flex;
@@ -417,7 +416,7 @@
         }
 
         .story-header-area {
-            padding: 0 0 10px;
+            padding: 20px 20px 10px;
             background: linear-gradient(to bottom, rgba(9,13,22,0.9) 0%, rgba(9,13,22,0) 100%);
             position: absolute;
             top: 0;
@@ -428,11 +427,10 @@
         }
 
         .story-progress-bar-container {
-    display: flex;
-    gap: 4px;
-    width: 100%;
-    margin-bottom: 12px;
-    padding: 0;
+            display: flex;
+            gap: 4px;
+            width: 100%;
+            margin-bottom: 12px;
         }
 
         .story-progress-bg {
@@ -446,8 +444,8 @@
         .story-progress-fill {
             height: 100%;
             background: #ffffff;
-            width: 0%;
-            transition: width 0.05s linear;
+            width: 100%;
+            animation: storyProgress 5s linear forwards;
         }
 
         /* Completely Immersive Full-Screen Card Body Frame */
@@ -781,45 +779,19 @@
             const [query, setQuery] = useState("");
             const [selectedCat, setSelectedCat] = useState(null);
             const [selectedPro, setSelectedPro] = useState(null);
-            const [activeStoryIndex, setActiveStoryIndex] = useState(null);
-            const [storyProgress, setStoryProgress] = useState(0);
-            const [storyPaused, setStoryPaused] = useState(false);
-            const storyPausedRef = React.useRef(false);
+            const [activeStoryFood, setActiveStoryFood] = useState(null); 
             const [nearMeActive, setNearMeActive] = useState(false);
             const [locating, setLocating] = useState(false);
             const [showSearchRouter, setShowSearchRouter] = useState(false);
 
-            const activeStoryFood = activeStoryIndex !== null ? LOCAL_STORY_PRODUCTS[activeStoryIndex] : null;
-            const STORY_DURATION_MS = 5000;
-            const STORY_TICK_MS = 50;
-
             useEffect(() => {
-    if (activeStoryIndex === null) return;
-    const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
-    const interval = setInterval(() => {
-        if (!storyPausedRef.current) {
-            setStoryProgress(prev => Math.min(prev + increment, 100));
-        }
-    }, STORY_TICK_MS);
-    return () => clearInterval(interval);
-}, [activeStoryIndex]);
-            
-            useEffect(() => {
-    if (storyProgress < 100 || activeStoryIndex === null) return;
-    const nextIndex = activeStoryIndex + 1;
-    if (nextIndex < LOCAL_STORY_PRODUCTS.length) {
-        setActiveStoryIndex(nextIndex);
-        setStoryProgress(0);
-    } else {
-        setActiveStoryIndex(null);
-        setStoryProgress(0);
-    }
-}, [storyProgress]);
-            
-            function toggleStoryPause() {
-                setStoryPaused(prev => !prev);
-            }
-            
+                if (activeStoryFood) {
+                    const timer = setTimeout(() => {
+                        setActiveStoryFood(null);
+                    }, 5000);
+                    return () => clearTimeout(timer);
+                }
+            }, [activeStoryFood]);
 
             const filteredPros = PROS.filter(p => {
                 if (selectedCat && p.category !== selectedCat) return false;
@@ -867,9 +839,7 @@
             }
 
             function routeFromStoryToProfile(proId) {
-                setActiveStoryIndex(null);
-                setStoryProgress(0);
-                setStoryPaused(false);
+                setActiveStoryFood(null);
                 const target = PROS.find(p => p.id === proId);
                 if (target) setSelectedPro(target);
             }
@@ -937,39 +907,14 @@
 
                     {/* DYNAMIC IMMERSIVE STRECHED FULL PAGE STORY CARD DISPLAY */}
                     {activeStoryFood && (
-                        
-                           <div
-    className="instagram-story-overlay fade-in"
-    onPointerDown={e => { if (e.target.closest('button')) return; setStoryPaused(true); }}
-    onPointerUp={e => {
-        if (e.target.closest('button')) return;
-        setStoryPaused(false);
-        const x = e.clientX;
-        const half = window.innerWidth / 2;
-        if (x >= half) {
-            const next = activeStoryIndex + 1;
-            if (next < LOCAL_STORY_PRODUCTS.length) { setActiveStoryIndex(next); setStoryProgress(0); }
-            else { setActiveStoryIndex(null); setStoryProgress(0); }
-        } else {
-            const prev = activeStoryIndex - 1;
-            if (prev >= 0) { setActiveStoryIndex(prev); setStoryProgress(0); }
-        }
-    }}
-    onPointerLeave={() => setStoryPaused(false)}
-> 
-      
-                               {/* Standard Top HUD Navigation bar placed cleanly over content */}
+                        <div className="instagram-story-overlay fade-in">
+                            
+                            {/* Standard Top HUD Navigation bar placed cleanly over content */}
                             <div className="story-header-area">
                                 <div className="story-progress-bar-container">
-                                    {LOCAL_STORY_PRODUCTS.map((item, idx) => (
-                                        <div key={item.id} className="story-progress-bg">
-                                            <div className="story-progress-fill" style={{
-                                                width: idx < activeStoryIndex ? "100%" : idx === activeStoryIndex ? `${storyProgress}%` : "0%"
-                                            }}></div>
-                                        </div>
-                                    ))}
+                                    <div className="story-progress-bg"><div className="story-progress-fill"></div></div>
                                 </div>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                         <span style={{ fontSize: 24 }}>🍳</span>
                                         <div>
@@ -977,7 +922,7 @@
                                             <div style={{ fontSize: 11, color: "#94a3b8" }}>Prepared Live Near Me ({activeStoryFood.distance})</div>
                                         </div>
                                     </div>
-                                    <button onClick={(e) => { e.stopPropagation(); setActiveStoryIndex(null); setStoryProgress(0); setStoryPaused(false); }} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: 16, width:32, height:32, borderRadius:'50%', cursor: "pointer", display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+                                    <button onClick={() => setActiveStoryFood(null)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: 16, width:32, height:32, borderRadius:'50%', cursor: "pointer", display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
                                 </div>
                             </div>
 
@@ -992,13 +937,12 @@
 
                                 {/* Integrated Control Deck Built Layered Directly INSIDE the Immersive Card Structure */}
                                 <div className="story-bottom-action-deck">
-                             
-                                    <button onClick={(e) => { e.stopPropagation(); alert(`Order initialized for ${activeStoryFood.name}`); }} style={{ flex: 1, background: "#1d4ed8", color: "#ffffff", border: "none", borderRadius: 12, padding: "10px 0", fontWeight: 800, fontSize: 12, cursor: "pointer", boxShadow: "0 4px 12px rgba(29, 78, 216, 0.3)" }}>
-                                    Place Order 🛒
+                                    <button onClick={() => alert(`Order initialized for ${activeStoryFood.name}`)} style={{ flex: 1, background: "#1d4ed8", color: "#ffffff", border: "none", borderRadius: 16, padding: "16px 0", fontWeight: 800, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 12px rgba(29, 78, 216, 0.3)" }}>
+                                        Place Order 🛒
                                     </button>
-                                    <button onClick={(e) => { e.stopPropagation(); routeFromStoryToProfile(activeStoryFood.proId); }} style={{ flex: 1, background: "rgba(255,255,255,0.12)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px 0", fontWeight: 700, fontSize: 12, cursor: "pointer", backdropFilter: "blur(10px)" }}>
-                                    Go to Profile 👤
-                                    </button>     
+                                    <button onClick={() => routeFromStoryToProfile(activeStoryFood.proId)} style={{ flex: 1, background: "rgba(255,255,255,0.12)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 16, padding: "16px 0", fontWeight: 700, fontSize: 14, cursor: "pointer", backdropFilter: "blur(10px)" }}>
+                                        Go to Profile 👤
+                                    </button>
                                 </div>
                             </div>
 
@@ -1020,12 +964,7 @@
                                 <div className="quantum-story-container">
                                     <div className="quantum-story-track">
                                         {doubleStories.map((item, index) => (
-                                            <div key={index} className="futuristic-story-card" onClick={() => {
-                                                const startIndex = LOCAL_STORY_PRODUCTS.findIndex(p => p.id === item.id);
-                                                setActiveStoryIndex(startIndex);
-                                                setStoryProgress(0);
-                                                setStoryPaused(false);
-                                            }}>
+                                            <div key={index} className="futuristic-story-card" onClick={() => setActiveStoryFood(item)}>
                                                 <div className="story-cyber-ring">
                                                     <div className="story-avatar-core">
                                                         {item.icon}
@@ -1205,7 +1144,6 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-                               
     </script>
 </body>
 </html>
