@@ -784,6 +784,7 @@
             const [activeStoryIndex, setActiveStoryIndex] = useState(null);
             const [storyProgress, setStoryProgress] = useState(0);
             const [storyPaused, setStoryPaused] = useState(false);
+            const storyPausedRef = React.useRef(false);
             const [nearMeActive, setNearMeActive] = useState(false);
             const [locating, setLocating] = useState(false);
             const [showSearchRouter, setShowSearchRouter] = useState(false);
@@ -793,25 +794,28 @@
             const STORY_TICK_MS = 50;
 
             useEffect(() => {
-                if (activeStoryIndex === null || storyPaused) return;
-                const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
-                const interval = setInterval(() => {
-                    setStoryProgress(prev => Math.min(prev + increment, 100));
-                }, STORY_TICK_MS);
-                return () => clearInterval(interval);
-            }, [activeStoryIndex, storyPaused]);
-
+    if (activeStoryIndex === null) return;
+    const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
+    const interval = setInterval(() => {
+        if (!storyPausedRef.current) {
+            setStoryProgress(prev => Math.min(prev + increment, 100));
+        }
+    }, STORY_TICK_MS);
+    return () => clearInterval(interval);
+}, [activeStoryIndex]);
+            
             useEffect(() => {
-                if (storyProgress < 100 || activeStoryIndex === null) return;
-                const nextIndex = activeStoryIndex + 1;
-                if (nextIndex < LOCAL_STORY_PRODUCTS.length) {
-                    setActiveStoryIndex(nextIndex);
-                } else {
-                    setActiveStoryIndex(null);
-                }
-                setStoryProgress(0);
-            }, [storyProgress]);
-
+    if (storyProgress < 100 || activeStoryIndex === null) return;
+    const nextIndex = activeStoryIndex + 1;
+    if (nextIndex < LOCAL_STORY_PRODUCTS.length) {
+        setActiveStoryIndex(nextIndex);
+        setStoryProgress(0);
+    } else {
+        setActiveStoryIndex(null);
+        setStoryProgress(0);
+    }
+}, [storyProgress]);
+            
             function toggleStoryPause() {
                 setStoryPaused(prev => !prev);
             }
@@ -988,12 +992,13 @@
 
                                 {/* Integrated Control Deck Built Layered Directly INSIDE the Immersive Card Structure */}
                                 <div className="story-bottom-action-deck">
-                                    <button onClick={(e) => { e.stopPropagation(); alert(`Order initialized for ${activeStoryFood.name}`); }} style={{ flex: 1, background: "#1d4ed8", color: "#ffffff", border: "none", borderRadius: 16, padding: "16px 0", fontWeight: 800, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 12px rgba(29, 78, 216, 0.3)" }}>
-                                        Place Order 🛒
+                             
+                                    <button onClick={(e) => { e.stopPropagation(); alert(`Order initialized for ${activeStoryFood.name}`); }} style={{ flex: 1, background: "#1d4ed8", color: "#ffffff", border: "none", borderRadius: 12, padding: "10px 0", fontWeight: 800, fontSize: 12, cursor: "pointer", boxShadow: "0 4px 12px rgba(29, 78, 216, 0.3)" }}>
+                                    Place Order 🛒
                                     </button>
-                                    <button onClick={(e) => { e.stopPropagation(); routeFromStoryToProfile(activeStoryFood.proId); }} style={{ flex: 1, background: "rgba(255,255,255,0.12)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 16, padding: "16px 0", fontWeight: 700, fontSize: 14, cursor: "pointer", backdropFilter: "blur(10px)" }}>
-                                        Go to Profile 👤
-                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); routeFromStoryToProfile(activeStoryFood.proId); }} style={{ flex: 1, background: "rgba(255,255,255,0.12)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px 0", fontWeight: 700, fontSize: 12, cursor: "pointer", backdropFilter: "blur(10px)" }}>
+                                    Go to Profile 👤
+                                    </button>     
                                 </div>
                             </div>
 
