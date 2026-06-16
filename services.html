@@ -1184,14 +1184,14 @@ function startStoryInterval() {
     if (state.storyIntervalId) clearInterval(state.storyIntervalId);
     const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
     
-    state.storyIntervalId = setInterval(() => {
-    if (state.isStoryPaused) return;
-    const now = Date.now();
-    const elapsed = now - state.lastTickTime;
-    state.lastTickTime = now;
-    if (elapsed > STORY_TICK_MS * 3) return; // Skip idan an dakata tsawo
+     // SABON CODE
+state.storyIntervalId = setInterval(() => {
+    if (state.isStoryPaused) {
+        state.lastTickTime = Date.now(); // ← Key fix: reset every tick during pause
+        return;
+    }
     state.storyProgress += increment;
-        
+    
         if (state.storyProgress >= 100) {
             state.storyProgress = 0;
             const currentProData = PRO_STORIES[state.activeProStoryIndex];
