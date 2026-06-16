@@ -1357,31 +1357,45 @@ function closeStoryDeck() {
             });
 
             storyOverlay.addEventListener("pointerup", (e) => {
-                if (e.target.closest("button")) return;
-                state.isStoryPaused = false;
-
-                const x = e.clientX;
-                const half = window.innerWidth / 2;
-                if (x >= half) {
-                    // Go Next Story Item
-                    const next = state.activeStoryIndex + 1;
-                    if (next < LOCAL_STORY_PRODUCTS.length) {
-                        state.activeStoryIndex = next;
-                        state.storyProgress = 0;
-                        updateStoryOverlayUi();
-                    } else {
-                        closeStoryDeck();
-                    }
-                } else {
-                    // Back To Previous Story Item
-                    const prev = state.activeStoryIndex - 1;
-                    if (prev >= 0) {
-                        state.activeStoryIndex = prev;
-                        state.storyProgress = 0;
-                        updateStoryOverlayUi();
-                    }
-                }
-            });
+    if (e.target.closest("button")) return;
+    state.isStoryPaused = false;
+    const x = e.clientX;
+    const half = window.innerWidth / 2;
+    const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    if (x >= half) {
+        const nextSlide = state.activeStorySlide + 1;
+        if (nextSlide < currentProData.stories.length) {
+            state.activeStorySlide = nextSlide;
+            state.storyProgress = 0;
+            updateStoryOverlayUi();
+        } else {
+            const nextPro = state.activeProStoryIndex + 1;
+            if (nextPro < PRO_STORIES.length) {
+                state.activeProStoryIndex = nextPro;
+                state.activeStorySlide = 0;
+                state.storyProgress = 0;
+                updateStoryOverlayUi();
+            } else {
+                closeStoryDeck();
+            }
+        }
+    } else {
+        const prevSlide = state.activeStorySlide - 1;
+        if (prevSlide >= 0) {
+            state.activeStorySlide = prevSlide;
+            state.storyProgress = 0;
+            updateStoryOverlayUi();
+        } else {
+            const prevPro = state.activeProStoryIndex - 1;
+            if (prevPro >= 0) {
+                state.activeProStoryIndex = prevPro;
+                state.activeStorySlide = 0;
+                state.storyProgress = 0;
+                updateStoryOverlayUi();
+            }
+        }
+    }
+});
 
             document.getElementById("close-story-overlay-btn").addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -1395,11 +1409,11 @@ function closeStoryDeck() {
             });
 
             document.getElementById("story-action-profile-btn").addEventListener("click", (e) => {
-                e.stopPropagation();
-                const currentProd = LOCAL_STORY_PRODUCTS[state.activeStoryIndex];
-                closeStoryDeck();
-                openProfileSheet(currentProd.proId);
-            });
+    e.stopPropagation();
+    const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    closeStoryDeck();
+    openProfileSheet(currentProData.proId);
+});
         });
     </script>
 </body>
