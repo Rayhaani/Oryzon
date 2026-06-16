@@ -910,11 +910,13 @@
     query: "",
     selectedCat: null,
     nearMeActive: false,
-    activeProStoryIndex: null,   // Wane Pro muke kallo (index a PRO_STORIES)
-    activeStorySlide: 0,         // Wane story a cikin Pro din (0, 1, 2...)
+    activeProStoryIndex: null,
+    activeStorySlide: 0,
     storyProgress: 0,
     storyIntervalId: null,
     isStoryPaused: false,
+    pauseStartTime: null,
+    lastTickTime: null,
     likedPros: {}
 };
         
@@ -1181,9 +1183,15 @@ function openStoryDeck(proStoriesIndex) {
 function startStoryInterval() {
     if (state.storyIntervalId) clearInterval(state.storyIntervalId);
     const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
+    
     state.storyIntervalId = setInterval(() => {
-        if (state.isStoryPaused) return;
-        state.storyProgress += increment;
+    if (state.isStoryPaused) return;
+    const now = Date.now();
+    const elapsed = now - state.lastTickTime;
+    state.lastTickTime = now;
+    if (elapsed > STORY_TICK_MS * 3) return; // Skip idan an dakata tsawo
+    state.storyProgress += increment;
+        
         if (state.storyProgress >= 100) {
             state.storyProgress = 0;
             const currentProData = PRO_STORIES[state.activeProStoryIndex];
@@ -1352,13 +1360,17 @@ function closeStoryDeck() {
             // Immersive Overlay Actions Deck Pointer Mechanics Engine
             const storyOverlay = document.getElementById("story-overlay-deck");
             storyOverlay.addEventListener("pointerdown", (e) => {
-                if (e.target.closest("button")) return;
-                state.isStoryPaused = true;
-            });
+    if (e.target.closest("button")) return;
+    state.isStoryPaused = true;
+    state.pauseStartTime = Date.now();
+});
+            
 
-            storyOverlay.addEventListener("pointerup", (e) => {
+    storyOverlay.addEventListener("pointerup", (e) => {
     if (e.target.closest("button")) return;
     state.isStoryPaused = false;
+    state.lastTickTime = Date.now(); // Reset tick lokacin da aka sake farawa
+        
     const x = e.clientX;
     const half = window.innerWidth / 2;
     const currentProData = PRO_STORIES[state.activeProStoryIndex];
