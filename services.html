@@ -780,19 +780,41 @@
             const [query, setQuery] = useState("");
             const [selectedCat, setSelectedCat] = useState(null);
             const [selectedPro, setSelectedPro] = useState(null);
-            const [activeStoryFood, setActiveStoryFood] = useState(null); 
+            const [activeStoryIndex, setActiveStoryIndex] = useState(null);
+            const [storyProgress, setStoryProgress] = useState(0);
+            const [storyPaused, setStoryPaused] = useState(false);
             const [nearMeActive, setNearMeActive] = useState(false);
             const [locating, setLocating] = useState(false);
             const [showSearchRouter, setShowSearchRouter] = useState(false);
 
+            const activeStoryFood = activeStoryIndex !== null ? LOCAL_STORY_PRODUCTS[activeStoryIndex] : null;
+            const STORY_DURATION_MS = 5000;
+            const STORY_TICK_MS = 50;
+
             useEffect(() => {
-                if (activeStoryFood) {
-                    const timer = setTimeout(() => {
-                        setActiveStoryFood(null);
-                    }, 5000);
-                    return () => clearTimeout(timer);
+                if (activeStoryIndex === null || storyPaused) return;
+                const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
+                const interval = setInterval(() => {
+                    setStoryProgress(prev => Math.min(prev + increment, 100));
+                }, STORY_TICK_MS);
+                return () => clearInterval(interval);
+            }, [activeStoryIndex, storyPaused]);
+
+            useEffect(() => {
+                if (storyProgress < 100 || activeStoryIndex === null) return;
+                const nextIndex = activeStoryIndex + 1;
+                if (nextIndex < LOCAL_STORY_PRODUCTS.length) {
+                    setActiveStoryIndex(nextIndex);
+                } else {
+                    setActiveStoryIndex(null);
                 }
-            }, [activeStoryFood]);
+                setStoryProgress(0);
+            }, [storyProgress]);
+
+            function toggleStoryPause() {
+                setStoryPaused(prev => !prev);
+            }
+            
 
             const filteredPros = PROS.filter(p => {
                 if (selectedCat && p.category !== selectedCat) return false;
@@ -971,16 +993,19 @@
                                     ⚡ Available Now In Your Area (Instant Pickup)
                                 </div>
                                 <div className="quantum-story-container">
+                                   <div style={{ marginTop: 24 }}>
+                                <div style={{ padding: "0 20px", fontWeight: 700, fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>
+                                    ⚡ Available Now In Your Area (Instant Pickup)
+                                </div>
+                                <div className="quantum-story-container">
                                     <div className="quantum-story-track">
-                                    {doubleStories.map((item, index) => (
+                                        {doubleStories.map((item, index) => (
                                             <div key={index} className="futuristic-story-card" onClick={() => {
                                                 const startIndex = LOCAL_STORY_PRODUCTS.findIndex(p => p.id === item.id);
                                                 setActiveStoryIndex(startIndex);
                                                 setStoryProgress(0);
                                                 setStoryPaused(false);
                                             }}>
-                                                
-                                            <div key={index} className="futuristic-story-card" onClick={() => setActiveStoryFood(item)}>
                                                 <div className="story-cyber-ring">
                                                     <div className="story-avatar-core">
                                                         {item.icon}
@@ -993,6 +1018,7 @@
                                     </div>
                                 </div>
                             </div>
+                                    
 
                            <div style={{ padding: "20px 20px 0" }}>
     <div style={{ fontWeight: 700, fontSize: 11, color: "#94a3b8", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.5px" }}>Service Categories</div>
