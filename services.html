@@ -840,12 +840,32 @@
             { id: "cleaner", label: "Professional Cleaner", icon: "🧹" }
         ];
 
-        const LOCAL_STORY_PRODUCTS = [
-    { id: 1, name: "Plumbing Job", icon: "🔧", proId: 1, distance: "0.8km", price: "₦3,500", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&q=80" },
-    { id: 2, name: "Solar Setup", icon: "⚡", proId: 2, distance: "1.2km", price: "₦5,000", image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=200&q=80" },
-    { id: 3, name: "Wardrobe Build", icon: "🪚", proId: 3, distance: "2.1km", price: "₦4,200", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&q=80" },
-    { id: 4, name: "Jollof Rice", icon: "🍛", proId: 4, distance: "0.5km", price: "₦2,200", image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=200&q=80" },
-    { id: 5, name: "Danwake", icon: "🥣", proId: 4, distance: "0.5km", price: "₦1,500", image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=200&q=80" }
+        const PRO_STORIES = [
+    {
+        proId: 1,
+        stories: [
+            { name: "Plumbing Job", icon: "🔧", price: "₦3,500", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" }
+        ]
+    },
+    {
+        proId: 2,
+        stories: [
+            { name: "Solar Setup", icon: "⚡", price: "₦5,000", image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&q=80" }
+        ]
+    },
+    {
+        proId: 3,
+        stories: [
+            { name: "Wardrobe Build", icon: "🪚", price: "₦4,200", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80" }
+        ]
+    },
+    {
+        proId: 4,
+        stories: [
+            { name: "Jollof Rice", icon: "🍛", price: "₦2,200", image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&q=80" },
+            { name: "Danwake", icon: "🥣", price: "₦1,500", image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80" }
+        ]
+    }
 ];
         
         const PROS = [
@@ -886,17 +906,18 @@
 
         // Global Application Architecture State Object Core Engine
         let state = {
-            view: "main", // Options: "main" | "results"
-            query: "",
-            selectedCat: null,
-            nearMeActive: false,
-            activeStoryIndex: null,
-            storyProgress: 0,
-            storyIntervalId: null,
-            isStoryPaused: false,
-            likedPros: {} // Tracks favorite status explicitly
-        };
-
+    view: "main",
+    query: "",
+    selectedCat: null,
+    nearMeActive: false,
+    activeProStoryIndex: null,   // Wane Pro muke kallo (index a PRO_STORIES)
+    activeStorySlide: 0,         // Wane story a cikin Pro din (0, 1, 2...)
+    storyProgress: 0,
+    storyIntervalId: null,
+    isStoryPaused: false,
+    likedPros: {}
+};
+        
         const STORY_DURATION_MS = 5000;
         const STORY_TICK_MS = 50;
 
@@ -989,22 +1010,25 @@
         // Data Rendering Pipeline Matrices
         function initAppElements() {
             // Render Stories Track 
-            const doubleStories = [...LOCAL_STORY_PRODUCTS, ...LOCAL_STORY_PRODUCTS];
-            const track = document.getElementById("stories-track-container");
-            track.innerHTML = doubleStories.map((item, index) => {
-        const startIndex = LOCAL_STORY_PRODUCTS.findIndex(p => p.id === item.id);
-        return `
-            <div class="futuristic-story-card" onclick="openStoryDeck(${startIndex})" style="padding: 0; overflow: hidden; border-radius: 20px; width: 95px;">
-                <div style="width: 95px; height: 110px; overflow: hidden; position: relative; flex-shrink: 0;">
-                    <img src="${item.image}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.style.background='#e2e8f0'; this.style.display='flex'; this.outerHTML='<div style=\'width:100%;height:100%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:28px\'>${item.icon}</div>'"/>
-                </div>
-                <div style="padding: 6px 6px 8px; text-align: center;">
-                    <span style="font-size: 10px; font-weight: 700; color: #1f2937; white-space: nowrap; width: 100%; overflow: hidden; text-overflow: ellipsis; display: block;">${item.name}</span>
-                </div>
+            
+           const doubleProStories = [...PRO_STORIES, ...PRO_STORIES];
+const track = document.getElementById("stories-track-container");
+track.innerHTML = doubleProStories.map((proStory, index) => {
+    const realIndex = index % PRO_STORIES.length;
+    const pro = PROS.find(p => p.id === proStory.proId);
+    const firstStory = proStory.stories[0];
+    return `
+        <div class="futuristic-story-card" onclick="openStoryDeck(${realIndex})" style="padding: 0; overflow: hidden; border-radius: 20px; width: 95px;">
+            <div style="width: 95px; height: 110px; overflow: hidden; position: relative; flex-shrink: 0;">
+                <img src="${firstStory.image}" alt="${pro ? pro.name : ''}" style="width: 100%; height: 100%; object-fit: cover; display: block;"/>
             </div>
-        `;
-    }).join('');
-
+            <div style="padding: 6px 6px 8px; text-align: center;">
+                <span style="font-size: 10px; font-weight: 700; color: #1f2937; white-space: nowrap; width: 100%; overflow: hidden; text-overflow: ellipsis; display: block;">${pro ? pro.name.split(' ')[0] : firstStory.name}</span>
+            </div>
+        </div>
+    `;
+}).join('');
+            
             // Render Main View Categories Grid
             const catGrid = document.getElementById("categories-grid-container");
             catGrid.innerHTML = CATEGORIES.map(cat => `
@@ -1141,83 +1165,96 @@
         }
 
         // IMMERSIVE STORIES ENGINE CONTROLLER MECHANICS
-        function openStoryDeck(index) {
-    state.activeStoryIndex = index;
+        
+
+function openStoryDeck(proStoriesIndex) {
+    state.activeProStoryIndex = proStoriesIndex;
+    state.activeStorySlide = 0;
     state.storyProgress = 0;
     state.isStoryPaused = false;
-    
     if (state.storyIntervalId) clearInterval(state.storyIntervalId);
-    
-    const overlay = document.getElementById("story-overlay-deck");
-    overlay.style.display = "flex";
-    
+    document.getElementById("story-overlay-deck").style.display = "flex";
     updateStoryOverlayUi();
     startStoryInterval();
-        }
+}
 
-        function startStoryInterval() {
+function startStoryInterval() {
     if (state.storyIntervalId) clearInterval(state.storyIntervalId);
     const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
-    
     state.storyIntervalId = setInterval(() => {
         if (state.isStoryPaused) return;
-        
         state.storyProgress += increment;
-        
         if (state.storyProgress >= 100) {
             state.storyProgress = 0;
-            const nextIndex = state.activeStoryIndex + 1;
-            if (nextIndex < LOCAL_STORY_PRODUCTS.length) {
-                state.activeStoryIndex = nextIndex;
+            const currentProData = PRO_STORIES[state.activeProStoryIndex];
+            const nextSlide = state.activeStorySlide + 1;
+            if (nextSlide < currentProData.stories.length) {
+                // Story gaba a cikin wannan Pro
+                state.activeStorySlide = nextSlide;
                 updateStoryOverlayUi();
-                // Interval yana ci gaba — ba a sake farawa ba
             } else {
-                closeStoryDeck(); // Duk cards sun gama
+                // Duk stories na wannan Pro sun gama — Pro na gaba
+                const nextPro = state.activeProStoryIndex + 1;
+                if (nextPro < PRO_STORIES.length) {
+                    state.activeProStoryIndex = nextPro;
+                    state.activeStorySlide = 0;
+                    updateStoryOverlayUi();
+                } else {
+                    closeStoryDeck();
+                }
             }
         } else {
             updateStoryProgressBarOnly();
         }
     }, STORY_TICK_MS);
-                }
+}
 
-        function updateStoryProgressBarOnly() {
-            LOCAL_STORY_PRODUCTS.forEach((item, idx) => {
-                const fillEl = document.getElementById(`story-fill-node-${idx}`);
-                if (fillEl) {
-                    if (idx < state.activeStoryIndex) fillEl.style.width = "100%";
-                    else if (idx === state.activeStoryIndex) fillEl.style.width = `${state.storyProgress}%`;
-                    else fillEl.style.width = "0%";
-                }
-            });
+function updateStoryProgressBarOnly() {
+    const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    currentProData.stories.forEach((s, idx) => {
+        const fillEl = document.getElementById(`story-fill-node-${idx}`);
+        if (fillEl) {
+            if (idx < state.activeStorySlide) fillEl.style.width = "100%";
+            else if (idx === state.activeStorySlide) fillEl.style.width = `${state.storyProgress}%`;
+            else fillEl.style.width = "0%";
         }
+    });
+}
 
-        function updateStoryOverlayUi() {
-            const activeProduct = LOCAL_STORY_PRODUCTS[state.activeStoryIndex];
-            
-            // Render progress slots headers 
-            const indicatorContainer = document.getElementById("story-progress-indicators-bar");
-            indicatorContainer.innerHTML = LOCAL_STORY_PRODUCTS.map((item, idx) => `
-                <div class="story-progress-bg">
-                    <div class="story-progress-fill" id="story-fill-node-${idx}" style="width: ${idx < state.activeStoryIndex ? "100%" : "0%"};"></div>
-                </div>
-            `).join('');
-            
-            // Sync Text Context Content Data Details
-            document.getElementById("story-header-icon").innerText = "🍳";
-            document.getElementById("story-header-title").innerText = activeProduct.name;
-            document.getElementById("story-header-meta").innerText = `Prepared Live Near Me (${activeProduct.distance})`;
-            
-            document.getElementById("story-canvas-main-emoji").innerText = activeProduct.icon;
-            document.getElementById("story-canvas-main-title").innerText = activeProduct.name;
-            document.getElementById("story-canvas-main-price").innerText = activeProduct.price;
-        }
+function updateStoryOverlayUi() {
+    const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    const activeStory = currentProData.stories[state.activeStorySlide];
+    const pro = PROS.find(p => p.id === currentProData.proId);
 
-        function closeStoryDeck() {
-            if (state.storyIntervalId) clearInterval(state.storyIntervalId);
-            state.activeStoryIndex = null;
-            document.getElementById("story-overlay-deck").style.display = "none";
-        }
+    // Progress bars — nuna bars na stories na wannan Pro kawai
+    const indicatorContainer = document.getElementById("story-progress-indicators-bar");
+    indicatorContainer.innerHTML = currentProData.stories.map((s, idx) => `
+        <div class="story-progress-bg">
+            <div class="story-progress-fill" id="story-fill-node-${idx}" style="width: ${idx < state.activeStorySlide ? '100%' : '0%'};"></div>
+        </div>
+    `).join('');
 
+    document.getElementById("story-header-icon").innerText = pro ? pro.avatar : "👤";
+    document.getElementById("story-header-title").innerText = pro ? pro.name : activeStory.name;
+    document.getElementById("story-header-meta").innerText = activeStory.name;
+
+    document.getElementById("story-canvas-main-emoji").innerText = activeStory.icon;
+    document.getElementById("story-canvas-main-title").innerText = activeStory.name;
+    document.getElementById("story-canvas-main-price").innerText = activeStory.price;
+
+    // Hoto na background
+    const canvas = document.getElementById("story-interactive-canvas-area");
+    canvas.style.backgroundImage = `url('${activeStory.image}')`;
+    canvas.style.backgroundSize = "cover";
+    canvas.style.backgroundPosition = "center";
+}
+
+function closeStoryDeck() {
+    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
+    state.activeProStoryIndex = null;
+    document.getElementById("story-overlay-deck").style.display = "none";
+}
+        
         // EXPERT VERIFICATION PORTAL FILE MODAL CONTROLLER VIEW
         function openProfileSheet(proId) {
             const pro = PROS.find(p => p.id === proId);
