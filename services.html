@@ -662,6 +662,157 @@
             text-align: center;
             letter-spacing: 0.2px;
         }
+
+        /* CHEF MENU GLASS OVERLAY */
+.chef-menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 6000;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding-top: 0;
+}
+
+.chef-menu-scroll-carpet {
+    width: 100%;
+    max-width: 430px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0 0 32px 32px;
+    padding: 20px 20px 32px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    transform: translateY(-100%);
+    animation: carpetUnroll 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@keyframes carpetUnroll {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+.chef-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.chef-menu-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+}
+
+.chef-menu-subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+.chef-menu-close-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+.chef-menu-close-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+
+.menu-item-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: menuItemSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes menuItemSlideIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.menu-item-emoji {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.menu-item-info { flex: 1; }
+
+.menu-item-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.menu-item-desc {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+.menu-item-price {
+    font-size: 15px;
+    font-weight: 800;
+    color: #34d399;
+    flex-shrink: 0;
+}
+
+.chef-availability-banner {
+    margin-top: 20px;
+    background: linear-gradient(135deg, rgba(29, 78, 216, 0.4) 0%, rgba(16, 185, 129, 0.3) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 18px;
+    padding: 16px 20px;
+    text-align: center;
+    opacity: 0;
+    animation: menuItemSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+}
+
+.availability-text {
+    font-size: 15px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.4;
+}
+
+.availability-cta {
+    font-size: 12px;
+    color: #34d399;
+    font-weight: 700;
+    margin-top: 6px;
+    letter-spacing: 0.3px;
+    }
+        
     </style>
 </head>
 <body>
@@ -874,6 +1025,24 @@
 
     </div>
 
+    <!-- CHEF MENU GLASS OVERLAY -->
+<div class="chef-menu-overlay" id="chef-menu-overlay">
+    <div class="chef-menu-scroll-carpet" id="chef-menu-carpet">
+        <div class="chef-menu-header">
+            <div>
+                <div class="chef-menu-title" id="chef-menu-pro-name">Chef Amara Yusuf</div>
+                <div class="chef-menu-subtitle">🍽️ Today's Live Menu</div>
+            </div>
+            <button class="chef-menu-close-btn" id="chef-menu-close-btn">❌</button>
+        </div>
+        <div id="chef-menu-items-slot"></div>
+        <div class="chef-availability-banner" id="chef-availability-banner">
+            <div class="availability-text" id="availability-text">Available Everyday</div>
+            <div class="availability-cta">👆 Place Order Now</div>
+        </div>
+    </div>
+</div>
+
     <!-- PURE TSANTSAR VANILLA JAVASCRIPT ENGINE (NO REACT/BABEL) -->
     <script>
         // Core Static Local Data Context Stores Verbatim
@@ -952,7 +1121,14 @@
                 bio: "Elite chef specializing in upscale local catering, signature gourmet dishes, and customized corporate event banquets.",
                 skills: ["Gourmet Catering", "Pastry Art", "Menu Development"], online: true,
                 schedule: ["Mondays", "Wednesdays", "Fridays", "Saturdays"],
-                gallery: ["Premium Banqueting Platter", "Pastry Fine Art Design", "Corporate Event Spread", "Gourmet Kitchen Prep"]
+                gallery: ["Premium Banqueting Platter", "Pastry Fine Art Design", "Corporate Event Spread", "Gourmet Kitchen Prep"],
+                menu: [
+                    { name: "Jollof Rice", price: "₦2,200", icon: "🍛", desc: "Smoky party-style jollof" },
+                    { name: "Danwake", price: "₦1,500", icon: "🥣", desc: "Fresh with groundnut oil" },
+                    { name: "Fried Rice", price: "₦2,500", icon: "🍚", desc: "Spiced with vegetables" },
+                    { name: "Masa", price: "₦800", icon: "🫓", desc: "Hot & crispy rice cakes" },
+                    { name: "Tuwo Shinkafa", price: "₦1,800", icon: "🍲", desc: "With miyan kuka" }
+                ]
             },
         ];
 
@@ -1367,6 +1543,11 @@ function closeStoryDeck() {
             document.getElementById("profile-sheet-overlay").style.display = "block";
         }
 
+        // Auto-trigger chef menu idan chef ne
+if (pro.category === "chef" && pro.menu) {
+    setTimeout(() => openChefMenuOverlay(pro), 400);
+}.
+    
         function closeProfileSheet() {
             document.getElementById("profile-sheet-overlay").style.display = "none";
         }
@@ -1374,6 +1555,11 @@ function closeStoryDeck() {
         // Document Event Listeners Wire-up Initialization Engine Verbatim
         document.addEventListener("DOMContentLoaded", () => {
             initAppElements();
+
+             // Setup search typing triggers execution listeners 
+    document.getElementById("search-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") triggerRouterCheck();
+    });
 
             // Setup search typing triggers execution listeners 
             document.getElementById("search-input").addEventListener("keydown", (e) => {
@@ -1482,6 +1668,41 @@ function closeStoryDeck() {
     openProfileSheet(currentProData.proId);
 });
         });
+
+        function openChefMenuOverlay(pro) {
+    document.getElementById("chef-menu-pro-name").innerText = pro.name;
+    document.getElementById("chef-menu-overlay").style.display = "flex";
+
+    // Render menu items da staggered animation
+    const slot = document.getElementById("chef-menu-items-slot");
+    slot.innerHTML = (pro.menu || []).map((item, idx) => `
+        <div class="menu-item-card" style="animation-delay: ${idx * 0.1}s">
+            <div class="menu-item-emoji">${item.icon}</div>
+            <div class="menu-item-info">
+                <div class="menu-item-name">${item.name}</div>
+                <div class="menu-item-desc">${item.desc}</div>
+            </div>
+            <div class="menu-item-price">${item.price}</div>
+        </div>
+    `).join('');
+
+    // Availability message
+    const availEl = document.getElementById("availability-text");
+    if (pro.schedule) {
+        if (pro.schedule.length === 7) {
+            availEl.innerText = "✅ Available Everyday";
+        } else {
+            availEl.innerText = `📅 Available: ${pro.schedule.join(', ')}`;
+        }
+    } else {
+        availEl.innerText = "✅ Available Everyday";
+    }
+}
+
+function closeChefMenuOverlay() {
+    document.getElementById("chef-menu-overlay").style.display = "none";
+}
+        
     </script>
 </body>
 </html>
