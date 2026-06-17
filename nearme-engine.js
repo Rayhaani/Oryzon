@@ -16,6 +16,9 @@ const FIREBASE_CONFIG = {
   appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
   measurementId: "G-K5085DLL2W"
 };
+
+// Initialize Firebase gaba ɗaya
+firebase.initializeApp(FIREBASE_CONFIG);
 // ────────────────────────────────────────────────────────────
 //  2. FIREBASE REALTIME DB STRUCTURE  (dokokin JSON)
 //
