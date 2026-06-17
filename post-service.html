@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Your Service — Abokina</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background: #0a0f1e;
+    font-family: 'Inter', sans-serif;
+    color: #ffffff;
+    min-height: 100vh;
+    padding-bottom: 40px;
+}
+
+.ps-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(10, 15, 30, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.ps-back-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.ps-header-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+.ps-header-badge {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+}
+
+.ps-wrapper {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px 20px;
+}
+
+.ps-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+}
+
+.ps-step {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.3);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.ps-step.active {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 0 16px rgba(99,102,241,0.5);
+}
+
+.ps-step.done {
+    background: #10b981;
+    border-color: transparent;
+    color: #ffffff;
+}
+
+.ps-step-line {
+    width: 60px;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+}
+
+.ps-steps-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 4px;
+    margin-bottom: 24px;
+}
+
+.ps-steps-labels span {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    flex: 1;
+    text-align: center;
+}
+
+.ps-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 28px;
+}
+
+.ps-profile-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(99,102,241,0.4);
+    background: rgba(255,255,255,0.05);
+}
+
+.ps-profile-info { flex: 1; }
+
+.ps-profile-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.ps-profile-username {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+}
+
+.ps-profile-verified {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #10b981;
+    font-weight: 700;
+}
+
+.ps-verified-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: verifiedPulse 1.5s infinite;
+}
+
+@keyframes verifiedPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.4); }
+}
+
+.ps-section {
+    animation: sectionFadeIn 0.35s ease forwards;
+}
+
+.ps-section.hidden { display: none; }
+
+@keyframes sectionFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ps-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 16px;
+}
+
+.ps-category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.ps-cat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 14px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ps-cat-card:active { transform: scale(0.96); }
+
+.ps-cat-card.selected {
+    background: rgba(99,102,241,0.15);
+    border-color: #6366f1;
+    box-shadow: 0 0 16px rgba(99,102,241,0.2);
+}
+
+.ps-cat-icon { font-size: 26px; }
+
+.ps-cat-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    line-height: 1.3;
+}
+
+.ps-cat-card.selected .ps-cat-label { color: #ffffff; }
+
+.ps-field-group { margin-bottom: 20px; }
+
+.ps-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.ps-input,
+.ps-select,
+.ps-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    -webkit-appearance: none;
+}
+
+.ps-input:focus,
+.ps-select:focus,
+.ps-textarea:focus {
+    border-color: #6366f1;
+    background: rgba(99,102,241,0.05);
+}
+
+.ps-input::placeholder,
+.ps-textarea::placeholder { color: rgba(255,255,255,0.2); }
+
+.ps-select option {
+    background: #1a1f35;
+    color: #ffffff;
+}
+
+.ps-textarea {
+    resize: none;
+    height: 110px;
+    line-height: 1.5;
+}
+
+.ps-char-count {
+    text-align: right;
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+    margin-top: 5px;
+}
+
+.ps-price-row { display: flex; gap: 10px; }
+.ps-price-row .ps-input { flex: 1; }
+.ps-price-unit { width: 130px; flex-shrink: 0; }
+
+.ps-days-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ps-day-chip input { display: none; }
+
+.ps-day-chip span {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.ps-day-chip input:checked + span {
+    background: rgba(99,102,241,0.2);
+    border-color: #6366f1;
+    color: #ffffff;
+}
+
+.ps-gps-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(16,185,129,0.05);
+    border: 1px solid rgba(16,185,129,0.15);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.ps-gps-icon { font-size: 28px; flex-shrink: 0; }
+.ps-gps-text { flex: 1; }
+
+.ps-gps-status {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.ps-gps-coords {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 3px;
+    font-family: monospace;
+}
+
+.ps-gps-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 10px 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+}
+
+.ps-gps-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ps-gps-card.gps-done {
+    border-color: rgba(16,185,129,0.4);
+    background: rgba(16,185,129,0.08);
+}
+
+.ps-summary-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.ps-summary-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.ps-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.ps-summary-row:last-child { border-bottom: none; }
+
+.ps-summary-key {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 600;
+}
+
+.ps-summary-val {
+    font-size: 12px;
+    color: #ffffff;
+    font-weight: 700;
+    text-align: right;
+    max-width: 60%;
+}
+
+.ps-next-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border: none;
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+    font-family: 'Inter', sans-serif;
+}
+
+.ps-next-btn:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+}
+
+.ps-btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.ps-back-step-btn {
+    flex: 0 0 90px;
+    padding: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+}
+
+.ps-submit-btn {
+    flex: 1;
+    padding: 16px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.ps-submit-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.ps-submit-btn:active { transform: scale(0.98); }
+
+.ps-success-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,15,30,0.96);
+    backdrop-filter: blur(20px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.ps-success-overlay.show { display: flex; }
+
+.ps-success-card {
+    text-align: center;
+    animation: sectionFadeIn 0.4s ease forwards;
+}
+
+.ps-success-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.ps-success-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px;
+    color: #10b981;
+    margin-bottom: 12px;
+}
+
+.ps-success-msg {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.ps-success-btn {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border: none;
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 16px 32px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+}
+</style>
+</head>
+<body>
+
+<header class="ps-header">
+    <button class="ps-back-btn" onclick="window.location.href='services.html'">←</button>
+    <span class="ps-header-title">Post Your Service</span>
+    <div class="ps-header-badge">Pro</div>
+</header>
+
+<div class="ps-wrapper">
+
+    <div class="ps-steps">
+        <div class="ps-step active" id="step-dot-1">1</div>
+        <div class="ps-step-line"></div>
+        <div class="ps-step" id="step-dot-2">2</div>
+        <div class="ps-step-line"></div>
+        <div class="ps-step" id="step-dot-3">3</div>
+    </div>
+    <div class="ps-steps-labels">
+        <span>Category</span>
+        <span>Details</span>
+        <span>Location</span>
+    </div>
+
+    <div class="ps-profile-card">
+        <img class="ps-profile-avatar" id="ps-avatar" src="" alt="Avatar">
+        <div class="ps-profile-info">
+            <div class="ps-profile-name" id="ps-fullname">Loading...</div>
+            <div class="ps-profile-username" id="ps-username">@...</div>
+        </div>
+        <div class="ps-profile-verified">
+            <span class="ps-verified-dot"></span>
+            Logged In
+        </div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="ps-section" id="section-step-1">
+        <div class="ps-section-label">Zaɓi Category</div>
+        <div class="ps-category-grid" id="ps-category-grid"></div>
+        <div class="ps-field-group" id="subcategory-group" style="display:none;">
+            <label class="ps-label">Subcategory</label>
+            <select class="ps-select" id="ps-subcategory">
+                <option value="">— Zaɓi —</option>
+            </select>
+        </div>
+        <button class="ps-next-btn" onclick="goToStep(2)">Ci gaba →</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="ps-section hidden" id="section-step-2">
+        <div class="ps-section-label">Bayanan Sana'a</div>
+
+        <div class="ps-field-group">
+            <label class="ps-label">Farashi (₦)</label>
+            <div class="ps-price-row">
+                <input class="ps-input" id="ps-price" type="number" placeholder="e.g. 3500" min="0">
+                <select class="ps-select ps-price-unit" id="ps-price-unit">
+                    <option value="per job">Per Job</option>
+                    <option value="per hour">Per Hour</option>
+                    <option value="per day">Per Day</option>
+                    <option value="negotiable">Negotiable</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="ps-field-group">
+            <label class="ps-label">Bayani game da ayyukanka</label>
+            <textarea class="ps-textarea" id="ps-description" placeholder="Bayyana ƙwarewar da kake da ita..." maxlength="300"></textarea>
+            <div class="ps-char-count"><span id="ps-char-num">0</span>/300</div>
+        </div>
+
+        <div class="ps-field-group">
+            <label class="ps-label">Kwanakin Available</label>
+            <div class="ps-days-grid">
+                <label class="ps-day-chip"><input type="checkbox" value="Monday"><span>Mon</span></label>
+                <label class="ps-day-chip"><input type="checkbox" value="Tuesday"><span>Tue</span></label>
+                <label class="ps-day-chip"><input type="checkbox" value="Wednesday"><span>Wed</span></label>
+                <label class="ps-day-chip"><input type="checkbox" value="Thursday"><span>Thu</span></label>
+                <label class="ps-day-chip"><input type="checkbox" value="Friday"><span>Fri</span></label>
+                <label class="ps-day-chip"><input type="checkbox" value="Saturday"><span>Sat</span></label>
+                <label class="ps-day-chip"><input type="checkbox" value="Sunday"><span>Sun</span></label>
+            </div>
+        </div>
+
+        <div class="ps-btn-row">
+            <button class="ps-back-step-btn" onclick="goToStep(1)">← Baya</button>
+            <button class="ps-next-btn" onclick="goToStep(3)">Ci gaba →</button>
+        </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="ps-section hidden" id="section-step-3">
+        <div class="ps-section-label">Wurin ka (GPS)</div>
+
+        <div class="ps-gps-card" id="ps-gps-card">
+            <div class="ps-gps-icon">📍</div>
+            <div class="ps-gps-text">
+                <div class="ps-gps-status" id="ps-gps-status">An shirya don ɗaukar loca</div>
+                <div class="ps-gps-coords" id="ps-gps-coords">GPS ba'a kunna ba tukuna</div>
+            </div>
+            <button class="ps-gps-btn" id="ps-gps-btn" onclick="captureGPS()">Ɗauki Loca</button>
+        </div>
+
+        <div class="ps-summary-card">
+            <div class="ps-summary-title">📋 Taƙaitaccen Bayani</div>
+            <div class="ps-summary-row">
+                <span class="ps-summary-key">Suna</span>
+                <span class="ps-summary-val" id="sum-name">—</span>
+            </div>
+            <div class="ps-summary-row">
+                <span class="ps-summary-key">Category</span>
+                <span class="ps-summary-val" id="sum-category">—</span>
+            </div>
+            <div class="ps-summary-row">
+                <span class="ps-summary-key">Farashi</span>
+                <span class="ps-summary-val" id="sum-price">—</span>
+            </div>
+            <div class="ps-summary-row">
+                <span class="ps-summary-key">Kwanaki</span>
+                <span class="ps-summary-val" id="sum-days">—</span>
+            </div>
+            <div class="ps-summary-row">
+                <span class="ps-summary-key">Loca</span>
+                <span class="ps-summary-val" id="sum-location">Ana jira GPS...</span>
+            </div>
+        </div>
+
+        <div class="ps-btn-row">
+            <button class="ps-back-step-btn" onclick="goToStep(2)">← Baya</button>
+            <button class="ps-submit-btn" id="ps-submit-btn" onclick="submitService()">🚀 Post Service</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="ps-success-overlay" id="ps-success-overlay">
+    <div class="ps-success-card">
+        <div class="ps-success-icon">✅</div>
+        <h2 class="ps-success-title">An Aika!</h2>
+        <p class="ps-success-msg">Sana'arka an saka a cikin tsarin Abokina. Masu buƙata kusa da kai za su iya ganinka yanzu.</p>
+        <button class="ps-success-btn" onclick="window.location.href='services.html'">Koma Services →</button>
+    </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="nearme-engine.js"></script>
+
+<script>
+const SERVICE_CATEGORIES = [
+    { id: "skilled_pro", label: "Plumber",     icon: "🔧", subcategories: ["General Plumbing","Pipe Fitting","Leak Repair","Drainage"] },
+    { id: "skilled_pro", label: "Electrician", icon: "⚡", subcategories: ["Wiring","Solar Installation","Generator","Smart Home"] },
+    { id: "skilled_pro", label: "Carpenter",   icon: "🪚", subcategories: ["Furniture","Doors & Windows","Roofing","Carving"] },
+    { id: "food",        label: "Chef / Cook", icon: "🍳", subcategories: ["Home Cooking","Catering","Pastry","Grills"] },
+    { id: "skilled_pro", label: "Painter",     icon: "🎨", subcategories: ["Interior","Exterior","Texture","Graffiti"] },
+    { id: "skilled_pro", label: "Mason",       icon: "🧱", subcategories: ["Block Laying","Plastering","Tiling","Foundation"] },
+    { id: "skilled_pro", label: "Welder",      icon: "🔩", subcategories: ["Gate & Fence","Steel Fabrication","Roofing","Furniture"] },
+    { id: "emergency",   label: "Mechanic",    icon: "🚗", subcategories: ["Engine Repair","Electrical","Tires","Body Work"] },
+    { id: "skilled_pro", label: "AC Tech",     icon: "❄️", subcategories: ["Installation","Repair","Maintenance","Gas Refill"] },
+    { id: "skilled_pro", label: "Tailor",      icon: "🧵", subcategories: ["Native Wear","English Wear","Alterations","Embroidery"] },
+    { id: "skilled_pro", label: "Cleaner",     icon: "🧹", subcategories: ["Home Cleaning","Office Cleaning","Post-Event","Deep Clean"] },
+    { id: "emergency",   label: "Emergency",   icon: "🚨", subcategories: ["Car Breakdown","Medical Assist","Security","Fire Safety"] }
+];
+
+const psState = {
+    currentStep: 1,
+    selectedCategory: null,
+    selectedCategoryLabel: null,
+    selectedSubcategory: null,
+    price: null,
+    priceUnit: null,
+    description: null,
+    availableDays: [],
+    gpsLat: null,
+    gpsLng: null,
+    gpsReady: false,
+    userFullName: null,
+    userUsername: null,
+    userPhone: null,
+    userPhoto: null
+};
+
+let firestoreDB = null;
+let realtimeDB  = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+    const username = localStorage.getItem("nexus_user_session");
+    if (!username) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    firestoreDB = firebase.firestore();
+    realtimeDB  = firebase.database();
+
+    loadUserProfile(username);
+    renderCategoryGrid();
+
+    document.getElementById("ps-description").addEventListener("input", function() {
+        document.getElementById("ps-char-num").textContent = this.value.length;
+    });
+});
+
+async function loadUserProfile(username) {
+    try {
+        const doc = await firestoreDB.collection("users").doc(username).get();
+        if (!doc.exists) return;
+        const data = doc.data();
+
+        psState.userFullName = data.fullName        || username;
+        psState.userUsername = data.username        || username;
+        psState.userPhone    = data.routingIdentity || "";
+        psState.userPhoto    = data.userProfilePic  || "";
+
+        document.getElementById("ps-fullname").textContent = psState.userFullName;
+        document.getElementById("ps-username").textContent = "@" + psState.userUsername;
+
+        if (psState.userPhoto) {
+            document.getElementById("ps-avatar").src = psState.userPhoto;
+        }
+    } catch (err) {
+        console.error("Load user kuskure:", err);
+    }
+}
+
+function renderCategoryGrid() {
+    const grid = document.getElementById("ps-category-grid");
+    grid.innerHTML = SERVICE_CATEGORIES.map((cat, idx) => `
+        <div class="ps-cat-card" data-index="${idx}" onclick="selectCategory(${idx})">
+            <div class="ps-cat-icon">${cat.icon}</div>
+            <div class="ps-cat-label">${cat.label}</div>
+        </div>
+    `).join("");
+}
+
+function selectCategory(idx) {
+    const cat = SERVICE_CATEGORIES[idx];
+
+    document.querySelectorAll(".ps-cat-card").forEach(el => el.classList.remove("selected"));
+    document.querySelector(`.ps-cat-card[data-index="${idx}"]`).classList.add("selected");
+
+    psState.selectedCategory      = cat.id;
+    psState.selectedCategoryLabel = cat.label;
+
+    const group  = document.getElementById("subcategory-group");
+    const select = document.getElementById("ps-subcategory");
+
+    group.style.display = "block";
+    select.innerHTML = `<option value="">— Zaɓi —</option>` +
+        cat.subcategories.map(sub => `<option value="${sub}">${sub}</option>`).join("");
+
+    select.onchange = () => { psState.selectedSubcategory = select.value; };
+}
+
+function goToStep(step) {
+    if (step === 2) {
+        if (!psState.selectedCategory)    { showToast("⚠️ Zaɓi category!"); return; }
+        if (!psState.selectedSubcategory) { showToast("⚠️ Zaɓi subcategory!"); return; }
+    }
+
+    if (step === 3) {
+        const price = document.getElementById("ps-price").value;
+        const desc  = document.getElementById("ps-description").value.trim();
+        const days  = Array.from(document.querySelectorAll(".ps-day-chip input:checked")).map(el => el.value);
+
+        if (!price || parseInt(price) <= 0) { showToast("⚠️ Saka farashi mai inganci!"); return; }
+        if (desc.length < 20)               { showToast("⚠️ Bayani ya yi ƙasa — kalla haruffa 20!"); return; }
+        if (days.length === 0)              { showToast("⚠️ Zaɓi kalla kwana ɗaya!"); return; }
+
+        psState.price         = parseInt(price);
+        psState.priceUnit     = document.getElementById("ps-price-unit").value;
+        psState.description   = desc;
+        psState.availableDays = days;
+
+        document.getElementById("sum-name").textContent     = psState.userFullName || "—";
+        document.getElementById("sum-category").textContent = `${psState.selectedCategoryLabel} → ${psState.selectedSubcategory}`;
+        document.getElementById("sum-price").textContent    = `₦${psState.price.toLocaleString()} ${psState.priceUnit}`;
+        document.getElementById("sum-days").textContent     = psState.availableDays.join(", ");
+    }
+
+    document.querySelectorAll(".ps-section").forEach(s => s.classList.add("hidden"));
+    document.getElementById(`section-step-${step}`).classList.remove("hidden");
+
+    for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById(`step-dot-${i}`);
+        dot.classList.remove("active", "done");
+        if (i < step)  dot.classList.add("done");
+        if (i === step) dot.classList.add("active");
+    }
+
+    psState.currentStep = step;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function captureGPS() {
+    const btn    = document.getElementById("ps-gps-btn");
+    const status = document.getElementById("ps-gps-status");
+    const coords = document.getElementById("ps-gps-coords");
+    const card   = document.getElementById("ps-gps-card");
+
+    if (!navigator.geolocation) { showToast("❌ Browser ɗinka bai goyi bayan GPS ba."); return; }
+
+    btn.disabled       = true;
+    btn.textContent    = "Ana nema...";
+    status.textContent = "🔄 Ana ɗaukar loca...";
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            psState.gpsLat   = pos.coords.latitude;
+            psState.gpsLng   = pos.coords.longitude;
+            psState.gpsReady = true;
+
+            status.textContent = "✅ Loca an samu!";
+            coords.textContent = `${psState.gpsLat.toFixed(5)}, ${psState.gpsLng.toFixed(5)}`;
+            btn.textContent    = "✅ Done";
+            card.classList.add("gps-done");
+
+            document.getElementById("sum-location").textContent =
+                `${psState.gpsLat.toFixed(4)}, ${psState.gpsLng.toFixed(4)}`;
+
+            showToast("📍 GPS an ɗauka daidai!");
+        },
+        (err) => {
+            btn.disabled       = false;
+            btn.textContent    = "Sake Gwadawa";
+            status.textContent = "❌ GPS ya kasa";
+            const msgs = { 1: "Ka ƙi ba GPS izni.", 2: "GPS bai samu loca ba.", 3: "Lokaci ya ƙare." };
+            showToast("⚠️ " + (msgs[err.code] || "GPS kuskure."));
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+}
+
+async function submitService() {
+    if (!psState.gpsReady) { showToast("⚠️ Ka ɗauki GPS loca kafin ka aika!"); return; }
+
+    const submitBtn = document.getElementById("ps-submit-btn");
+    submitBtn.disabled    = true;
+    submitBtn.textContent = "⏳ Ana aika...";
+
+    try {
+        const providerData = {
+            name:        psState.userFullName,
+            phone:       psState.userPhone,
+            category:    psState.selectedCategory,
+            subcategory: psState.selectedSubcategory,
+            rating:      0,
+            reviewCount: 0,
+            available:   true,
+            verified:    false,
+            photo:       psState.userPhoto || "",
+            schedule:    psState.availableDays,
+            location: {
+                lat:       psState.gpsLat,
+                lng:       psState.gpsLng,
+                updatedAt: Date.now()
+            },
+            pricing: {
+                base: psState.price,
+                unit: psState.priceUnit
+            },
+            bio:       psState.description,
+            createdAt: Date.now(),
+            username:  psState.userUsername
+        };
+
+        await realtimeDB.ref(`providers/${psState.userUsername}`).set(providerData);
+        document.getElementById("ps-success-overlay").classList.add("show");
+
+    } catch (err) {
+        console.error("Submit kuskure:", err);
+        showToast("❌ Matsala: " + err.message);
+        submitBtn.disabled    = false;
+        submitBtn.textContent = "🚀 Post Service";
+    }
+}
+
+function showToast(message) {
+    const existing = document.getElementById("ps-toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "ps-toast";
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed; bottom: 30px; left: 50%;
+        transform: translateX(-50%);
+        background: rgba(20,25,45,0.97);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #fff; padding: 12px 22px;
+        border-radius: 50px; font-size: 13px;
+        font-weight: 600; z-index: 99999;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        white-space: nowrap;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.3s ease";
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>
+</body>
+</html>
