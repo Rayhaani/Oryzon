@@ -211,6 +211,14 @@ body {
     margin-bottom: 20px;
 }
 
+.ps-category-select-group {
+    margin-bottom: 20px;
+}
+
+.ps-category-select-group .ps-select {
+    font-weight: 700;
+}
+
 .ps-cat-card {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
@@ -717,8 +725,12 @@ body {
 
     <!-- STEP 1 -->
     <div class="ps-section" id="section-step-1">
-        <div class="ps-section-label">Zaɓi Category</div>
-        <div class="ps-category-grid" id="ps-category-grid"></div>
+       <div class="ps-section-label">Zaɓi Category</div>
+<div class="ps-category-select-group">
+    <select class="ps-select" id="ps-category-select">
+        <option value="">— Zaɓi Sana'a —</option>
+    </select>
+</div>
         <div class="ps-field-group" id="subcategory-group" style="display:none;">
             <label class="ps-label">Subcategory</label>
             <select class="ps-select" id="ps-subcategory">
@@ -944,7 +956,14 @@ const SERVICE_CATEGORIES = [
     { id: "skilled_pro", label: "AC Tech",     icon: "❄️", subcategories: ["Installation","Repair","Maintenance","Gas Refill"] },
     { id: "skilled_pro", label: "Tailor",      icon: "🧵", subcategories: ["Native Wear","English Wear","Alterations","Embroidery"] },
     { id: "skilled_pro", label: "Cleaner",     icon: "🧹", subcategories: ["Home Cleaning","Office Cleaning","Post-Event","Deep Clean"] },
-    { id: "emergency",   label: "Emergency",   icon: "🚨", subcategories: ["Car Breakdown","Medical Assist","Security","Fire Safety"] }
+    { id: "emergency",   label: "Emergency",   icon: "🚨", subcategories: ["Car Breakdown","Medical Assist","Security","Fire Safety"] },
+
+    { id: "beauty",       label: "Kitso / Hair", icon: "💇🏾‍♀️", subcategories: ["Kitso","Wig Making","Hair Treatment","Braiding"] },
+    { id: "beauty",       label: "Kunshi / Makeup", icon: "💄", subcategories: ["Bridal Makeup","Party Makeup","Henna/Lalle"] },
+    { id: "beauty",       label: "Manicure/Pedicure", icon: "💅", subcategories: ["Nail Art","Pedicure","Manicure"] },
+    { id: "delivery",     label: "Delivery / Dispatch", icon: "🛵", subcategories: ["Bike Delivery","Car Delivery","Package Delivery"] },
+    { id: "home_service", label: "Laundry", icon: "🧺", subcategories: ["Wash & Fold","Ironing","Dry Cleaning"] },
+    { id: "food",         label: "Catering", icon: "🍲", subcategories: ["Wedding Catering","Small Chops","Party Food"] }
 ];
 
 const psState = {
@@ -1118,7 +1137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     realtimeDB  = firebase.database();
 
     loadUserProfile(username);
-    renderCategoryGrid();
+renderCategorySelect();
 
     document.getElementById("ps-description").addEventListener("input", function() {
         document.getElementById("ps-char-num").textContent = this.value.length;
@@ -1172,21 +1191,28 @@ async function loadUserProfile(username) {
     }
 }
 
-function renderCategoryGrid() {
-    const grid = document.getElementById("ps-category-grid");
-    grid.innerHTML = SERVICE_CATEGORIES.map((cat, idx) => `
-        <div class="ps-cat-card" data-index="${idx}" onclick="selectCategory(${idx})">
-            <div class="ps-cat-icon">${cat.icon}</div>
-            <div class="ps-cat-label">${cat.label}</div>
-        </div>
-    `).join("");
+function renderCategorySelect() {
+    const select = document.getElementById("ps-category-select");
+    select.innerHTML = `<option value="">— Zaɓi Sana'a —</option>` +
+        SERVICE_CATEGORIES.map((cat, idx) =>
+            `<option value="${idx}">${cat.icon} ${cat.label}</option>`
+        ).join("");
+
+    select.onchange = () => {
+        const idx = select.value;
+        if (idx === "") {
+            document.getElementById("subcategory-group").style.display = "none";
+            psState.selectedCategory = null;
+            psState.selectedCategoryLabel = null;
+            psState.selectedSubcategory = null;
+            return;
+        }
+        selectCategory(parseInt(idx));
+    };
 }
 
 function selectCategory(idx) {
     const cat = SERVICE_CATEGORIES[idx];
-
-    document.querySelectorAll(".ps-cat-card").forEach(el => el.classList.remove("selected"));
-    document.querySelector(`.ps-cat-card[data-index="${idx}"]`).classList.add("selected");
 
     psState.selectedCategory      = cat.id;
     psState.selectedCategoryLabel = cat.label;
