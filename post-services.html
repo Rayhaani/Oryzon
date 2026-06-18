@@ -1072,6 +1072,11 @@ function goToStep(step) {
         if (!price || parseInt(price) <= 0) { showToast("⚠️ Saka farashi mai inganci!"); return; }
         if (desc.length < 20)               { showToast("⚠️ Bayani ya yi ƙasa — kalla haruffa 20!"); return; }
         if (days.length === 0)              { showToast("⚠️ Zaɓi kalla kwana ɗaya!"); return; }
+        const filledPhotos = Object.keys(portfolioFiles).length;
+if (filledPhotos < 4) {
+    showToast(`⚠️ Saka aƙalla hoto 4! (${filledPhotos}/4 yanzu)`);
+    return;
+}
 
         psState.price         = parseInt(price);
         psState.priceUnit     = document.getElementById("ps-price-unit").value;
@@ -1145,6 +1150,10 @@ async function submitService() {
     submitBtn.textContent = "⏳ Ana aika...";
 
     try {
+        // Upload portfolio files first
+showToast("⏳ Ana upload hotunan aiki...");
+const portfolioUrls = await uploadPortfolioFiles(psState.userUsername);
+        
         const providerData = {
             name:        psState.userFullName,
             phone:       psState.userPhone,
@@ -1166,6 +1175,7 @@ async function submitService() {
                 unit: psState.priceUnit
             },
             bio:       psState.description,
+            portfolio: portfolioUrls,
             createdAt: Date.now(),
             username:  psState.userUsername
         };
