@@ -1057,11 +1057,15 @@
 </div>
     
 <!-- POST SERVICE BOTTOM SHEET -->
-<div id="post-service-sheet-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:7000;display:none;align-items:flex-end;justify-content:center;" onclick="closePSOverlay(event)">
-    <div id="post-service-sheet" style="width:100%;max-width:480px;max-height:80vh;background:rgba(255,255,255,0.07);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.15);border-radius:28px 28px 0 0;border-bottom:none;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.22,1,0.36,1);overflow:hidden;box-shadow:0 -20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;flex-shrink:0;">
+<div id="post-service-sheet-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:7000;display:none;align-items:center;justify-content:center;padding:20px;" onclick="closePSOverlay(event)">
+    <div id="post-service-sheet" style="width:100%;max-width:480px;max-height:75vh;background:rgba(20,25,45,0.55);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.15);border-radius:24px;display:flex;flex-direction:column;transform:scale(0.9);opacity:0;transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;flex-shrink:0;">
             <span style="font-size:15px;font-weight:800;color:#ffffff;">Choose Your Service</span>
             <div onclick="closePSManual()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;">✕</div>
+        </div>
+        <div style="padding:0 20px 12px;flex-shrink:0;position:relative;">
+            <span style="position:absolute;left:34px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;">🔍</span>
+            <input id="ps-inline-search" type="text" placeholder="Search service..." oninput="filterInlineCategories(this.value)" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#ffffff;font-size:14px;padding:11px 14px 11px 38px;outline:none;">
         </div>
         <div id="ps-cat-list" style="overflow-y:auto;flex:1;padding-bottom:20px;"></div>
     </div>
@@ -1756,22 +1760,22 @@ let psSelectedCat = null;
 let psSelectedSub = null;
 let psFilteredCats = [...PS_CATS];
 
-
 function openPostServiceSheet() {
     renderPSCatList();
     const overlay = document.getElementById("post-service-sheet-overlay");
     const sheet = document.getElementById("post-service-sheet");
     overlay.style.display = "flex";
-    setTimeout(() => sheet.style.transform = "translateY(0)", 10);
+    setTimeout(() => { sheet.style.transform = "scale(1)"; sheet.style.opacity = "1"; }, 10);
     document.body.style.overflow = "hidden";
 }
 
 function closePSManual() {
     const sheet = document.getElementById("post-service-sheet");
-    sheet.style.transform = "translateY(100%)";
+    sheet.style.transform = "scale(0.9)";
+    sheet.style.opacity = "0";
     setTimeout(() => {
         document.getElementById("post-service-sheet-overlay").style.display = "none";
-    }, 350);
+    }, 300);
     document.body.style.overflow = "";
 }
 
@@ -1780,35 +1784,44 @@ function closePSOverlay(event) {
     closePSManual();
 }
 
-function renderPSCatList() {
+function renderPSCatList(filteredCats) {
+    const cats = filteredCats || PS_CATS;
     const list = document.getElementById("ps-cat-list");
-    list.innerHTML = PS_CATS.map((cat, idx) => `
-        <div id="ps-cat-${idx}" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+    list.innerHTML = cats.map((cat) => {
+        const idx = PS_CATS.indexOf(cat);
+        return `
+        <div id="ps-cat-${idx}" style="position:relative;border-bottom:1px solid rgba(255,255,255,0.05);">
             <div onclick="togglePSCat(${idx})" style="display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;">
                 <span style="font-size:22px;">${cat.icon}</span>
                 <span style="flex:1;font-size:14px;font-weight:700;color:rgba(255,255,255,0.85);">${cat.label}</span>
-                <span id="ps-arrow-${idx}" style="font-size:11px;color:rgba(255,255,255,0.3);transition:transform 0.2s;">▼</span>
+                <span id="ps-arrow-${idx}" style="font-size:11px;color:rgba(255,255,255,0.3);">▼</span>
             </div>
-            <div id="ps-sub-${idx}" style="max-height:0;overflow:hidden;transition:max-height 0.25s ease;">
+            <div id="ps-sub-${idx}" style="display:none;position:absolute;left:100%;top:0;margin-left:6px;background:rgba(20,25,45,0.9);backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.15);border-radius:14px;overflow:hidden;width:max-content;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,0.4);">
                 ${cat.subs.map(sub => `
-                    <div onclick="selectPSSub('${cat.label}','${sub}',${idx})" style="padding:11px 20px 11px 54px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.55);cursor:pointer;border-top:1px solid rgba(255,255,255,0.04);">${sub}</div>
+                    <div onclick="selectPSSub('${cat.label}','${sub}',${idx})" style="padding:11px 18px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);cursor:pointer;white-space:nowrap;">${sub}</div>
                 `).join("")}
             </div>
-        </div>
-    `).join("");
+        </div>`;
+    }).join("");
 }
 
 function togglePSCat(idx) {
     PS_CATS.forEach((_, i) => {
-        document.getElementById(`ps-sub-${i}`).style.maxHeight = "0";
-        document.getElementById(`ps-arrow-${i}`).style.transform = "rotate(0deg)";
+        if (i !== idx) {
+            const el = document.getElementById(`ps-sub-${i}`);
+            if (el) el.style.display = "none";
+        }
     });
     const sub = document.getElementById(`ps-sub-${idx}`);
-    const arrow = document.getElementById(`ps-arrow-${idx}`);
-    if (sub.style.maxHeight === "0px" || sub.style.maxHeight === "0") {
-        sub.style.maxHeight = sub.scrollHeight + "px";
-        arrow.style.transform = "rotate(180deg)";
-    }
+    sub.style.display = sub.style.display === "block" ? "none" : "block";
+}
+
+function filterInlineCategories(query) {
+    const q = query.trim().toLowerCase();
+    const filtered = q === "" ? PS_CATS : PS_CATS.filter(c =>
+        c.label.toLowerCase().includes(q) || c.subs.some(s => s.toLowerCase().includes(q))
+    );
+    renderPSCatList(filtered);
 }
 
 function selectPSSub(catLabel, sub, idx) {
