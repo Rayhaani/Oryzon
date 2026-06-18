@@ -624,7 +624,60 @@ body {
     padding: 2px 6px;
     border-radius: 6px;
     }
-    
+
+    /* ── ID VERIFICATION ── */
+.ps-verify-upload-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.ps-verify-slot {
+    aspect-ratio: 1;
+    border-radius: 14px;
+    border: 1.5px dashed rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    display: block;
+}
+
+.ps-verify-slot.filled {
+    border-color: rgba(16,185,129,0.5);
+    border-style: solid;
+}
+
+.ps-verify-slot .ps-slot-inner {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; padding: 10px;
+}
+
+.ps-verify-slot .ps-slot-icon { font-size: 28px; }
+
+.ps-verify-slot .ps-slot-text {
+    font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,0.35);
+    text-align: center; line-height: 1.4;
+}
+
+.ps-verify-note {
+    background: rgba(99,102,241,0.06);
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+.ps-id-type-select {
+    margin-bottom: 16px;
+}
 </style>
 </head>
 <body>
@@ -710,6 +763,41 @@ body {
                 <label class="ps-day-chip"><input type="checkbox" value="Sunday"><span>Sun</span></label>
             </div>
         </div>
+
+        <!-- ID VERIFICATION -->
+<div class="ps-field-group">
+    <label class="ps-label">Tabbatar da Asalinka (ID Verification) <span style="color:#ef4444;">*</span></label>
+    <p class="ps-verify-note">
+        🔒 Wannan bayani sirri ne, Admin ɗinmu kawai zai duba shi don tabbatar da asalinka. Ba za a nuna shi a profile ɗinka ba.
+    </p>
+
+    <div class="ps-id-type-select">
+        <select class="ps-select" id="ps-id-type">
+            <option value="">— Zaɓi Irin ID —</option>
+            <option value="national_id">National ID Card</option>
+            <option value="passport">International Passport</option>
+            <option value="drivers_license">Driver's License</option>
+            <option value="voters_card">Voter's Card</option>
+        </select>
+    </div>
+
+    <div class="ps-verify-upload-row">
+        <label class="ps-verify-slot" id="verify-slot-id">
+            <input type="file" accept="image/*" onchange="handleVerificationFile(this, 'id')" hidden>
+            <div class="ps-slot-inner">
+                <span class="ps-slot-icon">🪪</span>
+                <span class="ps-slot-text">Hoton ID</span>
+            </div>
+        </label>
+        <label class="ps-verify-slot" id="verify-slot-selfie">
+            <input type="file" accept="image/*" capture="user" onchange="handleVerificationFile(this, 'selfie')" hidden>
+            <div class="ps-slot-inner">
+                <span class="ps-slot-icon">🤳</span>
+                <span class="ps-slot-text">Selfie (Riƙe ID a hannunka)</span>
+            </div>
+        </label>
+    </div>
+</div>
 
         <!-- PORTFOLIO PHOTOS -->
 <div class="ps-field-group">
@@ -882,6 +970,9 @@ const psState = {
 const portfolioFiles = {}; // { index: { file, url, type } }
 const BACKEND_URL = "https://oryzon-backend-ed1q.onrender.com";
 
+    // ── VERIFICATION STATE ──
+const verificationFiles = {}; // { id: {file,url,type}, selfie: {...} }
+
 function handlePortfolioFile(input, slotIndex) {
     const file = input.files[0];
     if (!file) return;
@@ -903,6 +994,33 @@ function handlePortfolioFile(input, slotIndex) {
     portfolioFiles[slotIndex] = { file, url: null, type: file.type };
 }
 
+
+function handleVerificationFile(input, slotKey) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const maxSize = 15 * 1024 * 1024; // 15MB - ID/selfie bai bukatar girma
+    if (file.size > maxSize) {
+        showToast("❌ Fayil ya yi girma — kalla 15MB!");
+        return;
+    }
+    if (!file.type.includes("image")) {
+        showToast("❌ Dole ne hoto kawai (ba video ba)!");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const slot = document.getElementById(`verify-slot-${slotKey}`);
+        slot.classList.add("filled");
+        slot.querySelector(".ps-slot-inner").innerHTML =
+            `<img src="${e.target.result}" class="ps-slot-preview" alt="${slotKey}">`;
+    };
+    reader.readAsDataURL(file);
+
+    verificationFiles[slotKey] = { file, url: null, type: file.type };
+}
+    
 function renderSlotPreview(slotIndex, previewSrc, fileType) {
     const slot = document.getElementById(`slot-${slotIndex}`);
     if (!slot) return;
@@ -1007,6 +1125,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+
+async function uploadVerificationFiles(username) {
+    const results = {};
+    for (const key of Object.keys(verificationFiles)) {
+        const entry = verificationFiles[key];
+        if (!entry.file) continue;
+        try {
+            const formData = new FormData();
+            formData.append("file", entry.file);
+            formData.append("type", "verification");
+            formData.append("username", username);
+
+            const res = await fetch(`${BACKEND_URL}/upload-verification`, {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) results[key] = data.key; // ajiye KEY, ba public url ba
+        } catch (err) {
+            console.warn(`Verification ${key} upload kaskure:`, err);
+        }
+    }
+    return results;
+}
+    
 async function loadUserProfile(username) {
     try {
         const doc = await firestoreDB.collection("users").doc(username).get();
@@ -1077,6 +1220,12 @@ if (filledPhotos < 4) {
     showToast(`⚠️ Saka aƙalla hoto 4! (${filledPhotos}/4 yanzu)`);
     return;
 }
+
+const idType = document.getElementById("ps-id-type").value;
+if (!idType) { showToast("⚠️ Zaɓi irin ID dinka!"); return; }
+if (!verificationFiles.id)     { showToast("⚠️ Saka hoton ID dinka!"); return; }
+if (!verificationFiles.selfie) { showToast("⚠️ Saka selfie ɗinka da ID!"); return; }
+psState.idType = idType;
 
         psState.price         = parseInt(price);
         psState.priceUnit     = document.getElementById("ps-price-unit").value;
@@ -1151,8 +1300,19 @@ async function submitService() {
 
     try {
         // Upload portfolio files first
-showToast("⏳ Ana upload hotunan aiki...");
+
+        showToast("⏳ Ana upload hotunan aiki...");
 const portfolioUrls = await uploadPortfolioFiles(psState.userUsername);
+
+showToast("⏳ Ana upload verification documents...");
+const verificationKeys = await uploadVerificationFiles(psState.userUsername);
+
+if (!verificationKeys.id || !verificationKeys.selfie) {
+    showToast("❌ Verification upload ya kasa — sake gwadawa!");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "🚀 Post Service";
+    return;
+}
         
         const providerData = {
             name:        psState.userFullName,
@@ -1176,6 +1336,13 @@ const portfolioUrls = await uploadPortfolioFiles(psState.userUsername);
             },
             bio:       psState.description,
             portfolio: portfolioUrls,
+            verification: {
+                idType:     psState.idType,
+                idKey:      verificationKeys.id,
+                selfieKey:  verificationKeys.selfie,
+                submittedAt: Date.now()
+            },
+            status:    "pending_verification",
             createdAt: Date.now(),
             username:  psState.userUsername
         };
