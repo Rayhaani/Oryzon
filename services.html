@@ -1787,18 +1787,19 @@ function closePSOverlay(event) {
 function renderPSCatList(filteredCats) {
     const cats = filteredCats || PS_CATS;
     const list = document.getElementById("ps-cat-list");
-    list.innerHTML = cats.map((cat) => {
-        const idx = PS_CATS.indexOf(cat);
+    list.innerHTML = cats.map((cat, idx) => {
         return `
-        <div id="ps-cat-${idx}" style="position:relative;border-bottom:1px solid rgba(255,255,255,0.05);">
-            <div onclick="togglePSCat(${idx})" style="display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;">
+        <div id="ps-cat-${idx}" style="position:relative; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <div onclick="togglePSCat(${idx})" style="display:flex; align-items:center; gap:12px; padding:14px 20px; cursor:pointer;">
                 <span style="font-size:22px;">${cat.icon}</span>
-                <span style="flex:1;font-size:14px;font-weight:700;color:rgba(255,255,255,0.85);">${cat.label}</span>
-                <span id="ps-arrow-${idx}" style="font-size:11px;color:rgba(255,255,255,0.3);">▼</span>
+                <span style="flex:1; font-size:14px; font-weight:700; color:rgba(255,255,255,0.85);">${cat.label}</span>
+                <span id="ps-arrow-${idx}" style="font-size:11px; color:rgba(255,255,255,0.3); transition: transform 0.2s;">▼</span>
             </div>
-            <div id="ps-sub-${idx}" style="display:none;position:absolute;left:100%;top:0;margin-left:6px;background:rgba(20,25,45,0.9);backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.15);border-radius:14px;overflow:hidden;width:max-content;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,0.4);">
+            <div id="ps-sub-${idx}" style="display:none; background:rgba(10,15,30,0.6); padding: 4px 0 10px 45px;">
                 ${cat.subs.map(sub => `
-                    <div onclick="selectPSSub('${cat.label}','${sub}',${idx})" style="padding:11px 18px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);cursor:pointer;white-space:nowrap;">${sub}</div>
+                    <div onclick="selectPSSub('${cat.label}','${sub}',${idx})" style="padding:10px 0; font-size:13px; font-weight:600; color:rgba(255,255,255,0.7); cursor:pointer;">
+                        🔹 ${sub}
+                    </div>
                 `).join("")}
             </div>
         </div>`;
@@ -1806,17 +1807,30 @@ function renderPSCatList(filteredCats) {
 }
 
 function togglePSCat(idx) {
+    // Rufe sauran duka wadanda ba shi ba
     PS_CATS.forEach((_, i) => {
         if (i !== idx) {
             const el = document.getElementById(`ps-sub-${i}`);
+            const arrow = document.getElementById(`ps-arrow-${i}`);
             if (el) el.style.display = "none";
+            if (arrow) arrow.style.transform = "rotate(0deg)";
         }
     });
+    
+    // Bude ko rufe wanda aka danna
     const sub = document.getElementById(`ps-sub-${idx}`);
+    const arrow = document.getElementById(`ps-arrow-${idx}`);
     if (!sub) return;
-    const isOpen = sub.style.display === "block";
-    sub.style.display = isOpen ? "none" : "block";
-}
+    
+    if (sub.style.display === "block") {
+        sub.style.display = "none";
+        if (arrow) arrow.style.transform = "rotate(0deg)";
+    } else {
+        sub.style.display = "block";
+        if (arrow) arrow.style.transform = "rotate(180deg)"; // Kibiya za ta juyo sama
+    }
+            }
+        
 
 function filterInlineCategories(query) {
     const q = query.trim().toLowerCase();
