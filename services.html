@@ -1058,19 +1058,37 @@
     
 <!-- POST SERVICE BOTTOM SHEET -->
 <div id="post-service-sheet-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:7000;display:none;align-items:center;justify-content:center;padding:20px;" onclick="closePSOverlay(event)">
-   <div id="post-service-sheet" style="width:100%;max-width:480px;max-height:75vh;background:rgba(20,25,45,0.55);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.15);border-radius:24px;display:flex;flex-direction:column;transform:scale(0.9);opacity:0;transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;overflow:visible;box-shadow:0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);"> 
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;flex-shrink:0;">
+   <div id="post-service-sheet" style="width:100%; max-width:600px; height:75vh; background:rgba(20,25,45,0.85); backdrop-filter:blur(40px) saturate(180%); -webkit-backdrop-filter:blur(40px) saturate(180%); border:1px solid rgba(255,255,255,0.15); border-radius:24px; display:flex; flex-direction:column; transform:scale(0.9); opacity:0; transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);"> 
+        
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;flex-shrink:0;">
             <span style="font-size:15px;font-weight:800;color:#ffffff;">Choose Your Service</span>
             <div onclick="closePSManual()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;">✕</div>
         </div>
+        
+        <!-- Search Bar -->
         <div style="padding:0 20px 12px;flex-shrink:0;position:relative;">
             <span style="position:absolute;left:34px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;">🔍</span>
             <input id="ps-inline-search" type="text" placeholder="Search service..." oninput="filterInlineCategories(this.value)" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#ffffff;font-size:14px;padding:11px 14px 11px 38px;outline:none;">
         </div>
-       <div id="ps-cat-list" style="overflow-y:auto;overflow-x:visible;flex:1;padding-bottom:20px;position:relative;"></div> 
+        
+        <!-- TWO COLUMN CONTAINER (Hagu na Categories, Dama na Subs) -->
+        <div style="display: flex; flex: 1; min-height: 0; border-top: 1px solid rgba(255,255,255,0.05);">
+            <!-- Hagu: Categories List -->
+            <div id="ps-cat-list" style="width: 45%; overflow-y:auto; border-right: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;"></div> 
+            
+            <!-- Dama: Sub Categories Panel -->
+            <div id="ps-sub-panel" style="width: 55%; overflow-y:auto; background: rgba(0,0,0,0.15); padding: 10px; padding-bottom: 20px;">
+                <div id="ps-sub-empty-state" style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-top:40px; font-weight:600;">
+                    ← Select a category to view specialties
+                </div>
+                <div id="ps-sub-list-content"></div>
+            </div>
+        </div>
+        
     </div>
 </div>
-
+    
     <!-- PURE TSANTSAR VANILLA JAVASCRIPT ENGINE (NO REACT/BABEL) -->
     <script>
         // Core Static Local Data Context Stores Verbatim
@@ -1787,49 +1805,57 @@ function closePSOverlay(event) {
 function renderPSCatList(filteredCats) {
     const cats = filteredCats || PS_CATS;
     const list = document.getElementById("ps-cat-list");
+    
     list.innerHTML = cats.map((cat, idx) => {
         return `
-        <div id="ps-cat-${idx}" style="position:relative; border-bottom:1px solid rgba(255,255,255,0.05);">
-            <div onclick="togglePSCat(${idx})" style="display:flex; align-items:center; gap:12px; padding:14px 20px; cursor:pointer;">
-                <span style="font-size:22px;">${cat.icon}</span>
-                <span style="flex:1; font-size:14px; font-weight:700; color:rgba(255,255,255,0.85);">${cat.label}</span>
-                <span id="ps-arrow-${idx}" style="font-size:11px; color:rgba(255,255,255,0.3); transition: transform 0.2s;">▼</span>
-            </div>
-            <div id="ps-sub-${idx}" style="display:none; background:rgba(10,15,30,0.6); padding: 4px 0 10px 45px;">
-                ${cat.subs.map(sub => `
-                    <div onclick="selectPSSub('${cat.label}','${sub}',${idx})" style="padding:10px 0; font-size:13px; font-weight:600; color:rgba(255,255,255,0.7); cursor:pointer;">
-                        🔹 ${sub}
-                    </div>
-                `).join("")}
-            </div>
+        <div id="ps-cat-item-${idx}" onclick="togglePSCat(${idx})" style="display:flex; align-items:center; gap:10px; padding:14px 12px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.03); transition: all 0.2s ease;">
+            <span style="font-size:18px;">${cat.icon}</span>
+            <span style="flex:1; font-size:13px; font-weight:700; color:rgba(255,255,255,0.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${cat.label}</span>
+            <span style="font-size:10px; color:rgba(255,255,255,0.2);">➔</span>
         </div>`;
     }).join("");
+    
+    // Reset panel na dama
+    document.getElementById("ps-sub-empty-state").style.display = "block";
+    document.getElementById("ps-sub-list-content").innerHTML = "";
 }
 
 function togglePSCat(idx) {
-    // Rufe sauran duka wadanda ba shi ba
+    // Haskaka category din da aka danna (Active Styling)
     PS_CATS.forEach((_, i) => {
-        if (i !== idx) {
-            const el = document.getElementById(`ps-sub-${i}`);
-            const arrow = document.getElementById(`ps-arrow-${i}`);
-            if (el) el.style.display = "none";
-            if (arrow) arrow.style.transform = "rotate(0deg)";
+        const item = document.getElementById(`ps-cat-item-${i}`);
+        if (item) {
+            if (i === idx) {
+                item.style.background = "rgba(56, 189, 248, 0.15)";
+                item.style.borderLeft = "3px solid #38bdf8";
+            } else {
+                item.style.background = "transparent";
+                item.style.borderLeft = "none";
+            }
         }
     });
+
+    const cat = PS_CATS[idx];
+    const emptyState = document.getElementById("ps-sub-empty-state");
+    const subListContent = document.getElementById("ps-sub-list-content");
     
-    // Bude ko rufe wanda aka danna
-    const sub = document.getElementById(`ps-sub-${idx}`);
-    const arrow = document.getElementById(`ps-arrow-${idx}`);
-    if (!sub) return;
+    if (!cat) return;
     
-    if (sub.style.display === "block") {
-        sub.style.display = "none";
-        if (arrow) arrow.style.transform = "rotate(0deg)";
-    } else {
-        sub.style.display = "block";
-        if (arrow) arrow.style.transform = "rotate(180deg)"; // Kibiya za ta juyo sama
-    }
-            }
+    // Boye empty state
+    emptyState.style.display = "none";
+    
+    // Inject sub-categories zuwa panel din dama gaba daya
+    subListContent.innerHTML = `
+        <div style="font-size:11px; font-weight:800; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; padding: 6px 8px 12px;">
+            ${cat.label} Specialties
+        </div>
+        ${cat.subs.map(sub => `
+            <div onclick="selectPSSub('${cat.label}','${sub}',${idx})" style="padding:12px 14px; margin-bottom:6px; font-size:13px; font-weight:700; color:rgba(255,255,255,0.8); background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:10px; cursor:pointer; transition:all 0.15s ease;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                ${sub}
+            </div>
+        `).join("")}
+    `;
+        }
         
 
 function filterInlineCategories(query) {
