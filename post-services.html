@@ -686,6 +686,191 @@ body {
 .ps-id-type-select {
     margin-bottom: 16px;
 }
+
+/* ── CATEGORY BOTTOM SHEET ── */
+.ps-cat-trigger {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    text-align: left;
+}
+
+.ps-cat-trigger.has-value { color: #ffffff; }
+.ps-cat-trigger .placeholder { color: rgba(255,255,255,0.2); font-weight: 400; }
+.ps-cat-trigger .selected-icon { font-size: 18px; margin-right: 8px; }
+.ps-cat-trigger .chevron { color: rgba(255,255,255,0.3); font-size: 12px; }
+
+.ps-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9000;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.ps-sheet-overlay.show { display: flex; }
+
+.ps-sheet {
+    width: 100%;
+    max-width: 480px;
+    max-height: 82vh;
+    background: #11162a;
+    border-radius: 24px 24px 0 0;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-bottom: none;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+}
+
+.ps-sheet-overlay.show .ps-sheet { transform: translateY(0); }
+
+.ps-sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    margin: 12px auto 8px;
+    flex-shrink: 0;
+}
+
+.ps-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 20px 14px;
+    flex-shrink: 0;
+}
+
+.ps-sheet-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    color: #ffffff;
+    letter-spacing: 0.4px;
+}
+
+.ps-sheet-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.ps-sheet-search-wrap {
+    padding: 0 20px 14px;
+    flex-shrink: 0;
+}
+
+.ps-sheet-search {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 12px 14px 12px 38px;
+    outline: none;
+}
+
+.ps-sheet-search:focus { border-color: #6366f1; }
+.ps-sheet-search::placeholder { color: rgba(255,255,255,0.25); }
+
+.ps-sheet-search-wrap { position: relative; }
+.ps-sheet-search-icon {
+    position: absolute;
+    left: 34px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: rgba(255,255,255,0.3);
+    pointer-events: none;
+}
+
+.ps-sheet-list {
+    overflow-y: auto;
+    padding: 4px 12px 24px;
+    flex: 1;
+}
+
+.ps-sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 12px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.ps-sheet-item:active { background: rgba(99,102,241,0.12); }
+.ps-sheet-item.selected { background: rgba(99,102,241,0.15); }
+
+.ps-sheet-item-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.ps-sheet-item-text { flex: 1; }
+
+.ps-sheet-item-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.ps-sheet-item-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 1px;
+}
+
+.ps-sheet-item-check {
+    color: #10b981;
+    font-size: 16px;
+    flex-shrink: 0;
+    opacity: 0;
+}
+
+.ps-sheet-item.selected .ps-sheet-item-check { opacity: 1; }
+
+.ps-sheet-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255,255,255,0.25);
+    font-size: 13px;
+    }
+    
 </style>
 </head>
 <body>
@@ -724,13 +909,12 @@ body {
     </div>
 
     <!-- STEP 1 -->
-    <div class="ps-section" id="section-step-1">
-       <div class="ps-section-label">Zaɓi Category</div>
-<div class="ps-category-select-group">
-    <select class="ps-select" id="ps-category-select">
-        <option value="">— Zaɓi Sana'a —</option>
-    </select>
-</div>
+<div class="ps-section-label">Zaɓi Category</div>
+<button type="button" class="ps-cat-trigger" id="ps-cat-trigger" onclick="openCategorySheet()">
+    <span id="ps-cat-trigger-text" class="placeholder">— Zaɓi Sana'a —</span>
+    <span class="chevron">▾</span>
+</button>
+    
         <div class="ps-field-group" id="subcategory-group" style="display:none;">
             <label class="ps-label">Subcategory</label>
             <select class="ps-select" id="ps-subcategory">
@@ -925,6 +1109,22 @@ body {
         </div>
     </div>
 
+</div>
+
+<!-- CATEGORY BOTTOM SHEET -->
+<div class="ps-sheet-overlay" id="ps-cat-sheet-overlay" onclick="closeCategorySheetOnBg(event)">
+    <div class="ps-sheet" id="ps-cat-sheet">
+        <div class="ps-sheet-handle"></div>
+        <div class="ps-sheet-header">
+            <span class="ps-sheet-title">Zaɓi Sana'arka</span>
+            <div class="ps-sheet-close" onclick="closeCategorySheet()">✕</div>
+        </div>
+        <div class="ps-sheet-search-wrap">
+            <span class="ps-sheet-search-icon">🔍</span>
+            <input type="text" class="ps-sheet-search" id="ps-cat-search" placeholder="Nemo sana'a..." oninput="filterCategorySheet(this.value)">
+        </div>
+        <div class="ps-sheet-list" id="ps-cat-sheet-list"></div>
+    </div>
 </div>
 
 <!-- SUCCESS OVERLAY -->
@@ -1137,8 +1337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     realtimeDB  = firebase.database();
 
     loadUserProfile(username);
-renderCategorySelect();
-
+    
     document.getElementById("ps-description").addEventListener("input", function() {
         document.getElementById("ps-char-num").textContent = this.value.length;
     });
@@ -1191,25 +1390,73 @@ async function loadUserProfile(username) {
     }
 }
 
-function renderCategorySelect() {
-    const select = document.getElementById("ps-category-select");
-    select.innerHTML = `<option value="">— Zaɓi Sana'a —</option>` +
-        SERVICE_CATEGORIES.map((cat, idx) =>
-            `<option value="${idx}">${cat.icon} ${cat.label}</option>`
-        ).join("");
-
-    select.onchange = () => {
-        const idx = select.value;
-        if (idx === "") {
-            document.getElementById("subcategory-group").style.display = "none";
-            psState.selectedCategory = null;
-            psState.selectedCategoryLabel = null;
-            psState.selectedSubcategory = null;
-            return;
-        }
-        selectCategory(parseInt(idx));
-    };
+function openCategorySheet() {
+    renderCategorySheetList(SERVICE_CATEGORIES);
+    document.getElementById("ps-cat-search").value = "";
+    document.getElementById("ps-cat-sheet-overlay").classList.add("show");
+    document.body.style.overflow = "hidden";
+    setTimeout(() => document.getElementById("ps-cat-search").focus(), 250);
 }
+
+function closeCategorySheet() {
+    document.getElementById("ps-cat-sheet-overlay").classList.remove("show");
+    document.body.style.overflow = "";
+}
+
+function closeCategorySheetOnBg(event) {
+    if (event.target.id === "ps-cat-sheet-overlay") closeCategorySheet();
+}
+
+function renderCategorySheetList(list) {
+    const container = document.getElementById("ps-cat-sheet-list");
+
+    if (list.length === 0) {
+        container.innerHTML = `<div class="ps-sheet-empty">Babu sakamako da aka samu 🔍</div>`;
+        return;
+    }
+
+    container.innerHTML = list.map(item => {
+        const isSelected = psState.selectedCategoryLabel === item.cat.label;
+        return `
+            <div class="ps-sheet-item ${isSelected ? 'selected' : ''}" onclick="pickCategoryFromSheet(${item.idx})">
+                <div class="ps-sheet-item-icon">${item.cat.icon}</div>
+                <div class="ps-sheet-item-text">
+                    <div class="ps-sheet-item-label">${item.cat.label}</div>
+                    <div class="ps-sheet-item-sub">${item.cat.subcategories.length} subcategories</div>
+                </div>
+                <div class="ps-sheet-item-check">✓</div>
+            </div>
+        `;
+    }).join("");
+}
+
+function filterCategorySheet(query) {
+    const q = query.trim().toLowerCase();
+    const indexed = SERVICE_CATEGORIES.map((cat, idx) => ({ cat, idx }));
+
+    if (q === "") {
+        renderCategorySheetList(indexed);
+        return;
+    }
+
+    const filtered = indexed.filter(item =>
+        item.cat.label.toLowerCase().includes(q) ||
+        item.cat.subcategories.some(sub => sub.toLowerCase().includes(q))
+    );
+    renderCategorySheetList(filtered);
+}
+
+function pickCategoryFromSheet(idx) {
+    selectCategory(idx);
+
+    const cat = SERVICE_CATEGORIES[idx];
+    const triggerText = document.getElementById("ps-cat-trigger-text");
+    triggerText.innerHTML = `<span class="selected-icon">${cat.icon}</span>${cat.label}`;
+    triggerText.classList.remove("placeholder");
+
+    closeCategorySheet();
+}
+    
 
 function selectCategory(idx) {
     const cat = SERVICE_CATEGORIES[idx];
