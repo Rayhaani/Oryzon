@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - Admin Command Center</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0b0f1a;
+  --bg2: #111827;
+  --bg3: #141d2e;
+  --bg4: #1a2235;
+  --border: #1f2d45;
+  --txt1: #e2e8f4;
+  --txt2: #7a8ba8;
+  --txt3: #3d5070;
+  --blue: #3b82f6;
+  --green: #22c55e;
+  --purple: #a855f7;
+  --yellow: #eab308;
+  --teal: #14b8a6;
+  --red: #ef4444;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--txt1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* ---- TOPBAR ---- */
+.topbar {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  height: 52px;
+  display: flex; align-items: center;
+  padding: 0 14px; gap: 10px;
+}
+.menu-btn {
+  width: 32px; height: 32px; border: 2px solid var(--red);
+  border-radius: 6px; background: transparent; color: var(--txt1);
+  font-size: 16px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+.logo { flex-shrink: 0; line-height: 1.1; }
+.logo-name {
+  font-size: 17px; font-weight: 800; letter-spacing: 2px;
+  background: linear-gradient(90deg, #3b82f6, #a855f7);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.logo-sub { font-size: 9px; color: var(--txt3); letter-spacing: 0.8px; }
+
+.search {
+  flex: 1; max-width: 400px; margin: 0 10px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; display: flex; align-items: center;
+  padding: 0 10px; gap: 7px; color: var(--txt2);
+}
+.search input {
+  background: none; border: none; outline: none;
+  color: var(--txt2); font-size: 12px; width: 100%; padding: 7px 0;
+}
+.tr { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.ib {
+  position: relative; width: 32px; height: 32px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 7px; display: flex; align-items: center;
+  justify-content: center; cursor: pointer; color: var(--txt2); font-size: 14px;
+}
+.badge {
+  position: absolute; top: -4px; right: -4px;
+  width: 16px; height: 16px; border-radius: 50%;
+  font-size: 9px; font-weight: 700; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.badge.b { background: var(--blue); }
+.badge.g { background: var(--green); }
+.ai-chip {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 7px; padding: 5px 9px; font-size: 11px;
+  display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--txt2);
+}
+.upr { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.av {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg,#3b82f6,#a855f7);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px; color: #fff;
+}
+.uname { font-size: 12px; font-weight: 600; line-height: 1.2; }
+.ustatus { font-size: 10px; color: var(--green); }
+
+/* ---- BODY WRAP ---- */
+.wrap {
+  display: flex;
+  min-height: calc(100vh - 52px);
+}
+
+/* ---- SIDEBAR ---- */
+.sidebar {
+  width: 190px; flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 10px 6px;
+  position: sticky; top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+.sidebar::-webkit-scrollbar { width: 3px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+.slbl {
+  font-size: 10px; font-weight: 600; letter-spacing: 1.1px;
+  color: var(--txt3); padding: 10px 8px 5px; text-transform: uppercase;
+}
+.sitem {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 9px; border-radius: 6px; cursor: pointer;
+  color: var(--txt2); font-size: 12px; font-weight: 500;
+  margin-bottom: 1px; transition: all 0.15s;
+}
+.sitem:hover { background: var(--bg4); color: var(--txt1); }
+.sitem.active {
+  background: rgba(59,130,246,0.18);
+  color: var(--blue);
+  border: 1px solid rgba(59,130,246,0.25);
+}
+.sic { font-size: 14px; width: 18px; text-align: center; }
+
+/* ---- MAIN ---- */
+.main {
+  flex: 1; padding: 14px;
+  display: flex; flex-direction: column; gap: 14px;
+  overflow: hidden;
+}
+
+/* ---- STAT CARDS ---- */
+.sgrid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+}
+.sc {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px;
+}
+.sc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sc-ico {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.sc-lbl { font-size: 11px; color: var(--txt2); }
+.sc-val { font-size: 24px; font-weight: 700; line-height: 1; }
+.sc-foot { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.chg { font-size: 11px; font-weight: 600; color: var(--green); }
+.sc-sp { margin-top: 8px; height: 32px; }
+.sc-sp svg { width: 100%; height: 100%; }
+.dot-live {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green); animation: blink 1.4s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.4} }
+
+/* ---- MID ROW (analytics + map + ai) ---- */
+.midrow {
+  display: grid; grid-template-columns: 1fr 1fr 270px; gap: 12px;
+}
+.card {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+}
+.ch { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.ct { font-size: 13px; font-weight: 600; }
+.ca {
+  font-size: 11px; color: var(--txt2); background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 5px; padding: 3px 7px; cursor: pointer;
+}
+
+canvas { display: block; }
+
+.cleg { display: flex; gap: 14px; margin-top: 8px; }
+.cli { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--txt2); }
+.cld { width: 8px; height: 8px; border-radius: 50%; }
+
+/* MAP */
+.mapwrap { width: 100%; height: 200px; border-radius: 8px; overflow: hidden; position: relative; }
+#worldMap { width: 100%; height: 100%; }
+
+/* AI PANEL */
+.aip { display: flex; flex-direction: column; gap: 9px; }
+.aipt {
+  font-size: 13px; font-weight: 700; color: var(--blue);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 3px;
+}
+.aicard {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 11px;
+}
+.aich {
+  font-size: 11px; font-weight: 600; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 5px;
+}
+.aitx { font-size: 11px; color: var(--txt2); line-height: 1.5; }
+.aitx b { color: var(--blue); font-weight: 600; }
+.aitx .gv { color: var(--green); font-weight: 600; font-size: 16px; }
+.aitx .tv { color: var(--teal); font-weight: 600; }
+.aibtn {
+  width: 100%; background: var(--blue); color: #fff; border: none;
+  border-radius: 8px; padding: 9px 14px; font-size: 12px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  margin-top: 4px;
+}
+.aibtn-arr {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,255,255,.2); display: flex;
+  align-items: center; justify-content: center; font-size: 13px;
+}
+
+/* ---- BOTTOM ROW ---- */
+.botrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* FEED */
+.feed { display: flex; flex-direction: column; }
+.fitem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.fitem:last-child { border-bottom: none; }
+.fico {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.fi { flex: 1; }
+.ft { font-size: 12px; font-weight: 600; }
+.fs { font-size: 11px; color: var(--txt2); margin-top: 1px; }
+.ftime { font-size: 10px; color: var(--txt3); white-space: nowrap; }
+.vab { font-size: 11px; color: var(--blue); background: none; border: none; cursor: pointer; }
+
+/* REVENUE */
+.revg {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 12px;
+}
+.ri .rl { font-size: 10px; color: var(--txt2); margin-bottom: 3px; }
+.ri .rv { font-size: 16px; font-weight: 700; }
+.ri .rc { font-size: 10px; font-weight: 600; margin-top: 2px; }
+.rc.up { color: var(--green); }
+.rc.pend { color: var(--yellow); }
+
+.donutwrap {
+  display: flex; align-items: center; gap: 16px;
+}
+.donutrel { position: relative; flex-shrink: 0; width: 140px; height: 140px; }
+#donutChart { position: absolute; top: 0; left: 0; }
+.donutctr {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  text-align: center; pointer-events: none;
+}
+.donutctr .dl { font-size: 9px; color: var(--txt2); }
+.donutctr .dv { font-size: 15px; font-weight: 700; }
+.donutctr .dp { font-size: 10px; color: var(--green); }
+
+.dleg { display: flex; flex-direction: column; gap: 8px; }
+.dli {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  font-size: 11px;
+}
+.dlil { display: flex; align-items: center; gap: 6px; color: var(--txt2); }
+.dlid { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.dlip { font-weight: 600; color: var(--txt1); }
+
+/* COLOR HELPERS */
+.ibl { background: rgba(59,130,246,.18); }
+.igl { background: rgba(34,197,94,.18); }
+.ipl { background: rgba(168,85,247,.18); }
+.iyl { background: rgba(234,179,8,.18); }
+.itl { background: rgba(20,184,166,.18); }
+.irl { background: rgba(239,68,68,.18); }
+
+/* ---- SIDEBAR TOGGLE ---- */
+.sidebar {
+  transition: transform 0.25s ease, width 0.25s ease;
+}
+.sidebar.collapsed {
+  transform: translateX(-100%);
+  width: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+/* Overlay for mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 150;
+}
+.sidebar-overlay.show { display: block; }
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 1100px) {
+  .midrow { grid-template-columns: 1fr 1fr; }
+  .midrow .card:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 820px) {
+  .sidebar {
+    position: fixed; top: 52px; left: 0; bottom: 0;
+    z-index: 160; transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+  .sidebar.collapsed { transform: translateX(-100%); }
+  .sgrid { grid-template-columns: repeat(2,1fr); }
+  .midrow { grid-template-columns: 1fr; }
+  .botrow { grid-template-columns: 1fr; }
+  .search { max-width: 200px; }
+}
+@media (max-width: 480px) {
+  .sgrid { grid-template-columns: repeat(2,1fr); }
+  .topbar { padding: 0 10px; }
+  .upr .uname, .upr .ustatus { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="overlay"></div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="menu-btn">☰</button>
+  <div class="logo">
+    <div class="logo-name">NEXUS</div>
+    <div class="logo-sub">Admin Command Center</div>
+  </div>
+  <div class="search">
+    <svg width="13" height="13" fill="none" stroke="#7a8ba8" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search users, videos, reports, creators...">
+  </div>
+  <div class="tr">
+    <div class="ib">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="badge b">3</span>
+    </div>
+    <div class="ib">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="badge g">5</span>
+    </div>
+    <div class="ai-chip">
+      <svg width="13" height="13" fill="none" stroke="#7a8ba8" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><path d="M8.5 15.5s1 2 3 2 3-2 3-2"/></svg>
+      AI
+    </div>
+    <div class="upr">
+      <div class="av">SA</div>
+      <div>
+        <div class="uname">Super Admin</div>
+        <div class="ustatus">● Online</div>
+      </div>
+      <span style="color:var(--txt3);font-size:11px;margin-left:3px;">▾</span>
+    </div>
+  </div>
+</div>
+
+<!-- WRAP -->
+<div class="wrap">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="slbl">Overview</div>
+  <div class="sitem active"><span class="sic">🏠</span> Dashboard</div>
+
+  <div class="slbl">Management</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  </span> Users</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+  </span> Content</div>
+  <div class="sitem"><span class="sic">⭐</span> Creators</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  </span> Communities</div>
+
+  <div class="slbl">Moderation</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  </span> Reports</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  </span> Trust &amp; Safety</div>
+  <div class="sitem"><span class="sic">🤖</span> AI Moderation</div>
+
+  <div class="slbl">Monetization</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+  </span> Revenue</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+  </span> Payouts</div>
+  <div class="sitem"><span class="sic">📢</span> Advertisers</div>
+
+  <div class="slbl">System</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+  </span> Analytics</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+  </span> Live Monitoring</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+  </span> Server Control</div>
+  <div class="sitem"><span class="sic">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+  </span> Settings</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- STAT CARDS -->
+  <div class="sgrid">
+    <div class="sc">
+      <div class="sc-head">
+        <div class="sc-ico ibl" style="color:var(--blue)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <span class="sc-lbl">Total Users</span>
+      </div>
+      <div class="sc-val">128.5M</div>
+      <div class="sc-foot"><span class="chg">+12.8%</span></div>
+      <div class="sc-sp">
+        <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+          <polyline points="0,26 16,22 32,19 48,21 64,13 80,9 100,5" fill="none" stroke="#3b82f6" stroke-width="1.8"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-head">
+        <div class="sc-ico igl" style="color:var(--green)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <span class="sc-lbl">Active Users</span>
+      </div>
+      <div class="sc-val">32.4M</div>
+      <div class="sc-foot"><div class="dot-live"></div><span style="font-size:11px;color:var(--txt2)">Live</span></div>
+      <div class="sc-sp">
+        <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+          <polyline points="0,28 16,23 32,25 48,16 64,18 80,10 100,7" fill="none" stroke="#22c55e" stroke-width="1.8"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-head">
+        <div class="sc-ico ipl" style="color:var(--purple)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <span class="sc-lbl">Videos Today</span>
+      </div>
+      <div class="sc-val">187K</div>
+      <div class="sc-foot"><span style="font-size:11px;color:var(--purple)">Uploaded</span></div>
+      <div class="sc-sp">
+        <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+          <polyline points="0,30 16,26 32,24 48,18 64,20 80,12 100,9" fill="none" stroke="#a855f7" stroke-width="1.8"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-head">
+        <div class="sc-ico iyl" style="color:var(--yellow)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <span class="sc-lbl">Revenue Today</span>
+      </div>
+      <div class="sc-val">$92K</div>
+      <div class="sc-foot"><span class="chg">+18%</span></div>
+      <div class="sc-sp">
+        <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+          <polyline points="0,28 16,24 32,20 48,16 64,12 80,8 100,4" fill="none" stroke="#22c55e" stroke-width="1.8"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- MID ROW -->
+  <div class="midrow">
+    <!-- Analytics -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct">Platform Analytics</span>
+        <button class="ca">Last 7 Days ▾</button>
+      </div>
+      <canvas id="ac" height="160"></canvas>
+      <div class="cleg">
+        <div class="cli"><div class="cld" style="background:#3b82f6"></div>Users</div>
+        <div class="cli"><div class="cld" style="background:#a855f7"></div>Engagements</div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="card">
+      <div class="ch"><span class="ct">Global Activity Map</span></div>
+      <div class="mapwrap">
+        <svg id="worldMap" viewBox="0 0 800 380" style="width:100%;height:100%;background:#0d1a2e;">
+          <defs>
+            <radialGradient id="g1" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity=".7"/>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="g2" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#22c55e" stop-opacity=".7"/>
+              <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- Landmasses -->
+          <!-- N America -->
+          <path d="M55,65 L175,55 L195,80 L185,125 L165,165 L140,188 L112,196 L90,175 L68,150 L55,120 Z" fill="#1a3555" stroke="#1e4a7a" stroke-width="0.8"/>
+          <!-- S America -->
+          <path d="M122,215 L185,205 L207,248 L196,308 L165,348 L136,328 L116,288 L108,255 Z" fill="#1a3555" stroke="#1e4a7a" stroke-width="0.8"/>
+          <!-- Europe -->
+          <path d="M335,52 L420,44 L445,75 L432,105 L392,115 L354,108 L332,86 Z" fill="#1a3555" stroke="#1e4a7a" stroke-width="0.8"/>
+          <!-- Africa -->
+          <path d="M342,126 L422,116 L448,158 L436,228 L396,265 L354,248 L332,196 L332,158 Z" fill="#1a3555" stroke="#1e4a7a" stroke-width="0.8"/>
+          <!-- Asia -->
+          <path d="M458,44 L680,34 L704,76 L682,128 L618,156 L538,148 L478,126 L448,98 Z" fill="#1a3555" stroke="#1e4a7a" stroke-width="0.8"/>
+          <!-- Australia -->
+          <path d="M595,225 L675,214 L698,255 L676,296 L626,306 L595,272 Z" fill="#1a3555" stroke="#1e4a7a" stroke-width="0.8"/>
+          <!-- Activity blobs -->
+          <circle cx="125" cy="125" r="18" fill="url(#g1)"/><circle cx="125" cy="125" r="5" fill="#3b82f6"/>
+          <circle cx="385" cy="75" r="24" fill="url(#g1)"/><circle cx="385" cy="75" r="6" fill="#3b82f6"/>
+          <circle cx="575" cy="85" r="30" fill="url(#g1)"/><circle cx="575" cy="85" r="7" fill="#3b82f6"/>
+          <circle cx="155" cy="258" r="14" fill="url(#g2)"/><circle cx="155" cy="258" r="4" fill="#22c55e"/>
+          <circle cx="385" cy="188" r="18" fill="url(#g2)"/><circle cx="385" cy="188" r="5" fill="#22c55e"/>
+          <circle cx="637" cy="256" r="16" fill="url(#g1)"/><circle cx="637" cy="256" r="4" fill="#a855f7"/>
+          <!-- Controls -->
+          <rect x="756" y="158" width="22" height="22" rx="4" fill="#1c2a3e" stroke="#1f2d45"/>
+          <text x="767" y="173" text-anchor="middle" fill="#7a8ba8" font-size="14">+</text>
+          <rect x="756" y="184" width="22" height="22" rx="4" fill="#1c2a3e" stroke="#1f2d45"/>
+          <text x="767" y="199" text-anchor="middle" fill="#7a8ba8" font-size="14">−</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- AI Panel -->
+    <div class="card">
+      <div class="aip">
+        <div class="aipt">✨ AI Command Center</div>
+        <div class="aicard">
+          <div class="aich" style="color:var(--blue)">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            Growth Insight
+          </div>
+          <div class="aitx">User growth increased by <b>18%</b> in the last 24 hours.</div>
+        </div>
+        <div class="aicard">
+          <div class="aich" style="color:var(--green)">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Revenue Prediction
+          </div>
+          <div class="aitx">Estimated revenue tomorrow:<br><span class="gv">$110,000</span></div>
+        </div>
+        <div class="aicard">
+          <div class="aich" style="color:var(--yellow)">💡 Recommendation</div>
+          <div class="aitx">Promote short-form video content to boost engagement.</div>
+        </div>
+        <div class="aicard">
+          <div class="aich" style="color:var(--teal)">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Risk Detection
+          </div>
+          <div class="aitx">Spam activity reduced by <span class="tv">7%</span>.</div>
+        </div>
+        <button class="aibtn">Ask AI Assistant <span class="aibtn-arr">→</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="botrow">
+    <!-- Live Feed -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct">Live Activity Feed</span>
+        <button class="vab">View All ▾</button>
+      </div>
+      <div class="feed" id="feedList">
+        <div class="fitem">
+          <div class="fico ibl">
+            <svg width="14" height="14" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="fi"><div class="ft">New user registered</div><div class="fs">John Doe joined from United States</div></div>
+          <div class="ftime">2 sec ago</div>
+        </div>
+        <div class="fitem">
+          <div class="fico ipl">
+            <svg width="14" height="14" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <div class="fi"><div class="ft">Video uploaded</div><div class="fs">A new video has been uploaded by @creative_world</div></div>
+          <div class="ftime">5 sec ago</div>
+        </div>
+        <div class="fitem">
+          <div class="fico igl">
+            <svg width="14" height="14" fill="none" stroke="#22c55e" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="fi"><div class="ft">Creator verified</div><div class="fs">@tech_master has been verified</div></div>
+          <div class="ftime">12 sec ago</div>
+        </div>
+        <div class="fitem">
+          <div class="fico iyl">
+            <svg width="14" height="14" fill="none" stroke="#eab308" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="fi"><div class="ft">Revenue generated</div><div class="fs">You earned $120 from ad revenue</div></div>
+          <div class="ftime">18 sec ago</div>
+        </div>
+        <div class="fitem">
+          <div class="fico itl">
+            <svg width="14" height="14" fill="none" stroke="#14b8a6" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          </div>
+          <div class="fi"><div class="ft">Community created</div><div class="fs">New community "Travel Lovers" created</div></div>
+          <div class="ftime">25 sec ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Overview -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct">Revenue Overview</span>
+        <button class="ca">This Month ▾</button>
+      </div>
+      <div class="revg">
+        <div class="ri"><div class="rl">Ad Revenue</div><div class="rv">$41,290</div><div class="rc up">+15.4%</div></div>
+        <div class="ri"><div class="rl">Creator Earnings</div><div class="rv">$22,840</div><div class="rc up">+11.3%</div></div>
+        <div class="ri"><div class="rl">Payout Requests</div><div class="rv">1,204</div><div class="rc pend">Pending</div></div>
+        <div class="ri"><div class="rl">Offerwall Revenue</div><div class="rv">$8,950</div><div class="rc up">+9.2%</div></div>
+      </div>
+      <div class="donutwrap">
+        <div class="donutrel">
+          <canvas id="donutChart" width="140" height="140"></canvas>
+          <div class="donutctr">
+            <div class="dl">Total Revenue</div>
+            <div class="dv">$73,080</div>
+            <div class="dp">+12.5%</div>
+          </div>
+        </div>
+        <div class="dleg">
+          <div class="dli"><div class="dlil"><div class="dlid" style="background:#3b82f6"></div>Ad Revenue</div><span class="dlip">56.5%</span></div>
+          <div class="dli"><div class="dlil"><div class="dlid" style="background:#a855f7"></div>Creator Earnings</div><span class="dlip">31.3%</span></div>
+          <div class="dli"><div class="dlil"><div class="dlid" style="background:#14b8a6"></div>Offerwall Revenue</div><span class="dlip">12.2%</span></div>
+          <div class="dli"><div class="dlil"><div class="dlid" style="background:#eab308"></div>Others</div><span class="dlip">0.0%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+</div><!-- end wrap -->
+
+<script>
+// === ANALYTICS CHART ===
+(function(){
+  const c = document.getElementById('ac');
+  if(!c) return;
+  const dpr = window.devicePixelRatio||1;
+  function resize(){
+    const w = c.parentElement.clientWidth - 28;
+    c.style.width = w+'px'; c.style.height = '160px';
+    c.width = w*dpr; c.height = 160*dpr;
+    draw();
+  }
+  function draw(){
+    const ctx = c.getContext('2d');
+    ctx.setTransform(1,0,0,1,0,0);
+    const dpr = window.devicePixelRatio||1;
+    ctx.scale(dpr,dpr);
+    const W=c.width/dpr, H=160;
+    ctx.clearRect(0,0,W,H);
+    const p={t:8,r:8,b:28,l:42};
+    const cw=W-p.l-p.r, ch=H-p.t-p.b;
+    const labels=['May 10','May 11','May 12','May 13','May 14','May 15','May 16'];
+    const u=[22000,36000,44000,52000,61000,72000,82000];
+    const e=[18000,30000,34000,40000,46000,57000,66000];
+    const max=100000;
+    const ticks=[0,20000,40000,60000,80000,100000];
+    const tx=i=>p.l+(i/(labels.length-1))*cw;
+    const ty=v=>p.t+ch-(v/max)*ch;
+    // grid
+    ticks.forEach(v=>{
+      const y=ty(v);
+      ctx.strokeStyle='#1f2d45'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(p.l,y); ctx.lineTo(p.l+cw,y); ctx.stroke();
+      ctx.fillStyle='#3d5070'; ctx.font='9px sans-serif'; ctx.textAlign='right';
+      ctx.fillText(v===0?'0':v>=1000?(v/1000)+'K':''+v, p.l-5, y+3);
+    });
+    // x labels
+    ctx.fillStyle='#3d5070'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+    labels.forEach((l,i)=>ctx.fillText(l,tx(i),H-6));
+    // line + fill
+    function drawLine(data,color){
+      const grad=ctx.createLinearGradient(0,p.t,0,p.t+ch);
+      grad.addColorStop(0,color+'55'); grad.addColorStop(1,color+'00');
+      ctx.beginPath();
+      data.forEach((v,i)=>i===0?ctx.moveTo(tx(i),ty(v)):ctx.lineTo(tx(i),ty(v)));
+      ctx.lineTo(tx(data.length-1),p.t+ch); ctx.lineTo(tx(0),p.t+ch); ctx.closePath();
+      ctx.fillStyle=grad; ctx.fill();
+      ctx.beginPath();
+      data.forEach((v,i)=>i===0?ctx.moveTo(tx(i),ty(v)):ctx.lineTo(tx(i),ty(v)));
+      ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+      data.forEach((v,i)=>{
+        ctx.beginPath(); ctx.arc(tx(i),ty(v),3.5,0,Math.PI*2);
+        ctx.fillStyle=color; ctx.fill();
+        ctx.strokeStyle='#141d2e'; ctx.lineWidth=1.5; ctx.stroke();
+      });
+    }
+    drawLine(u,'#3b82f6');
+    drawLine(e,'#a855f7');
+  }
+  window.addEventListener('resize',resize);
+  resize();
+})();
+
+// === DONUT CHART ===
+(function(){
+  const c=document.getElementById('donutChart');
+  if(!c) return;
+  const dpr=window.devicePixelRatio||1;
+  c.width=140*dpr; c.height=140*dpr;
+  c.style.width='140px'; c.style.height='140px';
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const cx=70,cy=70,ro=58,ri=38;
+  const segs=[
+    {p:.565,c:'#3b82f6'},
+    {p:.313,c:'#a855f7'},
+    {p:.122,c:'#14b8a6'},
+  ];
+  let a=-Math.PI/2;
+  segs.forEach(s=>{
+    const sw=s.p*2*Math.PI;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,ro,a,a+sw); ctx.closePath();
+    ctx.fillStyle=s.c; ctx.fill();
+    a+=sw+0.015;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,ri,0,Math.PI*2);
+  ctx.fillStyle='#141d2e'; ctx.fill();
+})();
+
+// === SIDEBAR TOGGLE ===
+const menuBtn = document.querySelector('.menu-btn');
+const sidebar = document.querySelector('.sidebar');
+const overlay = document.getElementById('overlay');
+const isMobile = () => window.innerWidth <= 820;
+
+menuBtn.addEventListener('click', function() {
+  if (isMobile()) {
+    // Mobile: slide in/out as overlay
+    const isOpen = sidebar.classList.contains('open');
+    if (isOpen) {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    } else {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+    }
+  } else {
+    // Desktop: collapse/expand inline
+    sidebar.classList.toggle('collapsed');
+  }
+});
+
+overlay.addEventListener('click', function() {
+  sidebar.classList.remove('open');
+  overlay.classList.remove('show');
+});
+
+// === SIDEBAR ACTIVE ===
+document.querySelectorAll('.sitem').forEach(el=>{
+  el.addEventListener('click',function(){
+    document.querySelectorAll('.sitem').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// === LIVE FEED TICKER ===
+const events=[
+  {cls:'ibl',stroke:'#3b82f6',icon:'<svg width="14" height="14" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',t:'New user registered',s:'Alex Smith joined from United Kingdom'},
+  {cls:'ipl',stroke:'#a855f7',icon:'<svg width="14" height="14" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>',t:'Video uploaded',s:'New video by @videoguru99'},
+  {cls:'igl',stroke:'#22c55e',icon:'<svg width="14" height="14" fill="none" stroke="#22c55e" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',t:'Creator verified',s:'@photo_art has been verified'},
+  {cls:'iyl',stroke:'#eab308',icon:'<svg width="14" height="14" fill="none" stroke="#eab308" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',t:'Revenue generated',s:'You earned $95 from ad revenue'},
+  {cls:'itl',stroke:'#14b8a6',icon:'<svg width="14" height="14" fill="none" stroke="#14b8a6" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',t:'Community created',s:'New community "Tech Devs" created'},
+];
+let ei=0;
+setInterval(()=>{
+  const items=document.querySelectorAll('#feedList .fitem');
+  if(!items.length) return;
+  const ev=events[ei%events.length]; ei++;
+  const last=items[items.length-1];
+  last.querySelector('.fico').className='fico '+ev.cls;
+  last.querySelector('.fico').innerHTML=ev.icon;
+  last.querySelector('.ft').textContent=ev.t;
+  last.querySelector('.fs').textContent=ev.s;
+  last.querySelector('.ftime').textContent='just now';
+  last.style.opacity='0';
+  requestAnimationFrame(()=>{ last.style.transition='opacity .4s'; last.style.opacity='1'; });
+},4000);
+</script>
+</body>
+</html>
