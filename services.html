@@ -821,6 +821,65 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
         }
+
+    /* PS Inline Day Chips */
+.ps-day-chip-inline input { display: none; }
+.ps-day-chip-inline span {
+    display: inline-block;
+    padding: 6px 11px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.ps-day-chip-inline input:checked + span {
+    background: rgba(99,102,241,0.2);
+    border-color: #6366f1;
+    color: #ffffff;
+}
+
+/* PS Portfolio Slots Inline */
+.ps-port-slot {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 1.5px dashed rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    display: block;
+    transition: all 0.2s ease;
+}
+.ps-port-slot.filled {
+    border-color: rgba(99,102,241,0.4);
+    border-style: solid;
+}
+.ps-port-inner {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px; font-size: 18px;
+}
+.ps-port-preview {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    border-radius: 8px;
+}
+.ps-port-remove {
+    position: absolute; top: 3px; right: 3px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.9);
+    color: #fff; font-size: 9px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 10; border: none;
+        }
+        
     </style>
 </head>
 <body>
@@ -1058,128 +1117,259 @@
     
 <!-- POST SERVICE BOTTOM SHEET -->
 <div id="post-service-sheet-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:7000;display:none;align-items:center;justify-content:center;padding:20px;" onclick="closePSOverlay(event)">
-   <div id="post-service-sheet" style="width:100%; max-width:600px; height:75vh; background:rgba(20,25,45,0.85); backdrop-filter:blur(40px) saturate(180%); -webkit-backdrop-filter:blur(40px) saturate(180%); border:1px solid rgba(255,255,255,0.15); border-radius:24px; display:flex; flex-direction:column; transform:scale(0.9); opacity:0; transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);"> 
+   <div id="post-service-sheet" style="width:100%; max-width:600px; height:75vh; background:rgba(20,25,45,0.85); backdrop-filter:blur(40px) saturate(180%); -webkit-backdrop-filter:blur(40px) saturate(180%); border:1px solid rgba(255,255,255,0.15); border-radius:24px; display:flex; flex-direction:column; transform:scale(0.9); opacity:0; transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);">
         
         <!-- Header -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;flex-shrink:0;">
-            <span style="font-size:15px;font-weight:800;color:#ffffff;">Choose Your Service</span>
-            <div onclick="closePSManual()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;">✕</div>
-        </div>
-        
-        <!-- Search Bar -->
-        <div style="padding:0 20px 12px;flex-shrink:0;position:relative;">
-            <span style="position:absolute;left:34px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;">🔍</span>
-            <input id="ps-inline-search" type="text" placeholder="Search service..." oninput="filterInlineCategories(this.value)" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#ffffff;font-size:14px;padding:11px 14px 11px 38px;outline:none;">
-        </div>
-        
-        <!-- TWO COLUMN CONTAINER (Hagu na Categories, Dama na Subs) -->
-        <div style="display: flex; flex: 1; min-height: 0; border-top: 1px solid rgba(255,255,255,0.05);">
-            <!-- Hagu: Categories List -->
-            <div id="ps-cat-list" style="width: 45%; overflow-y:auto; border-right: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;"></div> 
-            
-            <!-- Dama: Sub Categories Panel -->
-            <div id="ps-sub-panel" style="width: 55%; overflow-y:auto; background: rgba(0,0,0,0.15); padding: 10px; padding-bottom: 20px;">
-                <div id="ps-sub-empty-state" style="text-align:center; color:rgba(255,255,255,0.3); font-size:12px; margin-top:40px; font-weight:600;">
-                    ← Select your profession to get started
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <button id="ps-back-step-inline-btn" onclick="psGoBack()" style="display:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;">← Back</button>
+                <span id="ps-sheet-title-label" style="font-size:14px;font-weight:800;color:#ffffff;">Choose Your Service</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <!-- Step dots -->
+                <div id="ps-inline-step-dots" style="display:none;gap:5px;align-items:center;">
+                    <div id="ps-dot-1" style="width:6px;height:6px;border-radius:50%;background:#6366f1;transition:all 0.3s;"></div>
+                    <div id="ps-dot-2" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all 0.3s;"></div>
+                    <div id="ps-dot-3" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all 0.3s;"></div>
                 </div>
-                <div id="ps-sub-list-content"></div>
+                <div onclick="closePSManual()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;">✕</div>
             </div>
         </div>
-        
+
+        <!-- STEP 1: Category + Sub (existing two-column layout) -->
+        <div id="ps-inline-step-1" style="display:flex;flex:1;min-height:0;border-top:none;">
+            <!-- Search Bar -->
+            <div style="position:absolute;width:calc(100% - 32px);padding:8px 0;left:16px;z-index:2;" id="ps-search-bar-wrap">
+                <div style="position:relative;">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;">🔍</span>
+                    <input id="ps-inline-search" type="text" placeholder="Search service..." oninput="filterInlineCategories(this.value)" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:9px 12px 9px 32px;outline:none;">
+                </div>
+            </div>
+            <!-- Two Column -->
+            <div style="display:flex;flex:1;min-height:0;margin-top:44px;">
+                <div id="ps-cat-list" style="width:45%;overflow-y:auto;border-right:1px solid rgba(255,255,255,0.05);padding-bottom:20px;"></div>
+                <div id="ps-sub-panel" style="width:55%;overflow-y:auto;background:rgba(0,0,0,0.15);padding:10px;padding-bottom:20px;">
+                    <div id="ps-sub-empty-state" style="text-align:center;color:rgba(255,255,255,0.3);font-size:12px;margin-top:40px;font-weight:600;">← Select your profession</div>
+                    <div id="ps-sub-list-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Details -->
+        <div id="ps-inline-step-2" style="display:none;flex:1;overflow-y:auto;padding:12px 16px 16px;flex-direction:column;gap:12px;">
+
+            <!-- Price Row -->
+            <div>
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Farashi (₦)</div>
+                <div style="display:flex;gap:8px;">
+                    <input id="ps-price" type="number" placeholder="e.g. 3500" min="0" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;">
+                    <select id="ps-price-unit" style="width:120px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 8px;outline:none;">
+                        <option value="per job">Per Job</option>
+                        <option value="per hour">Per Hour</option>
+                        <option value="per day">Per Day</option>
+                        <option value="negotiable">Negotiable</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Bayani <span style="color:rgba(255,255,255,0.2);font-size:10px;" id="ps-char-num-inline">0</span>/300</div>
+                <textarea id="ps-description" maxlength="300" placeholder="Bayyana ƙwarewar da kake da ita..." oninput="document.getElementById('ps-char-num-inline').textContent=this.value.length" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;resize:none;height:72px;line-height:1.5;font-family:inherit;"></textarea>
+            </div>
+
+            <!-- Available Days -->
+            <div>
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Kwanakin Available</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;" id="ps-days-grid-inline">
+                    <label class="ps-day-chip-inline"><input type="checkbox" value="Monday"><span>Mon</span></label>
+                    <label class="ps-day-chip-inline"><input type="checkbox" value="Tuesday"><span>Tue</span></label>
+                    <label class="ps-day-chip-inline"><input type="checkbox" value="Wednesday"><span>Wed</span></label>
+                    <label class="ps-day-chip-inline"><input type="checkbox" value="Thursday"><span>Thu</span></label>
+                    <label class="ps-day-chip-inline"><input type="checkbox" value="Friday"><span>Fri</span></label>
+                    <label class="ps-day-chip-inline"><input type="checkbox" value="Saturday"><span>Sat</span></label>
+                    <label class="ps-day-chip-inline"><input type="checkbox" value="Sunday"><span>Sun</span></label>
+                </div>
+            </div>
+
+            <!-- ID Verification -->
+            <div>
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">ID Verification <span style="color:#ef4444;">*</span></div>
+                <div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);border-radius:10px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,0.4);line-height:1.5;margin-bottom:8px;">🔒 Sirri ne — Admin kawai zai duba don tabbatar da asalinka.</div>
+                <select id="ps-id-type" style="width:100%;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;margin-bottom:8px;">
+                    <option value="">— Zaɓi Irin ID —</option>
+                    <option value="national_id">National ID Card</option>
+                    <option value="passport">International Passport</option>
+                    <option value="drivers_license">Driver's License</option>
+                    <option value="voters_card">Voter's Card</option>
+                </select>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <label id="verify-slot-id" style="aspect-ratio:2/1;border-radius:10px;border:1.5px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;">
+                        <input type="file" accept="image/*" onchange="handleVerificationFile(this,'id')" hidden>
+                        <span style="font-size:20px;">🪪</span>
+                        <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);">Hoton ID</span>
+                    </label>
+                    <label id="verify-slot-selfie" style="aspect-ratio:2/1;border-radius:10px;border:1.5px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;">
+                        <input type="file" accept="image/*" capture="user" onchange="handleVerificationFile(this,'selfie')" hidden>
+                        <span style="font-size:20px;">🤳</span>
+                        <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);">Selfie + ID</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Portfolio -->
+            <div>
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Hotunan Aiki (Min. 4) <span style="color:#ef4444;">*</span></div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;" id="ps-portfolio-grid-inline">
+                    <label class="ps-port-slot" id="ps-slot-0"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,0)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Hoto 1</span></div></label>
+                    <label class="ps-port-slot" id="ps-slot-1"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,1)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Hoto 2</span></div></label>
+                    <label class="ps-port-slot" id="ps-slot-2"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,2)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Hoto 3</span></div></label>
+                    <label class="ps-port-slot" id="ps-slot-3"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,3)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Hoto 4</span></div></label>
+                    <label class="ps-port-slot" id="ps-slot-4"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,4)" hidden><div class="ps-port-inner"><span>🎥</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Video</span></div></label>
+                    <label class="ps-port-slot" id="ps-slot-5"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,5)" hidden><div class="ps-port-inner"><span>➕</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Ƙara</span></div></label>
+                </div>
+                <div id="ps-upload-status-inline" style="display:none;margin-top:8px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-size:11px;color:rgba(255,255,255,0.4);">Ana upload...</span>
+                        <span style="font-size:11px;color:#6366f1;font-weight:700;" id="ps-upload-count-inline">0/4</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden;height:3px;">
+                        <div id="ps-upload-bar-inline" style="height:100%;background:linear-gradient(90deg,#6366f1,#10b981);width:0%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Button -->
+            <button onclick="psGoToStep3()" style="width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px;font-family:inherit;">Ci gaba → GPS</button>
+        </div>
+
+        <!-- STEP 3: GPS + Summary + Submit -->
+        <div id="ps-inline-step-3" style="display:none;flex:1;overflow-y:auto;padding:12px 16px 16px;flex-direction:column;gap:10px;">
+
+            <!-- GPS Card -->
+            <div id="ps-gps-card-inline" style="display:flex;align-items:center;gap:10px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);border-radius:12px;padding:12px;">
+                <span style="font-size:24px;">📍</span>
+                <div style="flex:1;">
+                    <div style="font-size:13px;font-weight:700;color:#ffffff;" id="ps-gps-status-inline">An shirya don ɗaukar loca</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:monospace;" id="ps-gps-coords-inline">GPS ba'a kunna ba tukuna</div>
+                </div>
+                <button id="ps-gps-btn-inline" onclick="captureGPSInline()" style="background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:8px;color:#ffffff;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;flex-shrink:0;">Ɗauki Loca</button>
+            </div>
+
+            <!-- Summary -->
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;">
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">📋 Taƙaitaccen Bayani</div>
+                <div style="display:flex;flex-direction:column;gap:0;">
+                    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Category</span>
+                        <span style="font-size:11px;color:#ffffff;font-weight:700;text-align:right;max-width:60%;" id="ps-sum-category">—</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Farashi</span>
+                        <span style="font-size:11px;color:#ffffff;font-weight:700;" id="ps-sum-price">—</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Kwanaki</span>
+                        <span style="font-size:11px;color:#ffffff;font-weight:700;text-align:right;max-width:60%;" id="ps-sum-days">—</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:7px 0;">
+                        <span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Loca</span>
+                        <span style="font-size:11px;color:#ffffff;font-weight:700;" id="ps-sum-location">Ana jira GPS...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <button id="ps-submit-btn-inline" onclick="submitServiceInline()" style="width:100%;padding:13px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Post Service</button>
+        </div>
+
     </div>
 </div>
+
+<!-- PS SUCCESS TOAST -->
+<div id="ps-success-overlay-inline" style="position:fixed;inset:0;background:rgba(10,15,30,0.96);backdrop-filter:blur(20px);z-index:9999;display:none;align-items:center;justify-content:center;padding:30px;">
+    <div style="text-align:center;">
+        <div style="font-size:64px;margin-bottom:20px;">✅</div>
+        <h2 style="font-size:22px;font-weight:800;color:#10b981;margin-bottom:12px;">An Aika!</h2>
+        <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:28px;">Sana'arka an saka a cikin tsarin Abokina. Masu buƙata kusa da kai za su iya ganinka yanzu.</p>
+        <button onclick="document.getElementById('ps-success-overlay-inline').style.display='none';closePSManual();" style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;padding:14px 28px;cursor:pointer;font-family:inherit;">Koma Home →</button>
+    </div>
+                                                          </div>
+    
     
     <!-- PURE TSANTSAR VANILLA JAVASCRIPT ENGINE (NO REACT/BABEL) -->
     <script>
-        // Core Static Local Data Context Stores Verbatim
-        const CATEGORIES = [
-            { id: "plumber", label: "Plumber", icon: "🔧" },
-            { id: "electrician", label: "Electrician", icon: "⚡" },
-            { id: "carpenter", label: "Carpenter", icon: "🪚" },
-            { id: "chef", label: "Chef / Cook", icon: "🍳" },
-            { id: "painter", label: "Painter", icon: "🎨" },
-            { id: "mason", label: "Mason / Builder", icon: "🧱" },
-            { id: "welder", label: "Welder", icon: "🔩" },
-            { id: "mechanic", label: "Auto Mechanic", icon: "🚗" },
-            { id: "ac_tech", label: "AC Technician", icon: "❄️" },
-            { id: "tailor", label: "Tailor", icon: "🧵" },
-            { id: "hvac", label: "HVAC Engineer", icon: "💨" },
-            { id: "cleaner", label: "Professional Cleaner", icon: "🧹" }
-        ];
-
-        const PRO_STORIES = [
-    {
-        proId: 1,
-        stories: [
-            { name: "Plumbing Job", icon: "🔧", price: "₦3,500", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" }
-        ]
-    },
-    {
-        proId: 2,
-        stories: [
-            { name: "Solar Setup", icon: "⚡", price: "₦5,000", image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&q=80" }
-        ]
-    },
-    {
-        proId: 3,
-        stories: [
-            { name: "Wardrobe Build", icon: "🪚", price: "₦4,200", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80" }
-        ]
-    },
-    {
-        proId: 4,
-        stories: [
-            { name: "Jollof Rice", icon: "🍛", price: "₦2,200", image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&q=80" },
-            { name: "Danwake", icon: "🥣", price: "₦1,500", image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80" }
-        ]
-    }
+      // Core Static Local Data Context Stores Verbatim
+const CATEGORIES = [
+    { id: "plumber", label: "Plumber", icon: "🔧" },
+    { id: "electrician", label: "Electrician", icon: "⚡" },
+    { id: "carpenter", label: "Carpenter", icon: "🪚" },
+    { id: "chef", label: "Chef / Cook", icon: "🍳" },
+    { id: "painter", label: "Painter", icon: "🎨" },
+    { id: "mason", label: "Mason / Builder", icon: "🧱" },
+    { id: "welder", label: "Welder", icon: "🔩" },
+    { id: "mechanic", label: "Auto Mechanic", icon: "🚗" },
+    { id: "ac_tech", label: "AC Technician", icon: "❄️" },
+    { id: "tailor", label: "Tailor", icon: "🧵" },
+    { id: "hvac", label: "HVAC Engineer", icon: "💨" },
+    { id: "cleaner", label: "Professional Cleaner", icon: "🧹" }
 ];
-        
-        const PROS = [
-            {
-                id: 1, name: "Malam Sule Ibrahim", category: "plumber", display_cat: "Plumbing Expert",
-                rating: 4.9, reviews: 134, distance: 0.8, city: "Kano", verified: true,
-                avatar: "SI", color: "linear-gradient(135deg, #059669 0%, #047857 100%)", jobs: 312, price: "₦3,500", 
-                bio: "Highly skilled professional with over 12 years of experience in modern plumbing networks and quantum fluid systems.",
-                skills: ["Leak Detection", "Pipe Layering", "Smart Drainage"], online: true,
-                gallery: ["Main Pipeline Fit", "Commercial Restroom Set", "Smart Drain Valve Setup", "Underground Leak Fix"]
-            },
-            {
-                id: 2, name: "Alhaji Bello Musa", category: "electrician", display_cat: "Electrical Engineer",
-                rating: 4.8, reviews: 98, distance: 1.2, city: "Abuja", verified: true,
-                avatar: "BM", color: "linear-gradient(135deg, #d97706 0%, #b45309 100%)", jobs: 245, price: "₦5,000", 
-                bio: "Certified electrical engineer specializing in industrial solar setups and smart residential home automation.",
-                skills: ["Auto-Wiring", "Solar Systems", "Generators"], online: true,
-                gallery: ["Inverter Bank Hookup", "Smart DB Box Clean Setup", "Industrial Control Panel", "Conduit Grid Layout"]
-            },
-            {
-                id: 3, name: "Usman Garba", category: "carpenter", display_cat: "Master Carpenter",
-                rating: 4.7, reviews: 76, distance: 2.1, city: "Kaduna", verified: false,
-                avatar: "UG", color: "linear-gradient(135deg, #78350f 0%, #451a03 100%)", jobs: 189, price: "₦4,200", 
-                bio: "Expert artisan dedicated to fabricating luxury furniture architectures and reinforced modern security doors.",
-                skills: ["Premium Furniture", "Roof Design", "Carving"], online: false,
-                gallery: ["Royal Dining Finish", "Mahogany Armor Door", "Modern Roof Trusses", "Custom Wardrobe Set"]
-            },
-            {
-                id: 4, name: "Chef Amara Yusuf", category: "chef", display_cat: "Culinary Artist / Chef",
-                rating: 5.0, reviews: 215, distance: 0.5, city: "Kano", verified: true,
-                avatar: "AY", color: "linear-gradient(135deg, #ec4899 0%, #be185d 100%)", jobs: 410, price: "₦6,000", 
-                bio: "Elite chef specializing in upscale local catering, signature gourmet dishes, and customized corporate event banquets.",
-                skills: ["Gourmet Catering", "Pastry Art", "Menu Development"], online: true,
-                schedule: ["Mondays", "Wednesdays", "Fridays", "Saturdays"],
-                gallery: ["Premium Banqueting Platter", "Pastry Fine Art Design", "Corporate Event Spread", "Gourmet Kitchen Prep"],
-                menu: [
-                    { name: "Jollof Rice", price: "₦2,200", icon: "🍛", desc: "Smoky party-style jollof" },
-                    { name: "Danwake", price: "₦1,500", icon: "🥣", desc: "Fresh with groundnut oil" },
-                    { name: "Fried Rice", price: "₦2,500", icon: "🍚", desc: "Spiced with vegetables" },
-                    { name: "Masa", price: "₦800", icon: "🫓", desc: "Hot & crispy rice cakes" },
-                    { name: "Tuwo Shinkafa", price: "₦1,800", icon: "🍲", desc: "With miyan kuka" }
-                ]
-            },
-        ];
 
-        // Global Application Architecture State Object Core Engine
-        let state = {
+const PRO_STORIES = [
+    { proId: 1, stories: [{ name: "Plumbing Job", icon: "🔧", price: "₦3,500", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" }] },
+    { proId: 2, stories: [{ name: "Solar Setup", icon: "⚡", price: "₦5,000", image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&q=80" }] },
+    { proId: 3, stories: [{ name: "Wardrobe Build", icon: "🪚", price: "₦4,200", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80" }] },
+    { proId: 4, stories: [
+        { name: "Jollof Rice", icon: "🍛", price: "₦2,200", image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&q=80" },
+        { name: "Danwake", icon: "🥣", price: "₦1,500", image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80" }
+    ]}
+];
+
+const PROS = [
+    {
+        id: 1, name: "Malam Sule Ibrahim", category: "plumber", display_cat: "Plumbing Expert",
+        rating: 4.9, reviews: 134, distance: 0.8, city: "Kano", verified: true,
+        avatar: "SI", color: "linear-gradient(135deg, #059669 0%, #047857 100%)", jobs: 312, price: "₦3,500",
+        bio: "Highly skilled professional with over 12 years of experience in modern plumbing networks and quantum fluid systems.",
+        skills: ["Leak Detection", "Pipe Layering", "Smart Drainage"], online: true,
+        gallery: ["Main Pipeline Fit", "Commercial Restroom Set", "Smart Drain Valve Setup", "Underground Leak Fix"]
+    },
+    {
+        id: 2, name: "Alhaji Bello Musa", category: "electrician", display_cat: "Electrical Engineer",
+        rating: 4.8, reviews: 98, distance: 1.2, city: "Abuja", verified: true,
+        avatar: "BM", color: "linear-gradient(135deg, #d97706 0%, #b45309 100%)", jobs: 245, price: "₦5,000",
+        bio: "Certified electrical engineer specializing in industrial solar setups and smart residential home automation.",
+        skills: ["Auto-Wiring", "Solar Systems", "Generators"], online: true,
+        gallery: ["Inverter Bank Hookup", "Smart DB Box Clean Setup", "Industrial Control Panel", "Conduit Grid Layout"]
+    },
+    {
+        id: 3, name: "Usman Garba", category: "carpenter", display_cat: "Master Carpenter",
+        rating: 4.7, reviews: 76, distance: 2.1, city: "Kaduna", verified: false,
+        avatar: "UG", color: "linear-gradient(135deg, #78350f 0%, #451a03 100%)", jobs: 189, price: "₦4,200",
+        bio: "Expert artisan dedicated to fabricating luxury furniture architectures and reinforced modern security doors.",
+        skills: ["Premium Furniture", "Roof Design", "Carving"], online: false,
+        gallery: ["Royal Dining Finish", "Mahogany Armor Door", "Modern Roof Trusses", "Custom Wardrobe Set"]
+    },
+    {
+        id: 4, name: "Chef Amara Yusuf", category: "chef", display_cat: "Culinary Artist / Chef",
+        rating: 5.0, reviews: 215, distance: 0.5, city: "Kano", verified: true,
+        avatar: "AY", color: "linear-gradient(135deg, #ec4899 0%, #be185d 100%)", jobs: 410, price: "₦6,000",
+        bio: "Elite chef specializing in upscale local catering, signature gourmet dishes, and customized corporate event banquets.",
+        skills: ["Gourmet Catering", "Pastry Art", "Menu Development"], online: true,
+        schedule: ["Mondays", "Wednesdays", "Fridays", "Saturdays"],
+        gallery: ["Premium Banqueting Platter", "Pastry Fine Art Design", "Corporate Event Spread", "Gourmet Kitchen Prep"],
+        menu: [
+            { name: "Jollof Rice", price: "₦2,200", icon: "🍛", desc: "Smoky party-style jollof" },
+            { name: "Danwake", price: "₦1,500", icon: "🥣", desc: "Fresh with groundnut oil" },
+            { name: "Fried Rice", price: "₦2,500", icon: "🍚", desc: "Spiced with vegetables" },
+            { name: "Masa", price: "₦800", icon: "🫓", desc: "Hot & crispy rice cakes" },
+            { name: "Tuwo Shinkafa", price: "₦1,800", icon: "🍲", desc: "With miyan kuka" }
+        ]
+    },
+];
+
+// Global App State
+let state = {
     view: "main",
     query: "",
     selectedCat: null,
@@ -1189,571 +1379,32 @@
     storyProgress: 0,
     storyIntervalId: null,
     isStoryPaused: false,
-    pauseStartTime: null,
-    lastTickTime: null,
     likedPros: {}
 };
-        
-        const STORY_DURATION_MS = 5000;
-        const STORY_TICK_MS = 50;
 
-        // Helper components formatting functions engine
-        function renderStars(rating) {
-            const floor = Math.floor(rating);
-            return `
-                <div style="display: flex; align-items: center; gap: 3px; flex-shrink: 0;">
-                    <span style="color: #f59e0b; font-size: 12px; letter-spacing: -0.5px;">
-                        ${"★".repeat(floor) + "☆".repeat(5 - floor)}
-                    </span>
-                    <span style="color: #71717a; font-size: 11px; font-weight: 700; margin-left: 2px;">${rating}</span>
-                </div>
-            `;
-        }
+const STORY_DURATION_MS = 5000;
+const STORY_TICK_MS = 50;
 
-        function createProCardHtml(pro) {
-            const isLiked = state.likedPros[pro.id] || false;
-            return `
-                <div class="biometric-sentinel-card" onclick="openProfileSheet(${pro.id})">
-                    <div class="sentinel-screw scr-tl"></div>
-                    <div class="sentinel-screw scr-tr"></div>
-                    <div class="sentinel-screw scr-bl"></div>
-                    <div class="sentinel-screw scr-br"></div>
+// ── PS INLINE STATE ──
+const psInlineState = {
+    currentStep: 1,
+    selectedCategory: null,
+    selectedCategoryLabel: null,
+    selectedSubcategory: null,
+    price: null,
+    priceUnit: null,
+    description: null,
+    availableDays: [],
+    gpsLat: null,
+    gpsLng: null,
+    gpsReady: false,
+    idType: null
+};
 
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; z-index: 2; position: relative;">
-                        <div class="lens-viewport">
-                            <div class="lens-glass-reflection"></div>
-                        </div>
-                        <div style="flex: 1; padding-left: 2px;">
-                            <div class="sentinel-title-text">${pro.name}</div>
-                            <div class="sentinel-sub-text">${pro.display_cat}</div>
-                        </div>
-                        <div class="laser-biometric-scanner">
-                            <div class="laser-target-core"></div>
-                            <div class="laser-ray-flare"></div>
-                        </div>
-                    </div>
+const portfolioFiles = {};
+const verificationFiles = {};
+const BACKEND_URL = "https://oryzon-backend-ed1q.onrender.com";
 
-                    <div style="margin-top: 8px; display: flex; align-items: center; gap: 6px; z-index: 2; position: relative;">
-                        ${renderStars(pro.rating)}
-                    </div>
-
-                    <p class="sentinel-body-p">${pro.bio}</p>
-
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap; marginTop: 12px; z-index: 2; position: relative;">
-                        ${pro.skills.slice(0, 2).map(s => `<span class="sentinel-hardware-badge">${s}</span>`).join('')}
-                    </div>
-
-                    <div class="sentinel-footer" style="z-index: 2; position: relative;">
-                        <div style="display: flex; gap: 12px; color: #475569; font-size: 12px; font-weight: 700;">
-                            <span>🔴 ${pro.distance}km</span>
-                            <span>💼 ${pro.jobs} Jobs</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div style="color: #16a34a; font-size: 16px; font-weight: 800;">
-                                ${pro.price}<span style="font-size: 11px; color: #64748b; font-weight: 500;">/hr</span>
-                            </div>
-                            <button onclick="handleLikeToggle(event, ${pro.id})" style="
-                                background: ${isLiked ? "rgba(239, 68, 68, 0.1)" : "rgba(0, 0, 0, 0.03)"}; 
-                                border: 1px solid #94a3b8; border-radius: 8px;
-                                width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center;
-                                color: ${isLiked ? "#ef4444" : "#64748b"}; font-size: 12px; justify-content: center;
-                            ">${isLiked ? "❤️" : "🤍"}</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // View Controller Sync Engine 
-        function switchView(viewName) {
-            state.view = viewName;
-            const mainView = document.getElementById("main-view");
-            const resultsView = document.getElementById("results-view");
-            const actionsBlock = document.getElementById("header-actions");
-
-            if (viewName === "main") {
-                mainView.style.display = "block";
-                resultsView.style.display = "none";
-                actionsBlock.style.display = "grid";
-            } else if (viewName === "results") {
-                mainView.style.display = "none";
-                resultsView.style.display = "block";
-                actionsBlock.style.display = "none";
-                renderResultsPage();
-            }
-        }
-
-        // Data Rendering Pipeline Matrices
-        function initAppElements() {
-            // Render Stories Track 
-            
-           const doubleProStories = [...PRO_STORIES, ...PRO_STORIES];
-const track = document.getElementById("stories-track-container");
-track.innerHTML = doubleProStories.map((proStory, index) => {
-    const realIndex = index % PRO_STORIES.length;
-    const pro = PROS.find(p => p.id === proStory.proId);
-    const firstStory = proStory.stories[0];
-    return `
-    <div class="glass-lens-card" onclick="openStoryDeck(${realIndex})">
-        <div class="glass-lens-img-wrap">
-            <img class="glass-lens-img" src="${firstStory.image}" alt="${pro ? pro.name : ''}" />
-        </div>
-        <div class="glass-lens-ring">✦</div>
-        <div class="glass-lens-body">
-            <span class="glass-lens-name">${pro ? pro.name.split(' ')[0] : firstStory.name}</span>
-            <div class="glass-lens-distance">${pro ? pro.distance + 'km away' : ''}</div>
-        </div>
-    </div>
-`;
-}).join('');
-            
-            // Render Main View Categories Grid
-            const catGrid = document.getElementById("categories-grid-container");
-            catGrid.innerHTML = CATEGORIES.map(cat => `
-                <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card">
-                    <div class="prism-icon-sphere">
-                        <span style="font-size: 22px;">${cat.icon}</span>
-                    </div>
-                    <span class="prism-card-label">${cat.label}</span>
-                </div>
-            `).join('');
-
-            // Render Highly Rated Providers List
-            const highlyRatedList = document.getElementById("highly-rated-list-container");
-            highlyRatedList.innerHTML = PROS.map((pro, idx) => `
-                <div class="slide-up" style="animation-delay: ${idx * 80}ms">
-                    ${createProCardHtml(pro)}
-                </div>
-            `).join('');
-        }
-
-        function getFilteredPros() {
-            return PROS.filter(p => {
-                if (state.selectedCat && p.category !== state.selectedCat) return false;
-                if (state.nearMeActive && p.distance > 1.5) return false;
-                if (state.query) {
-                    const q = state.query.toLowerCase();
-                    return p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.display_cat.toLowerCase().includes(q);
-                }
-                return true;
-            });
-        }
-
-        function renderResultsPage() {
-            // Render Filters Bar
-            const bar = document.getElementById("trades-filter-bar");
-            const allBtnActive = !state.selectedCat;
-            let barHtml = `
-                <button onclick="handleCategorySelect(null)" style="
-                    flex-shrink: 0; background: ${allBtnActive ? "linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)" : "#ffffff"};
-                    color: ${allBtnActive ? "#fff" : "#4b5563"}; border: ${allBtnActive ? "none" : "1px solid #e2e8f0"};
-                    border-radius: 12px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer;
-                ">All Trades</button>
-            `;
-            barHtml += CATEGORIES.map(cat => {
-                const isActive = state.selectedCat === cat.id;
-                return `
-                    <button onclick="handleCategorySelect('${cat.id}')" style="
-                        flex-shrink: 0; background: ${isActive ? "linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)" : "#ffffff"};
-                        color: ${isActive ? "#fff" : "#4b5563"}; border: ${isActive ? "none" : "1px solid #e2e8f0"};
-                        border-radius: 12px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
-                    ">${cat.icon} ${cat.label}</button>
-                `;
-            }).join('');
-            bar.innerHTML = barHtml;
-
-            // Handle Proximity Alert display toggling
-            const proxBadge = document.getElementById("proximity-badge-alert");
-            proxBadge.style.display = state.nearMeActive ? "flex" : "none";
-
-            // Render Matches List
-            const list = document.getElementById("results-list-container");
-            const filtered = getFilteredPros();
-            
-            document.getElementById("search-results-counter").innerText = `Search Results (${filtered.length})`;
-
-            if (filtered.length > 0) {
-                list.innerHTML = filtered.map((pro, idx) => `
-                    <div class="slide-up" style="animation-delay: ${idx * 40}ms">
-                        ${createProCardHtml(pro)}
-                    </div>
-                `).join('');
-            } else {
-                list.innerHTML = `
-                    <div style="text-align: center; padding: 80px 20px;">
-                        <div style="font-size: 36px;">📍</div>
-                        <div style="font-weight: 700; font-size: 15px; color: #111827; margin-top: 12px;">No Matches Near You</div>
-                        <div style="color: #64748b; font-size: 12px; margin-top: 4px;">Zero results found within your immediate physical radar constraint.</div>
-                    </div>
-                `;
-            }
-        }
-
-        // Actions and Event Handlers 
-        function handleCategorySelect(catId) {
-            state.selectedCat = catId;
-            switchView("results");
-        }
-
-        function handleLikeToggle(event, proId) {
-            event.stopPropagation();
-            state.likedPros[proId] = !state.likedPros[proId];
-            if (state.view === "results") {
-                renderResultsPage();
-            } else {
-                // Re-render highly rated list elements 
-                initAppElements();
-            }
-        }
-
-        function triggerRouterCheck() {
-            const val = document.getElementById("search-input").value;
-            state.query = val;
-            if (!val.trim()) return;
-            document.getElementById("router-overlay").style.display = "flex";
-        }
-
-        function selectRoutePreference(type) {
-            document.getElementById("router-overlay").style.display = "none";
-            const q = state.query.toLowerCase();
-            const match = CATEGORIES.find(c => q.includes(c.label.toLowerCase()) || q.includes(c.id));
-            if (match) state.selectedCat = match.id;
-
-            if (type === "near") {
-                const locator = document.getElementById("locating-status");
-                locator.style.display = "block";
-                setTimeout(() => {
-                    locator.style.display = "none";
-                    state.nearMeActive = true;
-                    switchView("results");
-                }, 1000);
-            } else {
-                state.nearMeActive = false;
-                switchView("results");
-            }
-        }
-
-        function resetAllSearchFilters() {
-            state.selectedCat = null;
-            state.query = "";
-            state.nearMeActive = false;
-            document.getElementById("search-input").value = "";
-            switchView("main");
-            initAppElements();
-        }
-
-        // IMMERSIVE STORIES ENGINE CONTROLLER MECHANICS
-        
-
-function openStoryDeck(proStoriesIndex) {
-    state.activeProStoryIndex = proStoriesIndex;
-    state.activeStorySlide = 0;
-    state.storyProgress = 0;
-    state.isStoryPaused = false;
-    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
-    document.getElementById("story-overlay-deck").style.display = "flex";
-    updateStoryOverlayUi();
-    startStoryInterval();
-}
-
-function startStoryInterval() {
-    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
-    const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
-    
-     // SABON CODE
-state.storyIntervalId = setInterval(() => {
-    if (state.isStoryPaused) {
-        state.lastTickTime = Date.now(); // ← Key fix: reset every tick during pause
-        return;
-    }
-    state.storyProgress += increment;
-    
-        if (state.storyProgress >= 100) {
-            state.storyProgress = 0;
-            const currentProData = PRO_STORIES[state.activeProStoryIndex];
-            const nextSlide = state.activeStorySlide + 1;
-            if (nextSlide < currentProData.stories.length) {
-                // Story gaba a cikin wannan Pro
-                state.activeStorySlide = nextSlide;
-                updateStoryOverlayUi();
-            } else {
-                // Duk stories na wannan Pro sun gama — Pro na gaba
-                const nextPro = state.activeProStoryIndex + 1;
-                if (nextPro < PRO_STORIES.length) {
-                    state.activeProStoryIndex = nextPro;
-                    state.activeStorySlide = 0;
-                    updateStoryOverlayUi();
-                } else {
-                    closeStoryDeck();
-                }
-            }
-        } else {
-            updateStoryProgressBarOnly();
-        }
-    }, STORY_TICK_MS);
-}
-
-function updateStoryProgressBarOnly() {
-    const currentProData = PRO_STORIES[state.activeProStoryIndex];
-    currentProData.stories.forEach((s, idx) => {
-        const fillEl = document.getElementById(`story-fill-node-${idx}`);
-        if (fillEl) {
-            if (idx < state.activeStorySlide) fillEl.style.width = "100%";
-            else if (idx === state.activeStorySlide) fillEl.style.width = `${state.storyProgress}%`;
-            else fillEl.style.width = "0%";
-        }
-    });
-}
-
-function updateStoryOverlayUi() {
-    const currentProData = PRO_STORIES[state.activeProStoryIndex];
-    const activeStory = currentProData.stories[state.activeStorySlide];
-    const pro = PROS.find(p => p.id === currentProData.proId);
-
-    // Progress bars — nuna bars na stories na wannan Pro kawai
-    const indicatorContainer = document.getElementById("story-progress-indicators-bar");
-    indicatorContainer.innerHTML = currentProData.stories.map((s, idx) => `
-        <div class="story-progress-bg">
-            <div class="story-progress-fill" id="story-fill-node-${idx}" style="width: ${idx < state.activeStorySlide ? '100%' : '0%'};"></div>
-        </div>
-    `).join('');
-
-    document.getElementById("story-header-icon").innerText = activeStory.icon;
-document.getElementById("story-header-title").innerText = activeStory.name;
-document.getElementById("story-header-meta").innerText = `Prepared Live Near Me (${pro ? pro.distance : ''}km)`;
-    
-    document.getElementById("story-canvas-main-emoji").innerText = activeStory.icon;
-    document.getElementById("story-canvas-main-title").innerText = activeStory.name;
-    document.getElementById("story-canvas-main-price").innerText = activeStory.price;
-
-    // Hoto na background
-    const canvas = document.getElementById("story-interactive-canvas-area");
-    canvas.style.backgroundImage = `url('${activeStory.image}')`;
-    canvas.style.backgroundSize = "cover";
-    canvas.style.backgroundPosition = "center";
-}
-
-function closeStoryDeck() {
-    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
-    state.activeProStoryIndex = null;
-    document.getElementById("story-overlay-deck").style.display = "none";
-}
-        
-        // EXPERT VERIFICATION PORTAL FILE MODAL CONTROLLER VIEW
-        function openProfileSheet(proId) {
-            const pro = PROS.find(p => p.id === proId);
-            if (!pro) return;
-
-            document.getElementById("profile-online-status-pill").innerText = pro.online ? 'ONLINE' : 'OFFLINE';
-            document.getElementById("profile-online-status-pill").style.color = pro.online ? '#16a34a' : '#dc2626';
-            
-            const avatarSphere = document.getElementById("profile-avatar-sphere");
-            avatarSphere.style.background = pro.color;
-            avatarSphere.innerText = pro.avatar;
-
-            document.getElementById("profile-expert-name").innerText = pro.name;
-            document.getElementById("profile-shield-badge").style.display = pro.verified ? "inline" : "none";
-            document.getElementById("profile-expert-category").innerText = pro.display_cat;
-            document.getElementById("profile-stars-slot").innerHTML = renderStars(pro.rating);
-
-            document.getElementById("meta-jobs-counter").innerText = pro.jobs;
-            document.getElementById("meta-reviews-counter").innerText = pro.reviews;
-            document.getElementById("meta-distance-counter").innerText = `${pro.distance}km`;
-
-            // Conditional scheduling card execution check frame 
-            const scheduleCard = document.getElementById("chef-schedule-section-card");
-            if (pro.category === "chef" && pro.schedule) {
-                scheduleCard.style.display = "block";
-                document.getElementById("chef-days-badges-slot").innerHTML = pro.schedule.map(day => `
-                    <span style="background: #ffffff; color: #be185d; border: 1px solid rgba(236, 72, 153, 0.2); padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 700;">${day}</span>
-                `).join('');
-            } else {
-                scheduleCard.style.display = "none";
-            }
-
-            document.getElementById("profile-expert-bio-p").innerText = pro.bio;
-            document.getElementById("profile-skills-badges-slot").innerHTML = pro.skills.map(s => `
-                <span style="background: #f1f5f9; color: #111827; border-radius: 12px; padding: 6px 14px; font-size: 12px; font-weight: 600;">${s}</span>
-            `).join('');
-
-            const targetGallery = pro.gallery || ["Project Layout Alpha", "System Installation Beta", "Premium Execution Gamma", "Standard Operations Delta"];
-            document.getElementById("profile-gallery-grid-slot").innerHTML = targetGallery.map(title => `
-                <div class="portfolio-img-card">
-                    <div style="text-align: center; padding: 8px;">
-                        <div style="font-size: 18px; margin-bottom: 4px;">📷</div>
-                        <div>${title}</div>
-                    </div>
-                </div>
-            `).join('');
-
-            document.getElementById("profile-sheet-overlay").style.display = "block";
-
-            // Auto-trigger chef menu idan chef ne
-            if (pro.category === "chef" && pro.menu) {
-                setTimeout(() => openChefMenuOverlay(pro), 400);
-            }
-        }
-    
-        function closeProfileSheet() {
-            document.getElementById("profile-sheet-overlay").style.display = "none";
-        }
-
-        // Document Event Listeners Wire-up Initialization Engine Verbatim
-        document.addEventListener("DOMContentLoaded", () => {
-            initAppElements();
-
-            // Setup search typing triggers execution listeners 
-            document.getElementById("search-input").addEventListener("keydown", (e) => {
-                if (e.key === "Enter") triggerRouterCheck();
-            });
-            document.getElementById("search-trigger-btn").addEventListener("click", triggerRouterCheck);
-
-            // Setup Search Options routing modal selection hooks 
-            document.getElementById("route-all-opt").addEventListener("click", () => selectRoutePreference("all"));
-            document.getElementById("route-near-opt").addEventListener("click", () => selectRoutePreference("near"));
-            document.getElementById("router-overlay").addEventListener("click", () => {
-                document.getElementById("router-overlay").style.display = "none";
-            });
-
-            // Top Header Context Controls 
-            document.getElementById("near-me-btn").addEventListener("click", () => {
-    const locator = document.getElementById("locating-status");
-    locator.style.display = "block";
-    initNearMe('skilled_pro', null, 'results-list-container').then(() => {
-        locator.style.display = "none";
-        state.nearMeActive = true;
-        switchView("results");
-    }).catch(err => {
-        locator.style.display = "none";
-        alert("📍 " + err.message);
-    });
-});
-            
-            
-            document.getElementById("verified-pros-btn").addEventListener("click", () => {
-                state.nearMeActive = false;
-                switchView("results");
-            });
-
-            document.getElementById("view-all-traders-btn").addEventListener("click", () => {
-                state.selectedCat = null;
-                switchView("results");
-            });
-
-            // Profile Sheet Dismiss Trigger
-            document.getElementById("close-profile-sheet-btn").addEventListener("click", closeProfileSheet);
-
-            // Immersive Overlay Actions Deck Pointer Mechanics Engine
-            const storyOverlay = document.getElementById("story-overlay-deck");
-            storyOverlay.addEventListener("pointerdown", (e) => {
-                e.preventDefault(); 
-    if (e.target.closest("button")) return;
-    state.isStoryPaused = true;
-    state.pauseStartTime = Date.now();
-});
-            
-
-    storyOverlay.addEventListener("pointerup", (e) => {
-    if (e.target.closest("button")) return;
-    state.isStoryPaused = false;
-    state.lastTickTime = Date.now(); // Reset tick lokacin da aka sake farawa
-        
-    const x = e.clientX;
-    const half = window.innerWidth / 2;
-    const currentProData = PRO_STORIES[state.activeProStoryIndex];
-    if (x >= half) {
-        const nextSlide = state.activeStorySlide + 1;
-        if (nextSlide < currentProData.stories.length) {
-            state.activeStorySlide = nextSlide;
-            state.storyProgress = 0;
-            updateStoryOverlayUi();
-        } else {
-            const nextPro = state.activeProStoryIndex + 1;
-            if (nextPro < PRO_STORIES.length) {
-                state.activeProStoryIndex = nextPro;
-                state.activeStorySlide = 0;
-                state.storyProgress = 0;
-                updateStoryOverlayUi();
-            } else {
-                closeStoryDeck();
-            }
-        }
-    } else {
-        const prevSlide = state.activeStorySlide - 1;
-        if (prevSlide >= 0) {
-            state.activeStorySlide = prevSlide;
-            state.storyProgress = 0;
-            updateStoryOverlayUi();
-        } else {
-            const prevPro = state.activeProStoryIndex - 1;
-            if (prevPro >= 0) {
-                state.activeProStoryIndex = prevPro;
-                state.activeStorySlide = 0;
-                state.storyProgress = 0;
-                updateStoryOverlayUi();
-            }
-        }
-    }
-});
-
-            document.getElementById("close-story-overlay-btn").addEventListener("click", (e) => {
-                e.stopPropagation();
-                closeStoryDeck();
-            });
-
-            document.getElementById("story-action-order-btn").addEventListener("click", (e) => {
-                e.stopPropagation();
-                const currentProd = LOCAL_STORY_PRODUCTS[state.activeStoryIndex];
-                alert(`Order initialized for ${currentProd.name}`);
-            });
-
-            document.getElementById("story-action-profile-btn").addEventListener("click", (e) => {
-    e.stopPropagation();
-    const currentProData = PRO_STORIES[state.activeProStoryIndex];
-    closeStoryDeck();
-    openProfileSheet(currentProData.proId);
-});
-
-            document.getElementById("chef-menu-close-btn").addEventListener("click", closeChefMenuOverlay);
-        
-        });
-
-        function openChefMenuOverlay(pro) {
-    document.getElementById("chef-menu-pro-name").innerText = pro.name;
-    document.querySelector(".chef-menu-header div div:first-child").innerText = `Welcome to ${pro.name} · ✨ This's our today's live menu`;
-    document.getElementById("chef-menu-overlay").style.display = "flex";
-
-    // Render menu items da staggered animation
-    const slot = document.getElementById("chef-menu-items-slot");
-    slot.innerHTML = (pro.menu || []).map((item, idx) => `
-        <div class="menu-item-card" style="animation-delay: ${idx * 0.1}s">
-            <div class="menu-item-emoji">${item.icon}</div>
-            <div class="menu-item-info">
-                <div class="menu-item-name">${item.name}</div>
-                <div class="menu-item-desc">${item.desc}</div>
-            </div>
-            <div class="menu-item-price">${item.price}</div>
-        </div>
-    `).join('');
-
-    // Availability message
-    const availEl = document.getElementById("availability-text");
-    if (pro.schedule) {
-        if (pro.schedule.length === 7) {
-            availEl.innerText = "✅ Available Everyday";
-        } else {
-            availEl.innerText = `📅 Available: ${pro.schedule.join(', ')}`;
-        }
-    } else {
-        availEl.innerText = "✅ Available Everyday";
-    }
-}
-
-function closeChefMenuOverlay() {
-    document.getElementById("chef-menu-overlay").style.display = "none";
-}
-
-// ── POST SERVICE INLINE SHEET ──
 const PS_CATS = [
     { id:"skilled_pro", label:"Plumber",      icon:"🔧", subs:["General Plumbing","Pipe Fitting","Leak Repair","Drainage"] },
     { id:"skilled_pro", label:"Electrician",  icon:"⚡", subs:["Wiring","Solar Installation","Generator","Smart Home"] },
@@ -1774,11 +1425,295 @@ const PS_CATS = [
     { id:"emergency",   label:"Emergency",    icon:"🚨", subs:["Car Breakdown","Medical Assist","Security","Fire Safety"] },
 ];
 
-let psSelectedCat = null;
-let psSelectedSub = null;
-let psFilteredCats = [...PS_CATS];
+// ── HELPERS ──
+function renderStars(rating) {
+    const floor = Math.floor(rating);
+    return `<div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
+        <span style="color:#f59e0b;font-size:12px;letter-spacing:-0.5px;">${"★".repeat(floor) + "☆".repeat(5-floor)}</span>
+        <span style="color:#71717a;font-size:11px;font-weight:700;margin-left:2px;">${rating}</span>
+    </div>`;
+}
 
+function createProCardHtml(pro) {
+    const isLiked = state.likedPros[pro.id] || false;
+    return `
+        <div class="biometric-sentinel-card" onclick="openProfileSheet(${pro.id})">
+            <div class="sentinel-screw scr-tl"></div><div class="sentinel-screw scr-tr"></div>
+            <div class="sentinel-screw scr-bl"></div><div class="sentinel-screw scr-br"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;z-index:2;position:relative;">
+                <div class="lens-viewport"><div class="lens-glass-reflection"></div></div>
+                <div style="flex:1;padding-left:2px;">
+                    <div class="sentinel-title-text">${pro.name}</div>
+                    <div class="sentinel-sub-text">${pro.display_cat}</div>
+                </div>
+                <div class="laser-biometric-scanner">
+                    <div class="laser-target-core"></div>
+                    <div class="laser-ray-flare"></div>
+                </div>
+            </div>
+            <div style="margin-top:8px;display:flex;align-items:center;gap:6px;z-index:2;position:relative;">${renderStars(pro.rating)}</div>
+            <p class="sentinel-body-p">${pro.bio}</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;z-index:2;position:relative;">
+                ${pro.skills.slice(0,2).map(s=>`<span class="sentinel-hardware-badge">${s}</span>`).join('')}
+            </div>
+            <div class="sentinel-footer" style="z-index:2;position:relative;">
+                <div style="display:flex;gap:12px;color:#475569;font-size:12px;font-weight:700;">
+                    <span>🔴 ${pro.distance}km</span><span>💼 ${pro.jobs} Jobs</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="color:#16a34a;font-size:16px;font-weight:800;">${pro.price}<span style="font-size:11px;color:#64748b;font-weight:500;">/hr</span></div>
+                    <button onclick="handleLikeToggle(event,${pro.id})" style="background:${isLiked?"rgba(239,68,68,0.1)":"rgba(0,0,0,0.03)"};border:1px solid #94a3b8;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;color:${isLiked?"#ef4444":"#64748b"};font-size:12px;justify-content:center;">${isLiked?"❤️":"🤍"}</button>
+                </div>
+            </div>
+        </div>`;
+}
+
+function switchView(viewName) {
+    state.view = viewName;
+    const mainView = document.getElementById("main-view");
+    const resultsView = document.getElementById("results-view");
+    const actionsBlock = document.getElementById("header-actions");
+    if (viewName === "main") {
+        mainView.style.display = "block";
+        resultsView.style.display = "none";
+        actionsBlock.style.display = "grid";
+    } else {
+        mainView.style.display = "none";
+        resultsView.style.display = "block";
+        actionsBlock.style.display = "none";
+        renderResultsPage();
+    }
+}
+
+function initAppElements() {
+    const doubleProStories = [...PRO_STORIES, ...PRO_STORIES];
+    const track = document.getElementById("stories-track-container");
+    track.innerHTML = doubleProStories.map((proStory, index) => {
+        const realIndex = index % PRO_STORIES.length;
+        const pro = PROS.find(p => p.id === proStory.proId);
+        const firstStory = proStory.stories[0];
+        return `<div class="glass-lens-card" onclick="openStoryDeck(${realIndex})">
+            <div class="glass-lens-img-wrap"><img class="glass-lens-img" src="${firstStory.image}" alt="${pro?pro.name:''}"/></div>
+            <div class="glass-lens-ring">✦</div>
+            <div class="glass-lens-body">
+                <span class="glass-lens-name">${pro?pro.name.split(' ')[0]:firstStory.name}</span>
+                <div class="glass-lens-distance">${pro?pro.distance+'km away':''}</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    const catGrid = document.getElementById("categories-grid-container");
+    catGrid.innerHTML = CATEGORIES.map(cat => `
+        <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card">
+            <div class="prism-icon-sphere"><span style="font-size:22px;">${cat.icon}</span></div>
+            <span class="prism-card-label">${cat.label}</span>
+        </div>`).join('');
+
+    const highlyRatedList = document.getElementById("highly-rated-list-container");
+    highlyRatedList.innerHTML = PROS.map((pro,idx) => `
+        <div class="slide-up" style="animation-delay:${idx*80}ms">${createProCardHtml(pro)}</div>`).join('');
+}
+
+function getFilteredPros() {
+    return PROS.filter(p => {
+        if (state.selectedCat && p.category !== state.selectedCat) return false;
+        if (state.nearMeActive && p.distance > 1.5) return false;
+        if (state.query) {
+            const q = state.query.toLowerCase();
+            return p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.display_cat.toLowerCase().includes(q);
+        }
+        return true;
+    });
+}
+
+function renderResultsPage() {
+    const bar = document.getElementById("trades-filter-bar");
+    const allBtnActive = !state.selectedCat;
+    let barHtml = `<button onclick="handleCategorySelect(null)" style="flex-shrink:0;background:${allBtnActive?"linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%)":"#ffffff"};color:${allBtnActive?"#fff":"#4b5563"};border:${allBtnActive?"none":"1px solid #e2e8f0"};border-radius:12px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;">All Trades</button>`;
+    barHtml += CATEGORIES.map(cat => {
+        const isActive = state.selectedCat === cat.id;
+        return `<button onclick="handleCategorySelect('${cat.id}')" style="flex-shrink:0;background:${isActive?"linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%)":"#ffffff"};color:${isActive?"#fff":"#4b5563"};border:${isActive?"none":"1px solid #e2e8f0"};border-radius:12px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">${cat.icon} ${cat.label}</button>`;
+    }).join('');
+    bar.innerHTML = barHtml;
+
+    document.getElementById("proximity-badge-alert").style.display = state.nearMeActive ? "flex" : "none";
+
+    const list = document.getElementById("results-list-container");
+    const filtered = getFilteredPros();
+    document.getElementById("search-results-counter").innerText = `Search Results (${filtered.length})`;
+
+    if (filtered.length > 0) {
+        list.innerHTML = filtered.map((pro,idx) => `<div class="slide-up" style="animation-delay:${idx*40}ms">${createProCardHtml(pro)}</div>`).join('');
+    } else {
+        list.innerHTML = `<div style="text-align:center;padding:80px 20px;">
+            <div style="font-size:36px;">📍</div>
+            <div style="font-weight:700;font-size:15px;color:#111827;margin-top:12px;">No Matches Near You</div>
+            <div style="color:#64748b;font-size:12px;margin-top:4px;">Zero results found within your immediate physical radar constraint.</div>
+        </div>`;
+    }
+}
+
+function handleCategorySelect(catId) { state.selectedCat = catId; switchView("results"); }
+
+function handleLikeToggle(event, proId) {
+    event.stopPropagation();
+    state.likedPros[proId] = !state.likedPros[proId];
+    if (state.view === "results") renderResultsPage(); else initAppElements();
+}
+
+function triggerRouterCheck() {
+    const val = document.getElementById("search-input").value;
+    state.query = val;
+    if (!val.trim()) return;
+    document.getElementById("router-overlay").style.display = "flex";
+}
+
+function selectRoutePreference(type) {
+    document.getElementById("router-overlay").style.display = "none";
+    const q = state.query.toLowerCase();
+    const match = CATEGORIES.find(c => q.includes(c.label.toLowerCase()) || q.includes(c.id));
+    if (match) state.selectedCat = match.id;
+    if (type === "near") {
+        const locator = document.getElementById("locating-status");
+        locator.style.display = "block";
+        setTimeout(() => { locator.style.display = "none"; state.nearMeActive = true; switchView("results"); }, 1000);
+    } else {
+        state.nearMeActive = false;
+        switchView("results");
+    }
+}
+
+// ── STORIES ENGINE ──
+function openStoryDeck(proStoriesIndex) {
+    state.activeProStoryIndex = proStoriesIndex;
+    state.activeStorySlide = 0;
+    state.storyProgress = 0;
+    state.isStoryPaused = false;
+    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
+    document.getElementById("story-overlay-deck").style.display = "flex";
+    updateStoryOverlayUi();
+    startStoryInterval();
+}
+
+function startStoryInterval() {
+    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
+    const increment = (STORY_TICK_MS / STORY_DURATION_MS) * 100;
+    state.storyIntervalId = setInterval(() => {
+        if (state.isStoryPaused) return;
+        state.storyProgress += increment;
+        if (state.storyProgress >= 100) {
+            state.storyProgress = 0;
+            const currentProData = PRO_STORIES[state.activeProStoryIndex];
+            const nextSlide = state.activeStorySlide + 1;
+            if (nextSlide < currentProData.stories.length) {
+                state.activeStorySlide = nextSlide;
+                updateStoryOverlayUi();
+            } else {
+                const nextPro = state.activeProStoryIndex + 1;
+                if (nextPro < PRO_STORIES.length) {
+                    state.activeProStoryIndex = nextPro;
+                    state.activeStorySlide = 0;
+                    updateStoryOverlayUi();
+                } else { closeStoryDeck(); }
+            }
+        } else { updateStoryProgressBarOnly(); }
+    }, STORY_TICK_MS);
+}
+
+function updateStoryProgressBarOnly() {
+    const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    currentProData.stories.forEach((s,idx) => {
+        const fillEl = document.getElementById(`story-fill-node-${idx}`);
+        if (fillEl) {
+            if (idx < state.activeStorySlide) fillEl.style.width = "100%";
+            else if (idx === state.activeStorySlide) fillEl.style.width = `${state.storyProgress}%`;
+            else fillEl.style.width = "0%";
+        }
+    });
+}
+
+function updateStoryOverlayUi() {
+    const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    const activeStory = currentProData.stories[state.activeStorySlide];
+    const pro = PROS.find(p => p.id === currentProData.proId);
+    const indicatorContainer = document.getElementById("story-progress-indicators-bar");
+    indicatorContainer.innerHTML = currentProData.stories.map((s,idx) => `
+        <div class="story-progress-bg"><div class="story-progress-fill" id="story-fill-node-${idx}" style="width:${idx<state.activeStorySlide?'100%':'0%'};"></div></div>`).join('');
+    document.getElementById("story-header-icon").innerText = activeStory.icon;
+    document.getElementById("story-header-title").innerText = activeStory.name;
+    document.getElementById("story-header-meta").innerText = `Prepared Live Near Me (${pro?pro.distance:''}km)`;
+    document.getElementById("story-canvas-main-emoji").innerText = activeStory.icon;
+    document.getElementById("story-canvas-main-title").innerText = activeStory.name;
+    document.getElementById("story-canvas-main-price").innerText = activeStory.price;
+    const canvas = document.getElementById("story-interactive-canvas-area");
+    canvas.style.backgroundImage = `url('${activeStory.image}')`;
+    canvas.style.backgroundSize = "cover";
+    canvas.style.backgroundPosition = "center";
+}
+
+function closeStoryDeck() {
+    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
+    state.activeProStoryIndex = null;
+    document.getElementById("story-overlay-deck").style.display = "none";
+}
+
+ // ── PROFILE SHEET ──
+function openProfileSheet(proId) {
+    const pro = PROS.find(p => p.id === proId);
+    if (!pro) return;
+    document.getElementById("profile-online-status-pill").innerText = pro.online ? 'ONLINE' : 'OFFLINE';
+    document.getElementById("profile-online-status-pill").style.color = pro.online ? '#16a34a' : '#dc2626';
+    const avatarSphere = document.getElementById("profile-avatar-sphere");
+    avatarSphere.style.background = pro.color;
+    avatarSphere.innerText = pro.avatar;
+    document.getElementById("profile-expert-name").innerText = pro.name;
+    document.getElementById("profile-shield-badge").style.display = pro.verified ? "inline" : "none";
+    document.getElementById("profile-expert-category").innerText = pro.display_cat;
+    document.getElementById("profile-stars-slot").innerHTML = renderStars(pro.rating);
+    document.getElementById("meta-jobs-counter").innerText = pro.jobs;
+    document.getElementById("meta-reviews-counter").innerText = pro.reviews;
+    document.getElementById("meta-distance-counter").innerText = `${pro.distance}km`;
+    const scheduleCard = document.getElementById("chef-schedule-section-card");
+    if (pro.category === "chef" && pro.schedule) {
+        scheduleCard.style.display = "block";
+        document.getElementById("chef-days-badges-slot").innerHTML = pro.schedule.map(day =>
+            `<span style="background:#ffffff;color:#be185d;border:1px solid rgba(236,72,153,0.2);padding:4px 10px;border-radius:10px;font-size:11px;font-weight:700;">${day}</span>`).join('');
+    } else { scheduleCard.style.display = "none"; }
+    document.getElementById("profile-expert-bio-p").innerText = pro.bio;
+    document.getElementById("profile-skills-badges-slot").innerHTML = pro.skills.map(s =>
+        `<span style="background:#f1f5f9;color:#111827;border-radius:12px;padding:6px 14px;font-size:12px;font-weight:600;">${s}</span>`).join('');
+    const targetGallery = pro.gallery || ["Project Alpha","System Beta","Execution Gamma","Operations Delta"];
+    document.getElementById("profile-gallery-grid-slot").innerHTML = targetGallery.map(title =>
+        `<div class="portfolio-img-card"><div style="text-align:center;padding:8px;"><div style="font-size:18px;margin-bottom:4px;">📷</div><div>${title}</div></div></div>`).join('');
+    document.getElementById("profile-sheet-overlay").style.display = "block";
+    if (pro.category === "chef" && pro.menu) setTimeout(() => openChefMenuOverlay(pro), 400);
+}
+
+function closeProfileSheet() { document.getElementById("profile-sheet-overlay").style.display = "none"; }
+
+// ── CHEF MENU ──
+function openChefMenuOverlay(pro) {
+    document.getElementById("chef-menu-pro-name").innerText = pro.name;
+    document.querySelector(".chef-menu-header div div:first-child").innerText = `Welcome to ${pro.name} · ✨ Today's Live Menu`;
+    document.getElementById("chef-menu-overlay").style.display = "flex";
+    const slot = document.getElementById("chef-menu-items-slot");
+    slot.innerHTML = (pro.menu||[]).map((item,idx) => `
+        <div class="menu-item-card" style="animation-delay:${idx*0.1}s">
+            <div class="menu-item-emoji">${item.icon}</div>
+            <div class="menu-item-info"><div class="menu-item-name">${item.name}</div><div class="menu-item-desc">${item.desc}</div></div>
+            <div class="menu-item-price">${item.price}</div>
+        </div>`).join('');
+    const availEl = document.getElementById("availability-text");
+    if (pro.schedule) {
+        availEl.innerText = pro.schedule.length === 7 ? "✅ Available Everyday" : `📅 Available: ${pro.schedule.join(', ')}`;
+    } else { availEl.innerText = "✅ Available Everyday"; }
+}
+
+function closeChefMenuOverlay() { document.getElementById("chef-menu-overlay").style.display = "none"; }
+
+// ── POST SERVICE INLINE ENGINE ──
 function openPostServiceSheet() {
+    psShowStep(1);
     renderPSCatList();
     const overlay = document.getElementById("post-service-sheet-overlay");
     const sheet = document.getElementById("post-service-sheet");
@@ -1791,9 +1726,7 @@ function closePSManual() {
     const sheet = document.getElementById("post-service-sheet");
     sheet.style.transform = "scale(0.9)";
     sheet.style.opacity = "0";
-    setTimeout(() => {
-        document.getElementById("post-service-sheet-overlay").style.display = "none";
-    }, 300);
+    setTimeout(() => { document.getElementById("post-service-sheet-overlay").style.display = "none"; }, 300);
     document.body.style.overflow = "";
 }
 
@@ -1802,76 +1735,366 @@ function closePSOverlay(event) {
     closePSManual();
 }
 
-function renderPSCatList(filteredCats) {
+function psShowStep(step) {
+    psInlineState.currentStep = step;
+    ["ps-inline-step-1","ps-inline-step-2","ps-inline-step-3"].forEach((id,i) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = (i+1 === step) ? (step === 1 ? "flex" : "block") : "none";
+    });
+    // Update dots
+    const dotsWrapper = document.getElementById("ps-inline-step-dots");
+    const backBtn = document.getElementById("ps-back-step-inline-btn");
+    const titleEl = document.getElementById("ps-sheet-title-label");
+
+    if (step === 1) {
+        dotsWrapper.style.display = "none";
+        backBtn.style.display = "none";
+        titleEl.textContent = "Choose Your Service";
+    } else {
+        dotsWrapper.style.display = "flex";
+        backBtn.style.display = "block";
+        titleEl.textContent = step === 2 ? "Service Details" : "Location & Submit";
+        [1,2,3].forEach(i => {
+            const dot = document.getElementById(`ps-dot-${i}`);
+            if (dot) dot.style.background = i === step ? "#6366f1" : i < step ? "#10b981" : "rgba(255,255,255,0.2)";
+        });
+    }
+}
+
+function psGoBack() {
+    if (psInlineState.currentStep > 1) psShowStep(psInlineState.currentStep - 1);
+}
+
+function psGoToStep3() {
+    const price = document.getElementById("ps-price").value;
+    const desc = document.getElementById("ps-description").value.trim();
+    const days = Array.from(document.querySelectorAll("#ps-inline-step-2 .ps-day-chip-inline input:checked")).map(el => el.value);
+    const idType = document.getElementById("ps-id-type").value;
+
+    if (!price || parseInt(price) <= 0) { psShowToast("⚠️ Saka farashi mai inganci!"); return; }
+    if (desc.length < 20) { psShowToast("⚠️ Bayani ya yi ƙasa — kalla haruffa 20!"); return; }
+    if (days.length === 0) { psShowToast("⚠️ Zaɓi kalla kwana ɗaya!"); return; }
+    if (Object.keys(portfolioFiles).length < 4) { psShowToast(`⚠️ Saka aƙalla hoto 4! (${Object.keys(portfolioFiles).length}/4)`); return; }
+    if (!idType) { psShowToast("⚠️ Zaɓi irin ID dinka!"); return; }
+    if (!verificationFiles.id) { psShowToast("⚠️ Saka hoton ID dinka!"); return; }
+    if (!verificationFiles.selfie) { psShowToast("⚠️ Saka selfie ɗinka da ID!"); return; }
+
+    psInlineState.price = parseInt(price);
+    psInlineState.priceUnit = document.getElementById("ps-price-unit").value;
+    psInlineState.description = desc;
+    psInlineState.availableDays = days;
+    psInlineState.idType = idType;
+
+    document.getElementById("ps-sum-category").textContent = `${psInlineState.selectedCategoryLabel} → ${psInlineState.selectedSubcategory}`;
+    document.getElementById("ps-sum-price").textContent = `₦${psInlineState.price.toLocaleString()} ${psInlineState.priceUnit}`;
+    document.getElementById("ps-sum-days").textContent = days.join(", ");
+
+    psShowStep(3);
+}
+
+function captureGPSInline() {
+    const btn = document.getElementById("ps-gps-btn-inline");
+    const status = document.getElementById("ps-gps-status-inline");
+    const coords = document.getElementById("ps-gps-coords-inline");
+    const card = document.getElementById("ps-gps-card-inline");
+
+    if (!navigator.geolocation) { psShowToast("❌ Browser ɗinka bai goyi bayan GPS ba."); return; }
+
+    btn.disabled = true;
+    btn.textContent = "Ana nema...";
+    status.textContent = "🔄 Ana ɗaukar loca...";
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            psInlineState.gpsLat = pos.coords.latitude;
+            psInlineState.gpsLng = pos.coords.longitude;
+            psInlineState.gpsReady = true;
+
+            status.textContent = "✅ Loca an samu!";
+            coords.textContent = `${psInlineState.gpsLat.toFixed(5)}, ${psInlineState.gpsLng.toFixed(5)}`;
+            btn.textContent = "✅ Done";
+            card.style.borderColor = "rgba(16,185,129,0.4)";
+            card.style.background = "rgba(16,185,129,0.08)";
+            document.getElementById("ps-sum-location").textContent = `${psInlineState.gpsLat.toFixed(4)}, ${psInlineState.gpsLng.toFixed(4)}`;
+            psShowToast("📍 GPS an ɗauka daidai!");
+        },
+        (err) => {
+            btn.disabled = false;
+            btn.textContent = "Sake Gwadawa";
+            status.textContent = "❌ GPS ya kasa";
+            const msgs = { 1:"Ka ƙi ba GPS izni.", 2:"GPS bai samu loca ba.", 3:"Lokaci ya ƙare." };
+            psShowToast("⚠️ " + (msgs[err.code] || "GPS kuskure."));
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+}
+
+async function uploadPortfolioFilesInline(username) {
+    const keys = Object.keys(portfolioFiles);
+    let uploaded = 0;
+    const statusEl = document.getElementById("ps-upload-status-inline");
+    const countEl = document.getElementById("ps-upload-count-inline");
+    const barEl = document.getElementById("ps-upload-bar-inline");
+    statusEl.style.display = "block";
+    for (const key of keys) {
+        const entry = portfolioFiles[key];
+        if (!entry.file) continue;
+        try {
+            const formData = new FormData();
+            formData.append("file", entry.file);
+            formData.append("type", "portfolio");
+            formData.append("username", username || "guest");
+            const res = await fetch(`${BACKEND_URL}/upload`, { method:"POST", body:formData });
+            const data = await res.json();
+            if (data.success) portfolioFiles[key].url = data.url;
+        } catch(err) { console.warn(`Slot ${key} upload kaskure:`, err); }
+        uploaded++;
+        const pct = Math.round((uploaded/keys.length)*100);
+        countEl.textContent = `${uploaded}/${keys.length}`;
+        barEl.style.width = pct + "%";
+    }
+    return Object.values(portfolioFiles).filter(e=>e.url).map(e=>({ url:e.url, type:e.type.includes("video")?"video":"image" }));
+                }
+
+        async function uploadVerificationFilesInline(username) {
+    const results = {};
+    for (const key of Object.keys(verificationFiles)) {
+        const entry = verificationFiles[key];
+        if (!entry.file) continue;
+        try {
+            const formData = new FormData();
+            formData.append("file", entry.file);
+            formData.append("type", "verification");
+            formData.append("username", username || "guest");
+            const res = await fetch(`${BACKEND_URL}/upload-verification`, { method:"POST", body:formData });
+            const data = await res.json();
+            if (data.success) results[key] = data.key;
+        } catch(err) { console.warn(`Verification ${key} upload kaskure:`, err); }
+    }
+    return results;
+}
+
+async function submitServiceInline() {
+    if (!psInlineState.gpsReady) { psShowToast("⚠️ Ka ɗauki GPS loca kafin ka aika!"); return; }
+    const submitBtn = document.getElementById("ps-submit-btn-inline");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "⏳ Ana aika...";
+
+    try {
+        const username = localStorage.getItem("nexus_user_session") || "guest";
+        psShowToast("⏳ Ana upload hotunan aiki...");
+        const portfolioUrls = await uploadPortfolioFilesInline(username);
+        psShowToast("⏳ Ana upload verification...");
+        const verificationKeys = await uploadVerificationFilesInline(username);
+
+        if (!verificationKeys.id || !verificationKeys.selfie) {
+            psShowToast("❌ Verification upload ya kasa!");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "🚀 Post Service";
+            return;
+        }
+
+        // Firebase write — idan firebase yana available
+        if (typeof firebase !== "undefined" && firebase.database) {
+            const db = firebase.database();
+            await db.ref(`providers/${username}`).set({
+                category: psInlineState.selectedCategory,
+                subcategory: psInlineState.selectedSubcategory,
+                categoryLabel: psInlineState.selectedCategoryLabel,
+                pricing: { base: psInlineState.price, unit: psInlineState.priceUnit },
+                bio: psInlineState.description,
+                schedule: psInlineState.availableDays,
+                location: { lat: psInlineState.gpsLat, lng: psInlineState.gpsLng, updatedAt: Date.now() },
+                portfolio: portfolioUrls,
+                verification: { idType: psInlineState.idType, idKey: verificationKeys.id, selfieKey: verificationKeys.selfie, submittedAt: Date.now() },
+                status: "pending_verification",
+                createdAt: Date.now(),
+                username: username
+            });
+        }
+
+        document.getElementById("ps-success-overlay-inline").style.display = "flex";
+
+    } catch(err) {
+        console.error("Submit kuskure:", err);
+        psShowToast("❌ Matsala: " + err.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = "🚀 Post Service";
+    }
+}
+
+function handlePortfolioFile(input, slotIndex) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 50*1024*1024) { psShowToast("❌ Fayil ya yi girma — kalla 50MB!"); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const slot = document.getElementById(`ps-slot-${slotIndex}`);
+        if (!slot) return;
+        slot.classList.add("filled");
+        const isVideo = file.type.includes("video");
+        slot.querySelector(".ps-port-inner").innerHTML = `
+            ${isVideo
+                ? `<video src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" muted playsinline></video>`
+                : `<img src="${e.target.result}" class="ps-port-preview" alt="Portfolio">`}
+            <button class="ps-port-remove" onclick="removePortfolioSlotInline(event,${slotIndex})">✕</button>`;
+    };
+    reader.readAsDataURL(file);
+    portfolioFiles[slotIndex] = { file, url: null, type: file.type };
+}
+
+function removePortfolioSlotInline(event, slotIndex) {
+    event.preventDefault(); event.stopPropagation();
+    delete portfolioFiles[slotIndex];
+    const slot = document.getElementById(`ps-slot-${slotIndex}`);
+    slot.classList.remove("filled");
+    const icons = ["📷","📷","📷","📷","🎥","➕"];
+    const labels = ["Hoto 1","Hoto 2","Hoto 3","Hoto 4","Video","Ƙara"];
+    slot.querySelector(".ps-port-inner").innerHTML = `<span>${icons[slotIndex]}</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">${labels[slotIndex]}</span>`;
+}
+
+function handleVerificationFile(input, slotKey) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 15*1024*1024) { psShowToast("❌ Fayil ya yi girma!"); return; }
+    if (!file.type.includes("image")) { psShowToast("❌ Hoto kawai!"); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const slot = document.getElementById(`verify-slot-${slotKey}`);
+        slot.style.borderColor = "rgba(16,185,129,0.5)";
+        slot.style.borderStyle = "solid";
+        slot.innerHTML = `<input type="file" accept="image/*" ${slotKey==='selfie'?'capture="user"':''} onchange="handleVerificationFile(this,'${slotKey}')" hidden><img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="${slotKey}">`;
+    };
+    reader.readAsDataURL(file);
+    verificationFiles[slotKey] = { file, url: null, type: file.type };
+                             }
+
+    function renderPSCatList(filteredCats) {
     const cats = filteredCats || PS_CATS;
     const list = document.getElementById("ps-cat-list");
-    
-    list.innerHTML = cats.map((cat, idx) => {
-        return `
-        <div id="ps-cat-item-${idx}" onclick="togglePSCat(${idx})" style="display:flex; align-items:center; gap:10px; padding:14px 12px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.03); transition: all 0.2s ease;">
-            <span style="font-size:18px;">${cat.icon}</span>
-            <span style="flex:1; font-size:13px; font-weight:700; color:rgba(255,255,255,0.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${cat.label}</span>
-            <span style="font-size:10px; color:rgba(255,255,255,0.2);">➔</span>
-        </div>`;
-    }).join("");
-    
-    // Reset panel na dama
+    list.innerHTML = cats.map((cat,idx) => `
+        <div id="ps-cat-item-${idx}" onclick="togglePSCat(${idx})" style="display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.03);transition:all 0.2s ease;">
+            <span style="font-size:17px;">${cat.icon}</span>
+            <span style="flex:1;font-size:12px;font-weight:700;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cat.label}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.2);">➔</span>
+        </div>`).join('');
     document.getElementById("ps-sub-empty-state").style.display = "block";
     document.getElementById("ps-sub-list-content").innerHTML = "";
 }
 
 function togglePSCat(idx) {
-    // Haskaka category din da aka danna (Active Styling)
-    PS_CATS.forEach((_, i) => {
+    PS_CATS.forEach((_,i) => {
         const item = document.getElementById(`ps-cat-item-${i}`);
         if (item) {
-            if (i === idx) {
-                item.style.background = "rgba(56, 189, 248, 0.15)";
-                item.style.borderLeft = "3px solid #38bdf8";
-            } else {
-                item.style.background = "transparent";
-                item.style.borderLeft = "none";
-            }
+            item.style.background = i===idx ? "rgba(56,189,248,0.15)" : "transparent";
+            item.style.borderLeft = i===idx ? "3px solid #38bdf8" : "none";
         }
     });
-
     const cat = PS_CATS[idx];
-    const emptyState = document.getElementById("ps-sub-empty-state");
-    const subListContent = document.getElementById("ps-sub-list-content");
-    
     if (!cat) return;
-    
-    // Boye empty state
-    emptyState.style.display = "none";
-    
-    // Inject sub-categories zuwa panel din dama gaba daya
-    subListContent.innerHTML = `
-        <div style="font-size:11px; font-weight:800; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; padding: 6px 8px 12px;">
-            ${cat.label} Specialties
-        </div>
+    document.getElementById("ps-sub-empty-state").style.display = "none";
+    document.getElementById("ps-sub-list-content").innerHTML = `
+        <div style="font-size:10px;font-weight:800;color:#38bdf8;text-transform:uppercase;letter-spacing:0.5px;padding:6px 8px 10px;">${cat.label} Specialties</div>
         ${cat.subs.map(sub => `
-            <div onclick="selectPSSub('${cat.label}','${sub}',${idx})" style="padding:12px 14px; margin-bottom:6px; font-size:13px; font-weight:700; color:rgba(255,255,255,0.8); background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:10px; cursor:pointer; transition:all 0.15s ease;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
-                ${sub}
-            </div>
-        `).join("")}
-    `;
-        }
-        
+            <div onclick="selectPSSub('${cat.label}','${sub}',${idx})" style="padding:10px 12px;margin-bottom:5px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:8px;cursor:pointer;transition:all 0.15s ease;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">${sub}</div>
+        `).join('')}`;
+}
 
 function filterInlineCategories(query) {
     const q = query.trim().toLowerCase();
-    const filtered = q === "" ? PS_CATS : PS_CATS.filter(c =>
-        c.label.toLowerCase().includes(q) || c.subs.some(s => s.toLowerCase().includes(q))
-    );
+    const filtered = q==="" ? PS_CATS : PS_CATS.filter(c => c.label.toLowerCase().includes(q) || c.subs.some(s=>s.toLowerCase().includes(q)));
     renderPSCatList(filtered);
 }
 
 function selectPSSub(catLabel, sub, idx) {
     const cat = PS_CATS[idx];
-    const url = `post-services.html?cat=${encodeURIComponent(cat.id)}&catLabel=${encodeURIComponent(catLabel)}&sub=${encodeURIComponent(sub)}`;
-    closePSManual();
-    setTimeout(() => window.location.href = url, 360);
+    psInlineState.selectedCategory = cat.id;
+    psInlineState.selectedCategoryLabel = catLabel;
+    psInlineState.selectedSubcategory = sub;
+    psShowStep(2);
+}
+
+function psShowToast(message) {
+    const existing = document.getElementById("ps-toast");
+    if (existing) existing.remove();
+    const toast = document.createElement("div");
+    toast.id = "ps-toast";
+    toast.textContent = message;
+    toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(20,25,45,0.97);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:10px 20px;border-radius:50px;font-size:12px;font-weight:600;z-index:99999;backdrop-filter:blur(20px);box-shadow:0 8px 30px rgba(0,0,0,0.4);white-space:nowrap;`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity="0"; toast.style.transition="opacity 0.3s ease"; setTimeout(()=>toast.remove(),300); }, 3000);
+}
+
+// ── DOMContentLoaded ──
+document.addEventListener("DOMContentLoaded", () => {
+    initAppElements();
+
+    document.getElementById("search-input").addEventListener("keydown", (e) => { if(e.key==="Enter") triggerRouterCheck(); });
+    document.getElementById("search-trigger-btn").addEventListener("click", triggerRouterCheck);
+    document.getElementById("route-all-opt").addEventListener("click", () => selectRoutePreference("all"));
+    document.getElementById("route-near-opt").addEventListener("click", () => selectRoutePreference("near"));
+    document.getElementById("router-overlay").addEventListener("click", () => { document.getElementById("router-overlay").style.display = "none"; });
+
+    document.getElementById("near-me-btn").addEventListener("click", () => {
+        const locator = document.getElementById("locating-status");
+        locator.style.display = "block";
+        if (typeof initNearMe === "function") {
+            initNearMe('skilled_pro', null, 'results-list-container').then(() => {
+                locator.style.display = "none";
+                state.nearMeActive = true;
+                switchView("results");
+            }).catch(err => {
+                locator.style.display = "none";
+                alert("📍 " + err.message);
+            });
+        } else {
+            setTimeout(() => { locator.style.display = "none"; state.nearMeActive = true; switchView("results"); }, 800);
         }
+    });
+
+    document.getElementById("verified-pros-btn").addEventListener("click", () => { state.nearMeActive = false; switchView("results"); });
+    document.getElementById("view-all-traders-btn").addEventListener("click", () => { state.selectedCat = null; switchView("results"); });
+    document.getElementById("close-profile-sheet-btn").addEventListener("click", closeProfileSheet);
+
+    const storyOverlay = document.getElementById("story-overlay-deck");
+    storyOverlay.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        if (e.target.closest("button")) return;
+        state.isStoryPaused = true;
+    });
+    storyOverlay.addEventListener("pointerup", (e) => {
+        if (e.target.closest("button")) return;
+        state.isStoryPaused = false;
+        const x = e.clientX;
+        const half = window.innerWidth / 2;
+        const currentProData = PRO_STORIES[state.activeProStoryIndex];
+        if (x >= half) {
+            const nextSlide = state.activeStorySlide + 1;
+            if (nextSlide < currentProData.stories.length) { state.activeStorySlide = nextSlide; state.storyProgress = 0; updateStoryOverlayUi(); }
+            else {
+                const nextPro = state.activeProStoryIndex + 1;
+                if (nextPro < PRO_STORIES.length) { state.activeProStoryIndex = nextPro; state.activeStorySlide = 0; state.storyProgress = 0; updateStoryOverlayUi(); }
+                else closeStoryDeck();
+            }
+        } else {
+            const prevSlide = state.activeStorySlide - 1;
+            if (prevSlide >= 0) { state.activeStorySlide = prevSlide; state.storyProgress = 0; updateStoryOverlayUi(); }
+            else {
+                const prevPro = state.activeProStoryIndex - 1;
+                if (prevPro >= 0) { state.activeProStoryIndex = prevPro; state.activeStorySlide = 0; state.storyProgress = 0; updateStoryOverlayUi(); }
+            }
+        }
+    });
+
+    document.getElementById("close-story-overlay-btn").addEventListener("click", (e) => { e.stopPropagation(); closeStoryDeck(); });
+    document.getElementById("story-action-profile-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const currentProData = PRO_STORIES[state.activeProStoryIndex];
+        closeStoryDeck();
+        openProfileSheet(currentProData.proId);
+    });
+    document.getElementById("chef-menu-close-btn").addEventListener("click", closeChefMenuOverlay);
+});
         
 
  </script>
