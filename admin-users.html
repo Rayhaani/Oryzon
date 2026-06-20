@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - Users Management</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0b0f1a;
+  --bg2: #111827;
+  --bg3: #141d2e;
+  --bg4: #1a2235;
+  --border: #1f2d45;
+  --txt1: #e2e8f4;
+  --txt2: #7a8ba8;
+  --txt3: #3d5070;
+  --blue: #3b82f6;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --purple: #a855f7;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--txt1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* TOPBAR */
+.topbar {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  height: 52px;
+  display: flex; align-items: center;
+  padding: 0 16px; gap: 12px;
+}
+
+.back-btn {
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: var(--blue);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.page-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--txt1);
+  flex: 1;
+}
+
+.online-indicator {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--green);
+  font-weight: 600;
+}
+
+.pulse {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.4); }
+}
+
+/* MAIN */
+.main { padding: 16px; max-width: 900px; margin: 0 auto; }
+
+/* STATS ROW */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-box .sv {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-box .sl {
+  font-size: 10px;
+  color: var(--txt2);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* SEARCH & FILTERS */
+.controls {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+}
+
+.search-box input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--txt1);
+  font-size: 13px;
+  padding: 10px 0;
+}
+
+.search-box input::placeholder { color: var(--txt3); }
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--txt2);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn.active {
+  background: rgba(59,130,246,0.15);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.filter-btn:hover { border-color: var(--txt2); color: var(--txt1); }
+
+/* USERS LIST */
+.users-count {
+  font-size: 11px;
+  color: var(--txt3);
+  margin-bottom: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* USER CARD */
+.user-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: border-color 0.2s;
+}
+
+.user-card:hover { border-color: var(--txt3); }
+.user-card.banned { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03); }
+
+.user-avatar {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+}
+
+.user-avatar-fallback {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px; color: #fff;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+}
+
+.user-info { flex: 1; min-width: 0; }
+
+.user-top {
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap; margin-bottom: 6px;
+}
+
+.user-name {
+  font-size: 14px; font-weight: 700; color: var(--txt1);
+}
+
+.user-handle {
+  font-size: 11px; color: var(--txt2); font-weight: 500;
+}
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%; flex-shrink: 0;
+}
+
+.status-dot.online { background: var(--green); }
+.status-dot.offline { background: var(--txt3); }
+
+.banned-badge {
+  background: rgba(239,68,68,0.15);
+  color: var(--red);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.user-meta {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-bottom: 8px;
+}
+
+.meta-item {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--txt2);
+}
+
+.user-stats {
+  display: flex; gap: 14px; margin-bottom: 10px;
+}
+
+.user-stat {
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.user-stat .usv {
+  font-size: 14px; font-weight: 700; color: var(--txt1);
+}
+
+.user-stat .usl {
+  font-size: 10px; color: var(--txt3);
+}
+
+.user-actions {
+  display: flex; gap: 7px; flex-wrap: wrap;
+}
+
+.btn-view {
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--txt2);
+  font-size: 11px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-view:hover { border-color: var(--blue); color: var(--blue); }
+
+.btn-ban {
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(234,179,8,0.3);
+  background: rgba(234,179,8,0.08);
+  color: var(--yellow);
+  font-size: 11px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ban:hover { background: rgba(234,179,8,0.15); }
+
+.btn-unban {
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(34,197,94,0.3);
+  background: rgba(34,197,94,0.08);
+  color: var(--green);
+  font-size: 11px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete {
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(239,68,68,0.3);
+  background: rgba(239,68,68,0.08);
+  color: var(--red);
+  font-size: 11px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete:hover { background: rgba(239,68,68,0.15); }
+
+/* LOAD MORE */
+.load-more-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--txt2);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: none;
+}
+
+.load-more-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--txt3);
+}
+
+.empty-state .ei { font-size: 36px; margin-bottom: 12px; }
+.empty-state .et { font-size: 14px; font-weight: 600; color: var(--txt2); }
+.empty-state .es { font-size: 12px; margin-top: 6px; }
+
+/* LOADING */
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--txt3);
+  font-size: 12px;
+}
+
+/* MODAL OVERLAY */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease forwards;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+  background: var(--bg2);
+}
+
+.modal-title { font-size: 14px; font-weight: 700; }
+
+.modal-close {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--txt2);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.modal-body { padding: 20px; }
+
+.profile-cover {
+  width: 100%; height: 80px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--bg3);
+  margin-bottom: -30px;
+  display: block;
+}
+
+.profile-avatar-wrap {
+  position: relative;
+  margin-left: 16px;
+  margin-bottom: 12px;
+}
+
+.profile-avatar-lg {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--bg2);
+}
+
+.profile-avatar-fallback-lg {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800; color: #fff;
+  border: 3px solid var(--bg2);
+}
+
+.modal-field {
+  display: flex; justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-field:last-child { border-bottom: none; }
+
+.mfk {
+  font-size: 11px; color: var(--txt2);
+  font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.mfv {
+  font-size: 12px; color: var(--txt1);
+  font-weight: 600; text-align: right;
+  max-width: 60%; word-break: break-all;
+}
+
+/* BAN REASON MODAL */
+.ban-modal-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+  animation: slideUp 0.3s ease forwards;
+}
+
+.ban-title {
+  font-size: 15px; font-weight: 700;
+  margin-bottom: 6px; color: var(--red);
+}
+
+.ban-sub {
+  font-size: 12px; color: var(--txt2);
+  margin-bottom: 16px; line-height: 1.5;
+}
+
+.ban-reasons {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ban-reason-opt {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--txt2);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.ban-reason-opt:hover,
+.ban-reason-opt.selected {
+  border-color: var(--red);
+  color: var(--red);
+  background: rgba(239,68,68,0.08);
+}
+
+.ban-custom-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--txt1);
+  font-size: 12px;
+  padding: 10px 12px;
+  outline: none;
+  margin-bottom: 16px;
+  font-family: inherit;
+  resize: none;
+  height: 70px;
+  display: none;
+}
+
+.ban-confirm-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--red);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.ban-cancel-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--txt2);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+}
+
+/* DELETE CONFIRM */
+.delete-modal-box {
+  background: var(--bg2);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 340px;
+  padding: 24px;
+  text-align: center;
+  animation: slideUp 0.3s ease forwards;
+}
+
+.delete-icon { font-size: 40px; margin-bottom: 12px; }
+.delete-title { font-size: 16px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
+.delete-msg { font-size: 12px; color: var(--txt2); line-height: 1.6; margin-bottom: 20px; }
+
+.delete-confirm-btn {
+  width: 100%; padding: 12px;
+  background: var(--red); border: none;
+  border-radius: 10px; color: #fff;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; margin-bottom: 8px;
+}
+
+.delete-cancel-btn {
+  width: 100%; padding: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px; color: var(--txt2);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+}
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--txt1);
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-size: 12px; font-weight: 600;
+  z-index: 99999;
+  white-space: nowrap;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  animation: toastIn 0.3s ease;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .user-card { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='admin.html'">
+    ← Back
+  </button>
+  <span class="page-title">Users Management</span>
+  <div class="online-indicator">
+    <div class="pulse"></div>
+    <span id="online-count">0</span> Online
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="sv" id="s-total" style="color:var(--blue)">—</div>
+      <div class="sl">Total Users</div>
+    </div>
+    <div class="stat-box">
+      <div class="sv" id="s-online" style="color:var(--green)">—</div>
+      <div class="sl">Online Now</div>
+    </div>
+    <div class="stat-box">
+      <div class="sv" id="s-banned" style="color:var(--red)">—</div>
+      <div class="sl">Banned</div>
+    </div>
+    <div class="stat-box">
+      <div class="sv" id="s-new" style="color:var(--purple)">—</div>
+      <div class="sl">New Today</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="search-box">
+      <svg width="14" height="14" fill="none" stroke="var(--txt3)" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="Search by username or full name...">
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all">All Users</button>
+      <button class="filter-btn" data-filter="online">🟢 Online</button>
+      <button class="filter-btn" data-filter="offline">⚫ Offline</button>
+      <button class="filter-btn" data-filter="banned">🚫 Banned</button>
+      <button class="filter-btn" data-filter="new">⭐ New Today</button>
+    </div>
+  </div>
+
+  <!-- USERS COUNT -->
+  <div class="users-count" id="users-count">Loading...</div>
+
+  <!-- USERS LIST -->
+  <div class="users-list" id="users-list">
+    <div class="loading-state">⏳ Loading users from Firebase...</div>
+  </div>
+
+  <!-- LOAD MORE -->
+  <button class="load-more-btn" id="load-more-btn" onclick="loadMoreUsers()">
+    Load More Users
+  </button>
+
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">👤 User Profile</span>
+      <button class="modal-close" onclick="closeModal('profile-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="profile-modal-body">
+    </div>
+  </div>
+</div>
+
+<!-- BAN MODAL -->
+<div class="modal-overlay" id="ban-modal">
+  <div class="ban-modal-box">
+    <div class="ban-title">🚫 Ban User</div>
+    <div class="ban-sub" id="ban-modal-sub">Select a reason for banning this user.</div>
+    <div class="ban-reasons">
+      <button class="ban-reason-opt" onclick="selectBanReason(this, 'Spam or fake account')">📢 Spam or fake account</button>
+      <button class="ban-reason-opt" onclick="selectBanReason(this, 'Harassment or abuse')">⚠️ Harassment or abuse</button>
+      <button class="ban-reason-opt" onclick="selectBanReason(this, 'Inappropriate content')">🔞 Inappropriate content</button>
+      <button class="ban-reason-opt" onclick="selectBanReason(this, 'Fraud or scam')">💸 Fraud or scam</button>
+      <button class="ban-reason-opt" onclick="selectBanReason(this, 'custom')">✏️ Custom reason...</button>
+    </div>
+    <textarea class="ban-custom-input" id="ban-custom-input" placeholder="Enter custom ban reason..."></textarea>
+    <button class="ban-confirm-btn" onclick="confirmBan()">🚫 Confirm Ban</button>
+    <button class="ban-cancel-btn" onclick="closeModal('ban-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="delete-modal-box">
+    <div class="delete-icon">🗑️</div>
+    <div class="delete-title">Delete Account</div>
+    <div class="delete-msg" id="delete-modal-msg">
+      Are you sure you want to permanently delete this account? This action cannot be undone.
+    </div>
+    <button class="delete-confirm-btn" onclick="confirmDelete()">Delete Permanently</button>
+    <button class="delete-cancel-btn" onclick="closeModal('delete-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ── FIREBASE INIT ──
+const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+    measurementId: "G-K5085DLL2W"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── STATE ──
+let allUsers = [];
+let filteredUsers = [];
+let currentFilter = "all";
+let searchQuery = "";
+let selectedBanReason = "";
+let pendingBanUsername = "";
+let pendingDeleteUsername = "";
+let displayCount = 20;
+const PAGE_SIZE = 20;
+
+// ── COLORS FOR AVATARS ──
+const AVATAR_COLORS = [
+    "linear-gradient(135deg,#3b82f6,#1d4ed8)",
+    "linear-gradient(135deg,#a855f7,#7c3aed)",
+    "linear-gradient(135deg,#22c55e,#15803d)",
+    "linear-gradient(135deg,#ef4444,#b91c1c)",
+    "linear-gradient(135deg,#f59e0b,#d97706)",
+    "linear-gradient(135deg,#14b8a6,#0f766e)",
+    "linear-gradient(135deg,#ec4899,#be185d)",
+];
+
+function getAvatarColor(username) {
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+        hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitials(name) {
+    if (!name) return "?";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) return parts[0][0] + parts[1][0];
+    return parts[0].substring(0, 2).toUpperCase();
+}
+
+// ── FORMAT DATE ──
+function formatDate(timestamp) {
+    if (!timestamp) return "—";
+    const date = new Date(
+        typeof timestamp === "number" ? timestamp :
+        timestamp.toDate ? timestamp.toDate() : timestamp
+    );
+    return date.toLocaleDateString("en-GB", {
+        day: "2-digit", month: "short", year: "numeric"
+    });
+}
+
+function timeAgo(timestamp) {
+    if (!timestamp) return "—";
+    const date = new Date(
+        typeof timestamp === "number" ? timestamp :
+        timestamp.toDate ? timestamp.toDate() : timestamp
+    );
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return "just now";
+    if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+    if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+    return Math.floor(seconds / 86400) + "d ago";
+}
+
+function isToday(timestamp) {
+    if (!timestamp) return false;
+    const date = new Date(
+        typeof timestamp === "number" ? timestamp :
+        timestamp.toDate ? timestamp.toDate() : timestamp
+    );
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+}
+
+// ── LOAD USERS ──
+function loadUsers() {
+    db.collection("users")
+        .orderBy("registrationTimestamp", "desc")
+        .onSnapshot(async (snap) => {
+            allUsers = [];
+
+            for (const doc of snap.docs) {
+                const data = doc.data();
+
+                // Get post count
+                let postCount = 0;
+                try {
+                    const postsSnap = await db.collection("posts")
+                        .where("username", "==", doc.id)
+                        .get();
+                    postCount = postsSnap.size;
+                } catch (e) {}
+
+                // Get likes count
+                let likesCount = 0;
+                try {
+                    const likesSnap = await db.collection("likes")
+                        .where("user", "==", doc.id)
+                        .get();
+                    likesCount = likesSnap.size;
+                } catch (e) {}
+
+                allUsers.push({
+                    id: doc.id,
+                    ...data,
+                    postCount,
+                    likesCount
+                });
+            }
+
+            updateStats();
+            applyFilters();
+        });
+}
+
+// ── UPDATE STATS ──
+function updateStats() {
+    const total   = allUsers.length;
+    const online  = allUsers.filter(u => u.isOnline === true).length;
+    const banned  = allUsers.filter(u => u.banned === true).length;
+    const newToday = allUsers.filter(u => isToday(u.registrationTimestamp)).length;
+
+    document.getElementById("s-total").textContent  = total;
+    document.getElementById("s-online").textContent = online;
+    document.getElementById("s-banned").textContent = banned;
+    document.getElementById("s-new").textContent    = newToday;
+    document.getElementById("online-count").textContent = online;
+}
+
+// ── APPLY FILTERS ──
+function applyFilters() {
+    filteredUsers = allUsers.filter(u => {
+        // Filter
+        if (currentFilter === "online")  return u.isOnline === true && !u.banned;
+        if (currentFilter === "offline") return !u.isOnline && !u.banned;
+        if (currentFilter === "banned")  return u.banned === true;
+        if (currentFilter === "new")     return isToday(u.registrationTimestamp);
+        return true;
+    }).filter(u => {
+        // Search
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (u.username || "").toLowerCase().includes(q) ||
+               (u.fullName || "").toLowerCase().includes(q);
+    });
+
+    displayCount = PAGE_SIZE;
+    renderUsers();
+}
+
+// ── RENDER USERS ──
+function renderUsers() {
+    const list = document.getElementById("users-list");
+    const countEl = document.getElementById("users-count");
+    const loadMoreBtn = document.getElementById("load-more-btn");
+
+    const toShow = filteredUsers.slice(0, displayCount);
+    countEl.textContent = `Showing ${toShow.length} of ${filteredUsers.length} users`;
+
+    if (filteredUsers.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="ei">🔍</div>
+                <div class="et">No users found</div>
+                <div class="es">Try adjusting your search or filter</div>
+            </div>`;
+        loadMoreBtn.style.display = "none";
+        return;
+    }
+
+    list.innerHTML = toShow.map(u => createUserCard(u)).join("");
+    loadMoreBtn.style.display = filteredUsers.length > displayCount ? "block" : "none";
+}
+
+// ── CREATE USER CARD ──
+function createUserCard(u) {
+    const isBanned = u.banned === true;
+    const isOnline = u.isOnline === true;
+    const initials = getInitials(u.fullName || u.username);
+    const color    = getAvatarColor(u.username || u.id);
+    const joined   = formatDate(u.registrationTimestamp);
+    const phone    = u.routingIdentity || "—";
+    const dob      = u.dateOfBirth || "—";
+
+    const avatarHtml = u.userProfilePic
+        ? `<img class="user-avatar" src="${u.userProfilePic}" alt="${u.username}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : "";
+
+    const fallbackHtml = `<div class="user-avatar-fallback" style="background:${color};display:${u.userProfilePic ? 'none' : 'flex'}">${initials}</div>`;
+
+    return `
+    <div class="user-card${isBanned ? " banned" : ""}" id="card-${u.id}">
+        ${avatarHtml}${fallbackHtml}
+        <div class="user-info">
+            <div class="user-top">
+                <div class="status-dot ${isOnline ? "online" : "offline"}"></div>
+                <span class="user-name">${u.fullName || "—"}</span>
+                <span class="user-handle">@${u.username || u.id}</span>
+                ${isBanned ? `<span class="banned-badge">BANNED</span>` : ""}
+            </div>
+            <div class="user-meta">
+                <div class="meta-item">📱 ${phone}</div>
+                <div class="meta-item">🎂 ${dob}</div>
+                <div class="meta-item">📅 Joined ${joined}</div>
+                <div class="meta-item">${isOnline ? "🟢 Online" : "⚫ Offline"}</div>
+            </div>
+            <div class="user-stats">
+                <div class="user-stat">
+                    <span class="usv">${u.postCount || 0}</span>
+                    <span class="usl">Posts</span>
+                </div>
+                <div class="user-stat">
+                    <span class="usv">${u.likesCount || 0}</span>
+                    <span class="usl">Likes</span>
+                </div>
+            </div>
+            <div class="user-actions">
+                <button class="btn-view" onclick="openProfileModal('${u.id}')">👁 View</button>
+                ${isBanned
+                    ? `<button class="btn-unban" onclick="unbanUser('${u.id}')">✅ Unban</button>`
+                    : `<button class="btn-ban" onclick="openBanModal('${u.id}')">🚫 Ban</button>`
+                }
+                <button class="btn-delete" onclick="openDeleteModal('${u.id}')">🗑️ Delete</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ── LOAD MORE ──
+function loadMoreUsers() {
+    displayCount += PAGE_SIZE;
+    renderUsers();
+}
+
+// ── PROFILE MODAL ──
+function openProfileModal(userId) {
+    const u = allUsers.find(x => x.id === userId);
+    if (!u) return;
+
+    const initials = getInitials(u.fullName || u.username);
+    const color    = getAvatarColor(u.username || u.id);
+
+    const coverHtml = u.userCover
+        ? `<img class="profile-cover" src="${u.userCover}" alt="cover">`
+        : `<div style="width:100%;height:80px;border-radius:10px;background:${color};margin-bottom:-30px;"></div>`;
+
+    const avatarHtml = u.userProfilePic
+        ? `<img class="profile-avatar-lg" src="${u.userProfilePic}" alt="${u.username}">`
+        : `<div class="profile-avatar-fallback-lg" style="background:${color}">${initials}</div>`;
+
+    document.getElementById("profile-modal-body").innerHTML = `
+        ${coverHtml}
+        <div class="profile-avatar-wrap">${avatarHtml}</div>
+        <div class="modal-field"><span class="mfk">Full Name</span><span class="mfv">${u.fullName || "—"}</span></div>
+        <div class="modal-field"><span class="mfk">Username</span><span class="mfv">@${u.username || u.id}</span></div>
+        <div class="modal-field"><span class="mfk">Phone</span><span class="mfv">${u.routingIdentity || "—"}</span></div>
+        <div class="modal-field"><span class="mfk">Date of Birth</span><span class="mfv">${u.dateOfBirth || "—"}</span></div>
+        <div class="modal-field"><span class="mfk">Joined</span><span class="mfv">${formatDate(u.registrationTimestamp)}</span></div>
+        <div class="modal-field"><span class="mfk">Status</span><span class="mfv" style="color:${u.isOnline ? 'var(--green)' : 'var(--txt3)'}">${u.isOnline ? "🟢 Online" : "⚫ Offline"}</span></div>
+        <div class="modal-field"><span class="mfk">Posts</span><span class="mfv">${u.postCount || 0}</span></div>
+        <div class="modal-field"><span class="mfk">Likes Given</span><span class="mfv">${u.likesCount || 0}</span></div>
+        <div class="modal-field"><span class="mfk">Banned</span><span class="mfv" style="color:${u.banned ? 'var(--red)' : 'var(--green)'}">${u.banned ? "Yes — " + (u.bannedReason || "No reason") : "No"}</span></div>
+    `;
+
+    document.getElementById("profile-modal").classList.add("show");
+}
+
+// ── BAN MODAL ──
+function openBanModal(userId) {
+    pendingBanUsername = userId;
+    selectedBanReason = "";
+    document.querySelectorAll(".ban-reason-opt").forEach(b => b.classList.remove("selected"));
+    document.getElementById("ban-custom-input").style.display = "none";
+    document.getElementById("ban-custom-input").value = "";
+    const u = allUsers.find(x => x.id === userId);
+    document.getElementById("ban-modal-sub").textContent =
+        `Banning @${u ? u.username : userId}`;
+    document.getElementById("ban-modal").classList.add("show");
+}
+
+function selectBanReason(btn, reason) {
+    document.querySelectorAll(".ban-reason-opt").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    const customInput = document.getElementById("ban-custom-input");
+    if (reason === "custom") {
+        customInput.style.display = "block";
+        selectedBanReason = "";
+    } else {
+        customInput.style.display = "none";
+        selectedBanReason = reason;
+    }
+}
+
+async function confirmBan() {
+    const customVal = document.getElementById("ban-custom-input").value.trim();
+    if (customVal) selectedBanReason = customVal;
+    if (!selectedBanReason) { showToast("⚠️ Zaɓi dalilin ban!"); return; }
+
+    try {
+        await db.collection("users").doc(pendingBanUsername).update({
+            banned: true,
+            bannedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            bannedReason: selectedBanReason
+        });
+        closeModal("ban-modal");
+        showToast("🚫 User an ban!");
+    } catch (e) {
+        showToast("❌ Error: " + e.message);
+    }
+}
+
+// ── UNBAN ──
+async function unbanUser(userId) {
+    try {
+        await db.collection("users").doc(userId).update({
+            banned: false,
+            bannedAt: null,
+            bannedReason: null
+        });
+        showToast("✅ User an unban!");
+    } catch (e) {
+        showToast("❌ Error: " + e.message);
+    }
+}
+
+// ── DELETE MODAL ──
+function openDeleteModal(userId) {
+    pendingDeleteUsername = userId;
+    const u = allUsers.find(x => x.id === userId);
+    document.getElementById("delete-modal-msg").textContent =
+        `Are you sure you want to permanently delete @${u ? u.username : userId}? All their posts and data will be lost forever.`;
+    document.getElementById("delete-modal").classList.add("show");
+}
+
+async function confirmDelete() {
+    try {
+        // Delete user posts
+        const postsSnap = await db.collection("posts")
+            .where("username", "==", pendingDeleteUsername).get();
+        const batch = db.batch();
+        postsSnap.forEach(doc => batch.delete(doc.ref));
+
+        // Delete user doc
+        batch.delete(db.collection("users").doc(pendingDeleteUsername));
+        await batch.commit();
+
+        closeModal("delete-modal");
+        showToast("🗑️ Account deleted permanently!");
+    } catch (e) {
+        showToast("❌ Error: " + e.message);
+    }
+}
+
+// ── CLOSE MODAL ──
+function closeModal(id) {
+    document.getElementById(id).classList.remove("show");
+}
+
+// ── TOAST ──
+function showToast(msg) {
+    const existing = document.getElementById("toast-el");
+    if (existing) existing.remove();
+    const t = document.createElement("div");
+    t.className = "toast"; t.id = "toast-el";
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => {
+        t.style.opacity = "0";
+        t.style.transition = "opacity 0.3s";
+        setTimeout(() => t.remove(), 300);
+    }, 3000);
+}
+
+// ── EVENTS ──
+document.addEventListener("DOMContentLoaded", () => {
+    loadUsers();
+
+    // Search
+    document.getElementById("search-input").addEventListener("input", function() {
+        searchQuery = this.value.trim();
+        applyFilters();
+    });
+
+    // Filters
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+            document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+            currentFilter = this.dataset.filter;
+            applyFilters();
+        });
+    });
+
+    // Close modals on overlay click
+    document.querySelectorAll(".modal-overlay").forEach(overlay => {
+        overlay.addEventListener("click", function(e) {
+            if (e.target === this) this.classList.remove("show");
+        });
+    });
+});
+</script>
+</body>
+</html>
