@@ -910,6 +910,148 @@ window.addEventListener("DOMContentLoaded", () => {
     loadLiveFeed();
     console.log("✅ Firebase connected to Admin Dashboard");
 });
-                  </script>
+                  
+
+// ── LOAD ALL REAL STATS ──
+async function loadAllRealStats() {
+
+    // Total Users
+    adminDB.collection("users").onSnapshot(snap => {
+        const el = document.getElementById("stat-total-users");
+        if (el) el.textContent = snap.size.toLocaleString();
+        
+        // Users growth — kwatanta da jiya
+        const el2 = document.getElementById("stat-users-growth");
+        if (el2) el2.textContent = snap.size > 0 ? "+" + snap.size + " total" : "—";
+    });
+
+    // Active Users
+    adminDB.collection("users")
+        .where("isOnline", "==", true)
+        .onSnapshot(snap => {
+            const el = document.getElementById("stat-active-users");
+            if (el) el.textContent = snap.size.toLocaleString();
+        });
+
+    // Posts Today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    adminDB.collection("posts")
+        .where("timestamp", ">=", firebase.firestore.Timestamp.fromDate(todayStart))
+        .onSnapshot(snap => {
+            const el = document.getElementById("stat-posts-today");
+            if (el) el.textContent = snap.size.toLocaleString();
+        });
+
+    // Pending Verifications badge
+    adminRTDB.ref("providers").orderByChild("verified")
+        .equalTo(false)
+        .on("value", snap => {
+            let count = 0;
+            snap.forEach(() => count++);
+            const badge = document.querySelector(".ib .badge.b");
+            if (badge) badge.textContent = count;
+            
+            // AI Risk count
+            const risk = document.getElementById("ai-risk-count");
+            if (risk) risk.textContent = count + " pending";
+        });
+
+    // Revenue Today daga Firestore
+    adminDB.collection("bookings")
+        .where("createdAt", ">=", firebase.firestore.Timestamp.fromDate(todayStart))
+        .onSnapshot(snap => {
+            let total = 0;
+            snap.forEach(doc => {
+                const data = doc.data();
+                if (data.amount) total += data.amount;
+            });
+            const el = document.getElementById("stat-revenue-today");
+            if (el) el.textContent = total > 0 ? "₦" + total.toLocaleString() : "₦0";
+            
+            const growth = document.getElementById("stat-revenue-growth");
+            if (growth) growth.textContent = snap.size > 0 ? "+" + snap.size + " bookings" : "No bookings yet";
+        });
+
+    // Revenue Overview daga Firestore
+    adminDB.collection("bookings").onSnapshot(snap => {
+        let adRev = 0, creatorEarn = 0, offerwall = 0, others = 0, total = 0;
+        let payoutCount = 0;
+
+        snap.forEach(doc => {
+            const data = doc.data();
+            const amt = data.amount || 0;
+            total += amt;
+
+            if (data.type === "ad") adRev += amt;
+            else if (data.type === "creator") creatorEarn += amt;
+            else if (data.type === "offerwall") offerwall += amt;
+            else others += amt;
+
+            if (data.status === "pending") payoutCount++;
+        });
+
+        // Update Revenue Overview
+        const adEl = document.getElementById("stat-ad-revenue");
+        if (adEl) adEl.textContent = adRev > 0 ? "₦" + adRev.toLocaleString() : "₦0";
+
+        const creEl = document.getElementById("stat-creator-earnings");
+        if (creEl) creEl.textContent = creatorEarn > 0 ? "₦" + creatorEarn.toLocaleString() : "₦0";
+
+        const payEl = document.getElementById("stat-payout-requests");
+        if (payEl) payEl.textContent = payoutCount.toLocaleString();
+
+        const offEl = document.getElementById("stat-offerwall");
+        if (offEl) offEl.textContent = offerwall > 0 ? "₦" + offerwall.toLocaleString() : "₦0";
+
+        const totEl = document.getElementById("stat-total-revenue");
+        if (totEl) totEl.textContent = total > 0 ? "₦" + total.toLocaleString() : "₦0";
+
+        const growEl = document.getElementById("stat-total-growth");
+        if (growEl) growEl.textContent = snap.size > 0 ? snap.size + " bookings" : "—";
+
+        // Percentages
+        if (total > 0) {
+            const pctAd = document.getElementById("pct-ad");
+            if (pctAd) pctAd.textContent = ((adRev / total) * 100).toFixed(1) + "%";
+
+            const pctCr = document.getElementById("pct-creator");
+            if (pctCr) pctCr.textContent = ((creatorEarn / total) * 100).toFixed(1) + "%";
+
+            const pctOff = document.getElementById("pct-offerwall");
+            if (pctOff) pctOff.textContent = ((offerwall / total) * 100).toFixed(1) + "%";
+
+            const pctOth = document.getElementById("pct-others");
+            if (pctOth) pctOth.textContent = ((others / total) * 100).toFixed(1) + "%";
+        } else {
+            ["pct-ad","pct-creator","pct-offerwall","pct-others"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = "0.0%";
+            });
+        }
+
+        // AI Revenue Prediction — 20% fiye da na yau
+        const predEl = document.getElementById("ai-revenue-prediction");
+        if (predEl) {
+            const predicted = Math.round(total * 1.2);
+            predEl.textContent = predicted > 0 ? "₦" + predicted.toLocaleString() : "No data yet";
+        }
+    });
+
+    // AI Growth Insight
+    adminDB.collection("users").onSnapshot(snap => {
+        const insightEl = document.getElementById("ai-growth-insight");
+        if (insightEl) insightEl.textContent = snap.size + " total users";
+    });
+}
+
+// ── VIEW ALL BUTTON ──
+document.querySelector(".vab").addEventListener("click", () => {
+    window.location.href = "admin-users.html";
+});
+
+// Kira functions
+loadAllRealStats();
+   </script>
 </body>
 </html>
