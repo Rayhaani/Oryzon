@@ -980,16 +980,16 @@ function loadUsers() {
 
                 let postCount = 0;
                 try {
-                    const postsSnap = await db.collection("posts")
-                        .where("username", "==", doc.id).get();
-                    postCount = postsSnap.size;
+                    const postsCount = await db.collection("posts")
+                        .where("username", "==", doc.id).count().get();
+                    postCount = postsCount.data().count;
                 } catch (e) {}
 
                 let likesCount = 0;
                 try {
-                    const likesSnap = await db.collection("likes")
-                        .where("user", "==", doc.id).get();
-                    likesCount = likesSnap.size;
+                    const likesCountSnap = await db.collection("likes")
+                        .where("user", "==", doc.id).count().get();
+                    likesCount = likesCountSnap.data().count;
                 } catch (e) {}
 
                 return { id: doc.id, ...data, postCount, likesCount };
@@ -1113,6 +1113,14 @@ function createUserCard(u) {
                         <span class="meta-label">Age</span>
                         <span class="meta-value">${age !== null ? age + " yrs" : "—"}</span>
                     </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Contact</span>
+                        <span class="meta-value">${contact}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Last Seen</span>
+                        <span class="meta-value last-seen${lastSeenInfo.isOnline ? " online-now" : ""}">${lastSeenInfo.text}</span>
+                    </div>
                 </div>
                 <div class="meta-col">
                     <div class="meta-item">
@@ -1128,14 +1136,6 @@ function createUserCard(u) {
                         <span class="meta-value">${u.followersCount || 0}</span>
                     </div>
                 </div>
-            </div>
-            <div class="meta-item wide">
-                <span class="meta-label">Contact</span>
-                <span class="meta-value">${contact}</span>
-            </div>
-            <div class="meta-item wide">
-                <span class="meta-label">Last Seen</span>
-                <span class="meta-value last-seen${lastSeenInfo.isOnline ? " online-now" : ""}">${lastSeenInfo.text}</span>
             </div>
         </div>
 
