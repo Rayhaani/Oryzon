@@ -975,9 +975,7 @@ function loadUsers() {
     db.collection("users")
         .orderBy("registrationTimestamp", "desc")
         .onSnapshot(async (snap) => {
-            allUsers = [];
-
-            for (const doc of snap.docs) {
+            allUsers = await Promise.all(snap.docs.map(async (doc) => {
                 const data = doc.data();
 
                 let postCount = 0;
@@ -994,8 +992,8 @@ function loadUsers() {
                     likesCount = likesSnap.size;
                 } catch (e) {}
 
-                allUsers.push({ id: doc.id, ...data, postCount, likesCount });
-            }
+                return { id: doc.id, ...data, postCount, likesCount };
+            }));
 
             updateStats();
             applyFilters();
@@ -1111,6 +1109,10 @@ function createUserCard(u) {
                         <span class="meta-label">Country</span>
                         <span class="meta-value">${getCountry(u)}</span>
                     </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Age</span>
+                        <span class="meta-value">${age !== null ? age + " yrs" : "—"}</span>
+                    </div>
                 </div>
                 <div class="meta-col">
                     <div class="meta-item">
@@ -1124,12 +1126,6 @@ function createUserCard(u) {
                     <div class="meta-item">
                         <span class="meta-label">Followers</span>
                         <span class="meta-value">${u.followersCount || 0}</span>
-                    </div>
-                </div>
-                <div class="meta-col">
-                    <div class="meta-item">
-                        <span class="meta-label">Age</span>
-                        <span class="meta-value">${age !== null ? age + " yrs" : "—"}</span>
                     </div>
                 </div>
             </div>
