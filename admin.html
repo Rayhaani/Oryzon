@@ -807,6 +807,145 @@ setInterval(()=>{
   last.style.opacity='0';
   requestAnimationFrame(()=>{ last.style.transition='opacity .4s'; last.style.opacity='1'; });
 },4000);
+
 </script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+    measurementId: "G-K5085DLL2W"
+};
+
+firebase.initializeApp(firebaseConfig);
+const adminDB = firebase.firestore();
+const adminRTDB = firebase.database();
+
+function timeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return seconds + " sec ago";
+    if (seconds < 3600) return Math.floor(seconds / 60) + " min ago";
+    if (seconds < 86400) return Math.floor(seconds / 3600) + " hr ago";
+    return Math.floor(seconds / 86400) + " days ago";
+}
+
+function loadRealStats() {
+
+    // Total Users
+    adminDB.collection("users").onSnapshot(snap => {
+        const el = document.querySelector('.sgrid .sc:nth-child(1) .sc-val');
+        if (el) el.textContent = snap.size.toLocaleString();
+    });
+
+    // Active Users
+    adminDB.collection("users")
+        .where("isOnline", "==", true)
+        .onSnapshot(snap => {
+            const el = document.querySelector('.sgrid .sc:nth-child(2) .sc-val');
+            if (el) el.textContent = snap.size.toLocaleString();
+        });
+
+    // Posts Today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    adminDB.collection("posts")
+        .where("timestamp", ">=", firebase.firestore.Timestamp.fromDate(todayStart))
+        .onSnapshot(snap => {
+            const el = document.querySelector('.sgrid .sc:nth-child(3) .sc-val');
+            if (el) el.textContent = snap.size.toLocaleString();
+            const lbl = document.querySelector('.sgrid .sc:nth-child(3) .sc-lbl');
+            if (lbl) lbl.textContent = "Posts Today";
+        });
+
+    // Pending Verifications
+    adminRTDB.ref("providers").orderByChild("verified")
+        .equalTo(false)
+        .on("value", snap => {
+            let count = 0;
+            snap.forEach(() => count++);
+            const badge = document.querySelector('.ib .badge.b');
+            if (badge) badge.textContent = count;
+        });
+}
+
+function loadLiveFeed() {
+
+    // Recent Posts
+    adminDB.collection("posts")
+        .orderBy("timestamp", "desc")
+        .limit(3)
+        .onSnapshot(snap => {
+            const feedList = document.getElementById("feedList");
+            if (!feedList) return;
+            feedList.innerHTML = "";
+            snap.forEach(doc => {
+                const post = doc.data();
+                const time = post.timestamp ? timeAgo(post.timestamp.toDate()) : "just now";
+                feedList.innerHTML += `
+                    <div class="fitem">
+                        <div class="fico ipl">
+                            <svg width="14" height="14" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                        </div>
+                        <div class="fi">
+                            <div class="ft">New Post</div>
+                            <div class="fs">@${post.username || "unknown"} posted</div>
+                        </div>
+                        <div class="ftime">${time}</div>
+                    </div>`;
+            });
+        });
+
+    // Recent Users
+    adminDB.collection("users")
+        .orderBy("registrationTimestamp", "desc")
+        .limit(2)
+        .onSnapshot(snap => {
+            snap.docChanges().forEach(change => {
+                if (change.type !== "added") return;
+                const user = change.doc.data();
+                const feedList = document.getElementById("feedList");
+                if (!feedList) return;
+                const item = document.createElement("div");
+                item.className = "fitem";
+                item.style.opacity = "0";
+                item.innerHTML = `
+                    <div class="fico ibl">
+                        <svg width="14" height="14" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div class="fi">
+                        <div class="ft">New User Joined</div>
+                        <div class="fs">@${user.username || "unknown"} registered</div>
+                    </div>
+                    <div class="ftime">just now</div>`;
+                feedList.prepend(item);
+                requestAnimationFrame(() => {
+                    item.style.transition = "opacity 0.4s";
+                    item.style.opacity = "1";
+                });
+                const items = feedList.querySelectorAll(".fitem");
+                if (items.length > 5) items[items.length - 1].remove();
+            });
+        });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    loadRealStats();
+    loadLiveFeed();
+    console.log("✅ Firebase connected to Admin Dashboard");
+});
+                  </script>
 </body>
 </html>
