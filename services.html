@@ -1861,36 +1861,53 @@ async function uploadPortfolioFilesInline(username) {
     return Object.values(portfolioFiles).filter(e=>e.url).map(e=>({ url:e.url, type:e.type.includes("video")?"video":"image" }));
                 }
 
-        async function uploadVerificationFilesInline(username) {
+ async function uploadVerificationFilesInline() {
+    if (!currentFirebaseUser) {
+        psShowToast("⚠️ Ana shirya asusunka, jira ɗan lokaci sannan sake gwadawa.");
+        throw new Error("Babu Firebase user tukuna");
+    }
+    const token = await currentFirebaseUser.getIdToken();
     const results = {};
+
     for (const key of Object.keys(verificationFiles)) {
         const entry = verificationFiles[key];
         if (!entry.file) continue;
         try {
             const formData = new FormData();
             formData.append("file", entry.file);
-            formData.append("type", "verification");
-            formData.append("username", username || "guest");
-            const res = await fetch(`${BACKEND_URL}/upload-verification`, { method:"POST", body:formData });
+            formData.append("docType", key);   // "id" ko "selfie" — daidai da server
+
+            const res = await fetch(`${BACKEND_URL}/upload-verification`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData
+            });
             const data = await res.json();
             if (data.success) results[key] = data.key;
-        } catch(err) { console.warn(`Verification ${key} upload kaskure:`, err); }
+            else console.warn(`Verification ${key} upload error:`, data.error);
+        } catch(err) {
+            console.warn(`Verification ${key} upload kaskure:`, err);
+        }
     }
     return results;
-}
+ }   
 
 async function submitServiceInline() {
     if (!psInlineState.gpsReady) { psShowToast("⚠️ Ka ɗauki GPS loca kafin ka aika!"); return; }
+    if (!currentFirebaseUser) { psShowToast("⚠️ Ana shirya asusunka, jira ɗan lokaci."); return; }
+
     const submitBtn = document.getElementById("ps-submit-btn-inline");
     submitBtn.disabled = true;
     submitBtn.textContent = "⏳ Ana aika...";
 
     try {
-        const username = localStorage.getItem("nexus_user_session") || "guest";
+        const uid = currentFirebaseUser.uid;   // ← UID na gaske, ba "guest" ba
+
         psShowToast("⏳ Ana upload hotunan aiki...");
-        const portfolioUrls = await uploadPortfolioFilesInline(username);
+        const portfolioUrls = await uploadPortfolioFilesInline(uid);
+
         psShowToast("⏳ Ana upload verification...");
-        const verificationKeys = await uploadVerificationFilesInline(username);
+        const verificationKeys = await uploadVerificationFilesInline();   // babu argument yanzu
 
         if (!verificationKeys.id || !verificationKeys.selfie) {
             psShowToast("❌ Verification upload ya kasa!");
@@ -1899,24 +1916,34 @@ async function submitServiceInline() {
             return;
         }
 
-        // Firebase write — idan firebase yana available
-        if (typeof firebase !== "undefined" && firebase.database) {
-            const db = firebase.database();
-            await db.ref(`providers/${username}`).set({
-                category: psInlineState.selectedCategory,
-                subcategory: psInlineState.selectedSubcategory,
-                categoryLabel: psInlineState.selectedCategoryLabel,
-                pricing: { base: psInlineState.price, unit: psInlineState.priceUnit },
-                bio: psInlineState.description,
-                schedule: psInlineState.availableDays,
-                location: { lat: psInlineState.gpsLat, lng: psInlineState.gpsLng, updatedAt: Date.now() },
-                portfolio: portfolioUrls,
-                verification: { idType: psInlineState.idType, idKey: verificationKeys.id, selfieKey: verificationKeys.selfie, submittedAt: Date.now() },
-                status: "pending_verification",
-                createdAt: Date.now(),
-                username: username
-            });
-        }
+        const db = firebase.database();
+        await db.ref(`providers/${uid}`).set({
+            category: psInlineState.selectedCategory,
+            subcategory: psInlineState.selectedSubcategory,
+            categoryLabel: psInlineState.selectedCategoryLabel,
+            pricing: { base: psInlineState.price, unit: psInlineState.priceUnit },
+            bio: psInlineState.description,
+            schedule: psInlineState.availableDays,
+            location: { lat: psInlineState.gpsLat, lng: psInlineState.gpsLng, updatedAt: Date.now() },
+            portfolio: portfolioUrls,
+            verification: {
+                status: "pending",
+                idType: psInlineState.idType,
+                idDocKey: verificationKeys.id,
+                selfieKey: verificationKeys.selfie,
+                consentGiven: true,
+                consentAt: Date.now(),
+                submittedAt: Date.now(),
+                reviewedAt: null,
+                reviewedBy: null,
+                rejectReason: null
+            },
+            verified: false,
+            status: "pending_verification",
+            createdAt: Date.now()
+        });
+
+        await db.ref(`verificationQueue/${uid}`).set(true);   // ← don Admin Dashboard ya gani
 
         document.getElementById("ps-success-overlay-inline").style.display = "flex";
 
@@ -2029,6 +2056,31 @@ function psShowToast(message) {
     document.body.appendChild(toast);
     setTimeout(() => { toast.style.opacity="0"; toast.style.transition="opacity 0.3s ease"; setTimeout(()=>toast.remove(),300); }, 3000);
 }
+
+
+// ── FIREBASE CONFIG + ANONYMOUS AUTH ──
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  databaseURL:       "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+firebase.initializeApp(FIREBASE_CONFIG);
+
+let currentFirebaseUser = null;
+
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    currentFirebaseUser = user;
+  } else {
+    firebase.auth().signInAnonymously().catch(err => {
+      console.error("Anonymous sign-in ya kasa:", err);
+    });
+  }
+});
 
 // ── DOMContentLoaded ──
 document.addEventListener("DOMContentLoaded", () => {
