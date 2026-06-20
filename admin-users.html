@@ -188,150 +188,218 @@ html, body {
   gap: 10px;
 }
 
-/* USER CARD */
+/* ============ USER CARD (redesigned) ============ */
 .user-card {
   background: var(--bg3);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  border-radius: 14px;
+  padding: 0;
+  overflow: hidden;
   transition: border-color 0.2s;
 }
 
 .user-card:hover { border-color: var(--txt3); }
-.user-card.banned { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03); }
+.user-card.banned { border-color: rgba(239,68,68,0.35); }
+.user-card.suspended { border-color: rgba(234,179,8,0.35); }
+
+/* -- Header: avatar + identity + badges -- */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px 12px 14px;
+}
+
+.avatar-link {
+  flex-shrink: 0;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  border-radius: 50%;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.avatar-link:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+  border-radius: 50%;
+}
 
 .user-avatar {
-  width: 46px; height: 46px;
+  width: 48px; height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  flex-shrink: 0;
+  display: block;
   border: 2px solid var(--border);
 }
 
 .user-avatar-fallback {
-  width: 46px; height: 46px;
+  width: 48px; height: 48px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 16px; color: #fff;
-  flex-shrink: 0;
   border: 2px solid var(--border);
 }
 
-.user-info { flex: 1; min-width: 0; }
+.card-identity {
+  flex: 1;
+  min-width: 0;
+}
 
-.user-top {
-  display: flex; align-items: center; gap: 8px;
-  flex-wrap: wrap; margin-bottom: 6px;
+.identity-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
 }
 
 .user-name {
   font-size: 14px; font-weight: 700; color: var(--txt1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 .user-handle {
-  font-size: 11px; color: var(--txt2); font-weight: 500;
+  font-size: 11.5px; color: var(--txt2); font-weight: 500;
 }
 
-.status-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%; flex-shrink: 0;
+.card-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
+.status-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.3px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.status-chip.active { color: var(--green); background: rgba(34,197,94,0.1); }
+.status-chip.inactive { color: var(--txt2); background: rgba(122,139,168,0.1); }
+
+.status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .status-dot.online { background: var(--green); }
 .status-dot.offline { background: var(--txt3); }
 
-.banned-badge {
-  background: rgba(239,68,68,0.15);
-  color: var(--red);
-  border: 1px solid rgba(239,68,68,0.3);
+.flag-badge {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.3px;
+  padding: 3px 8px;
   border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 10px;
-  font-weight: 700;
+  white-space: nowrap;
 }
 
-.user-meta {
-  display: flex; flex-wrap: wrap; gap: 10px;
-  margin-bottom: 8px;
+.flag-badge.banned { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+.flag-badge.suspended { background: rgba(234,179,8,0.15); color: var(--yellow); border: 1px solid rgba(234,179,8,0.3); }
+
+/* -- Divider -- */
+.card-divider { height: 1px; background: var(--border); margin: 0 14px; }
+
+/* -- Info grid: country, town, age, contact, last seen -- */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+  padding: 12px 14px;
 }
 
-.meta-item {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 11px; color: var(--txt2);
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
-.user-stats {
-  display: flex; gap: 14px; margin-bottom: 10px;
+.info-row.full { grid-column: 1 / -1; }
+
+.info-label {
+  font-size: 9.5px; color: var(--txt3);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+}
+
+.info-value {
+  font-size: 12px; color: var(--txt1); font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* -- Stats: posts / likes -- */
+.card-stats {
+  display: flex;
+  gap: 22px;
+  padding: 0 14px 12px 14px;
 }
 
 .user-stat {
   display: flex; flex-direction: column; align-items: center;
 }
 
-.user-stat .usv {
-  font-size: 14px; font-weight: 700; color: var(--txt1);
+.user-stat .usv { font-size: 14px; font-weight: 700; color: var(--txt1); }
+.user-stat .usl { font-size: 9.5px; color: var(--txt3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+
+/* -- Actions footer -- */
+.card-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  padding: 10px 14px 14px 14px;
 }
 
-.user-stat .usl {
-  font-size: 10px; color: var(--txt3);
-}
-
-.user-actions {
-  display: flex; gap: 7px; flex-wrap: wrap;
-}
-
-.btn-view {
-  padding: 6px 12px;
-  border-radius: 7px;
+.act-btn {
+  padding: 8px 6px;
+  border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--bg2);
   color: var(--txt2);
   font-size: 11px; font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.btn-view:hover { border-color: var(--blue); color: var(--blue); }
+.act-btn.btn-view:hover { border-color: var(--blue); color: var(--blue); }
 
-.btn-ban {
-  padding: 6px 12px;
-  border-radius: 7px;
-  border: 1px solid rgba(234,179,8,0.3);
+.act-btn.btn-ban {
+  border-color: rgba(234,179,8,0.3);
   background: rgba(234,179,8,0.08);
   color: var(--yellow);
-  font-size: 11px; font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
 }
+.act-btn.btn-ban:hover { background: rgba(234,179,8,0.15); }
 
-.btn-ban:hover { background: rgba(234,179,8,0.15); }
-
-.btn-unban {
-  padding: 6px 12px;
-  border-radius: 7px;
-  border: 1px solid rgba(34,197,94,0.3);
+.act-btn.btn-unban {
+  border-color: rgba(34,197,94,0.3);
   background: rgba(34,197,94,0.08);
   color: var(--green);
-  font-size: 11px; font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
 }
+.act-btn.btn-unban:hover { background: rgba(34,197,94,0.15); }
 
-.btn-delete {
-  padding: 6px 12px;
-  border-radius: 7px;
-  border: 1px solid rgba(239,68,68,0.3);
+.act-btn.btn-suspend {
+  border-color: rgba(168,85,247,0.3);
+  background: rgba(168,85,247,0.08);
+  color: var(--purple);
+}
+.act-btn.btn-suspend:hover { background: rgba(168,85,247,0.15); }
+
+.act-btn.btn-unsuspend {
+  border-color: rgba(59,130,246,0.3);
+  background: rgba(59,130,246,0.08);
+  color: var(--blue);
+}
+.act-btn.btn-unsuspend:hover { background: rgba(59,130,246,0.15); }
+
+.act-btn.btn-delete {
+  border-color: rgba(239,68,68,0.3);
   background: rgba(239,68,68,0.08);
   color: var(--red);
-  font-size: 11px; font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
 }
-
-.btn-delete:hover { background: rgba(239,68,68,0.15); }
+.act-btn.btn-delete:hover { background: rgba(239,68,68,0.15); }
 
 /* LOAD MORE */
 .load-more-btn {
@@ -490,6 +558,8 @@ html, body {
   margin-bottom: 6px; color: var(--red);
 }
 
+.ban-title.suspend-title { color: var(--purple); }
+
 .ban-sub {
   font-size: 12px; color: var(--txt2);
   margin-bottom: 16px; line-height: 1.5;
@@ -519,6 +589,13 @@ html, body {
   background: rgba(239,68,68,0.08);
 }
 
+.ban-reason-opt.suspend-opt:hover,
+.ban-reason-opt.suspend-opt.selected {
+  border-color: var(--purple);
+  color: var(--purple);
+  background: rgba(168,85,247,0.08);
+}
+
 .ban-custom-input {
   width: 100%;
   background: var(--bg3);
@@ -546,6 +623,8 @@ html, body {
   cursor: pointer;
   margin-bottom: 8px;
 }
+
+.ban-confirm-btn.suspend-confirm { background: var(--purple); }
 
 .ban-cancel-btn {
   width: 100%;
@@ -616,7 +695,7 @@ html, body {
 /* RESPONSIVE */
 @media (max-width: 480px) {
   .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .user-card { flex-wrap: wrap; }
+  .card-actions { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
@@ -670,6 +749,7 @@ html, body {
       <button class="filter-btn" data-filter="online">🟢 Online</button>
       <button class="filter-btn" data-filter="offline">⚫ Offline</button>
       <button class="filter-btn" data-filter="banned">🚫 Banned</button>
+      <button class="filter-btn" data-filter="suspended">⏸️ Suspended</button>
       <button class="filter-btn" data-filter="new">⭐ New Today</button>
     </div>
   </div>
@@ -719,6 +799,23 @@ html, body {
   </div>
 </div>
 
+<!-- SUSPEND MODAL -->
+<div class="modal-overlay" id="suspend-modal">
+  <div class="ban-modal-box">
+    <div class="ban-title suspend-title">⏸️ Suspend User</div>
+    <div class="ban-sub" id="suspend-modal-sub">Select a reason for suspending this user temporarily.</div>
+    <div class="ban-reasons">
+      <button class="ban-reason-opt suspend-opt" onclick="selectSuspendReason(this, 'Suspicious activity')">🕵️ Suspicious activity</button>
+      <button class="ban-reason-opt suspend-opt" onclick="selectSuspendReason(this, 'Pending verification')">🪪 Pending verification</button>
+      <button class="ban-reason-opt suspend-opt" onclick="selectSuspendReason(this, 'Policy violation under review')">📋 Policy violation under review</button>
+      <button class="ban-reason-opt suspend-opt" onclick="selectSuspendReason(this, 'custom')">✏️ Custom reason...</button>
+    </div>
+    <textarea class="ban-custom-input" id="suspend-custom-input" placeholder="Enter custom suspension reason..."></textarea>
+    <button class="ban-confirm-btn suspend-confirm" onclick="confirmSuspend()">⏸️ Confirm Suspend</button>
+    <button class="ban-cancel-btn" onclick="closeModal('suspend-modal')">Cancel</button>
+  </div>
+</div>
+
 <!-- DELETE MODAL -->
 <div class="modal-overlay" id="delete-modal">
   <div class="delete-modal-box">
@@ -758,7 +855,9 @@ let filteredUsers = [];
 let currentFilter = "all";
 let searchQuery = "";
 let selectedBanReason = "";
+let selectedSuspendReason = "";
 let pendingBanUsername = "";
+let pendingSuspendUsername = "";
 let pendingDeleteUsername = "";
 let displayCount = 20;
 const PAGE_SIZE = 20;
@@ -790,38 +889,65 @@ function getInitials(name) {
 }
 
 // ── FORMAT DATE ──
+function toJsDate(timestamp) {
+    if (!timestamp) return null;
+    if (timestamp.toDate) return timestamp.toDate();
+    return new Date(timestamp);
+}
+
 function formatDate(timestamp) {
-    if (!timestamp) return "—";
-    const date = new Date(
-        typeof timestamp === "number" ? timestamp :
-        timestamp.toDate ? timestamp.toDate() : timestamp
-    );
+    const date = toJsDate(timestamp);
+    if (!date) return "—";
     return date.toLocaleDateString("en-GB", {
         day: "2-digit", month: "short", year: "numeric"
     });
 }
 
 function timeAgo(timestamp) {
-    if (!timestamp) return "—";
-    const date = new Date(
-        typeof timestamp === "number" ? timestamp :
-        timestamp.toDate ? timestamp.toDate() : timestamp
-    );
+    const date = toJsDate(timestamp);
+    if (!date) return "—";
     const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 0) return "just now";
     if (seconds < 60) return "just now";
     if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
     if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
-    return Math.floor(seconds / 86400) + "d ago";
+    if (seconds < 2592000) return Math.floor(seconds / 86400) + "d ago";
+    return formatDate(timestamp);
 }
 
 function isToday(timestamp) {
-    if (!timestamp) return false;
-    const date = new Date(
-        typeof timestamp === "number" ? timestamp :
-        timestamp.toDate ? timestamp.toDate() : timestamp
-    );
+    const date = toJsDate(timestamp);
+    if (!date) return false;
     const today = new Date();
     return date.toDateString() === today.toDateString();
+}
+
+// ── AGE FROM DATE OF BIRTH ──
+function calculateAge(dob) {
+    if (!dob) return null;
+    const birth = new Date(dob);
+    if (isNaN(birth.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age >= 0 ? age : null;
+}
+
+// ── LAST SEEN (Telegram-style) ──
+function getLastSeenLabel(u) {
+    if (u.isOnline === true) return "Online now";
+    const raw = u.lastSeen || u.lastSeenTimestamp || u.lastActive || u.lastActiveTimestamp;
+    if (!raw) return "—";
+    return "Last seen " + timeAgo(raw);
+}
+
+// ── LOCATION HELPERS ──
+function getCountry(u) {
+    return u.country || u.userCountry || "—";
+}
+function getTown(u) {
+    return u.town || u.city || u.userTown || u.userCity || "—";
 }
 
 // ── LOAD USERS ──
@@ -883,10 +1009,11 @@ function updateStats() {
 function applyFilters() {
     filteredUsers = allUsers.filter(u => {
         // Filter
-        if (currentFilter === "online")  return u.isOnline === true && !u.banned;
-        if (currentFilter === "offline") return !u.isOnline && !u.banned;
-        if (currentFilter === "banned")  return u.banned === true;
-        if (currentFilter === "new")     return isToday(u.registrationTimestamp);
+        if (currentFilter === "online")    return u.isOnline === true && !u.banned;
+        if (currentFilter === "offline")   return !u.isOnline && !u.banned;
+        if (currentFilter === "banned")    return u.banned === true;
+        if (currentFilter === "suspended") return u.suspended === true;
+        if (currentFilter === "new")       return isToday(u.registrationTimestamp);
         return true;
     }).filter(u => {
         // Search
@@ -924,56 +1051,98 @@ function renderUsers() {
     loadMoreBtn.style.display = filteredUsers.length > displayCount ? "block" : "none";
 }
 
-// ── CREATE USER CARD ──
+// ── CREATE USER CARD (clean, ordered layout) ──
 function createUserCard(u) {
-    const isBanned = u.banned === true;
-    const isOnline = u.isOnline === true;
-    const initials = getInitials(u.fullName || u.username);
-    const color    = getAvatarColor(u.username || u.id);
-    const joined   = formatDate(u.registrationTimestamp);
-    const phone    = u.routingIdentity || "—";
-    const dob      = u.dateOfBirth || "—";
+    const isBanned    = u.banned === true;
+    const isSuspended = u.suspended === true;
+    const isOnline    = u.isOnline === true;
+    const initials    = getInitials(u.fullName || u.username);
+    const color       = getAvatarColor(u.username || u.id);
+    const age         = calculateAge(u.dateOfBirth);
+    const contact     = u.routingIdentity || u.email || "—";
+    const lastSeen    = getLastSeenLabel(u);
 
-    const avatarHtml = u.userProfilePic
-        ? `<img class="user-avatar" src="${u.userProfilePic}" alt="${u.username}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        : "";
-
-    const fallbackHtml = `<div class="user-avatar-fallback" style="background:${color};display:${u.userProfilePic ? 'none' : 'flex'}">${initials}</div>`;
+    const avatarInner = u.userProfilePic
+        ? `<img class="user-avatar" src="${u.userProfilePic}" alt="${u.username}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+           <div class="user-avatar-fallback" style="background:${color};display:none">${initials}</div>`
+        : `<div class="user-avatar-fallback" style="background:${color};display:flex">${initials}</div>`;
 
     return `
-    <div class="user-card${isBanned ? " banned" : ""}" id="card-${u.id}">
-        ${avatarHtml}${fallbackHtml}
-        <div class="user-info">
-            <div class="user-top">
-                <div class="status-dot ${isOnline ? "online" : "offline"}"></div>
-                <span class="user-name">${u.fullName || "—"}</span>
-                <span class="user-handle">@${u.username || u.id}</span>
-                ${isBanned ? `<span class="banned-badge">BANNED</span>` : ""}
-            </div>
-            <div class="user-meta">
-                <div class="meta-item">📱 ${phone}</div>
-                <div class="meta-item">🎂 ${dob}</div>
-                <div class="meta-item">📅 Joined ${joined}</div>
-                <div class="meta-item">${isOnline ? "🟢 Online" : "⚫ Offline"}</div>
-            </div>
-            <div class="user-stats">
-                <div class="user-stat">
-                    <span class="usv">${u.postCount || 0}</span>
-                    <span class="usl">Posts</span>
+    <div class="user-card${isBanned ? " banned" : ""}${isSuspended && !isBanned ? " suspended" : ""}" id="card-${u.id}">
+
+        <!-- Header: avatar (clickable) + name/username + status badges -->
+        <div class="card-header">
+            <button class="avatar-link" onclick="openProfileModal('${u.id}')" title="Open profile">
+                ${avatarInner}
+            </button>
+            <div class="card-identity">
+                <div class="identity-name-row">
+                    <span class="user-name">${u.fullName || "—"}</span>
                 </div>
-                <div class="user-stat">
-                    <span class="usv">${u.likesCount || 0}</span>
-                    <span class="usl">Likes</span>
-                </div>
+                <div class="user-handle">@${u.username || u.id}</div>
             </div>
-            <div class="user-actions">
-                <button class="btn-view" onclick="openProfileModal('${u.id}')">👁 View</button>
-                ${isBanned
-                    ? `<button class="btn-unban" onclick="unbanUser('${u.id}')">✅ Unban</button>`
-                    : `<button class="btn-ban" onclick="openBanModal('${u.id}')">🚫 Ban</button>`
-                }
-                <button class="btn-delete" onclick="openDeleteModal('${u.id}')">🗑️ Delete</button>
+            <div class="card-badges">
+                <span class="status-chip ${isOnline ? "active" : "inactive"}">
+                    <span class="status-dot ${isOnline ? "online" : "offline"}"></span>
+                    ${isOnline ? "Active" : "Inactive"}
+                </span>
+                ${isBanned ? `<span class="flag-badge banned">Banned</span>` : ""}
+                ${isSuspended ? `<span class="flag-badge suspended">Suspended</span>` : ""}
             </div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <!-- Info: country, town, age, contact, last seen -->
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">Country</span>
+                <span class="info-value">${getCountry(u)}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Town</span>
+                <span class="info-value">${getTown(u)}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Age</span>
+                <span class="info-value">${age !== null ? age + " yrs" : "—"}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Contact</span>
+                <span class="info-value">${contact}</span>
+            </div>
+            <div class="info-row full">
+                <span class="info-label">Last Seen</span>
+                <span class="info-value">${lastSeen}</span>
+            </div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <!-- Stats -->
+        <div class="card-stats">
+            <div class="user-stat">
+                <span class="usv">${u.postCount || 0}</span>
+                <span class="usl">Posts</span>
+            </div>
+            <div class="user-stat">
+                <span class="usv">${u.likesCount || 0}</span>
+                <span class="usl">Likes</span>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card-actions">
+            <button class="act-btn btn-view" onclick="openProfileModal('${u.id}')">👁 View</button>
+            ${isBanned
+                ? `<button class="act-btn btn-unban" onclick="unbanUser('${u.id}')">✅ Unban</button>`
+                : `<button class="act-btn btn-ban" onclick="openBanModal('${u.id}')">🚫 Ban</button>`
+            }
+            ${isSuspended
+                ? `<button class="act-btn btn-unsuspend" onclick="unsuspendUser('${u.id}')">▶️ Unsuspend</button>`
+                : `<button class="act-btn btn-suspend" onclick="openSuspendModal('${u.id}')">⏸️ Suspend</button>`
+            }
+            <button class="act-btn btn-delete" onclick="openDeleteModal('${u.id}')">🗑️ Delete</button>
         </div>
     </div>`;
 }
@@ -991,6 +1160,7 @@ function openProfileModal(userId) {
 
     const initials = getInitials(u.fullName || u.username);
     const color    = getAvatarColor(u.username || u.id);
+    const age      = calculateAge(u.dateOfBirth);
 
     const coverHtml = u.userCover
         ? `<img class="profile-cover" src="${u.userCover}" alt="cover">`
@@ -1005,13 +1175,18 @@ function openProfileModal(userId) {
         <div class="profile-avatar-wrap">${avatarHtml}</div>
         <div class="modal-field"><span class="mfk">Full Name</span><span class="mfv">${u.fullName || "—"}</span></div>
         <div class="modal-field"><span class="mfk">Username</span><span class="mfv">@${u.username || u.id}</span></div>
-        <div class="modal-field"><span class="mfk">Phone</span><span class="mfv">${u.routingIdentity || "—"}</span></div>
+        <div class="modal-field"><span class="mfk">Country</span><span class="mfv">${getCountry(u)}</span></div>
+        <div class="modal-field"><span class="mfk">Town</span><span class="mfv">${getTown(u)}</span></div>
+        <div class="modal-field"><span class="mfk">Age</span><span class="mfv">${age !== null ? age + " yrs" : "—"}</span></div>
+        <div class="modal-field"><span class="mfk">Contact</span><span class="mfv">${u.routingIdentity || u.email || "—"}</span></div>
         <div class="modal-field"><span class="mfk">Date of Birth</span><span class="mfv">${u.dateOfBirth || "—"}</span></div>
         <div class="modal-field"><span class="mfk">Joined</span><span class="mfv">${formatDate(u.registrationTimestamp)}</span></div>
-        <div class="modal-field"><span class="mfk">Status</span><span class="mfv" style="color:${u.isOnline ? 'var(--green)' : 'var(--txt3)'}">${u.isOnline ? "🟢 Online" : "⚫ Offline"}</span></div>
+        <div class="modal-field"><span class="mfk">Status</span><span class="mfv" style="color:${u.isOnline ? 'var(--green)' : 'var(--txt3)'}">${u.isOnline ? "🟢 Active" : "⚫ Inactive"}</span></div>
+        <div class="modal-field"><span class="mfk">Last Seen</span><span class="mfv">${getLastSeenLabel(u)}</span></div>
         <div class="modal-field"><span class="mfk">Posts</span><span class="mfv">${u.postCount || 0}</span></div>
         <div class="modal-field"><span class="mfk">Likes Given</span><span class="mfv">${u.likesCount || 0}</span></div>
         <div class="modal-field"><span class="mfk">Banned</span><span class="mfv" style="color:${u.banned ? 'var(--red)' : 'var(--green)'}">${u.banned ? "Yes — " + (u.bannedReason || "No reason") : "No"}</span></div>
+        <div class="modal-field"><span class="mfk">Suspended</span><span class="mfv" style="color:${u.suspended ? 'var(--yellow)' : 'var(--green)'}">${u.suspended ? "Yes — " + (u.suspendedReason || "No reason") : "No"}</span></div>
     `;
 
     document.getElementById("profile-modal").classList.add("show");
@@ -1021,7 +1196,7 @@ function openProfileModal(userId) {
 function openBanModal(userId) {
     pendingBanUsername = userId;
     selectedBanReason = "";
-    document.querySelectorAll(".ban-reason-opt").forEach(b => b.classList.remove("selected"));
+    document.querySelectorAll("#ban-modal .ban-reason-opt").forEach(b => b.classList.remove("selected"));
     document.getElementById("ban-custom-input").style.display = "none";
     document.getElementById("ban-custom-input").value = "";
     const u = allUsers.find(x => x.id === userId);
@@ -1031,7 +1206,7 @@ function openBanModal(userId) {
 }
 
 function selectBanReason(btn, reason) {
-    document.querySelectorAll(".ban-reason-opt").forEach(b => b.classList.remove("selected"));
+    document.querySelectorAll("#ban-modal .ban-reason-opt").forEach(b => b.classList.remove("selected"));
     btn.classList.add("selected");
     const customInput = document.getElementById("ban-custom-input");
     if (reason === "custom") {
@@ -1070,6 +1245,64 @@ async function unbanUser(userId) {
             bannedReason: null
         });
         showToast("✅ User an unban!");
+    } catch (e) {
+        showToast("❌ Error: " + e.message);
+    }
+}
+
+// ── SUSPEND MODAL ──
+function openSuspendModal(userId) {
+    pendingSuspendUsername = userId;
+    selectedSuspendReason = "";
+    document.querySelectorAll("#suspend-modal .ban-reason-opt").forEach(b => b.classList.remove("selected"));
+    document.getElementById("suspend-custom-input").style.display = "none";
+    document.getElementById("suspend-custom-input").value = "";
+    const u = allUsers.find(x => x.id === userId);
+    document.getElementById("suspend-modal-sub").textContent =
+        `Suspending @${u ? u.username : userId}`;
+    document.getElementById("suspend-modal").classList.add("show");
+}
+
+function selectSuspendReason(btn, reason) {
+    document.querySelectorAll("#suspend-modal .ban-reason-opt").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    const customInput = document.getElementById("suspend-custom-input");
+    if (reason === "custom") {
+        customInput.style.display = "block";
+        selectedSuspendReason = "";
+    } else {
+        customInput.style.display = "none";
+        selectedSuspendReason = reason;
+    }
+}
+
+async function confirmSuspend() {
+    const customVal = document.getElementById("suspend-custom-input").value.trim();
+    if (customVal) selectedSuspendReason = customVal;
+    if (!selectedSuspendReason) { showToast("⚠️ Zaɓi dalilin suspend!"); return; }
+
+    try {
+        await db.collection("users").doc(pendingSuspendUsername).update({
+            suspended: true,
+            suspendedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            suspendedReason: selectedSuspendReason
+        });
+        closeModal("suspend-modal");
+        showToast("⏸️ User an suspend!");
+    } catch (e) {
+        showToast("❌ Error: " + e.message);
+    }
+}
+
+// ── UNSUSPEND ──
+async function unsuspendUser(userId) {
+    try {
+        await db.collection("users").doc(userId).update({
+            suspended: false,
+            suspendedAt: null,
+            suspendedReason: null
+        });
+        showToast("▶️ User an unsuspend!");
     } catch (e) {
         showToast("❌ Error: " + e.message);
     }
