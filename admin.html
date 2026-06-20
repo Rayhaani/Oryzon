@@ -586,9 +586,11 @@ canvas { display: block; }
         <span class="ct">Live Activity Feed</span>
         <button class="vab">View All ▾</button>
       </div>
-      <div class="feed" id="feedList">
-       <div id="feedList-loading" style="text-align:center;padding:20px;color:var(--txt3);font-size:12px;">Loading live feed...</div> 
-
+     <div class="feed" id="feedList">
+  <div id="feedList-loading" style="text-align:center;padding:20px;color:var(--txt3);font-size:12px;">Loading live feed...</div>
+</div>
+</div>
+ 
     <!-- Revenue Overview -->
     <div class="card">
       <div class="ch">
@@ -749,29 +751,6 @@ document.querySelectorAll('.sitem').forEach(el=>{
   });
 });
 
-// === LIVE FEED TICKER ===
-const events=[
-  {cls:'ibl',stroke:'#3b82f6',icon:'<svg width="14" height="14" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',t:'New user registered',s:'Alex Smith joined from United Kingdom'},
-  {cls:'ipl',stroke:'#a855f7',icon:'<svg width="14" height="14" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>',t:'Video uploaded',s:'New video by @videoguru99'},
-  {cls:'igl',stroke:'#22c55e',icon:'<svg width="14" height="14" fill="none" stroke="#22c55e" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',t:'Creator verified',s:'@photo_art has been verified'},
-  {cls:'iyl',stroke:'#eab308',icon:'<svg width="14" height="14" fill="none" stroke="#eab308" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',t:'Revenue generated',s:'You earned $95 from ad revenue'},
-  {cls:'itl',stroke:'#14b8a6',icon:'<svg width="14" height="14" fill="none" stroke="#14b8a6" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',t:'Community created',s:'New community "Tech Devs" created'},
-];
-let ei=0;
-setInterval(()=>{
-  const items=document.querySelectorAll('#feedList .fitem');
-  if(!items.length) return;
-  const ev=events[ei%events.length]; ei++;
-  const last=items[items.length-1];
-  last.querySelector('.fico').className='fico '+ev.cls;
-  last.querySelector('.fico').innerHTML=ev.icon;
-  last.querySelector('.ft').textContent=ev.t;
-  last.querySelector('.fs').textContent=ev.s;
-  last.querySelector('.ftime').textContent='just now';
-  last.style.opacity='0';
-  requestAnimationFrame(()=>{ last.style.transition='opacity .4s'; last.style.opacity='1'; });
-},4000);
-
 </script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -798,45 +777,6 @@ function timeAgo(date) {
     if (seconds < 3600) return Math.floor(seconds / 60) + " min ago";
     if (seconds < 86400) return Math.floor(seconds / 3600) + " hr ago";
     return Math.floor(seconds / 86400) + " days ago";
-}
-
-function loadRealStats() {
-
-    // Total Users
-    adminDB.collection("users").onSnapshot(snap => {
-        const el = document.querySelector('.sgrid .sc:nth-child(1) .sc-val');
-        if (el) el.textContent = snap.size.toLocaleString();
-    });
-
-    // Active Users
-    adminDB.collection("users")
-        .where("isOnline", "==", true)
-        .onSnapshot(snap => {
-            const el = document.querySelector('.sgrid .sc:nth-child(2) .sc-val');
-            if (el) el.textContent = snap.size.toLocaleString();
-        });
-
-    // Posts Today
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    adminDB.collection("posts")
-        .where("timestamp", ">=", firebase.firestore.Timestamp.fromDate(todayStart))
-        .onSnapshot(snap => {
-            const el = document.querySelector('.sgrid .sc:nth-child(3) .sc-val');
-            if (el) el.textContent = snap.size.toLocaleString();
-            const lbl = document.querySelector('.sgrid .sc:nth-child(3) .sc-lbl');
-            if (lbl) lbl.textContent = "Posts Today";
-        });
-
-    // Pending Verifications
-    adminRTDB.ref("providers").orderByChild("verified")
-        .equalTo(false)
-        .on("value", snap => {
-            let count = 0;
-            snap.forEach(() => count++);
-            const badge = document.querySelector('.ib .badge.b');
-            if (badge) badge.textContent = count;
-        });
 }
 
 function loadLiveFeed() {
@@ -906,11 +846,10 @@ function loadLiveFeed() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    loadRealStats();
+    loadAllRealStats();
     loadLiveFeed();
     console.log("✅ Firebase connected to Admin Dashboard");
 });
-                  
 
 // ── LOAD ALL REAL STATS ──
 async function loadAllRealStats() {
