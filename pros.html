@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - Creators / Service Providers</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0b0f1a;
+  --bg2: #111827;
+  --bg3: #141d2e;
+  --bg4: #1a2235;
+  --border: #1f2d45;
+  --txt1: #e2e8f4;
+  --txt2: #7a8ba8;
+  --txt3: #3d5070;
+  --blue: #3b82f6;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --purple: #a855f7;
+  --teal: #14b8a6;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--txt1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* TOPBAR */
+.topbar {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  height: 44px;
+  display: flex; align-items: center;
+  padding: 0 14px; gap: 10px;
+}
+.back-btn {
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: var(--blue);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+}
+.page-title { font-size: 14px; font-weight: 700; color: var(--txt1); flex: 1; }
+.pending-indicator {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--yellow); font-weight: 600;
+}
+.pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.4)} }
+
+/* MAIN */
+.main { padding: 12px; max-width: 900px; margin: 0 auto; }
+
+/* STATS */
+.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
+.stat-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; transition: border-color .2s; }
+.stat-box:hover { border-color: var(--txt3); }
+.stat-box .sv { font-size: 18px; font-weight: 800; line-height: 1; margin-bottom: 3px; }
+.stat-box .sl { font-size: 9px; color: var(--txt2); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+
+/* CONTROLS */
+.controls { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+.search-box { display: flex; align-items: center; gap: 7px; background: var(--bg2); border: 1px solid var(--border); border-radius: 7px; padding: 0 10px; }
+.search-box input { flex: 1; background: none; border: none; outline: none; color: var(--txt1); font-size: 12px; padding: 8px 0; }
+.search-box input::placeholder { color: var(--txt3); }
+.filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn { padding: 5px 11px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg2); color: var(--txt2); font-size: 10px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.filter-btn.active { background: rgba(59,130,246,0.15); border-color: var(--blue); color: var(--blue); }
+.filter-btn:hover { border-color: var(--txt2); color: var(--txt1); }
+
+.providers-count { font-size: 10px; color: var(--txt3); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.providers-list { display: flex; flex-direction: column; gap: 7px; }
+
+/* PROVIDER CARD */
+.prov-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 11px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; transition: border-color .2s; }
+.prov-card:hover { border-color: var(--txt3); }
+.prov-card.pending { border-color: rgba(234,179,8,0.35); }
+.prov-card.approved { border-color: rgba(34,197,94,0.25); }
+.prov-card.rejected { border-color: rgba(239,68,68,0.35); }
+.prov-card.suspended { border-color: rgba(168,85,247,0.35); }
+
+.card-top { display: flex; align-items: center; gap: 9px; }
+.prov-avatar {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; border: 2px solid var(--border); background: var(--bg2);
+}
+.card-identity { flex: 1; min-width: 0; }
+.prov-name { font-size: 13px; font-weight: 700; color: var(--txt1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prov-sub { font-size: 11px; color: var(--txt2); font-weight: 500; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+
+.status-chip { display: flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; padding: 2px 7px; border-radius: 5px; white-space: nowrap; }
+.status-chip.pending { color: var(--yellow); background: rgba(234,179,8,0.12); }
+.status-chip.approved { color: var(--green); background: rgba(34,197,94,0.12); }
+.status-chip.rejected { color: var(--red); background: rgba(239,68,68,0.12); }
+.status-chip.suspended { color: var(--purple); background: rgba(168,85,247,0.12); }
+
+.card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 10px; }
+.meta-item { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.meta-item.wide { grid-column: 1 / -1; }
+.meta-label { font-size: 9px; color: var(--txt3); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.meta-value { font-size: 11px; color: var(--txt1); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.port-strip { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }
+.port-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--bg2); border: 1px solid var(--border); }
+.port-thumb.vid { display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.port-more { width: 44px; height: 44px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--txt2); font-weight: 700; }
+
+.card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.act-btn { flex: 1; min-width: 70px; padding: 7px 4px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg2); color: var(--txt2); font-size: 10.5px; font-weight: 600; cursor: pointer; text-align: center; white-space: nowrap; }
+.act-btn.btn-view:hover { border-color: var(--blue); color: var(--blue); background: rgba(59,130,246,0.08); }
+.act-btn.btn-approve { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.06); color: var(--green); }
+.act-btn.btn-approve:hover { background: rgba(34,197,94,0.15); }
+.act-btn.btn-reject { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); color: var(--red); }
+.act-btn.btn-reject:hover { background: rgba(239,68,68,0.15); }
+.act-btn.btn-suspend { border-color: rgba(168,85,247,0.3); background: rgba(168,85,247,0.06); color: var(--purple); }
+.act-btn.btn-suspend:hover { background: rgba(168,85,247,0.15); }
+.act-btn.btn-unsuspend { border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.06); color: var(--blue); }
+.act-btn.btn-unsuspend:hover { background: rgba(59,130,246,0.15); }
+.act-btn.btn-delete { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); color: var(--red); }
+.act-btn.btn-delete:hover { background: rgba(239,68,68,0.15); }
+
+.load-more-btn { width: 100%; padding: 11px; margin-top: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; color: var(--txt2); font-size: 12px; font-weight: 600; cursor: pointer; display: none; }
+.load-more-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+.empty-state { text-align: center; padding: 50px 20px; color: var(--txt3); }
+.empty-state .ei { font-size: 32px; margin-bottom: 10px; }
+.empty-state .et { font-size: 13px; font-weight: 600; color: var(--txt2); }
+.empty-state .es { font-size: 11px; margin-top: 5px; }
+.loading-state { text-align: center; padding: 40px; color: var(--txt3); font-size: 12px; }
+
+/* MODALS */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; width: 100%; max-width: 420px; max-height: 85vh; overflow-y: auto; animation: slideUp .25s ease forwards; }
+@keyframes slideUp { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg2); z-index: 2; }
+.modal-title { font-size: 13px; font-weight: 700; }
+.modal-close { width: 26px; height: 26px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border); color: var(--txt2); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.modal-body { padding: 18px; }
+
+.modal-field { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid var(--border); gap: 10px; }
+.modal-field:last-child { border-bottom: none; }
+.mfk { font-size: 10px; color: var(--txt2); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0; }
+.mfv { font-size: 12px; color: var(--txt1); font-weight: 600; text-align: right; word-break: break-word; }
+
+.modal-section-label { font-size: 10px; color: var(--txt3); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin: 16px 0 8px; }
+.modal-section-label:first-child { margin-top: 0; }
+
+.verif-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.verif-img-box { aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; background: var(--bg3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; position: relative; }
+.verif-img-box img { width: 100%; height: 100%; object-fit: cover; }
+.verif-fallback { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--txt3); font-size: 10px; font-weight: 600; padding: 8px; text-align: center; }
+.verif-fallback a { color: var(--blue); text-decoration: none; }
+.verif-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; font-weight: 700; text-align: center; padding: 3px; text-transform: uppercase; letter-spacing: .4px; }
+
+.gallery-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
+.gallery-item { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--bg3); border: 1px solid var(--border); }
+.gallery-item img, .gallery-item video { width: 100%; height: 100%; object-fit: cover; }
+
+.day-pill-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+.day-pill { font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(59,130,246,0.1); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
+
+.map-link-btn { display: block; width: 100%; text-align: center; padding: 9px; margin-top: 6px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); border-radius: 9px; color: var(--green); font-size: 11px; font-weight: 700; text-decoration: none; }
+
+.modal-action-row { display: flex; gap: 8px; margin-top: 18px; }
+.modal-action-row .act-btn { padding: 10px 4px; font-size: 11px; }
+
+/* REASON MODAL */
+.reason-modal-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; width: 100%; max-width: 340px; padding: 22px; animation: slideUp .25s ease forwards; }
+.reason-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; color: var(--red); }
+.reason-sub { font-size: 11px; color: var(--txt2); margin-bottom: 14px; line-height: 1.5; }
+.reason-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.reason-opt { padding: 9px 12px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg3); color: var(--txt2); font-size: 11px; font-weight: 600; cursor: pointer; text-align: left; }
+.reason-opt:hover, .reason-opt.selected { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.08); }
+.reason-custom-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; color: var(--txt1); font-size: 12px; padding: 9px 11px; outline: none; margin-bottom: 14px; font-family: inherit; resize: none; height: 65px; display: none; }
+.reason-confirm-btn { width: 100%; padding: 11px; background: var(--red); border: none; border-radius: 9px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; margin-bottom: 7px; }
+.reason-cancel-btn { width: 100%; padding: 9px; background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; color: var(--txt2); font-size: 11px; font-weight: 600; cursor: pointer; }
+
+/* DELETE CONFIRM */
+.delete-modal-box { background: var(--bg2); border: 1px solid rgba(239,68,68,0.3); border-radius: 18px; width: 100%; max-width: 320px; padding: 22px; text-align: center; animation: slideUp .25s ease forwards; }
+.delete-icon { font-size: 36px; margin-bottom: 10px; }
+.delete-title { font-size: 15px; font-weight: 700; color: var(--red); margin-bottom: 7px; }
+.delete-msg { font-size: 11px; color: var(--txt2); line-height: 1.6; margin-bottom: 18px; }
+.delete-confirm-btn { width: 100%; padding: 11px; background: var(--red); border: none; border-radius: 9px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; margin-bottom: 7px; }
+.delete-cancel-btn { width: 100%; padding: 9px; background: var(--bg3); border: 1px solid var(--border); border-radius: 9px; color: var(--txt2); font-size: 11px; font-weight: 600; cursor: pointer; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--bg2); border: 1px solid var(--border); color: var(--txt1); padding: 9px 18px; border-radius: 50px; font-size: 12px; font-weight: 600; z-index: 99999; white-space: nowrap; backdrop-filter: blur(20px); box-shadow: 0 8px 30px rgba(0,0,0,0.4); animation: toastIn .3s ease; }
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: repeat(2,1fr); }
+  .verif-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='admin.html'">← Back</button>
+  <span class="page-title">Creators / Service Providers</span>
+  <div class="pending-indicator">
+    <div class="pulse"></div>
+    <span id="pending-count">0</span> Pending
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-box" onclick="setFilter('all')">
+      <div class="sv" id="s-total" style="color:var(--blue)">—</div>
+      <div class="sl">Total Providers</div>
+    </div>
+    <div class="stat-box" onclick="setFilter('pending')">
+      <div class="sv" id="s-pending" style="color:var(--yellow)">—</div>
+      <div class="sl">Pending Review</div>
+    </div>
+    <div class="stat-box" onclick="setFilter('approved')">
+      <div class="sv" id="s-approved" style="color:var(--green)">—</div>
+      <div class="sl">Approved</div>
+    </div>
+    <div class="stat-box" onclick="setFilter('rejected')">
+      <div class="sv" id="s-rejected" style="color:var(--red)">—</div>
+      <div class="sl">Rejected</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="search-box">
+      <svg width="13" height="13" fill="none" stroke="var(--txt3)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Search by category, subcategory or ID...">
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="pending">🟡 Pending</button>
+      <button class="filter-btn" data-filter="approved">✅ Approved</button>
+      <button class="filter-btn" data-filter="rejected">🚫 Rejected</button>
+      <button class="filter-btn" data-filter="suspended">⏸️ Suspended</button>
+    </div>
+  </div>
+
+  <div class="providers-count" id="providers-count">Loading...</div>
+
+  <div class="providers-list" id="providers-list">
+    <div class="loading-state">⏳ Loading providers from Firebase...</div>
+  </div>
+
+  <button class="load-more-btn" id="load-more-btn" onclick="loadMoreProviders()">Load More</button>
+
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">🧰 Provider Details</span>
+      <button class="modal-close" onclick="closeModal('view-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="view-modal-body"></div>
+  </div>
+</div>
+
+<!-- REJECT MODAL -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="reason-modal-box">
+    <div class="reason-title">🚫 Reject Provider</div>
+    <div class="reason-sub" id="reject-modal-sub">Select a reason for rejecting this application.</div>
+    <div class="reason-opts">
+      <button class="reason-opt" onclick="selectReason(this,'Blurry or unreadable ID')">🪪 Blurry or unreadable ID</button>
+      <button class="reason-opt" onclick="selectReason(this,'Selfie does not match ID')">🤳 Selfie does not match ID</button>
+      <button class="reason-opt" onclick="selectReason(this,'Incomplete portfolio')">🖼️ Incomplete portfolio</button>
+      <button class="reason-opt" onclick="selectReason(this,'Suspicious or fake details')">⚠️ Suspicious or fake details</button>
+      <button class="reason-opt" onclick="selectReason(this,'custom')">✏️ Custom reason...</button>
+    </div>
+    <textarea class="reason-custom-input" id="reject-custom-input" placeholder="Enter custom rejection reason..."></textarea>
+    <button class="reason-confirm-btn" onclick="confirmReject()">🚫 Confirm Reject</button>
+    <button class="reason-cancel-btn" onclick="closeModal('reject-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="delete-modal-box">
+    <div class="delete-icon">🗑️</div>
+    <div class="delete-title">Delete Provider</div>
+    <div class="delete-msg" id="delete-modal-msg">Are you sure you want to permanently delete this provider record? This action cannot be undone.</div>
+    <button class="delete-confirm-btn" onclick="confirmDelete()">Delete Permanently</button>
+    <button class="delete-cancel-btn" onclick="closeModal('delete-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN OVERLAY (required to fetch signed verification image URLs) -->
+<div class="modal-overlay show" id="admin-login-overlay" style="z-index:10500;">
+  <div class="reason-modal-box" style="max-width:320px;">
+    <div class="reason-title" style="color:var(--blue);">🔐 Admin Login</div>
+    <div class="reason-sub">Shiga da admin account domin samun damar duba hotunan ID/Selfie na verification.</div>
+    <input type="email" id="admin-login-email" placeholder="Admin email" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--txt1);font-size:12px;padding:10px 12px;outline:none;margin-bottom:8px;">
+    <input type="password" id="admin-login-password" placeholder="Password" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--txt1);font-size:12px;padding:10px 12px;outline:none;margin-bottom:8px;">
+    <div id="admin-login-error" style="font-size:11px;color:var(--red);margin-bottom:8px;display:none;"></div>
+    <button class="reason-confirm-btn" style="background:var(--blue);" id="admin-login-btn">Shiga</button>
+    <button class="reason-cancel-btn" onclick="document.getElementById('admin-login-overlay').classList.remove('show')">Ci gaba ba tare da hoton verification ba</button>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+// ── FIREBASE INIT (same project as admin.html / users.html) ──
+const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+    measurementId: "G-K5085DLL2W"
+};
+firebase.initializeApp(firebaseConfig);
+const rtdb = firebase.database();
+
+const BACKEND_URL = "https://oryzon-backend-ed1q.onrender.com";
+const auth = firebase.auth();
+let adminUser = null;
+
+// Cache signed URLs for a few minutes within a session so re-opening the same
+// provider doesn't re-request a fresh signed URL every single time.
+const signedUrlCache = {}; // key -> { url, expiresAt }
+
+async function fetchVerificationSignedUrl(key) {
+    if (!key) return null;
+    const cached = signedUrlCache[key];
+    if (cached && cached.expiresAt > Date.now()) return cached.url;
+    if (!adminUser) return null;
+
+    try {
+        const token = await adminUser.getIdToken();
+        const res = await fetch(`${BACKEND_URL}/verification-url`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ key })
+        });
+        const data = await res.json();
+        if (!data.success) return null;
+        // signed URL is valid for 10 min server-side — cache for 8 to be safe
+        signedUrlCache[key] = { url: data.url, expiresAt: Date.now() + 8 * 60 * 1000 };
+        return data.url;
+    } catch (e) {
+        console.error("verification-url fetch failed:", e);
+        return null;
+    }
+}
+
+const CATEGORY_ICONS = {
+    plumber: "🔧", electrician: "⚡", carpenter: "🪚", chef: "🍳", "chef / cook": "🍳",
+    painter: "🎨", mason: "🧱", welder: "🔩", mechanic: "🚗", ac_tech: "❄️",
+    "ac tech": "❄️", tailor: "🧵", cleaner: "🧹", "kitso / hair": "💇🏾‍♀️",
+    makeup: "💄", delivery: "🛵", laundry: "🧺", catering: "🍲", emergency: "🚨"
+};
+function getCatIcon(subLabel) {
+    if (!subLabel) return "🛠️";
+    return CATEGORY_ICONS[subLabel.toLowerCase()] || "🛠️";
+}
+
+// ── STATE ──
+let allProviders = [];
+let filteredProviders = [];
+let currentFilter = "all";
+let searchQuery = "";
+let pendingRejectUid = "";
+let pendingDeleteUid = "";
+let selectedRejectReason = "";
+let displayCount = 20;
+const PAGE_SIZE = 20;
+
+function formatDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" });
+}
+function timeAgo(ms) {
+    if (!ms) return "—";
+    const seconds = Math.floor((Date.now() - ms) / 1000);
+    if (seconds < 60) return "just now";
+    if (seconds < 3600) return Math.floor(seconds/60) + "m ago";
+    if (seconds < 86400) return Math.floor(seconds/3600) + "h ago";
+    if (seconds < 2592000) return Math.floor(seconds/86400) + "d ago";
+    return formatDate(ms);
+}
+
+function getStatusInfo(p) {
+    if (p.suspended === true) return { key: "suspended", label: "Suspended" };
+    const vs = (p.verification && p.verification.status) || p.status || "pending";
+    if (p.verified === true || vs === "approved") return { key: "approved", label: "Approved" };
+    if (vs === "rejected" || p.status === "rejected") return { key: "rejected", label: "Rejected" };
+    return { key: "pending", label: "Pending" };
+}
+
+// ── LOAD PROVIDERS (Realtime Database) ──
+function loadProviders() {
+    rtdb.ref("providers").on("value", (snap) => {
+        const data = snap.val() || {};
+        allProviders = Object.keys(data).map(uid => ({ id: uid, ...data[uid] }));
+        allProviders.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+        updateStats();
+        applyFilters();
+    }, (err) => {
+        document.getElementById("providers-list").innerHTML =
+            `<div class="empty-state"><div class="ei">⚠️</div><div class="et">Could not load providers</div><div class="es">${err.message}</div></div>`;
+    });
+}
+
+function updateStats() {
+    const total = allProviders.length;
+    let pending = 0, approved = 0, rejected = 0;
+    allProviders.forEach(p => {
+        const s = getStatusInfo(p).key;
+        if (s === "pending") pending++;
+        else if (s === "approved") approved++;
+        else if (s === "rejected") rejected++;
+    });
+    document.getElementById("s-total").textContent = total;
+    document.getElementById("s-pending").textContent = pending;
+    document.getElementById("s-approved").textContent = approved;
+    document.getElementById("s-rejected").textContent = rejected;
+    document.getElementById("pending-count").textContent = pending;
+}
+
+function setFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.filter === f));
+    applyFilters();
+}
+
+function applyFilters() {
+    filteredProviders = allProviders.filter(p => {
+        const s = getStatusInfo(p).key;
+        if (currentFilter !== "all" && s !== currentFilter) return false;
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (p.categoryLabel||"").toLowerCase().includes(q) ||
+               (p.subcategory||"").toLowerCase().includes(q) ||
+               (p.id||"").toLowerCase().includes(q);
+    });
+    displayCount = PAGE_SIZE;
+    renderProviders();
+}
+
+function renderProviders() {
+    const list = document.getElementById("providers-list");
+    const countEl = document.getElementById("providers-count");
+    const loadMoreBtn = document.getElementById("load-more-btn");
+
+    const toShow = filteredProviders.slice(0, displayCount);
+    countEl.textContent = `Showing ${toShow.length} of ${filteredProviders.length} providers`;
+
+    if (filteredProviders.length === 0) {
+        list.innerHTML = `<div class="empty-state"><div class="ei">🔍</div><div class="et">No providers found</div><div class="es">Try adjusting your search or filter</div></div>`;
+        loadMoreBtn.style.display = "none";
+        return;
+    }
+
+    list.innerHTML = toShow.map(p => createProviderCard(p)).join("");
+    loadMoreBtn.style.display = filteredProviders.length > displayCount ? "block" : "none";
+}
+
+function createProviderCard(p) {
+    const status = getStatusInfo(p);
+    const icon = getCatIcon(p.subcategory || p.categoryLabel);
+    const portfolio = Array.isArray(p.portfolio) ? p.portfolio : [];
+    const portStrip = portfolio.slice(0,4).map(item => {
+        if (item.type === "video") return `<div class="port-thumb vid">🎥</div>`;
+        return `<img class="port-thumb" src="${item.url}" loading="lazy" onerror="this.style.opacity=0.2">`;
+    }).join("") + (portfolio.length > 4 ? `<div class="port-more">+${portfolio.length-4}</div>` : "");
+
+    return `
+    <div class="prov-card ${status.key}" id="prov-card-${p.id}">
+        <div class="card-top">
+            <div class="prov-avatar">${icon}</div>
+            <div class="card-identity">
+                <div class="prov-name">${p.categoryLabel || "—"} ${p.subcategory ? "· " + p.subcategory : ""}</div>
+                <div class="prov-sub">ID: ${p.id.substring(0,10)}… · ${timeAgo(p.createdAt)}</div>
+            </div>
+            <div class="card-right">
+                <span class="status-chip ${status.key}">${status.label}</span>
+            </div>
+        </div>
+
+        <div class="card-meta">
+            <div class="meta-item"><span class="meta-label">Price</span><span class="meta-value">${p.pricing ? "₦" + Number(p.pricing.base||0).toLocaleString() + " " + (p.pricing.unit||"") : "—"}</span></div>
+            <div class="meta-item"><span class="meta-label">ID Type</span><span class="meta-value">${(p.verification && p.verification.idType) || "—"}</span></div>
+            <div class="meta-item wide"><span class="meta-label">Bio</span><span class="meta-value" style="white-space:normal;">${p.bio || "—"}</span></div>
+        </div>
+
+        ${portfolio.length ? `<div class="port-strip">${portStrip}</div>` : ""}
+
+        <div class="card-actions">
+            <button class="act-btn btn-view" onclick="openViewModal('${p.id}')">👁 View</button>
+            ${status.key !== "approved"
+                ? `<button class="act-btn btn-approve" onclick="approveProvider('${p.id}')">✅ Approve</button>`
+                : `<button class="act-btn btn-suspend" onclick="toggleSuspend('${p.id}', false)">⏸️ Suspend</button>`
+            }
+            ${status.key === "suspended"
+                ? `<button class="act-btn btn-unsuspend" onclick="toggleSuspend('${p.id}', true)">▶️ Unsuspend</button>` : ""
+            }
+            ${status.key !== "rejected"
+                ? `<button class="act-btn btn-reject" onclick="openRejectModal('${p.id}')">🚫 Reject</button>` : ""
+            }
+            <button class="act-btn btn-delete" onclick="openDeleteModal('${p.id}')">🗑️ Delete</button>
+        </div>
+    </div>`;
+}
+
+function loadMoreProviders() { displayCount += PAGE_SIZE; renderProviders(); }
+
+// ── VIEW MODAL ──
+function openViewModal(uid) {
+    const p = allProviders.find(x => x.id === uid);
+    if (!p) return;
+    const status = getStatusInfo(p);
+    const v = p.verification || {};
+    const mapsUrl = (p.location && p.location.lat) ? `https://www.google.com/maps?q=${p.location.lat},${p.location.lng}` : null;
+    const portfolio = Array.isArray(p.portfolio) ? p.portfolio : [];
+
+    document.getElementById("view-modal-body").innerHTML = `
+        <div class="modal-field"><span class="mfk">Status</span><span class="mfv">${status.label}</span></div>
+        <div class="modal-field"><span class="mfk">Provider ID</span><span class="mfv">${p.id}</span></div>
+        <div class="modal-field"><span class="mfk">Category</span><span class="mfv">${p.categoryLabel || "—"}</span></div>
+        <div class="modal-field"><span class="mfk">Subcategory</span><span class="mfv">${p.subcategory || "—"}</span></div>
+        <div class="modal-field"><span class="mfk">Price</span><span class="mfv">${p.pricing ? "₦"+Number(p.pricing.base||0).toLocaleString()+" "+(p.pricing.unit||"") : "—"}</span></div>
+        <div class="modal-field"><span class="mfk">Submitted</span><span class="mfv">${formatDate(p.createdAt)}</span></div>
+        <div class="modal-field"><span class="mfk">Bio</span><span class="mfv">${p.bio || "—"}</span></div>
+
+        <div class="modal-section-label">📅 Available Days</div>
+        <div class="day-pill-row">${(p.schedule||[]).map(d=>`<span class="day-pill">${d}</span>`).join("") || "—"}</div>
+
+        <div class="modal-section-label">📍 Location</div>
+        ${mapsUrl
+            ? `<a class="map-link-btn" href="${mapsUrl}" target="_blank" rel="noopener">Open in Google Maps (${p.location.lat.toFixed(4)}, ${p.location.lng.toFixed(4)})</a>`
+            : `<div style="font-size:11px;color:var(--txt3);">No GPS location submitted</div>`}
+
+        <div class="modal-section-label">🪪 Identity Verification</div>
+        <div class="modal-field"><span class="mfk">ID Type</span><span class="mfv">${v.idType || "—"}</span></div>
+        <div class="verif-grid">
+            <div class="verif-img-box" id="verif-box-id">
+                <div class="verif-fallback">⏳ Loading...</div>
+                <div class="verif-label">ID Document</div>
+            </div>
+            <div class="verif-img-box" id="verif-box-selfie">
+                <div class="verif-fallback">⏳ Loading...</div>
+                <div class="verif-label">Selfie + ID</div>
+            </div>
+        </div>
+
+        <div class="modal-section-label">🖼️ Work Portfolio (${portfolio.length})</div>
+        <div class="gallery-grid">
+            ${portfolio.map(item => item.type === "video"
+                ? `<div class="gallery-item"><video src="${item.url}" muted playsinline controls></video></div>`
+                : `<div class="gallery-item"><img src="${item.url}" loading="lazy" onerror="this.style.opacity=0.2"></div>`
+            ).join("") || `<div style="font-size:11px;color:var(--txt3);">No portfolio items</div>`}
+        </div>
+
+        ${status.key === "rejected" && v.rejectReason ? `
+        <div class="modal-section-label">🚫 Rejection Reason</div>
+        <div style="font-size:12px;color:var(--red);background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:9px;padding:10px 12px;">${v.rejectReason}</div>` : ""}
+
+        <div class="modal-action-row">
+            ${status.key !== "approved" ? `<button class="act-btn btn-approve" onclick="approveProvider('${p.id}');closeModal('view-modal')">✅ Approve</button>` : ""}
+            ${status.key !== "rejected" ? `<button class="act-btn btn-reject" onclick="closeModal('view-modal');openRejectModal('${p.id}')">🚫 Reject</button>` : ""}
+        </div>
+        ${status.key !== "pending" && (v.idDocKey || v.selfieKey) ? `
+        <div class="modal-action-row">
+            <button class="act-btn btn-delete" style="flex:1;" onclick="purgeVerificationFiles('${p.id}')">🗑️ Share Hoton ID/Selfie (Privacy)</button>
+        </div>
+        <div style="font-size:10px;color:var(--txt3);margin-top:6px;text-align:center;">An gama review — za ka iya share hotunan verification domin kare sirrin user.</div>` : ""}
+    `;
+    document.getElementById("view-modal").classList.add("show");
+
+    // Resolve signed URLs (requires admin to be logged in)
+    loadVerificationImage("verif-box-id", "ID Document", v.idDocKey, "🪪");
+    loadVerificationImage("verif-box-selfie", "Selfie + ID", v.selfieKey, "🤳");
+}
+
+async function purgeVerificationFiles(uid) {
+    const p = allProviders.find(x => x.id === uid);
+    if (!p || !adminUser) { showToast("⚠️ Admin login ake bukata!"); return; }
+    const v = p.verification || {};
+    try {
+        const token = await adminUser.getIdToken();
+        const keys = [v.idDocKey, v.selfieKey].filter(Boolean);
+        for (const key of keys) {
+            await fetch(`${BACKEND_URL}/verification-delete`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify({ key })
+            });
+            delete signedUrlCache[key];
+        }
+        await rtdb.ref("providers/" + uid).update({
+            "verification/idDocKey": null,
+            "verification/selfieKey": null,
+            "verification/filesPurged": true,
+            "verification/purgedAt": firebase.database.ServerValue.TIMESTAMP
+        });
+        showToast("🗑️ An share hotunan verification!");
+        closeModal("view-modal");
+    } catch (e) { showToast("❌ Error: " + e.message); }
+}
+
+async function loadVerificationImage(boxId, labelText, key, emoji) {
+    const box = document.getElementById(boxId);
+    if (!box) return;
+
+    if (!key) {
+        box.innerHTML = `<div class="verif-fallback">${emoji} No file on record</div><div class="verif-label">${labelText}</div>`;
+        return;
+    }
+    if (!adminUser) {
+        box.innerHTML = `<div class="verif-fallback">🔐 Admin login required<br><a href="#" onclick="document.getElementById('admin-login-overlay').classList.add('show');return false;">Shiga yanzu</a></div><div class="verif-label">${labelText}</div>`;
+        return;
+    }
+
+    const url = await fetchVerificationSignedUrl(key);
+    // box might no longer be in the DOM if modal was closed/reopened — re-check
+    const liveBox = document.getElementById(boxId);
+    if (!liveBox) return;
+
+    if (!url) {
+        liveBox.innerHTML = `<div class="verif-fallback">⚠️ Could not load image</div><div class="verif-label">${labelText}</div>`;
+        return;
+    }
+    liveBox.innerHTML = `<img src="${url}" alt="${labelText}" onerror="this.parentElement.querySelector('img')?.remove();this.outerHTML='<div class=&quot;verif-fallback&quot;>⚠️ Image expired or failed</div>'"><div class="verif-label">${labelText}</div>`;
+}
+
+// ── APPROVE ──
+async function approveProvider(uid) {
+    try {
+        await rtdb.ref("providers/" + uid).update({
+            verified: true,
+            status: "approved",
+            suspended: false,
+            "verification/status": "approved",
+            "verification/reviewedAt": firebase.database.ServerValue.TIMESTAMP,
+            "verification/reviewedBy": "Super Admin",
+            "verification/rejectReason": null
+        });
+        await rtdb.ref("verificationQueue/" + uid).remove();
+        showToast("✅ Provider an amince da shi!");
+    } catch (e) { showToast("❌ Error: " + e.message); }
+}
+
+// ── REJECT ──
+function openRejectModal(uid) {
+    pendingRejectUid = uid;
+    selectedRejectReason = "";
+    document.querySelectorAll("#reject-modal .reason-opt").forEach(b => b.classList.remove("selected"));
+    document.getElementById("reject-custom-input").style.display = "none";
+    document.getElementById("reject-custom-input").value = "";
+    const p = allProviders.find(x => x.id === uid);
+    document.getElementById("reject-modal-sub").textContent = `Rejecting ${p ? (p.categoryLabel+" · "+p.subcategory) : uid}`;
+    document.getElementById("reject-modal").classList.add("show");
+}
+
+function selectReason(btn, reason) {
+    document.querySelectorAll("#reject-modal .reason-opt").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    const customInput = document.getElementById("reject-custom-input");
+    if (reason === "custom") { customInput.style.display = "block"; selectedRejectReason = ""; }
+    else { customInput.style.display = "none"; selectedRejectReason = reason; }
+}
+
+async function confirmReject() {
+    const customVal = document.getElementById("reject-custom-input").value.trim();
+    if (customVal) selectedRejectReason = customVal;
+    if (!selectedRejectReason) { showToast("⚠️ Zaɓi dalilin ƙin amincewa!"); return; }
+    try {
+        await rtdb.ref("providers/" + pendingRejectUid).update({
+            verified: false,
+            status: "rejected",
+            "verification/status": "rejected",
+            "verification/reviewedAt": firebase.database.ServerValue.TIMESTAMP,
+            "verification/reviewedBy": "Super Admin",
+            "verification/rejectReason": selectedRejectReason
+        });
+        await rtdb.ref("verificationQueue/" + pendingRejectUid).remove();
+        closeModal("reject-modal");
+        showToast("🚫 An ƙi amincewa da provider!");
+    } catch (e) { showToast("❌ Error: " + e.message); }
+}
+
+// ── SUSPEND / UNSUSPEND ──
+async function toggleSuspend(uid, currentlySuspended) {
+    try {
+        await rtdb.ref("providers/" + uid).update({ suspended: !currentlySuspended });
+        showToast(currentlySuspended ? "▶️ An cire suspension!" : "⏸️ Provider an suspend!");
+    } catch (e) { showToast("❌ Error: " + e.message); }
+}
+
+// ── DELETE ──
+function openDeleteModal(uid) {
+    pendingDeleteUid = uid;
+    document.getElementById("delete-modal-msg").textContent =
+        `Are you sure you want to permanently delete this provider record (${uid})? This cannot be undone.`;
+    document.getElementById("delete-modal").classList.add("show");
+}
+
+async function confirmDelete() {
+    try {
+        await rtdb.ref("providers/" + pendingDeleteUid).remove();
+        await rtdb.ref("verificationQueue/" + pendingDeleteUid).remove();
+        closeModal("delete-modal");
+        showToast("🗑️ Provider an goge gaba ɗaya!");
+    } catch (e) { showToast("❌ Error: " + e.message); }
+}
+
+// ── CLOSE / TOAST ──
+function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+function showToast(msg) {
+    const existing = document.getElementById("toast-el");
+    if (existing) existing.remove();
+    const t = document.createElement("div");
+    t.className = "toast"; t.id = "toast-el";
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity="0"; t.style.transition="opacity .3s"; setTimeout(()=>t.remove(),300); }, 3000);
+}
+
+// ── EVENTS ──
+document.addEventListener("DOMContentLoaded", () => {
+    loadProviders();
+
+    auth.onAuthStateChanged((user) => {
+        adminUser = user;
+        if (user) document.getElementById("admin-login-overlay").classList.remove("show");
+    });
+
+    document.getElementById("admin-login-btn").addEventListener("click", async () => {
+        const email = document.getElementById("admin-login-email").value.trim();
+        const password = document.getElementById("admin-login-password").value;
+        const errEl = document.getElementById("admin-login-error");
+        errEl.style.display = "none";
+        if (!email || !password) { errEl.textContent = "Saka email da password!"; errEl.style.display = "block"; return; }
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+        } catch (e) {
+            errEl.textContent = "Login ya kasa: " + e.message;
+            errEl.style.display = "block";
+        }
+    });
+
+    document.getElementById("search-input").addEventListener("input", function() {
+        searchQuery = this.value.trim();
+        applyFilters();
+    });
+
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+        btn.addEventListener("click", function() { setFilter(this.dataset.filter); });
+    });
+
+    document.querySelectorAll(".modal-overlay").forEach(overlay => {
+        overlay.addEventListener("click", function(e) { if (e.target === this && this.id !== "admin-login-overlay") this.classList.remove("show"); });
+    });
+});
+</script>
+</body>
+</html>
