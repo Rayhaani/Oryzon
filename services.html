@@ -2391,6 +2391,9 @@ document.addEventListener("DOMContentLoaded", () => {
 const sessionUser = localStorage.getItem('nexus_user_session');
 if (sessionUser) checkProviderWarnings(sessionUser);
 });
+
+// Initialize push notifications
+initPushNotifications();
         
 
  </script>
@@ -2559,6 +2562,14 @@ async function submitReport() {
         }
 
         closeReportModal();
+       
+        // Aika push zuwa provider
+await sendPushToUser(
+    currentEditProId,
+    '🚩 New Report Filed',
+    'Someone has filed a report against your service profile.',
+    { url: '/services.html' }
+);
         showGlobalToast('✅ Report submitted successfully. Our team will review it.');
 
     } catch (err) {
@@ -2633,6 +2644,18 @@ async function submitReview() {
         }
 
         closeReviewModal();
+
+        // In-App alert ga provider (Firebase RTDB)
+if (typeof firebase !== 'undefined' && firebase.database) {
+    await firebase.database().ref(`providers/${currentEditProId}/notifications`).push({
+        type: 'review',
+        title: '⭐ New Review',
+        message: `A customer left you a ${selectedReviewStars}-star review!`,
+        read: false,
+        createdAt: Date.now()
+    });
+}
+        
         showGlobalToast('✅ Review posted! Thank you for your feedback.');
 
     } catch (err) {
