@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Protocol - Abokina Premium Aurora v8.9</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #111827; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 0px; height: 0px; }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes cyberGlow { 0%, 100% { border-color: rgba(255,255,255,0.2); box-shadow: 0 0 10px rgba(255,255,255,0.05); } 50% { border-color: rgba(255,255,255,0.45); box-shadow: 0 0 18px rgba(255,255,255,0.15); } }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes avatarRotateGlow { 0% { transform: rotate(0deg); box-shadow: 0 0 8px #00f2fe, 0 0 15px rgba(0,242,254,0.2); } 50% { box-shadow: 0 0 20px #4facfe, 0 0 35px rgba(79,172,254,0.6); } 100% { transform: rotate(360deg); box-shadow: 0 0 8px #00f2fe, 0 0 15px rgba(0,242,254,0.2); } }
+        @keyframes softBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes warningSlideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes carpetUnroll { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        @keyframes menuItemSlideIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes sheetSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .slide-up { animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .fade-in { animation: fadeIn 0.35s ease forwards; }
+
+        /* ── HEADER ── */
+        .aurora-header { background: linear-gradient(180deg, #1d4ed8 0%, #3b82f6 85%, #f8fafc 100%); padding: 24px 20px 35px; color: #fff; position: relative; }
+        .cyber-input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
+        .trustid-typing-bar { width: 100%; height: 48px; background: rgba(10,25,50,0.35); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.25); border-radius: 24px; padding: 0 50px 0 45px; color: #fff; font-size: 15px; font-weight: 700; letter-spacing: 0.4px; text-shadow: 0 0 8px rgba(255,255,255,0.3); outline: none; box-sizing: border-box; animation: cyberGlow 6s infinite ease-in-out; }
+        .trustid-typing-bar::placeholder { color: rgba(255,255,255,0.75); font-weight: 700; }
+        .embedded-search-btn { position: absolute; right: 6px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+        .glass-btn { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-radius: 20px; padding: 14px 16px; text-align: center; box-shadow: 0 10px 25px rgba(29,78,216,0.08); border: 1px solid rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* ── BIOMETRIC CARD ── */
+        .biometric-sentinel-card { background: linear-gradient(145deg,#e6e9ed 0%,#dcdfe4 50%,#cbd0d8 100%) !important; border: 1px solid #b8bfc7 !important; border-radius: 18px !important; padding: 24px 20px 20px !important; box-shadow: 0 15px 35px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.8) !important; position: relative; overflow: hidden; color: #1a202c !important; cursor: pointer; }
+        .biometric-sentinel-card::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg,rgba(0,0,0,0.01) 0px,rgba(0,0,0,0.01) 1px,transparent 1px,transparent 2px); opacity: 0.7; pointer-events: none; z-index: 1; }
+        .sentinel-screw { position: absolute; width: 8px; height: 8px; background: radial-gradient(circle at 30% 30%,#fff 0%,#a8b2bd 60%,#5a6578 100%); border: 0.5px solid #7b8896; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2),inset 0 0.5px 1px rgba(0,0,0,0.4); z-index: 3; }
+        .sentinel-screw::after { content: ""; position: absolute; top: 3.5px; left: 1px; width: 6px; height: 1px; background: #5a6578; }
+        .scr-tl { top:10px;left:10px; } .scr-tr { top:10px;right:10px; } .scr-bl { bottom:10px;left:10px; } .scr-br { bottom:10px;right:10px; }
+        .lens-viewport { width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#0d1117 20%,#1f2937 50%,#4b5563 80%,#9ca3af 100%);border:3px solid #8e9aa8;box-shadow:0 4px 8px rgba(0,0,0,0.15),inset 0 2px 4px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+        .lens-glass-reflection { width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(59,130,246,0.6) 0%,rgba(16,185,129,0.4) 40%,transparent 70%);position:relative; }
+        .lens-glass-reflection::before { content:"";position:absolute;top:3px;left:4px;width:5px;height:5px;background:#fff;border-radius:50%;opacity:0.8; }
+        .laser-biometric-scanner { width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#064e3b 10%,#022c22 60%,#374151 100%);border:3px solid #8e9aa8;box-shadow:0 4px 10px rgba(16,185,129,0.3),inset 0 2px 6px rgba(0,0,0,0.6),0 0 15px rgba(52,211,153,0.4);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0; }
+        .laser-target-core { width:20px;height:20px;border:1px solid rgba(52,211,153,0.5);border-radius:50%;background:rgba(52,211,153,0.1);box-shadow:0 0 8px #10b981;position:relative; }
+        .laser-ray-flare { position:absolute;right:-10px;width:60px;height:2px;background:linear-gradient(90deg,#34d399 0%,rgba(52,211,153,0) 100%);box-shadow:0 0 8px #10b981;transform:rotate(-15deg); }
+        .sentinel-title-text { font-size:19px;font-weight:800;color:#0f172a !important;letter-spacing:-0.4px;line-height:1.1; }
+        .sentinel-sub-text { color:#1e3a8a !important;font-size:13px;font-weight:700;margin-top:3px; }
+        .sentinel-body-p { color:#334155 !important;font-size:13px !important;font-weight:600;line-height:1.4;margin-top:12px; }
+        .sentinel-hardware-badge { background:transparent !important;color:#1e293b !important;border:1px solid #94a3b8 !important;border-radius:20px !important;padding:4px 14px;font-size:11px;font-weight:700; }
+        .sentinel-footer { display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:10px;border-top:1px solid rgba(0,0,0,0.08) !important; }
+
+        /* ── STORIES ── */
+        .quantum-story-container { width:100%;overflow:hidden;padding:10px 0;position:relative; }
+        .quantum-story-track { display:flex;width:max-content;animation:marquee 25s linear infinite;gap:12px;padding-left:20px; }
+        .glass-lens-card { width:90px;flex-shrink:0;border-radius:22px;overflow:visible;position:relative;cursor:pointer;transition:transform 0.2s ease; }
+        .glass-lens-card:hover { transform:scale(1.03); }
+        .glass-lens-img-wrap { width:90px;height:100px;border-radius:22px;overflow:hidden;position:relative;border:1.5px solid rgba(56,189,248,0.5);box-shadow:0 0 0 3px rgba(56,189,248,0.08),0 12px 28px rgba(0,0,0,0.35); }
+        .glass-lens-img { width:100%;height:100%;object-fit:cover;filter:brightness(0.72) saturate(1.3); }
+        .glass-lens-img-wrap::before { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.12) 0%,transparent 45%,rgba(56,189,248,0.08) 100%);z-index:2;border-radius:22px;pointer-events:none; }
+        .glass-lens-ring { position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;border:2px solid #38bdf8;box-shadow:0 0 10px rgba(56,189,248,0.6);background:rgba(14,165,233,0.15);z-index:5;display:flex;align-items:center;justify-content:center;font-size:8px; }
+        .glass-lens-body { padding:7px 2px 0;text-align:center; }
+        .glass-lens-name { font-size:9.5px;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;display:block; }
+        .glass-lens-distance { font-size:8.5px;color:#38bdf8;font-weight:700;margin-top:2px; }
+
+        /* ── STORY OVERLAY ── */
+        .instagram-story-overlay { position:fixed;top:0;left:0;width:100vw;height:100vh;height:100dvh;background:#090d16;z-index:9999;display:none;flex-direction:column;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none; }
+        .story-header-area { padding:0 0 10px;background:linear-gradient(to bottom,rgba(9,13,22,0.9) 0%,rgba(9,13,22,0) 100%);position:absolute;top:0;left:0;width:100%;z-index:10020;box-sizing:border-box; }
+        .story-progress-bar-container { display:flex;gap:4px;width:100%;margin-bottom:12px; }
+        .story-progress-bg { height:3px;background:rgba(255,255,255,0.25);flex:1;border-radius:2px;overflow:hidden; }
+        .story-progress-fill { height:100%;background:#fff;width:0%; }
+        .story-food-display-canvas { width:100%;height:100%;flex:1;background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;box-sizing:border-box;padding:40px; }
+        .story-bottom-action-deck { position:absolute;bottom:0;left:0;width:100%;padding:16px 24px 24px;background:linear-gradient(to top,rgba(15,23,42,0.95) 70%,rgba(15,23,42,0) 100%);display:flex;gap:14px;box-sizing:border-box;z-index:10010; }
+
+        /* ── ROUTER ── */
+        .router-overlay { position:fixed;inset:0;background:rgba(10,20,40,0.4);backdrop-filter:blur(8px);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px; }
+        .router-box { background:#fff;border-radius:28px;width:100%;max-width:380px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,0.15);animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .router-option { width:100%;padding:16px;border-radius:16px;border:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;gap:14px;cursor:pointer;font-weight:700;font-size:14px;color:#111827;margin-top:12px; }
+
+        /* ── PROFILE SHEET ── */
+        .full-profile-view { position:fixed;inset:0;background:#fff;z-index:4000;overflow-y:auto;display:none;animation:slideUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .portfolio-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px; }
+        .portfolio-img-card { background:#f1f5f9;height:110px;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#64748b;font-weight:600;font-size:12px;border:1px solid #e2e8f0; }
+
+        /* ── CATEGORY CARDS ── */
+        .aero-prism-card { background:rgba(255,255,255,0.8) !important;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,0.7) !important;border-radius:20px !important;padding:16px 8px !important;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden;box-shadow:0 10px 25px rgba(148,163,184,0.1),inset 0 2px 4px rgba(255,255,255,0.9) !important;transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); }
+        .aero-prism-card:hover { transform:translateY(-5px) scale(1.02);background:#fff !important;border-color:transparent !important;box-shadow:0 20px 35px rgba(59,130,246,0.15) !important; }
+        .aero-prism-card::after { content:'';position:absolute;inset:0;border-radius:20px;padding:1.5px;background:linear-gradient(135deg,#3b82f6,#10b981,#f59e0b,#ef4444,#3b82f6);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity 0.3s ease; }
+        .aero-prism-card:hover::after { opacity:1; }
+        .prism-icon-sphere { width:48px;height:48px;background:#f1f5f9;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;box-shadow:inset 0 2px 5px rgba(0,0,0,0.05); }
+        .aero-prism-card:hover .prism-icon-sphere { background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);transform:rotate(10deg); }
+        .prism-card-label { font-size:11px !important;font-weight:700 !important;color:#1e293b !important;text-align:center;letter-spacing:0.2px; }
+
+        /* ── CHEF MENU ── */
+        .chef-menu-overlay { position:fixed;inset:0;z-index:6000;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,0.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px); }
+        .chef-menu-scroll-carpet { width:92%;max-width:400px;background:rgba(255,255,255,0.12);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.2);border-radius:28px;padding:20px 20px 32px;box-shadow:0 20px 60px rgba(0,0,0,0.4);animation:carpetUnroll 0.5s cubic-bezier(0.16,1,0.3,1) forwards;max-height:80vh;overflow-y:auto; }
+        .chef-menu-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.15); }
+        .chef-menu-title { font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.3px;animation:softBlink 1.8s ease-in-out infinite; }
+        .chef-menu-close-btn { width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
+        .menu-item-card { display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:14px 16px;margin-bottom:10px;opacity:0;transform:translateY(16px);animation:menuItemSlideIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .menu-item-emoji { font-size:32px;flex-shrink:0; }
+        .menu-item-name { font-size:14px;font-weight:800;color:#fff; }
+        .menu-item-desc { font-size:11px;color:rgba(255,255,255,0.55);margin-top:2px;font-weight:500; }
+        .menu-item-price { font-size:15px;font-weight:800;color:#34d399;flex-shrink:0; }
+        .chef-availability-banner { margin-top:20px;background:linear-gradient(135deg,rgba(29,78,216,0.4) 0%,rgba(16,185,129,0.3) 100%);border:1px solid rgba(255,255,255,0.15);border-radius:18px;padding:16px 20px;text-align:center;opacity:0;animation:menuItemSlideIn 0.4s cubic-bezier(0.16,1,0.3,1) 0.6s forwards; }
+        .availability-text { font-size:15px;font-weight:800;color:#fff;line-height:1.4; }
+        .availability-cta { font-size:12px;color:#34d399;font-weight:700;margin-top:6px;animation:softBlink 1.8s ease-in-out infinite; }
+
+        /* ── POST SERVICE ── */
+        .ps-day-chip-inline input { display:none; }
+        .ps-day-chip-inline span { display:inline-block;padding:5px 8px;border-radius:7px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s ease;user-select:none;white-space:nowrap;flex-shrink:0; }
+        .ps-day-chip-inline input:checked + span { background:rgba(99,102,241,0.2);border-color:#6366f1;color:#fff; }
+        .ps-port-slot { aspect-ratio:1;border-radius:10px;border:1.5px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);cursor:pointer;overflow:hidden;position:relative;display:block;transition:all 0.2s ease; }
+        .ps-port-slot.filled { border-color:rgba(99,102,241,0.4);border-style:solid; }
+        .ps-port-inner { width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:18px; }
+        .ps-port-preview { width:100%;height:100%;object-fit:cover;display:block;border-radius:8px; }
+        .ps-port-remove { position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(239,68,68,0.9);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;border:none; }
+
+        /* ══════════════════════════════════════════
+           NEW FEATURE STYLES
+        ══════════════════════════════════════════ */
+
+        /* ── BOTTOM SHEET BASE (shared by Report & Review) ── */
+        .bottom-sheet-overlay {
+            position: fixed; inset: 0;
+            background: rgba(5,10,20,0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 8500;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .bottom-sheet-panel {
+            width: 100%; max-width: 500px;
+            background: rgba(13,18,36,0.98);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 26px 26px 0 0;
+            padding: 8px 20px 36px;
+            transform: translateY(100%);
+            transition: transform 0.38s cubic-bezier(0.22,1,0.36,1);
+            box-shadow: 0 -24px 70px rgba(0,0,0,0.55);
+            max-height: 90dvh;
+            overflow-y: auto;
+        }
+        .bottom-sheet-panel.open { transform: translateY(0); }
+        .sheet-drag-handle {
+            width: 40px; height: 4px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.15);
+            margin: 12px auto 18px;
+        }
+        .sheet-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:20px; }
+        .sheet-header-left .sheet-eyebrow { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.9px;margin-bottom:3px; }
+        .sheet-header-left .sheet-title { font-size:18px;font-weight:800;color:#fff; }
+        .sheet-close-btn {
+            width:32px;height:32px;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            font-size:13px;cursor:pointer;border:none;
+        }
+        .field-label {
+            font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);
+            text-transform:uppercase;letter-spacing:0.5px;
+            margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;
+        }
+        .field-label .req { color:#ef4444; }
+        .glass-input {
+            width:100%;background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:10px;color:#fff;
+            font-size:13px;padding:10px 12px;outline:none;
+            font-family:inherit;box-sizing:border-box;
+            transition:border-color 0.2s;
+        }
+        .glass-input:focus { border-color:rgba(255,255,255,0.3); }
+        .glass-select {
+            width:100%;background:rgba(13,18,36,0.99);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:10px;color:#fff;
+            font-size:13px;padding:10px 12px;outline:none;
+            box-sizing:border-box;
+        }
+        .glass-textarea {
+            width:100%;background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:10px;color:#fff;font-size:13px;
+            padding:10px 12px;outline:none;resize:none;
+            line-height:1.5;font-family:inherit;box-sizing:border-box;
+        }
+        .glass-textarea:focus { border-color:rgba(255,255,255,0.3); }
+        .form-field { margin-bottom:14px; }
+
+        /* ── REPORT SPECIFIC ── */
+        .report-proof-grid {
+            display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+        }
+        .report-proof-slot {
+            aspect-ratio:1;border-radius:10px;
+            border:1.5px dashed rgba(239,68,68,0.25);
+            background:rgba(239,68,68,0.03);
+            cursor:pointer;display:flex;
+            align-items:center;justify-content:center;
+            flex-direction:column;gap:3px;
+            overflow:hidden;position:relative;
+            transition:border-color 0.2s;
+        }
+        .report-proof-slot.has-file { border-color:rgba(239,68,68,0.6);border-style:solid; }
+        .report-notice {
+            background:rgba(239,68,68,0.05);
+            border:1px solid rgba(239,68,68,0.12);
+            border-radius:10px;padding:9px 12px;
+            font-size:10px;color:rgba(255,255,255,0.35);
+            line-height:1.5;margin-bottom:14px;
+        }
+        .btn-report-submit {
+            width:100%;padding:13px;
+            background:linear-gradient(135deg,#dc2626,#b91c1c);
+            border:none;border-radius:12px;color:#fff;
+            font-size:14px;font-weight:800;cursor:pointer;
+            font-family:inherit;
+            box-shadow:0 4px 22px rgba(220,38,38,0.3);
+            transition:opacity 0.2s;
+        }
+        .btn-report-submit:disabled { opacity:0.5;cursor:not-allowed; }
+
+        /* ── REVIEW SPECIFIC ── */
+        .star-row { display:flex;justify-content:center;gap:10px;margin:4px 0 8px; }
+        .star-pick {
+            font-size:34px;cursor:pointer;
+            transition:transform 0.15s ease,filter 0.15s ease;
+            filter:grayscale(1);color:rgba(255,255,255,0.15);
+            user-select:none;
+        }
+        .star-pick.lit { filter:none;color:#f59e0b; }
+        .star-pick.lit.current { transform:scale(1.28); }
+        .star-label-text { font-size:12px;color:rgba(255,255,255,0.35);font-weight:600;text-align:center;min-height:18px;margin-bottom:10px; }
+        .tag-row { display:flex;gap:6px;flex-wrap:wrap; }
+        .rev-tag {
+            padding:5px 12px;border-radius:20px;
+            border:1px solid rgba(255,255,255,0.1);
+            background:rgba(255,255,255,0.04);
+            font-size:11px;font-weight:700;
+            color:rgba(255,255,255,0.4);
+            cursor:pointer;transition:all 0.2s;
+            user-select:none;
+        }
+        .rev-tag.active { background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.45);color:#fbbf24; }
+        .btn-review-submit {
+            width:100%;padding:13px;
+            background:linear-gradient(135deg,#f59e0b,#d97706);
+            border:none;border-radius:12px;color:#fff;
+            font-size:14px;font-weight:800;cursor:pointer;
+            font-family:inherit;
+            box-shadow:0 4px 22px rgba(245,158,11,0.3);
+            transition:opacity 0.2s;
+        }
+        .btn-review-submit:disabled { opacity:0.5;cursor:not-allowed; }
+
+        /* ── WARNING BANNER (Feature C) ── */
+        #pro-warning-banner {
+            position:fixed;top:0;left:0;width:100%;
+            z-index:9600;display:none;
+            padding:0;pointer-events:none;
+        }
+        #pro-warning-inner {
+            margin:10px auto;
+            max-width:430px;
+            width:calc(100% - 24px);
+            background:rgba(12,4,4,0.97);
+            border:1px solid rgba(239,68,68,0.45);
+            border-radius:20px;
+            padding:14px 16px;
+            box-shadow:0 10px 45px rgba(220,38,38,0.25),0 0 0 1px rgba(239,68,68,0.08);
+            display:flex;align-items:flex-start;gap:12px;
+            pointer-events:all;
+            animation:warningSlideDown 0.42s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        .warning-pulse-dot {
+            width:38px;height:38px;flex-shrink:0;
+            border-radius:50%;
+            background:rgba(239,68,68,0.1);
+            border:1px solid rgba(239,68,68,0.3);
+            display:flex;align-items:center;justify-content:center;
+            font-size:17px;
+            animation:softBlink 1.5s ease-in-out infinite;
+        }
+        .warning-eyebrow { font-size:9.5px;font-weight:700;color:rgba(239,68,68,0.65);text-transform:uppercase;letter-spacing:0.9px;margin-bottom:3px; }
+        .warning-title { font-size:13px;font-weight:800;color:#fff;margin-bottom:4px; }
+        .warning-body { font-size:11.5px;color:rgba(255,255,255,0.5);line-height:1.5; }
+        .warning-btn-row { display:flex;gap:8px;margin-top:10px; }
+        .btn-warn-dismiss { flex:1;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;color:#f87171;font-size:11px;font-weight:700;padding:7px;cursor:pointer;font-family:inherit; }
+        .btn-warn-ack { flex:1;background:linear-gradient(135deg,#dc2626,#991b1b);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:800;padding:7px;cursor:pointer;font-family:inherit; }
+    </style>
+</head>
+<body>
+
+<div id="wrapper" style="max-width:430px;margin:0 auto;min-height:100vh;background:#f8fafc;position:relative;padding-bottom:60px;box-shadow:0 0 30px rgba(0,0,0,0.05);">
+
+    <!-- ── HEADER ── -->
+    <div class="aurora-header">
+        <div style="display:flex;align-items:center;position:relative;">
+            <div class="cyber-input-wrapper">
+                <span style="position:absolute;left:18px;font-size:16px;pointer-events:none;z-index:2;">🛡️</span>
+                <input type="text" id="search-input" class="trustid-typing-bar" placeholder="TrustID Secured Portal"/>
+                <div class="embedded-search-btn" id="search-trigger-btn"><span style="font-size:14px;">🔍</span></div>
+            </div>
+        </div>
+        <div id="header-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px;position:relative;margin-bottom:-10px;">
+            <div class="glass-btn" id="near-me-btn"><span style="font-size:18px;">📍</span><span style="font-weight:700;font-size:13px;color:#111827;">Pros Near Me</span></div>
+            <div class="glass-btn" id="verified-pros-btn"><span style="font-size:18px;">🛡️</span><span style="font-weight:700;font-size:13px;color:#111827;">Verified Pros</span></div>
+            <div class="glass-btn" id="post-service-btn" onclick="openPostServiceSheet()" style="grid-column:1/-1;width:calc(50% - 7px);margin:0 auto;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;">
+                <span style="font-size:18px;">🚀</span><span style="font-weight:700;font-size:13px;color:#fff;">Post Your Service</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── SEARCH ROUTER ── -->
+    <div class="router-overlay" id="router-overlay">
+        <div class="router-box">
+            <h3 style="font-size:16px;font-weight:800;color:#111827;text-align:center;">Search Preferences</h3>
+            <p style="font-size:13px;color:#64748b;text-align:center;margin-top:4px;margin-bottom:12px;">Select scope for your query.</p>
+            <div class="router-option" id="route-all-opt"><span style="font-size:18px;">🌍</span><div>Search All Verified Experts</div></div>
+            <div class="router-option" id="route-near-opt"><span style="font-size:18px;">📍</span><div>Search Experts Near Me</div></div>
+        </div>
+    </div>
+
+    <!-- ── MAIN VIEW ── -->
+    <div id="main-view" class="fade-in">
+        <div id="locating-status" style="display:none;padding:24px 20px 0;text-align:center;color:#1d4ed8;font-weight:600;font-size:13px;">🔄 Syncing GPS Location Engine...</div>
+        <div style="margin-top:24px;">
+            <div style="padding:0 20px;font-weight:700;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">⚡ Available Now In Your Area</div>
+            <div class="quantum-story-container">
+                <div class="quantum-story-track" id="stories-track-container"></div>
+            </div>
+        </div>
+        <div style="padding:20px 20px 0;">
+            <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.5px;">Service Categories</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;" id="categories-grid-container"></div>
+        </div>
+        <div style="padding:28px 20px 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div style="font-weight:700;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">⭐ Highly Rated Providers</div>
+                <button id="view-all-traders-btn" style="background:none;border:none;color:#1d4ed8;font-weight:700;font-size:12px;cursor:pointer;">View All</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;" id="highly-rated-list-container"></div>
+        </div>
+    </div>
+
+    <!-- ── RESULTS VIEW ── -->
+    <div id="results-view" class="fade-in" style="display:none;margin-top:10px;">
+        <div style="padding:14px 20px;display:flex;gap:8px;overflow-x:auto;" id="trades-filter-bar"></div>
+        <div id="proximity-badge-alert" style="display:none;margin:4px 20px 12px;background:rgba(34,197,94,0.05);border-radius:16px;padding:12px 16px;align-items:center;gap:10px;border:1px solid rgba(34,197,94,0.15);">
+            <span style="font-size:16px;">📍</span>
+            <div><div style="font-weight:700;font-size:12px;color:#16a34a;">GPS Live Proximity Active</div><div style="font-size:11px;color:#64748b;margin-top:1px;">Filter locked below 1.5 km.</div></div>
+        </div>
+        <div style="padding:12px 20px 0;">
+            <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:14px;text-transform:uppercase;" id="search-results-counter">Search Results (0)</div>
+            <div style="display:flex;flex-direction:column;gap:12px;" id="results-list-container"></div>
+        </div>
+    </div>
+
+    <!-- ── STORY OVERLAY ── -->
+    <div class="instagram-story-overlay" id="story-overlay-deck">
+        <div class="story-header-area">
+            <div class="story-progress-bar-container" id="story-progress-indicators-bar"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:24px;" id="story-header-icon">🍳</span>
+                    <div>
+                        <div style="font-weight:800;font-size:14px;color:#fff;" id="story-header-title">Chef Amara</div>
+                        <div style="font-size:11px;color:#fff;" id="story-header-meta">Live Near Me (0.5km)</div>
+                    </div>
+                </div>
+                <button id="close-story-overlay-btn" style="background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:16px;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+            </div>
+        </div>
+        <div class="story-food-display-canvas" id="story-interactive-canvas-area">
+            <div style="font-size:96px;margin-bottom:16px;" id="story-canvas-main-emoji">🥣</div>
+            <h2 style="font-weight:800;font-size:28px;color:#fff;" id="story-canvas-main-title">Danwake</h2>
+            <div style="color:#34d399;font-weight:800;font-size:24px;margin-top:6px;" id="story-canvas-main-price">₦1,500</div>
+            <div style="background:rgba(255,255,255,0.06);padding:8px 18px;border-radius:14px;font-size:12px;color:#cbd5e1;margin-top:14px;border:1px solid rgba(255,255,255,0.1);">🔥 Freshly Available In Perimeter</div>
+            <div class="story-bottom-action-deck">
+                <button id="story-action-order-btn" style="flex:1;background:#1d4ed8;color:#fff;border:none;border-radius:12px;padding:10px 0;font-weight:800;font-size:12px;cursor:pointer;">Place Order 🛒</button>
+                <button id="story-action-profile-btn" style="flex:1;background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:10px 0;font-weight:700;font-size:12px;cursor:pointer;">Go to Profile 👤</button>
+            </div>
+        </div>
+    </div>
+</div><!-- end #wrapper -->
+
+<!-- ══════════════════════════════════════════
+     EXPERT PROFILE MODAL
+══════════════════════════════════════════ -->
+<div class="full-profile-view" id="profile-sheet-overlay">
+    <div style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;background:#fff;position:sticky;top:0;z-index:10;">
+        <div style="display:flex;align-items:center;gap:16px;">
+            <button id="close-profile-sheet-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#111827;">←</button>
+            <span style="font-weight:800;font-size:16px;color:#111827;">Expert Verification File</span>
+        </div>
+        <span style="font-size:11px;font-weight:800;" id="profile-online-status-pill">ONLINE</span>
+    </div>
+
+    <div style="padding:24px 20px;background:linear-gradient(180deg,#f8fafc 0%,#fff 100%);text-align:center;border-bottom:1px solid #f1f5f9;">
+        <div id="profile-avatar-sphere" style="width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;margin:0 auto 14px;box-shadow:0 10px 25px rgba(0,0,0,0.1);"></div>
+        <h2 style="font-weight:800;font-size:22px;color:#111827;display:flex;align-items:center;justify-content:center;gap:6px;"><span id="profile-expert-name"></span><span id="profile-shield-badge">🛡️</span></h2>
+        <div style="color:#1d4ed8;font-weight:700;font-size:14px;margin-top:4px;" id="profile-expert-category"></div>
+        <div style="display:flex;justify-content:center;margin-top:8px;" id="profile-stars-slot"></div>
+    </div>
+
+    <div style="padding:20px;">
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;">
+            <div style="background:#f8fafc;border-radius:16px;padding:14px 8px;text-align:center;border:1px solid #f1f5f9;"><div style="font-weight:800;font-size:16px;color:#111827;" id="meta-jobs-counter"></div><div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:500;">Completed Jobs</div></div>
+            <div style="background:#f8fafc;border-radius:16px;padding:14px 8px;text-align:center;border:1px solid #f1f5f9;"><div style="font-weight:800;font-size:16px;color:#111827;" id="meta-reviews-counter"></div><div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:500;">Client Reviews</div></div>
+            <div style="background:#f8fafc;border-radius:16px;padding:14px 8px;text-align:center;border:1px solid #f1f5f9;"><div style="font-weight:800;font-size:16px;color:#111827;" id="meta-distance-counter"></div><div style="font-size:11px;color:#64748b;margin-top:4px;font-weight:500;">Proximity</div></div>
+        </div>
+
+        <!-- Chef schedule -->
+        <div id="chef-schedule-section-card" style="display:none;margin-bottom:24px;background:rgba(236,72,153,0.04);border:1px solid rgba(236,72,153,0.15);border-radius:16px;padding:16px;">
+            <div style="font-weight:700;font-size:11px;color:#be185d;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">📅 Available Order Days</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;" id="chef-days-badges-slot"></div>
+        </div>
+
+        <div style="margin-bottom:24px;">
+            <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;">Professional Profile</div>
+            <p style="color:#374151;font-size:14px;line-height:1.6;margin:0;text-align:justify;" id="profile-expert-bio-p"></p>
+        </div>
+        <div style="margin-bottom:24px;">
+            <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;">Endorsed Competencies</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;" id="profile-skills-badges-slot"></div>
+        </div>
+        <div style="margin-bottom:24px;">
+            <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:4px;text-transform:uppercase;">Work Portfolio</div>
+            <div class="portfolio-grid" id="profile-gallery-grid-slot"></div>
+        </div>
+
+        <!-- ── ACTION BUTTONS (4-button grid) ── -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;position:sticky;bottom:16px;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);padding:10px 0;">
+            <button onclick="alert('Secure Chat opening...')" style="background:#f1f5f9;color:#111827;border:none;border-radius:16px;padding:14px 0;font-weight:700;font-size:13px;cursor:pointer;">Chat 📩</button>
+            <button onclick="alert('Hiring workflow...')" style="background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:16px;padding:14px 0;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 4px 15px rgba(29,78,216,0.3);">Hire 📞</button>
+            <!-- NEW ── Review -->
+            <button id="btn-open-review" onclick="openReviewOverlay()" style="background:rgba(245,158,11,0.07);color:#d97706;border:1px solid rgba(245,158,11,0.25);border-radius:16px;padding:14px 0;font-weight:700;font-size:13px;cursor:pointer;">Leave Review ⭐</button>
+            <!-- NEW ── Report -->
+            <button id="btn-open-report" onclick="openReportOverlay()" style="background:rgba(239,68,68,0.06);color:#dc2626;border:1px solid rgba(239,68,68,0.2);border-radius:16px;padding:14px 0;font-weight:700;font-size:13px;cursor:pointer;">Report ⚠️</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── CHEF MENU ── -->
+<div class="chef-menu-overlay" id="chef-menu-overlay">
+    <div class="chef-menu-scroll-carpet">
+        <div class="chef-menu-header">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:10px;color:rgba(255,255,255,0.5);font-weight:600;">Welcome to Nexus Protocol · Today's Live Menu</div>
+                <div class="chef-menu-title" id="chef-menu-pro-name">Chef Amara Yusuf</div>
+            </div>
+            <button class="chef-menu-close-btn" id="chef-menu-close-btn">✕</button>
+        </div>
+        <div id="chef-menu-items-slot"></div>
+        <div class="chef-availability-banner">
+            <div class="availability-text" id="availability-text">Available Everyday</div>
+            <div class="availability-cta">👆 Place Order Now</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── POST SERVICE SHEET ── -->
+<div id="post-service-sheet-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:7000;display:none;align-items:center;justify-content:center;padding:20px;" onclick="closePSOverlay(event)">
+    <div id="post-service-sheet" style="width:100%;max-width:600px;height:75vh;background:rgba(20,25,45,0.85);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.15);border-radius:24px;display:flex;flex-direction:column;transform:scale(0.9);opacity:0;transition:transform 0.3s cubic-bezier(0.22,1,0.36,1),opacity 0.3s ease;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.2);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <button id="ps-back-step-inline-btn" onclick="psGoBack()" style="display:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;">← Back</button>
+                <span id="ps-sheet-title-label" style="font-size:14px;font-weight:800;color:#fff;">Choose Your Service</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div id="ps-inline-step-dots" style="display:none;gap:5px;align-items:center;">
+                    <div id="ps-dot-1" style="width:6px;height:6px;border-radius:50%;background:#6366f1;transition:all 0.3s;"></div>
+                    <div id="ps-dot-2" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all 0.3s;"></div>
+                    <div id="ps-dot-3" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all 0.3s;"></div>
+                </div>
+                <div onclick="closePSManual()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;">✕</div>
+            </div>
+        </div>
+        <!-- Step 1 -->
+        <div id="ps-inline-step-1" style="display:flex;flex:1;min-height:0;">
+            <div style="position:absolute;width:calc(100% - 32px);padding:8px 0;left:16px;z-index:2;" id="ps-search-bar-wrap">
+                <div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;">🔍</span><input id="ps-inline-search" type="text" placeholder="Search service..." oninput="filterInlineCategories(this.value)" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:13px;padding:9px 12px 9px 32px;outline:none;"></div>
+            </div>
+            <div style="display:flex;flex:1;min-height:0;margin-top:44px;">
+                <div id="ps-cat-list" style="width:45%;overflow-y:auto;border-right:1px solid rgba(255,255,255,0.05);padding-bottom:20px;"></div>
+                <div id="ps-sub-panel" style="width:55%;overflow-y:auto;background:rgba(0,0,0,0.15);padding:10px;padding-bottom:20px;">
+                    <div id="ps-sub-empty-state" style="text-align:center;color:rgba(255,255,255,0.3);font-size:12px;margin-top:40px;font-weight:600;">← Select your profession</div>
+                    <div id="ps-sub-list-content"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Step 2 -->
+        <div id="ps-inline-step-2" style="display:none;flex:1;overflow-y:auto;padding:12px 16px 16px;flex-direction:column;gap:12px;">
+            <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Price (₦)</div><div style="display:flex;gap:8px;"><input id="ps-price" type="number" placeholder="e.g. 3500" min="0" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;outline:none;"><select id="ps-price-unit" style="width:120px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:12px;padding:10px 8px;outline:none;"><option value="per job">Per Job</option><option value="per hour">Per Hour</option><option value="per day">Per Day</option><option value="negotiable">Negotiable</option></select></div></div>
+            <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Description <span style="color:rgba(255,255,255,0.2);font-size:10px;" id="ps-char-num-inline">0</span>/300</div><textarea id="ps-description" maxlength="300" placeholder="Describe your skills and experience..." oninput="document.getElementById('ps-char-num-inline').textContent=this.value.length" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;outline:none;resize:none;height:72px;line-height:1.5;font-family:inherit;"></textarea></div>
+            <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Available Days</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;"><label class="ps-day-chip-inline"><input type="checkbox" value="Monday"><span>Mon</span></label><label class="ps-day-chip-inline"><input type="checkbox" value="Tuesday"><span>Tue</span></label><label class="ps-day-chip-inline"><input type="checkbox" value="Wednesday"><span>Wed</span></label><label class="ps-day-chip-inline"><input type="checkbox" value="Thursday"><span>Thu</span></label><label class="ps-day-chip-inline"><input type="checkbox" value="Friday"><span>Fri</span></label><label class="ps-day-chip-inline"><input type="checkbox" value="Saturday"><span>Sat</span></label><label class="ps-day-chip-inline"><input type="checkbox" value="Sunday"><span>Sun</span></label></div></div>
+            <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">ID Verification <span style="color:#ef4444;">*</span></div><div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);border-radius:10px;padding:7px 10px;font-size:10px;color:rgba(255,255,255,0.4);line-height:1.3;margin-bottom:8px;">🔒 Confidential — only Admin can view for identity verification.</div><select id="ps-id-type" style="width:100%;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:13px;padding:10px 12px;outline:none;margin-bottom:8px;"><option value="">— Select ID Type —</option><option value="national_id">National ID Card</option><option value="passport">International Passport</option><option value="drivers_license">Driver's License</option><option value="voters_card">Voter's Card</option></select><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><label id="verify-slot-id" style="aspect-ratio:2/1;border-radius:10px;border:1.5px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;"><input type="file" accept="image/*" onchange="handleVerificationFile(this,'id')" hidden><span style="font-size:20px;">🪪</span><span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);">ID Photo</span></label><label id="verify-slot-selfie" style="aspect-ratio:2/1;border-radius:10px;border:1.5px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;"><input type="file" accept="image/*" capture="user" onchange="handleVerificationFile(this,'selfie')" hidden><span style="font-size:20px;">🤳</span><span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);">Selfie + ID</span></label></div></div>
+            <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Work Photos (Min. 4) <span style="color:#ef4444;">*</span></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;"><label class="ps-port-slot" id="ps-slot-0"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,0)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Photo 1</span></div></label><label class="ps-port-slot" id="ps-slot-1"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,1)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Photo 2</span></div></label><label class="ps-port-slot" id="ps-slot-2"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,2)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Photo 3</span></div></label><label class="ps-port-slot" id="ps-slot-3"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,3)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Photo 4</span></div></label><label class="ps-port-slot" id="ps-slot-4"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,4)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Photo 5</span></div></label><label class="ps-port-slot" id="ps-slot-5"><input type="file" accept="image/*,video/*" onchange="handlePortfolioFile(this,5)" hidden><div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Photo 6</span></div></label><label class="ps-port-slot" id="ps-slot-6"><input type="file" accept="video/*" onchange="handlePortfolioFile(this,6)" hidden><div class="ps-port-inner"><span>🎥</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Video 1</span></div></label><label class="ps-port-slot" id="ps-slot-7"><input type="file" accept="video/*" onchange="handlePortfolioFile(this,7)" hidden><div class="ps-port-inner"><span>🎥</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Video 2</span></div></label></div></div>
+            <div id="ps-upload-status-inline" style="display:none;margin-top:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:11px;color:rgba(255,255,255,0.4);">Uploading...</span><span style="font-size:11px;color:#6366f1;font-weight:700;" id="ps-upload-count-inline">0/4</span></div><div style="background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden;height:3px;"><div id="ps-upload-bar-inline" style="height:100%;background:linear-gradient(90deg,#6366f1,#10b981);width:0%;transition:width 0.3s ease;border-radius:6px;"></div></div></div>
+            <button onclick="psGoToStep3()" style="width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px;font-family:inherit;">Continue → GPS</button>
+        </div>
+        <!-- Step 3 -->
+        <div id="ps-inline-step-3" style="display:none;flex:1;overflow-y:auto;padding:12px 16px 16px;flex-direction:column;gap:10px;">
+            <div id="ps-gps-card-inline" style="display:flex;align-items:center;gap:10px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);border-radius:12px;padding:12px;"><span style="font-size:24px;">📍</span><div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#fff;" id="ps-gps-status-inline">Ready to capture location</div><div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:monospace;" id="ps-gps-coords-inline">GPS not enabled yet</div></div><button id="ps-gps-btn-inline" onclick="captureGPSInline()" style="background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;flex-shrink:0;">Get Location</button></div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;"><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">📋 Summary</div><div style="display:flex;flex-direction:column;"><div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Category</span><span style="font-size:11px;color:#fff;font-weight:700;text-align:right;max-width:60%;" id="ps-sum-category">—</span></div><div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Price</span><span style="font-size:11px;color:#fff;font-weight:700;" id="ps-sum-price">—</span></div><div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Days</span><span style="font-size:11px;color:#fff;font-weight:700;text-align:right;max-width:60%;" id="ps-sum-days">—</span></div><div style="display:flex;justify-content:space-between;padding:7px 0;"><span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Location</span><span style="font-size:11px;color:#fff;font-weight:700;" id="ps-sum-location">Waiting for GPS...</span></div></div></div>
+            <button id="ps-submit-btn-inline" onclick="submitServiceInline()" style="width:100%;padding:13px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Post Service</button>
+        </div>
+    </div>
+</div>
+
+<!-- PS Success -->
+<div id="ps-success-overlay-inline" style="position:fixed;inset:0;background:rgba(10,15,30,0.96);backdrop-filter:blur(20px);z-index:9999;display:none;align-items:center;justify-content:center;padding:30px;">
+    <div style="text-align:center;"><div style="font-size:64px;margin-bottom:20px;">✅</div><h2 style="font-size:22px;font-weight:800;color:#10b981;margin-bottom:12px;">Submitted!</h2><p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:28px;">Your service has been added to the Abokina network. Nearby clients can now find you.</p><button onclick="document.getElementById('ps-success-overlay-inline').style.display='none';closePSManual();" style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:800;padding:14px 28px;cursor:pointer;font-family:inherit;">Back to Home →</button></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ██  FEATURE A — REPORT PROVIDER BOTTOM SHEET  ██
+     DB write → reports/{reportId}
+     { providerId, reporterName, reason, description,
+       proofs:[], status:"pending", createdAt }
+══════════════════════════════════════════════════════════════ -->
+<div class="bottom-sheet-overlay" id="report-overlay" onclick="overlayBackdropClose(event,'report-overlay','report-panel')">
+    <div class="bottom-sheet-panel" id="report-panel">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+            <div class="sheet-header-left">
+                <div class="sheet-eyebrow" style="color:rgba(239,68,68,0.7);">Safety Report</div>
+                <div class="sheet-title">Report this Provider</div>
+            </div>
+            <button class="sheet-close-btn" onclick="closeSheet('report-overlay','report-panel')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;">✕</button>
+        </div>
+
+        <div class="form-field">
+            <div class="field-label">Your Name <span class="req">*</span></div>
+            <input id="report-name" type="text" class="glass-input" placeholder="e.g. John Doe">
+        </div>
+        <div class="form-field">
+            <div class="field-label">Reason <span class="req">*</span></div>
+            <select id="report-reason" class="glass-select">
+                <option value="">— Select reason —</option>
+                <option value="fake_profile">Fake Profile / False Info</option>
+                <option value="fraud">Fraud / Scam</option>
+                <option value="harassment">Harassment</option>
+                <option value="poor_quality">Poor Work Quality</option>
+                <option value="no_show">Took money, didn't show up</option>
+                <option value="inappropriate">Inappropriate Behaviour</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <div class="field-label">Full Description <span class="req">*</span> <span id="report-char-count" style="color:rgba(255,255,255,0.2);">0/400</span></div>
+            <textarea id="report-description" class="glass-textarea" maxlength="400" rows="4" placeholder="Describe exactly what happened..." oninput="document.getElementById('report-char-count').textContent=this.value.length+'/400'"></textarea>
+        </div>
+        <div class="form-field">
+            <div class="field-label">Evidence / Proof Photos (optional)</div>
+            <div class="report-proof-grid" id="report-proof-grid">
+                <label id="rp-slot-0" class="report-proof-slot"><input type="file" accept="image/*" onchange="handleReportProof(this,0)" hidden><span style="font-size:18px;">📎</span><span style="font-size:8px;color:rgba(255,255,255,0.25);font-weight:700;">Photo 1</span></label>
+                <label id="rp-slot-1" class="report-proof-slot"><input type="file" accept="image/*" onchange="handleReportProof(this,1)" hidden><span style="font-size:18px;">📎</span><span style="font-size:8px;color:rgba(255,255,255,0.25);font-weight:700;">Photo 2</span></label>
+                <label id="rp-slot-2" class="report-proof-slot"><input type="file" accept="image/*" onchange="handleReportProof(this,2)" hidden><span style="font-size:18px;">📎</span><span style="font-size:8px;color:rgba(255,255,255,0.25);font-weight:700;">Photo 3</span></label>
+                <label id="rp-slot-3" class="report-proof-slot"><input type="file" accept="image/*" onchange="handleReportProof(this,3)" hidden><span style="font-size:18px;">📎</span><span style="font-size:8px;color:rgba(255,255,255,0.25);font-weight:700;">Photo 4</span></label>
+            </div>
+        </div>
+        <div class="report-notice">🔒 This report is confidential. Admin will review within 24 hours.</div>
+        <button class="btn-report-submit" id="report-submit-btn" onclick="submitReport()">⚠️ Submit Report</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ██  FEATURE B — REVIEW SUBMISSION BOTTOM SHEET  ██
+     DB write → reviews/{providerId}/{reviewId}
+     { reviewerName, reviewerUid, stars, tags, text,
+       providerId, providerName, createdAt }
+══════════════════════════════════════════════════════════════ -->
+<div class="bottom-sheet-overlay" id="review-overlay" onclick="overlayBackdropClose(event,'review-overlay','review-panel')">
+    <div class="bottom-sheet-panel" id="review-panel">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+            <div class="sheet-header-left">
+                <div class="sheet-eyebrow" style="color:rgba(245,158,11,0.7);">Client Review</div>
+                <div class="sheet-title" id="review-sheet-title">Rate this Provider</div>
+            </div>
+            <button class="sheet-close-btn" onclick="closeSheet('review-overlay','review-panel')" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:#fbbf24;">✕</button>
+        </div>
+
+        <!-- Stars -->
+        <div style="text-align:center;margin-bottom:16px;">
+            <div class="field-label" style="justify-content:center;margin-bottom:8px;">Rating <span class="req">*</span></div>
+            <div class="star-row" id="star-picker">
+                <span class="star-pick" data-val="1" onclick="setReviewStar(1)">★</span>
+                <span class="star-pick" data-val="2" onclick="setReviewStar(2)">★</span>
+                <span class="star-pick" data-val="3" onclick="setReviewStar(3)">★</span>
+                <span class="star-pick" data-val="4" onclick="setReviewStar(4)">★</span>
+                <span class="star-pick" data-val="5" onclick="setReviewStar(5)">★</span>
+            </div>
+            <div class="star-label-text" id="star-label-text"></div>
+        </div>
+
+        <div class="form-field">
+            <div class="field-label">Your Name <span class="req">*</span></div>
+            <input id="review-name" type="text" class="glass-input" placeholder="e.g. Aisha Saleh">
+        </div>
+
+        <!-- Quick tags -->
+        <div class="form-field">
+            <div class="field-label">Quick Tags</div>
+            <div class="tag-row">
+                <span class="rev-tag" onclick="toggleRevTag(this,'Honest')">👍 Honest</span>
+                <span class="rev-tag" onclick="toggleRevTag(this,'Fast Worker')">⚡ Fast Worker</span>
+                <span class="rev-tag" onclick="toggleRevTag(this,'Expert')">🏆 Expert</span>
+                <span class="rev-tag" onclick="toggleRevTag(this,'Good Price')">💰 Good Price</span>
+                <span class="rev-tag" onclick="toggleRevTag(this,'Clean Work')">✨ Clean Work</span>
+                <span class="rev-tag" onclick="toggleRevTag(this,'Professional')">🎯 Professional</span>
+            </div>
+        </div>
+
+        <div class="form-field">
+            <div class="field-label">Written Review <span id="rev-char-count" style="color:rgba(255,255,255,0.2);">0/300</span></div>
+            <textarea id="review-text" class="glass-textarea" maxlength="300" rows="3" placeholder="How did the job go? Share your experience..." oninput="document.getElementById('rev-char-count').textContent=this.value.length+'/300'"></textarea>
+        </div>
+
+        <button class="btn-review-submit" id="review-submit-btn" onclick="submitReview()">⭐ Submit Review</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ██  FEATURE C — PRO WARNING BANNER  ██
+     Reads real-time from → providers/{uid}/warnings
+     Shows for any warning where readAt is null/missing
+     "Na Fahimta" button writes readAt timestamp → acknowledged
+══════════════════════════════════════════════════════════════ -->
+<div id="pro-warning-banner">
+    <div id="pro-warning-inner">
+        <div class="warning-pulse-dot">⚠️</div>
+        <div style="flex:1;min-width:0;">
+            <div class="warning-eyebrow">Abokina Admin · Warning Notice</div>
+            <div class="warning-title" id="warning-title-text">You have a new warning from Admin</div>
+            <div class="warning-body" id="warning-body-text">Please review the notice sent to your account.</div>
+            <div class="warning-btn-row">
+                <button class="btn-warn-dismiss" onclick="dismissWarningBanner()">Dismiss</button>
+                <button class="btn-warn-ack" onclick="acknowledgeWarning()">I Understand ✓</button>
+            </div>
+        </div>
+        <button onclick="dismissWarningBanner()" style="background:none;border:none;color:rgba(255,255,255,0.2);font-size:15px;cursor:pointer;padding:0;flex-shrink:0;line-height:1;">✕</button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     FIREBASE SDKs  (must be before main <script>)
+═══════════════════════════════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="nearme-engine.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   FIREBASE INIT  ←  replace with your real config
+═══════════════════════════════════════════════════ */
+const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    authDomain:        "oryzon-50ea4.firebaseapp.com",
+    databaseURL:       "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+    projectId:         "oryzon-50ea4",
+    storageBucket:     "oryzon-50ea4.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId:             "YOUR_APP_ID"
+};
+firebase.initializeApp(FIREBASE_CONFIG);
+const BACKEND_URL = "https://oryzon-backend-ed1q.onrender.com";
+let currentFirebaseUser = null;
+
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        currentFirebaseUser = user;
+        startWarningListener(user.uid);   // Feature C — auto-start
+    } else {
+        firebase.auth().signInAnonymously()
+            .catch(err => console.error("Anon sign-in failed:", err));
+    }
+});
+
+/* ═══════════════════════════════════════════════════
+   STATIC DATA
+═══════════════════════════════════════════════════ */
+const CATEGORIES = [
+    { id:"plumber",     label:"Plumber",             icon:"🔧" },
+    { id:"electrician", label:"Electrician",          icon:"⚡" },
+    { id:"carpenter",   label:"Carpenter",            icon:"🪚" },
+    { id:"chef",        label:"Chef / Cook",          icon:"🍳" },
+    { id:"painter",     label:"Painter",              icon:"🎨" },
+    { id:"mason",       label:"Mason / Builder",      icon:"🧱" },
+    { id:"welder",      label:"Welder",               icon:"🔩" },
+    { id:"mechanic",    label:"Auto Mechanic",        icon:"🚗" },
+    { id:"ac_tech",     label:"AC Technician",        icon:"❄️" },
+    { id:"tailor",      label:"Tailor",               icon:"🧵" },
+    { id:"hvac",        label:"HVAC Engineer",        icon:"💨" },
+    { id:"cleaner",     label:"Professional Cleaner", icon:"🧹" }
+];
+
+const PRO_STORIES = [
+    { proId:1, stories:[{ name:"Plumbing Job",   icon:"🔧", price:"₦3,500", image:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" }] },
+    { proId:2, stories:[{ name:"Solar Setup",    icon:"⚡", price:"₦5,000", image:"https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&q=80" }] },
+    { proId:3, stories:[{ name:"Wardrobe Build", icon:"🪚", price:"₦4,200", image:"https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80" }] },
+    { proId:4, stories:[
+        { name:"Jollof Rice", icon:"🍛", price:"₦2,200", image:"https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&q=80" },
+        { name:"Danwake",     icon:"🥣", price:"₦1,500", image:"https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80" }
+    ]}
+];
+
+const PROS = [
+    { id:1, name:"Malam Sule Ibrahim",  category:"plumber",     display_cat:"Plumbing Expert",        rating:4.9, reviews:134, distance:0.8, city:"Kano",   verified:true,  avatar:"SI", color:"linear-gradient(135deg,#059669,#047857)", jobs:312, price:"₦3,500", bio:"Highly skilled professional with over 12 years of experience in modern plumbing networks and advanced fluid systems.", skills:["Leak Detection","Pipe Layering","Smart Drainage"], online:true,  gallery:["Main Pipeline Fit","Commercial Restroom Set","Smart Drain Valve Setup","Underground Leak Fix"] },
+    { id:2, name:"Alhaji Bello Musa",   category:"electrician", display_cat:"Electrical Engineer",    rating:4.8, reviews:98,  distance:1.2, city:"Abuja",  verified:true,  avatar:"BM", color:"linear-gradient(135deg,#d97706,#b45309)", jobs:245, price:"₦5,000", bio:"Certified electrical engineer specializing in industrial solar setups and smart residential home automation systems.", skills:["Auto-Wiring","Solar Systems","Generators"], online:true,  gallery:["Inverter Bank Hookup","Smart DB Box Setup","Industrial Control Panel","Conduit Grid Layout"] },
+    { id:3, name:"Usman Garba",         category:"carpenter",   display_cat:"Master Carpenter",       rating:4.7, reviews:76,  distance:2.1, city:"Kaduna", verified:false, avatar:"UG", color:"linear-gradient(135deg,#78350f,#451a03)", jobs:189, price:"₦4,200", bio:"Expert artisan dedicated to fabricating luxury furniture and reinforced modern security doors with precision craftsmanship.", skills:["Premium Furniture","Roof Design","Carving"], online:false, gallery:["Royal Dining Finish","Mahogany Armor Door","Modern Roof Trusses","Custom Wardrobe Set"] },
+    { id:4, name:"Chef Amara Yusuf",    category:"chef",        display_cat:"Culinary Artist / Chef", rating:5.0, reviews:215, distance:0.5, city:"Kano",   verified:true,  avatar:"AY", color:"linear-gradient(135deg,#ec4899,#be185d)", jobs:410, price:"₦6,000", bio:"Elite chef specializing in upscale local catering, signature gourmet dishes, and customised corporate event banquets.", skills:["Gourmet Catering","Pastry Art","Menu Development"], online:true,
+        schedule:["Mondays","Wednesdays","Fridays","Saturdays"],
+        gallery:["Premium Banqueting Platter","Pastry Fine Art Design","Corporate Event Spread","Gourmet Kitchen Prep"],
+        menu:[
+            { name:"Jollof Rice",    price:"₦2,200", icon:"🍛", desc:"Smoky party-style jollof" },
+            { name:"Danwake",        price:"₦1,500", icon:"🥣", desc:"Fresh with groundnut oil" },
+            { name:"Fried Rice",     price:"₦2,500", icon:"🍚", desc:"Spiced with vegetables" },
+            { name:"Masa",           price:"₦800",   icon:"🫓", desc:"Hot & crispy rice cakes" },
+            { name:"Tuwo Shinkafa",  price:"₦1,800", icon:"🍲", desc:"With miyan kuka" }
+        ]
+    },
+];
+
+const PS_CATS = [
+    { id:"skilled_pro", label:"Plumber",      icon:"🔧", subs:["General Plumbing","Pipe Fitting","Leak Repair","Drainage"] },
+    { id:"skilled_pro", label:"Electrician",  icon:"⚡", subs:["Wiring","Solar Installation","Generator","Smart Home"] },
+    { id:"skilled_pro", label:"Carpenter",    icon:"🪚", subs:["Furniture","Doors & Windows","Roofing","Carving"] },
+    { id:"food",        label:"Chef / Cook",  icon:"🍳", subs:["Home Cooking","Catering","Pastry","Grills"] },
+    { id:"skilled_pro", label:"Painter",      icon:"🎨", subs:["Interior","Exterior","Texture","Graffiti"] },
+    { id:"skilled_pro", label:"Mason",        icon:"🧱", subs:["Block Laying","Plastering","Tiling","Foundation"] },
+    { id:"skilled_pro", label:"Welder",       icon:"🔩", subs:["Gate & Fence","Steel Fabrication","Roofing","Furniture"] },
+    { id:"emergency",   label:"Mechanic",     icon:"🚗", subs:["Engine Repair","Electrical","Tires","Body Work"] },
+    { id:"skilled_pro", label:"AC Tech",      icon:"❄️", subs:["Installation","Repair","Maintenance","Gas Refill"] },
+    { id:"skilled_pro", label:"Tailor",       icon:"🧵", subs:["Native Wear","English Wear","Alterations","Embroidery"] },
+    { id:"skilled_pro", label:"Cleaner",      icon:"🧹", subs:["Home Cleaning","Office Cleaning","Post-Event","Deep Clean"] },
+    { id:"beauty",      label:"Hair / Braiding",icon:"💇🏾‍♀️",subs:["Braiding","Wig Making","Hair Treatment","Twists"] },
+    { id:"beauty",      label:"Makeup",       icon:"💄", subs:["Bridal Makeup","Party Makeup","Henna"] },
+    { id:"delivery",    label:"Delivery",     icon:"🛵", subs:["Bike Delivery","Car Delivery","Package Delivery"] },
+    { id:"home_service",label:"Laundry",      icon:"🧺", subs:["Wash & Fold","Ironing","Dry Cleaning"] },
+    { id:"food",        label:"Catering",     icon:"🍲", subs:["Wedding Catering","Small Chops","Party Food"] },
+    { id:"emergency",   label:"Emergency",    icon:"🚨", subs:["Car Breakdown","Medical Assist","Security","Fire Safety"] },
+];
+
+/* ═══════════════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════════════ */
+let state = {
+    view:"main", query:"", selectedCat:null, nearMeActive:false,
+    activeProStoryIndex:null, activeStorySlide:0, storyProgress:0,
+    storyIntervalId:null, isStoryPaused:false, likedPros:{}
+};
+const STORY_DURATION_MS = 5000;
+const STORY_TICK_MS     = 50;
+
+// PS state
+const psState = { currentStep:1, selectedCategory:null, selectedCategoryLabel:null, selectedSubcategory:null, price:null, priceUnit:null, description:null, availableDays:[], gpsLat:null, gpsLng:null, gpsReady:false, idType:null };
+const portfolioFiles    = {};
+const verificationFiles = {};
+
+// Currently-open profile
+let _currentProId = null;
+
+/* ═══════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════ */
+function renderStars(rating) {
+    const f = Math.floor(rating);
+    return `<div style="display:flex;align-items:center;gap:3px;flex-shrink:0;"><span style="color:#f59e0b;font-size:12px;letter-spacing:-0.5px;">${"★".repeat(f)+"☆".repeat(5-f)}</span><span style="color:#71717a;font-size:11px;font-weight:700;margin-left:2px;">${rating}</span></div>`;
+}
+
+function showToast(msg) {
+    const old = document.getElementById("_toast"); if(old) old.remove();
+    const t = document.createElement("div"); t.id="_toast"; t.textContent=msg;
+    t.style.cssText="position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(13,18,36,0.97);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:10px 22px;border-radius:50px;font-size:12px;font-weight:600;z-index:99999;backdrop-filter:blur(20px);box-shadow:0 8px 30px rgba(0,0,0,0.4);white-space:nowrap;pointer-events:none;";
+    document.body.appendChild(t);
+    setTimeout(()=>{t.style.opacity="0";t.style.transition="opacity 0.3s";setTimeout(()=>t.remove(),320);},3000);
+}
+
+function createProCardHtml(pro) {
+    const liked = state.likedPros[pro.id]||false;
+    return `<div class="biometric-sentinel-card" onclick="openProfileSheet(${pro.id})">
+        <div class="sentinel-screw scr-tl"></div><div class="sentinel-screw scr-tr"></div><div class="sentinel-screw scr-bl"></div><div class="sentinel-screw scr-br"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;z-index:2;position:relative;">
+            <div class="lens-viewport"><div class="lens-glass-reflection"></div></div>
+            <div style="flex:1;padding-left:2px;"><div class="sentinel-title-text">${pro.name}</div><div class="sentinel-sub-text">${pro.display_cat}</div></div>
+            <div class="laser-biometric-scanner"><div class="laser-target-core"></div><div class="laser-ray-flare"></div></div>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:6px;z-index:2;position:relative;">${renderStars(pro.rating)}</div>
+        <p class="sentinel-body-p">${pro.bio}</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;z-index:2;position:relative;">${pro.skills.slice(0,2).map(s=>`<span class="sentinel-hardware-badge">${s}</span>`).join('')}</div>
+        <div class="sentinel-footer" style="z-index:2;position:relative;">
+            <div style="display:flex;gap:12px;color:#475569;font-size:12px;font-weight:700;"><span>🔴 ${pro.distance}km</span><span>💼 ${pro.jobs} Jobs</span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div style="color:#16a34a;font-size:16px;font-weight:800;">${pro.price}<span style="font-size:11px;color:#64748b;font-weight:500;">/hr</span></div>
+                <button onclick="handleLikeToggle(event,${pro.id})" style="background:${liked?"rgba(239,68,68,0.1)":"rgba(0,0,0,0.03)"};border:1px solid #94a3b8;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;color:${liked?"#ef4444":"#64748b"};font-size:12px;justify-content:center;">${liked?"❤️":"🤍"}</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   VIEW SWITCHING
+═══════════════════════════════════════════════════ */
+function switchView(v) {
+    state.view=v;
+    const mv=document.getElementById("main-view"), rv=document.getElementById("results-view"), ab=document.getElementById("header-actions");
+    if(v==="main"){mv.style.display="block";rv.style.display="none";ab.style.display="grid";}
+    else{mv.style.display="none";rv.style.display="block";ab.style.display="none";renderResultsPage();}
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+function initAppElements() {
+    // Stories track
+    const track=document.getElementById("stories-track-container");
+    const doubled=[...PRO_STORIES,...PRO_STORIES];
+    track.innerHTML=doubled.map((ps,i)=>{
+        const ri=i%PRO_STORIES.length;
+        const pro=PROS.find(p=>p.id===ps.proId);
+        const fs=ps.stories[0];
+        return `<div class="glass-lens-card" onclick="openStoryDeck(${ri})"><div class="glass-lens-img-wrap"><img class="glass-lens-img" src="${fs.image}" alt=""/></div><div class="glass-lens-ring">✦</div><div class="glass-lens-body"><span class="glass-lens-name">${pro?pro.name.split(' ')[0]:fs.name}</span><div class="glass-lens-distance">${pro?pro.distance+'km away':''}</div></div></div>`;
+    }).join('');
+
+    // Categories
+    document.getElementById("categories-grid-container").innerHTML=CATEGORIES.map(cat=>`<div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card"><div class="prism-icon-sphere"><span style="font-size:22px;">${cat.icon}</span></div><span class="prism-card-label">${cat.label}</span></div>`).join('');
+
+    // Highly rated
+    document.getElementById("highly-rated-list-container").innerHTML=PROS.map((p,i)=>`<div class="slide-up" style="animation-delay:${i*80}ms">${createProCardHtml(p)}</div>`).join('');
+}
+
+function getFilteredPros() {
+    return PROS.filter(p=>{
+        if(state.selectedCat&&p.category!==state.selectedCat)return false;
+        if(state.nearMeActive&&p.distance>1.5)return false;
+        if(state.query){const q=state.query.toLowerCase();return p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)||p.display_cat.toLowerCase().includes(q);}
+        return true;
+    });
+}
+
+function renderResultsPage() {
+    const bar=document.getElementById("trades-filter-bar");
+    const allA=!state.selectedCat;
+    let bh=`<button onclick="handleCategorySelect(null)" style="flex-shrink:0;background:${allA?"linear-gradient(135deg,#1d4ed8,#1e40af)":"#fff"};color:${allA?"#fff":"#4b5563"};border:${allA?"none":"1px solid #e2e8f0"};border-radius:12px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;">All Trades</button>`;
+    bh+=CATEGORIES.map(cat=>{const a=state.selectedCat===cat.id;return `<button onclick="handleCategorySelect('${cat.id}')" style="flex-shrink:0;background:${a?"linear-gradient(135deg,#1d4ed8,#1e40af)":"#fff"};color:${a?"#fff":"#4b5563"};border:${a?"none":"1px solid #e2e8f0"};border-radius:12px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">${cat.icon} ${cat.label}</button>`;}).join('');
+    bar.innerHTML=bh;
+    document.getElementById("proximity-badge-alert").style.display=state.nearMeActive?"flex":"none";
+    const list=document.getElementById("results-list-container");
+    const filtered=getFilteredPros();
+    document.getElementById("search-results-counter").innerText=`Search Results (${filtered.length})`;
+    list.innerHTML=filtered.length>0?filtered.map((p,i)=>`<div class="slide-up" style="animation-delay:${i*40}ms">${createProCardHtml(p)}</div>`).join(''):`<div style="text-align:center;padding:80px 20px;"><div style="font-size:36px;">📍</div><div style="font-weight:700;font-size:15px;color:#111827;margin-top:12px;">No Matches Near You</div><div style="color:#64748b;font-size:12px;margin-top:4px;">Zero results within your radar.</div></div>`;
+}
+
+function handleCategorySelect(id){state.selectedCat=id;switchView("results");}
+
+function handleLikeToggle(e,proId){
+    e.stopPropagation();
+    state.likedPros[proId]=!state.likedPros[proId];
+    if(state.view==="results")renderResultsPage();else initAppElements();
+}
+
+function triggerRouterCheck(){
+    const val=document.getElementById("search-input").value; state.query=val;
+    if(!val.trim())return;
+    document.getElementById("router-overlay").style.display="flex";
+}
+
+function selectRoutePreference(type){
+    document.getElementById("router-overlay").style.display="none";
+    const q=state.query.toLowerCase();
+    const m=CATEGORIES.find(c=>q.includes(c.label.toLowerCase())||q.includes(c.id));
+    if(m)state.selectedCat=m.id;
+    if(type==="near"){const loc=document.getElementById("locating-status");loc.style.display="block";setTimeout(()=>{loc.style.display="none";state.nearMeActive=true;switchView("results");},1000);}
+    else{state.nearMeActive=false;switchView("results");}
+}
+
+/* ═══════════════════════════════════════════════════
+   STORIES
+═══════════════════════════════════════════════════ */
+function openStoryDeck(idx){state.activeProStoryIndex=idx;state.activeStorySlide=0;state.storyProgress=0;state.isStoryPaused=false;if(state.storyIntervalId)clearInterval(state.storyIntervalId);document.getElementById("story-overlay-deck").style.display="flex";updateStoryOverlayUi();startStoryInterval();}
+
+function startStoryInterval(){
+    if(state.storyIntervalId)clearInterval(state.storyIntervalId);
+    const inc=(STORY_TICK_MS/STORY_DURATION_MS)*100;
+    state.storyIntervalId=setInterval(()=>{
+        if(state.isStoryPaused)return;
+        state.storyProgress+=inc;
+        if(state.storyProgress>=100){
+            state.storyProgress=0;
+            const cpd=PRO_STORIES[state.activeProStoryIndex],ns=state.activeStorySlide+1;
+            if(ns<cpd.stories.length){state.activeStorySlide=ns;updateStoryOverlayUi();}
+            else{const np=state.activeProStoryIndex+1;if(np<PRO_STORIES.length){state.activeProStoryIndex=np;state.activeStorySlide=0;updateStoryOverlayUi();}else closeStoryDeck();}
+        } else updateStoryProgressBarOnly();
+    },STORY_TICK_MS);
+}
+
+function updateStoryProgressBarOnly(){
+    PRO_STORIES[state.activeProStoryIndex].stories.forEach((s,i)=>{const el=document.getElementById(`story-fill-node-${i}`);if(el){if(i<state.activeStorySlide)el.style.width="100%";else if(i===state.activeStorySlide)el.style.width=`${state.storyProgress}%`;else el.style.width="0%";}});
+}
+
+function updateStoryOverlayUi(){
+    const cpd=PRO_STORIES[state.activeProStoryIndex],as=cpd.stories[state.activeStorySlide],pro=PROS.find(p=>p.id===cpd.proId);
+    document.getElementById("story-progress-indicators-bar").innerHTML=cpd.stories.map((s,i)=>`<div class="story-progress-bg"><div class="story-progress-fill" id="story-fill-node-${i}" style="width:${i<state.activeStorySlide?'100%':'0%'};"></div></div>`).join('');
+    document.getElementById("story-header-icon").innerText=as.icon;
+    document.getElementById("story-header-title").innerText=as.name;
+    document.getElementById("story-header-meta").innerText=`Live Near Me (${pro?pro.distance:''}km)`;
+    document.getElementById("story-canvas-main-emoji").innerText=as.icon;
+    document.getElementById("story-canvas-main-title").innerText=as.name;
+    document.getElementById("story-canvas-main-price").innerText=as.price;
+    const cv=document.getElementById("story-interactive-canvas-area");
+    cv.style.backgroundImage=`url('${as.image}')`;cv.style.backgroundSize="cover";cv.style.backgroundPosition="center";
+}
+
+function closeStoryDeck(){if(state.storyIntervalId)clearInterval(state.storyIntervalId);state.activeProStoryIndex=null;document.getElementById("story-overlay-deck").style.display="none";}
+
+/* ═══════════════════════════════════════════════════
+   PROFILE SHEET
+═══════════════════════════════════════════════════ */
+function openProfileSheet(proId){
+    _currentProId=proId;
+    const pro=PROS.find(p=>p.id===proId); if(!pro)return;
+    document.getElementById("profile-online-status-pill").innerText=pro.online?"ONLINE":"OFFLINE";
+    document.getElementById("profile-online-status-pill").style.color=pro.online?"#16a34a":"#dc2626";
+    const av=document.getElementById("profile-avatar-sphere"); av.style.background=pro.color; av.innerText=pro.avatar;
+    document.getElementById("profile-expert-name").innerText=pro.name;
+    document.getElementById("profile-shield-badge").style.display=pro.verified?"inline":"none";
+    document.getElementById("profile-expert-category").innerText=pro.display_cat;
+    document.getElementById("profile-stars-slot").innerHTML=renderStars(pro.rating);
+    document.getElementById("meta-jobs-counter").innerText=pro.jobs;
+    document.getElementById("meta-reviews-counter").innerText=pro.reviews;
+    document.getElementById("meta-distance-counter").innerText=`${pro.distance}km`;
+    const sc=document.getElementById("chef-schedule-section-card");
+    if(pro.category==="chef"&&pro.schedule){sc.style.display="block";document.getElementById("chef-days-badges-slot").innerHTML=pro.schedule.map(d=>`<span style="background:#fff;color:#be185d;border:1px solid rgba(236,72,153,0.2);padding:4px 10px;border-radius:10px;font-size:11px;font-weight:700;">${d}</span>`).join('');}else{sc.style.display="none";}
+    document.getElementById("profile-expert-bio-p").innerText=pro.bio;
+    document.getElementById("profile-skills-badges-slot").innerHTML=pro.skills.map(s=>`<span style="background:#f1f5f9;color:#111827;border-radius:12px;padding:6px 14px;font-size:12px;font-weight:600;">${s}</span>`).join('');
+    document.getElementById("profile-gallery-grid-slot").innerHTML=(pro.gallery||["Project Alpha","System Beta","Execution Gamma","Delta Ops"]).map(t=>`<div class="portfolio-img-card"><div style="text-align:center;padding:8px;"><div style="font-size:18px;margin-bottom:4px;">📷</div><div>${t}</div></div></div>`).join('');
+    document.getElementById("profile-sheet-overlay").style.display="block";
+    if(pro.category==="chef"&&pro.menu)setTimeout(()=>openChefMenuOverlay(pro),400);
+}
+
+function closeProfileSheet(){document.getElementById("profile-sheet-overlay").style.display="none";}
+
+/* ═══════════════════════════════════════════════════
+   CHEF MENU
+═══════════════════════════════════════════════════ */
+function openChefMenuOverlay(pro){
+    document.getElementById("chef-menu-pro-name").innerText=pro.name;
+    document.getElementById("chef-menu-overlay").style.display="flex";
+    document.getElementById("chef-menu-items-slot").innerHTML=(pro.menu||[]).map((item,i)=>`<div class="menu-item-card" style="animation-delay:${i*0.1}s"><div class="menu-item-emoji">${item.icon}</div><div><div class="menu-item-name">${item.name}</div><div class="menu-item-desc">${item.desc}</div></div><div class="menu-item-price">${item.price}</div></div>`).join('');
+    const av=document.getElementById("availability-text");
+    av.innerText=pro.schedule?(pro.schedule.length===7?"✅ Available Everyday":`📅 Available: ${pro.schedule.join(', ')}`):"✅ Available Everyday";
+}
+function closeChefMenuOverlay(){document.getElementById("chef-menu-overlay").style.display="none";}
+
+/* ═══════════════════════════════════════════════════
+   BOTTOM SHEET UTILS
+═══════════════════════════════════════════════════ */
+function openSheet(overlayId, panelId){
+    const ov=document.getElementById(overlayId),pn=document.getElementById(panelId);
+    ov.style.display="flex";
+    requestAnimationFrame(()=>requestAnimationFrame(()=>pn.classList.add("open")));
+}
+function closeSheet(overlayId, panelId){
+    const pn=document.getElementById(panelId);
+    pn.classList.remove("open");
+    setTimeout(()=>{ document.getElementById(overlayId).style.display="none"; },400);
+}
+function overlayBackdropClose(event, overlayId, panelId){
+    if(event.target.id===overlayId) closeSheet(overlayId,panelId);
+}
+
+/* ═══════════════════════════════════════════════════
+   FEATURE A — REPORT PROVIDER
+   DB write → reports/{reportId}
+═══════════════════════════════════════════════════ */
+const _reportProofFiles = {};
+
+function openReportOverlay(){
+    // Reset form
+    ["report-name","report-description"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("report-reason").value="";
+    document.getElementById("report-char-count").textContent="0/400";
+    document.getElementById("report-submit-btn").disabled=false;
+    document.getElementById("report-submit-btn").textContent="⚠️ Submit Report";
+    Object.keys(_reportProofFiles).forEach(k=>delete _reportProofFiles[k]);
+    for(let i=0;i<4;i++){
+        const sl=document.getElementById(`rp-slot-${i}`);
+        if(sl){sl.classList.remove("has-file");sl.innerHTML=`<input type="file" accept="image/*" onchange="handleReportProof(this,${i})" hidden><span style="font-size:18px;">📎</span><span style="font-size:8px;color:rgba(255,255,255,0.25);font-weight:700;">Photo ${i+1}</span>`;}
+    }
+    openSheet("report-overlay","report-panel");
+}
+
+function handleReportProof(input, idx){
+    const file=input.files[0]; if(!file)return;
+    if(file.size>10*1024*1024){showToast("❌ Photo too large — max 10 MB");return;}
+    const reader=new FileReader();
+    reader.onload=e=>{
+        const sl=document.getElementById(`rp-slot-${idx}`); if(!sl)return;
+        sl.classList.add("has-file");
+        sl.innerHTML=`<input type="file" accept="image/*" onchange="handleReportProof(this,${idx})" hidden><img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="proof"><button onclick="removeReportProof(event,${idx})" style="position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(220,38,38,0.9);color:#fff;font-size:9px;font-weight:800;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
+    };
+    reader.readAsDataURL(file);
+    _reportProofFiles[idx]=file;
+}
+
+function removeReportProof(event,idx){
+    event.preventDefault();event.stopPropagation();delete _reportProofFiles[idx];
+    const sl=document.getElementById(`rp-slot-${idx}`); if(!sl)return;
+    sl.classList.remove("has-file");
+    sl.innerHTML=`<input type="file" accept="image/*" onchange="handleReportProof(this,${idx})" hidden><span style="font-size:18px;">📎</span><span style="font-size:8px;color:rgba(255,255,255,0.25);font-weight:700;">Photo ${idx+1}</span>`;
+}
+
+async function submitReport(){
+    const name   = document.getElementById("report-name").value.trim();
+    const reason = document.getElementById("report-reason").value;
+    const desc   = document.getElementById("report-description").value.trim();
+    if(!name)  {showToast("⚠️ Please enter your name!");return;}
+    if(!reason){showToast("⚠️ Please select a reason!");return;}
+    if(desc.length<15){showToast("⚠️ Description too short — at least 15 chars!");return;}
+
+    const btn=document.getElementById("report-submit-btn");
+    btn.disabled=true; btn.textContent="⏳ Submitting...";
+
+    try{
+        // Upload proof images
+        const proofUrls=[];
+        for(const key of Object.keys(_reportProofFiles)){
+            const file=_reportProofFiles[key];
+            const fd=new FormData();fd.append("file",file);fd.append("type","report_proof");fd.append("username",currentFirebaseUser?currentFirebaseUser.uid:"guest");
+            try{const res=await fetch(`${BACKEND_URL}/upload`,{method:"POST",body:fd});const d=await res.json();if(d.success)proofUrls.push(d.url);}catch(e){console.warn("Proof upload failed:",e);}
+        }
+        // Write to Firebase
+        const db=firebase.database();
+        const reportId=db.ref("reports").push().key;
+        await db.ref(`reports/${reportId}`).set({
+            providerId:   _currentProId,
+            reporterName: name,
+            reporterUid:  currentFirebaseUser?currentFirebaseUser.uid:null,
+            reason,
+            description:  desc,
+            proofs:        proofUrls,
+            status:       "pending",
+            createdAt:    Date.now()
+        });
+        closeSheet("report-overlay","report-panel");
+        showToast("✅ Report submitted. Admin will review within 24 hours.");
+    }catch(err){
+        console.error("Report submit error:",err);
+        showToast("❌ Error: "+err.message);
+        btn.disabled=false; btn.textContent="⚠️ Submit Report";
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   FEATURE B — REVIEW SUBMISSION
+   DB write → reviews/{providerId}/{reviewId}
+═══════════════════════════════════════════════════ */
+let _reviewStars=0;
+const _reviewTags=new Set();
+const STAR_LABELS={1:"Poor 😔",2:"Fair 😐",3:"Good 🙂",4:"Very Good 😊",5:"Excellent! 🌟"};
+
+function openReviewOverlay(){
+    const pro=PROS.find(p=>p.id===_currentProId);
+    document.getElementById("review-sheet-title").textContent=`Rate: ${pro?pro.name:"Provider"}`;
+    _reviewStars=0; _reviewTags.clear();
+    document.getElementById("review-name").value="";
+    document.getElementById("review-text").value="";
+    document.getElementById("rev-char-count").textContent="0/300";
+    document.getElementById("star-label-text").textContent="";
+    document.querySelectorAll(".star-pick").forEach(s=>{s.classList.remove("lit","current");});
+    document.querySelectorAll(".rev-tag").forEach(t=>t.classList.remove("active"));
+    const btn=document.getElementById("review-submit-btn");
+    btn.disabled=false; btn.textContent="⭐ Submit Review";
+    openSheet("review-overlay","review-panel");
+}
+
+function setReviewStar(val){
+    _reviewStars=val;
+    document.querySelectorAll(".star-pick").forEach(s=>{
+        const v=parseInt(s.getAttribute("data-val"));
+        s.classList.toggle("lit",v<=val);
+        s.classList.toggle("current",v===val);
+    });
+    document.getElementById("star-label-text").textContent=STAR_LABELS[val]||"";
+}
+
+function toggleRevTag(el,tag){
+    if(_reviewTags.has(tag)){_reviewTags.delete(tag);el.classList.remove("active");}
+    else{_reviewTags.add(tag);el.classList.add("active");}
+}
+
+async function submitReview(){
+    const reviewerName=document.getElementById("review-name").value.trim();
+    const reviewText  =document.getElementById("review-text").value.trim();
+    if(!_reviewStars)    {showToast("⚠️ Please pick a star rating!");return;}
+    if(!reviewerName)    {showToast("⚠️ Please enter your name!");return;}
+
+    const btn=document.getElementById("review-submit-btn");
+    btn.disabled=true; btn.textContent="⏳ Submitting...";
+
+    try{
+        const pro=PROS.find(p=>p.id===_currentProId);
+        const db=firebase.database();
+        const reviewId=db.ref(`reviews/${_currentProId}`).push().key;
+        await db.ref(`reviews/${_currentProId}/${reviewId}`).set({
+            reviewerName,
+            reviewerUid:  currentFirebaseUser?currentFirebaseUser.uid:null,
+            stars:        _reviewStars,
+            tags:         Array.from(_reviewTags),
+            text:         reviewText,
+            providerId:   _currentProId,
+            providerName: pro?pro.name:"",
+            createdAt:    Date.now()
+        });
+        closeSheet("review-overlay","review-panel");
+        showToast(`⭐ Review submitted. Thank you, ${reviewerName}!`);
+    }catch(err){
+        console.error("Review submit error:",err);
+        showToast("❌ Error: "+err.message);
+        btn.disabled=false; btn.textContent="⭐ Submit Review";
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   FEATURE C — PRO WARNING LISTENER
+   Reads real-time: providers/{uid}/warnings
+   Fires banner for any entry where readAt is falsy
+   "I Understand" writes readAt, dismissing it forever
+═══════════════════════════════════════════════════ */
+let _warningListenerRef=null;
+let _currentWarningKey=null;
+
+function startWarningListener(uid){
+    if(_warningListenerRef) _warningListenerRef.off();
+    _warningListenerRef=firebase.database().ref(`providers/${uid}/warnings`);
+    _warningListenerRef.on("value", snapshot=>{
+        if(!snapshot.exists())return;
+        const warnings=snapshot.val();
+        // Show the latest unread warning
+        const keys=Object.keys(warnings).sort().reverse();
+        for(const key of keys){
+            const w=warnings[key];
+            if(!w.readAt){
+                _currentWarningKey=key;
+                showWarningBanner(
+                    w.title  || "You have a new warning from Admin",
+                    w.message|| w.body || "Please review the notice sent to your account."
+                );
+                break;   // show one at a time
+            }
+        }
+    });
+}
+
+function showWarningBanner(title,body){
+    document.getElementById("warning-title-text").textContent=title;
+    document.getElementById("warning-body-text").textContent=body;
+    const banner=document.getElementById("pro-warning-banner");
+    banner.style.display="block";
+    // Re-trigger animation
+    const inner=document.getElementById("pro-warning-inner");
+    inner.style.animation="none"; void inner.offsetWidth;
+    inner.style.animation="warningSlideDown 0.42s cubic-bezier(0.22,1,0.36,1) both";
+}
+
+function dismissWarningBanner(){
+    document.getElementById("pro-warning-banner").style.display="none";
+}
+
+async function acknowledgeWarning(){
+    if(!currentFirebaseUser||!_currentWarningKey){dismissWarningBanner();return;}
+    try{
+        await firebase.database()
+            .ref(`providers/${currentFirebaseUser.uid}/warnings/${_currentWarningKey}/readAt`)
+            .set(Date.now());
+        dismissWarningBanner();
+        showToast("✅ Warning acknowledged.");
+    }catch(err){
+        console.error("Acknowledge error:",err);
+        dismissWarningBanner();
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   POST SERVICE SHEET
+═══════════════════════════════════════════════════ */
+function openPostServiceSheet(){
+    psShowStep(1);renderPSCatList();
+    const ov=document.getElementById("post-service-sheet-overlay"),sh=document.getElementById("post-service-sheet");
+    ov.style.display="flex";setTimeout(()=>{sh.style.transform="scale(1)";sh.style.opacity="1";},10);
+    document.body.style.overflow="hidden";
+}
+function closePSManual(){
+    const sh=document.getElementById("post-service-sheet"); sh.style.transform="scale(0.9)"; sh.style.opacity="0";
+    setTimeout(()=>{document.getElementById("post-service-sheet-overlay").style.display="none";},300);
+    document.body.style.overflow="";
+}
+function closePSOverlay(event){if(event.target.id!=="post-service-sheet-overlay")return;closePSManual();}
+
+function psShowStep(step){
+    psState.currentStep=step;
+    ["ps-inline-step-1","ps-inline-step-2","ps-inline-step-3"].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.style.display=(i+1===step)?"flex":"none";});
+    const dw=document.getElementById("ps-inline-step-dots"),bb=document.getElementById("ps-back-step-inline-btn"),tl=document.getElementById("ps-sheet-title-label");
+    if(step===1){dw.style.display="none";bb.style.display="none";tl.textContent="Choose Your Service";}
+    else{dw.style.display="flex";bb.style.display="block";tl.textContent=step===2?"Service Details":"Location & Submit";[1,2,3].forEach(i=>{const d=document.getElementById(`ps-dot-${i}`);if(d)d.style.background=i===step?"#6366f1":i<step?"#10b981":"rgba(255,255,255,0.2)";});}
+}
+function psGoBack(){if(psState.currentStep>1)psShowStep(psState.currentStep-1);}
+
+function psGoToStep3(){
+    const price=document.getElementById("ps-price").value;
+    const desc =document.getElementById("ps-description").value.trim();
+    const days =Array.from(document.querySelectorAll("#ps-inline-step-2 .ps-day-chip-inline input:checked")).map(e=>e.value);
+    const idType=document.getElementById("ps-id-type").value;
+    if(!price||parseInt(price)<=0){showToast("⚠️ Enter a valid price!");return;}
+    if(desc.length<20){showToast("⚠️ Description too short — at least 20 chars!");return;}
+    if(days.length===0){showToast("⚠️ Select at least one available day!");return;}
+    if(Object.keys(portfolioFiles).length<4){showToast(`⚠️ Add at least 4 photos! (${Object.keys(portfolioFiles).length}/4)`);return;}
+    if(!idType){showToast("⚠️ Select your ID type!");return;}
+    if(!verificationFiles.id){showToast("⚠️ Upload your ID photo!");return;}
+    if(!verificationFiles.selfie){showToast("⚠️ Upload your selfie with ID!");return;}
+    psState.price=parseInt(price);psState.priceUnit=document.getElementById("ps-price-unit").value;
+    psState.description=desc;psState.availableDays=days;psState.idType=idType;
+    document.getElementById("ps-sum-category").textContent=`${psState.selectedCategoryLabel} → ${psState.selectedSubcategory}`;
+    document.getElementById("ps-sum-price").textContent=`₦${psState.price.toLocaleString()} ${psState.priceUnit}`;
+    document.getElementById("ps-sum-days").textContent=days.join(", ");
+    psShowStep(3);
+}
+
+function captureGPSInline(){
+    const btn=document.getElementById("ps-gps-btn-inline"),st=document.getElementById("ps-gps-status-inline"),co=document.getElementById("ps-gps-coords-inline"),card=document.getElementById("ps-gps-card-inline");
+    if(!navigator.geolocation){showToast("❌ Your browser doesn't support GPS.");return;}
+    btn.disabled=true;btn.textContent="Locating...";st.textContent="🔄 Capturing location...";
+    navigator.geolocation.getCurrentPosition(
+        pos=>{psState.gpsLat=pos.coords.latitude;psState.gpsLng=pos.coords.longitude;psState.gpsReady=true;st.textContent="✅ Location captured!";co.textContent=`${psState.gpsLat.toFixed(5)}, ${psState.gpsLng.toFixed(5)}`;btn.textContent="✅ Done";card.style.borderColor="rgba(16,185,129,0.4)";card.style.background="rgba(16,185,129,0.08)";document.getElementById("ps-sum-location").textContent=`${psState.gpsLat.toFixed(4)}, ${psState.gpsLng.toFixed(4)}`;showToast("📍 GPS location captured!");},
+        err=>{btn.disabled=false;btn.textContent="Try Again";st.textContent="❌ GPS failed";const msgs={1:"Location permission denied.",2:"Location unavailable.",3:"Request timed out."};showToast("⚠️ "+(msgs[err.code]||"GPS error."));},
+        {enableHighAccuracy:true,timeout:12000,maximumAge:0}
+    );
+}
+
+async function uploadPortfolioFilesInline(username){
+    const keys=Object.keys(portfolioFiles);let uploaded=0;
+    const stEl=document.getElementById("ps-upload-status-inline"),cEl=document.getElementById("ps-upload-count-inline"),bEl=document.getElementById("ps-upload-bar-inline");
+    stEl.style.display="block";
+    for(const key of keys){const e=portfolioFiles[key];if(!e.file)continue;try{const fd=new FormData();fd.append("file",e.file);fd.append("type","portfolio");fd.append("username",username||"guest");const res=await fetch(`${BACKEND_URL}/upload`,{method:"POST",body:fd});const d=await res.json();if(d.success)portfolioFiles[key].url=d.url;}catch(err){console.warn(`Slot ${key} upload failed:`,err);}uploaded++;const pct=Math.round((uploaded/keys.length)*100);cEl.textContent=`${uploaded}/${keys.length}`;bEl.style.width=pct+"%";}
+    return Object.values(portfolioFiles).filter(e=>e.url).map(e=>({url:e.url,type:e.type.includes("video")?"video":"image"}));
+}
+
+async function uploadVerificationFilesInline(){
+    if(!currentFirebaseUser)throw new Error("No Firebase user yet");
+    const token=await currentFirebaseUser.getIdToken();const results={};
+    for(const key of Object.keys(verificationFiles)){const e=verificationFiles[key];if(!e.file)continue;try{const fd=new FormData();fd.append("file",e.file);fd.append("docType",key);const res=await fetch(`${BACKEND_URL}/upload-verification`,{method:"POST",headers:{"Authorization":`Bearer ${token}`},body:fd});const d=await res.json();if(d.success)results[key]=d.key;else console.warn(`Verification ${key} error:`,d.error);}catch(err){console.warn(`Verification ${key} failed:`,err);}}
+    return results;
+}
+
+async function submitServiceInline(){
+    if(!psState.gpsReady){showToast("⚠️ Capture your GPS location first!");return;}
+    if(!currentFirebaseUser){showToast("⚠️ Account still loading, please wait...");return;}
+    const btn=document.getElementById("ps-submit-btn-inline");btn.disabled=true;btn.textContent="⏳ Submitting...";
+    try{
+        const uid=currentFirebaseUser.uid;
+        showToast("⏳ Uploading work photos...");const portfolioUrls=await uploadPortfolioFilesInline(uid);
+        showToast("⏳ Uploading verification...");const verificationKeys=await uploadVerificationFilesInline();
+        if(!verificationKeys.id||!verificationKeys.selfie){showToast("❌ Verification upload failed!");btn.disabled=false;btn.textContent="🚀 Post Service";return;}
+        const db=firebase.database();
+        await db.ref(`providers/${uid}`).set({category:psState.selectedCategory,subcategory:psState.selectedSubcategory,categoryLabel:psState.selectedCategoryLabel,pricing:{base:psState.price,unit:psState.priceUnit},bio:psState.description,schedule:psState.availableDays,location:{lat:psState.gpsLat,lng:psState.gpsLng,updatedAt:Date.now()},portfolio:portfolioUrls,verification:{status:"pending",idType:psState.idType,idDocKey:verificationKeys.id,selfieKey:verificationKeys.selfie,consentGiven:true,consentAt:Date.now(),submittedAt:Date.now(),reviewedAt:null,reviewedBy:null,rejectReason:null},verified:false,status:"pending_verification",createdAt:Date.now()});
+        await db.ref(`verificationQueue/${uid}`).set(true);
+        document.getElementById("ps-success-overlay-inline").style.display="flex";
+    }catch(err){console.error("Submit error:",err);showToast("❌ Error: "+err.message);btn.disabled=false;btn.textContent="🚀 Post Service";}
+}
+
+function handlePortfolioFile(input,slotIndex){const file=input.files[0];if(!file)return;if(file.size>50*1024*1024){showToast("❌ File too large — max 50 MB!");return;}const reader=new FileReader();reader.onload=e=>{const sl=document.getElementById(`ps-slot-${slotIndex}`);if(!sl)return;sl.classList.add("filled");const isVideo=file.type.includes("video");sl.querySelector(".ps-port-inner").innerHTML=`${isVideo?`<video src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" muted playsinline></video>`:`<img src="${e.target.result}" class="ps-port-preview" alt="Portfolio">`}<button class="ps-port-remove" onclick="removePortfolioSlotInline(event,${slotIndex})">✕</button>`;};reader.readAsDataURL(file);portfolioFiles[slotIndex]={file,url:null,type:file.type};}
+
+function removePortfolioSlotInline(event,slotIndex){event.preventDefault();event.stopPropagation();delete portfolioFiles[slotIndex];const sl=document.getElementById(`ps-slot-${slotIndex}`);sl.classList.remove("filled");const icons=["📷","📷","📷","📷","📷","📷","🎥","🎥"],labels=["Photo 1","Photo 2","Photo 3","Photo 4","Photo 5","Photo 6","Video 1","Video 2"];sl.querySelector(".ps-port-inner").innerHTML=`<span>${icons[slotIndex]}</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">${labels[slotIndex]}</span>`;}
+
+function handleVerificationFile(input,slotKey){const file=input.files[0];if(!file)return;if(file.size>15*1024*1024){showToast("❌ File too large!");return;}if(!file.type.includes("image")){showToast("❌ Images only!");return;}const reader=new FileReader();reader.onload=e=>{const sl=document.getElementById(`verify-slot-${slotKey}`);sl.style.borderColor="rgba(16,185,129,0.5)";sl.style.borderStyle="solid";sl.innerHTML=`<input type="file" accept="image/*" ${slotKey==='selfie'?'capture="user"':''} onchange="handleVerificationFile(this,'${slotKey}')" hidden><img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="${slotKey}">`;};reader.readAsDataURL(file);verificationFiles[slotKey]={file,url:null,type:file.type};}
+
+function renderPSCatList(filteredCats){const cats=filteredCats||PS_CATS;document.getElementById("ps-cat-list").innerHTML=cats.map((cat,i)=>`<div id="ps-cat-item-${i}" onclick="togglePSCat(${i})" style="display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.03);transition:all 0.2s;"><span style="font-size:17px;">${cat.icon}</span><span style="flex:1;font-size:12px;font-weight:700;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cat.label}</span><span style="font-size:10px;color:rgba(255,255,255,0.2);">➔</span></div>`).join('');document.getElementById("ps-sub-empty-state").style.display="block";document.getElementById("ps-sub-list-content").innerHTML="";}
+
+function togglePSCat(idx){PS_CATS.forEach((_,i)=>{const item=document.getElementById(`ps-cat-item-${i}`);if(item){item.style.background=i===idx?"rgba(56,189,248,0.15)":"transparent";item.style.borderLeft=i===idx?"3px solid #38bdf8":"none";}});const cat=PS_CATS[idx];if(!cat)return;document.getElementById("ps-sub-empty-state").style.display="none";document.getElementById("ps-sub-list-content").innerHTML=`<div style="font-size:10px;font-weight:800;color:#38bdf8;text-transform:uppercase;letter-spacing:0.5px;padding:6px 8px 10px;">${cat.label} Specialties</div>${cat.subs.map(sub=>`<div onclick="selectPSSub('${cat.label}','${sub}',${idx})" style="padding:10px 12px;margin-bottom:5px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:8px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">${sub}</div>`).join('')}`;}
+
+function filterInlineCategories(query){const q=query.trim().toLowerCase();renderPSCatList(q===""?PS_CATS:PS_CATS.filter(c=>c.label.toLowerCase().includes(q)||c.subs.some(s=>s.toLowerCase().includes(q))));}
+
+function selectPSSub(catLabel,sub,idx){const cat=PS_CATS[idx];psState.selectedCategory=cat.id;psState.selectedCategoryLabel=catLabel;psState.selectedSubcategory=sub;psShowStep(2);}
+
+/* ═══════════════════════════════════════════════════
+   DOM READY
+═══════════════════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded",()=>{
+    initAppElements();
+
+    document.getElementById("search-input").addEventListener("keydown",e=>{if(e.key==="Enter")triggerRouterCheck();});
+    document.getElementById("search-trigger-btn").addEventListener("click",triggerRouterCheck);
+    document.getElementById("route-all-opt").addEventListener("click",()=>selectRoutePreference("all"));
+    document.getElementById("route-near-opt").addEventListener("click",()=>selectRoutePreference("near"));
+    document.getElementById("router-overlay").addEventListener("click",()=>{document.getElementById("router-overlay").style.display="none";});
+
+    document.getElementById("near-me-btn").addEventListener("click",()=>{
+        const loc=document.getElementById("locating-status");loc.style.display="block";
+        if(typeof initNearMe==="function"){initNearMe('skilled_pro',null,'results-list-container').then(()=>{loc.style.display="none";state.nearMeActive=true;switchView("results");}).catch(err=>{loc.style.display="none";alert("📍 "+err.message);});}
+        else{setTimeout(()=>{loc.style.display="none";state.nearMeActive=true;switchView("results");},800);}
+    });
+
+    document.getElementById("verified-pros-btn").addEventListener("click",()=>{state.nearMeActive=false;switchView("results");});
+    document.getElementById("view-all-traders-btn").addEventListener("click",()=>{state.selectedCat=null;switchView("results");});
+    document.getElementById("close-profile-sheet-btn").addEventListener("click",closeProfileSheet);
+    document.getElementById("chef-menu-close-btn").addEventListener("click",closeChefMenuOverlay);
+
+    // Story touch
+    const so=document.getElementById("story-overlay-deck");
+    so.addEventListener("pointerdown",e=>{e.preventDefault();if(e.target.closest("button"))return;state.isStoryPaused=true;});
+    so.addEventListener("pointerup",e=>{
+        if(e.target.closest("button"))return;
+        state.isStoryPaused=false;
+        const x=e.clientX,half=window.innerWidth/2,cpd=PRO_STORIES[state.activeProStoryIndex];
+        if(x>=half){const ns=state.activeStorySlide+1;if(ns<cpd.stories.length){state.activeStorySlide=ns;state.storyProgress=0;updateStoryOverlayUi();}else{const np=state.activeProStoryIndex+1;if(np<PRO_STORIES.length){state.activeProStoryIndex=np;state.activeStorySlide=0;state.storyProgress=0;updateStoryOverlayUi();}else closeStoryDeck();}}
+        else{const ps=state.activeStorySlide-1;if(ps>=0){state.activeStorySlide=ps;state.storyProgress=0;updateStoryOverlayUi();}else{const pp=state.activeProStoryIndex-1;if(pp>=0){state.activeProStoryIndex=pp;state.activeStorySlide=0;state.storyProgress=0;updateStoryOverlayUi();}}}
+    });
+    document.getElementById("close-story-overlay-btn").addEventListener("click",e=>{e.stopPropagation();closeStoryDeck();});
+    document.getElementById("story-action-profile-btn").addEventListener("click",e=>{e.stopPropagation();const cpd=PRO_STORIES[state.activeProStoryIndex];closeStoryDeck();openProfileSheet(cpd.proId);});
+});
+</script>
+</body>
+</html>
