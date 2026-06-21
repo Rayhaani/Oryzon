@@ -308,16 +308,15 @@ html, body {
   </div>
 </div>
 
-<!-- ADMIN LOGIN OVERLAY (required to fetch signed verification image URLs) -->
+<!-- ADMIN LOGIN OVERLAY (required — RTDB rules now require auth to read providers) -->
 <div class="modal-overlay show" id="admin-login-overlay" style="z-index:10500;">
   <div class="reason-modal-box" style="max-width:320px;">
     <div class="reason-title" style="color:var(--blue);">🔐 Admin Login</div>
-    <div class="reason-sub">Shiga da admin account domin samun damar duba hotunan ID/Selfie na verification.</div>
+    <div class="reason-sub">Dole ka shiga da admin account kafin ka ga providers — Database rules ɗinmu yanzu suna buƙatar login.</div>
     <input type="email" id="admin-login-email" placeholder="Admin email" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--txt1);font-size:12px;padding:10px 12px;outline:none;margin-bottom:8px;">
     <input type="password" id="admin-login-password" placeholder="Password" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--txt1);font-size:12px;padding:10px 12px;outline:none;margin-bottom:8px;">
     <div id="admin-login-error" style="font-size:11px;color:var(--red);margin-bottom:8px;display:none;"></div>
     <button class="reason-confirm-btn" style="background:var(--blue);" id="admin-login-btn">Shiga</button>
-    <button class="reason-cancel-btn" onclick="document.getElementById('admin-login-overlay').classList.remove('show')">Ci gaba ba tare da hoton verification ba</button>
   </div>
 </div>
 
@@ -748,11 +747,19 @@ function showToast(msg) {
 
 // ── EVENTS ──
 document.addEventListener("DOMContentLoaded", () => {
-    loadProviders();
+    let providersStarted = false;
 
     auth.onAuthStateChanged((user) => {
         adminUser = user;
-        if (user) document.getElementById("admin-login-overlay").classList.remove("show");
+        if (user) {
+            document.getElementById("admin-login-overlay").classList.remove("show");
+            if (!providersStarted) {
+                providersStarted = true;
+                loadProviders();
+            }
+        } else {
+            document.getElementById("admin-login-overlay").classList.add("show");
+        }
     });
 
     document.getElementById("admin-login-btn").addEventListener("click", async () => {
@@ -767,6 +774,10 @@ document.addEventListener("DOMContentLoaded", () => {
             errEl.textContent = "Login ya kasa: " + e.message;
             errEl.style.display = "block";
         }
+    });
+
+    document.getElementById("admin-login-password").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("admin-login-btn").click();
     });
 
     document.getElementById("search-input").addEventListener("input", function() {
