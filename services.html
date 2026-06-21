@@ -2850,6 +2850,69 @@ async function saveProfileEdits() {
     saveBtn.textContent = '💾 Save Changes';
     saveBtn.disabled = false;
         }
+
+// ════════════════════════════════════════════════════════════
+//  FCM PUSH NOTIFICATION ENGINE
+// ════════════════════════════════════════════════════════════
+
+// VAPID Key daga Firebase Console → Project Settings → Cloud Messaging
+const FCM_VAPID_KEY = "YOUR_VAPID_KEY_HERE"; // ← Za mu canza wannan
+
+async function initPushNotifications() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) return;
+
+    try {
+        // Register Service Worker
+        if (!('serviceWorker' in navigator)) return;
+        const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+
+        // Request permission
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return;
+
+        // Initialize FCM
+        if (typeof firebase === 'undefined' || !firebase.messaging) return;
+        const messaging = firebase.messaging();
+
+        // Get FCM token
+        const token = await messaging.getToken({
+            vapidKey: FCM_VAPID_KEY,
+            serviceWorkerRegistration: reg
+        });
+
+        if (!token) return;
+
+        // Save token to backend
+        await fetch(`${BACKEND_URL}/save-fcm-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: sessionUser, token })
+        });
+
+        // Foreground notification handler
+        messaging.onMessage((payload) => {
+            const { title, body } = payload.notification;
+            showGlobalToast(`🔔 ${title}: ${body}`);
+        });
+
+    } catch (err) {
+        console.warn('Push notification init failed:', err);
+    }
+}
+
+// Aika push notification (internal function)
+async function sendPushToUser(username, title, body, data = {}) {
+    try {
+        await fetch(`${BACKEND_URL}/send-push`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, title, body, data })
+        });
+    } catch (err) {
+        console.warn('Send push failed:', err);
+    }
+            }
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
