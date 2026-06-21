@@ -881,7 +881,154 @@
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; z-index: 10; border: none;
         }
-        
+
+
+/* ── REPORT MODAL ── */
+.report-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    z-index: 8000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.report-modal-box {
+    width: 100%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 24px 20px 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.report-reason-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 12px;
+    font-weight: 700;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 4px 4px 4px 0;
+}
+.report-reason-chip.selected {
+    background: rgba(239,68,68,0.08);
+    border-color: #ef4444;
+    color: #dc2626;
+}
+.report-proof-grid {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+.report-proof-slot {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 1.5px dashed #cbd5e1;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    font-size: 20px;
+}
+.report-proof-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+.report-proof-slot .proof-remove {
+    position: absolute;
+    top: 2px; right: 2px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.9);
+    color: #fff;
+    font-size: 8px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+}
+
+/* ── REVIEW MODAL ── */
+.review-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(10px);
+    z-index: 8000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.review-modal-box {
+    width: 100%;
+    max-width: 400px;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 24px 20px 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.star-picker {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 12px 0;
+}
+.star-picker span {
+    font-size: 32px;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.star-picker span.lit {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+/* ── PRO WARNING OVERLAY ── */
+.pro-warning-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,15,30,0.97);
+    backdrop-filter: blur(20px);
+    z-index: 9990;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+.pro-warning-card {
+    width: 100%;
+    max-width: 380px;
+    background: #1e293b;
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 24px;
+    padding: 32px 24px 28px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(239,68,68,0.15);
+    animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+      }
+      
     </style>
 </head>
 <body>
@@ -1088,15 +1235,118 @@
                     <div class="portfolio-grid" id="profile-gallery-grid-slot"></div>
                 </div>
 
-                <div style="display: flex; gap: 12px; position: sticky; bottom: 16px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); padding: 10px 0;">
-                    <button style="flex: 1; background: #f1f5f9; color: #111827; border: none; border-radius: 16px; padding: 16px 0; font-weight: 700; font-size: 14px; cursor: pointer;" onclick="alert('Secure Chat channel opening...')">Secure Chat 📩</button>
-                    <button style="flex: 1; background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); color: #fff; border: none; border-radius: 16px; padding: 16px 0; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(29, 78, 216, 0.3);" onclick="alert('Hiring workflow routing...')">Hire Expert 📞</button>
-                </div>
+                <div style="position:sticky;bottom:16px;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);padding:10px 0;display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;gap:10px;">
+        <button style="flex:1;background:#f1f5f9;color:#111827;border:none;border-radius:14px;padding:14px 0;font-weight:700;font-size:13px;cursor:pointer;" onclick="alert('Secure Chat channel opening...')">Secure Chat 📩</button>
+        <button style="flex:1;background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);color:#fff;border:none;border-radius:14px;padding:14px 0;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 4px 15px rgba(29,78,216,0.3);" onclick="alert('Hiring workflow routing...')">Hire Expert 📞</button>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <button onclick="openReportModal()" style="flex:1;background:rgba(239,68,68,0.06);color:#dc2626;border:1.5px solid rgba(239,68,68,0.2);border-radius:14px;padding:10px 0;font-weight:700;font-size:12px;cursor:pointer;">🚩 Report Provider</button>
+        <button onclick="openReviewModal()" style="flex:1;background:rgba(245,158,11,0.06);color:#d97706;border:1.5px solid rgba(245,158,11,0.2);border-radius:14px;padding:10px 0;font-weight:700;font-size:12px;cursor:pointer;">⭐ Leave Review</button>
+    </div>
+</div>
             </div>
         </div>
 
-    </div>
+</div>
+    
+<!-- ══ REPORT MODAL ══ -->
+<div class="report-modal-overlay" id="report-modal-overlay">
+    <div class="report-modal-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+            <div>
+                <div style="font-size:17px;font-weight:800;color:#111827;">🚩 Report Provider</div>
+                <div style="font-size:11px;color:#64748b;margin-top:2px;" id="report-modal-pro-name-label">Provider name</div>
+            </div>
+            <button onclick="closeReportModal()" style="background:#f1f5f9;border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;color:#64748b;">✕</button>
+        </div>
 
+        <!-- Reason Chips -->
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Select Reason *</div>
+        <div id="report-reason-chips-slot">
+            <span class="report-reason-chip" onclick="selectReportReason(this,'Fake Profile')">Fake Profile</span>
+            <span class="report-reason-chip" onclick="selectReportReason(this,'Fraud / Scam')">Fraud / Scam</span>
+            <span class="report-reason-chip" onclick="selectReportReason(this,'Poor Service Quality')">Poor Service Quality</span>
+            <span class="report-reason-chip" onclick="selectReportReason(this,'Abusive Behavior')">Abusive Behavior</span>
+            <span class="report-reason-chip" onclick="selectReportReason(this,'Wrong Category')">Wrong Category</span>
+            <span class="report-reason-chip" onclick="selectReportReason(this,'Other')">Other</span>
+        </div>
+        <input type="text" id="report-custom-reason-input" placeholder="Specify reason..." style="display:none;width:100%;margin-top:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;box-sizing:border-box;">
+
+        <!-- Description -->
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 6px;">Description</div>
+        <textarea id="report-description-input" placeholder="Describe what happened in detail..." maxlength="500" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;resize:none;height:80px;line-height:1.5;font-family:inherit;box-sizing:border-box;"></textarea>
+
+        <!-- Reporter Name (optional) -->
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 6px;">Your Name (Optional)</div>
+        <input type="text" id="report-reporter-name-input" placeholder="Anonymous if left blank" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;box-sizing:border-box;">
+
+        <!-- Proof Photos -->
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 6px;">Proof Photos (Max 4)</div>
+        <div class="report-proof-grid" id="report-proof-grid">
+            <label class="report-proof-slot" id="rp-slot-0"><input type="file" accept="image/*" onchange="handleReportProof(this,0)" hidden>📷</label>
+            <label class="report-proof-slot" id="rp-slot-1"><input type="file" accept="image/*" onchange="handleReportProof(this,1)" hidden>📷</label>
+            <label class="report-proof-slot" id="rp-slot-2"><input type="file" accept="image/*" onchange="handleReportProof(this,2)" hidden>📷</label>
+            <label class="report-proof-slot" id="rp-slot-3"><input type="file" accept="image/*" onchange="handleReportProof(this,3)" hidden>📷</label>
+        </div>
+
+        <!-- Submit -->
+        <button id="report-submit-btn" onclick="submitReport()" style="width:100%;margin-top:20px;padding:14px;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;border-radius:14px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Submit Report 🚩</button>
+    </div>
+</div>
+
+<!-- ══ REVIEW MODAL ══ -->
+<div class="review-modal-overlay" id="review-modal-overlay">
+    <div class="review-modal-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div>
+                <div style="font-size:17px;font-weight:800;color:#111827;">⭐ Leave a Review</div>
+                <div style="font-size:11px;color:#64748b;margin-top:2px;" id="review-modal-pro-name-label">Provider name</div>
+            </div>
+            <button onclick="closeReviewModal()" style="background:#f1f5f9;border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;color:#64748b;">✕</button>
+        </div>
+
+        <!-- Star Picker -->
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Rating *</div>
+        <div class="star-picker" id="star-picker-row">
+            <span onclick="setReviewStar(1)">★</span>
+            <span onclick="setReviewStar(2)">★</span>
+            <span onclick="setReviewStar(3)">★</span>
+            <span onclick="setReviewStar(4)">★</span>
+            <span onclick="setReviewStar(5)">★</span>
+        </div>
+        <div style="text-align:center;font-size:12px;color:#f59e0b;font-weight:700;height:16px;" id="review-star-label"></div>
+
+        <!-- Comment -->
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 6px;">Comment *</div>
+        <textarea id="review-comment-input" placeholder="Share your experience with this provider..." maxlength="400" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;resize:none;height:90px;line-height:1.5;font-family:inherit;box-sizing:border-box;"></textarea>
+
+        <!-- Customer Name -->
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 6px;">Your Name (Optional)</div>
+        <input type="text" id="review-customer-name-input" placeholder="Anonymous if left blank" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;box-sizing:border-box;">
+
+        <!-- Submit -->
+        <button id="review-submit-btn" onclick="submitReview()" style="width:100%;margin-top:20px;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:14px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Post Review ⭐</button>
+    </div>
+</div>
+
+<!-- ══ PRO WARNING OVERLAY ══ -->
+<div class="pro-warning-overlay" id="pro-warning-overlay">
+    <div class="pro-warning-card">
+        <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+        <div style="font-size:18px;font-weight:800;color:#ef4444;margin-bottom:8px;">Account Warning</div>
+        <div style="font-size:13px;color:#94a3b8;font-weight:600;margin-bottom:16px;">This message is from Nexus Protocol Admin</div>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:14px;padding:16px;margin-bottom:20px;">
+            <p id="pro-warning-message-text" style="font-size:14px;color:#f1f5f9;font-weight:600;line-height:1.6;margin:0;text-align:left;">
+                You have received a formal warning regarding your service listing. Please review your profile and ensure compliance with Nexus Protocol guidelines.
+            </p>
+        </div>
+        <div style="font-size:11px;color:#475569;margin-bottom:20px;" id="pro-warning-timestamp">Issued: —</div>
+        <button onclick="acknowledgeWarning()" style="width:100%;padding:14px;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;border-radius:14px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">I Understand ✓</button>
+    </div>
+</div>
+
+    
     <!-- CHEF MENU GLASS OVERLAY -->
 <div class="chef-menu-overlay" id="chef-menu-overlay">
     <div class="chef-menu-scroll-carpet" id="chef-menu-carpet">
@@ -2106,6 +2356,341 @@ document.addEventListener("DOMContentLoaded", () => {
       <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="nearme-engine.js"></script>  
+<script src="nearme-engine.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBqK4orfnHWvuBdYCFRaYWcYDcXlOI6cEg",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.appspot.com",
+    messagingSenderId: "1098376246",
+    appId: "1:1098376246:web:4e8f3c2b1a7d9e5f2c3a1b"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+
+// ── GLOBAL STATE ADDITIONS ──
+let currentProfileProId = null;  // Track which pro is open in profile sheet
+let selectedReportReason = null;
+let selectedReviewStars = 0;
+const reportProofFiles = {};
+
+// ── PATCH openProfileSheet to track currentProfileProId ──
+// NOTE: Nemo wannan layi a cikin openProfileSheet function ɗinka:
+//   const pro = PROS.find(p => p.id === proId);
+//   if (!pro) return;
+// Saka wannan BAYAN wannan layin biyu:
+//   currentProfileProId = proId;
+// (Ka nemi 'currentProfileProId = proId;' a cikin openProfileSheet a kasa — already included)
+
+// ── OVERRIDE openProfileSheet to add currentProfileProId tracking ──
+const _originalOpenProfileSheet = openProfileSheet;
+// We patch by re-declaring; ensure this runs after original definition
+(function patchOpenProfileSheet() {
+    const origFn = window.openProfileSheet;
+    window.openProfileSheet = function(proId) {
+        currentProfileProId = proId;
+        origFn(proId);
+    };
+})();
+
+// ═══════════════════════════
+// 🚩 REPORT FUNCTIONS
+// ═══════════════════════════
+
+function openReportModal() {
+    if (!currentProfileProId) return;
+    const pro = PROS.find(p => p.id === currentProfileProId);
+    if (!pro) return;
+
+    // Reset state
+    selectedReportReason = null;
+    document.querySelectorAll('.report-reason-chip').forEach(c => c.classList.remove('selected'));
+    document.getElementById('report-description-input').value = '';
+    document.getElementById('report-reporter-name-input').value = '';
+    document.getElementById('report-custom-reason-input').value = '';
+    document.getElementById('report-custom-reason-input').style.display = 'none';
+    Object.keys(reportProofFiles).forEach(k => delete reportProofFiles[k]);
+    [0,1,2,3].forEach(i => {
+        const slot = document.getElementById(`rp-slot-${i}`);
+        if (slot) slot.innerHTML = `<input type="file" accept="image/*" onchange="handleReportProof(this,${i})" hidden>📷`;
+    });
+
+    document.getElementById('report-modal-pro-name-label').textContent = pro.name;
+    document.getElementById('report-modal-overlay').style.display = 'flex';
+}
+
+function closeReportModal() {
+    document.getElementById('report-modal-overlay').style.display = 'none';
+}
+
+function selectReportReason(el, reason) {
+    document.querySelectorAll('.report-reason-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedReportReason = reason;
+
+    const customInput = document.getElementById('report-custom-reason-input');
+    if (reason === 'Other') {
+        customInput.style.display = 'block';
+    } else {
+        customInput.style.display = 'none';
+    }
+}
+
+function handleReportProof(input, slotIndex) {
+    const file = input.files[0];
+    if (!file) return;
+    if (!file.type.includes('image')) { showGlobalToast('⚠️ Images only!'); return; }
+    if (file.size > 10 * 1024 * 1024) { showGlobalToast('⚠️ File too large (max 10MB)'); return; }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const slot = document.getElementById(`rp-slot-${slotIndex}`);
+        if (!slot) return;
+        slot.innerHTML = `
+            <input type="file" accept="image/*" onchange="handleReportProof(this,${slotIndex})" hidden>
+            <img src="${e.target.result}" alt="proof">
+            <button class="proof-remove" onclick="removeReportProof(event,${slotIndex})">✕</button>`;
+    };
+    reader.readAsDataURL(file);
+    reportProofFiles[slotIndex] = file;
+}
+
+function removeReportProof(event, slotIndex) {
+    event.preventDefault();
+    event.stopPropagation();
+    delete reportProofFiles[slotIndex];
+    const slot = document.getElementById(`rp-slot-${slotIndex}`);
+    if (slot) slot.innerHTML = `<input type="file" accept="image/*" onchange="handleReportProof(this,${slotIndex})" hidden>📷`;
+}
+
+async function submitReport() {
+    const pro = PROS.find(p => p.id === currentProfileProId);
+    if (!pro) return;
+
+    const reason = selectedReportReason === 'Other'
+        ? document.getElementById('report-custom-reason-input').value.trim()
+        : selectedReportReason;
+
+    const description = document.getElementById('report-description-input').value.trim();
+    const reporterName = document.getElementById('report-reporter-name-input').value.trim() || 'Anonymous';
+
+    if (!reason) { showGlobalToast('⚠️ Please select a reason!'); return; }
+    if (description.length < 10) { showGlobalToast('⚠️ Please add a description (min 10 chars)!'); return; }
+
+    const btn = document.getElementById('report-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Submitting...';
+
+    try {
+        // Upload proof images
+        const proofUrls = [];
+        for (const key of Object.keys(reportProofFiles)) {
+            const file = reportProofFiles[key];
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('type', 'report_proof');
+                formData.append('username', reporterName);
+                const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) proofUrls.push(data.url);
+            } catch (e) { console.warn('Proof upload failed:', e); }
+        }
+
+        // Write to Firebase
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            const db = firebase.database();
+            const reportId = `report_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+            await db.ref(`reports/${reportId}`).set({
+                providerId: String(pro.id),
+                providerName: pro.name,
+                reporterName: reporterName,
+                reason: reason,
+                description: description,
+                proofs: proofUrls,
+                status: 'pending',
+                createdAt: Date.now()
+            });
+        }
+
+        closeReportModal();
+        showGlobalToast('✅ Report submitted successfully. Our team will review it.');
+
+    } catch (err) {
+        console.error('Report submit error:', err);
+        showGlobalToast('❌ Failed to submit. Please try again.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Submit Report 🚩';
+}
+
+// ═══════════════════════════
+// ⭐ REVIEW FUNCTIONS
+// ═══════════════════════════
+
+function openReviewModal() {
+    if (!currentProfileProId) return;
+    const pro = PROS.find(p => p.id === currentProfileProId);
+    if (!pro) return;
+
+    // Reset
+    selectedReviewStars = 0;
+    document.querySelectorAll('#star-picker-row span').forEach(s => s.classList.remove('lit'));
+    document.getElementById('review-star-label').textContent = '';
+    document.getElementById('review-comment-input').value = '';
+    document.getElementById('review-customer-name-input').value = '';
+
+    document.getElementById('review-modal-pro-name-label').textContent = pro.name;
+    document.getElementById('review-modal-overlay').style.display = 'flex';
+}
+
+function closeReviewModal() {
+    document.getElementById('review-modal-overlay').style.display = 'none';
+}
+
+function setReviewStar(count) {
+    selectedReviewStars = count;
+    const stars = document.querySelectorAll('#star-picker-row span');
+    stars.forEach((s, i) => {
+        s.classList.toggle('lit', i < count);
+    });
+    const labels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    document.getElementById('review-star-label').textContent = labels[count] || '';
+}
+
+async function submitReview() {
+    const pro = PROS.find(p => p.id === currentProfileProId);
+    if (!pro) return;
+
+    const comment = document.getElementById('review-comment-input').value.trim();
+    const customerName = document.getElementById('review-customer-name-input').value.trim() || 'Anonymous';
+
+    if (selectedReviewStars === 0) { showGlobalToast('⚠️ Please select a star rating!'); return; }
+    if (comment.length < 10) { showGlobalToast('⚠️ Please write a comment (min 10 chars)!'); return; }
+
+    const btn = document.getElementById('review-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Posting...';
+
+    try {
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            const db = firebase.database();
+            const reviewId = `rev_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+            await db.ref(`reviews/${pro.id}/${reviewId}`).set({
+                providerId: String(pro.id),
+                providerName: pro.name,
+                customerName: customerName,
+                rating: selectedReviewStars,
+                comment: comment,
+                createdAt: Date.now()
+            });
+        }
+
+        closeReviewModal();
+        showGlobalToast('✅ Review posted! Thank you for your feedback.');
+
+    } catch (err) {
+        console.error('Review submit error:', err);
+        showGlobalToast('❌ Failed to post review. Please try again.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Post Review ⭐';
+}
+
+// ═══════════════════════════
+// ⚠️ WARNING OVERLAY FUNCTIONS
+// ═══════════════════════════
+
+function checkProviderWarnings(uid) {
+    if (!uid || typeof firebase === 'undefined' || !firebase.database) return;
+    const db = firebase.database();
+    db.ref(`providers/${uid}/warnings`).once('value').then(snap => {
+        const warnings = snap.val();
+        if (!warnings) return;
+        const unacked = Object.entries(warnings).find(([key, w]) => !w.acknowledged);
+        if (unacked) {
+            const [warningKey, warning] = unacked;
+            showWarningOverlay(uid, warningKey, warning);
+        }
+    });
+}
+
+function showWarningOverlay(uid, warningKey, warning) {
+    document.getElementById('pro-warning-message-text').textContent =
+        warning.message || 'You have received a formal warning from Nexus Protocol Admin. Please review your profile.';
+
+    const issuedDate = warning.issuedAt
+        ? new Date(warning.issuedAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+        : '—';
+    document.getElementById('pro-warning-timestamp').textContent = `Issued: ${issuedDate}`;
+
+    // Store for acknowledgeWarning
+    document.getElementById('pro-warning-overlay').dataset.uid = uid;
+    document.getElementById('pro-warning-overlay').dataset.warningKey = warningKey;
+
+    document.getElementById('pro-warning-overlay').style.display = 'flex';
+}
+
+function acknowledgeWarning() {
+    const overlay = document.getElementById('pro-warning-overlay');
+    const uid = overlay.dataset.uid;
+    const warningKey = overlay.dataset.warningKey;
+
+    if (uid && warningKey && typeof firebase !== 'undefined' && firebase.database) {
+        firebase.database().ref(`providers/${uid}/warnings/${warningKey}/acknowledged`).set(true);
+    }
+
+    overlay.style.display = 'none';
+}
+
+// ═══════════════════════════
+// 🔔 GLOBAL TOAST (shared)
+// ═══════════════════════════
+function showGlobalToast(message) {
+    const existing = document.getElementById('global-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'global-toast';
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed; bottom: 30px; left: 50%;
+        transform: translateX(-50%);
+        background: rgba(15,23,42,0.97);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #fff;
+        padding: 10px 22px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 600;
+        z-index: 99999;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        white-space: nowrap;
+        pointer-events: none;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ═══════════════════════════
+// AUTO-CHECK WARNINGS ON LOAD
+// ═══════════════════════════
+// Idan ana amfani da Firebase Auth, ka saka wannan a cikin DOMContentLoaded:
+// firebase.auth().onAuthStateChanged(user => { if (user) checkProviderWarnings(user.uid); });
+// Ko kuma idan username-based session:
+// const sessionUser = localStorage.getItem('nexus_user_session');
+// if (sessionUser) checkProviderWarnings(sessionUser);
+        
+</script>
 </body>
 </html>
