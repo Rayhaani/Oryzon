@@ -2264,14 +2264,17 @@ function handleLikeToggle(event, proId) {
 }
 
 function triggerRouterCheck() {
-    const val = document.getElementById("search-input").value;
+    const inputEl = document.getElementById("search-input");
+    const val = inputEl.value;
     state.query = val;
+    inputEl.blur(); // 👈 cire keyboard nan take
     if (!val.trim()) return;
     document.getElementById("router-overlay").style.display = "flex";
 }
-
+        
 function selectRoutePreference(type) {
     document.getElementById("router-overlay").style.display = "none";
+    document.activeElement.blur(); // 👈 extra safety
     const q = state.query.toLowerCase();
     const match = CATEGORIES.find(c => q.includes(c.label.toLowerCase()) || q.includes(c.id));
     if (match) state.selectedCat = match.id;
