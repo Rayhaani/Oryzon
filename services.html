@@ -2386,20 +2386,22 @@ document.addEventListener("DOMContentLoaded", () => {
         closeStoryDeck();
         openProfileSheet(currentProData.proId);
     });
-    document.getElementById("chef-menu-close-btn").addEventListener("click", closeChefMenuOverlay);
- // AUTO-CHECK WARNINGS ON LOAD
-const sessionUser = localStorage.getItem('nexus_user_session');
-if (sessionUser) checkProviderWarnings(sessionUser);
-});
+document.getElementById("chef-menu-close-btn").addEventListener("click", closeChefMenuOverlay);
 
-// Initialize push notifications
-initPushNotifications();
-        
+    // AUTO-CHECK WARNINGS ON LOAD
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (sessionUser) checkProviderWarnings(sessionUser);
+
+    // Initialize push notifications
+    initPushNotifications();
+
+});
 
  </script>
       <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <script src="nearme-engine.js"></script>
 <script>
   const firebaseConfig = {
@@ -2564,14 +2566,14 @@ async function submitReport() {
         closeReportModal();
        
         // Aika push zuwa provider
-await sendPushToUser(
-    currentEditProId,
-    '🚩 New Report Filed',
-    'Someone has filed a report against your service profile.',
-    { url: '/services.html' }
-);
+        await sendPushToUser(
+            currentProfileProId,
+            '🚩 New Report Filed',
+            'Someone has filed a report against your service profile.',
+            { url: '/services.html' }
+        );
         showGlobalToast('✅ Report submitted successfully. Our team will review it.');
-
+        
     } catch (err) {
         console.error('Report submit error:', err);
         showGlobalToast('❌ Failed to submit. Please try again.');
@@ -2643,21 +2645,21 @@ async function submitReview() {
             });
         }
 
-        closeReviewModal();
+    closeReviewModal();
 
         // In-App alert ga provider (Firebase RTDB)
-if (typeof firebase !== 'undefined' && firebase.database) {
-    await firebase.database().ref(`providers/${currentEditProId}/notifications`).push({
-        type: 'review',
-        title: '⭐ New Review',
-        message: `A customer left you a ${selectedReviewStars}-star review!`,
-        read: false,
-        createdAt: Date.now()
-    });
-}
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            await firebase.database().ref(`providers/${currentProfileProId}/notifications`).push({
+                type: 'review',
+                title: '⭐ New Review',
+                message: `A customer left you a ${selectedReviewStars}-star review!`,
+                read: false,
+                createdAt: Date.now()
+            });
+        }
         
         showGlobalToast('✅ Review posted! Thank you for your feedback.');
-
+        
     } catch (err) {
         console.error('Review submit error:', err);
         showGlobalToast('❌ Failed to post review. Please try again.');
