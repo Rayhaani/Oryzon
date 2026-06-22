@@ -1376,29 +1376,32 @@
 .hire-sheet-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(10px);
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(6px);
     z-index: 7800;
     display: none;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
+    padding: 20px;
 }
 
 .hire-sheet-box {
     width: 100%;
-    max-width: 430px;
-    max-height: 88vh;
-    background: rgba(20,25,45,0.92);
-    backdrop-filter: blur(30px) saturate(180%);
-    -webkit-backdrop-filter: blur(30px) saturate(180%);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 28px 28px 0 0;
+    max-width: 600px;
+    max-height: 80vh;
+    background: rgba(20,25,45,0.85);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 24px;
     padding: 18px 18px 28px;
-    box-shadow: 0 -20px 60px rgba(0,0,0,0.4);
-    animation: sheetSlideUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
     overflow-y: auto;
     box-sizing: border-box;
-}
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
+        }
 
 .hire-sheet-header {
     display: flex;
@@ -4010,16 +4013,12 @@ function openHireSheet() {
     hireState.step = 1;
 
     const pro = getHireProData(currentProfileProId);
-
-    // Fill mini card
     const avatar = document.getElementById('hire-mini-avatar');
     if (pro) {
         avatar.style.background = pro.color;
         avatar.textContent = pro.avatar;
         document.getElementById('hire-mini-name').textContent = pro.name;
         document.getElementById('hire-mini-category').textContent = pro.display_cat;
-
-        // Pre-fill suggested price from pro.price (strip ₦ and commas)
         const priceDigits = (pro.price || '').replace(/[^\d]/g, '');
         document.getElementById('hire-budget').value = priceDigits || '';
     } else {
@@ -4030,20 +4029,32 @@ function openHireSheet() {
         document.getElementById('hire-budget').value = '';
     }
 
-    // Reset fields
     document.getElementById('hire-job-desc').value = '';
     document.getElementById('hire-date-needed').value = '';
     document.getElementById('hire-date-warning').style.display = 'none';
     document.getElementById('hire-budget-unit').value = 'per job';
 
     hireShowStep(1);
-    document.getElementById('hire-sheet-overlay').style.display = 'flex';
+
+    const overlay = document.getElementById('hire-sheet-overlay');
+    const box = document.getElementById('hire-sheet-box');
+    overlay.style.display = 'flex';
+    setTimeout(() => {
+        box.style.transform = 'scale(1)';
+        box.style.opacity = '1';
+    }, 10);
+    document.body.style.overflow = 'hidden';
 }
 
 function closeHireSheet() {
-    document.getElementById('hire-sheet-overlay').style.display = 'none';
+    const box = document.getElementById('hire-sheet-box');
+    box.style.transform = 'scale(0.9)';
+    box.style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('hire-sheet-overlay').style.display = 'none';
+    }, 300);
+    document.body.style.overflow = '';
 }
-
 function closeHireSheetOnBg(event) {
     if (event.target.id === 'hire-sheet-overlay') closeHireSheet();
 }
