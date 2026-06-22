@@ -1476,7 +1476,7 @@
 
                 <div style="position:sticky;bottom:16px;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);padding:10px 0;display:flex;flex-direction:column;gap:8px;">
     <div style="display:flex;gap:10px;">
-        <button style="flex:1;background:#f1f5f9;color:#111827;border:none;border-radius:14px;padding:14px 0;font-weight:700;font-size:13px;cursor:pointer;" onclick="alert('Secure Chat channel opening...')">Secure Chat 📩</button>
+        <button style="flex:1;background:#f1f5f9;color:#111827;border:none;border-radius:14px;padding:14px 0;font-weight:700;font-size:13px;cursor:pointer;" onclick="openSecureChat()">Secure Chat 📩</button>
         <button style="flex:1;background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);color:#fff;border:none;border-radius:14px;padding:14px 0;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 4px 15px rgba(29,78,216,0.3);" onclick="alert('Hiring workflow routing...')">Hire Expert 📞</button>
     </div>
     <div style="display:flex;gap:10px;">
@@ -3265,6 +3265,50 @@ function formatNotifTime(timestamp) {
     if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
     return Math.floor(seconds / 86400) + 'd ago';
     }
+
+    // ════════════════════════════════════════════════════════════
+//  💬 SECURE CHAT ENGINE
+// ════════════════════════════════════════════════════════════
+
+function openSecureChat() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+
+    // Idan ba a login ba
+    if (!sessionUser) {
+        showGlobalToast('⚠️ Please login first to start a chat!');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+        return;
+    }
+
+    // Samu pro username daga Firebase
+    if (typeof firebase !== 'undefined' && firebase.database) {
+
+        // Check: shin wannan user pro ne (owner)?
+        firebase.database().ref('providers/' + sessionUser).once('value').then(snap => {
+
+            if (snap.exists()) {
+                // Wannan USER shine PRO — je chats.html ya ga duk messages ɗinsa
+                window.location.href = 'chats.html';
+            } else {
+                // Wannan CUSTOMER ne — je chat-interior.html da pro ɗin da yake kallo
+                if (!currentProfileProId) {
+                    showGlobalToast('⚠️ Could not identify provider!');
+                    return;
+                }
+                // currentProfileProId shine username na pro a Firebase
+                window.location.href = `chat-interior.html?with=${encodeURIComponent(currentProfileProId)}`;
+            }
+        }).catch(() => {
+            // Idan error, treat as customer
+            if (currentProfileProId) {
+                window.location.href = `chat-interior.html?with=${encodeURIComponent(currentProfileProId)}`;
+            }
+        });
+
+    } else {
+        showGlobalToast('❌ Firebase not ready. Try again.');
+    }
+}
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
