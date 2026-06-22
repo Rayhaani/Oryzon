@@ -1028,7 +1028,187 @@
     box-shadow: 0 0 60px rgba(239,68,68,0.15);
     animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
       }
-      
+
+    /* ── NOTIFICATION BELL ── */
+.notif-bell-wrapper {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+}
+
+.notif-bell-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.notif-bell-btn:active {
+    transform: scale(0.92);
+}
+
+.notif-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    min-width: 16px;
+    height: 16px;
+    background: #ef4444;
+    border: 2px solid #1d4ed8;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 800;
+    color: #ffffff;
+    padding: 0 3px;
+    z-index: 10;
+    animation: badgePop 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+@keyframes badgePop {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+}
+
+/* Bell shake animation */
+@keyframes bellShake {
+    0%,100% { transform: rotate(0deg); }
+    15% { transform: rotate(12deg); }
+    30% { transform: rotate(-10deg); }
+    45% { transform: rotate(8deg); }
+    60% { transform: rotate(-6deg); }
+    75% { transform: rotate(4deg); }
+}
+
+.notif-bell-btn.has-notif .bell-icon {
+    animation: bellShake 0.6s ease 0.2s forwards;
+    display: inline-block;
+}
+
+/* Notification Panel */
+.notif-panel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 7500;
+    display: none;
+}
+
+.notif-panel {
+    position: absolute;
+    top: 70px;
+    right: 16px;
+    width: 300px;
+    max-height: 420px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+    overflow: hidden;
+    animation: notifPanelIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes notifPanelIn {
+    from { transform: translateY(-10px) scale(0.95); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.notif-panel-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.notif-panel-list {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f8fafc;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.notif-item:hover { background: #f8fafc; }
+
+.notif-item.unread {
+    background: rgba(29,78,216,0.03);
+    border-left: 3px solid #1d4ed8;
+}
+
+.notif-item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.notif-item-icon.review { background: rgba(245,158,11,0.1); }
+.notif-item-icon.warning { background: rgba(239,68,68,0.1); }
+.notif-item-icon.message { background: rgba(29,78,216,0.1); }
+
+.notif-item-body { flex: 1; min-width: 0; }
+.notif-item-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 2px;
+}
+.notif-item-msg {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.notif-item-time {
+    font-size: 9px;
+    color: #94a3b8;
+    margin-top: 3px;
+    font-weight: 600;
+}
+
+.notif-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.notif-mark-all {
+    font-size: 11px;
+    color: #1d4ed8;
+    font-weight: 700;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    }
     </style>
 </head>
 <body>
@@ -1038,13 +1218,34 @@
         <!-- Header Dynamic View Area -->
         <div class="aurora-header">
             <div style="display: flex; align-items: center; position: relative;">
-                <div class="cyber-input-wrapper">
-                    <span style="position: absolute; left: 18px; font-size: 16px; pointer-events: none; z-index: 2;">🛡️</span>
-                    <input type="text" id="search-input" class="trustid-typing-bar" placeholder="TrustID Secured Portal" />
-                    <div class="embedded-search-btn" id="search-trigger-btn">
-                        <span style="font-size: 14px;">🔍</span>
-                    </div>
-                </div>
+               <div class="cyber-input-wrapper">
+    <span style="position: absolute; left: 18px; font-size: 16px; pointer-events: none; z-index: 2;">🛡️</span>
+    <input type="text" id="search-input" class="trustid-typing-bar" placeholder="TrustID Secured Portal" />
+    <div class="embedded-search-btn" id="search-trigger-btn">
+        <span style="font-size: 14px;">🔍</span>
+    </div>
+</div>
+
+<!-- 🔔 NOTIFICATION BELL -->
+<div class="notif-bell-wrapper" style="margin-left:10px;">
+    <div class="notif-bell-btn" id="notif-bell-btn" onclick="toggleNotifPanel()">
+        <span class="bell-icon" style="font-size:16px;">🔔</span>
+        <div class="notif-badge" id="notif-badge">0</div>
+    </div>
+</div>
+
+<!-- Notification Panel Overlay -->
+<div class="notif-panel-overlay" id="notif-panel-overlay" onclick="closeNotifPanel()">
+    <div class="notif-panel" onclick="event.stopPropagation()">
+        <div class="notif-panel-header">
+            <div style="font-size:13px;font-weight:800;color:#111827;">🔔 Notifications</div>
+            <button class="notif-mark-all" onclick="markAllNotifsRead()">Mark all read</button>
+        </div>
+        <div class="notif-panel-list" id="notif-panel-list">
+            <div class="notif-empty">No notifications yet</div>
+        </div>
+    </div>
+</div> 
             </div>
 
             <!-- Header Action Buttons -->
@@ -2394,7 +2595,9 @@ document.getElementById("chef-menu-close-btn").addEventListener("click", closeCh
 
     // Initialize push notifications
     initPushNotifications();
-
+    
+    // Initialize notification bell
+initNotificationBell();
 });
 
  </script>
@@ -2938,6 +3141,130 @@ async function sendPushToUser(username, title, body, data = {}) {
         console.warn('Send push failed:', err);
     }
             }
+
+// ════════════════════════════════════════════════════════════
+//  🔔 IN-APP NOTIFICATION ENGINE
+// ════════════════════════════════════════════════════════════
+
+let notifListener = null;
+let allNotifications = [];
+
+function initNotificationBell() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) return;
+    if (!firebase || !firebase.database) return;
+
+    const db = firebase.database();
+
+    // Listen for new notifications in realtime
+    notifListener = db.ref(`providers/${sessionUser}/notifications`)
+        .orderByChild('createdAt')
+        .limitToLast(20)
+        .on('value', (snap) => {
+            const data = snap.val() || {};
+            allNotifications = Object.entries(data)
+                .map(([id, n]) => ({ id, ...n }))
+                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            updateBellBadge();
+        });
+}
+
+function updateBellBadge() {
+    const unread = allNotifications.filter(n => !n.read).length;
+    const badge = document.getElementById('notif-badge');
+    const bellBtn = document.getElementById('notif-bell-btn');
+
+    if (unread > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = unread > 9 ? '9+' : unread;
+        bellBtn.classList.add('has-notif');
+    } else {
+        badge.style.display = 'none';
+        bellBtn.classList.remove('has-notif');
+    }
+}
+
+function toggleNotifPanel() {
+    const overlay = document.getElementById('notif-panel-overlay');
+    const isOpen = overlay.style.display === 'block';
+    if (isOpen) {
+        closeNotifPanel();
+    } else {
+        renderNotifPanel();
+        overlay.style.display = 'block';
+    }
+}
+
+function closeNotifPanel() {
+    document.getElementById('notif-panel-overlay').style.display = 'none';
+}
+
+function renderNotifPanel() {
+    const list = document.getElementById('notif-panel-list');
+
+    if (allNotifications.length === 0) {
+        list.innerHTML = `<div class="notif-empty">🔕 No notifications yet</div>`;
+        return;
+    }
+
+    list.innerHTML = allNotifications.map(n => {
+        const isUnread = !n.read;
+        const iconClass = n.type === 'review' ? 'review' : n.type === 'warning' ? 'warning' : 'message';
+        const iconEmoji = n.type === 'review' ? '⭐' : n.type === 'warning' ? '⚠️' : '💬';
+        const timeStr = formatNotifTime(n.createdAt);
+
+        return `
+        <div class="notif-item ${isUnread ? 'unread' : ''}" onclick="handleNotifClick('${n.id}','${n.type}')">
+            <div class="notif-item-icon ${iconClass}">${iconEmoji}</div>
+            <div class="notif-item-body">
+                <div class="notif-item-title">${n.title || 'Notification'}</div>
+                <div class="notif-item-msg">${n.message || ''}</div>
+                <div class="notif-item-time">${timeStr}</div>
+            </div>
+            ${isUnread ? '<div style="width:6px;height:6px;border-radius:50%;background:#1d4ed8;flex-shrink:0;margin-top:4px;"></div>' : ''}
+        </div>`;
+    }).join('');
+}
+
+function handleNotifClick(notifId, type) {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) return;
+
+    // Mark as read
+    firebase.database()
+        .ref(`providers/${sessionUser}/notifications/${notifId}/read`)
+        .set(true);
+
+    closeNotifPanel();
+}
+
+function markAllNotifsRead() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) return;
+
+    const updates = {};
+    allNotifications.forEach(n => {
+        if (!n.read) updates[`${n.id}/read`] = true;
+    });
+
+    if (Object.keys(updates).length > 0) {
+        firebase.database()
+            .ref(`providers/${sessionUser}/notifications`)
+            .update(updates);
+    }
+
+    closeNotifPanel();
+}
+
+function formatNotifTime(timestamp) {
+    if (!timestamp) return '—';
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+    return Math.floor(seconds / 86400) + 'd ago';
+    }
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
