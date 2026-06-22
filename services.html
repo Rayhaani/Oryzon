@@ -1209,6 +1209,168 @@
     border: none;
     padding: 0;
     }
+
+/* ── EMERGENCY BUTTON ── */
+.emergency-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 8px;
+    box-shadow: 0 4px 15px rgba(239,68,68,0.4);
+}
+
+.emergency-btn-text {
+    font-size: 11px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.emergency-pulse-ring {
+    position: absolute;
+    inset: -3px;
+    border-radius: 22px;
+    border: 2px solid rgba(239,68,68,0.6);
+    animation: emergencyPulse 1.5s infinite ease-out;
+}
+
+.emergency-pulse-ring-2 {
+    position: absolute;
+    inset: -6px;
+    border-radius: 25px;
+    border: 1.5px solid rgba(239,68,68,0.3);
+    animation: emergencyPulse 1.5s infinite ease-out 0.4s;
+}
+
+@keyframes emergencyPulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.12); opacity: 0; }
+}
+
+/* ── EMERGENCY SHEET ── */
+.emergency-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(12px);
+    z-index: 8500;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.emergency-sheet {
+    width: 100%;
+    max-width: 430px;
+    background: #0f172a;
+    border-radius: 28px 28px 0 0;
+    padding: 20px 20px 40px;
+    border: 1px solid rgba(239,68,68,0.2);
+    box-shadow: 0 -20px 60px rgba(239,68,68,0.15);
+    animation: sheetSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+@keyframes sheetSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* Scanning animation */
+.emergency-radar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid rgba(239,68,68,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    position: relative;
+}
+
+.emergency-radar::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    border: 2px solid rgba(239,68,68,0.2);
+}
+
+.emergency-radar::after {
+    content: '';
+    position: absolute;
+    inset: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(239,68,68,0.15);
+}
+
+.radar-sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(239,68,68,0.4) 30deg,
+        transparent 60deg
+    );
+    animation: radarSpin 2s linear infinite;
+}
+
+@keyframes radarSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.emergency-pro-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.emergency-pro-card:hover {
+    background: rgba(239,68,68,0.08);
+    border-color: rgba(239,68,68,0.3);
+}
+
+.emergency-pro-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.emergency-distance-badge {
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #ef4444;
+        }
     </style>
 </head>
 <body>
@@ -1222,8 +1384,17 @@
     <span style="position: absolute; left: 18px; font-size: 16px; pointer-events: none; z-index: 2;">🛡️</span>
     <input type="text" id="search-input" class="trustid-typing-bar" placeholder="TrustID Secured Portal" />
     <div class="embedded-search-btn" id="search-trigger-btn">
-        <span style="font-size: 14px;">🔍</span>
-    </div>
+    <span style="font-size: 14px;">🔍</span>
+</div>
+</div>
+
+<!-- 🚨 EMERGENCY BUTTON -->
+<button class="emergency-btn" onclick="openEmergencySheet()">
+    <div class="emergency-pulse-ring"></div>
+    <div class="emergency-pulse-ring-2"></div>
+    <span style="font-size:14px;">🚨</span>
+    <span class="emergency-btn-text">Emergency</span>
+</button>
 </div>
 
 <!-- 🔔 NOTIFICATION BELL -->
@@ -1585,6 +1756,49 @@
     </div>
 </div>
 
+    <!-- ══ EMERGENCY SHEET ══ -->
+<div class="emergency-sheet-overlay" id="emergency-sheet-overlay" onclick="closeEmergencySheet(event)">
+    <div class="emergency-sheet" onclick="event.stopPropagation()">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+                <div style="font-size:18px;font-weight:800;color:#ef4444;">🚨 Emergency</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;" id="emergency-location-text">Detecting your location...</div>
+            </div>
+            <button onclick="closeEmergencySheet()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:50%;width:32px;height:32px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+
+        <!-- Category Filter -->
+        <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;" id="emergency-cat-filter">
+            <button onclick="filterEmergencyPros(null,this)" style="flex-shrink:0;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">All</button>
+            <button onclick="filterEmergencyPros('mechanic',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">🚗 Mechanic</button>
+            <button onclick="filterEmergencyPros('plumber',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">🔧 Plumber</button>
+            <button onclick="filterEmergencyPros('electrician',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">⚡ Electrician</button>
+            <button onclick="filterEmergencyPros('chef',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">🍳 Chef</button>
+            <button onclick="filterEmergencyPros('cleaner',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">🧹 Cleaner</button>
+        </div>
+
+        <!-- Radar + Status -->
+        <div id="emergency-scanning-state">
+            <div class="emergency-radar">
+                <div class="radar-sweep"></div>
+                <span style="font-size:28px;z-index:2;">📍</span>
+            </div>
+            <div style="text-align:center;font-size:13px;font-weight:700;color:#ffffff;margin-bottom:6px;" id="emergency-scan-status">Scanning nearby pros...</div>
+            <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);" id="emergency-scan-sub">Finding verified experts within 5km</div>
+        </div>
+
+        <!-- Results -->
+        <div id="emergency-results-list" style="display:none;max-height:320px;overflow-y:auto;"></div>
+
+        <!-- Expand Radius Button -->
+        <button id="emergency-expand-btn" onclick="expandEmergencyRadius()" style="display:none;width:100%;margin-top:12px;padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;">
+            🔍 Expand Search Radius
+        </button>
+
+    </div>
+</div>
     
     <!-- CHEF MENU GLASS OVERLAY -->
 <div class="chef-menu-overlay" id="chef-menu-overlay">
@@ -3309,6 +3523,218 @@ function openSecureChat() {
         showGlobalToast('❌ Firebase not ready. Try again.');
     }
 }
+
+// ════════════════════════════════════════════════════════════
+//  🚨 EMERGENCY ENGINE
+// ════════════════════════════════════════════════════════════
+
+let emergencyUserLat = null;
+let emergencyUserLng = null;
+let emergencyCurrentRadius = 5;
+let emergencyAllPros = [];
+let emergencyFilteredPros = [];
+let emergencySelectedCat = null;
+
+function openEmergencySheet() {
+    document.getElementById('emergency-sheet-overlay').style.display = 'flex';
+    document.getElementById('emergency-scanning-state').style.display = 'block';
+    document.getElementById('emergency-results-list').style.display = 'none';
+    document.getElementById('emergency-expand-btn').style.display = 'none';
+    document.getElementById('emergency-scan-status').textContent = 'Scanning nearby pros...';
+    document.getElementById('emergency-scan-sub').textContent = 'Finding verified experts within 5km';
+    document.getElementById('emergency-location-text').textContent = 'Detecting your location...';
+    emergencyCurrentRadius = 5;
+    emergencySelectedCat = null;
+
+    // Get GPS
+    if (!navigator.geolocation) {
+        document.getElementById('emergency-scan-status').textContent = '❌ GPS not supported';
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            emergencyUserLat = pos.coords.latitude;
+            emergencyUserLng = pos.coords.longitude;
+            document.getElementById('emergency-location-text').textContent =
+                `📍 ${emergencyUserLat.toFixed(4)}, ${emergencyUserLng.toFixed(4)}`;
+            scanEmergencyPros();
+        },
+        (err) => {
+            document.getElementById('emergency-scan-status').textContent = '⚠️ Location access denied';
+            document.getElementById('emergency-scan-sub').textContent = 'Please enable GPS and try again';
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+function closeEmergencySheet(event) {
+    if (event && event.target !== document.getElementById('emergency-sheet-overlay')) return;
+    document.getElementById('emergency-sheet-overlay').style.display = 'none';
+}
+
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function scanEmergencyPros() {
+    document.getElementById('emergency-scan-status').textContent = 'Scanning nearby pros...';
+    document.getElementById('emergency-scan-sub').textContent =
+        `Finding verified experts within ${emergencyCurrentRadius}km`;
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) {
+            showGlobalToast('❌ Firebase not ready');
+            return;
+        }
+
+        const db = firebase.database();
+        const snap = await db.ref('providers').once('value');
+        const data = snap.val() || {};
+
+        emergencyAllPros = [];
+
+        Object.entries(data).forEach(([uid, pro]) => {
+            // Approved pros kawai
+            if (pro.status !== 'approved' && pro.verified !== true) return;
+            if (!pro.location || !pro.location.lat || !pro.location.lng) return;
+
+            const dist = getDistanceKm(
+                emergencyUserLat, emergencyUserLng,
+                pro.location.lat, pro.location.lng
+            );
+
+            if (dist <= emergencyCurrentRadius) {
+                emergencyAllPros.push({ uid, ...pro, distanceKm: dist });
+            }
+        });
+
+        // Sort by distance
+        emergencyAllPros.sort((a, b) => a.distanceKm - b.distanceKm);
+
+        renderEmergencyResults();
+
+    } catch (err) {
+        document.getElementById('emergency-scan-status').textContent = '❌ Scan failed';
+        console.error('Emergency scan error:', err);
+    }
+}
+
+function filterEmergencyPros(cat, btn) {
+    emergencySelectedCat = cat;
+
+    // Update button styles
+    document.querySelectorAll('#emergency-cat-filter button').forEach(b => {
+        b.style.background = 'rgba(255,255,255,0.06)';
+        b.style.color = 'rgba(255,255,255,0.7)';
+        b.style.border = '1px solid rgba(255,255,255,0.1)';
+    });
+    btn.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
+    btn.style.color = '#fff';
+    btn.style.border = 'none';
+
+    renderEmergencyResults();
+}
+
+function renderEmergencyResults() {
+    const list = document.getElementById('emergency-results-list');
+    const scanState = document.getElementById('emergency-scanning-state');
+    const expandBtn = document.getElementById('emergency-expand-btn');
+
+    let pros = emergencyAllPros;
+
+    // Apply category filter
+    if (emergencySelectedCat) {
+        pros = pros.filter(p =>
+            (p.category || '').toLowerCase().includes(emergencySelectedCat) ||
+            (p.categoryLabel || '').toLowerCase().includes(emergencySelectedCat) ||
+            (p.subcategory || '').toLowerCase().includes(emergencySelectedCat)
+        );
+    }
+
+    emergencyFilteredPros = pros;
+    scanState.style.display = 'none';
+
+    if (pros.length === 0) {
+        list.style.display = 'block';
+        list.innerHTML = `
+            <div style="text-align:center;padding:30px 20px;">
+                <div style="font-size:36px;margin-bottom:12px;">📡</div>
+                <div style="font-size:14px;font-weight:700;color:#ffffff;margin-bottom:6px;">No pros found within ${emergencyCurrentRadius}km</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);">Try expanding the search radius</div>
+            </div>`;
+        expandBtn.style.display = 'block';
+        expandBtn.textContent = `🔍 Expand to ${emergencyCurrentRadius * 2}km`;
+        return;
+    }
+
+    expandBtn.style.display = 'none';
+    list.style.display = 'block';
+    list.innerHTML = `
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
+            ⚡ ${pros.length} Pro${pros.length > 1 ? 's' : ''} Found Within ${emergencyCurrentRadius}km
+        </div>
+        ${pros.map(pro => `
+        <div class="emergency-pro-card" onclick="emergencyContactPro('${pro.uid}')">
+            <div class="emergency-pro-avatar" style="background:${getProColor(pro.categoryLabel)};">
+                ${(pro.categoryLabel || 'P').charAt(0).toUpperCase()}
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:800;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    ${pro.categoryLabel || 'Professional'} ${pro.subcategory ? '· ' + pro.subcategory : ''}
+                </div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;">
+                    ₦${Number(pro.pricing?.base || 0).toLocaleString()} ${pro.pricing?.unit || 'per job'}
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <span class="emergency-distance-badge">${pro.distanceKm.toFixed(1)}km</span>
+                <span style="font-size:9px;color:#22c55e;font-weight:700;">● Available</span>
+            </div>
+        </div>`).join('')}`;
+}
+
+function getProColor(category) {
+    const colors = {
+        'Plumber': 'linear-gradient(135deg,#059669,#047857)',
+        'Electrician': 'linear-gradient(135deg,#d97706,#b45309)',
+        'Mechanic': 'linear-gradient(135deg,#dc2626,#b91c1c)',
+        'Chef': 'linear-gradient(135deg,#ec4899,#be185d)',
+        'Carpenter': 'linear-gradient(135deg,#78350f,#451a03)',
+        'Cleaner': 'linear-gradient(135deg,#0284c7,#0369a1)',
+    };
+    return colors[category] || 'linear-gradient(135deg,#1d4ed8,#1e40af)';
+}
+
+function expandEmergencyRadius() {
+    emergencyCurrentRadius = emergencyCurrentRadius * 2;
+    document.getElementById('emergency-scanning-state').style.display = 'block';
+    document.getElementById('emergency-results-list').style.display = 'none';
+    scanEmergencyPros();
+}
+
+function emergencyContactPro(proUid) {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+
+    if (!sessionUser) {
+        showGlobalToast('⚠️ Please login first!');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+        return;
+    }
+
+    // Close emergency sheet
+    document.getElementById('emergency-sheet-overlay').style.display = 'none';
+
+    // Je chat-interior kai tsaye da wannan pro
+    window.location.href = `chat-interior.html?with=${encodeURIComponent(proUid)}`;
+    }
+                                               
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
