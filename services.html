@@ -3604,28 +3604,29 @@ function psShowFoodForm() {
 }
 
 // ── CHEF STEP 3: MENU BUILDER ──
-function psChefGoToStep3() {
-    const cuisines = Array.from(
-        document.querySelectorAll('#chef-cuisine-chips input:checked')
-    ).map(el => el.value);
-    const style = document.getElementById('chef-cooking-style').value;
-    const exp = document.getElementById('chef-experience').value;
-    const bio = document.getElementById('chef-bio').value.trim();
+// Ɓoye step 2 form gaba ɗaya
+document.getElementById('ps-inline-step-2').style.display = 'none';
 
-    if (cuisines.length === 0) { psShowToast('⚠️ Zaɓi aƙalla cuisine ɗaya!'); return; }
-    if (!style) { psShowToast('⚠️ Zaɓi cooking style!'); return; }
-    if (!exp) { psShowToast('⚠️ Zaɓi years of experience!'); return; }
-    if (bio.length < 10) { psShowToast('⚠️ Bayani ya yi ƙasa — kalla haruffa 10!'); return; }
+// Nuna step 3 a matsayin sabon flex container
+const step3 = document.getElementById('ps-chef-step-3');
+step3.style.display = 'flex';
+step3.style.flex = '1';
+step3.style.overflowY = 'auto';
+step3.style.flexDirection = 'column';
+step3.style.gap = '12px';
+step3.style.padding = '12px 16px 16px';
 
-    psInlineState.chefCuisines = cuisines;
-    psInlineState.chefStyle = style;
-    psInlineState.chefExperience = exp;
-    psInlineState.chefBio = bio;
+// Update header
+document.getElementById('ps-sheet-title-label').textContent = '🍽️ Menu Builder';
+document.getElementById('ps-back-step-inline-btn').style.display = 'block';
 
-    // Show step 3 - Menu Builder
-    psShowChefStep(3);
-}
+// Update dots
+[1,2,3,4,5,6].forEach(i => {
+    const dot = document.getElementById(`ps-dot-${i}`);
+    if (dot) dot.style.background = i === 3 ? '#ec4899' : i < 3 ? '#10b981' : 'rgba(255,255,255,0.2)';
+});
 
+psInlineState.currentStep = 3;
 // ── CHEF STEP 4: SERVICE SETUP ──
 function psChefGoToStep4() {
     const menuItems = getChefMenuItems();
