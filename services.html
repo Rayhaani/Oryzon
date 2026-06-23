@@ -2772,7 +2772,7 @@ function psShowStep(step) {
         const el = document.getElementById(id);
         if (el) el.style.display = (i+1 === step) ? "flex" : "none";
     });
-    // Update dots
+
     const dotsWrapper = document.getElementById("ps-inline-step-dots");
     const backBtn = document.getElementById("ps-back-step-inline-btn");
     const titleEl = document.getElementById("ps-sheet-title-label");
@@ -2784,13 +2784,26 @@ function psShowStep(step) {
     } else {
         dotsWrapper.style.display = "flex";
         backBtn.style.display = "block";
-        titleEl.textContent = step === 2 ? "Service Details" : "Location & Submit";
+        
+        // Titles bisa formType
+        if (step === 2) {
+            const typeLabels = {
+                chef: "👨‍🍳 Chef Details",
+                snacks: "🧁 Snacks Details", 
+                beverages: "🥤 Beverages Details",
+                general: "Service Details"
+            };
+            titleEl.textContent = typeLabels[psInlineState.formType] || "Service Details";
+        } else {
+            titleEl.textContent = "Location & Submit";
+        }
+
         [1,2,3].forEach(i => {
             const dot = document.getElementById(`ps-dot-${i}`);
             if (dot) dot.style.background = i === step ? "#6366f1" : i < step ? "#10b981" : "rgba(255,255,255,0.2)";
         });
     }
-}
+    }
 
 function psGoBack() {
     if (psInlineState.currentStep > 1) psShowStep(psInlineState.currentStep - 1);
@@ -3055,6 +3068,7 @@ function selectPSSub(catLabel, sub, idx) {
     }
     
     psShowStep(2);
+    psShowFoodForm();
 }
 
 // ── FOOD FORM CONTROLLER ──
