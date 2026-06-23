@@ -3057,6 +3057,409 @@ function selectPSSub(catLabel, sub, idx) {
     psShowStep(2);
 }
 
+// ── FOOD FORM CONTROLLER ──
+function psShowFoodForm() {
+    const type = psInlineState.formType;
+    document.getElementById('ps-form-chef').style.display = 'none';
+    document.getElementById('ps-form-snacks').style.display = 'none';
+    document.getElementById('ps-form-beverages').style.display = 'none';
+    document.getElementById('ps-form-general').style.display = 'none';
+
+    if (type === 'chef') {
+        document.getElementById('ps-form-chef').style.display = 'flex';
+    } else if (type === 'snacks') {
+        document.getElementById('ps-form-snacks').style.display = 'flex';
+    } else if (type === 'beverages') {
+        document.getElementById('ps-form-beverages').style.display = 'flex';
+    } else {
+        document.getElementById('ps-form-general').style.display = 'flex';
+    }
+}
+
+// ── CHEF STEP 3: MENU BUILDER ──
+function psChefGoToStep3() {
+    const cuisines = Array.from(
+        document.querySelectorAll('#chef-cuisine-chips input:checked')
+    ).map(el => el.value);
+    const style = document.getElementById('chef-cooking-style').value;
+    const exp = document.getElementById('chef-experience').value;
+    const bio = document.getElementById('chef-bio').value.trim();
+
+    if (cuisines.length === 0) { psShowToast('⚠️ Zaɓi aƙalla cuisine ɗaya!'); return; }
+    if (!style) { psShowToast('⚠️ Zaɓi cooking style!'); return; }
+    if (!exp) { psShowToast('⚠️ Zaɓi years of experience!'); return; }
+    if (bio.length < 10) { psShowToast('⚠️ Bayani ya yi ƙasa — kalla haruffa 10!'); return; }
+
+    psInlineState.chefCuisines = cuisines;
+    psInlineState.chefStyle = style;
+    psInlineState.chefExperience = exp;
+    psInlineState.chefBio = bio;
+
+    // Show step 3 - Menu Builder
+    psShowChefStep(3);
+}
+
+// ── CHEF STEP 4: SERVICE SETUP ──
+function psChefGoToStep4() {
+    const menuItems = getChefMenuItems();
+    if (menuItems.length === 0) { psShowToast('⚠️ Ƙara aƙalla menu item ɗaya!'); return; }
+
+    psInlineState.chefMenu = menuItems;
+    psShowChefStep(4);
+}
+
+// ── CHEF STEP 5: SCHEDULE + VERIFICATION ──
+function psChefGoToStep5() {
+    const eventTypes = Array.from(
+        document.querySelectorAll('#chef-event-types input:checked')
+    ).map(el => el.value);
+    const maxGuests = document.getElementById('chef-max-guests').value;
+    const radius = document.getElementById('chef-service-radius').value;
+    const serviceType = document.getElementById('chef-service-type').value;
+
+    if (eventTypes.length === 0) { psShowToast('⚠️ Zaɓi aƙalla event type ɗaya!'); return; }
+    if (!serviceType) { psShowToast('⚠️ Zaɓi service type!'); return; }
+
+    psInlineState.chefEventTypes = eventTypes;
+    psInlineState.chefMaxGuests = maxGuests;
+    psInlineState.chefRadius = radius;
+    psInlineState.chefServiceType = serviceType;
+
+    psShowChefStep(5);
+}
+
+// ── CHEF STEP 6: GPS ──
+function psChefGoToStep6() {
+    const days = Array.from(
+        document.querySelectorAll('#chef-days-grid input:checked')
+    ).map(el => el.value);
+    const timeFrom = document.getElementById('chef-time-from').value;
+    const timeTo = document.getElementById('chef-time-to').value;
+    const notice = document.getElementById('chef-advance-notice').value;
+    const idType = document.getElementById('chef-id-type').value;
+
+    if (days.length === 0) { psShowToast('⚠️ Zaɓi aƙalla kwana ɗaya!'); return; }
+    if (!timeFrom || !timeTo) { psShowToast('⚠️ Saka lokacin aiki!'); return; }
+    if (!idType) { psShowToast('⚠️ Zaɓi irin ID ɗinka!'); return; }
+    if (!verificationFiles.id) { psShowToast('⚠️ Saka hoton ID ɗinka!'); return; }
+    if (!verificationFiles.selfie) { psShowToast('⚠️ Saka selfie ɗinka da ID!'); return; }
+
+    psInlineState.chefDays = days;
+    psInlineState.chefTimeFrom = timeFrom;
+    psInlineState.chefTimeTo = timeTo;
+    psInlineState.chefNotice = notice;
+
+    // Show GPS step
+    psShowChefStep(6);
+    renderChefSummary();
+}
+
+// ── CHEF STEP CONTROLLER ──
+function psShowChefStep(step) {
+    [3,4,5,6].forEach(s => {
+        const el = document.getElementById(`ps-chef-step-${s}`);
+        if (el) el.style.display = 'none';
+    });
+    const target = document.getElementById(`ps-chef-step-${step}`);
+    if (target) target.style.display = 'flex';
+
+    // Update dots
+    const totalSteps = 6;
+    psInlineState.currentStep = step;
+    [1,2,3,4,5,6].forEach(i => {
+        const dot = document.getElementById(`ps-dot-${i}`);
+        if (dot) dot.style.background = i === step ? '#ec4899' : i < step ? '#10b981' : 'rgba(255,255,255,0.2)';
+    });
+
+    // Update title
+    const titles = {
+        3: '🍽️ Menu Builder',
+        4: '⚙️ Service Setup',
+        5: '📅 Schedule & Verification',
+        6: '📍 Location & Submit'
+    };
+    document.getElementById('ps-sheet-title-label').textContent = titles[step] || 'Chef Registration';
+}
+
+// ── MENU BUILDER HELPERS ──
+let chefMenuItems = [];
+
+function getChefMenuItems() {
+    return chefMenuItems;
+}
+
+function addChefMenuItem() {
+    const name = document.getElementById('chef-menu-item-name').value.trim();
+    const price = document.getElementById('chef-menu-item-price').value;
+    const category = document.getElementById('chef-menu-item-category').value;
+    const desc = document.getElementById('chef-menu-item-desc').value.trim();
+
+    if (!name) { psShowToast('⚠️ Saka sunan dish!'); return; }
+    if (!price || parseInt(price) <= 0) { psShowToast('⚠️ Saka farashi mai inganci!'); return; }
+    if (!category) { psShowToast('⚠️ Zaɓi category!'); return; }
+
+    const item = {
+        id: Date.now(),
+        name,
+        price: parseInt(price),
+        category,
+        desc: desc || ''
+    };
+
+    chefMenuItems.push(item);
+    renderChefMenuList();
+
+    // Clear inputs
+    document.getElementById('chef-menu-item-name').value = '';
+    document.getElementById('chef-menu-item-price').value = '';
+    document.getElementById('chef-menu-item-desc').value = '';
+    document.getElementById('chef-menu-item-category').value = '';
+
+    psShowToast(`✅ "${name}" an ƙara!`);
+}
+
+function removeChefMenuItem(id) {
+    chefMenuItems = chefMenuItems.filter(item => item.id !== id);
+    renderChefMenuList();
+}
+
+function renderChefMenuList() {
+    const list = document.getElementById('chef-menu-items-list');
+    if (!list) return;
+
+    if (chefMenuItems.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">Menu ɗinka bai da items tukuna</div>`;
+        return;
+    }
+
+    list.innerHTML = chefMenuItems.map(item => `
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 12px;margin-bottom:8px;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:800;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;">${item.category} ${item.desc ? '· ' + item.desc : ''}</div>
+            </div>
+            <div style="font-size:13px;font-weight:800;color:#34d399;flex-shrink:0;">₦${item.price.toLocaleString()}</div>
+            <button onclick="removeChefMenuItem(${item.id})" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#ef4444;font-size:11px;padding:4px 8px;cursor:pointer;flex-shrink:0;">✕</button>
+        </div>`).join('');
+}
+
+// ── SNACKS VENDOR ──
+let snacksItems = [];
+
+function psSnacksGoToStep3() {
+    const bio = document.getElementById('snacks-bio').value.trim();
+    if (bio.length < 10) { psShowToast('⚠️ Bayani ya yi ƙasa!'); return; }
+    psInlineState.snacksBio = bio;
+    psShowSnacksStep(3);
+}
+
+function psSnacksGoToStep4() {
+    if (snacksItems.length === 0) { psShowToast('⚠️ Ƙara aƙalla product ɗaya!'); return; }
+    psInlineState.snacksItems = snacksItems;
+    psShowSnacksStep(4);
+}
+
+function psSnacksGoToGPS() {
+    const days = Array.from(
+        document.querySelectorAll('#snacks-days-grid input:checked')
+    ).map(el => el.value);
+    const delivery = document.getElementById('snacks-delivery-type').value;
+    const idType = document.getElementById('snacks-id-type').value;
+
+    if (days.length === 0) { psShowToast('⚠️ Zaɓi aƙalla kwana ɗaya!'); return; }
+    if (!delivery) { psShowToast('⚠️ Zaɓi delivery type!'); return; }
+    if (!idType) { psShowToast('⚠️ Zaɓi irin ID ɗinka!'); return; }
+    if (!verificationFiles.id) { psShowToast('⚠️ Saka hoton ID ɗinka!'); return; }
+    if (!verificationFiles.selfie) { psShowToast('⚠️ Saka selfie ɗinka da ID!'); return; }
+
+    psInlineState.snacksDays = days;
+    psInlineState.snacksDelivery = delivery;
+    psShowSnacksStep(5);
+}
+
+function psShowSnacksStep(step) {
+    [3,4,5].forEach(s => {
+        const el = document.getElementById(`ps-snacks-step-${s}`);
+        if (el) el.style.display = 'none';
+    });
+    const target = document.getElementById(`ps-snacks-step-${step}`);
+    if (target) target.style.display = 'flex';
+
+    const titles = {
+        3: '🧁 Products List',
+        4: '📅 Schedule & Verification',
+        5: '📍 Location & Submit'
+    };
+    document.getElementById('ps-sheet-title-label').textContent = titles[step] || 'Snacks Registration';
+
+    [1,2,3,4,5].forEach(i => {
+        const dot = document.getElementById(`ps-dot-${i}`);
+        if (dot) dot.style.background = i === step ? '#f59e0b' : i < step ? '#10b981' : 'rgba(255,255,255,0.2)';
+    });
+}
+
+function addSnacksItem() {
+    const name = document.getElementById('snacks-item-name').value.trim();
+    const price = document.getElementById('snacks-item-price').value;
+    const unit = document.getElementById('snacks-item-unit').value;
+
+    if (!name) { psShowToast('⚠️ Saka sunan product!'); return; }
+    if (!price || parseInt(price) <= 0) { psShowToast('⚠️ Saka farashi!'); return; }
+
+    const item = { id: Date.now(), name, price: parseInt(price), unit };
+    snacksItems.push(item);
+    renderSnacksItemsList();
+
+    document.getElementById('snacks-item-name').value = '';
+    document.getElementById('snacks-item-price').value = '';
+    psShowToast(`✅ "${name}" an ƙara!`);
+}
+
+function removeSnacksItem(id) {
+    snacksItems = snacksItems.filter(i => i.id !== id);
+    renderSnacksItemsList();
+}
+
+function renderSnacksItemsList() {
+    const list = document.getElementById('snacks-items-list');
+    if (!list) return;
+
+    if (snacksItems.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">Ba a ƙara products tukuna</div>`;
+        return;
+    }
+
+    list.innerHTML = snacksItems.map(item => `
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 12px;margin-bottom:8px;">
+            <div style="flex:1;">
+                <div style="font-size:13px;font-weight:800;color:#ffffff;">${item.name}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4);">${item.unit}</div>
+            </div>
+            <div style="font-size:13px;font-weight:800;color:#f59e0b;">₦${item.price.toLocaleString()}</div>
+            <button onclick="removeSnacksItem(${item.id})" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#ef4444;font-size:11px;padding:4px 8px;cursor:pointer;">✕</button>
+        </div>`).join('');
+}
+
+// ── BEVERAGES VENDOR ──
+let beveragesItems = [];
+
+function psBeveragesGoToStep3() {
+    const bio = document.getElementById('beverages-bio').value.trim();
+    if (bio.length < 10) { psShowToast('⚠️ Bayani ya yi ƙasa!'); return; }
+    psInlineState.beveragesBio = bio;
+    psShowBeveragesStep(3);
+}
+
+function psBeveragesGoToStep4() {
+    if (beveragesItems.length === 0) { psShowToast('⚠️ Ƙara aƙalla drink ɗaya!'); return; }
+    psInlineState.beveragesItems = beveragesItems;
+    psShowBeveragesStep(4);
+}
+
+function psBeveragesGoToGPS() {
+    const days = Array.from(
+        document.querySelectorAll('#beverages-days-grid input:checked')
+    ).map(el => el.value);
+    const delivery = document.getElementById('beverages-delivery-type').value;
+    const idType = document.getElementById('beverages-id-type').value;
+
+    if (days.length === 0) { psShowToast('⚠️ Zaɓi aƙalla kwana ɗaya!'); return; }
+    if (!delivery) { psShowToast('⚠️ Zaɓi delivery type!'); return; }
+    if (!idType) { psShowToast('⚠️ Zaɓi irin ID ɗinka!'); return; }
+    if (!verificationFiles.id) { psShowToast('⚠️ Saka hoton ID ɗinka!'); return; }
+    if (!verificationFiles.selfie) { psShowToast('⚠️ Saka selfie ɗinka da ID!'); return; }
+
+    psInlineState.beveragesDays = days;
+    psInlineState.beveragesDelivery = delivery;
+    psShowBeveragesStep(5);
+}
+
+function psShowBeveragesStep(step) {
+    [3,4,5].forEach(s => {
+        const el = document.getElementById(`ps-beverages-step-${s}`);
+        if (el) el.style.display = 'none';
+    });
+    const target = document.getElementById(`ps-beverages-step-${step}`);
+    if (target) target.style.display = 'flex';
+
+    const titles = {
+        3: '🥤 Drinks List',
+        4: '📅 Schedule & Verification',
+        5: '📍 Location & Submit'
+    };
+    document.getElementById('ps-sheet-title-label').textContent = titles[step] || 'Beverages Registration';
+
+    [1,2,3,4,5].forEach(i => {
+        const dot = document.getElementById(`ps-dot-${i}`);
+        if (dot) dot.style.background = i === step ? '#06b6d4' : i < step ? '#10b981' : 'rgba(255,255,255,0.2)';
+    });
+}
+
+function addBeveragesItem() {
+    const name = document.getElementById('beverages-item-name').value.trim();
+    const price = document.getElementById('beverages-item-price').value;
+    const unit = document.getElementById('beverages-item-unit').value;
+
+    if (!name) { psShowToast('⚠️ Saka sunan drink!'); return; }
+    if (!price || parseInt(price) <= 0) { psShowToast('⚠️ Saka farashi!'); return; }
+
+    const item = { id: Date.now(), name, price: parseInt(price), unit };
+    beveragesItems.push(item);
+    renderBeveragesItemsList();
+
+    document.getElementById('beverages-item-name').value = '';
+    document.getElementById('beverages-item-price').value = '';
+    psShowToast(`✅ "${name}" an ƙara!`);
+}
+
+function removeBeveragesItem(id) {
+    beveragesItems = beveragesItems.filter(i => i.id !== id);
+    renderBeveragesItemsList();
+}
+
+function renderBeveragesItemsList() {
+    const list = document.getElementById('beverages-items-list');
+    if (!list) return;
+
+    if (beveragesItems.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">Ba a ƙara drinks tukuna</div>`;
+        return;
+    }
+
+    list.innerHTML = beveragesItems.map(item => `
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 12px;margin-bottom:8px;">
+            <div style="flex:1;">
+                <div style="font-size:13px;font-weight:800;color:#ffffff;">${item.name}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.4);">${item.unit}</div>
+            </div>
+            <div style="font-size:13px;font-weight:800;color:#06b6d4;">₦${item.price.toLocaleString()}</div>
+            <button onclick="removeBeveragesItem(${item.id})" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#ef4444;font-size:11px;padding:4px 8px;cursor:pointer;">✕</button>
+        </div>`).join('');
+}
+
+// ── CHEF SUMMARY ──
+function renderChefSummary() {
+    const el = document.getElementById('chef-gps-summary');
+    if (!el) return;
+    el.innerHTML = `
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Category</span>
+            <span style="font-size:11px;color:#ffffff;font-weight:700;">${psInlineState.selectedCategoryLabel} → ${psInlineState.selectedSubcategory}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Style</span>
+            <span style="font-size:11px;color:#ffffff;font-weight:700;">${psInlineState.chefStyle || '—'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Menu Items</span>
+            <span style="font-size:11px;color:#ffffff;font-weight:700;">${chefMenuItems.length} dishes</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;">
+            <span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;">Kwanaki</span>
+            <span style="font-size:11px;color:#ffffff;font-weight:700;text-align:right;max-width:60%;">${(psInlineState.chefDays || []).join(', ')}</span>
+        </div>`;
+}
+        
 function psShowToast(message) {
     const existing = document.getElementById("ps-toast");
     if (existing) existing.remove();
