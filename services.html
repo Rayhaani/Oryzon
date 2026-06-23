@@ -3986,6 +3986,419 @@ function renderChefSummary() {
             <span style="font-size:11px;color:#ffffff;font-weight:700;text-align:right;max-width:60%;">${(psInlineState.chefDays || []).join(', ')}</span>
         </div>`;
 }
+
+// ── CHEF FOOD PHOTOS ──
+const chefFoodPhotos = {};
+
+function handleChefFoodPhoto(input, slotIndex) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 50*1024*1024) { psShowToast('❌ Fayil ya yi girma!'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const slot = document.getElementById(`cf-slot-${slotIndex}`);
+        if (!slot) return;
+        slot.classList.add('filled');
+        const isVideo = file.type.includes('video');
+        slot.querySelector('.ps-port-inner').innerHTML = `
+            ${isVideo
+                ? `<video src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" muted playsinline></video>`
+                : `<img src="${e.target.result}" class="ps-port-preview" alt="Food">`}
+            <button class="ps-port-remove" onclick="removeChefFoodPhoto(event,${slotIndex})">✕</button>`;
+    };
+    reader.readAsDataURL(file);
+    chefFoodPhotos[slotIndex] = { file, url: null, type: file.type };
+}
+
+function removeChefFoodPhoto(event, slotIndex) {
+    event.preventDefault(); event.stopPropagation();
+    delete chefFoodPhotos[slotIndex];
+    const slot = document.getElementById(`cf-slot-${slotIndex}`);
+    slot.classList.remove('filled');
+    slot.querySelector('.ps-port-inner').innerHTML = `<span>🍽️</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Hoto ${slotIndex+1}</span>`;
+}
+
+// ── SNACKS PHOTOS ──
+const snacksPhotos = {};
+
+function handleSnacksPhoto(input, slotIndex) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const slot = document.getElementById(`sn-slot-${slotIndex}`);
+        if (!slot) return;
+        slot.classList.add('filled');
+        slot.querySelector('.ps-port-inner').innerHTML = `
+            <img src="${e.target.result}" class="ps-port-preview" alt="Snack">
+            <button class="ps-port-remove" onclick="removeSnacksPhoto(event,${slotIndex})">✕</button>`;
+    };
+    reader.readAsDataURL(file);
+    snacksPhotos[slotIndex] = { file, url: null, type: file.type };
+}
+
+function removeSnacksPhoto(event, slotIndex) {
+    event.preventDefault(); event.stopPropagation();
+    delete snacksPhotos[slotIndex];
+    const slot = document.getElementById(`sn-slot-${slotIndex}`);
+    slot.classList.remove('filled');
+    slot.querySelector('.ps-port-inner').innerHTML = `<span>🧁</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Hoto ${slotIndex+1}</span>`;
+}
+
+// ── BEVERAGES PHOTOS ──
+const beveragesPhotos = {};
+
+function handleBeveragesPhoto(input, slotIndex) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const slot = document.getElementById(`bv-slot-${slotIndex}`);
+        if (!slot) return;
+        slot.classList.add('filled');
+        slot.querySelector('.ps-port-inner').innerHTML = `
+            <img src="${e.target.result}" class="ps-port-preview" alt="Drink">
+            <button class="ps-port-remove" onclick="removeBeveragesPhoto(event,${slotIndex})">✕</button>`;
+    };
+    reader.readAsDataURL(file);
+    beveragesPhotos[slotIndex] = { file, url: null, type: file.type };
+}
+
+function removeBeveragesPhoto(event, slotIndex) {
+    event.preventDefault(); event.stopPropagation();
+    delete beveragesPhotos[slotIndex];
+    const slot = document.getElementById(`bv-slot-${slotIndex}`);
+    slot.classList.remove('filled');
+    slot.querySelector('.ps-port-inner').innerHTML = `<span>🥤</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Hoto ${slotIndex+1}</span>`;
+}
+
+// ── CHEF GPS ──
+function captureChefGPS() {
+    const btn = document.getElementById('chef-gps-btn');
+    const status = document.getElementById('chef-gps-status');
+    const coords = document.getElementById('chef-gps-coords');
+    const card = document.getElementById('chef-gps-card');
+
+    if (!navigator.geolocation) { psShowToast('❌ GPS ba ya aiki!'); return; }
+    btn.disabled = true;
+    btn.textContent = 'Ana nema...';
+    status.textContent = '🔄 Ana ɗaukar loca...';
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            psInlineState.gpsLat = pos.coords.latitude;
+            psInlineState.gpsLng = pos.coords.longitude;
+            psInlineState.gpsReady = true;
+            status.textContent = '✅ Loca an samu!';
+            coords.textContent = `${psInlineState.gpsLat.toFixed(5)}, ${psInlineState.gpsLng.toFixed(5)}`;
+            btn.textContent = '✅ Done';
+            card.style.borderColor = 'rgba(16,185,129,0.4)';
+            card.style.background = 'rgba(16,185,129,0.08)';
+            renderChefSummary();
+            psShowToast('📍 GPS an ɗauka!');
+        },
+        (err) => {
+            btn.disabled = false;
+            btn.textContent = 'Sake Gwadawa';
+            status.textContent = '❌ GPS ya kasa';
+            const msgs = { 1:'Ka ƙi ba GPS izni.', 2:'GPS bai samu loca ba.', 3:'Lokaci ya ƙare.' };
+            psShowToast('⚠️ ' + (msgs[err.code] || 'GPS kuskure.'));
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+}
+
+// ── SNACKS GPS ──
+function captureSnacksGPS() {
+    const status = document.getElementById('snacks-gps-status');
+    const coords = document.getElementById('snacks-gps-coords');
+    const card = document.getElementById('snacks-gps-card');
+
+    if (!navigator.geolocation) { psShowToast('❌ GPS ba ya aiki!'); return; }
+    status.textContent = '🔄 Ana ɗaukar loca...';
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            psInlineState.gpsLat = pos.coords.latitude;
+            psInlineState.gpsLng = pos.coords.longitude;
+            psInlineState.gpsReady = true;
+            status.textContent = '✅ Loca an samu!';
+            coords.textContent = `${psInlineState.gpsLat.toFixed(5)}, ${psInlineState.gpsLng.toFixed(5)}`;
+            card.style.borderColor = 'rgba(16,185,129,0.4)';
+            card.style.background = 'rgba(16,185,129,0.08)';
+            document.getElementById('snacks-sum-category').textContent = 
+                `${psInlineState.selectedCategoryLabel} → ${psInlineState.selectedSubcategory}`;
+            document.getElementById('snacks-sum-count').textContent = 
+                `${snacksItems.length} products`;
+            document.getElementById('snacks-sum-location').textContent = 
+                `${psInlineState.gpsLat.toFixed(4)}, ${psInlineState.gpsLng.toFixed(4)}`;
+            psShowToast('📍 GPS an ɗauka!');
+        },
+        (err) => {
+            status.textContent = '❌ GPS ya kasa';
+            const msgs = { 1:'Ka ƙi ba GPS izni.', 2:'GPS bai samu loca ba.', 3:'Lokaci ya ƙare.' };
+            psShowToast('⚠️ ' + (msgs[err.code] || 'GPS kuskure.'));
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+}
+
+// ── BEVERAGES GPS ──
+function captureBeveragesGPS() {
+    const status = document.getElementById('beverages-gps-status');
+    const coords = document.getElementById('beverages-gps-coords');
+
+    if (!navigator.geolocation) { psShowToast('❌ GPS ba ya aiki!'); return; }
+    status.textContent = '🔄 Ana ɗaukar loca...';
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            psInlineState.gpsLat = pos.coords.latitude;
+            psInlineState.gpsLng = pos.coords.longitude;
+            psInlineState.gpsReady = true;
+            status.textContent = '✅ Loca an samu!';
+            coords.textContent = `${psInlineState.gpsLat.toFixed(5)}, ${psInlineState.gpsLng.toFixed(5)}`;
+            document.getElementById('beverages-sum-count').textContent = 
+                `${beveragesItems.length} drinks`;
+            document.getElementById('beverages-sum-location').textContent = 
+                `${psInlineState.gpsLat.toFixed(4)}, ${psInlineState.gpsLng.toFixed(4)}`;
+            psShowToast('📍 GPS an ɗauka!');
+        },
+        (err) => {
+            status.textContent = '❌ GPS ya kasa';
+            psShowToast('⚠️ GPS kuskure.');
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+}
+
+// ── CHEF SUBMIT ──
+async function submitChefService() {
+    if (!psInlineState.gpsReady) { psShowToast('⚠️ Ka ɗauki GPS loca!'); return; }
+    if (chefMenuItems.length === 0) { psShowToast('⚠️ Menu ɗinka a fanko!'); return; }
+
+    const btn = document.getElementById('chef-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Ana aika...';
+
+    try {
+        const username = localStorage.getItem('nexus_user_session') || 'guest';
+
+        // Upload food photos
+        const photoUrls = [];
+        for (const key of Object.keys(chefFoodPhotos)) {
+            const entry = chefFoodPhotos[key];
+            if (!entry.file) continue;
+            try {
+                const formData = new FormData();
+                formData.append('file', entry.file);
+                formData.append('type', 'portfolio');
+                formData.append('username', username);
+                const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) photoUrls.push({ url: data.url, type: 'image' });
+            } catch(e) { console.warn('Photo upload failed:', e); }
+        }
+
+        // Upload verification
+        const verificationKeys = await uploadVerificationFilesInline(username);
+        if (!verificationKeys.id || !verificationKeys.selfie) {
+            psShowToast('❌ Verification upload ya kasa!');
+            btn.disabled = false;
+            btn.textContent = '🚀 Post Chef Service';
+            return;
+        }
+
+        // Firebase write
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            await firebase.database().ref(`providers/${username}`).set({
+                category: 'chef',
+                subcategory: psInlineState.selectedSubcategory,
+                categoryLabel: psInlineState.selectedCategoryLabel,
+                cuisines: psInlineState.chefCuisines,
+                cookingStyle: psInlineState.chefStyle,
+                experience: psInlineState.chefExperience,
+                bio: psInlineState.chefBio,
+                menu: chefMenuItems,
+                serviceType: psInlineState.chefServiceType,
+                eventTypes: psInlineState.chefEventTypes,
+                maxGuests: psInlineState.chefMaxGuests,
+                serviceRadius: psInlineState.chefRadius,
+                pricing: {
+                    base: parseInt(document.getElementById('chef-starting-price').value) || 0,
+                    unit: document.getElementById('chef-price-unit').value
+                },
+                schedule: psInlineState.chefDays,
+                operatingHours: {
+                    from: psInlineState.chefTimeFrom,
+                    to: psInlineState.chefTimeTo
+                },
+                advanceNotice: psInlineState.chefNotice,
+                portfolio: photoUrls,
+                location: {
+                    lat: psInlineState.gpsLat,
+                    lng: psInlineState.gpsLng,
+                    updatedAt: Date.now()
+                },
+                verification: {
+                    idType: document.getElementById('chef-id-type').value,
+                    idKey: verificationKeys.id,
+                    selfieKey: verificationKeys.selfie,
+                    submittedAt: Date.now()
+                },
+                status: 'pending_verification',
+                createdAt: Date.now(),
+                username: username
+            });
+        }
+
+        document.getElementById('ps-success-overlay-inline').style.display = 'flex';
+
+    } catch(err) {
+        console.error('Chef submit error:', err);
+        psShowToast('❌ Matsala: ' + err.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🚀 Post Chef Service';
+}
+
+// ── SNACKS SUBMIT ──
+async function submitSnacksService() {
+    if (!psInlineState.gpsReady) { psShowToast('⚠️ Ka ɗauki GPS loca!'); return; }
+    if (snacksItems.length === 0) { psShowToast('⚠️ Ƙara aƙalla product ɗaya!'); return; }
+    if (Object.keys(snacksPhotos).length < 2) { psShowToast('⚠️ Saka aƙalla hoto 2!'); return; }
+
+    const btn = document.getElementById('snacks-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Ana aika...';
+
+    try {
+        const username = localStorage.getItem('nexus_user_session') || 'guest';
+
+        // Upload photos
+        const photoUrls = [];
+        for (const key of Object.keys(snacksPhotos)) {
+            const entry = snacksPhotos[key];
+            if (!entry.file) continue;
+            try {
+                const formData = new FormData();
+                formData.append('file', entry.file);
+                formData.append('type', 'portfolio');
+                formData.append('username', username);
+                const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) photoUrls.push({ url: data.url, type: 'image' });
+            } catch(e) { console.warn('Photo upload failed:', e); }
+        }
+
+        const verificationKeys = await uploadVerificationFilesInline(username);
+
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            await firebase.database().ref(`providers/${username}`).set({
+                category: 'snacks',
+                subcategory: psInlineState.selectedSubcategory,
+                categoryLabel: psInlineState.selectedCategoryLabel,
+                bio: psInlineState.snacksBio,
+                products: snacksItems,
+                deliveryType: psInlineState.snacksDelivery,
+                schedule: psInlineState.snacksDays,
+                portfolio: photoUrls,
+                location: {
+                    lat: psInlineState.gpsLat,
+                    lng: psInlineState.gpsLng,
+                    updatedAt: Date.now()
+                },
+                verification: {
+                    idType: document.getElementById('snacks-id-type').value,
+                    idKey: verificationKeys.id || '',
+                    selfieKey: verificationKeys.selfie || '',
+                    submittedAt: Date.now()
+                },
+                status: 'pending_verification',
+                createdAt: Date.now(),
+                username: username
+            });
+        }
+
+        document.getElementById('ps-success-overlay-inline').style.display = 'flex';
+
+    } catch(err) {
+        console.error('Snacks submit error:', err);
+        psShowToast('❌ Matsala: ' + err.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🚀 Post Snacks Service';
+}
+
+// ── BEVERAGES SUBMIT ──
+async function submitBeveragesService() {
+    if (!psInlineState.gpsReady) { psShowToast('⚠️ Ka ɗauki GPS loca!'); return; }
+    if (beveragesItems.length === 0) { psShowToast('⚠️ Ƙara aƙalla drink ɗaya!'); return; }
+    if (Object.keys(beveragesPhotos).length < 2) { psShowToast('⚠️ Saka aƙalla hoto 2!'); return; }
+
+    const btn = document.getElementById('beverages-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Ana aika...';
+
+    try {
+        const username = localStorage.getItem('nexus_user_session') || 'guest';
+
+        const photoUrls = [];
+        for (const key of Object.keys(beveragesPhotos)) {
+            const entry = beveragesPhotos[key];
+            if (!entry.file) continue;
+            try {
+                const formData = new FormData();
+                formData.append('file', entry.file);
+                formData.append('type', 'portfolio');
+                formData.append('username', username);
+                const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) photoUrls.push({ url: data.url, type: 'image' });
+            } catch(e) { console.warn('Photo upload failed:', e); }
+        }
+
+        const verificationKeys = await uploadVerificationFilesInline(username);
+
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            await firebase.database().ref(`providers/${username}`).set({
+                category: 'beverages',
+                subcategory: psInlineState.selectedSubcategory,
+                categoryLabel: psInlineState.selectedCategoryLabel,
+                bio: psInlineState.beveragesBio,
+                products: beveragesItems,
+                deliveryType: psInlineState.beveragesDelivery,
+                schedule: psInlineState.beveragesDays,
+                portfolio: photoUrls,
+                location: {
+                    lat: psInlineState.gpsLat,
+                    lng: psInlineState.gpsLng,
+                    updatedAt: Date.now()
+                },
+                verification: {
+                    idType: document.getElementById('beverages-id-type').value,
+                    idKey: verificationKeys.id || '',
+                    selfieKey: verificationKeys.selfie || '',
+                    submittedAt: Date.now()
+                },
+                status: 'pending_verification',
+                createdAt: Date.now(),
+                username: username
+            });
+        }
+
+        document.getElementById('ps-success-overlay-inline').style.display = 'flex';
+
+    } catch(err) {
+        console.error('Beverages submit error:', err);
+        psShowToast('❌ Matsala: ' + err.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🚀 Post Beverages Service';
+        }
         
 function psShowToast(message) {
     const existing = document.getElementById("ps-toast");
