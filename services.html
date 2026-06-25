@@ -6355,6 +6355,329 @@ async function saveChefMenuChanges() {
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Save Menu Changes'; }
     }
 }
+
+// ════════════════════════════════════════════════════════════
+//  📅 DAILY UPLOAD WINDOW ENGINE
+// ════════════════════════════════════════════════════════════
+
+const UPLOAD_WINDOW_CHECK_INTERVAL = 60000; // Duba kowane minti 1
+
+function getNowNigeria() {
+    // Nigeria = UTC+1
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    return new Date(utc + (3600000 * 1));
+}
+
+function getTodayDayName() {
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    return days[getNowNigeria().getDay()];
+}
+
+function getCurrentHHMM() {
+    const now = getNowNigeria();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    return `${h}:${m}`;
+}
+
+function isWithinBusinessHours(timeFrom, timeTo) {
+    const now = getCurrentHHMM();
+    return now >= timeFrom && now < timeTo;
+}
+
+function isProScheduledToday(proData) {
+    const today = getTodayDayName();
+    const schedule = proData.schedule || [];
+    return schedule.some(d => d.toLowerCase().replace(/s$/,'') === today.toLowerCase());
+}
+
+// Main checker — runs every minute
+function startUploadWindowChecker() {
+    checkUploadWindow();
+    setInterval(checkUploadWindow, UPLOAD_WINDOW_CHECK_INTERVAL);
+}
+
+async function checkUploadWindow() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) return;
+    if (typeof firebase === 'undefined' || !firebase.database) return;
+
+    try {
+        const snap = await firebase.database().ref('providers/' + sessionUser).once('value');
+        if (!snap.exists()) return;
+        const proData = snap.val();
+
+        const isChef = proData.category === 'chef';
+        if (!isChef) return; // upload window chef kawai yanzu
+
+        const scheduledToday = isProScheduledToday(proData);
+        const timeFrom = proData.operatingHours?.from || null;
+        const timeTo   = proData.operatingHours?.to   || null;
+
+        if (!scheduledToday || !timeFrom || !timeTo) {
+            hideUploadWindow();
+            return;
+        }
+
+        const withinHours = isWithinBusinessHours(timeFrom, timeTo);
+
+        if (withinHours) {
+            await showUploadWindow(sessionUser, proData, timeFrom, timeTo);
+        } else {
+            hideUploadWindow();
+            await expireStories(sessionUser);
+        }
+
+    } catch(err) {
+        console.warn('Upload window check failed:', err);
+    }
+}
+
+async function expireStories(sessionUser) {
+    // Remove today's stories from Firebase when hours expire
+    try {
+        const today = getNowNigeria().toISOString().slice(0,10);
+        await firebase.database()
+            .ref('daily_stories/' + sessionUser + '/' + today)
+            .remove();
+    } catch(e) {
+        console.warn('Story expire failed:', e);
+    }
+}
+
+// ════════════════════════════════════════════════════════════
+//  📸 UPLOAD WINDOW UI ENGINE
+// ════════════════════════════════════════════════════════════
+
+let uploadWindowState = {
+    isVisible: false,
+    previousUploads: [],
+    sessionUser: null,
+    proData: null
+};
+
+async function showUploadWindow(sessionUser, proData, timeFrom, timeTo) {
+    uploadWindowState.sessionUser = sessionUser;
+    uploadWindowState.proData = proData;
+
+    // Check idan akwai previous uploads na yau
+    const today = getNowNigeria().toISOString().slice(0,10);
+    const snap = await firebase.database()
+        .ref('daily_stories/' + sessionUser + '/' + today)
+        .once('value');
+
+    const todayData = snap.val();
+    const hasPreviousUploads = todayData && todayData.uploads && todayData.uploads.length > 0;
+
+    if (!uploadWindowState.isVisible) {
+        uploadWindowState.isVisible = true;
+
+        if (hasPreviousUploads) {
+            uploadWindowState.previousUploads = todayData.uploads;
+            showPreviousUploadsPrompt(proData, timeFrom, timeTo, todayData.uploads);
+        } else {
+            injectUploadSlotIntoProfile(proData, timeFrom, timeTo, false);
+        }
+    }
+}
+
+function hideUploadWindow() {
+    uploadWindowState.isVisible = false;
+
+    // Cire upload slot daga profile sheet
+    const slot = document.getElementById('daily-upload-slot');
+    if (slot) slot.remove();
+
+    // Cire prompt idan yana can
+    const prompt = document.getElementById('previous-uploads-prompt');
+    if (prompt) prompt.remove();
+}
+
+// ── PREVIOUS UPLOADS PROMPT ──
+function showPreviousUploadsPrompt(proData, timeFrom, timeTo, previousUploads) {
+    // Cire idan yana can
+    const existing = document.getElementById('previous-uploads-prompt');
+    if (existing) existing.remove();
+
+    const profileContent = document.querySelector('#profile-sheet-overlay > div:last-child');
+    if (!profileContent) return;
+
+    const prompt = document.createElement('div');
+    prompt.id = 'previous-uploads-prompt';
+    prompt.style.cssText = `
+        margin-bottom: 24px;
+        background: linear-gradient(135deg, rgba(236,72,153,0.08) 0%, rgba(190,24,93,0.05) 100%);
+        border: 1px solid rgba(236,72,153,0.2);
+        border-radius: 18px;
+        padding: 16px;
+        animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+    `;
+
+    prompt.innerHTML = `
+        <div style="font-size:11px;font-weight:700;color:#be185d;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+            📸 Today's Upload Window Active · ${timeFrom} – ${timeTo}
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:12px;">
+            Kana da uploads ${previousUploads.length} na yau. Shin kana son mu sake nuna su ko kana son ƙara sababbi?
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="usePreviousUploads()" style="flex:1;padding:10px;background:linear-gradient(135deg,#ec4899,#be185d);border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">
+                ✅ Nuna Na Baya
+            </button>
+            <button onclick="startNewUpload('${timeFrom}','${timeTo}')" style="flex:1;padding:10px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;color:#111827;font-size:12px;font-weight:800;cursor:pointer;">
+                📷 Upload Sababbi
+            </button>
+        </div>
+    `;
+
+    // Saka kafin chef-schedule-section-card ko a farkon content
+    const scheduleCard = document.getElementById('chef-schedule-section-card');
+    if (scheduleCard && scheduleCard.parentNode) {
+        scheduleCard.parentNode.insertBefore(prompt, scheduleCard);
+    } else {
+        profileContent.insertBefore(prompt, profileContent.firstChild);
+    }
+}
+
+async function usePreviousUploads() {
+    const { sessionUser, previousUploads } = uploadWindowState;
+    const today = getNowNigeria().toISOString().slice(0,10);
+
+    // Re-activate a Firebase (set active: true)
+    await firebase.database()
+        .ref('daily_stories/' + sessionUser + '/' + today)
+        .update({ active: true, reusedAt: Date.now() });
+
+    // Cire prompt
+    const prompt = document.getElementById('previous-uploads-prompt');
+    if (prompt) prompt.remove();
+
+    showGlobalToast('✅ Na baya hotunan sun koma active a story!');
+    
+    // Refresh stories a homepage
+    loadAndRenderDailyStories();
+}
+
+function startNewUpload(timeFrom, timeTo) {
+    // Cire prompt
+    const prompt = document.getElementById('previous-uploads-prompt');
+    if (prompt) prompt.remove();
+
+    // Nuna upload slot
+    injectUploadSlotIntoProfile(
+        uploadWindowState.proData, 
+        timeFrom, 
+        timeTo, 
+        true
+    );
+}
+
+// ── INJECT UPLOAD SLOT INTO PROFILE SHEET ──
+function injectUploadSlotIntoProfile(proData, timeFrom, timeTo, isNewUpload) {
+    // Cire idan yana can
+    const existing = document.getElementById('daily-upload-slot');
+    if (existing) existing.remove();
+
+    const profileContent = document.querySelector('#profile-sheet-overlay > div:last-child');
+    if (!profileContent) return;
+
+    const slot = document.createElement('div');
+    slot.id = 'daily-upload-slot';
+    slot.style.cssText = `
+        margin-bottom: 24px;
+        background: linear-gradient(135deg, rgba(236,72,153,0.06) 0%, rgba(190,24,93,0.04) 100%);
+        border: 1.5px solid rgba(236,72,153,0.25);
+        border-radius: 18px;
+        padding: 16px;
+        animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+    `;
+
+    slot.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div>
+                <div style="font-size:11px;font-weight:700;color:#be185d;text-transform:uppercase;letter-spacing:0.5px;">
+                    🔴 LIVE · Upload Window Open
+                </div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px;font-weight:600;">
+                    ${timeFrom} – ${timeTo} · Kayan abincin yau
+                </div>
+            </div>
+            <div style="background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.2);border-radius:8px;padding:4px 10px;">
+                <span style="font-size:10px;font-weight:800;color:#be185d;" id="upload-window-countdown">--:--</span>
+            </div>
+        </div>
+
+        <!-- Upload Grid -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;" id="daily-upload-grid">
+            <label class="ps-port-slot" id="du-slot-0">
+                <input type="file" accept="image/*,video/*" onchange="handleDailyUpload(this,0)" hidden>
+                <div class="ps-port-inner"><span>🍽️</span><span style="font-size:9px;color:rgba(0,0,0,0.3);">Hoto 1</span></div>
+            </label>
+            <label class="ps-port-slot" id="du-slot-1">
+                <input type="file" accept="image/*,video/*" onchange="handleDailyUpload(this,1)" hidden>
+                <div class="ps-port-inner"><span>🍽️</span><span style="font-size:9px;color:rgba(0,0,0,0.3);">Hoto 2</span></div>
+            </label>
+            <label class="ps-port-slot" id="du-slot-2">
+                <input type="file" accept="image/*,video/*" onchange="handleDailyUpload(this,2)" hidden>
+                <div class="ps-port-inner"><span>🍽️</span><span style="font-size:9px;color:rgba(0,0,0,0.3);">Hoto 3</span></div>
+            </label>
+            <label class="ps-port-slot" id="du-slot-3">
+                <input type="file" accept="image/*,video/*" onchange="handleDailyUpload(this,3)" hidden>
+                <div class="ps-port-inner"><span>🍽️</span><span style="font-size:9px;color:rgba(0,0,0,0.3);">Video</span></div>
+            </label>
+        </div>
+
+        <!-- Upload Button -->
+        <button id="daily-upload-submit-btn" onclick="submitDailyUploads()" style="width:100%;padding:12px;background:linear-gradient(135deg,#ec4899,#be185d);border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">
+            🚀 Aika Zuwa Story
+        </button>
+    `;
+
+    // Saka kafin schedule card
+    const scheduleCard = document.getElementById('chef-schedule-section-card');
+    if (scheduleCard && scheduleCard.parentNode) {
+        scheduleCard.parentNode.insertBefore(slot, scheduleCard);
+    } else {
+        profileContent.insertBefore(slot, profileContent.firstChild);
+    }
+
+    // Start countdown
+    startUploadWindowCountdown(uploadWindowState.proData?.operatingHours?.to);
+}
+
+// ── COUNTDOWN TIMER ──
+let countdownInterval = null;
+
+function startUploadWindowCountdown(timeTo) {
+    if (countdownInterval) clearInterval(countdownInterval);
+    if (!timeTo) return;
+
+    function updateCountdown() {
+        const el = document.getElementById('upload-window-countdown');
+        if (!el) { clearInterval(countdownInterval); return; }
+
+        const now = getNowNigeria();
+        const [h, m] = timeTo.split(':').map(Number);
+        const end = new Date(now);
+        end.setHours(h, m, 0, 0);
+
+        const diff = end - now;
+        if (diff <= 0) {
+            el.textContent = 'Closed';
+            clearInterval(countdownInterval);
+            hideUploadWindow();
+            return;
+        }
+
+        const hrs = Math.floor(diff / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        el.textContent = `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')} left`;
+    }
+
+    updateCountdown();
+    countdownInterval = setInterval(updateCountdown, 60000);
+    }
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
