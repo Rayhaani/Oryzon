@@ -3595,6 +3595,101 @@ function toggleChefMenuEditMode() {
         renderChefMenuOverlayItems(currentChefMenuPro);
     }
         }
+
+// ── RENDER MENU ITEMS (handles both normal view & edit mode) ──
+function renderChefMenuOverlayItems(pro) {
+    const slot = document.getElementById('chef-menu-items-slot');
+    if (!slot) return;
+
+    if (!chefMenuEditMode) {
+        // Normal customer view — exactly as before
+        slot.innerHTML = (pro.menu || []).map((item, idx) => `
+            <div class="menu-item-card" style="animation-delay:${idx * 0.1}s" onclick="openOrderConfirm('${(item.name||'').replace(/'/g, "\\'")}','${item.price}')">
+                <div class="menu-item-emoji">${item.icon || '🍽️'}</div>
+                <div class="menu-item-info"><div class="menu-item-name">${item.name}</div><div class="menu-item-desc">${item.desc || ''}</div></div>
+                <div class="menu-item-price">${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}</div>
+            </div>`).join('');
+        return;
+    }
+
+    // Edit mode view — show edit/delete buttons, no order-on-click
+    slot.innerHTML = (pro.menu || []).map((item, idx) => `
+        <div class="menu-item-card edit-mode" style="animation-delay:${idx * 0.1}s">
+            <div class="menu-item-emoji">${item.icon || '🍽️'}</div>
+            <div class="menu-item-info"><div class="menu-item-name">${item.name}</div><div class="menu-item-desc">${item.desc || ''}</div></div>
+            <div class="menu-item-price">${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}</div>
+            <div class="menu-item-edit-actions">
+                <button class="menu-item-edit-btn" onclick="openChefMenuItemForm(${idx})">✏️</button>
+                <button class="menu-item-delete-btn" onclick="deleteChefMenuOverlayItem(${idx})">🗑️</button>
+            </div>
+        </div>`).join('');
+
+    // Add New Item button at the bottom
+    slot.innerHTML += `<button class="chef-menu-add-item-btn" onclick="openChefMenuItemForm(null)">➕ Add New Item</button>`;
+
+    // Save Changes button
+    slot.innerHTML += `<button class="chef-menu-save-changes-btn" onclick="saveChefMenuChanges()">💾 Save Menu Changes</button>`;
+}
+
+// ── ADD / EDIT FORM ──
+function openChefMenuItemForm(itemIdx) {
+    chefMenuEditingItemId = itemIdx; // null = new item, number = index of item being edited
+    const pro = currentChefMenuPro;
+    const existing = (itemIdx !== null && pro.menu) ? pro.menu[itemIdx] : null;
+
+    const slot = document.getElementById('chef-menu-items-slot');
+    const formHtml = `
+        <div class="chef-menu-edit-form" id="chef-menu-inline-form">
+            <input type="text" id="cmf-name" placeholder="Sunan Dish" value="${existing ? existing.name.replace(/"/g,'&quot;') : ''}">
+            <input type="number" id="cmf-price" placeholder="Farashi (₦)" value="${existing ? existing.price : ''}">
+            <input type="text" id="cmf-desc" placeholder="Short Description" value="${existing ? (existing.desc||'').replace(/"/g,'&quot;') : ''}">
+            <input type="text" id="cmf-icon" placeholder="Emoji (misali 🍛)" value="${existing ? (existing.icon||'') : ''}" maxlength="4">
+            <div class="chef-menu-edit-form-actions">
+                <button onclick="cancelChefMenuItemForm()" style="background:rgba(255,255,255,0.1);color:#fff;">Cancel</button>
+                <button onclick="confirmChefMenuItemForm()" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;">${existing ? 'Update' : 'Add'} Dish</button>
+            </div>
+        </div>`;
+
+    // Re-render list, then inject form at top
+    renderChefMenuOverlayItems(pro);
+    slot.insertAdjacentHTML('afterbegin', formHtml);
+}
+
+function cancelChefMenuItemForm() {
+    chefMenuEditingItemId = null;
+    renderChefMenuOverlayItems(currentChefMenuPro);
+}
+
+function confirmChefMenuItemForm() {
+    const name = document.getElementById('cmf-name').value.trim();
+    const price = parseInt(document.getElementById('cmf-price').value);
+    const desc = document.getElementById('cmf-desc').value.trim();
+    const icon = document.getElementById('cmf-icon').value.trim() || '🍽️';
+
+    if (!name) { showGlobalToast('⚠️ Saka sunan dish!'); return; }
+    if (!price || price <= 0) { showGlobalToast('⚠️ Saka farashi mai inganci!'); return; }
+
+    if (!currentChefMenuPro.menu) currentChefMenuPro.menu = [];
+
+    if (chefMenuEditingItemId === null) {
+        currentChefMenuPro.menu.push({ name, price, desc, icon });
+        showGlobalToast(`✅ "${name}" an ƙara!`);
+    } else {
+        currentChefMenuPro.menu[chefMenuEditingItemId] = { name, price, desc, icon };
+        showGlobalToast(`✅ "${name}" an update!`);
+    }
+
+    chefMenuEditingItemId = null;
+    renderChefMenuOverlayItems(currentChefMenuPro);
+}
+
+function deleteChefMenuOverlayItem(idx) {
+    const item = currentChefMenuPro.menu[idx];
+    if (!confirm(`Tabbatar: Cire "${item.name}" daga menu?`)) return;
+    currentChefMenuPro.menu.splice(idx, 1);
+    renderChefMenuOverlayItems(currentChefMenuPro);
+    showGlobalToast(`🗑️ "${item.name}" an cire!`);
+        }
         
 // ── POST SERVICE INLINE ENGINE ──
 function openPostServiceSheet() {
