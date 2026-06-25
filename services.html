@@ -4955,6 +4955,12 @@ document.getElementById("chef-menu-close-btn").addEventListener("click", closeCh
     
     // Initialize notification bell
 initNotificationBell();
+
+// AUTO-START upload window checker
+startUploadWindowChecker();
+
+// AUTO-LOAD daily stories
+loadAndRenderDailyStories();
 });
 
  </script>
@@ -6721,6 +6727,108 @@ function startUploadWindowCountdown(timeTo) {
         console.warn('loadAndRenderDailyStories error:', err);
     }
     }
+const dailyUploadFiles = {};
+
+function handleDailyUpload(input, slotIndex) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { showGlobalToast('❌ Fayil ya yi girma — kalla 50MB!'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const slot = document.getElementById(`du-slot-${slotIndex}`);
+        if (!slot) return;
+        slot.classList.add('filled');
+        const isVideo = file.type.includes('video');
+        slot.querySelector('.ps-port-inner').innerHTML = `
+            ${isVideo
+                ? `<video src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" muted playsinline></video>`
+                : `<img src="${e.target.result}" class="ps-port-preview" alt="Upload">`}
+            <button class="ps-port-remove" onclick="removeDailyUpload(event,${slotIndex})">✕</button>`;
+    };
+    reader.readAsDataURL(file);
+    dailyUploadFiles[slotIndex] = { file, url: null, type: file.type };
+}
+
+function removeDailyUpload(event, slotIndex) {
+    event.preventDefault(); event.stopPropagation();
+    delete dailyUploadFiles[slotIndex];
+    const slot = document.getElementById(`du-slot-${slotIndex}`);
+    if (!slot) return;
+    slot.classList.remove('filled');
+    const icons = ['🍽️','🍽️','🍽️','🎥'];
+    const labels = ['Hoto 1','Hoto 2','Hoto 3','Video'];
+    slot.querySelector('.ps-port-inner').innerHTML = `
+        <span>${icons[slotIndex]}</span>
+        <span style="font-size:9px;color:rgba(0,0,0,0.3);">${labels[slotIndex]}</span>`;
+}
+
+async function submitDailyUploads() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) { showGlobalToast('⚠️ Please login first!'); return; }
+
+    const fileKeys = Object.keys(dailyUploadFiles);
+    if (fileKeys.length === 0) { showGlobalToast('⚠️ Saka aƙalla hoto ɗaya!'); return; }
+
+    const btn = document.getElementById('daily-upload-submit-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Ana aika...'; }
+
+    try {
+        const uploadedUrls = [];
+
+        for (const key of fileKeys) {
+            const entry = dailyUploadFiles[key];
+            if (!entry.file) continue;
+            try {
+                const formData = new FormData();
+                formData.append('file', entry.file);
+                formData.append('type', 'daily_story');
+                formData.append('username', sessionUser);
+                const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    uploadedUrls.push({
+                        url: data.url,
+                        type: entry.type.includes('video') ? 'video' : 'image'
+                    });
+                }
+            } catch (e) { console.warn(`Slot ${key} upload failed:`, e); }
+        }
+
+        if (uploadedUrls.length === 0) {
+            showGlobalToast('❌ Upload ya kasa. Sake gwadawa.');
+            if (btn) { btn.disabled = false; btn.textContent = '🚀 Aika Zuwa Story'; }
+            return;
+        }
+
+        // Save to Firebase daily_stories
+        const today = getNowNigeria().toISOString().slice(0, 10);
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            await firebase.database().ref(`daily_stories/${sessionUser}/${today}`).set({
+                uploads: uploadedUrls,
+                active: true,
+                uploadedAt: Date.now(),
+                username: sessionUser
+            });
+        }
+
+        showGlobalToast(`✅ Hotunan ${uploadedUrls.length} sun tafi story!`);
+
+        // Clear files
+        Object.keys(dailyUploadFiles).forEach(k => delete dailyUploadFiles[k]);
+
+        // Refresh stories on homepage
+        loadAndRenderDailyStories();
+
+        // Close upload slot
+        const slot = document.getElementById('daily-upload-slot');
+        if (slot) slot.remove();
+
+    } catch (err) {
+        console.error('Daily upload error:', err);
+        showGlobalToast('❌ Matsala: ' + err.message);
+        if (btn) { btn.disabled = false; btn.textContent = '🚀 Aika Zuwa Story'; }
+    }
+}
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
