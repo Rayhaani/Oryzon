@@ -6678,6 +6678,49 @@ function startUploadWindowCountdown(timeTo) {
     updateCountdown();
     countdownInterval = setInterval(updateCountdown, 60000);
     }
+
+    async function loadAndRenderDailyStories() {
+    if (typeof firebase === 'undefined' || !firebase.database) return;
+    const today = getNowNigeria().toISOString().slice(0,10);
+    
+    try {
+        const snap = await firebase.database().ref('daily_stories').once('value');
+        const data = snap.val() || {};
+        
+        const liveStories = [];
+        Object.entries(data).forEach(([username, days]) => {
+            const todayData = days[today];
+            if (!todayData || !todayData.active || !todayData.uploads) return;
+            liveStories.push({ username, uploads: todayData.uploads });
+        });
+        
+        // Idan babu live stories, bar PRO_STORIES su bayyana
+        if (liveStories.length === 0) return;
+        
+        // Inject into stories track
+        const track = document.getElementById("stories-track-container");
+        if (!track) return;
+        
+        liveStories.forEach(story => {
+            const firstUpload = story.uploads[0];
+            const div = document.createElement('div');
+            div.className = 'glass-lens-card';
+            div.innerHTML = `
+                <div class="glass-lens-img-wrap">
+                    <img class="glass-lens-img" src="${firstUpload.url}" alt="${story.username}"/>
+                </div>
+                <div class="glass-lens-ring">🔴</div>
+                <div class="glass-lens-body">
+                    <span class="glass-lens-name">${story.username}</span>
+                    <div class="glass-lens-distance" style="color:#ef4444;">● LIVE</div>
+                </div>`;
+            track.prepend(div); // Live stories suna gaba
+        });
+        
+    } catch(err) {
+        console.warn('loadAndRenderDailyStories error:', err);
+    }
+    }
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
