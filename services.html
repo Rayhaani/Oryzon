@@ -1256,121 +1256,251 @@
 }
 
 /* ── EMERGENCY SHEET ── */
-.emergency-sheet-overlay {
+<style id="emergency-new-css">
+
+/* ── EMERGENCY DROPDOWN OVERLAY (glass, top-anchored) ── */
+.emergency-dropdown-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(12px);
     z-index: 8500;
     display: none;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: center;
+    /* subtle dark tint so page content doesn't bleed through text */
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    padding-top: 130px; /* push below header */
 }
 
-.emergency-sheet {
-    width: 100%;
-    max-width: 430px;
-    background: #0f172a;
-    border-radius: 28px 28px 0 0;
-    padding: 20px 20px 40px;
-    border: 1px solid rgba(239,68,68,0.2);
-    box-shadow: 0 -20px 60px rgba(239,68,68,0.15);
-    animation: sheetSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+.emergency-dropdown-box {
+    width: 92%;
+    max-width: 420px;
+    /* True glass: semi-transparent dark with blur */
+    background: rgba(8, 14, 30, 0.72);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 22px;
+    padding: 16px 16px 20px;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    animation: emergencyDropIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    max-height: 70vh;
+    overflow-y: auto;
 }
 
-@keyframes sheetSlideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-}
+@keyframes emergencyDropIn {
+    from { transform: translateY(-18px) scale(0.97); opacity: 0; }
+    to   { transform: translateY(0)     scale(1);    opacity: 1; }
+        }
 
-/* Scanning animation */
-.emergency-radar {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 2px solid rgba(239,68,68,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
+/* Search bar inside dropdown */
+.emergency-search-wrap {
     position: relative;
+    margin-bottom: 12px;
 }
 
-.emergency-radar::before {
-    content: '';
+.emergency-search-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 14px 10px 36px;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.emergency-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 500;
+}
+
+.emergency-search-input:focus {
+    border-color: rgba(239, 68, 68, 0.5);
+                                                  }
+.emergency-search-icon {
     position: absolute;
-    inset: 8px;
-    border-radius: 50%;
-    border: 2px solid rgba(239,68,68,0.2);
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    pointer-events: none;
+    opacity: 0.5;
 }
 
-.emergency-radar::after {
-    content: '';
-    position: absolute;
-    inset: 16px;
-    border-radius: 50%;
-    border: 2px solid rgba(239,68,68,0.15);
+/* Section header inside dropdown */
+.emergency-section-label {
+    font-size: 9px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 10px 0 8px;
 }
 
-.radar-sweep {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: conic-gradient(
-        from 0deg,
-        transparent 0deg,
-        rgba(239,68,68,0.4) 30deg,
-        transparent 60deg
-    );
-    animation: radarSpin 2s linear infinite;
+/* Grid of trade chips */
+.emergency-trades-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
 }
 
-@keyframes radarSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+.emergency-trade-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    padding: 12px 8px 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: center;
 }
 
-.emergency-pro-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px;
-    padding: 14px 16px;
+.emergency-trade-chip:hover,
+.emergency-trade-chip:active {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    transform: scale(1.03);
+}
+
+.emergency-trade-chip.selected {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.6);
+}
+
+.emergency-chip-icon {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.emergency-chip-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.2;
+        }
+
+/* Results list inside dropdown */
+.emergency-results-inner {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.emg-pro-row {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 10px;
-    animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    padding: 12px 14px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.emergency-pro-card:hover {
-    background: rgba(239,68,68,0.08);
-    border-color: rgba(239,68,68,0.3);
+.emg-pro-row:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
 }
 
-.emergency-pro-avatar {
-    width: 46px;
-    height: 46px;
+.emg-pro-avatar {
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
     font-weight: 800;
-    font-size: 14px;
+    font-size: 13px;
     flex-shrink: 0;
 }
 
-.emergency-distance-badge {
-    background: rgba(239,68,68,0.15);
-    border: 1px solid rgba(239,68,68,0.3);
+.emg-distance-tag {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
     border-radius: 8px;
     padding: 3px 8px;
     font-size: 10px;
     font-weight: 800;
     color: #ef4444;
+    flex-shrink: 0;
+}
+
+/* Expand radius button */
+.emg-expand-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 11px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 12px;
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: none;
         }
+    /* Pulse radar (compact) */
+.emg-scanning-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0 4px;
+}
+
+.emg-pulse-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ef4444;
+    flex-shrink: 0;
+    animation: emgPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes emgPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%       { transform: scale(1.6); opacity: 0.5; }
+}
+
+/* Header row */
+.emg-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.emg-close-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+        }
+
 
     /* ── HIRE EXPERT SHEET ── */
 .hire-sheet-overlay {
@@ -2006,49 +2136,56 @@
 </div>
 
     <!-- ══ EMERGENCY SHEET ══ -->
-<div class="emergency-sheet-overlay" id="emergency-sheet-overlay" onclick="closeEmergencySheet(event)">
-    <div class="emergency-sheet" onclick="event.stopPropagation()">
+
+<!-- ════ NEW EMERGENCY DROPDOWN HTML ════ -->
+<div class="emergency-dropdown-overlay" id="emergency-sheet-overlay" onclick="closeEmergencySheetNew(event)">
+    <div class="emergency-dropdown-box" onclick="event.stopPropagation()">
 
         <!-- Header -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div class="emg-header-row">
             <div>
-                <div style="font-size:18px;font-weight:800;color:#ef4444;">🚨 Emergency</div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;" id="emergency-location-text">Detecting your location...</div>
+                <div style="font-size:16px;font-weight:800;color:#ef4444;letter-spacing:-0.3px;">🚨 Emergency</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:500;" id="emg-location-label">Detecting location…</div>
             </div>
-            <button onclick="closeEmergencySheet()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:50%;width:32px;height:32px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+            <button class="emg-close-btn" onclick="document.getElementById('emergency-sheet-overlay').style.display='none'">✕</button>
         </div>
 
-        <!-- Category Filter -->
-        <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;" id="emergency-cat-filter">
-            <button onclick="filterEmergencyPros(null,this)" style="flex-shrink:0;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">All</button>
-            <button onclick="filterEmergencyPros('mechanic',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">🚗 Mechanic</button>
-            <button onclick="filterEmergencyPros('plumber',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">🔧 Plumber</button>
-            <button onclick="filterEmergencyPros('electrician',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">⚡ Electrician</button>
-            <button onclick="filterEmergencyPros('chef',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">🍳 Chef</button>
-            <button onclick="filterEmergencyPros('cleaner',this)" style="flex-shrink:0;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">🧹 Cleaner</button>
+        <!-- Search bar -->
+        <div class="emergency-search-wrap">
+            <span class="emergency-search-icon">🔍</span>
+            <input
+                class="emergency-search-input"
+                id="emg-search-input"
+                type="text"
+                placeholder="Search trade… e.g. Plumber, Chef"
+                oninput="filterEmgTrades(this.value)"
+            />
         </div>
 
-        <!-- Radar + Status -->
-        <div id="emergency-scanning-state">
-            <div class="emergency-radar">
-                <div class="radar-sweep"></div>
-                <span style="font-size:28px;z-index:2;">📍</span>
-            </div>
-            <div style="text-align:center;font-size:13px;font-weight:700;color:#ffffff;margin-bottom:6px;" id="emergency-scan-status">Scanning nearby pros...</div>
-            <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);" id="emergency-scan-sub">Finding verified experts within 5km</div>
+        <!-- Trade grid -->
+        <div class="emergency-section-label">Select Trade</div>
+        <div class="emergency-trades-grid" id="emg-trades-grid">
+            <!-- Injected by JS -->
         </div>
 
-        <!-- Results -->
-        <div id="emergency-results-list" style="display:none;max-height:320px;overflow-y:auto;"></div>
+        <!-- Scanning indicator (shown while GPS / Firebase loads) -->
+        <div class="emg-scanning-row" id="emg-scanning-row" style="display:none;">
+            <div class="emg-pulse-dot"></div>
+            <div style="font-size:12px;font-weight:700;color:#ffffff;" id="emg-scan-label">Scanning nearby pros…</div>
+        </div>
 
-        <!-- Expand Radius Button -->
-        <button id="emergency-expand-btn" onclick="expandEmergencyRadius()" style="display:none;width:100%;margin-top:12px;padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;">
+        <!-- Results list -->
+        <div class="emergency-results-inner" id="emg-results-inner">
+            <!-- Injected by JS -->
+        </div>
+
+        <!-- Expand radius button -->
+        <button class="emg-expand-btn" id="emg-expand-btn" onclick="expandEmgRadius()">
             🔍 Expand Search Radius
         </button>
 
     </div>
 </div>
-    
     <!-- CHEF MENU GLASS OVERLAY -->
 <div class="chef-menu-overlay" id="chef-menu-overlay">
     <div class="chef-menu-scroll-carpet" id="chef-menu-carpet">
@@ -5241,214 +5378,301 @@ function openSecureChat() {
 // ════════════════════════════════════════════════════════════
 //  🚨 EMERGENCY ENGINE
 // ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+//  🚨 NEW EMERGENCY DROPDOWN ENGINE
+//  Replace / append after the old emergency JS block
+// ════════════════════════════════════════════════════════════
 
-let emergencyUserLat = null;
-let emergencyUserLng = null;
-let emergencyCurrentRadius = 5;
-let emergencyAllPros = [];
-let emergencyFilteredPros = [];
-let emergencySelectedCat = null;
+// ── Trade list (matches CATEGORIES in your PROS data) ──
+const EMG_TRADES = [
+    { id: "plumber",      label: "Plumber",       icon: "🔧" },
+    { id: "electrician",  label: "Electrician",   icon: "⚡" },
+    { id: "carpenter",    label: "Carpenter",      icon: "🪚" },
+    { id: "chef",         label: "Chef / Cook",    icon: "🍳" },
+    { id: "painter",      label: "Painter",        icon: "🎨" },
+    { id: "mason",        label: "Mason",          icon: "🧱" },
+    { id: "welder",       label: "Welder",         icon: "🔩" },
+    { id: "mechanic",     label: "Mechanic",       icon: "🚗" },
+    { id: "ac_tech",      label: "AC Tech",        icon: "❄️" },
+    { id: "tailor",       label: "Tailor",         icon: "🧵" },
+    { id: "cleaner",      label: "Cleaner",        icon: "🧹" },
+    { id: "hvac",         label: "HVAC",           icon: "💨" },
+];
 
+// ── State ──
+let emgUserLat = null;
+let emgUserLng = null;
+let emgCurrentRadius = 5;
+let emgAllPros = [];
+let emgSelectedCat = null;
+let emgGpsReady = false;
+
+// ── Render trade grid ──
+function renderEmgTradeGrid(list) {
+    const grid = document.getElementById("emg-trades-grid");
+    if (!grid) return;
+    grid.innerHTML = list.map(t => `
+        <div class="emergency-trade-chip ${emgSelectedCat === t.id ? 'selected' : ''}"
+             id="emg-chip-${t.id}"
+             onclick="selectEmgTrade('${t.id}')">
+            <span class="emergency-chip-icon">${t.icon}</span>
+            <span class="emergency-chip-label">${t.label}</span>
+        </div>`).join('');
+}
+
+// ── Filter trades by search ──
+function filterEmgTrades(query) {
+    const q = query.trim().toLowerCase();
+    const filtered = q === ""
+        ? EMG_TRADES
+        : EMG_TRADES.filter(t =>
+            t.label.toLowerCase().includes(q) ||
+            t.id.toLowerCase().includes(q)
+          );
+    renderEmgTradeGrid(filtered);
+}
+
+// ── Open dropdown ──
 function openEmergencySheet() {
-    document.getElementById('emergency-sheet-overlay').style.display = 'flex';
-    document.getElementById('emergency-scanning-state').style.display = 'block';
-    document.getElementById('emergency-results-list').style.display = 'none';
-    document.getElementById('emergency-expand-btn').style.display = 'none';
-    document.getElementById('emergency-scan-status').textContent = 'Scanning nearby pros...';
-    document.getElementById('emergency-scan-sub').textContent = 'Finding verified experts within 5km';
-    document.getElementById('emergency-location-text').textContent = 'Detecting your location...';
-    emergencyCurrentRadius = 5;
-    emergencySelectedCat = null;
+    const overlay = document.getElementById("emergency-sheet-overlay");
+    if (!overlay) return;
 
-    // Get GPS
+    // Reset UI
+    emgSelectedCat = null;
+    emgCurrentRadius = 5;
+    emgAllPros = [];
+    emgGpsReady = false;
+
+    const searchInput = document.getElementById("emg-search-input");
+    if (searchInput) searchInput.value = "";
+
+    renderEmgTradeGrid(EMG_TRADES);
+    setEmgResultsVisible(false);
+    setEmgScanning(false);
+    setEmgExpandBtn(false);
+
+    overlay.style.display = "flex";
+
+    // Start GPS quietly in background
+    startEmgGPS();
+}
+
+// ── Close (clicking outside box) ──
+function closeEmergencySheetNew(event) {
+    // Only close if clicking the dark overlay itself
+    if (event && event.target && event.target.id !== "emergency-sheet-overlay") return;
+    document.getElementById("emergency-sheet-overlay").style.display = "none";
+}
+
+// Also keep backward compat alias used in HTML onclick:
+function closeEmergencySheet(event) {
+    closeEmergencySheetNew(event);
+}
+
+// ── GPS ──
+function startEmgGPS() {
     if (!navigator.geolocation) {
-        document.getElementById('emergency-scan-status').textContent = '❌ GPS not supported';
+        setEmgLocationLabel("GPS not supported");
+        emgGpsReady = false;
         return;
     }
-
+    setEmgLocationLabel("Detecting location…");
     navigator.geolocation.getCurrentPosition(
         (pos) => {
-            emergencyUserLat = pos.coords.latitude;
-            emergencyUserLng = pos.coords.longitude;
-            document.getElementById('emergency-location-text').textContent =
-                `📍 ${emergencyUserLat.toFixed(4)}, ${emergencyUserLng.toFixed(4)}`;
-            scanEmergencyPros();
+            emgUserLat = pos.coords.latitude;
+            emgUserLng = pos.coords.longitude;
+            emgGpsReady = true;
+            setEmgLocationLabel(`📍 ${emgUserLat.toFixed(4)}, ${emgUserLng.toFixed(4)}`);
+            // If a trade was already selected, scan now
+            if (emgSelectedCat) scanEmgPros();
         },
-        (err) => {
-            document.getElementById('emergency-scan-status').textContent = '⚠️ Location access denied';
-            document.getElementById('emergency-scan-sub').textContent = 'Please enable GPS and try again';
+        () => {
+            emgGpsReady = false;
+            setEmgLocationLabel("Location unavailable");
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
 
-function closeEmergencySheet(event) {
-    if (event && event.target !== document.getElementById('emergency-sheet-overlay')) return;
-    document.getElementById('emergency-sheet-overlay').style.display = 'none';
+// ── Select a trade ──
+function selectEmgTrade(catId) {
+    emgSelectedCat = catId;
+
+    // Update chip highlight
+    document.querySelectorAll(".emergency-trade-chip").forEach(el => el.classList.remove("selected"));
+    const chip = document.getElementById(`emg-chip-${catId}`);
+    if (chip) chip.classList.add("selected");
+
+    if (!emgGpsReady) {
+        setEmgScanning(true, "Waiting for GPS…");
+        // GPS callback will call scanEmgPros once ready
+        return;
+    }
+    scanEmgPros();
 }
 
-function getDistanceKm(lat1, lng1, lat2, lng2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
+// ── Scan pros ──
+async function scanEmgPros() {
+    setEmgScanning(true, `Scanning within ${emgCurrentRadius}km…`);
+    setEmgResultsVisible(false);
+    setEmgExpandBtn(false);
 
-async function scanEmergencyPros() {
-    document.getElementById('emergency-scan-status').textContent = 'Scanning nearby pros...';
-    document.getElementById('emergency-scan-sub').textContent =
-        `Finding verified experts within ${emergencyCurrentRadius}km`;
+    // ── Demo data (PROS array) ──
+    const demoPros = (typeof PROS !== "undefined" ? PROS : [])
+        .filter(p => !emgSelectedCat || p.category === emgSelectedCat)
+        .map(p => ({
+            uid: String(p.id),
+            name: p.name,
+            display_cat: p.display_cat,
+            avatar: p.avatar,
+            color: p.color,
+            price: p.price,
+            distanceKm: p.distance,
+            online: p.online
+        }))
+        .filter(p => p.distanceKm <= emgCurrentRadius);
 
+    // ── Firebase live data (if available) ──
+    let firePros = [];
     try {
-        if (typeof firebase === 'undefined' || !firebase.database) {
-            showGlobalToast('❌ Firebase not ready');
-            return;
+        if (typeof firebase !== "undefined" && firebase.database && emgUserLat && emgUserLng) {
+            const snap = await firebase.database().ref("providers").once("value");
+            const data = snap.val() || {};
+            Object.entries(data).forEach(([uid, pro]) => {
+                if (!pro.location || !pro.location.lat || !pro.location.lng) return;
+                const dist = getEmgDistanceKm(emgUserLat, emgUserLng, pro.location.lat, pro.location.lng);
+                if (dist > emgCurrentRadius) return;
+                const cat = (pro.category || "").toLowerCase();
+                if (emgSelectedCat && cat !== emgSelectedCat) return;
+                firePros.push({
+                    uid,
+                    name: pro.categoryLabel || "Professional",
+                    display_cat: pro.subcategory || pro.categoryLabel || "",
+                    avatar: (pro.categoryLabel || "P").charAt(0).toUpperCase(),
+                    color: getProColor(pro.categoryLabel),
+                    price: pro.pricing ? `₦${Number(pro.pricing.base).toLocaleString()} ${pro.pricing.unit}` : "",
+                    distanceKm: dist,
+                    online: true
+                });
+            });
         }
-
-        const db = firebase.database();
-        const snap = await db.ref('providers').once('value');
-        const data = snap.val() || {};
-
-        emergencyAllPros = [];
-
-        Object.entries(data).forEach(([uid, pro]) => {
-            // Approved pros kawai
-            if (pro.status !== 'approved' && pro.verified !== true) return;
-            if (!pro.location || !pro.location.lat || !pro.location.lng) return;
-
-            const dist = getDistanceKm(
-                emergencyUserLat, emergencyUserLng,
-                pro.location.lat, pro.location.lng
-            );
-
-            if (dist <= emergencyCurrentRadius) {
-                emergencyAllPros.push({ uid, ...pro, distanceKm: dist });
-            }
-        });
-
-        // Sort by distance
-        emergencyAllPros.sort((a, b) => a.distanceKm - b.distanceKm);
-
-        renderEmergencyResults();
-
-    } catch (err) {
-        document.getElementById('emergency-scan-status').textContent = '❌ Scan failed';
-        console.error('Emergency scan error:', err);
+    } catch (e) {
+        console.warn("Firebase emergency scan failed:", e);
     }
-}
 
-function filterEmergencyPros(cat, btn) {
-    emergencySelectedCat = cat;
-
-    // Update button styles
-    document.querySelectorAll('#emergency-cat-filter button').forEach(b => {
-        b.style.background = 'rgba(255,255,255,0.06)';
-        b.style.color = 'rgba(255,255,255,0.7)';
-        b.style.border = '1px solid rgba(255,255,255,0.1)';
+    // Merge & deduplicate by uid, sort by distance
+    const merged = [...demoPros];
+    firePros.forEach(fp => {
+        if (!merged.find(p => p.uid === fp.uid)) merged.push(fp);
     });
-    btn.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
-    btn.style.color = '#fff';
-    btn.style.border = 'none';
+    merged.sort((a, b) => a.distanceKm - b.distanceKm);
+    emgAllPros = merged;
 
-    renderEmergencyResults();
+    setEmgScanning(false);
+    renderEmgResults();
 }
 
-function renderEmergencyResults() {
-    const list = document.getElementById('emergency-results-list');
-    const scanState = document.getElementById('emergency-scanning-state');
-    const expandBtn = document.getElementById('emergency-expand-btn');
+// ── Render results ──
+function renderEmgResults() {
+    const container = document.getElementById("emg-results-inner");
+    if (!container) return;
 
-    let pros = emergencyAllPros;
-
-    // Apply category filter
-    if (emergencySelectedCat) {
-        pros = pros.filter(p =>
-            (p.category || '').toLowerCase().includes(emergencySelectedCat) ||
-            (p.categoryLabel || '').toLowerCase().includes(emergencySelectedCat) ||
-            (p.subcategory || '').toLowerCase().includes(emergencySelectedCat)
-        );
-    }
-
-    emergencyFilteredPros = pros;
-    scanState.style.display = 'none';
-
-    if (pros.length === 0) {
-        list.style.display = 'block';
-        list.innerHTML = `
-            <div style="text-align:center;padding:30px 20px;">
-                <div style="font-size:36px;margin-bottom:12px;">📡</div>
-                <div style="font-size:14px;font-weight:700;color:#ffffff;margin-bottom:6px;">No pros found within ${emergencyCurrentRadius}km</div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.4);">Try expanding the search radius</div>
+    if (emgAllPros.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:20px 10px;">
+                <div style="font-size:28px;margin-bottom:8px;">📡</div>
+                <div style="font-size:13px;font-weight:700;color:#ffffff;">No pros found within ${emgCurrentRadius}km</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">Try expanding the radius</div>
             </div>`;
-        expandBtn.style.display = 'block';
-        expandBtn.textContent = `🔍 Expand to ${emergencyCurrentRadius * 2}km`;
+        setEmgResultsVisible(true);
+        setEmgExpandBtn(true);
         return;
     }
 
-    expandBtn.style.display = 'none';
-    list.style.display = 'block';
-    list.innerHTML = `
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
-            ⚡ ${pros.length} Pro${pros.length > 1 ? 's' : ''} Found Within ${emergencyCurrentRadius}km
+    container.innerHTML = `
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">
+            ⚡ ${emgAllPros.length} Pro${emgAllPros.length > 1 ? "s" : ""} within ${emgCurrentRadius}km
         </div>
-        ${pros.map(pro => `
-        <div class="emergency-pro-card" onclick="emergencyContactPro('${pro.uid}')">
-            <div class="emergency-pro-avatar" style="background:${getProColor(pro.categoryLabel)};">
-                ${(pro.categoryLabel || 'P').charAt(0).toUpperCase()}
+        ${emgAllPros.map(pro => `
+        <div class="emg-pro-row" onclick="emergencyContactProNew('${pro.uid}')">
+            <div class="emg-pro-avatar" style="background:${pro.color};">
+                ${pro.avatar}
             </div>
             <div style="flex:1;min-width:0;">
                 <div style="font-size:13px;font-weight:800;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                    ${pro.categoryLabel || 'Professional'} ${pro.subcategory ? '· ' + pro.subcategory : ''}
+                    ${pro.name}
                 </div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;">
-                    ₦${Number(pro.pricing?.base || 0).toLocaleString()} ${pro.pricing?.unit || 'per job'}
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">
+                    ${pro.display_cat}${pro.price ? " · " + pro.price : ""}
                 </div>
             </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <span class="emergency-distance-badge">${pro.distanceKm.toFixed(1)}km</span>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+                <span class="emg-distance-tag">${pro.distanceKm.toFixed(1)}km</span>
                 <span style="font-size:9px;color:#22c55e;font-weight:700;">● Available</span>
             </div>
-        </div>`).join('')}`;
+        </div>`).join("")}`;
+
+    setEmgResultsVisible(true);
+    setEmgExpandBtn(false);
 }
 
-function getProColor(category) {
-    const colors = {
-        'Plumber': 'linear-gradient(135deg,#059669,#047857)',
-        'Electrician': 'linear-gradient(135deg,#d97706,#b45309)',
-        'Mechanic': 'linear-gradient(135deg,#dc2626,#b91c1c)',
-        'Chef': 'linear-gradient(135deg,#ec4899,#be185d)',
-        'Carpenter': 'linear-gradient(135deg,#78350f,#451a03)',
-        'Cleaner': 'linear-gradient(135deg,#0284c7,#0369a1)',
-    };
-    return colors[category] || 'linear-gradient(135deg,#1d4ed8,#1e40af)';
+// ── Expand radius ──
+function expandEmgRadius() {
+    emgCurrentRadius *= 2;
+    document.getElementById("emg-expand-btn").style.display = "none";
+    scanEmgPros();
 }
 
-function expandEmergencyRadius() {
-    emergencyCurrentRadius = emergencyCurrentRadius * 2;
-    document.getElementById('emergency-scanning-state').style.display = 'block';
-    document.getElementById('emergency-results-list').style.display = 'none';
-    scanEmergencyPros();
-}
-
-function emergencyContactPro(proUid) {
-    const sessionUser = localStorage.getItem('nexus_user_session');
+// ── Contact pro ──
+function emergencyContactProNew(proUid) {
+    const sessionUser = (typeof localStorage !== "undefined")
+        ? localStorage.getItem("nexus_user_session")
+        : null;
 
     if (!sessionUser) {
-        showGlobalToast('⚠️ Please login first!');
-        setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+        showGlobalToast("⚠️ Please login first!");
+        setTimeout(() => { window.location.href = "login.html"; }, 1500);
         return;
     }
 
-    // Close emergency sheet
-    document.getElementById('emergency-sheet-overlay').style.display = 'none';
-
-    // Je chat-interior kai tsaye da wannan pro
+    document.getElementById("emergency-sheet-overlay").style.display = "none";
     window.location.href = `chat-interior.html?with=${encodeURIComponent(proUid)}`;
-    }
+}
 
+// ── Helpers ──
+function setEmgLocationLabel(text) {
+    const el = document.getElementById("emg-location-label");
+    if (el) el.textContent = text;
+}
+
+function setEmgScanning(visible, label) {
+    const row = document.getElementById("emg-scanning-row");
+    const lbl = document.getElementById("emg-scan-label");
+    if (row) row.style.display = visible ? "flex" : "none";
+    if (lbl && label) lbl.textContent = label;
+}
+
+function setEmgResultsVisible(visible) {
+    const el = document.getElementById("emg-results-inner");
+    if (el) el.style.display = visible ? "flex" : "none";
+}
+
+function setEmgExpandBtn(visible) {
+    const btn = document.getElementById("emg-expand-btn");
+    if (btn) btn.style.display = visible ? "block" : "none";
+}
+
+function getEmgDistanceKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) ** 2 +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+              Math.sin(dLng/2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+// Note: getProColor() already defined earlier in your main script — reuse it.
+    
 // ════════════════════════════════════════════════════════════
 //  📞 HIRE EXPERT ENGINE
 // ════════════════════════════════════════════════════════════
