@@ -1653,6 +1653,124 @@
 #ps-beverages-step-3, #ps-beverages-step-4, #ps-beverages-step-5 {
     display: none;
 }
+
+/* ── CHEF MENU EDIT MODE ── */
+.chef-menu-welcome-input {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 5px 8px;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.menu-item-card.edit-mode {
+    cursor: default;
+    align-items: stretch;
+}
+
+.menu-item-edit-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.menu-item-edit-btn, .menu-item-delete-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: none;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-item-edit-btn {
+    background: rgba(99,102,241,0.2);
+    color: #818cf8;
+}
+
+.menu-item-delete-btn {
+    background: rgba(239,68,68,0.2);
+    color: #ef4444;
+}
+
+.chef-menu-add-item-btn {
+    width: 100%;
+    padding: 10px;
+    background: rgba(236,72,153,0.15);
+    border: 1.5px dashed rgba(236,72,153,0.4);
+    border-radius: 12px;
+    color: #ec4899;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 6px;
+    font-family: inherit;
+}
+
+.chef-menu-edit-form {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chef-menu-edit-form input, .chef-menu-edit-form select {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 12px;
+    padding: 8px 10px;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.chef-menu-edit-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.chef-menu-edit-form-actions button {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.chef-menu-save-changes-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg,#10b981,#059669);
+    border: none;
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 10px;
+    font-family: inherit;
+        }
     </style>
 </head>
 <body>
@@ -2178,13 +2296,16 @@
 <div class="chef-menu-overlay" id="chef-menu-overlay">
     <div class="chef-menu-scroll-carpet" id="chef-menu-carpet">
 
-        <div class="chef-menu-header">
+       <div class="chef-menu-header">
     <div style="display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0;">
         <div style="font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Welcome to Nexus Protocol · ✨ Today's Live Menu</div>
         <div class="chef-menu-title" id="chef-menu-pro-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Chef Amara Yusuf</div>
     </div>
-    <button class="chef-menu-close-btn" id="chef-menu-close-btn">✕</button>
-        </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <button class="chef-menu-edit-btn" id="chef-menu-edit-btn" onclick="toggleChefMenuEditMode()" style="display:none;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#ffffff;font-size:12px;cursor:pointer;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:all 0.2s ease;">✏️</button>
+        <button class="chef-menu-close-btn" id="chef-menu-close-btn">✕</button>
+    </div>
+       </div> 
         
 <div id="chef-menu-items-slot"></div>
 <div class="chef-availability-banner" id="chef-availability-banner">
@@ -3432,8 +3553,49 @@ function openChefMenuOverlay(pro) {
         availEl.innerText = pro.schedule.length === 7 ? "✅ Available Everyday" : `📅 Available: ${pro.schedule.join(', ')}`;
     } else { availEl.innerText = "✅ Available Everyday"; }
         }
+
 function closeChefMenuOverlay() { document.getElementById("chef-menu-overlay").style.display = "none"; }
 
+// ── CHEF MENU EDIT MODE STATE ──
+let chefMenuEditMode = false;
+let chefMenuIsOwner = false;
+let chefMenuEditingItemId = null; // null = adding new, otherwise editing existing item id
+
+function checkChefMenuOwnership(pro) {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    const editBtn = document.getElementById('chef-menu-edit-btn');
+    if (!editBtn) return;
+
+    if (sessionUser && String(currentProfileProId) === String(sessionUser)) {
+        chefMenuIsOwner = true;
+        editBtn.style.display = 'flex';
+    } else {
+        chefMenuIsOwner = false;
+        editBtn.style.display = 'none';
+    }
+}
+
+function toggleChefMenuEditMode() {
+    if (!chefMenuIsOwner) return;
+    chefMenuEditMode = !chefMenuEditMode;
+    const editBtn = document.getElementById('chef-menu-edit-btn');
+
+    if (chefMenuEditMode) {
+        editBtn.textContent = '✕';
+        editBtn.style.background = 'rgba(239,68,68,0.2)';
+        editBtn.style.borderColor = 'rgba(239,68,68,0.3)';
+    } else {
+        editBtn.textContent = '✏️';
+        editBtn.style.background = 'rgba(255,255,255,0.1)';
+        editBtn.style.borderColor = 'rgba(255,255,255,0.2)';
+        chefMenuEditingItemId = null;
+    }
+
+    if (currentChefMenuPro) {
+        renderChefMenuOverlayItems(currentChefMenuPro);
+    }
+        }
+        
 // ── POST SERVICE INLINE ENGINE ──
 function openPostServiceSheet() {
     psShowStep(1);
