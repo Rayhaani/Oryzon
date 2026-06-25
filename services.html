@@ -1268,7 +1268,7 @@
 /* ── THE DROPDOWN PANEL ── */
 .emg-dropdown-panel {
     position: fixed;
-    top: 0;
+    top: 86px;                 /* nisa daga sama don corners su bayyana */
     left: 50%;
     transform: translateX(-50%);
     width: 92%;
@@ -1276,18 +1276,16 @@
     z-index: 8600;
     display: none;
     flex-direction: column;
-    /* Glass style */
-    background: rgba(10, 16, 34, 0.78);
+    background: rgba(10, 16, 34, 0.92);
     backdrop-filter: blur(26px) saturate(160%);
     -webkit-backdrop-filter: blur(26px) saturate(160%);
     border: 1px solid rgba(255, 255, 255, 0.13);
-    border-top: none;
-    border-radius: 0 0 20px 20px;
+    border-radius: 20px;       /* dukan kusurwoyi 4 */
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55),
                 inset 0 -1px 0 rgba(255, 255, 255, 0.06);
     overflow: hidden;
     animation: emgPanelDrop 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+        }
 
 @keyframes emgPanelDrop {
     from { transform: translateX(-50%) translateY(-12px); opacity: 0; }
@@ -1307,10 +1305,10 @@
 
 /* ── SEARCH BAR ── */
 .emg-search-wrap {
-    padding: 12px 14px 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 12px 14px 6px;
     position: relative;
-}
+        }
+        
 .emg-search-icon {
     position: absolute;
     left: 26px;
@@ -1341,8 +1339,8 @@
 .emg-service-list {
     overflow-y: auto;
     max-height: 54vh;
-    padding: 6px 0 10px;
-}
+    padding: 0 0 10px;
+    }
 
 .emg-service-row {
     display: flex;
@@ -1393,18 +1391,19 @@
     -webkit-backdrop-filter: blur(12px);
     z-index: 8700;
     display: none;
-    align-items: flex-end;
+    align-items: center;       /* tsakiya, ba ƙasa ba */
     justify-content: center;
+    padding: 20px;              /* don kada ya cika gefe-gefen page */
 }
 
 .emergency-sheet {
     width: 100%;
-    max-width: 430px;
+    max-width: 400px;
     background: #0f172a;
-    border-radius: 28px 28px 0 0;
-    padding: 20px 20px 40px;
+    border-radius: 28px;        /* dukan kusurwoyi 4 */
+    padding: 20px 20px 28px;
     border: 1px solid rgba(239,68,68,0.2);
-    box-shadow: 0 -20px 60px rgba(239,68,68,0.15);
+    box-shadow: 0 20px 60px rgba(239,68,68,0.25);
     animation: sheetSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 
@@ -2147,10 +2146,15 @@
             oninput="filterEmgServices(this.value)"
         />
     </div>
-    <!-- Service list -->
-    <div class="emg-service-list" id="emg-service-list">
-        <!-- Injected by JS -->
+    
+   <!-- Service list + sub-category panel -->
+<div style="display:flex;flex:1;min-height:0;">
+    <div class="emg-service-list" id="emg-service-list" style="width:48%;border-right:1px solid rgba(255,255,255,0.06);"></div>
+    <div id="emg-sub-panel" style="width:52%;overflow-y:auto;max-height:54vh;padding:6px 8px;">
+        <div id="emg-sub-empty" style="text-align:center;color:rgba(255,255,255,0.3);font-size:11px;margin-top:30px;font-weight:600;">← Select a service</div>
+        <div id="emg-sub-list-content"></div>
     </div>
+</div> 
 </div>
 
 <!-- ── ORIGINAL SCANNING SHEET (restored) ── -->
@@ -5382,18 +5386,18 @@ function openSecureChat() {
 
 // ── Service list (mirrors your CATEGORIES) ──
 const EMG_SERVICES = [
-    { id: "plumber",      label: "Plumber",             icon: "🔧" },
-    { id: "electrician",  label: "Electrician",         icon: "⚡" },
-    { id: "carpenter",    label: "Carpenter",            icon: "🪚" },
-    { id: "chef",         label: "Chef / Cook",          icon: "🍳" },
-    { id: "painter",      label: "Painter",              icon: "🎨" },
-    { id: "mason",        label: "Mason / Builder",      icon: "🧱" },
-    { id: "welder",       label: "Welder",               icon: "🔩" },
-    { id: "mechanic",     label: "Auto Mechanic",        icon: "🚗" },
-    { id: "ac_tech",      label: "AC Technician",        icon: "❄️" },
-    { id: "tailor",       label: "Tailor",               icon: "🧵" },
-    { id: "hvac",         label: "HVAC Engineer",        icon: "💨" },
-    { id: "cleaner",      label: "Professional Cleaner", icon: "🧹" },
+    { id:"plumber",     label:"Plumber",             icon:"🔧", subs:["General Plumbing","Pipe Fitting","Leak Repair","Drainage"] },
+    { id:"electrician", label:"Electrician",         icon:"⚡", subs:["Wiring","Solar Installation","Generator","Smart Home"] },
+    { id:"carpenter",   label:"Carpenter",           icon:"🪚", subs:["Furniture","Doors & Windows","Roofing","Carving"] },
+    { id:"chef",        label:"Chef / Cook",         icon:"🍳", subs:["Home Cooking","Catering","Corporate Events"] },
+    { id:"painter",     label:"Painter",             icon:"🎨", subs:["Interior","Exterior","Texture"] },
+    { id:"mason",       label:"Mason / Builder",     icon:"🧱", subs:["Block Laying","Plastering","Tiling"] },
+    { id:"welder",      label:"Welder",              icon:"🔩", subs:["Gate & Fence","Steel Fabrication","Roofing"] },
+    { id:"mechanic",    label:"Auto Mechanic",       icon:"🚗", subs:["Engine Repair","Electrical","Tires","Body Work"] },
+    { id:"ac_tech",     label:"AC Technician",       icon:"❄️", subs:["Installation","Repair","Maintenance","Gas Refill"] },
+    { id:"tailor",      label:"Tailor",              icon:"🧵", subs:["Native Wear","English Wear","Alterations"] },
+    { id:"hvac",        label:"HVAC Engineer",       icon:"💨", subs:["Installation","Repair","Maintenance"] },
+    { id:"cleaner",     label:"Professional Cleaner",icon:"🧹", subs:["Home Cleaning","Office Cleaning","Deep Clean"] },
 ];
 
 // ── Scanning state ──
@@ -5429,12 +5433,37 @@ function closeEmgDropdown() {
 function renderEmgServiceList(list) {
     const el = document.getElementById("emg-service-list");
     if (!el) return;
-    el.innerHTML = list.map(s => `
-        <div class="emg-service-row" onclick="selectEmgService('${s.id}','${s.label}')">
+    el.innerHTML = list.map((s, idx) => `
+        <div class="emg-service-row" id="emg-row-${idx}" onclick="toggleEmgSub(${idx})">
             <div class="emg-service-icon">${s.icon}</div>
             <span class="emg-service-label">${s.label}</span>
             <span class="emg-service-arrow">›</span>
         </div>`).join("");
+    window._emgCurrentList = list;
+    document.getElementById('emg-sub-empty').style.display = 'block';
+    document.getElementById('emg-sub-list-content').innerHTML = '';
+}
+
+function toggleEmgSub(idx) {
+    const list = window._emgCurrentList || EMG_SERVICES;
+    const service = list[idx];
+    if (!service) return;
+
+    document.querySelectorAll('.emg-service-row').forEach((row,i) => {
+        row.style.background = i===idx ? 'rgba(239,68,68,0.12)' : 'transparent';
+    });
+
+    document.getElementById('emg-sub-empty').style.display = 'none';
+    document.getElementById('emg-sub-list-content').innerHTML = `
+        <div style="font-size:10px;font-weight:800;color:#ef4444;text-transform:uppercase;letter-spacing:0.5px;padding:6px 8px 10px;">${service.label}</div>
+        ${(service.subs||[]).map(sub => `
+            <div onclick="selectEmgSub('${service.id}','${service.label}','${sub}')" style="padding:10px 12px;margin-bottom:6px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:8px;cursor:pointer;">${sub}</div>
+        `).join('')}`;
+}
+
+function selectEmgSub(catId, catLabel, subLabel) {
+    closeEmgDropdown();
+    selectEmgService(catId, `${catLabel} – ${subLabel}`);
 }
 
 function filterEmgServices(query) {
@@ -5455,9 +5484,9 @@ function selectEmgService(catId, catLabel) {
     closeEmgDropdown();
 
     // Set selected category
-    emergencySelectedCat  = catId;
+    emergencySelectedCat   = catId;
     emergencyCurrentRadius = 5;
-    emergencyAllPros      = [];
+    emergencyAllPros       = [];
 
     // Reset scanning sheet UI
     document.getElementById("emergency-scanning-state").style.display = "block";
@@ -5470,25 +5499,36 @@ function selectEmgService(catId, catLabel) {
     // Show scanning sheet
     document.getElementById("emergency-sheet-overlay").style.display = "flex";
 
-    // Get GPS then scan
     if (!navigator.geolocation) {
         document.getElementById("emergency-scan-status").textContent = "❌ GPS not supported";
         return;
     }
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            emergencyUserLat = pos.coords.latitude;
-            emergencyUserLng = pos.coords.longitude;
-            document.getElementById("emergency-location-text").textContent =
-                `📍 ${emergencyUserLat.toFixed(4)}, ${emergencyUserLng.toFixed(4)}`;
-            scanEmergencyPros();
-        },
-        () => {
-            document.getElementById("emergency-scan-status").textContent = "⚠️ Location access denied";
-            document.getElementById("emergency-scan-sub").textContent    = "Please enable GPS and try again";
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+
+    // Check permission state FIRST, before attempting to get location
+    navigator.permissions?.query({ name: 'geolocation' }).then(res => {
+        if (res.state === 'denied') {
+            document.getElementById("emergency-scan-status").textContent = "🚫 Location Access Blocked";
+            document.getElementById("emergency-scan-sub").textContent    = "Go to Chrome Settings → Site Settings → Location → Allow, then try again.";
+            document.getElementById("emergency-location-text").textContent = "Location permission denied";
+            return; // don't even attempt getCurrentPosition
+        }
+
+        // Permission not denied — proceed normally
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                emergencyUserLat = pos.coords.latitude;
+                emergencyUserLng = pos.coords.longitude;
+                document.getElementById("emergency-location-text").textContent =
+                    `📍 ${emergencyUserLat.toFixed(4)}, ${emergencyUserLng.toFixed(4)}`;
+                scanEmergencyPros();
+            },
+            () => {
+                document.getElementById("emergency-scan-status").textContent = "⚠️ Location access denied";
+                document.getElementById("emergency-scan-sub").textContent    = "Please enable GPS and try again";
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    });
 }
 
 // ────────────────────────────────────────────
