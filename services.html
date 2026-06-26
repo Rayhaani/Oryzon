@@ -3217,7 +3217,9 @@ let state = {
     storyProgress: 0,
     storyIntervalId: null,
     isStoryPaused: false,
-    likedPros: {}
+    likedPros: {},
+    isLiveStoryMode: false,
+    liveStoryData: null
 };
 
 const STORY_DURATION_MS = 5000;
@@ -3437,6 +3439,18 @@ function openStoryDeck(proStoriesIndex) {
     updateStoryOverlayUi();
     startStoryInterval();
 }
+
+function openLiveDailyStory(username, uploads) {
+    state.isLiveStoryMode = true;
+    state.liveStoryData = { username, uploads };
+    state.activeStorySlide = 0;
+    state.storyProgress = 0;
+    state.isStoryPaused = false;
+    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
+    document.getElementById("story-overlay-deck").style.display = "flex";
+    updateStoryOverlayUi();
+    startStoryInterval();
+        }
 
 function startStoryInterval() {
     if (state.storyIntervalId) clearInterval(state.storyIntervalId);
