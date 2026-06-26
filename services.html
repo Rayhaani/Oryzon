@@ -1925,9 +1925,10 @@
                 </div>
             </div>
 
-            <div class="story-food-display-canvas" id="story-interactive-canvas-area">
-                <div style="font-size: 96px; margin-bottom: 16px;" id="story-canvas-main-emoji">🥣</div>
-                <h2 style="font-weight: 800; font-size: 28px; color: #ffffff;" id="story-canvas-main-title">Danwake</h2>
+           <div class="story-food-display-canvas" id="story-interactive-canvas-area">
+    <div id="story-canvas-video-layer" style="position:absolute;inset:0;z-index:0;display:none;"></div>
+    <div style="font-size: 96px; margin-bottom: 16px; position:relative; z-index:1;" id="story-canvas-main-emoji">🥣</div> 
+            <h2 style="font-weight: 800; font-size: 28px; color: #ffffff;" id="story-canvas-main-title">Danwake</h2>
                 <div style="color: #34d399; font-weight: 800; font-size: 24px; margin-top: 6px;" id="story-canvas-main-price">₦1,500</div>
                 <div style="background: rgba(255,255,255,0.06); padding: 8px 18px; border-radius: 14px; font-size: 12px; color: #cbd5e1; margin-top: 14px; border: 1px solid rgba(255,255,255,0.1);">
                     🔥 Freshly Steaming & Available In Perimeter
@@ -3445,6 +3446,19 @@ function startStoryInterval() {
         state.storyProgress += increment;
         if (state.storyProgress >= 100) {
             state.storyProgress = 0;
+
+            if (state.isLiveStoryMode) {
+                const uploads = state.liveStoryData.uploads;
+                const nextSlide = state.activeStorySlide + 1;
+                if (nextSlide < uploads.length) {
+                    state.activeStorySlide = nextSlide;
+                    updateStoryOverlayUi();
+                } else {
+                    closeStoryDeck();
+                }
+                return;
+            }
+
             const currentProData = PRO_STORIES[state.activeProStoryIndex];
             const nextSlide = state.activeStorySlide + 1;
             if (nextSlide < currentProData.stories.length) {
@@ -3460,21 +3474,62 @@ function startStoryInterval() {
             }
         } else { updateStoryProgressBarOnly(); }
     }, STORY_TICK_MS);
-}
+        }
 
 function updateStoryProgressBarOnly() {
-    const currentProData = PRO_STORIES[state.activeProStoryIndex];
-    currentProData.stories.forEach((s,idx) => {
+    const totalSlides = state.isLiveStoryMode
+        ? state.liveStoryData.uploads.length
+        : PRO_STORIES[state.activeProStoryIndex].stories.length;
+
+    for (let idx = 0; idx < totalSlides; idx++) {
         const fillEl = document.getElementById(`story-fill-node-${idx}`);
         if (fillEl) {
             if (idx < state.activeStorySlide) fillEl.style.width = "100%";
             else if (idx === state.activeStorySlide) fillEl.style.width = `${state.storyProgress}%`;
             else fillEl.style.width = "0%";
         }
-    });
-}
+    }
+        }
 
 function updateStoryOverlayUi() {
+    const videoLayer = document.getElementById("story-canvas-video-layer");
+    const canvas = document.getElementById("story-interactive-canvas-area");
+
+    if (state.isLiveStoryMode) {
+        const { username, uploads } = state.liveStoryData;
+        const activeUpload = uploads[state.activeStorySlide];
+
+        const indicatorContainer = document.getElementById("story-progress-indicators-bar");
+        indicatorContainer.innerHTML = uploads.map((u, idx) => `
+            <div class="story-progress-bg"><div class="story-progress-fill" id="story-fill-node-${idx}" style="width:${idx < state.activeStorySlide ? '100%' : '0%'};"></div></div>`).join('');
+
+        document.getElementById("story-header-icon").innerText = "🔴";
+        document.getElementById("story-header-title").innerText = username;
+        document.getElementById("story-header-meta").innerText = "Live Now · Available In Perimeter";
+        document.getElementById("story-canvas-main-emoji").style.display = "none";
+        document.getElementById("story-canvas-main-title").innerText = "";
+        document.getElementById("story-canvas-main-price").innerText = "";
+
+        // Share tsohon video/image kafin sabo
+        videoLayer.innerHTML = "";
+        videoLayer.style.display = "none";
+        canvas.style.backgroundImage = "none";
+
+        if (activeUpload.type === "video") {
+            videoLayer.innerHTML = `<video src="${activeUpload.url}" autoplay muted playsinline loop style="width:100%;height:100%;object-fit:cover;"></video>`;
+            videoLayer.style.display = "block";
+        } else {
+            canvas.style.backgroundImage = `url('${activeUpload.url}')`;
+            canvas.style.backgroundSize = "cover";
+            canvas.style.backgroundPosition = "center";
+        }
+        return;
+    }
+
+    // Demo PRO_STORIES mode (yadda yake a baya) — tabbatar an share video layer
+    videoLayer.innerHTML = "";
+    videoLayer.style.display = "none";
+
     const currentProData = PRO_STORIES[state.activeProStoryIndex];
     const activeStory = currentProData.stories[state.activeStorySlide];
     const pro = PROS.find(p => p.id === currentProData.proId);
@@ -3482,22 +3537,25 @@ function updateStoryOverlayUi() {
     indicatorContainer.innerHTML = currentProData.stories.map((s,idx) => `
         <div class="story-progress-bg"><div class="story-progress-fill" id="story-fill-node-${idx}" style="width:${idx<state.activeStorySlide?'100%':'0%'};"></div></div>`).join('');
     document.getElementById("story-header-icon").innerText = activeStory.icon;
+    document.getElementById("story-header-icon").style.display = "inline";
     document.getElementById("story-header-title").innerText = activeStory.name;
     document.getElementById("story-header-meta").innerText = `Prepared Live Near Me (${pro?pro.distance:''}km)`;
+    document.getElementById("story-canvas-main-emoji").style.display = "block";
     document.getElementById("story-canvas-main-emoji").innerText = activeStory.icon;
     document.getElementById("story-canvas-main-title").innerText = activeStory.name;
     document.getElementById("story-canvas-main-price").innerText = activeStory.price;
-    const canvas = document.getElementById("story-interactive-canvas-area");
     canvas.style.backgroundImage = `url('${activeStory.image}')`;
     canvas.style.backgroundSize = "cover";
     canvas.style.backgroundPosition = "center";
-}
+        }
 
 function closeStoryDeck() {
     if (state.storyIntervalId) clearInterval(state.storyIntervalId);
     state.activeProStoryIndex = null;
+    state.isLiveStoryMode = false;
+    state.liveStoryData = null;
     document.getElementById("story-overlay-deck").style.display = "none";
-}
+        }
 
  // ── PROFILE SHEET ──
 function openProfileSheet(proId) {
@@ -4915,36 +4973,64 @@ document.addEventListener("DOMContentLoaded", () => {
         state.isStoryPaused = true;
     });
     storyOverlay.addEventListener("pointerup", (e) => {
-        if (e.target.closest("button")) return;
-        state.isStoryPaused = false;
-        const x = e.clientX;
-        const half = window.innerWidth / 2;
-        const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    if (e.target.closest("button")) return;
+    state.isStoryPaused = false;
+    const x = e.clientX;
+    const half = window.innerWidth / 2;
+
+    if (state.isLiveStoryMode) {
+        const uploads = state.liveStoryData.uploads;
         if (x >= half) {
             const nextSlide = state.activeStorySlide + 1;
-            if (nextSlide < currentProData.stories.length) { state.activeStorySlide = nextSlide; state.storyProgress = 0; updateStoryOverlayUi(); }
-            else {
-                const nextPro = state.activeProStoryIndex + 1;
-                if (nextPro < PRO_STORIES.length) { state.activeProStoryIndex = nextPro; state.activeStorySlide = 0; state.storyProgress = 0; updateStoryOverlayUi(); }
-                else closeStoryDeck();
-            }
+            if (nextSlide < uploads.length) { state.activeStorySlide = nextSlide; state.storyProgress = 0; updateStoryOverlayUi(); }
+            else closeStoryDeck();
         } else {
             const prevSlide = state.activeStorySlide - 1;
             if (prevSlide >= 0) { state.activeStorySlide = prevSlide; state.storyProgress = 0; updateStoryOverlayUi(); }
-            else {
-                const prevPro = state.activeProStoryIndex - 1;
-                if (prevPro >= 0) { state.activeProStoryIndex = prevPro; state.activeStorySlide = 0; state.storyProgress = 0; updateStoryOverlayUi(); }
-            }
         }
-    });
+        return;
+    }
+
+    const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    if (x >= half) {
+        const nextSlide = state.activeStorySlide + 1;
+        if (nextSlide < currentProData.stories.length) { state.activeStorySlide = nextSlide; state.storyProgress = 0; updateStoryOverlayUi(); }
+        else {
+            const nextPro = state.activeProStoryIndex + 1;
+            if (nextPro < PRO_STORIES.length) { state.activeProStoryIndex = nextPro; state.activeStorySlide = 0; state.storyProgress = 0; updateStoryOverlayUi(); }
+            else closeStoryDeck();
+        }
+    } else {
+        const prevSlide = state.activeStorySlide - 1;
+        if (prevSlide >= 0) { state.activeStorySlide = prevSlide; state.storyProgress = 0; updateStoryOverlayUi(); }
+        else {
+            const prevPro = state.activeProStoryIndex - 1;
+            if (prevPro >= 0) { state.activeProStoryIndex = prevPro; state.activeStorySlide = 0; state.storyProgress = 0; updateStoryOverlayUi(); }
+        }
+    }
+});
 
     document.getElementById("close-story-overlay-btn").addEventListener("click", (e) => { e.stopPropagation(); closeStoryDeck(); });
     document.getElementById("story-action-profile-btn").addEventListener("click", (e) => {
-        e.stopPropagation();
-        const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    e.stopPropagation();
+
+    if (state.isLiveStoryMode) {
+        const username = state.liveStoryData.username;
         closeStoryDeck();
-        openProfileSheet(currentProData.proId);
-    });
+        // Idan akwai PRO mai wannan suna a demo array, bude profile dinsa
+        const matchedPro = PROS.find(p => p.name === username || String(p.id) === username);
+        if (matchedPro) {
+            openProfileSheet(matchedPro.id);
+        } else {
+            showGlobalToast(`ℹ️ ${username} profile ba ya cikin demo data tukuna.`);
+        }
+        return;
+    }
+
+    const currentProData = PRO_STORIES[state.activeProStoryIndex];
+    closeStoryDeck();
+    openProfileSheet(currentProData.proId);
+});
 document.getElementById("chef-menu-close-btn").addEventListener("click", closeChefMenuOverlay);
 
     // AUTO-CHECK WARNINGS ON LOAD
@@ -6435,12 +6521,14 @@ async function checkUploadWindow() {
 }
 
 async function expireStories(sessionUser) {
-    // Remove today's stories from Firebase when hours expire
+    // Mayar da active zuwa false kawai — KAR a cire uploads, domin za mu bukace su gobe
     try {
         const today = getNowNigeria().toISOString().slice(0,10);
-        await firebase.database()
-            .ref('daily_stories/' + sessionUser + '/' + today)
-            .remove();
+        const ref = firebase.database().ref('daily_stories/' + sessionUser + '/' + today);
+        const snap = await ref.once('value');
+        if (snap.exists() && snap.val().active) {
+            await ref.update({ active: false, expiredAt: Date.now() });
+        }
     } catch(e) {
         console.warn('Story expire failed:', e);
     }
@@ -6693,18 +6781,20 @@ function startUploadWindowCountdown(timeTo) {
             if (!todayData || !todayData.active || !todayData.uploads) return;
             liveStories.push({ username, uploads: todayData.uploads });
         });
-        
-        // Idan babu live stories, bar PRO_STORIES su bayyana
-        if (liveStories.length === 0) return;
-        
-        // Inject into stories track
+
         const track = document.getElementById("stories-track-container");
         if (!track) return;
+
+        // Cire duk tsohon live-story nodes kafin mu sake zana sabbin
+        track.querySelectorAll('.live-daily-story').forEach(el => el.remove());
+
+        if (liveStories.length === 0) return;
         
         liveStories.forEach(story => {
             const firstUpload = story.uploads[0];
             const div = document.createElement('div');
-            div.className = 'glass-lens-card';
+            div.className = 'glass-lens-card live-daily-story';
+            div.onclick = () => openLiveDailyStory(story.username, story.uploads);
             div.innerHTML = `
                 <div class="glass-lens-img-wrap">
                     <img class="glass-lens-img" src="${firstUpload.url}" alt="${story.username}"/>
@@ -6714,15 +6804,14 @@ function startUploadWindowCountdown(timeTo) {
                     <span class="glass-lens-name">${story.username}</span>
                     <div class="glass-lens-distance" style="color:#ef4444;">● LIVE</div>
                 </div>`;
-            track.prepend(div); // Live stories suna gaba
+            track.prepend(div);
         });
         
     } catch(err) {
         console.warn('loadAndRenderDailyStories error:', err);
     }
     }
-const dailyUploadFiles = {};
-
+    
 function handleDailyUpload(input, slotIndex) {
     const file = input.files[0];
     if (!file) return;
@@ -6821,6 +6910,49 @@ async function submitDailyUploads() {
         console.error('Daily upload error:', err);
         showGlobalToast('❌ Matsala: ' + err.message);
         if (btn) { btn.disabled = false; btn.textContent = '🚀 Aika Zuwa Story'; }
+    }
+}
+
+// ── FIREBASE PROVIDER → PRO-LIKE OBJECT NORMALIZER ──
+function normalizeFirebaseProvider(username, data) {
+    const initials = (data.username || username || '??').slice(0, 2).toUpperCase();
+    return {
+        id: username, // username ne maimakon lamba — wannan shi ne alamar "real provider"
+        name: data.username || username,
+        category: data.category || 'general',
+        display_cat: data.categoryLabel || data.category || 'Service Provider',
+        rating: data.rating || 0,
+        reviews: data.reviewsCount || 0,
+        distance: data.distanceKm || 0,
+        city: data.city || '',
+        verified: data.status === 'approved' || data.verified === true,
+        avatar: initials,
+        color: getProColor(data.categoryLabel || data.category),
+        jobs: data.jobsCompleted || 0,
+        price: data.pricing ? `₦${Number(data.pricing.base || 0).toLocaleString()}` : '₦0',
+        bio: data.bio || 'No bio provided yet.',
+        skills: data.skills || data.cuisines || [],
+        online: data.online === true,
+        schedule: data.schedule || null,
+        gallery: (data.portfolio || []).map(p => p.url ? p : { url: p }),
+        menu: data.menu || null,
+        operatingHours: data.operatingHours || null,
+        location: data.location || null,
+        bankDetails: data.bankDetails || null,
+        _isFirebaseProvider: true
+    };
+}
+
+// ── ASYNC FETCH + RENDER WRAPPER ──
+async function fetchFirebaseProviderAsPro(username) {
+    if (typeof firebase === 'undefined' || !firebase.database) return null;
+    try {
+        const snap = await firebase.database().ref('providers/' + username).once('value');
+        if (!snap.exists()) return null;
+        return normalizeFirebaseProvider(username, snap.val());
+    } catch (err) {
+        console.warn('fetchFirebaseProviderAsPro failed:', err);
+        return null;
     }
 }
 // ═══════════════════════════
