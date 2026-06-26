@@ -3542,8 +3542,10 @@ function openChefMenuOverlay(pro) {
     chefMenuEditingItemId = null;
     document.getElementById("chef-menu-overlay").style.display = "flex";
 
+    document.getElementById("chef-menu-pro-name").innerText = pro.name;
+    document.querySelector(".chef-menu-header div div:first-child").innerText = pro.menuWelcome || `Welcome to ${pro.name} · ✨ Today's Live Menu`;
+
     checkChefMenuOwnership(pro);
-    renderChefMenuWelcomeArea(pro);
     renderChefMenuOverlayItems(pro);
 
     const availEl = document.getElementById("availability-text");
@@ -3590,7 +3592,6 @@ function toggleChefMenuEditMode() {
     }
 
     if (currentChefMenuPro) {
-        renderChefMenuWelcomeArea(currentChefMenuPro);
         renderChefMenuOverlayItems(currentChefMenuPro);
     }
         }
@@ -6334,26 +6335,19 @@ async function saveChefMenuChanges() {
     const sessionUser = localStorage.getItem('nexus_user_session');
     if (!sessionUser || !chefMenuIsOwner) { showGlobalToast('⚠️ Ba ka da izinin yin wannan!'); return; }
 
-    const welcomeInput = document.getElementById('chef-menu-welcome-input');
-    const newWelcome = welcomeInput ? welcomeInput.value.trim() : (currentChefMenuPro.menuWelcome || '');
-
     const saveBtn = document.querySelector('.chef-menu-save-changes-btn');
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Ana ajiyewa...'; }
 
     try {
-        currentChefMenuPro.menuWelcome = newWelcome;
-
         if (typeof firebase !== 'undefined' && firebase.database) {
             await firebase.database().ref(`providers/${sessionUser}`).update({
                 menu: currentChefMenuPro.menu,
-                menuWelcome: newWelcome,
                 lastUpdated: Date.now()
             });
         }
 
         showGlobalToast('✅ Menu an ajiye cikin nasara!');
-        toggleChefMenuEditMode(); // exit edit mode after save
-        renderChefMenuWelcomeArea(currentChefMenuPro);
+        toggleChefMenuEditMode();
 
     } catch (err) {
         console.error('Save menu error:', err);
