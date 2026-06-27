@@ -5936,39 +5936,104 @@ async function submitReport() {
 }
 
 // ═══════════════════════════
-// ⭐ REVIEW FUNCTIONS
+// ⭐ REVIEW MODAL — FULL REWRITE
 // ═══════════════════════════
-
 function openReviewModal() {
     if (!currentProfileProId) return;
     const pro = PROS.find(p => p.id === currentProfileProId);
     if (!pro) return;
 
+    const dims = getNPDimensions(pro.category || 'default');
+
     // Reset
     selectedReviewStars = 0;
-    document.querySelectorAll('#star-picker-row span').forEach(s => s.classList.remove('lit'));
-    document.getElementById('review-star-label').textContent = '';
     document.getElementById('review-comment-input').value = '';
     document.getElementById('review-customer-name-input').value = '';
 
-    document.getElementById('review-modal-pro-name-label').textContent = pro.name;
+    // Gina dimension stars rows
+    const dimsHTML = dims.map(d => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#374151;flex:1;">${d.label}</div>
+            <div class="np-dim-star-picker" data-key="${d.key}" style="display:flex;gap:4px;">
+                ${[1,2,3,4,5].map(n => `
+                    <span onclick="setDimStar('${d.key}', ${n}, this)"
+                        data-val="${n}"
+                        style="font-size:22px;color:#e2e8f0;cursor:pointer;
+                        transition:all 0.15s ease;-webkit-tap-highlight-color:transparent;">★</span>
+                `).join('')}
+            </div>
+        </div>`).join('');
+
+    // Inject into existing modal
+    const box = document.querySelector('.review-modal-box');
+    if (!box) return;
+
+    box.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div>
+                <div style="font-size:17px;font-weight:800;color:#111827;">⭐ Leave a Review</div>
+                <div style="font-size:11px;color:#64748b;margin-top:2px;">${pro.name}</div>
+            </div>
+            <button onclick="closeReviewModal()" 
+                style="background:#f1f5f9;border:none;border-radius:50%;width:30px;height:30px;
+                font-size:14px;cursor:pointer;color:#64748b;">✕</button>
+        </div>
+
+        <!-- Comment -->
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;
+            letter-spacing:0.5px;margin-bottom:6px;">Your Review *</div>
+        <textarea id="review-comment-input" maxlength="400"
+            placeholder="Share your experience with this provider..."
+            style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
+            padding:10px 12px;font-size:13px;color:#111827;outline:none;resize:none;
+            height:80px;line-height:1.5;font-family:inherit;box-sizing:border-box;
+            margin-bottom:16px;"></textarea>
+
+        <!-- Dimension Stars -->
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;
+            letter-spacing:0.5px;margin-bottom:4px;">Rate Each Category *</div>
+        <div id="np-dim-stars-container">
+            ${dimsHTML}
+        </div>
+
+        <!-- Customer Name -->
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;
+            letter-spacing:0.5px;margin:14px 0 6px;">Your Name (Optional)</div>
+        <input type="text" id="review-customer-name-input"
+            placeholder="Anonymous if left blank"
+            style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
+            padding:10px 12px;font-size:13px;color:#111827;outline:none;box-sizing:border-box;">
+
+        <!-- Submit -->
+        <button onclick="submitReview()"
+            style="width:100%;margin-top:20px;padding:14px;
+            background:linear-gradient(135deg,#f59e0b,#d97706);
+            border:none;border-radius:14px;color:#ffffff;font-size:14px;
+            font-weight:800;cursor:pointer;font-family:inherit;">
+            Post Review ⭐
+        </button>
+    `;
+
     document.getElementById('review-modal-overlay').style.display = 'flex';
 }
 
-function closeReviewModal() {
-    document.getElementById('review-modal-overlay').style.display = 'none';
-}
+// ── SET DIMENSION STAR ──
+const npDimRatings = {};
 
-function setReviewStar(count) {
-    selectedReviewStars = count;
-    const stars = document.querySelectorAll('#star-picker-row span');
-    stars.forEach((s, i) => {
-        s.classList.toggle('lit', i < count);
+function setDimStar(key, value, el) {
+    npDimRatings[key] = value;
+
+    // Light up stars
+    const picker = el.closest('.np-dim-star-picker');
+    picker.querySelectorAll('span').forEach(s => {
+        s.style.color = parseInt(s.dataset.val) <= value ? '#f59e0b' : '#e2e8f0';
+        s.style.transform = parseInt(s.dataset.val) <= value ? 'scale(1.15)' : 'scale(1)';
     });
-    const labels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
-    document.getElementById('review-star-label').textContent = labels[count] || '';
+
+    if (navigator.vibrate) navigator.vibrate(8);
 }
 
+// ── SUBMIT REVIEW ──
 async function submitReview() {
     const pro = PROS.find(p => p.id === currentProfileProId);
     if (!pro) return;
@@ -5976,50 +6041,99 @@ async function submitReview() {
     const comment = document.getElementById('review-comment-input').value.trim();
     const customerName = document.getElementById('review-customer-name-input').value.trim() || 'Anonymous';
 
-    if (selectedReviewStars === 0) { showGlobalToast('⚠️ Please select a star rating!'); return; }
-    if (comment.length < 10) { showGlobalToast('⚠️ Please write a comment (min 10 chars)!'); return; }
+    // Validation
+    if (comment.length < 10) {
+        showGlobalToast('⚠️ Please write a comment (min 10 chars)!');
+        return;
+    }
 
-    const btn = document.getElementById('review-submit-btn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Posting...';
+    const dims = getNPDimensions(pro.category || 'default');
+    const unrated = dims.filter(d => !npDimRatings[d.key]);
+    if (unrated.length > 0) {
+        showGlobalToast(`⚠️ Please rate: ${unrated[0].label}`);
+        return;
+    }
+
+    // Calculate overall rating = average of all dimensions
+    const dimValues = dims.map(d => npDimRatings[d.key]);
+    const overallRating = parseFloat(
+        (dimValues.reduce((a, b) => a + b, 0) / dimValues.length).toFixed(1)
+    );
+
+    // Build initials
+    const nameParts = customerName.split(' ');
+    const initials = nameParts.length >= 2
+        ? nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase()
+        : customerName.slice(0, 2).toUpperCase();
+
+    const avatarColors = [
+        '#1d4ed8','#059669','#7c3aed','#dc2626',
+        '#d97706','#0891b2','#be185d','#065f46'
+    ];
+    const avatarColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+
+    const reviewPayload = {
+        providerId: String(pro.id),
+        providerName: pro.name,
+        customerName: customerName,
+        reviewerInitials: initials,
+        reviewerColor: avatarColor,
+        reviewerSince: `Member since ${new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}`,
+        rating: overallRating,
+        comment: comment,
+        dimensions: { ...npDimRatings },
+        verifiedOrder: 'Verified Purchase',
+        orderDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        orderStatus: 'Delivered & Confirmed',
+        helpfulCount: 0,
+        date: new Date().toLocaleDateString('en-GB').replace(/\//g, '/'),
+        createdAt: Date.now()
+    };
+
+    const btn = document.querySelector('.review-modal-box button:last-child');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting...'; }
 
     try {
+        // Save to Firebase
         if (typeof firebase !== 'undefined' && firebase.database) {
-            const db = firebase.database();
             const reviewId = `rev_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-            await db.ref(`reviews/${pro.id}/${reviewId}`).set({
-                providerId: String(pro.id),
-                providerName: pro.name,
-                customerName: customerName,
-                rating: selectedReviewStars,
-                comment: comment,
-                createdAt: Date.now()
-            });
+            await firebase.database()
+                .ref(`reviews/${pro.id}/${reviewId}`)
+                .set(reviewPayload);
+
+            // Notify provider
+            await firebase.database()
+                .ref(`providers/${currentProfileProId}/notifications`)
+                .push({
+                    type: 'review',
+                    title: '⭐ New Review',
+                    message: `A customer rated you ${overallRating} stars!`,
+                    read: false,
+                    createdAt: Date.now()
+                });
         }
 
-    closeReviewModal();
+        // Clear dim ratings
+        Object.keys(npDimRatings).forEach(k => delete npDimRatings[k]);
 
-        // In-App alert ga provider (Firebase RTDB)
-        if (typeof firebase !== 'undefined' && firebase.database) {
-            await firebase.database().ref(`providers/${currentProfileProId}/notifications`).push({
-                type: 'review',
-                title: '⭐ New Review',
-                message: `A customer left you a ${selectedReviewStars}-star review!`,
-                read: false,
-                createdAt: Date.now()
-            });
-        }
-        
+        closeReviewModal();
         showGlobalToast('✅ Review posted! Thank you for your feedback.');
-        
+
+        // Refresh reviews display
+        setTimeout(() => injectNPReviewsIntoProfile(currentProfileProId), 500);
+
     } catch (err) {
         console.error('Review submit error:', err);
         showGlobalToast('❌ Failed to post review. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Post Review ⭐'; }
     }
-
-    btn.disabled = false;
-    btn.textContent = 'Post Review ⭐';
 }
+
+// ── CLOSE REVIEW MODAL ──
+function closeReviewModal() {
+    document.getElementById('review-modal-overlay').style.display = 'none';
+    Object.keys(npDimRatings).forEach(k => delete npDimRatings[k]);
+    }
 
 // ═══════════════════════════
 // ⚠️ WARNING OVERLAY FUNCTIONS
