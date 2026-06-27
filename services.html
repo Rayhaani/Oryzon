@@ -3220,6 +3220,7 @@ let state = {
     likedPros: {},
     isLiveStoryMode: false,
     liveStoryData: null
+    storyOpenedFromProfile: false,
 };
 
 const STORY_DURATION_MS = 5000;
@@ -3603,8 +3604,19 @@ function openProfileSheet(proId) {
     if (pro.category === "chef" && pro.menu) setTimeout(() => openChefMenuOverlay(pro), 400);
 }
 
-function closeProfileSheet() { document.getElementById("profile-sheet-overlay").style.display = "none"; }
-
+// REPLACE: closeProfileSheet() function
+function closeProfileSheet() {
+    document.getElementById("profile-sheet-overlay").style.display = "none";
+    
+    // Idan an shigo daga story, dawo story daidai inda ya tsaya
+    if (state.storyOpenedFromProfile) {
+        state.storyOpenedFromProfile = false;
+        document.getElementById('story-overlay-deck').style.display = 'flex';
+        state.isStoryPaused = false;
+        startStoryInterval();
+    }
+        }
+        
 // ── CHEF MENU ──
 let currentChefMenuPro = null;
 
@@ -5143,32 +5155,50 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
    document.getElementById("close-story-overlay-btn").addEventListener("click", (e) => { e.stopPropagation(); closeStoryDeck(); });
-    document.getElementById("story-action-order-btn").addEventListener("click", (e) => {
-        e.stopPropagation();
-        const itemName = document.getElementById("story-canvas-main-title").innerText;
-        const itemPrice = document.getElementById("story-canvas-main-price").innerText;
-        openOrderConfirm(itemName, itemPrice);
-    });
+   // REPLACE: story-action-order-btn click handler (a cikin DOMContentLoaded)
+document.getElementById("story-action-order-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    state.isStoryPaused = true;
+    if (state.storyIntervalId) clearInterval(state.storyIntervalId);
+    
+    const itemName = document.getElementById("story-canvas-main-title").innerText;
+    const itemPrice = document.getElementById("story-canvas-main-price").innerText;
+    
+    orderDraft.itemName = itemName;
+    orderDraft.itemPrice = itemPrice;
+    orderDraft.fromStory = true; // flag
+    
+    // Set vendor info daga current story pro
+    const currentProData = state.isLiveStoryMode ? null : PRO_STORIES[state.activeProStoryIndex];
+    const pro = state.isLiveStoryMode
+        ? PROS.find(p => p.name === state.liveStoryData?.username)
+        : PROS.find(p => p.id === currentProData?.proId);
+    
+    if (pro) {
+        currentChefMenuPro = pro;
+    }
+    
+    document.getElementById('order-confirm-item-name').textContent = itemName;
+    document.getElementById('order-confirm-overlay').style.display = 'flex';
+}); 
     document.getElementById("story-action-profile-btn").addEventListener("click", (e) => {
         e.stopPropagation();
+        state.isStoryPaused = true;
+        if (state.storyIntervalId) clearInterval(state.storyIntervalId);
+        state.storyOpenedFromProfile = true;
+        document.getElementById('story-overlay-deck').style.display = 'none';
 
         if (state.isLiveStoryMode) {
             const username = state.liveStoryData.username;
-            closeStoryDeck();
             const matchedPro = PROS.find(p => p.name === username || String(p.id) === username);
-            if (matchedPro) {
-                openProfileSheet(matchedPro.id);
-            } else {
-                openProfileSheet(username);
-            }
+            if (matchedPro) { openProfileSheet(matchedPro.id); } else { openProfileSheet(username); }
             return;
         }
 
         const currentProData = PRO_STORIES[state.activeProStoryIndex];
-        closeStoryDeck();
         openProfileSheet(currentProData.proId);
     });
-    document.getElementById("chef-menu-close-btn").addEventListener("click", closeChefMenuOverlay); 
+    document.getElementById("chef-menu-close-btn").addEventListener("click", closeChefMenuOverlay);
    
     // AUTO-CHECK WARNINGS ON LOAD
     const sessionUser = localStorage.getItem('nexus_user_session');
@@ -6464,14 +6494,36 @@ function openOrderConfirm(itemName, itemPrice) {
     document.getElementById('order-confirm-overlay').style.display = 'flex';
 }
 
+// REPLACE: closeOrderConfirm() function
 function closeOrderConfirm() {
     document.getElementById('order-confirm-overlay').style.display = 'none';
+    
+    // Idan an shigo daga story, dawo story kuma ci gaba
+    if (orderDraft.fromStory) {
+        orderDraft.fromStory = false;
+        state.isStoryPaused = false;
+        startStoryInterval();
+    }
 }
-
+    
+// REPLACE: confirmOrderYes() function
 function confirmOrderYes() {
-    closeOrderConfirm();
-    closeChefMenuOverlay();
-    openPlaceOrderOverlay();
+    document.getElementById('order-confirm-overlay').style.display = 'none';
+    orderDraft.fromStory = false;
+    
+    // KAR a close story — sai dai a buɗe place order overlay a saman story
+    document.getElementById('po-item-name').textContent = orderDraft.itemName;
+    document.getElementById('po-item-price').textContent = orderDraft.itemPrice;
+    document.getElementById('po-qty').value = 1;
+    document.getElementById('po-address').value = '';
+    document.getElementById('po-phone').value = '';
+
+    const pro = currentChefMenuPro;
+    document.getElementById('po-vendor-bank').textContent = pro?.bankDetails?.bankName || 'Bank info not set';
+    document.getElementById('po-vendor-acct').textContent = pro?.bankDetails?.accountNumber || '—';
+    document.getElementById('po-vendor-acctname').textContent = pro?.bankDetails?.accountName || '';
+
+    document.getElementById('place-order-overlay').style.display = 'flex';
 }
 
 function openPlaceOrderOverlay() {
@@ -6489,8 +6541,15 @@ function openPlaceOrderOverlay() {
     document.getElementById('place-order-overlay').style.display = 'flex';
 }
 
+// REPLACE: closePlaceOrderOverlay() function
 function closePlaceOrderOverlay() {
     document.getElementById('place-order-overlay').style.display = 'none';
+    
+    // Dawo story idan an fito daga can
+    if (document.getElementById('story-overlay-deck').style.display === 'flex') {
+        state.isStoryPaused = false;
+        startStoryInterval();
+    }
 }
 
 async function submitPlaceOrder() {
