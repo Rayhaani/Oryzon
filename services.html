@@ -2786,6 +2786,9 @@
 <div class="chef-availability-banner" id="chef-availability-banner">
     <div class="availability-text" id="availability-text">Available Everyday</div>
     <div class="availability-cta">👆 Place Order Now</div>
+    <button id="notify-me-btn" onclick="toggleNotifyMe()" style="margin-top:10px;width:100%;padding:9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#ffffff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">
+        🔔 Notify Me on Next Order Day
+    </button>
 </div>
     </div>
 </div>
@@ -4194,11 +4197,14 @@ function openChefMenuOverlay(pro) {
     if (pro.schedule) {
         availEl.innerText = pro.schedule.length === 7 ? "✅ Available Everyday" : `📅 Available: ${pro.schedule.join(', ')}`;
     } else { availEl.innerText = "✅ Available Everyday"; }
+      
+    // Check notify me status
+    setTimeout(() => checkNotifyMeStatus(), 300);
         }
         
 function closeChefMenuOverlay() { document.getElementById("chef-menu-overlay").style.display = "none"; }
 
-// ── CHEF MENU EDIT MODE STATE ──
+  // ── CHEF MENU EDIT MODE STATE ──
 let chefMenuEditMode = false;
 let chefMenuIsOwner = false;
 let chefMenuEditingItemId = null; // null = adding new, otherwise editing existing item id
@@ -7454,7 +7460,129 @@ async function alertAdminNewOrder(orderData) {
         console.warn('Admin alert failed:', err);
     }
 }
-        
+
+
+// ── NOTIFY ME ENGINE ──
+async function toggleNotifyMe() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) {
+        showGlobalToast('⚠️ Please login first to enable notifications!');
+        return;
+    }
+
+    if (!currentChefMenuPro) return;
+
+    const proId = String(currentChefMenuPro.id);
+    const btn = document.getElementById('notify-me-btn');
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const ref = firebase.database()
+            .ref(`notify_subscribers/${proId}/${sessionUser}`);
+        const snap = await ref.once('value');
+
+        if (snap.exists()) {
+            // Already subscribed — unsubscribe
+            await ref.remove();
+            btn.textContent = '🔔 Notify Me on Next Order Day';
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.borderColor = 'rgba(255,255,255,0.2)';
+            showGlobalToast('🔕 Notifications turned off.');
+        } else {
+            // Subscribe
+            await ref.set({
+                username: sessionUser,
+                proId: proId,
+                proName: currentChefMenuPro.name || '—',
+                subscribedAt: Date.now()
+            });
+            btn.textContent = '✅ You will be notified!';
+            btn.style.background = 'rgba(16,185,129,0.2)';
+            btn.style.borderColor = 'rgba(16,185,129,0.4)';
+            showGlobalToast('✅ You will be notified on the next order day!');
+        }
+
+    } catch(err) {
+        console.warn('toggleNotifyMe error:', err);
+        showGlobalToast('❌ Failed. Try again.');
+    }
+}
+
+// ── CHECK NOTIFY ME STATUS ──
+async function checkNotifyMeStatus() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser || !currentChefMenuPro) return;
+
+    const proId = String(currentChefMenuPro.id);
+    const btn = document.getElementById('notify-me-btn');
+    if (!btn) return;
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const snap = await firebase.database()
+            .ref(`notify_subscribers/${proId}/${sessionUser}`)
+            .once('value');
+
+        if (snap.exists()) {
+            btn.textContent = '✅ You will be notified!';
+            btn.style.background = 'rgba(16,185,129,0.2)';
+            btn.style.borderColor = 'rgba(16,185,129,0.4)';
+        }
+    } catch(err) {
+        console.warn('checkNotifyMeStatus error:', err);
+    }
+}
+
+// ── SEND NOTIFICATIONS TO SUBSCRIBERS ──
+async function sendOrderDayNotifications(proId, proName, nextOrderDay) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const snap = await firebase.database()
+            .ref(`notify_subscribers/${proId}`)
+            .once('value');
+
+        const subscribers = snap.val() || {};
+        const usernames = Object.keys(subscribers);
+
+        if (usernames.length === 0) return;
+
+        // Send notification to each subscriber
+        const promises = usernames.map(username =>
+            firebase.database()
+                .ref(`customers/${username}/notifications`)
+                .push({
+                    type: 'order_day_alert',
+                    title: `🍽️ ${proName} is taking orders today!`,
+                    message: `${proName} is currently available and taking orders. Place your order now before it closes!`,
+                    proId: proId,
+                    proName: proName,
+                    read: false,
+                    createdAt: Date.now()
+                })
+        );
+
+        await Promise.all(promises);
+
+        // Also send push notifications
+        await Promise.all(usernames.map(username =>
+            sendPushToUser(
+                username,
+                `🍽️ ${proName} is taking orders today!`,
+                `Place your order now before it closes!`,
+                { url: 'index.html' }
+            )
+        ));
+
+        showGlobalToast(`✅ ${usernames.length} subscriber${usernames.length > 1 ? 's' : ''} notified!`);
+
+    } catch(err) {
+        console.warn('sendOrderDayNotifications error:', err);
+    }
+                                        }
+    
 // ── WELCOME MESSAGE EDIT ──
 function renderChefMenuWelcomeArea(pro) {
     const headerTextWrap = document.querySelector('#chef-menu-overlay .chef-menu-header > div:first-child');
@@ -7567,7 +7695,19 @@ async function checkUploadWindow() {
 
         if (withinHours) {
             await showUploadWindow(sessionUser, proData, timeFrom, timeTo);
+            // Notify subscribers when upload window opens
+            const today = getNowNigeria().toISOString().slice(0,10);
+            const alreadyNotifiedSnap = await firebase.database()
+                .ref(`notify_sent/${sessionUser}/${today}`)
+                .once('value');
+            if (!alreadyNotifiedSnap.exists()) {
+                await sendOrderDayNotifications(sessionUser, proData.username || sessionUser, today);
+                await firebase.database()
+                    .ref(`notify_sent/${sessionUser}/${today}`)
+                    .set(true);
+            }
         } else {
+    
             hideUploadWindow();
             await expireStories(sessionUser);
         }
