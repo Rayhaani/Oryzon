@@ -3589,8 +3589,19 @@
             </div>
         </div>
         <div style="margin-bottom:12px;">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:6px;">Delivery Address</div>
-            <textarea id="po-address" placeholder="e.g. No. 12 Zaria Road, Kano" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;resize:none;height:64px;box-sizing:border-box;font-family:inherit;"></textarea>
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:8px;">Fulfillment Method</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button id="po-method-delivery" onclick="setOrderMethod('delivery')" style="flex:1;padding:10px;background:linear-gradient(135deg,#1d4ed8,#1e40af);border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">🚚 Delivery</button>
+        <button id="po-method-pickup" onclick="setOrderMethod('pickup')" style="flex:1;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.5);font-size:12px;font-weight:800;cursor:pointer;">📦 Self Pickup</button>
+    </div>
+    <div id="po-address-wrap">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:6px;">Delivery Address</div>
+        <textarea id="po-address" placeholder="e.g. No. 12 Zaria Road, Kano" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;resize:none;height:64px;box-sizing:border-box;font-family:inherit;"></textarea>
+    </div>
+    <div id="po-pickup-info" style="display:none;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;color:#34d399;">📦 Self Pickup Selected</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;">The vendor will contact you with pickup location details.</div>
+    </div>
         </div>
         <div style="margin-bottom:18px;">
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:6px;">Phone Number</div>
@@ -7218,7 +7229,8 @@ async function submitPlaceOrder() {
     const address = document.getElementById('po-address').value.trim();
     const phone = document.getElementById('po-phone').value.trim();
 
-    if (!address || address.length < 5) { showGlobalToast('⚠️ Enter delivery address!'); return; }
+    const method = document.getElementById('po-method-delivery').dataset.active === 'true' ? 'delivery' : 'pickup';
+    if (method === 'delivery' && (!address || address.length < 5)) { showGlobalToast('⚠️ Enter delivery address!'); return; }
     if (!phone || phone.length < 7) { showGlobalToast('⚠️ Enter phone number!'); return; }
 
     const btn = document.getElementById('po-submit-btn');
@@ -7234,7 +7246,7 @@ async function submitPlaceOrder() {
             await firebase.database().ref(`providers/${pro.id}/orders/${orderId}`).set({
                 orderId, itemName: orderDraft.itemName, itemPrice: orderDraft.itemPrice,
                 quantity: qty, address, phone, customerUsername: sessionUser,
-                status: 'pending', createdAt: Date.now()
+                fulfillmentMethod: method, status: 'pending', createdAt: Date.now()
             });
             await firebase.database().ref(`providers/${pro.id}/notifications`).push({
                 type: 'message', title: '🛒 New Order',
@@ -8133,6 +8145,34 @@ function injectNPReviewsIntoProfile(proId) {
         setTimeout(() => injectNPReviewsIntoProfile(proId), 100);
     };
 })();
+
+function setOrderMethod(method) {
+    const deliveryBtn = document.getElementById('po-method-delivery');
+    const pickupBtn = document.getElementById('po-method-pickup');
+    const addressWrap = document.getElementById('po-address-wrap');
+    const pickupInfo = document.getElementById('po-pickup-info');
+
+    if (method === 'delivery') {
+        deliveryBtn.style.background = 'linear-gradient(135deg,#1d4ed8,#1e40af)';
+        deliveryBtn.style.color = '#ffffff';
+        deliveryBtn.style.borderColor = 'transparent';
+        deliveryBtn.dataset.active = 'true';
+        pickupBtn.style.background = 'rgba(255,255,255,0.05)';
+        pickupBtn.style.color = 'rgba(255,255,255,0.5)';
+        pickupBtn.dataset.active = 'false';
+        addressWrap.style.display = 'block';
+        pickupInfo.style.display = 'none';
+    } else {
+        pickupBtn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+        pickupBtn.style.color = '#ffffff';
+        pickupBtn.dataset.active = 'true';
+        deliveryBtn.style.background = 'rgba(255,255,255,0.05)';
+        deliveryBtn.style.color = 'rgba(255,255,255,0.5)';
+        deliveryBtn.dataset.active = 'false';
+        addressWrap.style.display = 'none';
+        pickupInfo.style.display = 'block';
+    }
+}
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
