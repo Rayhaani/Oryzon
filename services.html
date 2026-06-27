@@ -2256,7 +2256,8 @@
 </div>
 
 <!-- 🔔 NOTIFICATION BELL -->
-<div class="notif-bell-wrapper" style="margin-left:10px;"> 
+<button onclick="openCustomerOrders()" style="background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:6px 12px;color:#ffffff;font-size:11px;font-weight:800;cursor:pointer;margin-left:8px;flex-shrink:0;">📦 Orders</button>
+    <div class="notif-bell-wrapper" style="margin-left:10px;"> 
     <div class="notif-bell-btn" id="notif-bell-btn" onclick="toggleNotifPanel()">
         <span class="bell-icon" style="font-size:16px;">🔔</span>
         <div class="notif-badge" id="notif-badge">0</div>
@@ -2507,8 +2508,14 @@
                     <div class="portfolio-grid" id="profile-gallery-grid-slot"></div>
                 </div>
 
-                <div style="position:sticky;bottom:16px;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);padding:10px 0;display:flex;flex-direction:column;gap:8px;">
-    <div style="display:flex;gap:10px;">
+         <div id="pro-pending-orders-section" style="margin-bottom:20px;display:none;">
+    <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">📦 Pending Orders</div>
+    <div id="pro-pending-orders-list" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">Loading orders...</div>
+    </div>
+         </div>  
+        <div style="position:sticky;bottom:16px;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);padding:10px 0;display:flex;flex-direction:column;gap:8px;">
+         <div style="display:flex;gap:10px;">
         <button style="flex:1;background:#f1f5f9;color:#111827;border:none;border-radius:14px;padding:14px 0;font-weight:700;font-size:13px;cursor:pointer;" onclick="openSecureChat()">Secure Chat 📩</button>
     <button style="flex:1;background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);color:#fff;border:none;border-radius:14px;padding:14px 0;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 4px 15px rgba(29,78,216,0.3);" onclick="openHireSheet()">Hire Expert 📞</button>  
     </div>
@@ -3614,6 +3621,19 @@
             <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;" id="po-vendor-acctname">—</div>
         </div>
         <button onclick="submitPlaceOrder()" id="po-submit-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#1e40af);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;">I've Paid — Submit Order ✅</button>
+    </div>
+</div>
+
+<!-- CUSTOMER ORDERS OVERLAY -->
+<div id="customer-orders-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10300;display:none;align-items:center;justify-content:center;padding:20px;">
+    <div style="width:100%;max-width:400px;max-height:85vh;overflow-y:auto;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:22px 20px 26px;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <div style="font-size:15px;font-weight:800;color:#ffffff;">📦 My Orders</div>
+            <button onclick="closeCustomerOrders()" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:13px;cursor:pointer;">✕</button>
+        </div>
+        <div id="customer-orders-list" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Loading your orders...</div>
+        </div>
     </div>
 </div>
 
@@ -7267,6 +7287,123 @@ async function submitPlaceOrder() {
     btn.textContent = "I've Paid — Submit Order ✅";
 }
 
+// ── LOAD PRO PENDING ORDERS ──
+async function loadProPendingOrders(proId) {
+    const section = document.getElementById('pro-pending-orders-section');
+    const list = document.getElementById('pro-pending-orders-list');
+    if (!section || !list) return;
+
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) return;
+
+    // Only show to the pro themselves
+    if (String(proId) !== String(sessionUser)) return;
+
+    section.style.display = 'block';
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        const snap = await firebase.database().ref(`providers/${proId}/orders`).once('value');
+        const data = snap.val() || {};
+
+        const orders = Object.entries(data)
+            .map(([id, o]) => ({ id, ...o }))
+            .filter(o => o.status === 'pending')
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        if (orders.length === 0) {
+            list.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;background:#f8fafc;border-radius:12px;">No pending orders yet</div>`;
+            return;
+        }
+
+        list.innerHTML = orders.map(o => `
+            <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:14px;padding:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                    <div>
+                        <div style="font-size:13px;font-weight:800;color:#111827;">${o.itemName || '—'}</div>
+                        <div style="font-size:11px;color:#64748b;margin-top:2px;">Qty: ${o.quantity || 1} · ${o.itemPrice || '—'}</div>
+                    </div>
+                    <span style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#d97706;border-radius:8px;padding:3px 10px;font-size:10px;font-weight:800;">PENDING</span>
+                </div>
+                <div style="font-size:11px;color:#64748b;margin-bottom:4px;">📍 ${o.fulfillmentMethod === 'pickup' ? 'Self Pickup' : (o.address || '—')}</div>
+                <div style="font-size:11px;color:#64748b;margin-bottom:10px;">📞 ${o.phone || '—'}</div>
+                <div style="display:flex;gap:8px;">
+                    <button onclick="updateOrderStatus('${proId}','${o.id}','confirmed')" style="flex:1;padding:8px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">✅ Confirm</button>
+                    <button onclick="updateOrderStatus('${proId}','${o.id}','cancelled')" style="flex:1;padding:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;">✕ Cancel</button>
+                </div>
+            </div>`).join('');
+
+    } catch(err) {
+        console.error('Load pro orders error:', err);
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">Failed to load orders</div>`;
+    }
+}
+
+// ── UPDATE ORDER STATUS ──
+async function updateOrderStatus(proId, orderId, newStatus) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        await firebase.database()
+            .ref(`providers/${proId}/orders/${orderId}/status`)
+            .set(newStatus);
+        showGlobalToast(`✅ Order ${newStatus}!`);
+        loadProPendingOrders(proId);
+    } catch(err) {
+        showGlobalToast('❌ Failed to update order.');
+    }
+}
+
+// ── CUSTOMER ORDERS ──
+async function openCustomerOrders() {
+    document.getElementById('customer-orders-overlay').style.display = 'flex';
+    const list = document.getElementById('customer-orders-list');
+    const sessionUser = localStorage.getItem('nexus_user_session');
+
+    if (!sessionUser) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Please login to view your orders</div>`;
+        return;
+    }
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        const snap = await firebase.database()
+            .ref(`customers/${sessionUser}/sentRequests`)
+            .once('value');
+        const data = snap.val() || {};
+
+        const orders = Object.entries(data)
+            .map(([id, o]) => ({ id, ...o }))
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        if (orders.length === 0) {
+            list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">You have no orders yet</div>`;
+            return;
+        }
+
+        const statusColor = { pending:'#d97706', confirmed:'#059669', cancelled:'#dc2626' };
+        const statusBg = { pending:'rgba(245,158,11,0.1)', confirmed:'rgba(16,185,129,0.1)', cancelled:'rgba(239,68,68,0.1)' };
+
+        list.innerHTML = orders.map(o => `
+            <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                    <div>
+                        <div style="font-size:13px;font-weight:800;color:#ffffff;">${o.itemName || o.jobDescription || '—'}</div>
+                        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">${o.proName || '—'}</div>
+                    </div>
+                    <span style="background:${statusBg[o.status]||statusBg.pending};color:${statusColor[o.status]||statusColor.pending};border-radius:8px;padding:3px 10px;font-size:10px;font-weight:800;">${(o.status||'pending').toUpperCase()}</span>
+                </div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</div>
+            </div>`).join('');
+
+    } catch(err) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Failed to load orders</div>`;
+    }
+}
+
+function closeCustomerOrders() {
+    document.getElementById('customer-orders-overlay').style.display = 'none';
+}
+    
 // ── WELCOME MESSAGE EDIT ──
 function renderChefMenuWelcomeArea(pro) {
     const headerTextWrap = document.querySelector('#chef-menu-overlay .chef-menu-header > div:first-child');
@@ -8143,6 +8280,7 @@ function injectNPReviewsIntoProfile(proId) {
     window.openProfileSheet = function(proId) {
         origFn(proId);
         setTimeout(() => injectNPReviewsIntoProfile(proId), 100);
+        setTimeout(() => loadProPendingOrders(proId), 200);
     };
 })();
 
