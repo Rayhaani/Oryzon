@@ -5186,6 +5186,19 @@ document.getElementById("story-action-order-btn").addEventListener("click", (e) 
         state.isStoryPaused = true;
         if (state.storyIntervalId) clearInterval(state.storyIntervalId);
         state.storyOpenedFromProfile = true;
+        // Ƙara wannan BAYAN: document.getElementById('story-overlay-deck').style.display = 'none';
+history.pushState({ storyOpen: true }, '', '');
+
+window.addEventListener('popstate', function handleBackFromProfile(e) {
+    if (state.storyOpenedFromProfile) {
+        state.storyOpenedFromProfile = false;
+        document.getElementById('profile-sheet-overlay').style.display = 'none';
+        document.getElementById('story-overlay-deck').style.display = 'flex';
+        state.isStoryPaused = false;
+        startStoryInterval();
+    }
+    window.removeEventListener('popstate', handleBackFromProfile);
+}, { once: true });
         document.getElementById('story-overlay-deck').style.display = 'none';
 
         if (state.isLiveStoryMode) {
@@ -6498,7 +6511,6 @@ function openOrderConfirm(itemName, itemPrice) {
 function closeOrderConfirm() {
     document.getElementById('order-confirm-overlay').style.display = 'none';
     
-    // Idan an shigo daga story, dawo story kuma ci gaba
     if (orderDraft.fromStory) {
         orderDraft.fromStory = false;
         state.isStoryPaused = false;
@@ -6509,9 +6521,10 @@ function closeOrderConfirm() {
 // REPLACE: confirmOrderYes() function
 function confirmOrderYes() {
     document.getElementById('order-confirm-overlay').style.display = 'none';
+    
+    const wasFromStory = orderDraft.fromStory;
     orderDraft.fromStory = false;
     
-    // KAR a close story — sai dai a buɗe place order overlay a saman story
     document.getElementById('po-item-name').textContent = orderDraft.itemName;
     document.getElementById('po-item-price').textContent = orderDraft.itemPrice;
     document.getElementById('po-qty').value = 1;
@@ -6523,6 +6536,9 @@ function confirmOrderYes() {
     document.getElementById('po-vendor-acct').textContent = pro?.bankDetails?.accountNumber || '—';
     document.getElementById('po-vendor-acctname').textContent = pro?.bankDetails?.accountName || '';
 
+    // Store flag don closePlaceOrderOverlay ta sani
+    orderDraft.returnToStory = wasFromStory;
+    
     document.getElementById('place-order-overlay').style.display = 'flex';
 }
 
@@ -6545,8 +6561,8 @@ function openPlaceOrderOverlay() {
 function closePlaceOrderOverlay() {
     document.getElementById('place-order-overlay').style.display = 'none';
     
-    // Dawo story idan an fito daga can
-    if (document.getElementById('story-overlay-deck').style.display === 'flex') {
+    if (orderDraft.returnToStory) {
+        orderDraft.returnToStory = false;
         state.isStoryPaused = false;
         startStoryInterval();
     }
