@@ -3620,7 +3620,11 @@
             <div style="font-size:13px;color:#ffffff;font-weight:700;margin-top:2px;" id="po-vendor-acct">—</div>
             <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;" id="po-vendor-acctname">—</div>
         </div>
-        <button onclick="submitPlaceOrder()" id="po-submit-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#1e40af);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;">I've Paid — Submit Order ✅</button>
+     <div style="display:flex;align-items:center;gap:6px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:10px;padding:10px 12px;margin-bottom:12px;">
+    <span style="font-size:14px;">🔒</span>
+    <span style="font-size:11px;font-weight:700;color:#34d399;line-height:1.4;">Payment validates your order. Transfer the exact amount above before submitting.</span>
+</div>
+<button onclick="submitPlaceOrder()" id="po-submit-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#1e40af);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;">I've Paid — Submit Order ✅</button>   
     </div>
 </div>
 
@@ -7262,18 +7266,35 @@ async function submitPlaceOrder() {
         const sessionUser = localStorage.getItem('nexus_user_session') || 'guest';
         const orderId = `order_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
 
-        if (typeof firebase !== 'undefined' && firebase.database) {
-            await firebase.database().ref(`providers/${pro.id}/orders/${orderId}`).set({
-                orderId, itemName: orderDraft.itemName, itemPrice: orderDraft.itemPrice,
-                quantity: qty, address, phone, customerUsername: sessionUser,
-                fulfillmentMethod: method, status: 'pending', createdAt: Date.now()
-            });
+       if (typeof firebase !== 'undefined' && firebase.database) {
+            const orderPayload = {
+                orderId,
+                itemName: orderDraft.itemName,
+                itemPrice: orderDraft.itemPrice,
+                quantity: qty,
+                address,
+                phone,
+                customerUsername: sessionUser,
+                proName: pro?.name || '—',
+                proId: String(pro?.id || ''),
+                fulfillmentMethod: method,
+                status: 'pending',
+                createdAt: Date.now()
+            };
+
+            await firebase.database().ref(`providers/${pro.id}/orders/${orderId}`).set(orderPayload);
+
             await firebase.database().ref(`providers/${pro.id}/notifications`).push({
-                type: 'message', title: '🛒 New Order',
+                type: 'message',
+                title: '🛒 New Order',
                 message: `New order: ${qty}x ${orderDraft.itemName}`,
-                read: false, createdAt: Date.now()
+                read: false,
+                createdAt: Date.now()
             });
-        }
+
+            // Alert Admin
+            await alertAdminNewOrder({ ...orderPayload, orderId });
+        } 
 
         closePlaceOrderOverlay();
         showGlobalToast('✅ Order submitted! The vendor will confirm shortly.');
@@ -7403,7 +7424,37 @@ async function openCustomerOrders() {
 function closeCustomerOrders() {
     document.getElementById('customer-orders-overlay').style.display = 'none';
 }
-    
+
+// ── ALERT ADMIN ON NEW ORDER ──
+async function alertAdminNewOrder(orderData) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const adminNotifId = `order_alert_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+
+        await firebase.database().ref(`admin/notifications/${adminNotifId}`).set({
+            type: 'new_order',
+            title: '🛒 New Order Placed',
+            message: `${orderData.customerUsername || 'A customer'} ordered ${orderData.quantity || 1}x ${orderData.itemName || '—'} from ${orderData.proName || '—'}`,
+            orderId: orderData.orderId || null,
+            proId: orderData.proId || null,
+            proName: orderData.proName || null,
+            customerUsername: orderData.customerUsername || null,
+            itemName: orderData.itemName || null,
+            itemPrice: orderData.itemPrice || null,
+            quantity: orderData.quantity || 1,
+            fulfillmentMethod: orderData.fulfillmentMethod || 'delivery',
+            address: orderData.address || null,
+            phone: orderData.phone || null,
+            read: false,
+            createdAt: Date.now()
+        });
+
+    } catch(err) {
+        console.warn('Admin alert failed:', err);
+    }
+}
+        
 // ── WELCOME MESSAGE EDIT ──
 function renderChefMenuWelcomeArea(pro) {
     const headerTextWrap = document.querySelector('#chef-menu-overlay .chef-menu-header > div:first-child');
