@@ -3521,9 +3521,9 @@ function updateStoryOverlayUi() {
         document.getElementById("story-header-title").innerText = username;
         document.getElementById("story-header-meta").innerText = "Live Now · Available In Perimeter";
         document.getElementById("story-canvas-main-emoji").style.display = "none";
-        document.getElementById("story-canvas-main-title").innerText = "";
-        document.getElementById("story-canvas-main-price").innerText = "";
-
+        document.getElementById("story-canvas-main-title").innerText = activeUpload.dishName || "";
+        document.getElementById("story-canvas-main-price").innerText = activeUpload.dishPrice ? `₦${Number(activeUpload.dishPrice).toLocaleString()}` : "";
+        
         // Share tsohon video/image kafin sabo
         videoLayer.innerHTML = "";
         videoLayer.style.display = "none";
@@ -4950,6 +4950,124 @@ function psShowToast(message) {
     setTimeout(() => { toast.style.opacity="0"; toast.style.transition="opacity 0.3s ease"; setTimeout(()=>toast.remove(),300); }, 3000);
 }
 
+// ════════════════════════════════════════════════════════════
+//  🍽️ DAILY UPLOAD — DISH BLOCKS ENGINE (dropdown-based)
+// ════════════════════════════════════════════════════════════
+
+let dailyUploadBlocks = []; // [{ blockId, dishName, dishPrice, photos: { 0: {file,type}, ... } }]
+let dailyUploadBlockCounter = 0;
+
+function getAvailableMenuForDailyUpload() {
+    // currentChefMenuPro yana dauke da menu na chef din da yake buÉ™e profile dinsa
+    if (currentChefMenuPro && currentChefMenuPro.menu) return currentChefMenuPro.menu;
+    if (uploadWindowState.proData && uploadWindowState.proData.menu) return uploadWindowState.proData.menu;
+    return [];
+}
+
+function addDailyUploadBlock() {
+    const menu = getAvailableMenuForDailyUpload();
+    if (!menu || menu.length === 0) {
+        showGlobalToast('⚠️ Babu dishes a menu ɗinka! Ka fara ƙara dish a Chef Menu kafin ka yi daily upload.');
+        return;
+    }
+
+    dailyUploadBlockCounter++;
+    const blockId = dailyUploadBlockCounter;
+
+    dailyUploadBlocks.push({
+        blockId,
+        dishName: '',
+        dishPrice: null,
+        photos: {}
+    });
+
+    renderDailyUploadBlocks();
+}
+
+function removeDailyUploadBlock(blockId) {
+    dailyUploadBlocks = dailyUploadBlocks.filter(b => b.blockId !== blockId);
+    renderDailyUploadBlocks();
+}
+
+function renderDailyUploadBlocks() {
+    const container = document.getElementById('daily-upload-blocks-container');
+    if (!container) return;
+
+    const menu = getAvailableMenuForDailyUpload();
+
+    if (dailyUploadBlocks.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:16px;color:rgba(0,0,0,0.3);font-size:12px;">Danna "➕ Ƙara Wani Dish" don fara</div>`;
+        return;
+    }
+
+    container.innerHTML = dailyUploadBlocks.map(block => {
+        const filledCount = Object.keys(block.photos).length;
+        return `
+        <div style="background:rgba(236,72,153,0.04);border:1px solid rgba(236,72,153,0.15);border-radius:14px;padding:12px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <select onchange="setDailyUploadBlockDish(${block.blockId}, this.value)" style="flex:1;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;color:#111827;font-size:12px;padding:8px 10px;outline:none;">
+                    <option value="">— Zaɓi Dish daga Menu —</option>
+                    ${menu.map(item => `<option value="${item.name.replace(/"/g,'&quot;')}|${item.price}" ${block.dishName === item.name ? 'selected' : ''}>${item.name} (₦${Number(item.price).toLocaleString()})</option>`).join('')}
+                </select>
+                <button onclick="removeDailyUploadBlock(${block.blockId})" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#ef4444;font-size:11px;padding:8px 10px;cursor:pointer;flex-shrink:0;">✕</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+                ${[0,1,2,3].map(slotIdx => {
+                    const photo = block.photos[slotIdx];
+                    if (photo && photo.previewUrl) {
+                        const isVideo = photo.type && photo.type.includes('video');
+                        return `
+                        <div class="ps-port-slot filled" style="position:relative;">
+                            ${isVideo
+                                ? `<video src="${photo.previewUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" muted playsinline></video>`
+                                : `<img src="${photo.previewUrl}" class="ps-port-preview" alt="Upload">`}
+                            <button class="ps-port-remove" onclick="removeDailyUploadBlockPhoto(${block.blockId},${slotIdx})">✕</button>
+                        </div>`;
+                    }
+                    return `
+                        <label class="ps-port-slot" style="display:block;">
+                            <input type="file" accept="image/*,video/*" onchange="handleDailyUploadBlockPhoto(this,${block.blockId},${slotIdx})" hidden>
+                            <div class="ps-port-inner"><span>🍽️</span><span style="font-size:9px;color:rgba(0,0,0,0.3);">Hoto ${slotIdx+1}</span></div>
+                        </label>`;
+                }).join('')}
+            </div>
+            <div style="font-size:10px;color:rgba(0,0,0,0.35);margin-top:6px;font-weight:600;">${filledCount}/4 hotuna/videos</div>
+        </div>`;
+    }).join('');
+}
+
+function setDailyUploadBlockDish(blockId, value) {
+    const block = dailyUploadBlocks.find(b => b.blockId === blockId);
+    if (!block) return;
+    if (!value) { block.dishName = ''; block.dishPrice = null; return; }
+    const [name, price] = value.split('|');
+    block.dishName = name;
+    block.dishPrice = parseInt(price);
+}
+
+function handleDailyUploadBlockPhoto(input, blockId, slotIdx) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { showGlobalToast('❌ Fayil ya yi girma — kalla 50MB!'); return; }
+
+    const block = dailyUploadBlocks.find(b => b.blockId === blockId);
+    if (!block) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        block.photos[slotIdx] = { file, type: file.type, previewUrl: e.target.result, uploadedUrl: null };
+        renderDailyUploadBlocks();
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeDailyUploadBlockPhoto(blockId, slotIdx) {
+    const block = dailyUploadBlocks.find(b => b.blockId === blockId);
+    if (!block) return;
+    delete block.photos[slotIdx];
+    renderDailyUploadBlocks();
+        }
+        
 // ── DOMContentLoaded ──
 document.addEventListener("DOMContentLoaded", () => {
     initAppElements();
@@ -5024,56 +5142,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-    document.getElementById("close-story-overlay-btn").addEventListener("click", (e) => { e.stopPropagation(); closeStoryDeck(); });
-    document.getElementById("close-story-overlay-btn").addEventListener("click", (e) => { e.stopPropagation(); closeStoryDeck(); });
-document.getElementById("story-action-order-btn").addEventListener("click", (e) => {
-    e.stopPropagation();
-    const itemName = document.getElementById("story-canvas-main-title").innerText;
-    const itemPrice = document.getElementById("story-canvas-main-price").innerText;
-    openOrderConfirm(itemName, itemPrice);
-});
+   document.getElementById("close-story-overlay-btn").addEventListener("click", (e) => { e.stopPropagation(); closeStoryDeck(); });
+    document.getElementById("story-action-order-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const itemName = document.getElementById("story-canvas-main-title").innerText;
+        const itemPrice = document.getElementById("story-canvas-main-price").innerText;
+        openOrderConfirm(itemName, itemPrice);
+    });
     document.getElementById("story-action-profile-btn").addEventListener("click", (e) => {
-    e.stopPropagation();
+        e.stopPropagation();
 
-    if (state.isLiveStoryMode) {
-        const username = state.liveStoryData.username;
-        closeStoryDeck();
-        // Idan akwai PRO mai wannan suna a demo array, bude profile dinsa
-        const matchedPro = PROS.find(p => p.name === username || String(p.id) === username);
-        if (matchedPro) {
-            openProfileSheet(matchedPro.id);
-        } else {
-            showGlobalToast(`ℹ️ ${username} profile ba ya cikin demo data tukuna.`);
+        if (state.isLiveStoryMode) {
+            const username = state.liveStoryData.username;
+            closeStoryDeck();
+            const matchedPro = PROS.find(p => p.name === username || String(p.id) === username);
+            if (matchedPro) {
+                openProfileSheet(matchedPro.id);
+            } else {
+                openProfileSheet(username);
+            }
+            return;
         }
-        return;
-    }
 
-    const currentProData = PRO_STORIES[state.activeProStoryIndex];
-    closeStoryDeck();
-    openProfileSheet(currentProData.proId);
-});
-    document.getElementById("story-action-profile-btn").addEventListener("click", (e) => {
-    e.stopPropagation();
-
-    if (state.isLiveStoryMode) {
-        const username = state.liveStoryData.username;
+        const currentProData = PRO_STORIES[state.activeProStoryIndex];
         closeStoryDeck();
-        // Idan akwai PRO mai wannan suna a demo array, bude profile dinsa
-        const matchedPro = PROS.find(p => p.name === username || String(p.id) === username);
-        if (matchedPro) {
-            openProfileSheet(matchedPro.id);
-        } else {
-            showGlobalToast(`ℹ️ ${username} profile ba ya cikin demo data tukuna.`);
-        }
-        return;
-    }
-
-    const currentProData = PRO_STORIES[state.activeProStoryIndex];
-    closeStoryDeck();
-    openProfileSheet(currentProData.proId);
-});
-document.getElementById("chef-menu-close-btn").addEventListener("click", closeChefMenuOverlay);
-
+        openProfileSheet(currentProData.proId);
+    });
+    document.getElementById("chef-menu-close-btn").addEventListener("click", closeChefMenuOverlay); 
+   
     // AUTO-CHECK WARNINGS ON LOAD
     const sessionUser = localStorage.getItem('nexus_user_session');
     if (sessionUser) checkProviderWarnings(sessionUser);
@@ -6737,31 +6833,18 @@ function injectUploadSlotIntoProfile(proData, timeFrom, timeTo, isNewUpload) {
             </div>
         </div>
 
-        <!-- Upload Grid -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;" id="daily-upload-grid">
-            <label class="ps-port-slot" id="du-slot-0">
-                <input type="file" accept="image/*,video/*" onchange="handleDailyUpload(this,0)" hidden>
-                <div class="ps-port-inner"><span>🍽️</span><span style="font-size:9px;color:rgba(0,0,0,0.3);">Hoto 1</span></div>
-            </label>
-            <label class="ps-port-slot" id="du-slot-1">
-                <input type="file" accept="image/*,video/*" onchange="handleDailyUpload(this,1)" hidden>
-                <div class="ps-port-inner"><span>🍽️</span><span style="font-size:9px;color:rgba(0,0,0,0.3);">Hoto 2</span></div>
-            </label>
-            <label class="ps-port-slot" id="du-slot-2">
-                <input type="file" accept="image/*,video/*" onchange="handleDailyUpload(this,2)" hidden>
-                <div class="ps-port-inner"><span>🍽️</span><span style="font-size:9px;color:rgba(0,0,0,0.3);">Hoto 3</span></div>
-            </label>
-            <label class="ps-port-slot" id="du-slot-3">
-                <input type="file" accept="image/*,video/*" onchange="handleDailyUpload(this,3)" hidden>
-                <div class="ps-port-inner"><span>🍽️</span><span style="font-size:9px;color:rgba(0,0,0,0.3);">Video</span></div>
-            </label>
-        </div>
+        <!-- Dish Blocks Container (dynamic) -->
+        <div id="daily-upload-blocks-container"></div>
+
+        <!-- Add New Dish Block Button -->
+        <button onclick="addDailyUploadBlock()" style="width:100%;padding:10px;background:rgba(236,72,153,0.15);border:1.5px dashed rgba(236,72,153,0.4);border-radius:12px;color:#be185d;font-size:12px;font-weight:800;cursor:pointer;margin-bottom:12px;font-family:inherit;">
+            ➕ Ƙara Wani Dish
+        </button>
 
         <!-- Upload Button -->
         <button id="daily-upload-submit-btn" onclick="submitDailyUploads()" style="width:100%;padding:12px;background:linear-gradient(135deg,#ec4899,#be185d);border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">
             🚀 Aika Zuwa Story
         </button>
-    `;
 
     // Saka kafin schedule card
     const scheduleCard = document.getElementById('chef-schedule-section-card');
@@ -6853,72 +6936,58 @@ function startUploadWindowCountdown(timeTo) {
     }
     }
     
-function handleDailyUpload(input, slotIndex) {
-    const file = input.files[0];
-    if (!file) return;
-    if (file.size > 50 * 1024 * 1024) { showGlobalToast('❌ Fayil ya yi girma — kalla 50MB!'); return; }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const slot = document.getElementById(`du-slot-${slotIndex}`);
-        if (!slot) return;
-        slot.classList.add('filled');
-        const isVideo = file.type.includes('video');
-        slot.querySelector('.ps-port-inner').innerHTML = `
-            ${isVideo
-                ? `<video src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" muted playsinline></video>`
-                : `<img src="${e.target.result}" class="ps-port-preview" alt="Upload">`}
-            <button class="ps-port-remove" onclick="removeDailyUpload(event,${slotIndex})">✕</button>`;
-    };
-    reader.readAsDataURL(file);
-    dailyUploadFiles[slotIndex] = { file, url: null, type: file.type };
-}
-
-function removeDailyUpload(event, slotIndex) {
-    event.preventDefault(); event.stopPropagation();
-    delete dailyUploadFiles[slotIndex];
-    const slot = document.getElementById(`du-slot-${slotIndex}`);
-    if (!slot) return;
-    slot.classList.remove('filled');
-    const icons = ['🍽️','🍽️','🍽️','🎥'];
-    const labels = ['Hoto 1','Hoto 2','Hoto 3','Video'];
-    slot.querySelector('.ps-port-inner').innerHTML = `
-        <span>${icons[slotIndex]}</span>
-        <span style="font-size:9px;color:rgba(0,0,0,0.3);">${labels[slotIndex]}</span>`;
-}
 
 async function submitDailyUploads() {
     const sessionUser = localStorage.getItem('nexus_user_session');
     if (!sessionUser) { showGlobalToast('⚠️ Please login first!'); return; }
 
-    const fileKeys = Object.keys(dailyUploadFiles);
-    if (fileKeys.length === 0) { showGlobalToast('⚠️ Saka aƙalla hoto ɗaya!'); return; }
+    if (dailyUploadBlocks.length === 0) {
+        showGlobalToast('⚠️ Ƙara aƙalla dish ɗaya!');
+        return;
+    }
+
+    // Validate kowane block
+    for (const block of dailyUploadBlocks) {
+        if (!block.dishName) {
+            showGlobalToast('⚠️ Zaɓi dish don kowane block!');
+            return;
+        }
+        if (Object.keys(block.photos).length === 0) {
+            showGlobalToast(`⚠️ Saka aƙalla hoto ɗaya don "${block.dishName}"!`);
+            return;
+        }
+    }
 
     const btn = document.getElementById('daily-upload-submit-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Ana aika...'; }
 
     try {
-        const uploadedUrls = [];
+        const allUploads = [];
 
-        for (const key of fileKeys) {
-            const entry = dailyUploadFiles[key];
-            if (!entry.file) continue;
-            try {
-                const formData = new FormData();
-                formData.append('file', entry.file);
-                formData.append('type', 'daily_story');
-                formData.append('username', sessionUser);
-                const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success) {
-                    uploadedUrls.push({
-                        url: data.url,
-                        type: entry.type.includes('video') ? 'video' : 'image'
-                    });
-                }
-            } catch (e) { console.warn(`Slot ${key} upload failed:`, e); }
+        for (const block of dailyUploadBlocks) {
+            for (const slotIdx of Object.keys(block.photos)) {
+                const photo = block.photos[slotIdx];
+                if (!photo.file) continue;
+                try {
+                    const formData = new FormData();
+                    formData.append('file', photo.file);
+                    formData.append('type', 'daily_story');
+                    formData.append('username', sessionUser);
+                    const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (data.success) {
+                        allUploads.push({
+                            url: data.url,
+                            type: photo.type && photo.type.includes('video') ? 'video' : 'image',
+                            dishName: block.dishName,
+                            dishPrice: block.dishPrice
+                        });
+                    }
+                } catch (e) { console.warn(`Block ${block.blockId} slot ${slotIdx} upload failed:`, e); }
+            }
         }
 
-        if (uploadedUrls.length === 0) {
+        if (allUploads.length === 0) {
             showGlobalToast('❌ Upload ya kasa. Sake gwadawa.');
             if (btn) { btn.disabled = false; btn.textContent = '🚀 Aika Zuwa Story'; }
             return;
@@ -6928,17 +6997,18 @@ async function submitDailyUploads() {
         const today = getNowNigeria().toISOString().slice(0, 10);
         if (typeof firebase !== 'undefined' && firebase.database) {
             await firebase.database().ref(`daily_stories/${sessionUser}/${today}`).set({
-                uploads: uploadedUrls,
+                uploads: allUploads,
                 active: true,
                 uploadedAt: Date.now(),
                 username: sessionUser
             });
         }
 
-        showGlobalToast(`✅ Hotunan ${uploadedUrls.length} sun tafi story!`);
+        showGlobalToast(`✅ Hotunan ${allUploads.length} sun tafi story!`);
 
-        // Clear files
-        Object.keys(dailyUploadFiles).forEach(k => delete dailyUploadFiles[k]);
+        // Reset blocks
+        dailyUploadBlocks = [];
+        renderDailyUploadBlocks();
 
         // Refresh stories on homepage
         loadAndRenderDailyStories();
@@ -6952,7 +7022,7 @@ async function submitDailyUploads() {
         showGlobalToast('❌ Matsala: ' + err.message);
         if (btn) { btn.disabled = false; btn.textContent = '🚀 Aika Zuwa Story'; }
     }
-}
+    }
 
 // ── FIREBASE PROVIDER → PRO-LIKE OBJECT NORMALIZER ──
 function normalizeFirebaseProvider(username, data) {
