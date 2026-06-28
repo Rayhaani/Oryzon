@@ -5466,44 +5466,19 @@ function psGoToStep3() {
 
     psShowStep(3);
 }
-
 function captureGPSInline() {
-    const btn = document.getElementById("ps-gps-btn-inline");
-    const status = document.getElementById("ps-gps-status-inline");
-    const coords = document.getElementById("ps-gps-coords-inline");
-    const card = document.getElementById("ps-gps-card-inline");
-
-    if (!navigator.geolocation) { psShowToast("❌ Browser ɗinka bai goyi bayan GPS ba."); return; }
-
-    btn.disabled = true;
-    btn.textContent = "Ana nema...";
-    status.textContent = "🔄 Ana ɗaukar loca...";
-
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            psInlineState.gpsLat = pos.coords.latitude;
-            psInlineState.gpsLng = pos.coords.longitude;
-            psInlineState.gpsReady = true;
-
-            status.textContent = "✅ Loca an samu!";
-            coords.textContent = `${psInlineState.gpsLat.toFixed(5)}, ${psInlineState.gpsLng.toFixed(5)}`;
-            btn.textContent = "✅ Done";
-            card.style.borderColor = "rgba(16,185,129,0.4)";
-            card.style.background = "rgba(16,185,129,0.08)";
-            document.getElementById("ps-sum-location").textContent = `${psInlineState.gpsLat.toFixed(4)}, ${psInlineState.gpsLng.toFixed(4)}`;
-            psShowToast("📍 GPS an ɗauka daidai!");
-        },
-        (err) => {
-            btn.disabled = false;
-            btn.textContent = "Sake Gwadawa";
-            status.textContent = "❌ GPS ya kasa";
-            const msgs = { 1:"Ka ƙi ba GPS izni.", 2:"GPS bai samu loca ba.", 3:"Lokaci ya ƙare." };
-            psShowToast("⚠️ " + (msgs[err.code] || "GPS kuskure."));
-        },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    );
-}
-
+    captureGPSUniversal({
+        statusId: 'ps-gps-status-inline',
+        coordsId: 'ps-gps-coords-inline',
+        btnId: 'ps-gps-btn-inline',
+        cardId: 'ps-gps-card-inline',
+        stateTarget: psInlineState,
+        summaryFields: {
+            'ps-sum-location': (s) => `${s.gpsLat.toFixed(4)}, ${s.gpsLng.toFixed(4)}`
+        }
+    });
+        }
+        
 async function uploadPortfolioFilesInline(username) {
     const keys = Object.keys(portfolioFiles);
     let uploaded = 0;
@@ -6212,103 +6187,43 @@ function removeBeveragesPhoto(event, slotIndex) {
 
 // ── CHEF GPS ──
 function captureChefGPS() {
-    const btn = document.getElementById('chef-gps-btn');
-    const status = document.getElementById('chef-gps-status');
-    const coords = document.getElementById('chef-gps-coords');
-    const card = document.getElementById('chef-gps-card');
-
-    if (!navigator.geolocation) { psShowToast('❌ GPS ba ya aiki!'); return; }
-    btn.disabled = true;
-    btn.textContent = 'Ana nema...';
-    status.textContent = '🔄 Ana ɗaukar loca...';
-
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            psInlineState.gpsLat = pos.coords.latitude;
-            psInlineState.gpsLng = pos.coords.longitude;
-            psInlineState.gpsReady = true;
-            status.textContent = '✅ Loca an samu!';
-            coords.textContent = `${psInlineState.gpsLat.toFixed(5)}, ${psInlineState.gpsLng.toFixed(5)}`;
-            btn.textContent = '✅ Done';
-            card.style.borderColor = 'rgba(16,185,129,0.4)';
-            card.style.background = 'rgba(16,185,129,0.08)';
-            renderChefSummary();
-            psShowToast('📍 GPS an ɗauka!');
-        },
-        (err) => {
-            btn.disabled = false;
-            btn.textContent = 'Sake Gwadawa';
-            status.textContent = '❌ GPS ya kasa';
-            const msgs = { 1:'Ka ƙi ba GPS izni.', 2:'GPS bai samu loca ba.', 3:'Lokaci ya ƙare.' };
-            psShowToast('⚠️ ' + (msgs[err.code] || 'GPS kuskure.'));
-        },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    );
-}
+    captureGPSUniversal({
+        statusId: 'chef-gps-status',
+        coordsId: 'chef-gps-coords',
+        btnId: 'chef-gps-btn',
+        cardId: 'chef-gps-card',
+        stateTarget: psInlineState,
+        onSuccess: renderChefSummary
+    });
+        }
 
 // ── SNACKS GPS ──
 function captureSnacksGPS() {
-    const status = document.getElementById('snacks-gps-status');
-    const coords = document.getElementById('snacks-gps-coords');
-    const card = document.getElementById('snacks-gps-card');
-
-    if (!navigator.geolocation) { psShowToast('❌ GPS ba ya aiki!'); return; }
-    status.textContent = '🔄 Ana ɗaukar loca...';
-
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            psInlineState.gpsLat = pos.coords.latitude;
-            psInlineState.gpsLng = pos.coords.longitude;
-            psInlineState.gpsReady = true;
-            status.textContent = '✅ Loca an samu!';
-            coords.textContent = `${psInlineState.gpsLat.toFixed(5)}, ${psInlineState.gpsLng.toFixed(5)}`;
-            card.style.borderColor = 'rgba(16,185,129,0.4)';
-            card.style.background = 'rgba(16,185,129,0.08)';
-            document.getElementById('snacks-sum-category').textContent = 
-                `${psInlineState.selectedCategoryLabel} → ${psInlineState.selectedSubcategory}`;
-            document.getElementById('snacks-sum-count').textContent = 
-                `${snacksItems.length} products`;
-            document.getElementById('snacks-sum-location').textContent = 
-                `${psInlineState.gpsLat.toFixed(4)}, ${psInlineState.gpsLng.toFixed(4)}`;
-            psShowToast('📍 GPS an ɗauka!');
-        },
-        (err) => {
-            status.textContent = '❌ GPS ya kasa';
-            const msgs = { 1:'Ka ƙi ba GPS izni.', 2:'GPS bai samu loca ba.', 3:'Lokaci ya ƙare.' };
-            psShowToast('⚠️ ' + (msgs[err.code] || 'GPS kuskure.'));
-        },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    );
-}
+    captureGPSUniversal({
+        statusId: 'snacks-gps-status',
+        coordsId: 'snacks-gps-coords',
+        cardId: 'snacks-gps-card',
+        stateTarget: psInlineState,
+        summaryFields: {
+            'snacks-sum-category': () => `${psInlineState.selectedCategoryLabel} → ${psInlineState.selectedSubcategory}`,
+            'snacks-sum-count': () => `${snacksItems.length} products`,
+            'snacks-sum-location': (s) => `${s.gpsLat.toFixed(4)}, ${s.gpsLng.toFixed(4)}`
+        }
+    });
+        }
 
 // ── BEVERAGES GPS ──
 function captureBeveragesGPS() {
-    const status = document.getElementById('beverages-gps-status');
-    const coords = document.getElementById('beverages-gps-coords');
-
-    if (!navigator.geolocation) { psShowToast('❌ GPS ba ya aiki!'); return; }
-    status.textContent = '🔄 Ana ɗaukar loca...';
-
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            psInlineState.gpsLat = pos.coords.latitude;
-            psInlineState.gpsLng = pos.coords.longitude;
-            psInlineState.gpsReady = true;
-            status.textContent = '✅ Loca an samu!';
-            coords.textContent = `${psInlineState.gpsLat.toFixed(5)}, ${psInlineState.gpsLng.toFixed(5)}`;
-            document.getElementById('beverages-sum-count').textContent = 
-                `${beveragesItems.length} drinks`;
-            document.getElementById('beverages-sum-location').textContent = 
-                `${psInlineState.gpsLat.toFixed(4)}, ${psInlineState.gpsLng.toFixed(4)}`;
-            psShowToast('📍 GPS an ɗauka!');
-        },
-        (err) => {
-            status.textContent = '❌ GPS ya kasa';
-            psShowToast('⚠️ GPS kuskure.');
-        },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    );
-}
+    captureGPSUniversal({
+        statusId: 'beverages-gps-status',
+        coordsId: 'beverages-gps-coords',
+        stateTarget: psInlineState,
+        summaryFields: {
+            'beverages-sum-count': () => `${beveragesItems.length} drinks`,
+            'beverages-sum-location': (s) => `${s.gpsLat.toFixed(4)}, ${s.gpsLng.toFixed(4)}`
+        }
+    });
+        }
 
 // ── CHEF SUBMIT ──
 async function submitChefService() {
@@ -7831,6 +7746,82 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+// ════════════════════════════════════════════════════════════
+//  📍 UNIVERSAL GPS CAPTURE — Yana aiki ga DUK categories
+//  (Plumber, Chef, Snacks, Beverages, Doctor, Engineer, Lab, da sauransu)
+// ════════════════════════════════════════════════════════════
+function captureGPSUniversal(config, isRetry) {
+    const {
+        statusId,           // ID na status text (misali "ps-gps-status-inline")
+        coordsId,           // ID na coords text (misali "ps-gps-coords-inline")
+        btnId = null,        // ID na button (idan akwai)
+        cardId = null,        // ID na card wrapper (idan akwai, don border/bg highlight)
+        stateTarget = psInlineState,  // Wane state object za a saka gpsLat/gpsLng a ciki
+        onSuccess = null,    // Optional callback bayan an samu GPS (misali renderChefSummary)
+        summaryFields = {}   // Optional: { locationId: "ps-sum-location" } don sabunta summary kai tsaye
+    } = config;
+
+    const status = document.getElementById(statusId);
+    const coords = document.getElementById(coordsId);
+    const btn = btnId ? document.getElementById(btnId) : null;
+    const card = cardId ? document.getElementById(cardId) : null;
+
+    if (!navigator.geolocation) {
+        psShowToast('❌ Browser ɗinka bai goyi bayan GPS ba.');
+        return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Ana nema...'; }
+    if (status) status.textContent = isRetry ? '🔄 Ana sake gwadawa da hanya dabam...' : '🔄 Ana ɗaukar loca...';
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            stateTarget.gpsLat = pos.coords.latitude;
+            stateTarget.gpsLng = pos.coords.longitude;
+            stateTarget.gpsReady = true;
+
+            if (status) status.textContent = '✅ Loca an samu!';
+            if (coords) coords.textContent = `${stateTarget.gpsLat.toFixed(5)}, ${stateTarget.gpsLng.toFixed(5)}`;
+            if (btn) { btn.disabled = false; btn.textContent = '✅ Done'; }
+            if (card) {
+                card.style.borderColor = 'rgba(16,185,129,0.4)';
+                card.style.background = 'rgba(16,185,129,0.08)';
+            }
+
+            // Sabunta duk summary fields da aka bayar (misali location text a Step na karshe)
+            Object.entries(summaryFields).forEach(([fieldId, formatter]) => {
+                const el = document.getElementById(fieldId);
+                if (el) {
+                    el.textContent = typeof formatter === 'function'
+                        ? formatter(stateTarget)
+                        : `${stateTarget.gpsLat.toFixed(4)}, ${stateTarget.gpsLng.toFixed(4)}`;
+                }
+            });
+
+            if (typeof onSuccess === 'function') onSuccess();
+
+            psShowToast('📍 GPS an ɗauka daidai!');
+        },
+        (err) => {
+            if (!isRetry) {
+                // Yunkuri na farko ya kasa — kai tsaye sake gwadawa da low-accuracy
+                captureGPSUniversal(config, true);
+                return;
+            }
+            if (btn) { btn.disabled = false; btn.textContent = 'Sake Gwadawa'; }
+            if (status) status.textContent = '❌ GPS ya kasa';
+            const msgs = {
+                1: 'Ka ƙi ba GPS izni.',
+                2: 'GPS bai samu loca ba — tabbatar Location yana ON.',
+                3: 'Lokaci ya ƙare — gwada waje ko kusa da taga sannan sake gwadawa.'
+            };
+            psShowToast('⚠️ ' + (msgs[err.code] || 'GPS kuskure.'));
+        },
+        isRetry
+            ? { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+            : { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
+    }
 // ────────────────────────────────────────────
 //  SCAN PROS (Firebase + demo PROS array)
 // ────────────────────────────────────────────
