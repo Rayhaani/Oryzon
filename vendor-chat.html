@@ -264,25 +264,21 @@ Ka amsa da harshen customer (Hausa ko Turanci). Ka amsa tambayar kai tsaye. Kada
     chatHistory.push({ role: "user", parts: userParts });
 
     try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
-            {  
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: systemPrompt }] },
-                    contents: chatHistory
-                })
-            }
-        );
+        const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=" + GEMINI_API_KEY;
+        const body = JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: chatHistory
+        });
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: body
+        });
         const data = await res.json();
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Yi hakuri, sake gwadawa.";
-        chatHistory.push({ role: "model", parts: [{ text: reply }] });
-        document.getElementById(loadingId).innerHTML = reply;
+        document.getElementById(loadingId).innerHTML = "Debug: " + JSON.stringify(data).substring(0, 300);
     } catch(e) {
         document.getElementById(loadingId).innerHTML = "Error: " + e.message;
-    }
-
+        }
     isSending = false;
     chat.scrollTop = chat.scrollHeight;
 }
