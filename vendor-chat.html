@@ -245,65 +245,66 @@ let chatHistory = [];
 let pendingImageBase64 = null;
 let pendingImageMime = null;
 
+let chatHistory = [];
+let pendingImageBase64 = null;
+let pendingImageMime = null;
+let isSending = false;
+
 async function sendMessage() {
+    if (isSending) return;
     const input = document.getElementById('userInput');
     const text = input.value.trim();
     if (!text && !pendingImageBase64) return;
 
+    isSending = true;
     const chat = document.getElementById('chat');
 
-    // Nuna message ɗin customer
     chat.innerHTML += `<div class="bubble u-bubble">${text || '📷 Hoto'}</div>`;
     input.value = '';
     input.style.height = 'auto';
     toggleInputUI(input);
     chat.scrollTop = chat.scrollHeight;
 
-    // Nuna loading
     const loadingId = 'loading-' + Date.now();
-    chat.innerHTML += `<div class="bubble v-bubble" id="${loadingId}">...</div>`;
+    chat.innerHTML += `<div class="bubble v-bubble" id="${loadingId}">⏳...</div>`;
     chat.scrollTop = chat.scrollHeight;
 
-    // Tattara products daga Firebase don system prompt
-    let productList = "Babu bayanan kaya a yanzu.";
+    let productList = "";
     try {
         const snap = await db.collection('products').limit(20).get();
         let items = [];
         snap.forEach(doc => {
             const d = doc.data();
-            items.push(`- ${d.name || d.title}: ₦${d.price || '?'}`);
+            items.push(`- ${d.name || d.title || 'Kaya'}: ₦${d.price || 'Tambaya'}`);
         });
-        if (items.length > 0) productList = items.join('\n');
-    } catch(e) {}
+        productList = items.join('\n') || "Babu kayan da aka saka tukuna.";
+    } catch(e) {
+        productList = "Babu kayan da aka saka tukuna.";
+    }
 
-    // System prompt — bot yana wakiltar vendor
-    const systemPrompt = `Kai ne AI assistant na wannan shago a Nexus platform. 
-Kana wakiltar vendor/mai shago kai tsaye — customer bai san da AI yake magana ba.
+    const systemPrompt = `Kai ne AI assistant na wannan shago a Nexus platform. Kana wakiltar vendor kai tsaye.
 Kayan da muke da su:
 ${productList}
 
-Ka amsa da harshen da customer ya yi amfani da shi (Hausa ko Turanci).
-Ka kasance da ladabi, ka taimaki customer ya zaɓa kaya, ka faɗa farashi idan aka tambaya.
-Kada ka fita daga batutuwan shago.`;
+Dokokin amsa:
+- Ka amsa da harshen da customer ya yi amfani da shi (Hausa ko Turanci)
+- Ka amsa tambayar da aka yi maka kai tsaye
+- Idan customer ya aika hoto, ka bayyana abin da kake gani a hoton
+- Ka kasance da ladabi kuma ka taimaka
+- Kada ka ce "Nagode, zan taimake ka" kawai — ka amsa tambayar daidai`;
 
-    // Build message content
-    let userContent = [];
+    let userParts = [];
     if (pendingImageBase64) {
-        userContent.push({
-            inlineData: {
-                mimeType: pendingImageMime,
-                data: pendingImageBase64
-            }
-        });
+        userParts.push({ inlineData: { mimeType: pendingImageMime, data: pendingImageBase64 } });
         pendingImageBase64 = null;
         pendingImageMime = null;
     }
-    if (text) userContent.push({ text });
+    if (text) userParts.push({ text });
 
-    chatHistory.push({ role: "user", parts: userContent });
+    chatHistory.push({ role: "user", parts: userParts });
 
     try {
-        const response = await fetch(
+        const res = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
             {
                 method: 'POST',
@@ -314,18 +315,19 @@ Kada ka fita daga batutuwan shago.`;
                 })
             }
         );
-        const data = await response.json();
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Nagode, zan taimake ka!";
-        
+        const data = await res.json();
+        console.log("Gemini response:", JSON.stringify(data));
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Yi hakuri, sake gwadawa.";
         chatHistory.push({ role: "model", parts: [{ text: reply }] });
-
         document.getElementById(loadingId).innerHTML = reply;
     } catch(e) {
-        document.getElementById(loadingId).innerHTML = "Matsala ta tashi, sake gwadawa.";
+        document.getElementById(loadingId).innerHTML = "Matsala ta tashi: " + e.message;
     }
+
+    isSending = false;
     chat.scrollTop = chat.scrollHeight;
-            }   
-        
+                }
+    
 
         document.addEventListener('DOMContentLoaded', loadFirestoreProducts);
     </script>
