@@ -2793,6 +2793,58 @@
 </div>
     </div>
 </div>
+
+<!-- SNACKS MENU GLASS OVERLAY -->
+<div class="chef-menu-overlay" id="snacks-menu-overlay">
+    <div class="chef-menu-scroll-carpet" id="snacks-menu-carpet">
+        <div class="chef-menu-header">
+            <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;">
+                <div style="font-size:10px;color:rgba(255,255,255,0.5);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Welcome to Nexus Protocol · 🧁 Today's Snacks</div>
+                <div class="chef-menu-title" id="snacks-menu-pro-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Snacks Vendor</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <button class="chef-menu-edit-btn" id="snacks-menu-edit-btn" onclick="toggleSnacksMenuEditMode()" style="display:none;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#ffffff;font-size:12px;cursor:pointer;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:all 0.2s ease;">✏️</button>
+                <button class="chef-menu-close-btn" id="snacks-menu-close-btn" onclick="closeSnacksMenuOverlay()">✕</button>
+            </div>
+        </div>
+
+        <div id="snacks-menu-items-slot"></div>
+
+        <div class="chef-availability-banner" id="snacks-availability-banner">
+            <div class="availability-text" id="snacks-availability-text">Available Everyday</div>
+            <div class="availability-cta">👆 Order Now</div>
+            <button id="snacks-notify-me-btn" onclick="toggleSnacksNotifyMe()" style="margin-top:10px;width:100%;padding:9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#ffffff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">
+                🔔 Notify Me on Next Order Day
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- BEVERAGES MENU GLASS OVERLAY -->
+<div class="chef-menu-overlay" id="beverages-menu-overlay">
+    <div class="chef-menu-scroll-carpet" id="beverages-menu-carpet">
+        <div class="chef-menu-header">
+            <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;">
+                <div style="font-size:10px;color:rgba(255,255,255,0.5);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Welcome to Nexus Protocol · 🥤 Today's Drinks</div>
+                <div class="chef-menu-title" id="beverages-menu-pro-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Beverages Vendor</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <button class="chef-menu-edit-btn" id="beverages-menu-edit-btn" onclick="toggleBeveragesMenuEditMode()" style="display:none;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#ffffff;font-size:12px;cursor:pointer;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:all 0.2s ease;">✏️</button>
+                <button class="chef-menu-close-btn" id="beverages-menu-close-btn" onclick="closeBeveragesMenuOverlay()">✕</button>
+            </div>
+        </div>
+
+        <div id="beverages-menu-items-slot"></div>
+
+        <div class="chef-availability-banner" id="beverages-availability-banner">
+            <div class="availability-text" id="beverages-availability-text">Available Everyday</div>
+            <div class="availability-cta">👆 Order Now</div>
+            <button id="beverages-notify-me-btn" onclick="toggleBeveragesNotifyMe()" style="margin-top:10px;width:100%;padding:9px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#ffffff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">
+                🔔 Notify Me on Next Order Day
+            </button>
+        </div>
+    </div>
+</div>
     
 <!-- POST SERVICE BOTTOM SHEET -->
 <div id="post-service-sheet-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:7000;display:none;align-items:center;justify-content:center;padding:20px;" onclick="closePSOverlay(event)">
@@ -4240,7 +4292,529 @@ function openChefMenuOverlay(pro) {
         
 function closeChefMenuOverlay() { document.getElementById("chef-menu-overlay").style.display = "none"; }
 
-  // ── CHEF MENU EDIT MODE STATE ──
+// ════════════════════════════════════════════════════════════
+//  🧁 SNACKS MENU OVERLAY ENGINE
+// ════════════════════════════════════════════════════════════
+
+let currentSnacksMenuPro = null;
+let snacksMenuEditMode = false;
+let snacksMenuIsOwner = false;
+let snacksMenuEditingItemId = null;
+
+function openSnacksMenuOverlay(pro) {
+    currentSnacksMenuPro = pro;
+    snacksMenuEditMode = false;
+    snacksMenuEditingItemId = null;
+    document.getElementById('snacks-menu-overlay').style.display = 'flex';
+    document.getElementById('snacks-menu-pro-name').innerText = pro.name;
+    document.querySelector('#snacks-menu-overlay .chef-menu-header div div:first-child').innerText =
+        pro.menuWelcome || `Welcome to ${pro.name} · 🧁 Today's Snacks`;
+
+    checkSnacksMenuOwnership(pro);
+    renderSnacksMenuOverlayItems(pro);
+
+    const availEl = document.getElementById('snacks-availability-text');
+    if (pro.schedule) {
+        availEl.innerText = pro.schedule.length === 7
+            ? '✅ Available Everyday'
+            : `📅 Available: ${pro.schedule.join(', ')}`;
+    } else {
+        availEl.innerText = '✅ Available Everyday';
+    }
+
+    setTimeout(() => checkSnacksNotifyMeStatus(), 300);
+}
+
+function closeSnacksMenuOverlay() {
+    document.getElementById('snacks-menu-overlay').style.display = 'none';
+}
+
+function checkSnacksMenuOwnership(pro) {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    const editBtn = document.getElementById('snacks-menu-edit-btn');
+    if (!editBtn) return;
+    if (sessionUser && String(pro.id) === String(sessionUser)) {
+        snacksMenuIsOwner = true;
+        editBtn.style.display = 'flex';
+    } else {
+        snacksMenuIsOwner = false;
+        editBtn.style.display = 'none';
+    }
+}
+
+function toggleSnacksMenuEditMode() {
+    if (!snacksMenuIsOwner) return;
+    snacksMenuEditMode = !snacksMenuEditMode;
+    const editBtn = document.getElementById('snacks-menu-edit-btn');
+    if (snacksMenuEditMode) {
+        editBtn.textContent = '✕';
+        editBtn.style.background = 'rgba(239,68,68,0.2)';
+        editBtn.style.borderColor = 'rgba(239,68,68,0.3)';
+    } else {
+        editBtn.textContent = '✏️';
+        editBtn.style.background = 'rgba(255,255,255,0.1)';
+        editBtn.style.borderColor = 'rgba(255,255,255,0.2)';
+        snacksMenuEditingItemId = null;
+    }
+    if (currentSnacksMenuPro) renderSnacksMenuOverlayItems(currentSnacksMenuPro);
+}
+
+function renderSnacksMenuOverlayItems(pro) {
+    const slot = document.getElementById('snacks-menu-items-slot');
+    if (!slot) return;
+
+    const products = pro.products || pro.menu || [];
+
+    if (!snacksMenuEditMode) {
+        slot.innerHTML = products.map((item, idx) => `
+            <div class="menu-item-card" style="animation-delay:${idx * 0.1}s"
+                onclick="openSnacksOrderConfirm('${(item.name||'').replace(/'/g,"\\'")}','${item.price}','${item.unit||''}')">
+                <div class="menu-item-emoji">${item.icon || '🧁'}</div>
+                <div class="menu-item-info">
+                    <div class="menu-item-name">${item.name}</div>
+                    <div class="menu-item-desc">${item.unit || item.desc || ''}</div>
+                </div>
+                <div class="menu-item-price">
+                    ${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}
+                </div>
+            </div>`).join('');
+        return;
+    }
+
+    slot.innerHTML = products.map((item, idx) => `
+        <div class="menu-item-card edit-mode" style="animation-delay:${idx * 0.1}s">
+            <div class="menu-item-emoji">${item.icon || '🧁'}</div>
+            <div class="menu-item-info">
+                <div class="menu-item-name">${item.name}</div>
+                <div class="menu-item-desc">${item.unit || item.desc || ''}</div>
+            </div>
+            <div class="menu-item-price">
+                ${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}
+            </div>
+            <div class="menu-item-edit-actions">
+                <button class="menu-item-edit-btn" onclick="openSnacksMenuItemForm(${idx})">✏️</button>
+                <button class="menu-item-delete-btn" onclick="deleteSnacksMenuOverlayItem(${idx})">🗑️</button>
+            </div>
+        </div>`).join('');
+
+    slot.innerHTML += `<button class="chef-menu-add-item-btn" onclick="openSnacksMenuItemForm(null)">➕ Add New Product</button>`;
+    slot.innerHTML += `<button class="chef-menu-save-changes-btn" onclick="saveSnacksMenuChanges()">💾 Save Changes</button>`;
+}
+
+function openSnacksMenuItemForm(itemIdx) {
+    snacksMenuEditingItemId = itemIdx;
+    const pro = currentSnacksMenuPro;
+    const products = pro.products || pro.menu || [];
+    const existing = itemIdx !== null ? products[itemIdx] : null;
+
+    const slot = document.getElementById('snacks-menu-items-slot');
+    const formHtml = `
+        <div class="chef-menu-edit-form" id="snacks-menu-inline-form">
+            <input type="text" id="smf-name" placeholder="Product Name" value="${existing ? existing.name.replace(/"/g,'&quot;') : ''}">
+            <input type="number" id="smf-price" placeholder="Price (₦)" value="${existing ? existing.price : ''}">
+            <input type="text" id="smf-unit" placeholder="Unit (e.g. per piece, per pack)" value="${existing ? (existing.unit||'') : ''}">
+            <input type="text" id="smf-icon" placeholder="Emoji (e.g. 🧁)" value="${existing ? (existing.icon||'') : ''}" maxlength="4">
+            <div class="chef-menu-edit-form-actions">
+                <button onclick="cancelSnacksMenuItemForm()" style="background:rgba(255,255,255,0.1);color:#fff;">Cancel</button>
+                <button onclick="confirmSnacksMenuItemForm()" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;">${existing ? 'Update' : 'Add'} Product</button>
+            </div>
+        </div>`;
+
+    renderSnacksMenuOverlayItems(pro);
+    slot.insertAdjacentHTML('afterbegin', formHtml);
+}
+
+function cancelSnacksMenuItemForm() {
+    snacksMenuEditingItemId = null;
+    renderSnacksMenuOverlayItems(currentSnacksMenuPro);
+}
+
+function confirmSnacksMenuItemForm() {
+    const name = document.getElementById('smf-name').value.trim();
+    const price = parseInt(document.getElementById('smf-price').value);
+    const unit = document.getElementById('smf-unit').value.trim();
+    const icon = document.getElementById('smf-icon').value.trim() || '🧁';
+
+    if (!name) { showGlobalToast('⚠️ Enter product name!'); return; }
+    if (!price || price <= 0) { showGlobalToast('⚠️ Enter valid price!'); return; }
+
+    if (!currentSnacksMenuPro.products) currentSnacksMenuPro.products = [];
+
+    if (snacksMenuEditingItemId === null) {
+        currentSnacksMenuPro.products.push({ name, price, unit, icon });
+        showGlobalToast(`✅ "${name}" added!`);
+    } else {
+        currentSnacksMenuPro.products[snacksMenuEditingItemId] = { name, price, unit, icon };
+        showGlobalToast(`✅ "${name}" updated!`);
+    }
+
+    snacksMenuEditingItemId = null;
+    renderSnacksMenuOverlayItems(currentSnacksMenuPro);
+}
+
+function deleteSnacksMenuOverlayItem(idx) {
+    const products = currentSnacksMenuPro.products || currentSnacksMenuPro.menu || [];
+    const item = products[idx];
+    if (!confirm(`Remove "${item.name}"?`)) return;
+    products.splice(idx, 1);
+    renderSnacksMenuOverlayItems(currentSnacksMenuPro);
+    showGlobalToast(`🗑️ "${item.name}" removed!`);
+}
+
+async function saveSnacksMenuChanges() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser || !snacksMenuIsOwner) { showGlobalToast('⚠️ No permission!'); return; }
+
+    const saveBtn = document.querySelector('#snacks-menu-items-slot .chef-menu-save-changes-btn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Saving...'; }
+
+    try {
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            await firebase.database().ref(`providers/${sessionUser}`).update({
+                products: currentSnacksMenuPro.products,
+                lastUpdated: Date.now()
+            });
+        }
+        showGlobalToast('✅ Products saved!');
+        toggleSnacksMenuEditMode();
+    } catch (err) {
+        showGlobalToast('❌ Failed: ' + err.message);
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Save Changes'; }
+    }
+}
+
+// ── SNACKS ORDER CONFIRM ──
+let snacksOrderDraft = { itemName: null, itemPrice: null, itemUnit: null };
+
+function openSnacksOrderConfirm(itemName, itemPrice, itemUnit) {
+    snacksOrderDraft.itemName = itemName;
+    snacksOrderDraft.itemPrice = itemPrice;
+    snacksOrderDraft.itemUnit = itemUnit;
+    document.getElementById('order-confirm-item-name').textContent = itemName;
+    document.getElementById('order-confirm-overlay').style.display = 'flex';
+
+    // Override confirmOrderYes temporarily
+    window._snacksOrderActive = true;
+}
+
+// ── SNACKS NOTIFY ME ──
+async function toggleSnacksNotifyMe() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) { showGlobalToast('⚠️ Please login first!'); return; }
+    if (!currentSnacksMenuPro) return;
+
+    const proId = String(currentSnacksMenuPro.id);
+    const btn = document.getElementById('snacks-notify-me-btn');
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        const ref = firebase.database().ref(`notify_subscribers/${proId}/${sessionUser}`);
+        const snap = await ref.once('value');
+
+        if (snap.exists()) {
+            await ref.remove();
+            btn.textContent = '🔔 Notify Me on Next Order Day';
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.borderColor = 'rgba(255,255,255,0.2)';
+            showGlobalToast('🔕 Notifications turned off.');
+        } else {
+            await ref.set({
+                username: sessionUser,
+                proId: proId,
+                proName: currentSnacksMenuPro.name || '—',
+                subscribedAt: Date.now()
+            });
+            btn.textContent = '✅ You will be notified!';
+            btn.style.background = 'rgba(16,185,129,0.2)';
+            btn.style.borderColor = 'rgba(16,185,129,0.4)';
+            showGlobalToast('✅ You will be notified on the next order day!');
+        }
+    } catch(err) {
+        showGlobalToast('❌ Failed. Try again.');
+    }
+}
+
+async function checkSnacksNotifyMeStatus() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser || !currentSnacksMenuPro) return;
+    const proId = String(currentSnacksMenuPro.id);
+    const btn = document.getElementById('snacks-notify-me-btn');
+    if (!btn) return;
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        const snap = await firebase.database()
+            .ref(`notify_subscribers/${proId}/${sessionUser}`)
+            .once('value');
+        if (snap.exists()) {
+            btn.textContent = '✅ You will be notified!';
+            btn.style.background = 'rgba(16,185,129,0.2)';
+            btn.style.borderColor = 'rgba(16,185,129,0.4)';
+        }
+    } catch(err) { console.warn('checkSnacksNotifyMeStatus error:', err); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  🥤 BEVERAGES MENU OVERLAY ENGINE
+// ════════════════════════════════════════════════════════════
+
+let currentBeveragesMenuPro = null;
+let beveragesMenuEditMode = false;
+let beveragesMenuIsOwner = false;
+let beveragesMenuEditingItemId = null;
+
+function openBeveragesMenuOverlay(pro) {
+    currentBeveragesMenuPro = pro;
+    beveragesMenuEditMode = false;
+    beveragesMenuEditingItemId = null;
+    document.getElementById('beverages-menu-overlay').style.display = 'flex';
+    document.getElementById('beverages-menu-pro-name').innerText = pro.name;
+    document.querySelector('#beverages-menu-overlay .chef-menu-header div div:first-child').innerText =
+        pro.menuWelcome || `Welcome to ${pro.name} · 🥤 Today's Drinks`;
+
+    checkBeveragesMenuOwnership(pro);
+    renderBeveragesMenuOverlayItems(pro);
+
+    const availEl = document.getElementById('beverages-availability-text');
+    if (pro.schedule) {
+        availEl.innerText = pro.schedule.length === 7
+            ? '✅ Available Everyday'
+            : `📅 Available: ${pro.schedule.join(', ')}`;
+    } else {
+        availEl.innerText = '✅ Available Everyday';
+    }
+
+    setTimeout(() => checkBeveragesNotifyMeStatus(), 300);
+}
+
+function closeBeveragesMenuOverlay() {
+    document.getElementById('beverages-menu-overlay').style.display = 'none';
+}
+
+function checkBeveragesMenuOwnership(pro) {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    const editBtn = document.getElementById('beverages-menu-edit-btn');
+    if (!editBtn) return;
+    if (sessionUser && String(pro.id) === String(sessionUser)) {
+        beveragesMenuIsOwner = true;
+        editBtn.style.display = 'flex';
+    } else {
+        beveragesMenuIsOwner = false;
+        editBtn.style.display = 'none';
+    }
+}
+
+function toggleBeveragesMenuEditMode() {
+    if (!beveragesMenuIsOwner) return;
+    beveragesMenuEditMode = !beveragesMenuEditMode;
+    const editBtn = document.getElementById('beverages-menu-edit-btn');
+    if (beveragesMenuEditMode) {
+        editBtn.textContent = '✕';
+        editBtn.style.background = 'rgba(239,68,68,0.2)';
+        editBtn.style.borderColor = 'rgba(239,68,68,0.3)';
+    } else {
+        editBtn.textContent = '✏️';
+        editBtn.style.background = 'rgba(255,255,255,0.1)';
+        editBtn.style.borderColor = 'rgba(255,255,255,0.2)';
+        beveragesMenuEditingItemId = null;
+    }
+    if (currentBeveragesMenuPro) renderBeveragesMenuOverlayItems(currentBeveragesMenuPro);
+}
+
+function renderBeveragesMenuOverlayItems(pro) {
+    const slot = document.getElementById('beverages-menu-items-slot');
+    if (!slot) return;
+
+    const products = pro.products || pro.menu || [];
+
+    if (!beveragesMenuEditMode) {
+        slot.innerHTML = products.map((item, idx) => `
+            <div class="menu-item-card" style="animation-delay:${idx * 0.1}s"
+                onclick="openBeveragesOrderConfirm('${(item.name||'').replace(/'/g,"\\'")}','${item.price}','${item.unit||''}')">
+                <div class="menu-item-emoji">${item.icon || '🥤'}</div>
+                <div class="menu-item-info">
+                    <div class="menu-item-name">${item.name}</div>
+                    <div class="menu-item-desc">${item.unit || item.desc || ''}</div>
+                </div>
+                <div class="menu-item-price">
+                    ${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}
+                </div>
+            </div>`).join('');
+        return;
+    }
+
+    slot.innerHTML = products.map((item, idx) => `
+        <div class="menu-item-card edit-mode" style="animation-delay:${idx * 0.1}s">
+            <div class="menu-item-emoji">${item.icon || '🥤'}</div>
+            <div class="menu-item-info">
+                <div class="menu-item-name">${item.name}</div>
+                <div class="menu-item-desc">${item.unit || item.desc || ''}</div>
+            </div>
+            <div class="menu-item-price">
+                ${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}
+            </div>
+            <div class="menu-item-edit-actions">
+                <button class="menu-item-edit-btn" onclick="openBeveragesMenuItemForm(${idx})">✏️</button>
+                <button class="menu-item-delete-btn" onclick="deleteBeveragesMenuOverlayItem(${idx})">🗑️</button>
+            </div>
+        </div>`).join('');
+
+    slot.innerHTML += `<button class="chef-menu-add-item-btn" onclick="openBeveragesMenuItemForm(null)">➕ Add New Drink</button>`;
+    slot.innerHTML += `<button class="chef-menu-save-changes-btn" onclick="saveBeveragesMenuChanges()">💾 Save Changes</button>`;
+}
+
+function openBeveragesMenuItemForm(itemIdx) {
+    beveragesMenuEditingItemId = itemIdx;
+    const pro = currentBeveragesMenuPro;
+    const products = pro.products || pro.menu || [];
+    const existing = itemIdx !== null ? products[itemIdx] : null;
+
+    const slot = document.getElementById('beverages-menu-items-slot');
+    const formHtml = `
+        <div class="chef-menu-edit-form" id="beverages-menu-inline-form">
+            <input type="text" id="bmf-name" placeholder="Drink Name" value="${existing ? existing.name.replace(/"/g,'&quot;') : ''}">
+            <input type="number" id="bmf-price" placeholder="Price (₦)" value="${existing ? existing.price : ''}">
+            <input type="text" id="bmf-unit" placeholder="Unit (e.g. per cup, per bottle)" value="${existing ? (existing.unit||'') : ''}">
+            <input type="text" id="bmf-icon" placeholder="Emoji (e.g. 🥤)" value="${existing ? (existing.icon||'') : ''}" maxlength="4">
+            <div class="chef-menu-edit-form-actions">
+                <button onclick="cancelBeveragesMenuItemForm()" style="background:rgba(255,255,255,0.1);color:#fff;">Cancel</button>
+                <button onclick="confirmBeveragesMenuItemForm()" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;">${existing ? 'Update' : 'Add'} Drink</button>
+            </div>
+        </div>`;
+
+    renderBeveragesMenuOverlayItems(pro);
+    slot.insertAdjacentHTML('afterbegin', formHtml);
+}
+
+function cancelBeveragesMenuItemForm() {
+    beveragesMenuEditingItemId = null;
+    renderBeveragesMenuOverlayItems(currentBeveragesMenuPro);
+}
+
+function confirmBeveragesMenuItemForm() {
+    const name = document.getElementById('bmf-name').value.trim();
+    const price = parseInt(document.getElementById('bmf-price').value);
+    const unit = document.getElementById('bmf-unit').value.trim();
+    const icon = document.getElementById('bmf-icon').value.trim() || '🥤';
+
+    if (!name) { showGlobalToast('⚠️ Enter drink name!'); return; }
+    if (!price || price <= 0) { showGlobalToast('⚠️ Enter valid price!'); return; }
+
+    if (!currentBeveragesMenuPro.products) currentBeveragesMenuPro.products = [];
+
+    if (beveragesMenuEditingItemId === null) {
+        currentBeveragesMenuPro.products.push({ name, price, unit, icon });
+        showGlobalToast(`✅ "${name}" added!`);
+    } else {
+        currentBeveragesMenuPro.products[beveragesMenuEditingItemId] = { name, price, unit, icon };
+        showGlobalToast(`✅ "${name}" updated!`);
+    }
+
+    beveragesMenuEditingItemId = null;
+    renderBeveragesMenuOverlayItems(currentBeveragesMenuPro);
+}
+
+function deleteBeveragesMenuOverlayItem(idx) {
+    const products = currentBeveragesMenuPro.products || currentBeveragesMenuPro.menu || [];
+    const item = products[idx];
+    if (!confirm(`Remove "${item.name}"?`)) return;
+    products.splice(idx, 1);
+    renderBeveragesMenuOverlayItems(currentBeveragesMenuPro);
+    showGlobalToast(`🗑️ "${item.name}" removed!`);
+}
+
+async function saveBeveragesMenuChanges() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser || !beveragesMenuIsOwner) { showGlobalToast('⚠️ No permission!'); return; }
+
+    const saveBtn = document.querySelector('#beverages-menu-items-slot .chef-menu-save-changes-btn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Saving...'; }
+
+    try {
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            await firebase.database().ref(`providers/${sessionUser}`).update({
+                products: currentBeveragesMenuPro.products,
+                lastUpdated: Date.now()
+            });
+        }
+        showGlobalToast('✅ Drinks saved!');
+        toggleBeveragesMenuEditMode();
+    } catch (err) {
+        showGlobalToast('❌ Failed: ' + err.message);
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Save Changes'; }
+    }
+}
+
+// ── BEVERAGES ORDER CONFIRM ──
+let beveragesOrderDraft = { itemName: null, itemPrice: null, itemUnit: null };
+
+function openBeveragesOrderConfirm(itemName, itemPrice, itemUnit) {
+    beveragesOrderDraft.itemName = itemName;
+    beveragesOrderDraft.itemPrice = itemPrice;
+    beveragesOrderDraft.itemUnit = itemUnit;
+    document.getElementById('order-confirm-item-name').textContent = itemName;
+    document.getElementById('order-confirm-overlay').style.display = 'flex';
+    window._beveragesOrderActive = true;
+}
+
+// ── BEVERAGES NOTIFY ME ──
+async function toggleBeveragesNotifyMe() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) { showGlobalToast('⚠️ Please login first!'); return; }
+    if (!currentBeveragesMenuPro) return;
+
+    const proId = String(currentBeveragesMenuPro.id);
+    const btn = document.getElementById('beverages-notify-me-btn');
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        const ref = firebase.database().ref(`notify_subscribers/${proId}/${sessionUser}`);
+        const snap = await ref.once('value');
+
+        if (snap.exists()) {
+            await ref.remove();
+            btn.textContent = '🔔 Notify Me on Next Order Day';
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.borderColor = 'rgba(255,255,255,0.2)';
+            showGlobalToast('🔕 Notifications turned off.');
+        } else {
+            await ref.set({
+                username: sessionUser,
+                proId: proId,
+                proName: currentBeveragesMenuPro.name || '—',
+                subscribedAt: Date.now()
+            });
+            btn.textContent = '✅ You will be notified!';
+            btn.style.background = 'rgba(16,185,129,0.2)';
+            btn.style.borderColor = 'rgba(16,185,129,0.4)';
+            showGlobalToast('✅ You will be notified on the next order day!');
+        }
+    } catch(err) {
+        showGlobalToast('❌ Failed. Try again.');
+    }
+}
+
+async function checkBeveragesNotifyMeStatus() {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser || !currentBeveragesMenuPro) return;
+    const proId = String(currentBeveragesMenuPro.id);
+    const btn = document.getElementById('beverages-notify-me-btn');
+    if (!btn) return;
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        const snap = await firebase.database()
+            .ref(`notify_subscribers/${proId}/${sessionUser}`)
+            .once('value');
+        if (snap.exists()) {
+            btn.textContent = '✅ You will be notified!';
+            btn.style.background = 'rgba(16,185,129,0.2)';
+            btn.style.borderColor = 'rgba(16,185,129,0.4)';
+        }
+    } catch(err) { console.warn('checkBeveragesNotifyMeStatus error:', err); }
+        }
+      
+// ── CHEF MENU EDIT MODE STATE ──
 let chefMenuEditMode = false;
 let chefMenuIsOwner = false;
 let chefMenuEditingItemId = null; // null = adding new, otherwise editing existing item id
