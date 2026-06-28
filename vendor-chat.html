@@ -119,9 +119,9 @@ function pick(name, img) {
     const chat = document.getElementById('chat');
     chat.innerHTML += `
         <div class="u-bubble bubble">
-            <div style="background:rgba(212,175,55,0.08); padding:8px; border-radius:10px; display:flex; align-items:center; gap:10px; border-left:3px solid #D4AF37; margin-bottom:8px;">
-                <img src="${img}" style="width:45px; height:45px; border-radius:8px; object-fit:cover;">
-                <span style="font-size:12px; font-weight:600; color:#B8860B;">${name}</span>
+            <div style="background:rgba(212,175,55,0.08);padding:8px;border-radius:10px;display:flex;align-items:center;gap:10px;border-left:3px solid #D4AF37;margin-bottom:8px;">
+                <img src="${img}" style="width:45px;height:45px;border-radius:8px;object-fit:cover;">
+                <span style="font-size:12px;font-weight:600;color:#B8860B;">${name}</span>
             </div>
             Ina son wannan...
         </div>`;
@@ -180,7 +180,7 @@ function handleImage(input) {
             pendingImageMime = input.files[0].type;
             document.getElementById('chat').innerHTML += `
                 <div class="bubble u-bubble">
-                    <img src="${e.target.result}" style="max-width:100%; border-radius:10px;">
+                    <img src="${e.target.result}" style="max-width:100%;border-radius:10px;">
                 </div>`;
             document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
             sendMessage();
@@ -204,11 +204,11 @@ function handleAction() {
     const chat = document.getElementById('chat');
     chat.innerHTML += `
         <div class="u-bubble bubble">
-            <div style="background:rgba(212,175,55,0.1); padding:8px; border-radius:10px; display:flex; align-items:center; gap:10px; border-left:3px solid #D4AF37; margin-bottom:8px;">
-                <img src="${img}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; flex-shrink:0;">
+            <div style="background:rgba(212,175,55,0.1);padding:8px;border-radius:10px;display:flex;align-items:center;gap:10px;border-left:3px solid #D4AF37;margin-bottom:8px;">
+                <img src="${img}" style="width:45px;height:45px;border-radius:8px;object-fit:cover;flex-shrink:0;">
                 <div>
-                    <div style="font-size:12px; font-weight:700; color:#B8860B;">${name}</div>
-                    <div style="font-size:11px; color:#888; margin-top:2px;">${price}</div>
+                    <div style="font-size:12px;font-weight:700;color:#B8860B;">${name}</div>
+                    <div style="font-size:11px;color:#888;margin-top:2px;">${price}</div>
                 </div>
             </div>
             ${msg}
@@ -225,13 +225,15 @@ async function sendMessage() {
     isSending = true;
     const chat = document.getElementById('chat');
 
-    chat.innerHTML += `<div class="bubble u-bubble">${text || '📷 Hoto'}</div>`;
+    if (text) {
+        chat.innerHTML += `<div class="bubble u-bubble">${text}</div>`;
+    }
     input.value = '';
     input.style.height = 'auto';
     toggleInputUI(input);
     chat.scrollTop = chat.scrollHeight;
 
-    const loadingId = 'loading-' + Date.now();
+    const loadingId = 'load' + Date.now();
     chat.innerHTML += `<div class="bubble v-bubble" id="${loadingId}">⏳...</div>`;
     chat.scrollTop = chat.scrollHeight;
 
@@ -241,21 +243,15 @@ async function sendMessage() {
         let items = [];
         snap.forEach(doc => {
             const d = doc.data();
-            items.push(`- ${d.name || d.title || 'Kaya'}: ₦${d.price || 'Tambaya'}`);
+            items.push(`- ${d.name || d.title || 'Kaya'}: ₦${d.price || '?'}`);
         });
         if (items.length > 0) productList = items.join('\n');
     } catch(e) {}
 
-    const systemPrompt = `Kai ne AI assistant na wannan shago a Nexus platform. Kana wakiltar vendor kai tsaye.
-Kayan da muke da su:
+    const systemPrompt = `Kai ne mai wannan shago. Kana magana da customers kai tsaye.
+Kayan da kake da su:
 ${productList}
-
-Dokokin amsa:
-- Ka amsa da harshen da customer ya yi amfani da shi (Hausa ko Turanci)
-- Ka amsa tambayar da aka yi maka kai tsaye
-- Idan customer ya aika hoto, ka bayyana abin da kake gani a hoton
-- Ka kasance da ladabi kuma ka taimaka
-- Kada ka ce "Nagode, zan taimake ka" kawai — ka amsa tambayar daidai`;
+Ka amsa da harshen customer (Hausa ko Turanci). Ka amsa tambayar kai tsaye. Kada ka fara da "Nagode zan taimake ka" — ka shiga cikin amsar kai tsaye.`;
 
     let userParts = [];
     if (pendingImageBase64) {
@@ -263,13 +259,13 @@ Dokokin amsa:
         pendingImageBase64 = null;
         pendingImageMime = null;
     }
-    if (text) userParts.push({ text });
+    if (text) userParts.push({ text: text });
 
     chatHistory.push({ role: "user", parts: userParts });
 
     try {
         const res = await fetch(
-           `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}` 
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -284,15 +280,15 @@ Dokokin amsa:
         chatHistory.push({ role: "model", parts: [{ text: reply }] });
         document.getElementById(loadingId).innerHTML = reply;
     } catch(e) {
-        document.getElementById(loadingId).innerHTML = "Matsala ta tashi: " + e.message;
+        document.getElementById(loadingId).innerHTML = "Error: " + e.message;
     }
 
     isSending = false;
     chat.scrollTop = chat.scrollHeight;
 }
 
-document.addEventListener('DOMContentLoaded', loadFirestoreProducts);   
-   
+document.addEventListener('DOMContentLoaded', loadFirestoreProducts);
+        
     </script>
 </body>
     </html>
