@@ -2366,8 +2366,9 @@
             </div>
 
             <div style="padding: 12px 20px 0;">
-                <div style="font-weight: 700; font-size: 11px; color: #94a3b8; margin-bottom: 14px; text-transform: uppercase;" id="search-results-counter">
-                    Search Results (0)
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <div style="font-weight:700;font-size:11px;color:#94a3b8;text-transform:uppercase;" id="search-results-counter">Search Results (0)</div>
+    <button onclick="openRequestServiceOverlay()" style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:5px 12px;font-size:11px;font-weight:700;color:#6366f1;cursor:pointer;">+ Request Service</button>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 12px;" id="results-list-container">
                     <!-- Conditional matches mapping track data frame template -->
@@ -3696,6 +3697,36 @@
         </div>
     </div>
 </div>
+
+<!-- REQUEST NEW SERVICE OVERLAY -->
+<div id="request-service-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10500;display:none;align-items:center;justify-content:center;padding:20px;">
+    <div style="width:100%;max-width:380px;background:#ffffff;border-radius:24px;padding:24px 20px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+                <div style="font-size:15px;font-weight:800;color:#111827;">🚀 Request a Service</div>
+                <div style="font-size:11px;color:#64748b;margin-top:2px;">Can't find your profession? Let us know!</div>
+            </div>
+            <button onclick="closeRequestServiceOverlay()" style="background:#f1f5f9;border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;color:#64748b;">✕</button>
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Service/Profession Name *</div>
+            <input type="text" id="req-service-name" placeholder="e.g. Solar Panel Installer, Photographer..." style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;box-sizing:border-box;">
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Why do you need this service?</div>
+            <textarea id="req-service-reason" placeholder="Explain briefly why this service should be added..." maxlength="300" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;resize:none;height:80px;line-height:1.5;font-family:inherit;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div style="margin-bottom:18px;">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Your Contact (Optional)</div>
+            <input type="text" id="req-service-contact" placeholder="Phone or email" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;box-sizing:border-box;">
+        </div>
+
+        <button onclick="submitServiceRequest()" style="width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:14px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Submit Request 🚀</button>
+    </div>
+</div>
     <!-- PURE TSANTSAR VANILLA JAVASCRIPT ENGINE (NO REACT/BABEL) -->
     <script>
       // Core Static Local Data Context Stores Verbatim
@@ -3957,8 +3988,12 @@ function renderResultsPage() {
     }
 }
 
-function handleCategorySelect(catId) { state.selectedCat = catId; switchView("results"); }
-
+function handleCategorySelect(catId) { 
+    state.selectedCat = catId; 
+    trackSearchEvent(catId);
+    switchView("results"); 
+        }
+        
 function handleLikeToggle(event, proId) {
     event.stopPropagation();
     state.likedPros[proId] = !state.likedPros[proId];
@@ -3969,10 +4004,11 @@ function triggerRouterCheck() {
     const inputEl = document.getElementById("search-input");
     const val = inputEl.value;
     state.query = val;
-    inputEl.blur(); // 👈 cire keyboard nan take
+    inputEl.blur();
     if (!val.trim()) return;
+    trackSearchEvent(val.trim().toLowerCase());
     document.getElementById("router-overlay").style.display = "flex";
-}
+        }
         
 function selectRoutePreference(type) {
     document.getElementById("router-overlay").style.display = "none";
@@ -8502,6 +8538,102 @@ function setOrderMethod(method) {
         pickupInfo.style.display = 'block';
     }
 }
+
+// ── TRACK SEARCH/CATEGORY EVENTS ──
+async function trackSearchEvent(query) {
+    if (!query) return;
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const cleanQuery = String(query).toLowerCase().trim();
+        const ref = firebase.database().ref(`admin/search_stats/${cleanQuery}`);
+        const snap = await ref.once('value');
+        const current = snap.val() || { query: cleanQuery, count: 0, lastSearched: null };
+
+        await ref.set({
+            query: cleanQuery,
+            count: (current.count || 0) + 1,
+            lastSearched: Date.now()
+        });
+
+    } catch(err) {
+        console.warn('trackSearchEvent error:', err);
+    }
+}
+
+// ── LOAD MOST SEARCHED (for admin panel use) ──
+async function loadMostSearched(limit = 10) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return [];
+
+        const snap = await firebase.database()
+            .ref('admin/search_stats')
+            .orderByChild('count')
+            .limitToLast(limit)
+            .once('value');
+
+        const data = snap.val() || {};
+        return Object.values(data)
+            .sort((a, b) => (b.count || 0) - (a.count || 0));
+
+    } catch(err) {
+        console.warn('loadMostSearched error:', err);
+        return [];
+    }
+}
+
+// ── REQUEST NEW SERVICE ──
+function openRequestServiceOverlay() {
+    document.getElementById('req-service-name').value = '';
+    document.getElementById('req-service-reason').value = '';
+    document.getElementById('req-service-contact').value = '';
+    document.getElementById('request-service-overlay').style.display = 'flex';
+}
+
+function closeRequestServiceOverlay() {
+    document.getElementById('request-service-overlay').style.display = 'none';
+}
+
+async function submitServiceRequest() {
+    const serviceName = document.getElementById('req-service-name').value.trim();
+    const reason = document.getElementById('req-service-reason').value.trim();
+    const contact = document.getElementById('req-service-contact').value.trim();
+
+    if (!serviceName || serviceName.length < 2) {
+        showGlobalToast('⚠️ Please enter the service name!');
+        return;
+    }
+
+    const btn = document.querySelector('#request-service-overlay button:last-child');
+    btn.disabled = true;
+    btn.textContent = '⏳ Submitting...';
+
+    try {
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            const requestId = `svc_req_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+            await firebase.database().ref(`admin/service_requests/${requestId}`).set({
+                serviceName,
+                reason: reason || '—',
+                contact: contact || 'Anonymous',
+                status: 'pending',
+                createdAt: Date.now()
+            });
+
+            // Also track as search
+            await trackSearchEvent(serviceName.toLowerCase());
+        }
+
+        closeRequestServiceOverlay();
+        showGlobalToast('✅ Request submitted! We will review and add it soon.');
+
+    } catch(err) {
+        console.error('Service request error:', err);
+        showGlobalToast('❌ Failed to submit. Try again.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Submit Request 🚀';
+                             }
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
