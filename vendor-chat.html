@@ -98,7 +98,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
-        const firebaseConfig = {
+     const firebaseConfig = {
     apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
     authDomain: "oryzon-50ea4.firebaseapp.com",
     projectId: "oryzon-50ea4",
@@ -106,125 +106,101 @@
     messagingSenderId: "782106742622",
     appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
 };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const GEMINI_API_KEY = "AIzaSyC2O1B-antGuao-H0bDCmrf2_IHgjcLywc";
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const GEMINI_API_KEY = "AIzaSyC2O1B-antGuao-H0bDCmrf2_IHgjcLywc";
 
-        // 1. RESTORED PICK FUNCTION (Gyarar Slide Interaction)
-        function pick(name, img) {
-            const chat = document.getElementById('chat');
-            chat.innerHTML += `
-                <div class="u-bubble bubble">
-                    <div style="background:rgba(212,175,55,0.08); padding:8px; border-radius:10px; display:flex; align-items:center; gap:10px; border-left:3px solid #D4AF37; margin-bottom:8px;">
-                        <img src="${img}" style="width:45px; height:45px; border-radius:8px; object-fit:cover;">
-                        <span style="font-size:12px; font-weight:600; color:#B8860B;">${name}</span>
-                    </div>
-                    Ina son wannan...
-                </div>`;
-            chat.scrollTop = chat.scrollHeight;
-        }
+let chatHistory = [];
+let pendingImageBase64 = null;
+let pendingImageMime = null;
+let isSending = false;
 
-        
-        async function loadFirestoreProducts() {
+function pick(name, img) {
+    const chat = document.getElementById('chat');
+    chat.innerHTML += `
+        <div class="u-bubble bubble">
+            <div style="background:rgba(212,175,55,0.08); padding:8px; border-radius:10px; display:flex; align-items:center; gap:10px; border-left:3px solid #D4AF37; margin-bottom:8px;">
+                <img src="${img}" style="width:45px; height:45px; border-radius:8px; object-fit:cover;">
+                <span style="font-size:12px; font-weight:600; color:#B8860B;">${name}</span>
+            </div>
+            Ina son wannan...
+        </div>`;
+    chat.scrollTop = chat.scrollHeight;
+}
+
+async function loadFirestoreProducts() {
     const track = document.getElementById('product-slider');
     const vendorId = new URLSearchParams(window.location.search).get('vendorId') || '';
-
     try {
         let snapshot;
-
         if (vendorId) {
-            // Filter by vendor kawai
-            snapshot = await db.collection('products')
-                .where('vendorId', '==', vendorId)
-                .get();
-
-            // Idan babu results, gwada sauran field names
-            if (snapshot.empty) {
-                snapshot = await db.collection('products')
-                    .where('vendor', '==', vendorId)
-                    .get();
-            }
-            if (snapshot.empty) {
-                snapshot = await db.collection('products')
-                    .where('sellerId', '==', vendorId)
-                    .get();
-            }
+            snapshot = await db.collection('products').where('vendorId', '==', vendorId).get();
+            if (snapshot.empty) snapshot = await db.collection('products').where('vendor', '==', vendorId).get();
+            if (snapshot.empty) snapshot = await db.collection('products').where('sellerId', '==', vendorId).get();
         } else {
-            // Fallback — babu vendor ID, karɓa duka (temporary)
             snapshot = await db.collection('products').limit(10).get();
         }
-
         let list = [];
         snapshot.forEach(doc => {
             const d = doc.data();
             const imgUrl = d.image || d.img || d.imageUrl || '';
-            const name   = d.name || d.title || 'Product';
+            const name = d.name || d.title || 'Product';
             if (imgUrl) list.push({ img: imgUrl, name });
         });
-
         if (list.length > 0) {
             track.innerHTML = [...list, ...list].map(p => `
                 <div class="slide-card" onclick="pick('${p.name}', '${p.img}')">
                     <img src="${p.img}" onerror="this.style.display='none'">
                 </div>`).join('');
         }
-
     } catch(err) {
         console.error('Firebase error:', err);
     }
-        }
-        
-        function toggleInputUI(el) {
-            el.style.height = 'auto';
-            el.style.height = (el.scrollHeight) + 'px';
-            const icon = document.getElementById('actionIcon');
-            const cam = document.getElementById('camBtn');
-            if (el.value.trim() !== "") {
-                icon.className = "fa-solid fa-paper-plane";
-                cam.style.display = "none";
-            } else {
-                icon.className = "fa-solid fa-microphone";
-                cam.style.display = "flex";
-            }
-        }
+}
 
-        function handleImage(input) {
+function toggleInputUI(el) {
+    el.style.height = 'auto';
+    el.style.height = (el.scrollHeight) + 'px';
+    const icon = document.getElementById('actionIcon');
+    const cam = document.getElementById('camBtn');
+    if (el.value.trim() !== "") {
+        icon.className = "fa-solid fa-paper-plane";
+        cam.style.display = "none";
+    } else {
+        icon.className = "fa-solid fa-microphone";
+        cam.style.display = "flex";
+    }
+}
+
+function handleImage(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            const base64 = e.target.result.split(',')[1];
-            pendingImageBase64 = base64;
+            pendingImageBase64 = e.target.result.split(',')[1];
             pendingImageMime = input.files[0].type;
-
-            document.getElementById('chat').innerHTML += 
-                `<div class="bubble u-bubble">
+            document.getElementById('chat').innerHTML += `
+                <div class="bubble u-bubble">
                     <img src="${e.target.result}" style="max-width:100%; border-radius:10px;">
                 </div>`;
-            document.getElementById('chat').scrollTop = 
-                document.getElementById('chat').scrollHeight;
-
-            // Auto send da hoto
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
             sendMessage();
         };
         reader.readAsDataURL(input.files[0]);
     }
-        }
+}
 
-        function handleAction() {
-            const icon = document.getElementById('actionIcon');
-            if (icon.classList.contains('fa-paper-plane')) sendMessage();
-            else alert("Voice...");
-        }
+function handleAction() {
+    const icon = document.getElementById('actionIcon');
+    if (icon.classList.contains('fa-paper-plane')) sendMessage();
+    else alert("Voice...");
+}
 
-
-        // Karba message + product tag daga product page
 (function loadIncomingMsg() {
     const msg   = localStorage.getItem('vc_msg');
     const name  = localStorage.getItem('vc_name');
     const price = localStorage.getItem('vc_price');
     const img   = localStorage.getItem('vc_img');
     if (!msg) return;
-
     const chat = document.getElementById('chat');
     chat.innerHTML += `
         <div class="u-bubble bubble">
@@ -238,17 +214,7 @@
             ${msg}
         </div>`;
     chat.scrollTop = chat.scrollHeight;
-
 })();
-
-let chatHistory = [];
-let pendingImageBase64 = null;
-let pendingImageMime = null;
-
-let chatHistory = [];
-let pendingImageBase64 = null;
-let pendingImageMime = null;
-let isSending = false;
 
 async function sendMessage() {
     if (isSending) return;
@@ -269,7 +235,7 @@ async function sendMessage() {
     chat.innerHTML += `<div class="bubble v-bubble" id="${loadingId}">⏳...</div>`;
     chat.scrollTop = chat.scrollHeight;
 
-    let productList = "";
+    let productList = "Babu kayan da aka saka tukuna.";
     try {
         const snap = await db.collection('products').limit(20).get();
         let items = [];
@@ -277,10 +243,8 @@ async function sendMessage() {
             const d = doc.data();
             items.push(`- ${d.name || d.title || 'Kaya'}: ₦${d.price || 'Tambaya'}`);
         });
-        productList = items.join('\n') || "Babu kayan da aka saka tukuna.";
-    } catch(e) {
-        productList = "Babu kayan da aka saka tukuna.";
-    }
+        if (items.length > 0) productList = items.join('\n');
+    } catch(e) {}
 
     const systemPrompt = `Kai ne AI assistant na wannan shago a Nexus platform. Kana wakiltar vendor kai tsaye.
 Kayan da muke da su:
@@ -316,7 +280,6 @@ Dokokin amsa:
             }
         );
         const data = await res.json();
-        console.log("Gemini response:", JSON.stringify(data));
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Yi hakuri, sake gwadawa.";
         chatHistory.push({ role: "model", parts: [{ text: reply }] });
         document.getElementById(loadingId).innerHTML = reply;
@@ -326,10 +289,10 @@ Dokokin amsa:
 
     isSending = false;
     chat.scrollTop = chat.scrollHeight;
-                }
-    
+}
 
-        document.addEventListener('DOMContentLoaded', loadFirestoreProducts);
+document.addEventListener('DOMContentLoaded', loadFirestoreProducts);   
+   
     </script>
 </body>
     </html>
