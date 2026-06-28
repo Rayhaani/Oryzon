@@ -3121,6 +3121,10 @@
         <!-- Results -->
         <div id="emergency-results-list" style="display:none;max-height:320px;overflow-y:auto;"></div>
 
+        <!-- GPS Retry Button -->
+        <button id="emergency-gps-retry-btn" onclick="emergencySelectedCat && selectEmgService(emergencySelectedCat, document.getElementById('emergency-scan-status').textContent)" style="display:none;width:100%;margin-top:12px;padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;">
+            🔄 Sake Gwada GPS
+        </button>
         <!-- Expand Radius Button -->
         <button id="emergency-expand-btn" onclick="expandEmergencyRadius()" style="display:none;width:100%;margin-top:12px;padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer;">
             🔍 Expand Search Radius
@@ -4220,7 +4224,7 @@ const PROS = [
     ]
     },
     {
-        id: 5, name: "Hajiya Bilkisu Musa", category: "snacks", display_cat: "Snacks Vendor",
+        id: 5, name: "Hajiya Bilkisu Musawa", category: "snacks", display_cat: "Snacks Vendor",
         rating: 4.8, reviews: 89, distance: 0.7, city: "Kano", verified: true,
         avatar: "BM", color: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", jobs: 203, price: "₦500",
         bio: "Premium snacks vendor specializing in fresh small chops, donuts, meatpie and chin chin. Serving Kano for over 8 years.",
@@ -7771,24 +7775,40 @@ function selectEmgService(catId, catLabel) {
             return; // don't even attempt getCurrentPosition
         }
 
-        // Permission not denied — proceed normally
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                emergencyUserLat = pos.coords.latitude;
-                emergencyUserLng = pos.coords.longitude;
-                document.getElementById("emergency-location-text").textContent =
-                    `📍 ${emergencyUserLat.toFixed(4)}, ${emergencyUserLng.toFixed(4)}`;
-                scanEmergencyPros();
-            },
-            () => {
-                document.getElementById("emergency-scan-status").textContent = "⚠️ Location access denied";
-                document.getElementById("emergency-scan-sub").textContent    = "Please enable GPS and try again";
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
+        // Permission not denied — proceed with retry logic
+        attemptEmergencyGPSFix(true);
     });
 }
 
+function attemptEmergencyGPSFix(isFirstAttempt) {
+    if (isFirstAttempt) {
+        document.getElementById("emergency-scan-sub").textContent = "Finding verified experts within " + emergencyCurrentRadius + "km";
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            emergencyUserLat = pos.coords.latitude;
+            emergencyUserLng = pos.coords.longitude;
+            document.getElementById("emergency-location-text").textContent =
+                `📍 ${emergencyUserLat.toFixed(4)}, ${emergencyUserLng.toFixed(4)}`;
+            scanEmergencyPros();
+        },
+        (err) => {
+            if (isFirstAttempt) {
+                // GPS ya kasa a yunkuri na farko — sake gwadawa da low-accuracy + tsawon lokaci
+                document.getElementById("emergency-scan-sub").textContent = "🔄 Ana sake gwadawa da hanya dabam...";
+                attemptEmergencyGPSFix(false);
+            } else {
+                const msgs = { 1:"Ka ƙi ba GPS izni.", 2:"GPS bai samu loca ba — tabbatar Location yana ON a phone.", 3:"Lokaci ya ƙare — gwada waje ko kusa da taga sannan sake gwadawa." };
+                document.getElementById("emergency-scan-status").textContent = "⚠️ GPS ya kasa";
+                document.getElementById("emergency-scan-sub").textContent    = msgs[err.code] || "GPS kuskure — sake gwadawa.";
+            }
+        },
+        isFirstAttempt
+            ? { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+            : { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+    );
+    }
 // ────────────────────────────────────────────
 //  CLOSE SCANNING SHEET
 // ────────────────────────────────────────────
