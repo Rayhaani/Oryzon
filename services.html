@@ -9,13 +9,351 @@
 
     <style>
         * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
-        body {
+:root {
+    /* ── NEXUS PROTOCOL GLOBAL DESIGN TOKENS ── */
+    /* Typography */
+    --np-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --np-font-size-xs: 10px;
+    --np-font-size-sm: 11px;
+    --np-font-size-md: 13px;
+    --np-font-size-lg: 15px;
+    --np-font-size-xl: 17px;
+    --np-font-size-xxl: 22px;
+
+    /* Border Radius */
+    --np-radius-sm: 10px;
+    --np-radius-md: 14px;
+    --np-radius-lg: 20px;
+    --np-radius-xl: 24px;
+    --np-radius-pill: 50px;
+
+    /* Dark Glass Overlay */
+    --np-dark-bg: rgba(15, 23, 42, 0.97);
+    --np-dark-border: rgba(255, 255, 255, 0.1);
+    --np-dark-surface: rgba(255, 255, 255, 0.05);
+    --np-dark-surface-hover: rgba(255, 255, 255, 0.08);
+    --np-dark-text: #ffffff;
+    --np-dark-text-muted: rgba(255, 255, 255, 0.45);
+
+    /* Light Clean Overlay */
+    --np-light-bg: #ffffff;
+    --np-light-border: #f1f5f9;
+    --np-light-surface: #f8fafc;
+    --np-light-text: #111827;
+    --np-light-text-muted: #64748b;
+
+    /* Brand Colors */
+    --np-blue: #1d4ed8;
+    --np-blue-dark: #1e40af;
+    --np-green: #10b981;
+    --np-green-dark: #059669;
+    --np-red: #ef4444;
+    --np-red-dark: #dc2626;
+    --np-amber: #f59e0b;
+    --np-amber-dark: #d97706;
+    --np-pink: #ec4899;
+    --np-pink-dark: #be185d;
+    --np-cyan: #06b6d4;
+    --np-cyan-dark: #0891b2;
+
+    /* Shadows */
+    --np-shadow-overlay: 0 20px 60px rgba(0, 0, 0, 0.25);
+    --np-shadow-dark-overlay: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+    /* Animation */
+    --np-anim-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --np-anim-duration: 0.3s;
+
+    /* Overlay Backdrop */
+    --np-backdrop-dark: rgba(0, 0, 0, 0.6);
+    --np-backdrop-blur: blur(12px);
+    --np-backdrop-dark-heavy: rgba(10, 15, 30, 0.95);
+    }
+
+    /* ══════════════════════════════════════════
+   NEXUS PROTOCOL — GLOBAL OVERLAY SYSTEM
+   ══════════════════════════════════════════ */
+
+/* Base Overlay Backdrop */
+.np-overlay-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--np-backdrop-dark);
+    backdrop-filter: var(--np-backdrop-blur);
+    -webkit-backdrop-filter: var(--np-backdrop-blur);
+    z-index: 8000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.np-overlay-backdrop.active {
+    display: flex;
+}
+
+/* ── LIGHT OVERLAY BOX (Report, Review, Search, Request) ── */
+.np-overlay-box-light {
+    width: 100%;
+    max-width: 400px;
+    max-height: 88vh;
+    overflow-y: auto;
+    background: var(--np-light-bg);
+    border-radius: var(--np-radius-xl);
+    padding: 22px 20px 26px;
+    box-shadow: var(--np-shadow-overlay);
+    animation: npOverlayIn var(--np-anim-duration) var(--np-anim-spring) forwards;
+    font-family: var(--np-font);
+}
+
+/* ── DARK OVERLAY BOX (Orders, Hire, Place Order) ── */
+.np-overlay-box-dark {
+    width: 100%;
+    max-width: 400px;
+    max-height: 88vh;
+    overflow-y: auto;
+    background: #0f172a;
+    border: 1px solid var(--np-dark-border);
+    border-radius: var(--np-radius-xl);
+    padding: 22px 20px 26px;
+    box-shadow: var(--np-shadow-dark-overlay);
+    animation: npOverlayIn var(--np-anim-duration) var(--np-anim-spring) forwards;
+    font-family: var(--np-font);
+}
+
+/* ── OVERLAY ANIMATION ── */
+@keyframes npOverlayIn {
+    from { transform: translateY(16px) scale(0.97); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ── OVERLAY HEADER ── */
+.np-overlay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.np-overlay-title-light {
+    font-size: var(--np-font-size-xl);
+    font-weight: 800;
+    color: var(--np-light-text);
+    font-family: var(--np-font);
+    letter-spacing: -0.3px;
+}
+
+.np-overlay-title-dark {
+    font-size: var(--np-font-size-xl);
+    font-weight: 800;
+    color: var(--np-dark-text);
+    font-family: var(--np-font);
+    letter-spacing: -0.3px;
+}
+
+.np-overlay-subtitle {
+    font-size: var(--np-font-size-sm);
+    color: var(--np-light-text-muted);
+    margin-top: 2px;
+    font-weight: 500;
+    font-family: var(--np-font);
+}
+
+.np-overlay-subtitle-dark {
+    font-size: var(--np-font-size-sm);
+    color: var(--np-dark-text-muted);
+    margin-top: 2px;
+    font-weight: 500;
+    font-family: var(--np-font);
+}
+
+/* ── CLOSE BUTTON ── */
+.np-close-btn-light {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--np-light-surface);
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--np-light-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: var(--np-font);
+    transition: all 0.15s ease;
+}
+
+.np-close-btn-light:active { transform: scale(0.92); background: #e2e8f0; }
+
+.np-close-btn-dark {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--np-dark-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: var(--np-font);
+    transition: all 0.15s ease;
+}
+
+.np-close-btn-dark:active { transform: scale(0.92); }
+
+/* ── FIELD LABEL ── */
+.np-field-label {
+    font-size: var(--np-font-size-xs);
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    font-family: var(--np-font);
+}
+
+/* ── INPUT LIGHT ── */
+.np-input-light {
+    width: 100%;
+    background: var(--np-light-surface);
+    border: 1px solid #e2e8f0;
+    border-radius: var(--np-radius-sm);
+    padding: 10px 12px;
+    font-size: var(--np-font-size-md);
+    color: var(--np-light-text);
+    outline: none;
+    box-sizing: border-box;
+    font-family: var(--np-font);
+    transition: border-color 0.2s ease;
+}
+
+.np-input-light:focus { border-color: #1d4ed8; }
+
+/* ── INPUT DARK ── */
+.np-input-dark {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--np-radius-sm);
+    padding: 10px 12px;
+    font-size: var(--np-font-size-md);
+    color: var(--np-dark-text);
+    outline: none;
+    box-sizing: border-box;
+    font-family: var(--np-font);
+    transition: border-color 0.2s ease;
+}
+
+.np-input-dark:focus { border-color: rgba(99,102,241,0.5); }
+
+/* ── PRIMARY BUTTON VARIANTS ── */
+.np-btn-blue {
+    width: 100%;
+    padding: 13px 16px;
+    background: linear-gradient(135deg, var(--np-blue), var(--np-blue-dark));
+    border: none;
+    border-radius: var(--np-radius-md);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: var(--np-font);
+    letter-spacing: 0.2px;
+    transition: opacity 0.2s ease;
+}
+
+.np-btn-blue:active { opacity: 0.88; transform: scale(0.99); }
+
+.np-btn-red {
+    width: 100%;
+    padding: 13px 16px;
+    background: linear-gradient(135deg, var(--np-red), var(--np-red-dark));
+    border: none;
+    border-radius: var(--np-radius-md);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: var(--np-font);
+    letter-spacing: 0.2px;
+    transition: opacity 0.2s ease;
+}
+
+.np-btn-amber {
+    width: 100%;
+    padding: 13px 16px;
+    background: linear-gradient(135deg, var(--np-amber), var(--np-amber-dark));
+    border: none;
+    border-radius: var(--np-radius-md);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: var(--np-font);
+    letter-spacing: 0.2px;
+}
+
+.np-btn-ghost {
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-radius: var(--np-radius-md);
+    color: #94a3b8;
+    font-size: var(--np-font-size-md);
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--np-font);
+}
+
+/* ── DIVIDER ── */
+.np-divider-light {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 14px 0;
+    border: none;
+}
+
+.np-divider-dark {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 14px 0;
+    border: none;
+}
+
+/* ── INFO BADGE ── */
+.np-info-badge-green {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(16,185,129,0.06);
+    border: 1px solid rgba(16,185,129,0.18);
+    border-radius: var(--np-radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 12px;
+}
+
+.np-info-badge-green span {
+    font-size: var(--np-font-size-sm);
+    font-weight: 700;
+    color: #059669;
+    font-family: var(--np-font);
+    line-height: 1.4;
+}
+       
+      body {
             background-color: #f8fafc;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: #111827;
@@ -2101,14 +2439,15 @@
 .np-identity-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     z-index: 99000;
     display: none;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
     padding: 20px;
-}
+        }
 
 .np-identity-overlay.active {
     display: flex;
@@ -2116,13 +2455,14 @@
 
 .np-identity-sheet {
     width: 100%;
-    max-width: 420px;
+    max-width: 390px;
     background: #ffffff;
-    border-radius: 24px;
-    padding: 24px 20px 32px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
-}
+    border-radius: var(--np-radius-xl);
+    padding: 20px 18px 24px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+    animation: npOverlayIn 0.3s var(--np-anim-spring) forwards;
+    font-family: var(--np-font);
+        }
 
 .np-identity-header {
     display: flex;
@@ -2238,6 +2578,26 @@
     color: #059669;
     line-height: 1.5;
         }
+
+    /* ── FORCE FONT CONSISTENCY ACROSS ALL OVERLAYS ── */
+.report-modal-box *,
+.review-modal-box *,
+.router-box *,
+.hire-sheet-box *,
+.pro-warning-card *,
+.np-identity-sheet *,
+#place-order-overlay *,
+#customer-orders-overlay *,
+#request-service-overlay *,
+#order-confirm-overlay *,
+.chef-menu-scroll-carpet *,
+#snacks-menu-overlay *,
+#beverages-menu-overlay *,
+.emergency-sheet *,
+.emg-dropdown-panel * {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        }
+        
     </style>
 </head>
 <body>
@@ -3700,54 +4060,55 @@
 <!-- ═══ VERIFIED IDENTITY OVERLAY ═══ -->
 <div class="np-identity-overlay" id="npIdentityOverlay" onclick="closeIdentityOverlay(event)">
     <div class="np-identity-sheet" onclick="event.stopPropagation()">
-        <div class="np-identity-header">
-            <div class="np-identity-title">🔒 Verified Reviewer</div>
-            <button class="np-identity-close" onclick="closeIdentityOverlay()">✕</button>
-        </div>
-        <div class="np-identity-avatar-row">
-            <div class="np-identity-avatar" id="npIdAvatar"></div>
-            <div>
-                <div class="np-identity-name" id="npIdName"></div>
-                <div class="np-identity-since" id="npIdSince"></div>
-            </div>
-        </div>
-        <div class="np-identity-rows">
-            <div class="np-identity-row">
-                <div class="np-identity-row-icon">📦</div>
-                <div>
-                    <div class="np-identity-row-label">Verified Order</div>
-                    <div class="np-identity-row-value" id="npIdOrder"></div>
-                </div>
-            </div>
-            <div class="np-identity-row">
-                <div class="np-identity-row-icon">📅</div>
-                <div>
-                    <div class="np-identity-row-label">Order Date</div>
-                    <div class="np-identity-row-value" id="npIdDate"></div>
-                </div>
-            </div>
-            <div class="np-identity-row">
-                <div class="np-identity-row-icon">✅</div>
-                <div>
-                    <div class="np-identity-row-label">Order Status</div>
-                    <div class="np-identity-row-value" id="npIdStatus"></div>
-                </div>
-            </div>
-            <div class="np-identity-row">
-                <div class="np-identity-row-icon">🌍</div>
-                <div>
-                    <div class="np-identity-row-label">Review Platform</div>
-                    <div class="np-identity-row-value">Nexus Protocol · Verified Purchase</div>
-                </div>
-            </div>
-        </div>
-        <div class="np-identity-seal">
-            <div class="np-identity-seal-icon">🛡️</div>
-            <div class="np-identity-seal-text">
-                This review is linked to a confirmed order. Only customers who completed a purchase can leave a review on Nexus Protocol.
-            </div>
+
+        <!-- Compact Header -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:32px;height:32px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;">🔒</div>
+        <div>
+            <div style="font-size:15px;font-weight:800;color:#111827;font-family:var(--np-font);letter-spacing:-0.3px;">Verified Reviewer</div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:600;font-family:var(--np-font);">Nexus Protocol Identity</div>
         </div>
     </div>
+    <button onclick="closeIdentityOverlay()" style="width:28px;height:28px;border-radius:50%;background:#f1f5f9;border:none;font-size:13px;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center;font-family:var(--np-font);">✕</button>
+</div>
+
+<!-- Avatar Row Compact -->
+<div style="display:flex;align-items:center;gap:12px;padding:12px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-radius:16px;margin-bottom:12px;">
+    <div id="npIdAvatar" style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#ffffff;flex-shrink:0;"></div>
+    <div>
+        <div id="npIdName" style="font-size:15px;font-weight:800;color:#111827;font-family:var(--np-font);"></div>
+        <div id="npIdSince" style="font-size:10px;color:#64748b;margin-top:1px;font-weight:600;font-family:var(--np-font);"></div>
+    </div>
+    <div style="margin-left:auto;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:20px;padding:3px 10px;">
+        <span style="font-size:10px;font-weight:800;color:#059669;font-family:var(--np-font);">✓ Verified</span>
+    </div>
+</div>
+
+<!-- Info Rows Compact -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+    <div style="background:#f8fafc;border-radius:12px;padding:10px 12px;">
+        <div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;font-family:var(--np-font);">📦 Verified Order</div>
+        <div id="npIdOrder" style="font-size:12px;font-weight:800;color:#111827;font-family:var(--np-font);"></div>
+    </div>
+    <div style="background:#f8fafc;border-radius:12px;padding:10px 12px;">
+        <div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;font-family:var(--np-font);">📅 Order Date</div>
+        <div id="npIdDate" style="font-size:12px;font-weight:800;color:#111827;font-family:var(--np-font);"></div>
+    </div>
+    <div style="background:#f8fafc;border-radius:12px;padding:10px 12px;">
+        <div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;font-family:var(--np-font);">✅ Status</div>
+        <div id="npIdStatus" style="font-size:12px;font-weight:800;color:#059669;font-family:var(--np-font);"></div>
+    </div>
+    <div style="background:#f8fafc;border-radius:12px;padding:10px 12px;">
+        <div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;font-family:var(--np-font);">🌍 Platform</div>
+        <div style="font-size:11px;font-weight:800;color:#1d4ed8;font-family:var(--np-font);">Nexus Protocol</div>
+    </div>
+</div>
+
+<!-- Seal -->
+<div style="display:flex;align-items:flex-start;gap:10px;background:linear-gradient(135deg,rgba(29,78,216,0.05),rgba(124,58,237,0.05));border:1px solid rgba(29,78,216,0.12);border-radius:14px;padding:12px 14px;">
+    <span style="font-size:18px;flex-shrink:0;">🛡️</span>
+    <span style="font-size:11px;font-weight:600;color:#374151;line-height:1.5;font-family:var(--np-font);">This review is linked to a confirmed order. Only customers who completed a purchase can leave a review on Nexus Protocol.</span>
 </div>
 
 <!-- REQUEST NEW SERVICE OVERLAY -->
