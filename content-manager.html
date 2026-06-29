@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS - Content Manager</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0b0f1a;
+  --bg2: #111827;
+  --bg3: #141d2e;
+  --bg4: #1a2235;
+  --border: #1f2d45;
+  --txt1: #e2e8f4;
+  --txt2: #7a8ba8;
+  --txt3: #3d5070;
+  --blue: #3b82f6;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --purple: #a855f7;
+  --teal: #14b8a6;
+  --pink: #ec4899;
+  --orange: #f97316;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--txt1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  height: 44px;
+  display: flex; align-items: center;
+  padding: 0 14px; gap: 10px;
+}
+.back-btn {
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: var(--blue);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.page-title { font-size: 14px; font-weight: 700; flex: 1; }
+.save-all-btn {
+  background: linear-gradient(135deg, var(--green), #16a34a);
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.save-all-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── TABS ── */
+.tabs-bar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  padding: 0 14px;
+  gap: 2px;
+}
+.tabs-bar::-webkit-scrollbar { display: none; }
+.tab-btn {
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt2);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+.tab-btn:hover { color: var(--txt1); }
+
+/* ── MAIN ── */
+.main { padding: 14px; max-width: 900px; margin: 0 auto; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── SECTION CARD ── */
+.section-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-subtitle {
+  font-size: 10px;
+  color: var(--txt3);
+  margin-top: 2px;
+  font-weight: 500;
+}
+.section-body { padding: 14px; }
+
+/* ── ADD BTN ── */
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 8px;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.add-btn:hover { background: rgba(59,130,246,0.18); }
+
+/* ── ITEM ROW ── */
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  margin-bottom: 7px;
+  transition: border-color 0.2s;
+}
+.item-row:hover { border-color: var(--txt3); }
+.item-row.dragging { opacity: 0.5; border-color: var(--blue); }
+
+.drag-handle {
+  color: var(--txt3);
+  font-size: 14px;
+  cursor: grab;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+.emoji-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+.emoji-btn:hover { border-color: var(--blue); }
+
+.item-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--txt1);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  min-width: 0;
+}
+.item-input::placeholder { color: var(--txt3); }
+
+.item-id-input {
+  width: 100px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: var(--txt2);
+  font-size: 10px;
+  font-family: monospace;
+  outline: none;
+}
+
+.item-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.badge-blue { background: rgba(59,130,246,0.12); color: var(--blue); }
+.badge-green { background: rgba(34,197,94,0.12); color: var(--green); }
+.badge-red { background: rgba(239,68,68,0.12); color: var(--red); }
+.badge-yellow { background: rgba(234,179,8,0.12); color: var(--yellow); }
+.badge-purple { background: rgba(168,85,247,0.12); color: var(--purple); }
+.badge-pink { background: rgba(236,72,153,0.12); color: var(--pink); }
+.badge-orange { background: rgba(249,115,22,0.12); color: var(--orange); }
+
+.del-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: var(--red);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.del-btn:hover { background: rgba(239,68,68,0.18); }
+
+/* ── SUBCATEGORIES EXPAND ── */
+.subs-toggle {
+  font-size: 10px;
+  color: var(--txt3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.subs-toggle:hover { color: var(--blue); }
+
+.subs-container {
+  margin: 4px 0 8px 46px;
+  display: none;
+}
+.subs-container.open { display: block; }
+.sub-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  margin-bottom: 5px;
+}
+.sub-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--txt2);
+  font-size: 11px;
+  font-family: inherit;
+  min-width: 0;
+}
+.sub-input::placeholder { color: var(--txt3); }
+.add-sub-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: rgba(59,130,246,0.06);
+  border: 1px dashed rgba(59,130,246,0.25);
+  border-radius: 7px;
+  color: var(--txt3);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}
+.add-sub-btn:hover { color: var(--blue); border-color: var(--blue); }
+
+/* ── FEATURED PRO CARD ── */
+.featured-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.featured-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.featured-info { flex: 1; min-width: 0; }
+.featured-name { font-size: 12px; font-weight: 700; color: var(--txt1); }
+.featured-cat { font-size: 10px; color: var(--txt3); margin-top: 2px; }
+.featured-pin-toggle {
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--txt2);
+}
+.featured-pin-toggle.pinned {
+  background: rgba(234,179,8,0.1);
+  border-color: rgba(234,179,8,0.3);
+  color: var(--yellow);
+}
+
+/* ── SEARCH REQUEST CARD ── */
+.req-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.req-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(59,130,246,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.req-body { flex: 1; min-width: 0; }
+.req-name { font-size: 13px; font-weight: 700; color: var(--txt1); }
+.req-reason { font-size: 11px; color: var(--txt2); margin-top: 3px; line-height: 1.4; }
+.req-meta { font-size: 10px; color: var(--txt3); margin-top: 4px; }
+.req-actions { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+.req-approve-btn {
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: var(--green);
+  white-space: nowrap;
+}
+.req-approve-btn:hover { background: rgba(34,197,94,0.2); }
+.req-dismiss-btn {
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: var(--red);
+  white-space: nowrap;
+}
+
+/* ── ANALYTICS ── */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.analytics-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.analytics-rank {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--blue);
+  flex-shrink: 0;
+}
+.analytics-rank.rank-1 { background: rgba(234,179,8,0.15); border-color: rgba(234,179,8,0.3); color: var(--yellow); }
+.analytics-rank.rank-2 { background: rgba(148,163,184,0.15); border-color: rgba(148,163,184,0.3); color: #94a3b8; }
+.analytics-rank.rank-3 { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.3); color: var(--orange); }
+.analytics-info { flex: 1; min-width: 0; }
+.analytics-query { font-size: 12px; font-weight: 700; color: var(--txt1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.analytics-count { font-size: 10px; color: var(--txt3); margin-top: 2px; }
+.analytics-bar-wrap { height: 4px; background: var(--border); border-radius: 10px; margin-top: 4px; overflow: hidden; }
+.analytics-bar { height: 100%; border-radius: 10px; background: var(--blue); transition: width 0.8s ease; }
+
+/* ── PUSH NOTIFICATION ── */
+.push-form {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.push-field-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.push-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--txt1);
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+.push-input:focus { border-color: var(--blue); }
+.push-textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--txt1);
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+  resize: none;
+  height: 80px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+.push-target-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.push-target-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--txt2);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.push-target-btn.active {
+  background: rgba(59,130,246,0.15);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.push-send-btn {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, var(--blue), #1e40af);
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.push-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--txt3);
+}
+.empty-state .ei { font-size: 28px; margin-bottom: 8px; }
+.empty-state .et { font-size: 12px; font-weight: 600; color: var(--txt2); }
+
+/* ── EMOJI PICKER ── */
+.emoji-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.emoji-picker-overlay.show { display: flex; }
+.emoji-picker-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+  max-width: 340px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.emoji-picker-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.emoji-picker-close {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--txt2);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.emoji-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--txt1);
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 10px;
+  text-align: center;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+.emoji-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.emoji-cell:hover { background: var(--bg4); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  z-index: 9000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 360px;
+  padding: 22px;
+  animation: slideUp 0.25s ease forwards;
+}
+@keyframes slideUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.modal-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--txt1);
+  font-size: 12px;
+  outline: none;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.modal-confirm-btn {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, var(--blue), #1e40af);
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 7px;
+  font-family: inherit;
+}
+.modal-cancel-btn {
+  width: 100%;
+  padding: 9px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--txt2);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 22px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--txt1); padding: 9px 18px;
+  border-radius: 50px; font-size: 12px; font-weight: 600;
+  z-index: 99999; white-space: nowrap;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  animation: toastIn 0.3s ease;
+}
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .analytics-grid { grid-template-columns: 1fr; }
+  .emoji-grid { grid-template-columns: repeat(6, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='admin.html'">← Back</button>
+  <span class="page-title">📋 Content Manager</span>
+  <button class="save-all-btn" id="save-all-btn" onclick="saveAllToFirebase()">
+    💾 Save All Changes
+  </button>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('categories')">🗂️ Categories</button>
+  <button class="tab-btn" onclick="switchTab('emergency')">🚨 Emergency Services</button>
+  <button class="tab-btn" onclick="switchTab('post-service')">🚀 Post Your Service</button>
+  <button class="tab-btn" onclick="switchTab('featured')">⭐ Featured Pros</button>
+  <button class="tab-btn" onclick="switchTab('requests')">📬 Service Requests</button>
+  <button class="tab-btn" onclick="switchTab('analytics')">📊 Search Analytics</button>
+  <button class="tab-btn" onclick="switchTab('push')">🔔 Push Notifications</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ════ TAB: CATEGORIES ════ -->
+  <div class="tab-panel active" id="tab-categories">
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">🗂️ Service Categories</div>
+          <div class="section-subtitle">These appear on the homepage category grid. Drag to reorder.</div>
+        </div>
+        <button class="add-btn" onclick="addCategoryRow()">+ Add Category</button>
+      </div>
+      <div class="section-body">
+        <div id="categories-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: EMERGENCY SERVICES ════ -->
+  <div class="tab-panel" id="tab-emergency">
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">🚨 Emergency Services</div>
+          <div class="section-subtitle">Services shown in the Emergency dropdown panel.</div>
+        </div>
+        <button class="add-btn" onclick="addEmergencyRow()">+ Add Service</button>
+      </div>
+      <div class="section-body">
+        <div id="emergency-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: POST YOUR SERVICE ════ -->
+  <div class="tab-panel" id="tab-post-service">
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">🚀 Post Your Service Categories</div>
+          <div class="section-subtitle">Categories in the "Post Your Service" bottom sheet with subcategories.</div>
+        </div>
+        <button class="add-btn" onclick="addPSCatRow()">+ Add Category</button>
+      </div>
+      <div class="section-body">
+        <div id="ps-cats-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: FEATURED PROS ════ -->
+  <div class="tab-panel" id="tab-featured">
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">⭐ Featured / Pinned Providers</div>
+          <div class="section-subtitle">Pinned providers appear at the top of the Highly Rated section.</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div id="featured-list">
+          <div class="empty-state">
+            <div class="ei">⏳</div>
+            <div class="et">Loading providers from Firebase...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: SERVICE REQUESTS ════ -->
+  <div class="tab-panel" id="tab-requests">
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">📬 User Service Requests</div>
+          <div class="section-subtitle">Services users have requested to be added to the platform.</div>
+        </div>
+        <span class="item-badge badge-yellow" id="requests-count-badge">0 pending</span>
+      </div>
+      <div class="section-body">
+        <div id="requests-list">
+          <div class="empty-state">
+            <div class="ei">⏳</div>
+            <div class="et">Loading requests...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: ANALYTICS ════ -->
+  <div class="tab-panel" id="tab-analytics">
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">📊 Most Searched Services</div>
+          <div class="section-subtitle">Real-time data from user searches and category clicks.</div>
+        </div>
+        <button class="add-btn" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:var(--red);" onclick="clearAnalytics()">🗑️ Clear All</button>
+      </div>
+      <div class="section-body">
+        <div class="analytics-grid" id="analytics-grid">
+          <div class="empty-state" style="grid-column:1/-1;">
+            <div class="ei">⏳</div>
+            <div class="et">Loading analytics...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: PUSH NOTIFICATIONS ════ -->
+  <div class="tab-panel" id="tab-push">
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">🔔 Send Push Notification</div>
+          <div class="section-subtitle">Send notifications to all users or a specific user.</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="push-form">
+          <div class="push-field-label">Target Audience</div>
+          <div class="push-target-row">
+            <button class="push-target-btn active" onclick="setPushTarget(this,'all')">🌍 All Users</button>
+            <button class="push-target-btn" onclick="setPushTarget(this,'providers')">🛠️ Providers Only</button>
+            <button class="push-target-btn" onclick="setPushTarget(this,'specific')">👤 Specific User</button>
+          </div>
+
+          <div id="specific-user-field" style="display:none;">
+            <div class="push-field-label">Username</div>
+            <input class="push-input" id="push-username" placeholder="Enter username...">
+          </div>
+
+          <div class="push-field-label">Notification Title *</div>
+          <input class="push-input" id="push-title" placeholder="e.g. 🎉 New Feature Available!">
+
+          <div class="push-field-label">Message *</div>
+          <textarea class="push-textarea" id="push-body" placeholder="Write your notification message here..."></textarea>
+
+          <div class="push-field-label">Link (Optional)</div>
+          <input class="push-input" id="push-url" placeholder="e.g. index.html or https://...">
+
+          <button class="push-send-btn" id="push-send-btn" onclick="sendPushNotification()">
+            🚀 Send Notification
+          </button>
+        </div>
+
+        <!-- Push History -->
+        <div class="section-card" style="margin-bottom:0;">
+          <div class="section-header">
+            <div class="section-title">📜 Recent Notifications Sent</div>
+          </div>
+          <div class="section-body">
+            <div id="push-history-list">
+              <div class="empty-state">
+                <div class="ei">📭</div>
+                <div class="et">No notifications sent yet</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<!-- EMOJI PICKER -->
+<div class="emoji-picker-overlay" id="emoji-picker-overlay">
+  <div class="emoji-picker-box">
+    <div class="emoji-picker-title">
+      Pick an Emoji
+      <button class="emoji-picker-close" onclick="closeEmojiPicker()">✕</button>
+    </div>
+    <input class="emoji-input" id="emoji-direct-input" placeholder="Type or paste emoji here..." oninput="setEmojiDirect(this.value)">
+    <div class="emoji-grid" id="emoji-grid"></div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="confirm-modal-title">Confirm Action</div>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:18px;line-height:1.6;" id="confirm-modal-msg"></div>
+    <button class="modal-confirm-btn" id="confirm-modal-btn">Confirm</button>
+    <button class="modal-cancel-btn" onclick="closeModal('confirm-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+// ── FIREBASE INIT ──
+const firebaseConfig = {
+  apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+  authDomain: "oryzon-50ea4.firebaseapp.com",
+  databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+  projectId: "oryzon-50ea4",
+  storageBucket: "oryzon-50ea4.firebasestorage.app",
+  messagingSenderId: "782106742622",
+  appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+const BACKEND_URL = "https://oryzon-backend-ed1q.onrender.com";
+
+let adminUser = null;
+let currentEmojiTarget = null;
+let pushTarget = 'all';
+let unsavedChanges = false;
+
+// ── DEFAULT DATA ──
+const DEFAULT_CATEGORIES = [
+  { id:"plumber", label:"Plumber", icon:"🔧" },
+  { id:"electrician", label:"Electrician", icon:"⚡" },
+  { id:"carpenter", label:"Carpenter", icon:"🪚" },
+  { id:"chef", label:"Chef / Cook", icon:"🍳" },
+  { id:"snacks", label:"Snacks Vendor", icon:"🧁" },
+  { id:"beverages", label:"Drinks & Beverages", icon:"🥤" },
+  { id:"painter", label:"Painter", icon:"🎨" },
+  { id:"mason", label:"Mason / Builder", icon:"🧱" },
+  { id:"welder", label:"Welder", icon:"🔩" },
+  { id:"mechanic", label:"Auto Mechanic", icon:"🚗" },
+  { id:"ac_tech", label:"AC Technician", icon:"❄️" },
+  { id:"tailor", label:"Tailor", icon:"🧵" },
+  { id:"hvac", label:"HVAC Engineer", icon:"💨" },
+  { id:"cleaner", label:"Professional Cleaner", icon:"🧹" }
+];
+
+const DEFAULT_EMERGENCY = [
+  { id:"plumber", label:"Plumber", icon:"🔧", subs:["General Plumbing","Pipe Fitting","Leak Repair","Drainage"] },
+  { id:"electrician", label:"Electrician", icon:"⚡", subs:["Wiring","Solar Installation","Generator","Smart Home"] },
+  { id:"carpenter", label:"Carpenter", icon:"🪚", subs:["Furniture","Doors & Windows","Roofing","Carving"] },
+  { id:"chef", label:"Chef / Cook", icon:"🍳", subs:["Home Cooking","Catering","Corporate Events"] },
+  { id:"painter", label:"Painter", icon:"🎨", subs:["Interior","Exterior","Texture"] },
+  { id:"mason", label:"Mason / Builder", icon:"🧱", subs:["Block Laying","Plastering","Tiling"] },
+  { id:"welder", label:"Welder", icon:"🔩", subs:["Gate & Fence","Steel Fabrication","Roofing"] },
+  { id:"mechanic", label:"Auto Mechanic", icon:"🚗", subs:["Engine Repair","Electrical","Tires","Body Work"] },
+  { id:"ac_tech", label:"AC Technician", icon:"❄️", subs:["Installation","Repair","Maintenance","Gas Refill"] },
+  { id:"tailor", label:"Tailor", icon:"🧵", subs:["Native Wear","English Wear","Alterations"] },
+  { id:"hvac", label:"HVAC Engineer", icon:"💨", subs:["Installation","Repair","Maintenance"] },
+  { id:"cleaner", label:"Professional Cleaner", icon:"🧹", subs:["Home Cleaning","Office Cleaning","Deep Clean"] }
+];
+
+const DEFAULT_PS_CATS = [
+  { id:"skilled_pro", label:"Plumber", icon:"🔧", subs:["General Plumbing","Pipe Fitting","Leak Repair","Drainage"] },
+  { id:"skilled_pro", label:"Electrician", icon:"⚡", subs:["Wiring","Solar Installation","Generator","Smart Home"] },
+  { id:"skilled_pro", label:"Carpenter", icon:"🪚", subs:["Furniture","Doors & Windows","Roofing","Carving"] },
+  { id:"chef", label:"Chef / Caterer", icon:"🍳", subs:["Home Cooking","Catering","Corporate Events","Wedding Catering","Fine Dining"] },
+  { id:"snacks", label:"Snacks Vendor", icon:"🧁", subs:["Small Chops","Donuts & Pastry","Meatpie & Samosa","Puff Puff","Chin Chin"] },
+  { id:"beverages", label:"Drinks & Beverages", icon:"🥤", subs:["Kunu & Fura","Zobo & Zabo","Fresh Juice","Smoothies","Waina & Masa"] },
+  { id:"skilled_pro", label:"Painter", icon:"🎨", subs:["Interior","Exterior","Texture","Graffiti"] },
+  { id:"skilled_pro", label:"Mason", icon:"🧱", subs:["Block Laying","Plastering","Tiling","Foundation"] },
+  { id:"skilled_pro", label:"Welder", icon:"🔩", subs:["Gate & Fence","Steel Fabrication","Roofing","Furniture"] },
+  { id:"emergency", label:"Mechanic", icon:"🚗", subs:["Engine Repair","Electrical","Tires","Body Work"] },
+  { id:"skilled_pro", label:"AC Tech", icon:"❄️", subs:["Installation","Repair","Maintenance","Gas Refill"] },
+  { id:"skilled_pro", label:"Tailor", icon:"🧵", subs:["Native Wear","English Wear","Alterations","Embroidery"] },
+  { id:"skilled_pro", label:"Cleaner", icon:"🧹", subs:["Home Cleaning","Office Cleaning","Post-Event","Deep Clean"] },
+  { id:"beauty", label:"Kitso / Hair", icon:"💇🏾‍♀️", subs:["Kitso","Wig Making","Hair Treatment","Braiding"] },
+  { id:"beauty", label:"Makeup", icon:"💄", subs:["Bridal Makeup","Party Makeup","Henna/Lalle"] },
+  { id:"delivery", label:"Delivery", icon:"🛵", subs:["Bike Delivery","Car Delivery","Package Delivery"] },
+  { id:"home_service", label:"Laundry", icon:"🧺", subs:["Wash & Fold","Ironing","Dry Cleaning"] },
+  { id:"food", label:"Catering", icon:"🍲", subs:["Wedding Catering","Small Chops","Party Food"] },
+  { id:"emergency", label:"Emergency", icon:"🚨", subs:["Car Breakdown","Medical Assist","Security","Fire Safety"] }
+];
+
+const COMMON_EMOJIS = [
+  "🔧","⚡","🪚","🍳","🎨","🧱","🔩","🚗","❄️","🧵","💨","🧹","🍳","🛵",
+  "🧁","🥤","🍲","💇🏾‍♀️","💄","🧺","🏠","🚨","📦","🔑","🪟","🚿","💡",
+  "🔌","📡","🏗️","🪜","⚒️","🛠️","🔨","🪛","🔩","🗜️","🪤","⛏️","🔬",
+  "🍽️","🥘","🫕","🍱","🥗","🧆","🥙","🌮","🍕","🍔","🌯","🥪","🍜","🍛",
+  "💈","✂️","👔","👗","🎭","🖌️","🖼️","📸","🎬","🎵","📱","💻","🖥️","⌨️",
+  "🚙","🚛","🚐","🏍️","🚲","✈️","🚢","🚂","🎒","💼","🗂️","📋","📝","📞",
+  "🌿","🌱","🌾","🍀","🌊","☀️","🌙","⭐","🔥","💧","🌈","❄️","🌪️","⚡"
+];
+
+// ── LOCAL STATE ──
+let categoriesData = [];
+let emergencyData = [];
+let psCatsData = [];
+
+// ── TAB SWITCHING ──
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    const tabs = ['categories','emergency','post-service','featured','requests','analytics','push'];
+    btn.classList.toggle('active', tabs[i] === tabId);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+
+  if (tabId === 'featured') loadFeaturedPros();
+  if (tabId === 'requests') loadServiceRequests();
+  if (tabId === 'analytics') loadAnalytics();
+  if (tabId === 'push') loadPushHistory();
+}
+
+// ═══════════════════════════════════════════
+// CATEGORIES
+// ═══════════════════════════════════════════
+function renderCategories(data) {
+  const list = document.getElementById('categories-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="ei">📂</div><div class="et">No categories yet</div></div>';
+    return;
+  }
+  list.innerHTML = data.map((cat, idx) => `
+    <div class="item-row" id="cat-row-${idx}">
+      <span class="drag-handle">⋮⋮</span>
+      <button class="emoji-btn" onclick="openEmojiPicker('cat-icon-${idx}')" id="cat-icon-btn-${idx}">${cat.icon}</button>
+      <input type="hidden" id="cat-icon-${idx}" value="${cat.icon}">
+      <input class="item-input" id="cat-label-${idx}" value="${cat.label}" placeholder="Category name" oninput="markUnsaved()">
+      <input class="item-id-input" id="cat-id-${idx}" value="${cat.id}" placeholder="id_key" oninput="markUnsaved()">
+      <button class="del-btn" onclick="deleteCategoryRow(${idx})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addCategoryRow() {
+  categoriesData.push({ id: 'new_category', label: 'New Category', icon: '🔧' });
+  renderCategories(categoriesData);
+  markUnsaved();
+  showToast('✅ Category added — edit and save!');
+}
+
+function deleteCategoryRow(idx) {
+  categoriesData.splice(idx, 1);
+  renderCategories(categoriesData);
+  markUnsaved();
+}
+
+function readCategoriesFromDOM() {
+  return categoriesData.map((_, idx) => ({
+    id: document.getElementById(`cat-id-${idx}`)?.value.trim() || 'category',
+    label: document.getElementById(`cat-label-${idx}`)?.value.trim() || 'Category',
+    icon: document.getElementById(`cat-icon-${idx}`)?.value || '🔧'
+  }));
+}
+
+// ═══════════════════════════════════════════
+// EMERGENCY SERVICES
+// ═══════════════════════════════════════════
+function renderEmergency(data) {
+  const list = document.getElementById('emergency-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="ei">🚨</div><div class="et">No emergency services yet</div></div>';
+    return;
+  }
+  list.innerHTML = data.map((svc, idx) => `
+    <div>
+      <div class="item-row" id="emg-row-${idx}">
+        <span class="drag-handle">⋮⋮</span>
+        <button class="emoji-btn" onclick="openEmojiPicker('emg-icon-${idx}')" id="emg-icon-btn-${idx}">${svc.icon}</button>
+        <input type="hidden" id="emg-icon-${idx}" value="${svc.icon}">
+        <input class="item-input" id="emg-label-${idx}" value="${svc.label}" placeholder="Service name" oninput="markUnsaved()">
+        <input class="item-id-input" id="emg-id-${idx}" value="${svc.id}" placeholder="id_key" oninput="markUnsaved()">
+        <button class="subs-toggle" onclick="toggleSubs('emg-subs-${idx}')">subcategories ▾</button>
+        <button class="del-btn" onclick="deleteEmergencyRow(${idx})">✕</button>
+      </div>
+      <div class="subs-container" id="emg-subs-${idx}">
+        <div id="emg-subs-list-${idx}">
+          ${(svc.subs||[]).map((sub, si) => `
+            <div class="sub-row" id="emg-sub-${idx}-${si}">
+              <span style="color:var(--txt3);font-size:12px;">›</span>
+              <input class="sub-input" id="emg-sub-input-${idx}-${si}" value="${sub}" placeholder="Subcategory name" oninput="markUnsaved()">
+              <button class="del-btn" style="width:22px;height:22px;font-size:10px;" onclick="deleteEmgSub(${idx},${si})">✕</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="add-sub-btn" onclick="addEmgSub(${idx})">+ Add Subcategory</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addEmergencyRow() {
+  emergencyData.push({ id:'new_service', label:'New Service', icon:'🛠️', subs:[] });
+  renderEmergency(emergencyData);
+  markUnsaved();
+}
+
+function deleteEmergencyRow(idx) {
+  emergencyData.splice(idx, 1);
+  renderEmergency(emergencyData);
+  markUnsaved();
+}
+
+function addEmgSub(idx) {
+  if (!emergencyData[idx].subs) emergencyData[idx].subs = [];
+  emergencyData[idx].subs.push('New Subcategory');
+  renderEmergency(emergencyData);
+  markUnsaved();
+}
+
+function deleteEmgSub(idx, si) {
+  emergencyData[idx].subs.splice(si, 1);
+  renderEmergency(emergencyData);
+  markUnsaved();
+}
+
+function readEmergencyFromDOM() {
+  return emergencyData.map((_, idx) => {
+    const subsContainer = document.getElementById(`emg-subs-list-${idx}`);
+    const subInputs = subsContainer ? subsContainer.querySelectorAll('input.sub-input') : [];
+    return {
+      id: document.getElementById(`emg-id-${idx}`)?.value.trim() || 'service',
+      label: document.getElementById(`emg-label-${idx}`)?.value.trim() || 'Service',
+      icon: document.getElementById(`emg-icon-${idx}`)?.value || '🛠️',
+      subs: Array.from(subInputs).map(i => i.value.trim()).filter(Boolean)
+    };
+  });
+}
+
+function toggleSubs(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+// POST YOUR SERVICE CATEGORIES
+// ═══════════════════════════════════════════
+function renderPSCats(data) {
+  const list = document.getElementById('ps-cats-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="ei">🚀</div><div class="et">No categories yet</div></div>';
+    return;
+  }
+
+  const TYPE_BADGES = {
+    chef: 'badge-pink', snacks: 'badge-yellow', beverages: 'badge-blue',
+    skilled_pro: 'badge-green', beauty: 'badge-purple', delivery: 'badge-orange',
+    home_service: 'badge-blue', food: 'badge-pink', emergency: 'badge-red'
+  };
+
+  list.innerHTML = data.map((cat, idx) => `
+    <div>
+      <div class="item-row" id="pscat-row-${idx}">
+        <span class="drag-handle">⋮⋮</span>
+        <button class="emoji-btn" onclick="openEmojiPicker('pscat-icon-${idx}')" id="pscat-icon-btn-${idx}">${cat.icon}</button>
+        <input type="hidden" id="pscat-icon-${idx}" value="${cat.icon}">
+        <input class="item-input" id="pscat-label-${idx}" value="${cat.label}" placeholder="Category name" oninput="markUnsaved()">
+        <select id="pscat-type-${idx}" onchange="markUnsaved()" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--txt2);font-size:10px;outline:none;">
+          ${['skilled_pro','chef','snacks','beverages','beauty','delivery','home_service','food','emergency'].map(t =>
+            `<option value="${t}" ${cat.id===t?'selected':''}>${t}</option>`
+          ).join('')}
+        </select>
+        <button class="subs-toggle" onclick="toggleSubs('pscat-subs-${idx}')">subs ▾</button>
+        <button class="del-btn" onclick="deletePSCatRow(${idx})">✕</button>
+      </div>
+      <div class="subs-container" id="pscat-subs-${idx}">
+        <div id="pscat-subs-list-${idx}">
+          ${(cat.subs||[]).map((sub, si) => `
+            <div class="sub-row" id="pscat-sub-${idx}-${si}">
+              <span style="color:var(--txt3);font-size:12px;">›</span>
+              <input class="sub-input" id="pscat-sub-input-${idx}-${si}" value="${sub}" placeholder="Subcategory name" oninput="markUnsaved()">
+              <button class="del-btn" style="width:22px;height:22px;font-size:10px;" onclick="deletePSSub(${idx},${si})">✕</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="add-sub-btn" onclick="addPSSub(${idx})">+ Add Subcategory</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addPSCatRow() {
+  psCatsData.push({ id:'skilled_pro', label:'New Category', icon:'🛠️', subs:[] });
+  renderPSCats(psCatsData);
+  markUnsaved();
+}
+
+function deletePSCatRow(idx) {
+  psCatsData.splice(idx, 1);
+  renderPSCats(psCatsData);
+  markUnsaved();
+}
+
+function addPSSub(idx) {
+  if (!psCatsData[idx].subs) psCatsData[idx].subs = [];
+  psCatsData[idx].subs.push('New Subcategory');
+  renderPSCats(psCatsData);
+  markUnsaved();
+}
+
+function deletePSSub(idx, si) {
+  psCatsData[idx].subs.splice(si, 1);
+  renderPSCats(psCatsData);
+  markUnsaved();
+}
+
+function readPSCatsFromDOM() {
+  return psCatsData.map((_, idx) => {
+    const subsContainer = document.getElementById(`pscat-subs-list-${idx}`);
+    const subInputs = subsContainer ? subsContainer.querySelectorAll('input.sub-input') : [];
+    return {
+      id: document.getElementById(`pscat-type-${idx}`)?.value || 'skilled_pro',
+      label: document.getElementById(`pscat-label-${idx}`)?.value.trim() || 'Category',
+      icon: document.getElementById(`pscat-icon-${idx}`)?.value || '🛠️',
+      subs: Array.from(subInputs).map(i => i.value.trim()).filter(Boolean)
+    };
+  });
+}
+
+// ═══════════════════════════════════════════
+// FEATURED PROS
+// ═══════════════════════════════════════════
+async function loadFeaturedPros() {
+  const list = document.getElementById('featured-list');
+  list.innerHTML = '<div class="empty-state"><div class="ei">⏳</div><div class="et">Loading...</div></div>';
+  try {
+    const snap = await db.ref('providers').once('value');
+    const data = snap.val() || {};
+    const providers = Object.keys(data).map(uid => ({ id: uid, ...data[uid] }));
+
+    if (providers.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="ei">👥</div><div class="et">No providers found</div></div>';
+      return;
+    }
+
+    const featSnap = await db.ref('admin/featured_pros').once('value');
+    const featuredIds = Object.keys(featSnap.val() || {});
+
+    list.innerHTML = providers.map(p => {
+      const isPinned = featuredIds.includes(p.id);
+      const initials = (p.username || p.id || '??').slice(0,2).toUpperCase();
+      const colors = ['#1d4ed8','#059669','#7c3aed','#ec4899','#06b6d4','#d97706'];
+      const color = colors[p.id.charCodeAt(0) % colors.length];
+      return `
+        <div class="featured-card">
+          <div class="featured-avatar" style="background:${color};">${initials}</div>
+          <div class="featured-info">
+            <div class="featured-name">${p.username || p.id}</div>
+            <div class="featured-cat">${p.categoryLabel || p.category || 'Provider'} · ${p.subcategory || ''}</div>
+          </div>
+          <span class="item-badge ${isPinned ? 'badge-yellow' : 'badge-blue'}">${isPinned ? '📌 Pinned' : getStatusBadge(p)}</span>
+          <button class="featured-pin-toggle ${isPinned ? 'pinned' : ''}" onclick="toggleFeaturedPin('${p.id}', this)">
+            ${isPinned ? '📌 Unpin' : '📍 Pin to Top'}
+          </button>
+        </div>
+      `;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty-state"><div class="ei">⚠️</div><div class="et">Error: ${e.message}</div></div>`;
+  }
+}
+
+function getStatusBadge(p) {
+  if (p.suspended) return '⏸️ Suspended';
+  if (p.verified || p.status === 'approved') return '✅ Approved';
+  if (p.status === 'rejected') return '🚫 Rejected';
+  return '🟡 Pending';
+}
+
+async function toggleFeaturedPin(uid, btn) {
+  const isPinned = btn.classList.contains('pinned');
+  try {
+    if (isPinned) {
+      await db.ref(`admin/featured_pros/${uid}`).remove();
+      btn.classList.remove('pinned');
+      btn.textContent = '📍 Pin to Top';
+      showToast('📍 Provider unpinned!');
+    } else {
+      await db.ref(`admin/featured_pros/${uid}`).set({
+        pinnedAt: Date.now(),
+        pinnedBy: 'Super Admin'
+      });
+      btn.classList.add('pinned');
+      btn.textContent = '📌 Unpin';
+      showToast('📌 Provider pinned to top!');
+    }
+  } catch(e) { showToast('❌ Error: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════
+// SERVICE REQUESTS
+// ═══════════════════════════════════════════
+async function loadServiceRequests() {
+  const list = document.getElementById('requests-list');
+  const badge = document.getElementById('requests-count-badge');
+  list.innerHTML = '<div class="empty-state"><div class="ei">⏳</div><div class="et">Loading...</div></div>';
+  try {
+    const snap = await db.ref('admin/service_requests').once('value');
+    const data = snap.val() || {};
+    const requests = Object.keys(data)
+      .map(id => ({ id, ...data[id] }))
+      .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+
+    const pending = requests.filter(r => r.status === 'pending');
+    badge.textContent = pending.length + ' pending';
+
+    if (requests.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="ei">📭</div><div class="et">No service requests yet</div></div>';
+      return;
+    }
+
+    list.innerHTML = requests.map(r => {
+      const isPending = r.status === 'pending';
+      return `
+        <div class="req-card" style="${!isPending ? 'opacity:0.6;' : ''}">
+          <div class="req-icon">🚀</div>
+          <div class="req-body">
+            <div class="req-name">${r.serviceName || '—'}</div>
+            <div class="req-reason">${r.reason || 'No reason provided'}</div>
+            <div class="req-meta">By ${r.contact || 'Anonymous'} · ${formatDate(r.createdAt)}</div>
+          </div>
+          <div class="req-actions">
+            ${isPending ? `
+              <button class="req-approve-btn" onclick="approveServiceRequest('${r.id}', '${(r.serviceName||'').replace(/'/g,"\\'")}')">✅ Add to Platform</button>
+              <button class="req-dismiss-btn" onclick="dismissServiceRequest('${r.id}')">✕ Dismiss</button>
+            ` : `<span class="item-badge ${r.status === 'approved' ? 'badge-green' : 'badge-red'}">${r.status}</span>`}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty-state"><div class="ei">⚠️</div><div class="et">Error: ${e.message}</div></div>`;
+  }
+}
+
+async function approveServiceRequest(reqId, serviceName) {
+  showConfirmModal(
+    '✅ Add Service to Platform',
+    `Add "${serviceName}" to the platform categories? This will mark the request as approved.`,
+    async () => {
+      try {
+        await db.ref(`admin/service_requests/${reqId}`).update({ status: 'approved', approvedAt: Date.now() });
+        showToast(`✅ "${serviceName}" approved! Remember to add it to Categories.`);
+        loadServiceRequests();
+      } catch(e) { showToast('❌ Error: ' + e.message); }
+    }
+  );
+}
+
+async function dismissServiceRequest(reqId) {
+  try {
+    await db.ref(`admin/service_requests/${reqId}`).update({ status: 'dismissed', dismissedAt: Date.now() });
+    showToast('🚫 Request dismissed!');
+    loadServiceRequests();
+  } catch(e) { showToast('❌ Error: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════
+async function loadAnalytics() {
+  const grid = document.getElementById('analytics-grid');
+  grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="ei">⏳</div><div class="et">Loading...</div></div>';
+  try {
+    const snap = await db.ref('admin/search_stats').orderByChild('count').limitToLast(20).once('value');
+    const data = snap.val() || {};
+    const items = Object.values(data).sort((a,b) => (b.count||0) - (a.count||0));
+
+    if (items.length === 0) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="ei">📊</div><div class="et">No search data yet</div></div>';
+      return;
+    }
+
+    const maxCount = items[0].count || 1;
+    grid.innerHTML = items.map((item, idx) => {
+      const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+      const pct = ((item.count / maxCount) * 100).toFixed(0);
+      return `
+        <div class="analytics-box">
+          <div class="analytics-rank ${rankClass}">${idx + 1}</div>
+          <div class="analytics-info">
+            <div class="analytics-query">${item.query || '—'}</div>
+            <div class="analytics-count">${item.count} searches</div>
+            <div class="analytics-bar-wrap">
+              <div class="analytics-bar" style="width:${pct}%"></div>
+            </div>
+          </div>
+          <span class="item-badge badge-blue">${pct}%</span>
+        </div>
+      `;
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="ei">⚠️</div><div class="et">Error: ${e.message}</div></div>`;
+  }
+}
+
+async function clearAnalytics() {
+  showConfirmModal(
+    '🗑️ Clear All Analytics',
+    'Are you sure you want to clear all search analytics data? This cannot be undone.',
+    async () => {
+      try {
+        await db.ref('admin/search_stats').remove();
+        showToast('✅ Analytics cleared!');
+        loadAnalytics();
+      } catch(e) { showToast('❌ Error: ' + e.message); }
+    }
+  );
+}
+
+// ═══════════════════════════════════════════
+// PUSH NOTIFICATIONS
+// ═══════════════════════════════════════════
+function setPushTarget(btn, target) {
+  pushTarget = target;
+  document.querySelectorAll('.push-target-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('specific-user-field').style.display = target === 'specific' ? 'block' : 'none';
+}
+
+async function sendPushNotification() {
+  const title = document.getElementById('push-title').value.trim();
+  const body = document.getElementById('push-body').value.trim();
+  const url = document.getElementById('push-url').value.trim();
+  const username = document.getElementById('push-username')?.value.trim();
+
+  if (!title) { showToast('⚠️ Enter notification title!'); return; }
+  if (!body) { showToast('⚠️ Enter notification message!'); return; }
+  if (pushTarget === 'specific' && !username) { showToast('⚠️ Enter username!'); return; }
+
+  const btn = document.getElementById('push-send-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending...';
+
+  try {
+    const payload = { title, body, target: pushTarget, url: url || null, sentAt: Date.now(), sentBy: 'Super Admin' };
+    if (pushTarget === 'specific') payload.username = username;
+
+    // Save to push history
+    await db.ref('admin/push_history').push(payload);
+
+    // Send to backend if available
+    if (pushTarget === 'specific' && username) {
+      await fetch(`${BACKEND_URL}/send-push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, title, body, data: { url } })
+      }).catch(() => {});
+    }
+
+    showToast(`✅ Notification sent to ${pushTarget === 'all' ? 'all users' : pushTarget === 'providers' ? 'all providers' : username}!`);
+
+    // Clear form
+    document.getElementById('push-title').value = '';
+    document.getElementById('push-body').value = '';
+    document.getElementById('push-url').value = '';
+    if (document.getElementById('push-username')) document.getElementById('push-username').value = '';
+
+    loadPushHistory();
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🚀 Send Notification';
+}
+
+async function loadPushHistory() {
+  const list = document.getElementById('push-history-list');
+  try {
+    const snap = await db.ref('admin/push_history').orderByChild('sentAt').limitToLast(10).once('value');
+    const data = snap.val() || {};
+    const items = Object.values(data).sort((a,b) => (b.sentAt||0) - (a.sentAt||0));
+
+    if (items.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="ei">📭</div><div class="et">No notifications sent yet</div></div>';
+      return;
+    }
+
+    list.innerHTML = items.map(n => `
+      <div class="req-card">
+        <div class="req-icon">🔔</div>
+        <div class="req-body">
+          <div class="req-name">${n.title}</div>
+          <div class="req-reason">${n.body}</div>
+          <div class="req-meta">To: ${n.target === 'specific' ? n.username : n.target} · ${formatDate(n.sentAt)}</div>
+        </div>
+        <span class="item-badge badge-green">Sent</span>
+      </div>
+    `).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty-state"><div class="ei">⚠️</div><div class="et">Could not load history</div></div>`;
+  }
+}
+
+// ═══════════════════════════════════════════
+// SAVE ALL TO FIREBASE
+// ═══════════════════════════════════════════
+async function saveAllToFirebase() {
+  const btn = document.getElementById('save-all-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving...';
+
+  try {
+    const categories = readCategoriesFromDOM();
+    const emergency = readEmergencyFromDOM();
+    const psCats = readPSCatsFromDOM();
+
+    await db.ref('admin/content').set({
+      categories,
+      emergency_services: emergency,
+      ps_categories: psCats,
+      lastUpdated: Date.now(),
+      updatedBy: 'Super Admin'
+    });
+
+    unsavedChanges = false;
+    showToast('✅ All changes saved to Firebase successfully!');
+  } catch(e) {
+    showToast('❌ Save failed: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💾 Save All Changes';
+}
+
+// ═══════════════════════════════════════════
+// LOAD FROM FIREBASE
+// ═══════════════════════════════════════════
+async function loadContentFromFirebase() {
+  try {
+    const snap = await db.ref('admin/content').once('value');
+    const data = snap.val();
+
+    if (data && data.categories) {
+      categoriesData = data.categories;
+    } else {
+      categoriesData = [...DEFAULT_CATEGORIES];
+    }
+
+    if (data && data.emergency_services) {
+      emergencyData = data.emergency_services;
+    } else {
+      emergencyData = [...DEFAULT_EMERGENCY];
+    }
+
+    if (data && data.ps_categories) {
+      psCatsData = data.ps_categories;
+    } else {
+      psCatsData = [...DEFAULT_PS_CATS];
+    }
+
+    renderCategories(categoriesData);
+    renderEmergency(emergencyData);
+    renderPSCats(psCatsData);
+
+    if (!data) {
+      showToast('ℹ️ Using default data. Save to push to Firebase.');
+    } else {
+      showToast('✅ Content loaded from Firebase!');
+    }
+  } catch(e) {
+    categoriesData = [...DEFAULT_CATEGORIES];
+    emergencyData = [...DEFAULT_EMERGENCY];
+    psCatsData = [...DEFAULT_PS_CATS];
+    renderCategories(categoriesData);
+    renderEmergency(emergencyData);
+    renderPSCats(psCatsData);
+    showToast('⚠️ Using defaults — could not load Firebase data.');
+  }
+}
+
+// ═══════════════════════════════════════════
+// EMOJI PICKER
+// ═══════════════════════════════════════════
+function openEmojiPicker(targetId) {
+  currentEmojiTarget = targetId;
+  const hiddenInput = document.getElementById(targetId);
+  const directInput = document.getElementById('emoji-direct-input');
+  if (directInput && hiddenInput) directInput.value = hiddenInput.value;
+
+  const grid = document.getElementById('emoji-grid');
+  grid.innerHTML = COMMON_EMOJIS.map(e =>
+    `<div class="emoji-cell" onclick="selectEmoji('${e}')">${e}</div>`
+  ).join('');
+
+  document.getElementById('emoji-picker-overlay').classList.add('show');
+}
+
+function selectEmoji(emoji) {
+  if (!currentEmojiTarget) return;
+  const hiddenInput = document.getElementById(currentEmojiTarget);
+  const btnId = currentEmojiTarget.replace('icon', 'icon-btn');
+  const btn = document.getElementById(btnId);
+  if (hiddenInput) hiddenInput.value = emoji;
+  if (btn) btn.textContent = emoji;
+  markUnsaved();
+  closeEmojiPicker();
+}
+
+function setEmojiDirect(value) {
+  if (!value || !currentEmojiTarget) return;
+  const emoji = value.trim();
+  if ([...emoji].length <= 2) {
+    selectEmoji(emoji);
+  }
+}
+
+function closeEmojiPicker() {
+  document.getElementById('emoji-picker-overlay').classList.remove('show');
+  currentEmojiTarget = null;
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function markUnsaved() {
+  unsavedChanges = true;
+}
+
+function formatDate(ms) {
+  if (!ms) return '—';
+  return new Date(ms).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function showToast(msg) {
+  const existing = document.getElementById('toast-el');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast'; t.id = 'toast-el';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3500);
+}
+
+function showConfirmModal(title, msg, onConfirm) {
+  document.getElementById('confirm-modal-title').textContent = title;
+  document.getElementById('confirm-modal-msg').textContent = msg;
+  const btn = document.getElementById('confirm-modal-btn');
+  btn.onclick = () => { closeModal('confirm-modal'); onConfirm(); };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function closeModal(id) {
+  document.getElementById(id)?.classList.remove('show');
+}
+
+// Warn before leaving with unsaved changes
+window.addEventListener('beforeunload', e => {
+  if (unsavedChanges) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ═══════════════════════════════════════════
+// AUTH + INIT
+// ═══════════════════════════════════════════
+document.getElementById('emoji-picker-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('emoji-picker-overlay')) closeEmojiPicker();
+});
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(overlay.id); });
+});
+
+// Check auth — redirect to admin.html if not logged in
+auth.onAuthStateChanged(user => {
+  adminUser = user;
+  if (user) {
+    loadContentFromFirebase();
+  } else {
+    // Ba a login ba — koma admin.html
+    window.location.href = 'admin.html';
+  }
+});
+</script>
+</body>
+</html>
