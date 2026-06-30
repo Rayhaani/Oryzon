@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Protocol</title>
+    <title>Nexus Protocol - Register</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -59,7 +59,7 @@
         }
         .progress-line-fill {
             height: 100%;
-            width: 14.28%;
+            width: 12.5%;
             background: var(--nexus-cyan);
             box-shadow: 0 0 10px var(--nexus-cyan);
             transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -104,6 +104,12 @@
             text-transform: capitalize;
             color: #ffffff;
         }
+        .step-header .step-hint {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: -10px;
+            margin-bottom: 14px;
+        }
 
         .nexus-input-field {
             width: 100%;
@@ -122,7 +128,6 @@
             background: #111114;
         }
 
-        /* SELECT DROPDOWN */
         .nexus-select-field {
             width: 100%;
             background: #0d0d0f;
@@ -156,6 +161,14 @@
             font-size: 11px;
             margin-top: 6px;
             display: none;
+            line-height: 1.4;
+        }
+        .success-message {
+            color: var(--success-green);
+            font-size: 11px;
+            margin-top: 6px;
+            display: none;
+            line-height: 1.4;
         }
 
         .suggestions-box {
@@ -219,6 +232,7 @@
             animation: buttonPulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
             transition: all 0.3s ease;
         }
+        .nexus-round-next:disabled { opacity: 0.4; cursor: not-allowed; animation: none; }
         .nexus-round-next span { font-size: 12px; transition: transform 0.2s ease; }
         .nexus-round-next:hover { background: rgba(0, 242, 255, 0.05); border-color: var(--nexus-cyan); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
         .nexus-round-next:hover span { transform: translateX(2px); }
@@ -235,6 +249,24 @@
             color: var(--text-secondary);
         }
         .auth-footer a { color: var(--nexus-cyan); text-decoration: none; }
+
+        .password-strength-row {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .strength-bar {
+            flex: 1;
+            height: 3px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.08);
+            transition: background 0.25s ease;
+        }
+        .strength-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
     </style>
 </head>
 <body>
@@ -272,25 +304,43 @@
                     <div class="step-header"><h2>Choose Username</h2></div>
                     <input type="text" id="inpUsername" class="nexus-input-field" required autocomplete="off">
                     <div class="error-message" id="usernameError">Username not available. Suggestions:</div>
+                    <div class="success-message" id="usernameOkMsg">✓ Username available</div>
                     <div class="suggestions-box" id="suggestionsBox"></div>
                     <div class="btn-container">
                         <button type="button" class="nexus-back-text" onclick="moveBackward(2)">Back</button>
-                        <button type="button" class="nexus-round-next" onclick="moveForward(4)">NEXT <span>→</span></button>
+                        <button type="button" class="nexus-round-next" id="step3NextBtn" onclick="moveForward(4)">NEXT <span>→</span></button>
                     </div>
                 </div>
 
-                <!-- STEP 4: Phone or Email -->
+                <!-- STEP 4: Email -->
                 <div class="form-step" id="step4">
-                    <div class="step-header"><h2>Phone or Email</h2></div>
-                    <input type="text" id="inpIdentity" class="nexus-input-field" required autocomplete="off">
+                    <div class="step-header">
+                        <h2>Email Address</h2>
+                        <div class="step-hint">This will be used to sign in to your account.</div>
+                    </div>
+                    <input type="email" id="inpEmail" class="nexus-input-field" required autocomplete="off" placeholder="you@example.com">
+                    <div class="error-message" id="emailError">Please enter a valid email address.</div>
                     <div class="btn-container">
                         <button type="button" class="nexus-back-text" onclick="moveBackward(3)">Back</button>
                         <button type="button" class="nexus-round-next" onclick="moveForward(5)">NEXT <span>→</span></button>
                     </div>
                 </div>
 
-                <!-- STEP 5: Country -->
+                <!-- STEP 5: Phone Number -->
                 <div class="form-step" id="step5">
+                    <div class="step-header">
+                        <h2>Phone Number</h2>
+                        <div class="step-hint">For order updates and verification (optional).</div>
+                    </div>
+                    <input type="tel" id="inpPhone" class="nexus-input-field" autocomplete="off" placeholder="e.g. 08012345678">
+                    <div class="btn-container">
+                        <button type="button" class="nexus-back-text" onclick="moveBackward(4)">Back</button>
+                        <button type="button" class="nexus-round-next" onclick="moveForward(6)">NEXT <span>→</span></button>
+                    </div>
+                </div>
+
+                <!-- STEP 6: Country -->
+                <div class="form-step" id="step6">
                     <div class="step-header"><h2>Country</h2></div>
                     <select id="inpCountry" class="nexus-select-field" required>
                         <option value="" disabled selected>Select your country</option>
@@ -329,27 +379,37 @@
                         <option>Other</option>
                     </select>
                     <div class="btn-container">
-                        <button type="button" class="nexus-back-text" onclick="moveBackward(4)">Back</button>
-                        <button type="button" class="nexus-round-next" onclick="moveForward(6)">NEXT <span>→</span></button>
-                    </div>
-                </div>
-
-                <!-- STEP 6: Town/State -->
-                <div class="form-step" id="step6">
-                    <div class="step-header"><h2>Town / State</h2></div>
-                    <input type="text" id="inpTown" class="nexus-input-field" required autocomplete="off" >
-                    <div class="btn-container">
                         <button type="button" class="nexus-back-text" onclick="moveBackward(5)">Back</button>
                         <button type="button" class="nexus-round-next" onclick="moveForward(7)">NEXT <span>→</span></button>
                     </div>
                 </div>
 
-                <!-- STEP 7: Password -->
+                <!-- STEP 7: Town/State -->
                 <div class="form-step" id="step7">
-                    <div class="step-header"><h2>Password</h2></div>
-                    <input type="password" id="inpPassword" class="nexus-input-field" required>
+                    <div class="step-header"><h2>Town / State</h2></div>
+                    <input type="text" id="inpTown" class="nexus-input-field" required autocomplete="off">
                     <div class="btn-container">
                         <button type="button" class="nexus-back-text" onclick="moveBackward(6)">Back</button>
+                        <button type="button" class="nexus-round-next" onclick="moveForward(8)">NEXT <span>→</span></button>
+                    </div>
+                </div>
+
+                <!-- STEP 8: Password -->
+                <div class="form-step" id="step8">
+                    <div class="step-header">
+                        <h2>Create Password</h2>
+                        <div class="step-hint">Minimum 6 characters.</div>
+                    </div>
+                    <input type="password" id="inpPassword" class="nexus-input-field" required minlength="6" autocomplete="new-password">
+                    <div class="password-strength-row">
+                        <div class="strength-bar" id="bar1"></div>
+                        <div class="strength-bar" id="bar2"></div>
+                        <div class="strength-bar" id="bar3"></div>
+                    </div>
+                    <div class="strength-label" id="strengthLabel"></div>
+                    <div class="error-message" id="passwordError">Password must be at least 6 characters.</div>
+                    <div class="btn-container">
+                        <button type="button" class="nexus-back-text" onclick="moveBackward(7)">Back</button>
                         <button type="submit" class="nexus-round-next" id="submitBtn">SUBMIT <span>→</span></button>
                     </div>
                 </div>
@@ -357,18 +417,33 @@
             </div>
         </form>
 
-        <div class="auth-footer">
+    <div class="auth-footer">
             Already registered? <a href="login.html">Login Here</a>
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- VERIFY EMAIL OVERLAY -->
+    <div id="verifyEmailOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);backdrop-filter:blur(10px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;">
+        <div style="width:100%;max-width:340px;background:linear-gradient(135deg,#1e1c1c 0%,#121111 100%);border-radius:20px;padding:32px 24px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,0.8);">
+            <div style="font-size:48px;margin-bottom:16px;">📧</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:#ffffff;margin-bottom:10px;letter-spacing:0.5px;">Verify Your Email</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:6px;">We sent a verification link to:</div>
+            <div style="font-size:13px;color:#00F2FF;font-weight:600;margin-bottom:18px;" id="verifyEmailAddress">—</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:22px;">Click the link in that email to activate your account. Check your spam folder if you don't see it.</div>
+            <button onclick="resendVerificationEmail()" id="resendBtn" style="width:100%;background:transparent;border:1px solid rgba(0,242,255,0.3);border-radius:25px;padding:11px;color:#00F2FF;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:10px;">RESEND EMAIL</button>
+            <button onclick="window.location.href='login.html'" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:25px;padding:11px;color:rgba(255,255,255,0.7);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Continue to Login →</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
         const firebaseConfig = {
           apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
           authDomain: "oryzon-50ea4.firebaseapp.com",
+          databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
           projectId: "oryzon-50ea4",
           storageBucket: "oryzon-50ea4.firebasestorage.app",
           messagingSenderId: "782106742622",
@@ -377,44 +452,90 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const rtdb = firebase.database();
 
         let activeStep = 1;
-        const totalSteps = 7;
+        const totalSteps = 8;
+        let usernameIsValid = false;
+        let usernameCheckTimeout = null;
 
-        const blacklistedUsernames = ["rayhaani", "ahmad", "nexus", "sadiq", "kanomart"];
+        const blacklistedUsernames = ["rayhaani", "ahmad", "nexus", "sadiq", "kanomart", "admin", "support"];
 
+        // ── USERNAME AVAILABILITY CHECK (Realtime Database lookup) ──
         document.getElementById("inpUsername").addEventListener("input", function(e) {
             let val = e.target.value.toLowerCase().trim().replace(/\s+/g, '');
+            e.target.value = val;
             const errorPrompt = document.getElementById("usernameError");
+            const okMsg = document.getElementById("usernameOkMsg");
             const sugBox = document.getElementById("suggestionsBox");
+            const nextBtn = document.getElementById("step3NextBtn");
 
-            if (val.length === 0) {
-                errorPrompt.style.display = "none";
-                sugBox.style.display = "none";
+            errorPrompt.style.display = "none";
+            okMsg.style.display = "none";
+            sugBox.style.display = "none";
+            usernameIsValid = false;
+
+            if (val.length < 3) return;
+
+            if (blacklistedUsernames.includes(val)) {
+                showUsernameTaken(val);
                 return;
             }
 
-            if (blacklistedUsernames.includes(val)) {
-                errorPrompt.style.display = "block";
-                sugBox.style.display = "block";
-                sugBox.innerHTML = "";
-                let variants = [`${val}.ani`, `${val}_ani`, `${val}._`, `core_${val}`, `${val}.node`];
-                variants.forEach(variant => {
-                    let div = document.createElement("div");
-                    div.className = "suggestion-item";
-                    div.innerText = variant;
-                    div.onclick = function() {
-                        document.getElementById("inpUsername").value = variant;
-                        errorPrompt.style.display = "none";
-                        sugBox.style.display = "none";
-                    };
-                    sugBox.appendChild(div);
+            clearTimeout(usernameCheckTimeout);
+            usernameCheckTimeout = setTimeout(() => {
+                rtdb.ref("usernames/" + val).once("value").then(snap => {
+                    if (snap.exists()) {
+                        showUsernameTaken(val);
+                    } else {
+                        usernameIsValid = true;
+                        okMsg.style.display = "block";
+                    }
                 });
-            } else {
-                errorPrompt.style.display = "none";
-                sugBox.style.display = "none";
+            }, 400);
+        });
+
+        function showUsernameTaken(val) {
+            const errorPrompt = document.getElementById("usernameError");
+            const sugBox = document.getElementById("suggestionsBox");
+            errorPrompt.style.display = "block";
+            sugBox.style.display = "block";
+            sugBox.innerHTML = "";
+            let variants = [`${val}.ani`, `${val}_ani`, `${val}._`, `core_${val}`, `${val}.node`];
+            variants.forEach(variant => {
+                let div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.innerText = variant;
+                div.onclick = function() {
+                    document.getElementById("inpUsername").value = variant;
+                    document.getElementById("inpUsername").dispatchEvent(new Event('input'));
+                };
+                sugBox.appendChild(div);
+            });
+        }
+
+        // ── PASSWORD STRENGTH METER ──
+        document.getElementById("inpPassword").addEventListener("input", function(e) {
+            const val = e.target.value;
+            const bars = [document.getElementById("bar1"), document.getElementById("bar2"), document.getElementById("bar3")];
+            const label = document.getElementById("strengthLabel");
+            bars.forEach(b => b.style.background = "rgba(255,255,255,0.08)");
+
+            if (val.length === 0) { label.textContent = ""; return; }
+
+            let score = 0;
+            if (val.length >= 6) score++;
+            if (val.length >= 10 && /[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+            if (val.length >= 10 && /[!@#$%^&*]/.test(val)) score++;
+
+            const colors = ["#ff3b30", "#eab308", "#34c759"];
+            const labels = ["Weak password", "Good password", "Strong password"];
+            for (let i = 0; i < Math.max(score, val.length >= 6 ? 1 : 0); i++) {
+                if (bars[i]) bars[i].style.background = colors[Math.max(score,1)-1];
             }
+            label.textContent = val.length >= 6 ? labels[Math.max(score,1)-1] : "Too short — minimum 6 characters";
+            label.style.color = val.length >= 6 ? colors[Math.max(score,1)-1] : "var(--error-red)";
         });
 
         function moveForward(target) {
@@ -435,11 +556,27 @@
                 }
             }
 
-            if (activeStep === 4 && !document.getElementById("inpIdentity").value.trim()) return;
+            if (activeStep === 3) {
+                const val = document.getElementById("inpUsername").value.trim();
+                if (val.length < 3 || !usernameIsValid) {
+                    document.getElementById("usernameError").style.display = "block";
+                    return;
+                }
+            }
 
-            if (activeStep === 5 && !document.getElementById("inpCountry").value) return;
+            if (activeStep === 4) {
+                const email = document.getElementById("inpEmail").value.trim();
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(email)) {
+                    document.getElementById("emailError").style.display = "block";
+                    return;
+                }
+                document.getElementById("emailError").style.display = "none";
+            }
 
-            if (activeStep === 6 && !document.getElementById("inpTown").value.trim()) return;
+            if (activeStep === 6 && !document.getElementById("inpCountry").value) return;
+
+            if (activeStep === 7 && !document.getElementById("inpTown").value.trim()) return;
 
             let currentForm = document.getElementById(`step${activeStep}`);
             currentForm.classList.add("exit");
@@ -467,41 +604,113 @@
             document.getElementById("progressFill").style.width = ((activeStep / totalSteps) * 100) + "%";
         }
 
+        // ── FINAL SUBMIT — FIREBASE AUTH + REALTIME DATABASE PROFILE ──
         function executeSync(event) {
             event.preventDefault();
             const submitBtn = document.getElementById("submitBtn");
             const authCard = document.getElementById("authCard");
+            const passwordError = document.getElementById("passwordError");
 
             const name     = document.getElementById("inpName").value.trim();
             const dob      = document.getElementById("inpDOB").value;
             const username = document.getElementById("inpUsername").value.trim().toLowerCase();
-            const identity = document.getElementById("inpIdentity").value.trim();
+            const email    = document.getElementById("inpEmail").value.trim();
+            const phone    = document.getElementById("inpPhone").value.trim();
             const country  = document.getElementById("inpCountry").value;
             const town     = document.getElementById("inpTown").value.trim();
-            const password = document.getElementById("inpPassword").value.trim();
+            const password = document.getElementById("inpPassword").value;
 
+            passwordError.style.display = "none";
+
+            if (password.length < 6) {
+                passwordError.style.display = "block";
+                return;
+            }
+
+            submitBtn.disabled = true;
             submitBtn.innerHTML = "SUBMITTING... <span>→</span>";
 
-            db.collection("users").doc(username).set({
-                fullName: name,
-                dateOfBirth: dob,
-                username: username,
-                routingIdentity: identity,
-                country: country,
-                town: town,
-                accessCipher: password,
-                isOnline: true,
-                registrationTimestamp: Date.now()
-            })
-            .then(() => {
-                localStorage.setItem("nexus_user_session", username);
-                authCard.classList.add("implode-active");
-                setTimeout(() => { window.location.href = "login.html"; }, 2000);
-            })
-            .catch((err) => {
-                console.error("Link error: ", err);
-                submitBtn.innerHTML = "SUBMIT <span>→</span>";
-            });
+            // 1) Create Firebase Auth account (email + password)
+            let createdUser = null;
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const uid = userCredential.user.uid;
+                    createdUser = userCredential.user;
+
+                    // 2) Reserve the username (uniqueness lock)
+                    const usernamePromise = rtdb.ref("usernames/" + username).set({ uid });
+
+                    // 3) Save full profile under customers/{uid}
+                    const profilePromise = rtdb.ref("customers/" + uid).set({
+                        uid: uid,
+                        fullName: name,
+                        dateOfBirth: dob,
+                        username: username,
+                        email: email,
+                        phone: phone || null,
+                        country: country,
+                        town: town,
+                        emailVerified: false,
+                        createdAt: Date.now()
+                    });
+
+                    return Promise.all([usernamePromise, profilePromise]).then(() => uid);
+                })
+                .then((uid) => {
+                    // 4) Send verification email
+                    return createdUser.sendEmailVerification().then(() => uid);
+                })
+                .then((uid) => {
+                    localStorage.setItem("nexus_user_session", username);
+                    localStorage.setItem("nexus_user_uid", uid);
+                    showVerifyEmailOverlay(email);
+                })
+                .catch((err) => {
+                    console.error("Registration error: ", err);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = "SUBMIT <span>→</span>";
+
+                    if (err.code === "auth/email-already-in-use") {
+                        moveBackward(4);
+                        document.getElementById("emailError").textContent = "This email is already registered. Try logging in instead.";
+                        document.getElementById("emailError").style.display = "block";
+                    } else if (err.code === "auth/weak-password") {
+                        passwordError.textContent = "Password is too weak. Use at least 6 characters.";
+                        passwordError.style.display = "block";
+                    } else {
+                        passwordError.textContent = "Registration failed: " + err.message;
+                        passwordError.style.display = "block";
+                    }
+                });
+        }
+
+        }
+
+        function showVerifyEmailOverlay(email) {
+            document.getElementById("authCard").style.display = "none";
+            document.getElementById("verifyEmailAddress").textContent = email;
+            document.getElementById("verifyEmailOverlay").style.display = "flex";
+        }
+
+        function resendVerificationEmail() {
+            const btn = document.getElementById("resendBtn");
+            const user = auth.currentUser;
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            btn.textContent = "SENDING...";
+            btn.disabled = true;
+            user.sendEmailVerification()
+                .then(() => {
+                    btn.textContent = "✓ EMAIL SENT";
+                    setTimeout(() => { btn.textContent = "RESEND EMAIL"; btn.disabled = false; }, 4000);
+                })
+                .catch((err) => {
+                    btn.textContent = "FAILED — TRY AGAIN";
+                    btn.disabled = false;
+                    console.error(err);
+                });
         }
     </script>
 </body>
