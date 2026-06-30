@@ -4349,7 +4349,7 @@
     <!-- PURE TSANTSAR VANILLA JAVASCRIPT ENGINE (NO REACT/BABEL) -->
     <script>
        // Core Static Local Data Context Stores Verbatim
-const CATEGORIES = [
+let CATEGORIES = [
     { id: "plumber", label: "Plumber", icon: "🔧" },
     { id: "electrician", label: "Electrician", icon: "⚡" },
     { id: "carpenter", label: "Carpenter", icon: "🪚" },
@@ -4461,6 +4461,20 @@ const PROS = [
     },
 ];
 
+async function loadContentFromFirebase() {
+    try {
+        const snap = await firebase.database().ref('admin/content').once('value');
+        const data = snap.val();
+        if (data) {
+            if (data.categories) CATEGORIES = data.categories;
+            if (data.emergency_services) EMG_SERVICES = data.emergency_services;
+            if (data.ps_categories) PS_CATS = data.ps_categories;
+        }
+    } catch(e) {
+        console.warn('Could not load Firebase content, using defaults:', e);
+    }
+}
+    
 // Global App State
 let state = {
     view: "main",
@@ -4501,7 +4515,7 @@ const portfolioFiles = {};
 const verificationFiles = {};
 const BACKEND_URL = "https://oryzon-backend-ed1q.onrender.com";
 
-const PS_CATS = [
+let PS_CATS = [
     { id:"skilled_pro", label:"Plumber",      icon:"🔧", subs:["General Plumbing","Pipe Fitting","Leak Repair","Drainage"] },
     { id:"skilled_pro", label:"Electrician",  icon:"⚡", subs:["Wiring","Solar Installation","Generator","Smart Home"] },
     { id:"skilled_pro", label:"Carpenter",    icon:"🪚", subs:["Furniture","Doors & Windows","Roofing","Carving"] },
@@ -6893,7 +6907,9 @@ function removeDailyUploadBlockPhoto(blockId, slotIdx) {
         
 // ── DOMContentLoaded ──
 document.addEventListener("DOMContentLoaded", () => {
-    initAppElements();
+    loadContentFromFirebase().then(() => {
+        initAppElements();
+    });
 
     document.getElementById("search-input").addEventListener("keydown", (e) => { if(e.key==="Enter") triggerRouterCheck(); });
     document.getElementById("search-trigger-btn").addEventListener("click", triggerRouterCheck);
@@ -7871,7 +7887,7 @@ function openSecureChat() {
 // ══════════════════════════════════════════════════════════════
 
 // ── Service list (mirrors your CATEGORIES) ──
-const EMG_SERVICES = [
+let EMG_SERVICES = [
     { id:"plumber",     label:"Plumber",             icon:"🔧", subs:["General Plumbing","Pipe Fitting","Leak Repair","Drainage"] },
     { id:"electrician", label:"Electrician",         icon:"⚡", subs:["Wiring","Solar Installation","Generator","Smart Home"] },
     { id:"carpenter",   label:"Carpenter",           icon:"🪚", subs:["Furniture","Doors & Windows","Roofing","Carving"] },
