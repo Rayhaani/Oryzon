@@ -435,9 +435,9 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -453,23 +453,22 @@
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const rtdb = firebase.database();
+        const db = firebase.firestore();
 
         let activeStep = 1;
         const totalSteps = 8;
         let usernameIsValid = false;
         let usernameCheckTimeout = null;
 
-        const blacklistedUsernames = ["rayhaani", "ahmad", "nexus", "sadiq", "kanomart", "admin", "support"];
+        const blacklistedUsernames = ["rayhaani", "rayhaan", "ahmad", "nexus", "sadiq", "kanomart", "admin", "support"];
 
-        // ── USERNAME AVAILABILITY CHECK (Realtime Database lookup) ──
+        // ── USERNAME AVAILABILITY CHECK (Firestore lookup: users/{username}) ──
         document.getElementById("inpUsername").addEventListener("input", function(e) {
             let val = e.target.value.toLowerCase().trim().replace(/\s+/g, '');
             e.target.value = val;
             const errorPrompt = document.getElementById("usernameError");
             const okMsg = document.getElementById("usernameOkMsg");
             const sugBox = document.getElementById("suggestionsBox");
-            const nextBtn = document.getElementById("step3NextBtn");
 
             errorPrompt.style.display = "none";
             okMsg.style.display = "none";
@@ -485,8 +484,8 @@
 
             clearTimeout(usernameCheckTimeout);
             usernameCheckTimeout = setTimeout(() => {
-                rtdb.ref("usernames/" + val).once("value").then(snap => {
-                    if (snap.exists()) {
+                db.collection("users").doc(val).get().then(docSnap => {
+                    if (docSnap.exists) {
                         showUsernameTaken(val);
                     } else {
                         usernameIsValid = true;
@@ -608,11 +607,10 @@
             document.getElementById("progressFill").style.width = ((activeStep / totalSteps) * 100) + "%";
         }
 
-        // ── FINAL SUBMIT — FIREBASE AUTH + REALTIME DATABASE PROFILE ──
+        // ── FINAL SUBMIT — FIREBASE AUTH + FIRESTORE PROFILE (users/{username}) ──
         function executeSync(event) {
             event.preventDefault();
             const submitBtn = document.getElementById("submitBtn");
-            const authCard = document.getElementById("authCard");
             const passwordError = document.getElementById("passwordError");
 
             const name     = document.getElementById("inpName").value.trim();
@@ -634,31 +632,35 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = "SUBMITTING... <span>→</span>";
 
-            // 1) Create Firebase Auth account (email + password)
             let createdUser = null;
-            auth.createUserWithEmailAndPassword(email, password)
+
+            // 1) Final race-condition guard: re-check the username doc right before creating the account
+            db.collection("users").doc(username).get()
+                .then(docSnap => {
+                    if (docSnap.exists) {
+                        return Promise.reject({ code: "custom/username-taken" });
+                    }
+                    // 2) Create Firebase Auth account (email + password)
+                    return auth.createUserWithEmailAndPassword(email, password);
+                })
                 .then((userCredential) => {
                     const uid = userCredential.user.uid;
                     createdUser = userCredential.user;
 
-                    // 2) Reserve the username (uniqueness lock)
-                    const usernamePromise = rtdb.ref("usernames/" + username).set({ uid });
-
-                    // 3) Save full profile under customers/{uid}
-                    const profilePromise = rtdb.ref("customers/" + uid).set({
+                    // 3) Save full profile under users/{username} (matches existing Firestore structure)
+                    return db.collection("users").doc(username).set({
                         uid: uid,
+                        username: username,
                         fullName: name,
                         dateOfBirth: dob,
-                        username: username,
                         email: email,
                         phone: phone || null,
                         country: country,
                         town: town,
+                        isOnline: false,
                         emailVerified: false,
-                        createdAt: Date.now()
-                    });
-
-                    return Promise.all([usernamePromise, profilePromise]).then(() => uid);
+                        registrationTimestamp: Date.now()
+                    }).then(() => uid);
                 })
                 .then((uid) => {
                     // 4) Send verification email
@@ -674,7 +676,11 @@
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = "SUBMIT <span>→</span>";
 
-                    if (err.code === "auth/email-already-in-use") {
+                    if (err.code === "custom/username-taken") {
+                        moveBackward(3);
+                        usernameIsValid = false;
+                        showUsernameTaken(username);
+                    } else if (err.code === "auth/email-already-in-use") {
                         moveBackward(4);
                         document.getElementById("emailError").textContent = "This email is already registered. Try logging in instead.";
                         document.getElementById("emailError").style.display = "block";
