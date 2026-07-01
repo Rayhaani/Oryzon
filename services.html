@@ -4372,22 +4372,23 @@
     </div>
 </div>
 
-<!-- ══ CURRENCY PICKER PANEL (reusable) ══ -->
-<div class="emg-backdrop" id="currency-picker-backdrop" onclick="closeCurrencyPicker()"></div>
-<div id="currency-picker-panel" style="position:fixed;bottom:0;left:0;width:100%;max-width:430px;margin:0 auto;right:0;z-index:8700;display:none;flex-direction:column;background:rgba(10,16,34,0.97);backdrop-filter:blur(26px) saturate(160%);-webkit-backdrop-filter:blur(26px) saturate(160%);border:1px solid rgba(255,255,255,0.13);border-radius:20px 20px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,0.5);max-height:60vh;overflow-y:auto;padding-bottom:16px;">
-<div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(10,16,34,0.97);z-index:2;">
-    <span style="font-size:13px;font-weight:800;color:#ffffff;">Zaɓi Currency</span>
-    <button onclick="closeCurrencyPicker()" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:12px;cursor:pointer;">✕</button>
-</div>
-<div style="padding:0 16px 10px;position:sticky;top:44px;background:rgba(10,16,34,0.97);z-index:2;">
-    <div style="position:relative;">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;opacity:0.45;pointer-events:none;">🔍</span>
-        <input id="currency-search-input" type="text" placeholder="Nemi currency… e.g. Dollar, USD" oninput="filterCurrencyList(this.value)" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:10px;color:#ffffff;font-size:13px;font-weight:600;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;">
+<!-- ══ CURRENCY PICKER OVERLAY (centered, matches Post Your Service style) ══ -->
+<div id="currency-picker-backdrop" onclick="closeCurrencyPicker()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:8700;display:none;align-items:center;justify-content:center;padding:20px;">
+    <div id="currency-picker-panel" onclick="event.stopPropagation()" style="width:100%;max-width:380px;max-height:70vh;background:rgba(20,25,45,0.85);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.15);border-radius:24px;display:flex;flex-direction:column;transform:scale(0.9);opacity:0;transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);">
+        <div style="padding:16px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <span style="font-size:14px;font-weight:800;color:#ffffff;">🌍 Zaɓi Currency</span>
+            <button onclick="closeCurrencyPicker()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+        <div style="padding:0 16px 10px;flex-shrink:0;">
+            <div style="position:relative;">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;opacity:0.45;pointer-events:none;">🔍</span>
+                <input id="currency-search-input" type="text" placeholder="Nemi currency… e.g. Dollar, USD" oninput="filterCurrencyList(this.value)" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:10px;color:#ffffff;font-size:13px;font-weight:600;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;">
+            </div>
+        </div>
+        <div id="currency-picker-list" style="overflow-y:auto;flex:1;padding-bottom:8px;"></div>
     </div>
-</div>
-<div id="currency-picker-list"></div>
-</div>
-        
+</div>  
+   
     <!-- PURE TSANTSAR VANILLA JAVASCRIPT ENGINE (NO REACT/BABEL) -->
     <script>
        // Core Static Local Data Context Stores Verbatim
@@ -4469,14 +4470,22 @@ function openCurrencyPicker(targetId) {
     currencyPickerTargetId = targetId;
     document.getElementById("currency-search-input").value = "";
     renderCurrencyList(CURRENCIES);
-    document.getElementById("currency-picker-panel").style.display = "flex";
-    document.getElementById("currency-picker-backdrop").style.display = "block";
-        }
+    const backdrop = document.getElementById("currency-picker-backdrop");
+    const panel = document.getElementById("currency-picker-panel");
+    backdrop.style.display = "flex";
+    setTimeout(() => {
+        panel.style.transform = "scale(1)";
+        panel.style.opacity = "1";
+    }, 10);
+}
 
 function closeCurrencyPicker() {
-    document.getElementById("currency-picker-panel").style.display = "none";
-    document.getElementById("currency-picker-backdrop").style.display = "none";
-}
+    const backdrop = document.getElementById("currency-picker-backdrop");
+    const panel = document.getElementById("currency-picker-panel");
+    panel.style.transform = "scale(0.9)";
+    panel.style.opacity = "0";
+    setTimeout(() => { backdrop.style.display = "none"; }, 300);
+        }
 
 function selectCurrency(code) {
     if (!currencyPickerTargetId) return;
