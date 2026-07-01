@@ -25,19 +25,22 @@
 
         /* ===== THE POST CARD ITSELF ===== */
         .post-card {
-            background: var(--bg) !important;
-            backdrop-filter: none !important;
-            border: 1px solid var(--post-border) !important;
-            border-radius: var(--post-radius) !important;
-            margin-bottom: 0 !important;
-            padding-bottom: 0 !important;
-            position: relative !important;
-            overflow: hidden !important;
-            box-shadow: var(--gold-glow) !important;
-            transition: none !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
+    background: var(--bg) !important;
+    backdrop-filter: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: 1px solid var(--post-border) !important;
+    border-bottom: 1px solid var(--post-border) !important;
+    border-radius: var(--post-radius) !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: var(--gold-glow) !important;
+    transition: none !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
 
         /* Gold shimmer line a saman katin */
         .post-card::before {
