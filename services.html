@@ -3542,16 +3542,19 @@
 
         <!-- Price Row -->
         <div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Farashi (₦)</div>
-            <div style="display:flex;gap:8px;">
-                <input id="ps-price" type="number" placeholder="e.g. 3500" min="0" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;">
-                <select id="ps-price-unit" style="width:120px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 8px;outline:none;">
-                    <option value="per job">Per Job</option>
-                    <option value="per hour">Per Hour</option>
-                    <option value="per day">Per Day</option>
-                    <option value="negotiable">Negotiable</option>
-                </select>
-            </div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Price</div>
+<div style="display:flex;gap:8px;">
+    <select id="ps-price-currency" class="currency-select-slot" style="width:88px;flex-shrink:0;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 4px;outline:none;"></select>
+    <input id="ps-price" type="number" placeholder="e.g. 3500" min="0" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;">
+</div>
+<div style="margin-top:8px;">
+    <select id="ps-price-unit" style="width:100%;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 8px;outline:none;">
+        <option value="per job">Per Job</option>
+        <option value="per hour">Per Hour</option>
+        <option value="per day">Per Day</option>
+        <option value="negotiable">Negotiable</option>
+    </select>
+</div>
         </div>
 
         <!-- Description -->
@@ -4371,6 +4374,44 @@ let CATEGORIES = [
     { id: "veterinary", label: "Veterinary Doctor", icon: "🐄" }
 ];
 
+// ── CURRENCY SYSTEM ──
+const CURRENCIES = [
+    { code: "NGN", symbol: "₦", label: "Nigerian Naira" },
+    { code: "USD", symbol: "$", label: "US Dollar" },
+    { code: "GHS", symbol: "₵", label: "Ghanaian Cedi" },
+    { code: "GBP", symbol: "£", label: "British Pound" },
+    { code: "EUR", symbol: "€", label: "Euro" },
+    { code: "XOF", symbol: "CFA", label: "West African CFA" },
+    { code: "KES", symbol: "KSh", label: "Kenyan Shilling" },
+    { code: "ZAR", symbol: "R", label: "South African Rand" }
+];
+
+function getCurrencySymbol(code) {
+    const found = CURRENCIES.find(c => c.code === code);
+    return found ? found.symbol : "₦"; // default zuwa Naira idan babu code
+}
+
+function formatPrice(amount, currencyCode) {
+    const symbol = getCurrencySymbol(currencyCode);
+    const num = typeof amount === "number" ? amount : parseInt(amount) || 0;
+    return `${symbol}${num.toLocaleString()}`;
+}
+
+function buildCurrencyDropdownHtml(id, selectedCode) {
+    const sel = selectedCode || "NGN";
+    return `<select id="${id}" style="width:100px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 6px;outline:none;">
+        ${CURRENCIES.map(c => `<option value="${c.code}" ${c.code === sel ? "selected" : ""}>${c.symbol} ${c.code}</option>`).join('')}
+    </select>`;
+        }
+
+function populateCurrencyDropdowns() {
+    document.querySelectorAll('.currency-select-slot').forEach(sel => {
+        if (sel.dataset.populated) return; // kar a sake cika idan an riga an yi
+        sel.innerHTML = CURRENCIES.map(c => `<option value="${c.code}">${c.symbol} ${c.code}</option>`).join('');
+        sel.dataset.populated = "true";
+    });
+        }
+
 const PRO_STORIES = [
     { proId: 1, stories: [{ name: "Plumbing Job", icon: "🔧", price: "₦3,500", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" }] },
     { proId: 2, stories: [{ name: "Solar Setup", icon: "⚡", price: "₦5,000", image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&q=80" }] },
@@ -4506,6 +4547,7 @@ const psInlineState = {
     selectedSubcategory: null,
     price: null,
     priceUnit: null,
+    currency: null,   // ← SABON FILI
     description: null,
     availableDays: [],
     gpsLat: null,
@@ -5684,16 +5726,16 @@ function psGoToStep3() {
     if (!verificationFiles.id) { psShowToast("⚠️ Saka hoton ID dinka!"); return; }
     if (!verificationFiles.selfie) { psShowToast("⚠️ Saka selfie ɗinka da ID!"); return; }
 
-    psInlineState.price = parseInt(price);
-    psInlineState.priceUnit = document.getElementById("ps-price-unit").value;
-    psInlineState.description = desc;
-    psInlineState.availableDays = days;
-    psInlineState.idType = idType;
+   psInlineState.price = parseInt(price);
+psInlineState.priceUnit = document.getElementById("ps-price-unit").value;
+psInlineState.currency = document.getElementById("ps-price-currency").value;
+psInlineState.description = desc;
+psInlineState.availableDays = days;
+psInlineState.idType = idType;
 
-    document.getElementById("ps-sum-category").textContent = `${psInlineState.selectedCategoryLabel} → ${psInlineState.selectedSubcategory}`;
-    document.getElementById("ps-sum-price").textContent = `₦${psInlineState.price.toLocaleString()} ${psInlineState.priceUnit}`;
-    document.getElementById("ps-sum-days").textContent = days.join(", ");
-
+document.getElementById("ps-sum-category").textContent = `${psInlineState.selectedCategoryLabel} → ${psInlineState.selectedSubcategory}`;
+document.getElementById("ps-sum-price").textContent = `${formatPrice(psInlineState.price, psInlineState.currency)} ${psInlineState.priceUnit}`;
+document.getElementById("ps-sum-days").textContent = days.join(", "); 
     psShowStep(3);
 }
 
@@ -5858,7 +5900,7 @@ async function submitServiceInline() {
                 category: psInlineState.selectedCategory,
                 subcategory: psInlineState.selectedSubcategory,
                 categoryLabel: psInlineState.selectedCategoryLabel,
-                pricing: { base: psInlineState.price, unit: psInlineState.priceUnit },
+                pricing: { base: psInlineState.price, unit: psInlineState.priceUnit, currency: psInlineState.currency },
                 bio: psInlineState.description,
                 schedule: psInlineState.availableDays,
                 location: { lat: psInlineState.gpsLat, lng: psInlineState.gpsLng, updatedAt: Date.now() },
@@ -6917,6 +6959,7 @@ function removeDailyUploadBlockPhoto(blockId, slotIdx) {
         
 // ── DOMContentLoaded ──
 document.addEventListener("DOMContentLoaded", () => {
+   populateCurrencyDropdowns();
     loadContentFromFirebase().then(() => {
         initAppElements();
     });
