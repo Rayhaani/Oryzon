@@ -1707,6 +1707,22 @@
     flex-shrink: 0;
 }
 
+.currency-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.currency-row:active, .currency-row:hover { background: rgba(99,102,241,0.12); }
+.currency-row-left { display:flex; align-items:center; gap:10px; }
+.currency-row-symbol { font-size:15px; font-weight:800; color:#ffffff; width:34px; flex-shrink:0; }
+.currency-row-label { font-size:12px; font-weight:600; color:rgba(255,255,255,0.6); }
+.currency-row-check { font-size:14px; color:#6366f1; display:none; }
+.currency-row.selected .currency-row-check { display:inline; }
+        
 /* ── ORIGINAL SCANNING PAGE (sheet) ── */
 .emergency-sheet-overlay {
     position: fixed;
@@ -3544,7 +3560,7 @@
         <div>
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Price</div>
 <div style="display:flex;gap:8px;">
-    <select id="ps-price-currency" class="currency-select-slot" style="width:88px;flex-shrink:0;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 4px;outline:none;"></select>
+    <button type="button" id="ps-price-currency" data-currency="NGN" onclick="openCurrencyPicker('ps-price-currency')" style="width:88px;flex-shrink:0;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 4px;cursor:pointer;text-align:center;">₦ NGN <span style="font-size:9px;opacity:0.5;">▾</span></button>
     <input id="ps-price" type="number" placeholder="e.g. 3500" min="0" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;">
 </div>
 <div style="margin-top:8px;">
@@ -4352,6 +4368,23 @@
         <button onclick="submitServiceRequest()" style="width:100%;padding:13px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:14px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Submit Request 🚀</button>
     </div>
 </div>
+
+<!-- ══ CURRENCY PICKER PANEL (reusable) ══ -->
+<div class="emg-backdrop" id="currency-picker-backdrop" onclick="closeCurrencyPicker()"></div>
+<div id="currency-picker-panel" style="position:fixed;bottom:0;left:0;width:100%;max-width:430px;margin:0 auto;right:0;z-index:8700;display:none;flex-direction:column;background:rgba(10,16,34,0.97);backdrop-filter:blur(26px) saturate(160%);-webkit-backdrop-filter:blur(26px) saturate(160%);border:1px solid rgba(255,255,255,0.13);border-radius:20px 20px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,0.5);max-height:60vh;overflow-y:auto;padding-bottom:16px;">
+<div style="padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(10,16,34,0.97);z-index:2;">
+    <span style="font-size:13px;font-weight:800;color:#ffffff;">Zaɓi Currency</span>
+    <button onclick="closeCurrencyPicker()" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:12px;cursor:pointer;">✕</button>
+</div>
+<div style="padding:0 16px 10px;position:sticky;top:44px;background:rgba(10,16,34,0.97);z-index:2;">
+    <div style="position:relative;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;opacity:0.45;pointer-events:none;">🔍</span>
+        <input id="currency-search-input" type="text" placeholder="Nemi currency… e.g. Dollar, USD" oninput="filterCurrencyList(this.value)" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:10px;color:#ffffff;font-size:13px;font-weight:600;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;">
+    </div>
+</div>
+<div id="currency-picker-list"></div>
+</div>
+        
     <!-- PURE TSANTSAR VANILLA JAVASCRIPT ENGINE (NO REACT/BABEL) -->
     <script>
        // Core Static Local Data Context Stores Verbatim
@@ -4375,21 +4408,20 @@ let CATEGORIES = [
 ];
 
 // ── CURRENCY SYSTEM ──
-const CURRENCIES = [
-    { code: "NGN", symbol: "₦", label: "Nigerian Naira" },
-    { code: "USD", symbol: "$", label: "US Dollar" },
-    { code: "GHS", symbol: "₵", label: "Ghanaian Cedi" },
-    { code: "GBP", symbol: "£", label: "British Pound" },
-    { code: "EUR", symbol: "€", label: "Euro" },
-    { code: "XOF", symbol: "CFA", label: "West African CFA" },
-    { code: "KES", symbol: "KSh", label: "Kenyan Shilling" },
-    { code: "ZAR", symbol: "R", label: "South African Rand" }
+    { code: "XOF", symbol: "CFA", label: "West African CFA", flag: "🌍" },
+    { code: "EUR", symbol: "€", label: "Euro", flag: "🇪🇺" },
+    { code: "GBP", symbol: "£", label: "British Pound", flag: "🇬🇧" },
+    { code: "GHS", symbol: "₵", label: "Ghanaian Cedi", flag: "🇬🇭" },
+    { code: "KES", symbol: "KSh", label: "Kenyan Shilling", flag: "🇰🇪" },
+    { code: "NGN", symbol: "₦", label: "Nigerian Naira", flag: "🇳🇬" },
+    { code: "USD", symbol: "$", label: "US Dollar", flag: "🇺🇸" },
+    { code: "ZAR", symbol: "R", label: "South African Rand", flag: "🇿🇦" }
 ];
 
 function getCurrencySymbol(code) {
     const found = CURRENCIES.find(c => c.code === code);
-    return found ? found.symbol : "₦"; // default zuwa Naira idan babu code
-}
+    return found ? found.symbol : ""; // babu default — idan babu code, babu symbol
+        }
 
 function formatPrice(amount, currencyCode) {
     const symbol = getCurrencySymbol(currencyCode);
@@ -4397,6 +4429,60 @@ function formatPrice(amount, currencyCode) {
     return `${symbol}${num.toLocaleString()}`;
 }
 
+let currencyPickerTargetId = null; // id na trigger button da za a sabunta
+
+function renderCurrencyList(list) {
+    const currentCode = document.getElementById(currencyPickerTargetId)?.dataset.currency || "NGN";
+    const container = document.getElementById("currency-picker-list");
+    if (list.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:30px 16px;color:rgba(255,255,255,0.3);font-size:12px;">Babu wata currency da ta dace</div>`;
+        return;
+    }
+    container.innerHTML = list.map(c => `
+        <div class="currency-row ${c.code === currentCode ? 'selected' : ''}" onclick="selectCurrency('${c.code}')">
+            <div class="currency-row-left">
+                <span style="font-size:16px;">${c.flag}</span>
+                <span class="currency-row-symbol">${c.symbol}</span>
+                <span class="currency-row-label">${c.label} (${c.code})</span>
+            </div>
+            <span class="currency-row-check">✓</span>
+        </div>`).join('');
+}
+
+function filterCurrencyList(query) {
+    const q = query.trim().toLowerCase();
+    const filtered = q === ""
+        ? CURRENCIES
+        : CURRENCIES.filter(c =>
+            c.code.toLowerCase().includes(q) ||
+            c.label.toLowerCase().includes(q) ||
+            c.symbol.toLowerCase().includes(q)
+          );
+    renderCurrencyList(filtered);
+}
+
+function openCurrencyPicker(targetId) {
+    currencyPickerTargetId = targetId;
+    document.getElementById("currency-search-input").value = "";
+    renderCurrencyList(CURRENCIES);
+    document.getElementById("currency-picker-panel").style.display = "flex";
+    document.getElementById("currency-picker-backdrop").style.display = "block";
+        }
+
+function closeCurrencyPicker() {
+    document.getElementById("currency-picker-panel").style.display = "none";
+    document.getElementById("currency-picker-backdrop").style.display = "none";
+}
+
+function selectCurrency(code) {
+    if (!currencyPickerTargetId) return;
+    const btn = document.getElementById(currencyPickerTargetId);
+    const c = CURRENCIES.find(x => x.code === code);
+    btn.dataset.currency = code;
+    btn.innerHTML = `${c.symbol} ${c.code} <span style="font-size:9px;opacity:0.5;">▾</span>`;
+    closeCurrencyPicker();
+        }
+        
 function buildCurrencyDropdownHtml(id, selectedCode) {
     const sel = selectedCode || "NGN";
     return `<select id="${id}" style="width:100px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 6px;outline:none;">
@@ -5728,7 +5814,9 @@ function psGoToStep3() {
 
    psInlineState.price = parseInt(price);
 psInlineState.priceUnit = document.getElementById("ps-price-unit").value;
-psInlineState.currency = document.getElementById("ps-price-currency").value;
+const selectedCurrency = document.getElementById("ps-price-currency").dataset.currency;
+if (!selectedCurrency) { psShowToast("⚠️ Select your currency!"); return; }
+psInlineState.currency = selectedCurrency;
 psInlineState.description = desc;
 psInlineState.availableDays = days;
 psInlineState.idType = idType;
