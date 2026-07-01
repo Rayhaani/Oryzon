@@ -4886,6 +4886,7 @@ function openProfileSheet(proId) {
     document.getElementById("profile-gallery-grid-slot").innerHTML = targetGallery.map(title =>
         `<div class="portfolio-img-card"><div style="text-align:center;padding:8px;"><div style="font-size:18px;margin-bottom:4px;">📷</div><div>${title}</div></div></div>`).join('');
   document.getElementById("profile-sheet-overlay").style.display = "block";
+history.pushState({ npOverlay: "profile" }, "", "");   
     if (pro.category === "chef" && pro.menu) {
         setTimeout(() => openChefMenuOverlay(pro), 400);
     } else if (pro.category === "snacks" && (pro.products || pro.menu)) {
@@ -7022,19 +7023,14 @@ document.getElementById("story-action-order-btn").addEventListener("click", (e) 
         state.isStoryPaused = true;
         if (state.storyIntervalId) clearInterval(state.storyIntervalId);
         state.storyOpenedFromProfile = true;
-        // Ƙara wannan BAYAN: document.getElementById('story-overlay-deck').style.display = 'none';
-history.pushState({ storyOpen: true }, '', '');
-
-window.addEventListener('popstate', function handleBackFromProfile(e) {
-    if (state.storyOpenedFromProfile) {
-        state.storyOpenedFromProfile = false;
-        document.getElementById('profile-sheet-overlay').style.display = 'none';
-        document.getElementById('story-overlay-deck').style.display = 'flex';
-        state.isStoryPaused = false;
-        startStoryInterval();
+      
+        window.addEventListener("popstate", function() {
+    const profileSheet = document.getElementById("profile-sheet-overlay");
+    if (profileSheet && profileSheet.style.display === "block") {
+        closeProfileSheet();
     }
-    window.removeEventListener('popstate', handleBackFromProfile);
-}, { once: true });
+});
+        
         document.getElementById('story-overlay-deck').style.display = 'none';
 
         if (state.isLiveStoryMode) {
