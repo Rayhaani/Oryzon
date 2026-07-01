@@ -1711,16 +1711,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 11px 16px;
+    padding: 10px 16px;
     cursor: pointer;
     transition: background 0.15s ease;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
 }
-.currency-row:active, .currency-row:hover { background: rgba(99,102,241,0.12); }
-.currency-row-left { display:flex; align-items:center; gap:8px; }
-.currency-row-symbol { font-size:15px; font-weight:800; color:#ffffff; width:34px; flex-shrink:0; }
-.currency-row-label { font-size:12px; font-weight:600; color:rgba(255,255,255,0.6); }
-.currency-row-check { font-size:14px; color:#6366f1; display:none; }
+.currency-row:active, .currency-row:hover { background: rgba(255,255,255,0.06); }
+.currency-row-left { display:flex; align-items:center; gap:12px; }
+.currency-row-check { font-size:16px; color:#3b82f6; display:none; }
 .currency-row.selected .currency-row-check { display:inline; }
         
 /* ── ORIGINAL SCANNING PAGE (sheet) ── */
@@ -4372,22 +4369,20 @@
     </div>
 </div>
 
-<!-- ══ CURRENCY PICKER OVERLAY (centered, matches Post Your Service style) ══ -->
-<div id="currency-picker-backdrop" onclick="closeCurrencyPicker()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:8700;display:none;align-items:center;justify-content:center;padding:20px;">
-    <div id="currency-picker-panel" onclick="event.stopPropagation()" style="width:100%;max-width:380px;max-height:70vh;background:rgba(20,25,45,0.85);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.15);border-radius:24px;display:flex;flex-direction:column;transform:scale(0.9);opacity:0;transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);">
-        <div style="padding:16px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-            <span style="font-size:14px;font-weight:800;color:#ffffff;">🌍 Zaɓi Currency</span>
-            <button onclick="closeCurrencyPicker()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+<!-- ══ CURRENCY FULL-SCREEN PICKER (Bybit style) ══ -->
+<div id="currency-picker-panel" style="position:fixed;inset:0;z-index:8700;display:none;flex-direction:column;background:#0b0e14;">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;flex-shrink:0;background:#0b0e14;">
+        <div style="position:relative;flex:1;">
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;opacity:0.4;pointer-events:none;">🔍</span>
+            <input id="currency-search-input" type="text" placeholder="Please enter preferred currency" oninput="filterCurrencyList(this.value)" style="width:100%;background:rgba(255,255,255,0.06);border:none;border-radius:24px;color:#ffffff;font-size:14px;font-weight:500;padding:11px 14px 11px 38px;outline:none;box-sizing:border-box;">
         </div>
-        <div style="padding:0 16px 10px;flex-shrink:0;">
-            <div style="position:relative;">
-                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;opacity:0.45;pointer-events:none;">🔍</span>
-                <input id="currency-search-input" type="text" placeholder="Nemi currency… e.g. Dollar, USD" oninput="filterCurrencyList(this.value)" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:10px;color:#ffffff;font-size:13px;font-weight:600;padding:9px 12px 9px 34px;outline:none;box-sizing:border-box;">
-            </div>
-        </div>
-        <div id="currency-picker-list" style="overflow-y:auto;flex:1;padding-bottom:8px;"></div>
+        <button onclick="closeCurrencyPicker()" style="background:none;border:none;color:rgba(255,255,255,0.85);font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0;padding:6px 4px;">Cancel</button>
     </div>
-</div>  
+    <div style="display:flex;flex:1;min-height:0;position:relative;">
+        <div id="currency-picker-list" style="flex:1;overflow-y:auto;padding:4px 0 20px;"></div>
+        <div id="currency-az-index" style="width:20px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding-right:6px;"></div>
+    </div>
+</div>
    
     <!-- PURE TSANTSAR VANILLA JAVASCRIPT ENGINE (NO REACT/BABEL) -->
     <script>
@@ -4413,45 +4408,223 @@ let CATEGORIES = [
 
 // ── CURRENCY SYSTEM ──
 const CURRENCIES = [
-    { code: "XOF", symbol: "CFA", label: "West African CFA", flag: "🌍" },
+    { code: "AED", symbol: "د.إ", label: "UAE Dirham", flag: "🇦🇪" },
+    { code: "AFN", symbol: "؋", label: "Afghan Afghani", flag: "🇦🇫" },
+    { code: "ALL", symbol: "L", label: "Albanian Lek", flag: "🇦🇱" },
+    { code: "AMD", symbol: "֏", label: "Armenian Dram", flag: "🇦🇲" },
+    { code: "ANG", symbol: "ƒ", label: "Netherlands Antillean Guilder", flag: "🇨🇼" },
+    { code: "AOA", symbol: "Kz", label: "Angolan Kwanza", flag: "🇦🇴" },
+    { code: "ARS", symbol: "$", label: "Argentine Peso", flag: "🇦🇷" },
+    { code: "AUD", symbol: "$", label: "Australian Dollar", flag: "🇦🇺" },
+    { code: "AWG", symbol: "ƒ", label: "Aruban Florin", flag: "🇦🇼" },
+    { code: "AZN", symbol: "₼", label: "Azerbaijani Manat", flag: "🇦🇿" },
+    { code: "BAM", symbol: "KM", label: "Bosnia-Herzegovina Mark", flag: "🇧🇦" },
+    { code: "BBD", symbol: "$", label: "Barbadian Dollar", flag: "🇧🇧" },
+    { code: "BDT", symbol: "৳", label: "Bangladeshi Taka", flag: "🇧🇩" },
+    { code: "BGN", symbol: "лв", label: "Bulgarian Lev", flag: "🇧🇬" },
+    { code: "BHD", symbol: ".د.ب", label: "Bahraini Dinar", flag: "🇧🇭" },
+    { code: "BIF", symbol: "FBu", label: "Burundian Franc", flag: "🇧🇮" },
+    { code: "BMD", symbol: "$", label: "Bermudan Dollar", flag: "🇧🇲" },
+    { code: "BND", symbol: "$", label: "Brunei Dollar", flag: "🇧🇳" },
+    { code: "BOB", symbol: "Bs.", label: "Bolivian Boliviano", flag: "🇧🇴" },
+    { code: "BRL", symbol: "R$", label: "Brazilian Real", flag: "🇧🇷" },
+    { code: "BSD", symbol: "$", label: "Bahamian Dollar", flag: "🇧🇸" },
+    { code: "BTN", symbol: "Nu.", label: "Bhutanese Ngultrum", flag: "🇧🇹" },
+    { code: "BWP", symbol: "P", label: "Botswanan Pula", flag: "🇧🇼" },
+    { code: "BYN", symbol: "Br", label: "Belarusian Ruble", flag: "🇧🇾" },
+    { code: "BZD", symbol: "$", label: "Belize Dollar", flag: "🇧🇿" },
+    { code: "CAD", symbol: "$", label: "Canadian Dollar", flag: "🇨🇦" },
+    { code: "CDF", symbol: "FC", label: "Congolese Franc", flag: "🇨🇩" },
+    { code: "CHF", symbol: "Fr", label: "Swiss Franc", flag: "🇨🇭" },
+    { code: "CLP", symbol: "$", label: "Chilean Peso", flag: "🇨🇱" },
+    { code: "CNY", symbol: "¥", label: "Chinese Yuan", flag: "🇨🇳" },
+    { code: "COP", symbol: "$", label: "Colombian Peso", flag: "🇨🇴" },
+    { code: "CRC", symbol: "₡", label: "Costa Rican Colón", flag: "🇨🇷" },
+    { code: "CUP", symbol: "$", label: "Cuban Peso", flag: "🇨🇺" },
+    { code: "CVE", symbol: "$", label: "Cape Verdean Escudo", flag: "🇨🇻" },
+    { code: "CZK", symbol: "Kč", label: "Czech Koruna", flag: "🇨🇿" },
+    { code: "DJF", symbol: "Fdj", label: "Djiboutian Franc", flag: "🇩🇯" },
+    { code: "DKK", symbol: "kr", label: "Danish Krone", flag: "🇩🇰" },
+    { code: "DOP", symbol: "$", label: "Dominican Peso", flag: "🇩🇴" },
+    { code: "DZD", symbol: "دج", label: "Algerian Dinar", flag: "🇩🇿" },
+    { code: "EGP", symbol: "£", label: "Egyptian Pound", flag: "🇪🇬" },
+    { code: "ERN", symbol: "Nfk", label: "Eritrean Nakfa", flag: "🇪🇷" },
+    { code: "ETB", symbol: "Br", label: "Ethiopian Birr", flag: "🇪🇹" },
     { code: "EUR", symbol: "€", label: "Euro", flag: "🇪🇺" },
+    { code: "FJD", symbol: "$", label: "Fijian Dollar", flag: "🇫🇯" },
     { code: "GBP", symbol: "£", label: "British Pound", flag: "🇬🇧" },
+    { code: "GEL", symbol: "₾", label: "Georgian Lari", flag: "🇬🇪" },
     { code: "GHS", symbol: "₵", label: "Ghanaian Cedi", flag: "🇬🇭" },
+    { code: "GMD", symbol: "D", label: "Gambian Dalasi", flag: "🇬🇲" },
+    { code: "GNF", symbol: "FG", label: "Guinean Franc", flag: "🇬🇳" },
+    { code: "GTQ", symbol: "Q", label: "Guatemalan Quetzal", flag: "🇬🇹" },
+    { code: "GYD", symbol: "$", label: "Guyanaese Dollar", flag: "🇬🇾" },
+    { code: "HKD", symbol: "$", label: "Hong Kong Dollar", flag: "🇭🇰" },
+    { code: "HNL", symbol: "L", label: "Honduran Lempira", flag: "🇭🇳" },
+    { code: "HRK", symbol: "kn", label: "Croatian Kuna", flag: "🇭🇷" },
+    { code: "HTG", symbol: "G", label: "Haitian Gourde", flag: "🇭🇹" },
+    { code: "HUF", symbol: "Ft", label: "Hungarian Forint", flag: "🇭🇺" },
+    { code: "IDR", symbol: "Rp", label: "Indonesian Rupiah", flag: "🇮🇩" },
+    { code: "ILS", symbol: "₪", label: "Israeli New Shekel", flag: "🇮🇱" },
+    { code: "INR", symbol: "₹", label: "Indian Rupee", flag: "🇮🇳" },
+    { code: "IQD", symbol: "ع.د", label: "Iraqi Dinar", flag: "🇮🇶" },
+    { code: "IRR", symbol: "﷼", label: "Iranian Rial", flag: "🇮🇷" },
+    { code: "ISK", symbol: "kr", label: "Icelandic Króna", flag: "🇮🇸" },
+    { code: "JMD", symbol: "$", label: "Jamaican Dollar", flag: "🇯🇲" },
+    { code: "JOD", symbol: "د.ا", label: "Jordanian Dinar", flag: "🇯🇴" },
+    { code: "JPY", symbol: "¥", label: "Japanese Yen", flag: "🇯🇵" },
     { code: "KES", symbol: "KSh", label: "Kenyan Shilling", flag: "🇰🇪" },
+    { code: "KGS", symbol: "с", label: "Kyrgystani Som", flag: "🇰🇬" },
+    { code: "KHR", symbol: "៛", label: "Cambodian Riel", flag: "🇰🇭" },
+    { code: "KMF", symbol: "CF", label: "Comorian Franc", flag: "🇰🇲" },
+    { code: "KRW", symbol: "₩", label: "South Korean Won", flag: "🇰🇷" },
+    { code: "KWD", symbol: "د.ك", label: "Kuwaiti Dinar", flag: "🇰🇼" },
+    { code: "KZT", symbol: "₸", label: "Kazakhstani Tenge", flag: "🇰🇿" },
+    { code: "LAK", symbol: "₭", label: "Laotian Kip", flag: "🇱🇦" },
+    { code: "LBP", symbol: "ل.ل", label: "Lebanese Pound", flag: "🇱🇧" },
+    { code: "LKR", symbol: "Rs", label: "Sri Lankan Rupee", flag: "🇱🇰" },
+    { code: "LRD", symbol: "$", label: "Liberian Dollar", flag: "🇱🇷" },
+    { code: "LSL", symbol: "L", label: "Lesotho Loti", flag: "🇱🇸" },
+    { code: "LYD", symbol: "ل.د", label: "Libyan Dinar", flag: "🇱🇾" },
+    { code: "MAD", symbol: "د.م.", label: "Moroccan Dirham", flag: "🇲🇦" },
+    { code: "MDL", symbol: "L", label: "Moldovan Leu", flag: "🇲🇩" },
+    { code: "MGA", symbol: "Ar", label: "Malagasy Ariary", flag: "🇲🇬" },
+    { code: "MKD", symbol: "ден", label: "Macedonian Denar", flag: "🇲🇰" },
+    { code: "MMK", symbol: "K", label: "Myanmar Kyat", flag: "🇲🇲" },
+    { code: "MNT", symbol: "₮", label: "Mongolian Tugrik", flag: "🇲🇳" },
+    { code: "MOP", symbol: "MOP$", label: "Macanese Pataca", flag: "🇲🇴" },
+    { code: "MRU", symbol: "UM", label: "Mauritanian Ouguiya", flag: "🇲🇷" },
+    { code: "MUR", symbol: "₨", label: "Mauritian Rupee", flag: "🇲🇺" },
+    { code: "MVR", symbol: "Rf", label: "Maldivian Rufiyaa", flag: "🇲🇻" },
+    { code: "MWK", symbol: "MK", label: "Malawian Kwacha", flag: "🇲🇼" },
+    { code: "MXN", symbol: "$", label: "Mexican Peso", flag: "🇲🇽" },
+    { code: "MYR", symbol: "RM", label: "Malaysian Ringgit", flag: "🇲🇾" },
+    { code: "MZN", symbol: "MT", label: "Mozambican Metical", flag: "🇲🇿" },
+    { code: "NAD", symbol: "$", label: "Namibian Dollar", flag: "🇳🇦" },
     { code: "NGN", symbol: "₦", label: "Nigerian Naira", flag: "🇳🇬" },
+    { code: "NIO", symbol: "C$", label: "Nicaraguan Córdoba", flag: "🇳🇮" },
+    { code: "NOK", symbol: "kr", label: "Norwegian Krone", flag: "🇳🇴" },
+    { code: "NPR", symbol: "₨", label: "Nepalese Rupee", flag: "🇳🇵" },
+    { code: "NZD", symbol: "$", label: "New Zealand Dollar", flag: "🇳🇿" },
+    { code: "OMR", symbol: "ر.ع.", label: "Omani Rial", flag: "🇴🇲" },
+    { code: "PAB", symbol: "B/.", label: "Panamanian Balboa", flag: "🇵🇦" },
+    { code: "PEN", symbol: "S/.", label: "Peruvian Sol", flag: "🇵🇪" },
+    { code: "PGK", symbol: "K", label: "Papua New Guinean Kina", flag: "🇵🇬" },
+    { code: "PHP", symbol: "₱", label: "Philippine Peso", flag: "🇵🇭" },
+    { code: "PKR", symbol: "₨", label: "Pakistani Rupee", flag: "🇵🇰" },
+    { code: "PLN", symbol: "zł", label: "Polish Złoty", flag: "🇵🇱" },
+    { code: "PYG", symbol: "₲", label: "Paraguayan Guarani", flag: "🇵🇾" },
+    { code: "QAR", symbol: "ر.ق", label: "Qatari Rial", flag: "🇶🇦" },
+    { code: "RON", symbol: "lei", label: "Romanian Leu", flag: "🇷🇴" },
+    { code: "RSD", symbol: "дин.", label: "Serbian Dinar", flag: "🇷🇸" },
+    { code: "RUB", symbol: "₽", label: "Russian Ruble", flag: "🇷🇺" },
+    { code: "RWF", symbol: "FRw", label: "Rwandan Franc", flag: "🇷🇼" },
+    { code: "SAR", symbol: "ر.س", label: "Saudi Riyal", flag: "🇸🇦" },
+    { code: "SBD", symbol: "$", label: "Solomon Islands Dollar", flag: "🇸🇧" },
+    { code: "SCR", symbol: "₨", label: "Seychellois Rupee", flag: "🇸🇨" },
+    { code: "SDG", symbol: "ج.س.", label: "Sudanese Pound", flag: "🇸🇩" },
+    { code: "SEK", symbol: "kr", label: "Swedish Krona", flag: "🇸🇪" },
+    { code: "SGD", symbol: "$", label: "Singapore Dollar", flag: "🇸🇬" },
+    { code: "SLL", symbol: "Le", label: "Sierra Leonean Leone", flag: "🇸🇱" },
+    { code: "SOS", symbol: "Sh", label: "Somali Shilling", flag: "🇸🇴" },
+    { code: "SRD", symbol: "$", label: "Surinamese Dollar", flag: "🇸🇷" },
+    { code: "SSP", symbol: "£", label: "South Sudanese Pound", flag: "🇸🇸" },
+    { code: "STN", symbol: "Db", label: "São Tomé & Príncipe Dobra", flag: "🇸🇹" },
+    { code: "SYP", symbol: "£", label: "Syrian Pound", flag: "🇸🇾" },
+    { code: "SZL", symbol: "L", label: "Swazi Lilangeni", flag: "🇸🇿" },
+    { code: "THB", symbol: "฿", label: "Thai Baht", flag: "🇹🇭" },
+    { code: "TJS", symbol: "SM", label: "Tajikistani Somoni", flag: "🇹🇯" },
+    { code: "TMT", symbol: "m", label: "Turkmenistani Manat", flag: "🇹🇲" },
+    { code: "TND", symbol: "د.ت", label: "Tunisian Dinar", flag: "🇹🇳" },
+    { code: "TOP", symbol: "T$", label: "Tongan Paʻanga", flag: "🇹🇴" },
+    { code: "TRY", symbol: "₺", label: "Turkish Lira", flag: "🇹🇷" },
+    { code: "TTD", symbol: "$", label: "Trinidad & Tobago Dollar", flag: "🇹🇹" },
+    { code: "TWD", symbol: "$", label: "New Taiwan Dollar", flag: "🇹🇼" },
+    { code: "TZS", symbol: "Sh", label: "Tanzanian Shilling", flag: "🇹🇿" },
+    { code: "UAH", symbol: "₴", label: "Ukrainian Hryvnia", flag: "🇺🇦" },
+    { code: "UGX", symbol: "USh", label: "Ugandan Shilling", flag: "🇺🇬" },
     { code: "USD", symbol: "$", label: "US Dollar", flag: "🇺🇸" },
-    { code: "ZAR", symbol: "R", label: "South African Rand", flag: "🇿🇦" }
+    { code: "UYU", symbol: "$U", label: "Uruguayan Peso", flag: "🇺🇾" },
+    { code: "UZS", symbol: "so'm", label: "Uzbekistan Som", flag: "🇺🇿" },
+    { code: "VES", symbol: "Bs.S", label: "Venezuelan Bolívar", flag: "🇻🇪" },
+    { code: "VND", symbol: "₫", label: "Vietnamese Dong", flag: "🇻🇳" },
+    { code: "VUV", symbol: "VT", label: "Vanuatu Vatu", flag: "🇻🇺" },
+    { code: "WST", symbol: "WS$", label: "Samoan Tala", flag: "🇼🇸" },
+    { code: "XAF", symbol: "FCFA", label: "Central African CFA", flag: "🌍" },
+    { code: "XCD", symbol: "$", label: "East Caribbean Dollar", flag: "🌍" },
+    { code: "XOF", symbol: "CFA", label: "West African CFA", flag: "🌍" },
+    { code: "YER", symbol: "﷼", label: "Yemeni Rial", flag: "🇾🇪" },
+    { code: "ZAR", symbol: "R", label: "South African Rand", flag: "🇿🇦" },
+    { code: "ZMW", symbol: "ZK", label: "Zambian Kwacha", flag: "🇿🇲" },
+    { code: "ZWL", symbol: "$", label: "Zimbabwean Dollar", flag: "🇿🇼" }
 ];
         
-function getCurrencySymbol(code) {
-    const found = CURRENCIES.find(c => c.code === code);
-    return found ? found.symbol : ""; // babu default — idan babu code, babu symbol
-        }
 
-function formatPrice(amount, currencyCode) {
-    const symbol = getCurrencySymbol(currencyCode);
-    const num = typeof amount === "number" ? amount : parseInt(amount) || 0;
-    return `${symbol}${num.toLocaleString()}`;
+let currencyPickerTargetId = null;
+
+function getCurrencyInitial(c) {
+    if (c.symbol && c.symbol.length <= 2) return c.symbol;
+    return c.code.charAt(0);
 }
 
-let currencyPickerTargetId = null; // id na trigger button da za a sabunta
+function getCurrencyIconColor(code) {
+    const colors = ['#3b82f6','#ef4444','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
+    let hash = 0;
+    for (let i = 0; i < code.length; i++) hash = code.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+}
 
-  function renderCurrencyList(list) {
-    const currentCode = document.getElementById(currencyPickerTargetId)?.dataset.currency || ""; 
+function groupCurrenciesByLetter(list) {
+    const groups = {};
+    const sorted = [...list].sort((a, b) => a.code.localeCompare(b.code));
+    sorted.forEach(c => {
+        const letter = c.code.charAt(0).toUpperCase();
+        if (!groups[letter]) groups[letter] = [];
+        groups[letter].push(c);
+    });
+    return groups;
+}
+
+function renderCurrencyList(list) {
+    const currentCode = currencyPickerTargetId
+        ? (document.getElementById(currencyPickerTargetId)?.dataset.currency || "")
+        : "";
     const container = document.getElementById("currency-picker-list");
+    const indexBar = document.getElementById("currency-az-index");
+
     if (list.length === 0) {
-        container.innerHTML = `<div style="text-align:center;padding:30px 16px;color:rgba(255,255,255,0.3);font-size:12px;">Babu wata currency da ta dace</div>`;
+        container.innerHTML = `<div style="text-align:center;padding:40px 16px;color:rgba(255,255,255,0.3);font-size:13px;">Babu wata currency da ta dace</div>`;
+        indexBar.innerHTML = "";
         return;
     }
-    container.innerHTML = list.map(c => `
-        <div class="currency-row ${c.code === currentCode ? 'selected' : ''}" onclick="selectCurrency('${c.code}')">
-            <div class="currency-row-left">
-                <span style="font-size:16px;">${c.flag}</span>
-                <span class="currency-row-symbol">${c.symbol}</span>
-                <span class="currency-row-label">${c.label} (${c.code})</span>
-            </div>
-            <span class="currency-row-check">✓</span>
-        </div>`).join('');
+
+    const groups = groupCurrenciesByLetter(list);
+    const letters = Object.keys(groups).sort();
+
+    container.innerHTML = letters.map(letter => `
+        <div class="currency-letter-group" id="currency-letter-${letter}">
+            <div style="padding:10px 16px 6px;font-size:11px;font-weight:800;color:rgba(255,255,255,0.35);letter-spacing:0.5px;">${letter}</div>
+            ${groups[letter].map(c => `
+                <div class="currency-row ${c.code === currentCode ? 'selected' : ''}" onclick="selectCurrency('${c.code}')">
+                    <div class="currency-row-left">
+                        <span style="width:30px;height:30px;border-radius:50%;background:${getCurrencyIconColor(c.code)};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#ffffff;flex-shrink:0;">${getCurrencyInitial(c)}</span>
+                        <span class="currency-row-label" style="font-size:15px;font-weight:700;color:#ffffff;">${c.code}</span>
+                    </div>
+                    <span class="currency-row-check">✓</span>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+
+    indexBar.innerHTML = letters.map(letter =>
+        `<span onclick="scrollToCurrencyLetter('${letter}')" style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;padding:1px 4px;line-height:1.5;">${letter}</span>`
+    ).join('');
+}
+
+function scrollToCurrencyLetter(letter) {
+    const el = document.getElementById(`currency-letter-${letter}`);
+    const container = document.getElementById("currency-picker-list");
+    if (el && container) container.scrollTo({ top: el.offsetTop - 4, behavior: 'smooth' });
 }
 
 function filterCurrencyList(query) {
@@ -4470,22 +4643,15 @@ function openCurrencyPicker(targetId) {
     currencyPickerTargetId = targetId;
     document.getElementById("currency-search-input").value = "";
     renderCurrencyList(CURRENCIES);
-    const backdrop = document.getElementById("currency-picker-backdrop");
-    const panel = document.getElementById("currency-picker-panel");
-    backdrop.style.display = "flex";
-    setTimeout(() => {
-        panel.style.transform = "scale(1)";
-        panel.style.opacity = "1";
-    }, 10);
+    document.getElementById("currency-picker-panel").style.display = "flex";
+    document.body.style.overflow = "hidden";
+    setTimeout(() => document.getElementById("currency-search-input").focus(), 100);
 }
 
 function closeCurrencyPicker() {
-    const backdrop = document.getElementById("currency-picker-backdrop");
-    const panel = document.getElementById("currency-picker-panel");
-    panel.style.transform = "scale(0.9)";
-    panel.style.opacity = "0";
-    setTimeout(() => { backdrop.style.display = "none"; }, 300);
-        }
+    document.getElementById("currency-picker-panel").style.display = "none";
+    document.body.style.overflow = "";
+}
 
 function selectCurrency(code) {
     if (!currencyPickerTargetId) return;
@@ -4494,21 +4660,6 @@ function selectCurrency(code) {
     btn.dataset.currency = code;
     btn.innerHTML = `${c.symbol} ${c.code} <span style="font-size:9px;opacity:0.5;">▾</span>`;
     closeCurrencyPicker();
-        }
-        
-function buildCurrencyDropdownHtml(id, selectedCode) {
-    const sel = selectedCode || "NGN";
-    return `<select id="${id}" style="width:100px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 6px;outline:none;">
-        ${CURRENCIES.map(c => `<option value="${c.code}" ${c.code === sel ? "selected" : ""}>${c.symbol} ${c.code}</option>`).join('')}
-    </select>`;
-        }
-
-function populateCurrencyDropdowns() {
-    document.querySelectorAll('.currency-select-slot').forEach(sel => {
-        if (sel.dataset.populated) return; // kar a sake cika idan an riga an yi
-        sel.innerHTML = CURRENCIES.map(c => `<option value="${c.code}">${c.symbol} ${c.code}</option>`).join('');
-        sel.dataset.populated = "true";
-    });
         }
 
 const PRO_STORIES = [
