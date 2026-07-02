@@ -66,6 +66,30 @@
             color: #ffffff;
         }
 
+        .password-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .password-label-row h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 0;
+        }
+        .forgot-link {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            color: var(--nexus-cyan);
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+        .forgot-link:hover { opacity: 1; }
+
         .input-block { display: flex; flex-direction: column; }
 
         .nexus-input-field {
@@ -78,6 +102,7 @@
             color: #ffffff;
             outline: none;
             transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
         }
         .nexus-input-field:focus {
             border-color: var(--nexus-cyan);
@@ -90,6 +115,23 @@
             margin-top: 6px;
             display: none;
             line-height: 1.4;
+        }
+
+        /* Email not verified banner */
+        .verify-banner {
+            background: rgba(255, 59, 48, 0.08);
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+            display: none;
+        }
+        .verify-banner span {
+            color: var(--nexus-cyan);
+            cursor: pointer;
+            text-decoration: underline;
         }
 
         .btn-container {
@@ -115,14 +157,12 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 0 10px rgba(0, 242, 255, 0.05);
             animation: buttonPulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
             transition: all 0.3s ease;
         }
-        
+        .nexus-round-next:disabled { opacity: 0.4; cursor: not-allowed; animation: none; }
         .nexus-round-next span { font-size: 12px; transition: transform 0.2s ease; }
-
-        .nexus-round-next:hover {
+        .nexus-round-next:hover:not(:disabled) {
             background: rgba(0, 242, 255, 0.05);
             border-color: var(--nexus-cyan);
             box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
@@ -147,20 +187,29 @@
     <div class="nexus-auth-card" id="authCard">
         <form id="nexusLoginForm" onsubmit="executeLogin(event)">
             <div class="login-window">
-                
+
+                <!-- USERNAME -->
                 <div class="input-block">
                     <div class="step-header">
                         <h2>Username</h2>
                     </div>
                     <input type="text" id="loginUsername" class="nexus-input-field" required autocomplete="off">
+                    <div class="error-message" id="usernameError"></div>
                 </div>
 
+                <!-- PASSWORD -->
                 <div class="input-block">
-                    <div class="step-header">
+                    <div class="password-label-row">
                         <h2>Password</h2>
+                        <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
                     </div>
                     <input type="password" id="loginPassword" class="nexus-input-field" required>
-                    <div class="error-message" id="loginError">Authentication failed. Please check credentials.</div>
+                    <div class="error-message" id="passwordError"></div>
+                </div>
+
+                <!-- Email not verified banner -->
+                <div class="verify-banner" id="verifyBanner">
+                    Your email is not verified yet. <span onclick="resendVerification()">Resend verification email</span>
                 </div>
 
                 <div class="btn-container">
@@ -175,8 +224,9 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -190,50 +240,116 @@
         };
 
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const db = firebase.firestore();
 
-        function executeLogin(event) {
-            event.preventDefault();
-            const loginBtn = document.getElementById("loginBtn");
-            const authCard = document.getElementById("authCard");
-            const errorPrompt = document.getElementById("loginError");
-            
-            // Canza shi zuwa lowercase don dacewa da database baki d'aya
-            const username = document.getElementById("loginUsername").value.trim().toLowerCase();
-            const accessCipher = document.getElementById("loginPassword").value.trim();
+        let currentAuthUser = null; // hold auth user for resend verification
 
-            errorPrompt.style.display = "none";
+        async function executeLogin(event) {
+            event.preventDefault();
+
+            const loginBtn      = document.getElementById("loginBtn");
+            const usernameError = document.getElementById("usernameError");
+            const passwordError = document.getElementById("passwordError");
+            const verifyBanner  = document.getElementById("verifyBanner");
+            const authCard      = document.getElementById("authCard");
+
+            const username = document.getElementById("loginUsername").value.trim().toLowerCase();
+            const password = document.getElementById("loginPassword").value;
+
+            // Reset all messages
+            usernameError.style.display = "none";
+            passwordError.style.display = "none";
+            verifyBanner.style.display  = "none";
+            currentAuthUser = null;
+
+            if (!username || !password) return;
+
+            loginBtn.disabled = true;
             loginBtn.innerHTML = "VERIFYING... <span>→</span>";
 
-            db.collection("users").doc(username).get()
-            .then((doc) => {
-                if (doc.exists) {
-                    if (doc.data().accessCipher === accessCipher) {
-                        db.collection("users").doc(username).update({ isOnline: true });
-                        localStorage.setItem("nexus_user_session", username);
-                        
-                        authCard.classList.add("implode-active");
-                        
-                        setTimeout(() => {
-                            window.location.href = "social.html";
-                        }, 2000);
-                    } else {
-                        errorPrompt.innerText = "Wrong password!";
-                        errorPrompt.style.display = "block";
-                        loginBtn.innerHTML = "LOGIN <span>→</span>";
-                    }
-                } else {
-                    errorPrompt.innerText = "Invalid username!";
-                    errorPrompt.style.display = "block";
+            try {
+                // STEP 1: Look up email from Firestore using username
+                const userDoc = await db.collection("users").doc(username).get();
+
+                if (!userDoc.exists) {
+                    usernameError.textContent = "Username not found.";
+                    usernameError.style.display = "block";
+                    loginBtn.disabled = false;
                     loginBtn.innerHTML = "LOGIN <span>→</span>";
+                    return;
                 }
-            })
-            .catch((err) => {
-                console.error("Auth error: ", err);
-                errorPrompt.innerText = "Wrong input: " + err.message;
-                errorPrompt.style.display = "block";
+
+                const email = userDoc.data().email;
+
+                if (!email) {
+                    usernameError.textContent = "Account error — no email on file. Contact support.";
+                    usernameError.style.display = "block";
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = "LOGIN <span>→</span>";
+                    return;
+                }
+
+                // STEP 2: Sign in with Firebase Auth (secure, hashed)
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                currentAuthUser = userCredential.user;
+
+                // STEP 3: Check email verification
+                if (!currentAuthUser.emailVerified) {
+                    verifyBanner.style.display = "block";
+                    await auth.signOut();
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = "LOGIN <span>→</span>";
+                    return;
+                }
+
+                // STEP 4: Update isOnline + sync emailVerified to Firestore
+await db.collection("users").doc(username).update({
+    isOnline: true,
+    emailVerified: true
+});
+                // STEP 5: Save session and redirect
+                localStorage.setItem("nexus_user_session", username);
+                localStorage.setItem("nexus_user_uid", currentAuthUser.uid);
+
+                authCard.classList.add("implode-active");
+                setTimeout(() => { window.location.href = "social.html"; }, 600);
+
+            } catch (err) {
+                console.error("Login error:", err);
+                loginBtn.disabled = false;
                 loginBtn.innerHTML = "LOGIN <span>→</span>";
-            });
+
+                if (
+                    err.code === "auth/wrong-password" ||
+                    err.code === "auth/invalid-credential" ||
+                    err.code === "auth/invalid-password"
+                ) {
+                    passwordError.textContent = "Wrong password. Try again or use Forgot password.";
+                    passwordError.style.display = "block";
+                } else if (err.code === "auth/too-many-requests") {
+                    passwordError.textContent = "Too many failed attempts. Please wait and try again.";
+                    passwordError.style.display = "block";
+                } else if (err.code === "auth/user-disabled") {
+                    usernameError.textContent = "This account has been disabled. Contact support.";
+                    usernameError.style.display = "block";
+                } else {
+                    passwordError.textContent = "Login failed: " + err.message;
+                    passwordError.style.display = "block";
+                }
+            }
+        }
+
+        function resendVerification() {
+            const user = auth.currentUser;
+            if (!user) return;
+            user.sendEmailVerification()
+                .then(() => {
+                    const banner = document.getElementById("verifyBanner");
+                    banner.innerHTML = "✓ Verification email sent! Check your inbox.";
+                    banner.style.color = "#34c759";
+                })
+                .catch(err => console.error("Resend error:", err));
         }
     </script>
 </body>
