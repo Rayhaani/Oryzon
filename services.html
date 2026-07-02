@@ -4647,8 +4647,8 @@
         <div style="margin-bottom:12px;">
     <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:8px;">Fulfillment Method</div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button id="po-method-delivery" onclick="setOrderMethod('delivery')" style="flex:1;padding:10px;background:linear-gradient(135deg,#1d4ed8,#1e40af);border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">🚚 Delivery</button>
-        <button id="po-method-pickup" onclick="setOrderMethod('pickup')" style="flex:1;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.5);font-size:12px;font-weight:800;cursor:pointer;">📦 Self Pickup</button>
+    <button id="po-method-pickup" onclick="setOrderMethod('pickup')" data-active="true" style="flex:1;padding:10px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">📦 Self Pickup</button>
+<button id="po-method-delivery" onclick="setOrderMethod('delivery')" data-active="false" style="flex:1;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.5);font-size:12px;font-weight:800;cursor:pointer;">🚚 Delivery</button>    
     </div>
     <div id="po-address-wrap">
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:6px;">Delivery Address</div>
@@ -9379,6 +9379,9 @@ function updateOrderTotal() {
 }
     
 async function submitOrderRequestOnly() {
+    const sessionUserCheck = localStorage.getItem('nexus_user_session') || 'guest';
+    if (await isCustomerRestricted(sessionUserCheck)) return;
+
     const qty = parseInt(document.getElementById('po-qty').value) || 1;
     const address = document.getElementById('po-address').value.trim();
     const phone = document.getElementById('po-phone').value.trim();
@@ -9386,7 +9389,7 @@ async function submitOrderRequestOnly() {
 
     if (method === 'delivery' && (!address || address.length < 5)) { showGlobalToast('⚠️ Enter delivery address!'); return; }
     if (!phone || phone.length < 7) { showGlobalToast('⚠️ Enter phone number!'); return; }
-    if (!validateDeliveryTimePreference()) return;
+    if (method === 'delivery' && !validateDeliveryTimePreference()) return;
 
     const btn = document.getElementById('por-submit-btn');
     btn.disabled = true;
@@ -9427,7 +9430,7 @@ async function submitOrderRequestOnly() {
         }
 
         closePlaceOrderOverlay();
-        showGlobalToast('✅ Request sent! Waiting for vendor confirmation.');
+        showOrderStatusOverlay(pro.id, requestId);
 
     } catch (err) {
         console.error('Order request error:', err);
@@ -10600,12 +10603,12 @@ function injectNPReviewsIntoProfile(proId) {
     };
 })();
     
-    
-    function setOrderMethod(method) {
+  function setOrderMethod(method) {
     const deliveryBtn = document.getElementById('po-method-delivery');
     const pickupBtn = document.getElementById('po-method-pickup');
     const addressWrap = document.getElementById('po-address-wrap');
     const pickupInfo = document.getElementById('po-pickup-info');
+    const dtpContainer = document.getElementById('dtp-container-el');
 
     if (method === 'delivery') {
         deliveryBtn.style.background = 'linear-gradient(135deg,#1d4ed8,#1e40af)';
@@ -10617,6 +10620,9 @@ function injectNPReviewsIntoProfile(proId) {
         pickupBtn.dataset.active = 'false';
         addressWrap.style.display = 'block';
         pickupInfo.style.display = 'none';
+
+        if (dtpContainer) dtpContainer.classList.add('visible');
+
     } else {
         pickupBtn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
         pickupBtn.style.color = '#ffffff';
@@ -10626,12 +10632,22 @@ function injectNPReviewsIntoProfile(proId) {
         deliveryBtn.dataset.active = 'false';
         addressWrap.style.display = 'none';
         pickupInfo.style.display = 'block';
-    }
 
-    // ── SABON ADDITION: reveal delivery time preference once method is chosen ──
-    const dtpContainer = document.getElementById('dtp-container-el');
-    if (dtpContainer) dtpContainer.classList.add('visible');
-}
+        if (dtpContainer) {
+            dtpContainer.classList.remove('visible');
+            deliveryTimePreference.mode = null;
+            deliveryTimePreference.windowType = null;
+            deliveryTimePreference.customText = null;
+            const vendorBtn = document.getElementById('dtp-opt-vendor');
+            const strictBtn = document.getElementById('dtp-opt-strict');
+            if (vendorBtn) vendorBtn.classList.remove('active');
+            if (strictBtn) strictBtn.classList.remove('active');
+            const dropdownWrap = document.getElementById('dtp-dropdown-wrap');
+            if (dropdownWrap) dropdownWrap.classList.remove('visible');
+        }
+    }
+    }  
+    
     
 // ── TRACK SEARCH/CATEGORY EVENTS ──
 async function trackSearchEvent(query) {
