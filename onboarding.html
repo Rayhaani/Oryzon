@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Protocol - Welcome</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep-black: #000000;
+            --nexus-cyan: #00F2FF;
+            --border-subtle: rgba(255, 255, 255, 0.05);
+            --text-secondary: rgba(255, 255, 255, 0.5);
+            --error-red: #ff3b30;
+            --success-green: #34c759;
+            --card-bg: linear-gradient(135deg, #1e1c1c 0%, #121111 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep-black);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .onboard-card {
+            width: 100%;
+            max-width: 340px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.02);
+            border-radius: 20px;
+            padding: 24px 20px 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        /* ── PROGRESS BAR ── */
+        .progress-engine {
+            width: 100%;
+            height: 2px;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 20px;
+            border-radius: 2px;
+        }
+        .progress-line-fill {
+            height: 100%;
+            width: 25%;
+            background: var(--nexus-cyan);
+            box-shadow: 0 0 10px var(--nexus-cyan);
+            transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        /* ── STEP SLIDER ── */
+        .slider-window {
+            position: relative;
+            width: 100%;
+        }
+        .form-step {
+            position: absolute;
+            width: 100%;
+            top: 0; left: 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(40px);
+            transition: transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease, visibility 0.5s;
+        }
+        .form-step.active {
+            position: relative;
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+        .form-step.exit {
+            position: absolute;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-40px);
+        }
+
+        /* ── TYPOGRAPHY ── */
+        .step-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+        .step-sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        /* ── BUTTONS ── */
+        .btn-row {
+            margin-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 40px;
+        }
+        .btn-skip {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .btn-skip:hover { color: #ffffff; }
+        .btn-next {
+            margin-left: auto;
+            background: transparent;
+            border: 1px solid rgba(0,242,255,0.3);
+            border-radius: 25px;
+            padding: 8px 16px;
+            color: var(--nexus-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: buttonPulse 2s infinite alternate cubic-bezier(0.4,0,0.6,1);
+            transition: all 0.3s ease;
+        }
+        .btn-next:disabled { opacity: 0.4; cursor: not-allowed; animation: none; }
+        .btn-next span { font-size: 12px; transition: transform 0.2s ease; }
+        .btn-next:hover:not(:disabled) {
+            background: rgba(0,242,255,0.05);
+            border-color: var(--nexus-cyan);
+            box-shadow: 0 0 15px rgba(0,242,255,0.2);
+        }
+        .btn-next:hover:not(:disabled) span { transform: translateX(2px); }
+        @keyframes buttonPulse {
+            0% { box-shadow: 0 0 8px rgba(0,242,255,0.05); border-color: rgba(0,242,255,0.2); }
+            100% { box-shadow: 0 0 15px rgba(0,242,255,0.25); border-color: rgba(0,242,255,0.6); }
+        }
+
+        /* ── STEP 1: PROFILE SETUP ── */
+        .avatar-upload-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .avatar-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid rgba(0,242,255,0.3);
+            background: #0d0d0f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            transition: border-color 0.3s ease;
+            margin-bottom: 8px;
+        }
+        .avatar-circle:hover { border-color: var(--nexus-cyan); }
+        .avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .avatar-circle .avatar-icon {
+            font-size: 28px;
+            opacity: 0.4;
+        }
+        .avatar-circle input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .avatar-hint {
+            font-size: 10px;
+            color: var(--nexus-cyan);
+            opacity: 0.7;
+        }
+        .nexus-textarea {
+            width: 100%;
+            background: #0d0d0f;
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 13px;
+            color: #ffffff;
+            outline: none;
+            resize: none;
+            height: 72px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s ease;
+            line-height: 1.5;
+        }
+        .nexus-textarea:focus { border-color: var(--nexus-cyan); background: #111114; }
+        .nexus-textarea::placeholder { color: rgba(255,255,255,0.25); }
+        .char-count {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        /* ── STEP 2: INTERESTS ── */
+        .interests-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .interest-chip {
+            background: #0d0d0f;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 10px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .interest-chip .chip-icon { font-size: 20px; }
+        .interest-chip .chip-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            line-height: 1.3;
+            font-weight: 500;
+        }
+        .interest-chip.selected {
+            background: rgba(0,242,255,0.08);
+            border-color: rgba(0,242,255,0.5);
+        }
+        .interest-chip.selected .chip-label { color: var(--nexus-cyan); }
+        .interests-hint {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* ── STEP 3: SUGGESTED ACCOUNTS ── */
+        .suggest-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .suggest-list::-webkit-scrollbar { width: 3px; }
+        .suggest-list::-webkit-scrollbar-thumb { background: rgba(0,242,255,0.2); border-radius: 2px; }
+
+        .suggest-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #0d0d0f;
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+        .suggest-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid rgba(0,242,255,0.15);
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .suggest-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .suggest-info { flex: 1; min-width: 0; }
+        .suggest-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .suggest-username {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        .follow-btn {
+            background: transparent;
+            border: 1px solid rgba(0,242,255,0.35);
+            border-radius: 20px;
+            padding: 5px 12px;
+            color: var(--nexus-cyan);
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .follow-btn.following {
+            background: rgba(0,242,255,0.1);
+            border-color: var(--nexus-cyan);
+        }
+        .follow-count-hint {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            text-align: center;
+        }
+        .follow-count-hint span { color: var(--nexus-cyan); }
+        .suggest-loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ── STEP 4: NOTIFICATIONS ── */
+        .notif-icon-wrap {
+            text-align: center;
+            font-size: 52px;
+            margin-bottom: 14px;
+        }
+        .notif-btn {
+            width: 100%;
+            background: rgba(0,242,255,0.06);
+            border: 1px solid rgba(0,242,255,0.3);
+            border-radius: 12px;
+            padding: 13px;
+            color: var(--nexus-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+        }
+        .notif-btn:hover { background: rgba(0,242,255,0.1); }
+        .notif-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .notif-granted {
+            text-align: center;
+            font-size: 12px;
+            color: var(--success-green);
+            display: none;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="onboard-card" id="onboardCard">
+
+    <div class="progress-engine">
+        <div class="progress-line-fill" id="progressFill"></div>
+    </div>
+
+    <div class="slider-window">
+
+        <!-- ══ STEP 1: PROFILE SETUP ══ -->
+        <div class="form-step active" id="step1">
+            <div class="step-title">Set Up Your Profile</div>
+            <div class="step-sub">Add a photo and tell the world who you are.</div>
+
+            <div class="avatar-upload-wrap">
+                <div class="avatar-circle" id="avatarCircle">
+                    <span class="avatar-icon">👤</span>
+                    <img id="avatarPreview" alt="Profile photo">
+                    <input type="file" id="avatarInput" accept="image/*" onchange="previewAvatar(this)">
+                </div>
+                <div class="avatar-hint">Tap to upload photo</div>
+            </div>
+
+            <textarea
+                class="nexus-textarea"
+                id="inpBio"
+                placeholder="Write a short bio about yourself..."
+                maxlength="120"
+                oninput="updateCharCount(this, 'bioCount', 120)"
+            ></textarea>
+            <div class="char-count"><span id="bioCount">0</span>/120</div>
+
+            <div class="btn-row">
+                <button class="btn-skip" onclick="skipStep(2)">Skip</button>
+                <button class="btn-next" onclick="saveProfileStep()">NEXT <span>→</span></button>
+            </div>
+        </div>
+
+        <!-- ══ STEP 2: INTERESTS ══ -->
+        <div class="form-step" id="step2">
+            <div class="step-title">Your Interests</div>
+            <div class="step-sub">Pick at least 3 topics you care about.</div>
+
+            <div class="interests-grid" id="interestsGrid">
+                <!-- populated by JS -->
+            </div>
+            <div class="interests-hint" id="interestHint">Select at least 3</div>
+
+            <div class="btn-row">
+                <button class="btn-skip" onclick="skipStep(3)">Skip</button>
+                <button class="btn-next" id="interestNextBtn" onclick="saveInterests()" disabled>NEXT <span>→</span></button>
+            </div>
+        </div>
+
+        <!-- ══ STEP 3: SUGGESTED ACCOUNTS ══ -->
+        <div class="form-step" id="step3">
+            <div class="step-title">People to Follow</div>
+            <div class="step-sub">Follow at least 3 people to personalise your feed.</div>
+
+            <div class="suggest-list" id="suggestList">
+                <div class="suggest-loading">Loading suggestions...</div>
+            </div>
+            <div class="follow-count-hint">
+                Following <span id="followCount">0</span> people
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-skip" onclick="skipStep(4)">Skip</button>
+                <button class="btn-next" id="followNextBtn" onclick="goToStep(4)" disabled>NEXT <span>→</span></button>
+            </div>
+        </div>
+
+        <!-- ══ STEP 4: NOTIFICATIONS ══ -->
+        <div class="form-step" id="step4">
+            <div class="notif-icon-wrap">🔔</div>
+            <div class="step-title">Stay in the Loop</div>
+            <div class="step-sub">Enable notifications so you never miss a message, like, or update from your network.</div>
+
+            <button class="notif-btn" id="notifBtn" onclick="requestNotifications()">ENABLE NOTIFICATIONS</button>
+            <div class="notif-granted" id="notifGranted">✓ Notifications enabled!</div>
+
+            <div class="btn-row">
+                <button class="btn-skip" onclick="finishOnboarding()">Skip</button>
+                <button class="btn-next" onclick="finishOnboarding()">ENTER NEXUS <span>→</span></button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+        authDomain: "oryzon-50ea4.firebaseapp.com",
+        projectId: "oryzon-50ea4",
+        storageBucket: "oryzon-50ea4.firebasestorage.app",
+        messagingSenderId: "782106742622",
+        appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+        measurementId: "G-K5085DLL2W"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ── Session check ──
+    const currentUsername = localStorage.getItem("nexus_user_session");
+    if (!currentUsername) window.location.href = "login.html";
+
+    let activeStep = 1;
+    const totalSteps = 4;
+    let followedUsers = new Set();
+    let selectedInterests = new Set();
+
+    // ── INTERESTS DATA ──
+    const INTERESTS = [
+        { icon: "🛒", label: "Kasuwanci" },
+        { icon: "💻", label: "Fasaha" },
+        { icon: "⚽", label: "Wasanni" },
+        { icon: "🕌", label: "Addini" },
+        { icon: "🎭", label: "Nishadi" },
+        { icon: "🏥", label: "Lafiya" },
+        { icon: "🎵", label: "Kiɗa" },
+        { icon: "🍔", label: "Abinci" },
+        { icon: "✈️",  label: "Tafiya" },
+        { icon: "📚", label: "Ilimi" },
+        { icon: "💰", label: "Kudi" },
+        { icon: "🎨", label: "Art" },
+    ];
+
+    // ── Build interests grid ──
+    (function buildInterests() {
+        const grid = document.getElementById("interestsGrid");
+        INTERESTS.forEach(item => {
+            const chip = document.createElement("div");
+            chip.className = "interest-chip";
+            chip.innerHTML = `<span class="chip-icon">${item.icon}</span><span class="chip-label">${item.label}</span>`;
+            chip.addEventListener("click", () => {
+                if (selectedInterests.has(item.label)) {
+                    selectedInterests.delete(item.label);
+                    chip.classList.remove("selected");
+                } else {
+                    selectedInterests.add(item.label);
+                    chip.classList.add("selected");
+                }
+                updateInterestHint();
+            });
+            grid.appendChild(chip);
+        });
+    })();
+
+    function updateInterestHint() {
+        const count = selectedInterests.size;
+        const hint = document.getElementById("interestHint");
+        const btn = document.getElementById("interestNextBtn");
+        if (count === 0) {
+            hint.textContent = "Select at least 3";
+            hint.style.color = "var(--text-secondary)";
+            btn.disabled = true;
+        } else if (count < 3) {
+            hint.textContent = `${count} selected — pick ${3 - count} more`;
+            hint.style.color = "var(--text-secondary)";
+            btn.disabled = true;
+        } else {
+            hint.textContent = `${count} selected ✓`;
+            hint.style.color = "var(--success-green)";
+            btn.disabled = false;
+        }
+    }
+
+    // ── STEP NAVIGATION ──
+    function goToStep(target) {
+        const current = document.getElementById(`step${activeStep}`);
+        current.classList.add("exit");
+        current.classList.remove("active");
+        activeStep = target;
+        const next = document.getElementById(`step${activeStep}`);
+        next.classList.remove("exit");
+        next.classList.add("active");
+        document.getElementById("progressFill").style.width = ((activeStep / totalSteps) * 100) + "%";
+
+        if (activeStep === 3) loadSuggestedAccounts();
+    }
+
+    function skipStep(target) {
+        goToStep(target);
+    }
+
+    // ── STEP 1: PROFILE SETUP ──
+    function previewAvatar(input) {
+        if (!input.files || !input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.getElementById("avatarPreview");
+            const icon = document.querySelector(".avatar-icon");
+            img.src = e.target.result;
+            img.style.display = "block";
+            icon.style.display = "none";
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    function updateCharCount(el, countId, max) {
+        document.getElementById(countId).textContent = el.value.length;
+    }
+
+    async function saveProfileStep() {
+        const bio = document.getElementById("inpBio").value.trim();
+        const avatarFile = document.getElementById("avatarInput").files[0];
+
+        // Save bio to Firestore immediately (photo upload handled separately via Storj backend)
+        try {
+            const updateData = {};
+            if (bio) updateData.bio = bio;
+            if (Object.keys(updateData).length > 0) {
+                await db.collection("users").doc(currentUsername).update(updateData);
+            }
+        } catch (e) {
+            console.error("Profile save error:", e);
+        }
+        goToStep(2);
+    }
+
+    // ── STEP 2: INTERESTS ──
+    async function saveInterests() {
+        try {
+            await db.collection("users").doc(currentUsername).update({
+                interests: Array.from(selectedInterests)
+            });
+        } catch (e) {
+            console.error("Interests save error:", e);
+        }
+        goToStep(3);
+    }
+
+    // ── STEP 3: SUGGESTED ACCOUNTS ──
+    async function loadSuggestedAccounts() {
+        const list = document.getElementById("suggestList");
+        list.innerHTML = '<div class="suggest-loading">Loading suggestions...</div>';
+
+        try {
+            // Fetch up to 10 users, exclude current user
+            const snap = await db.collection("users").limit(12).get();
+            const accounts = [];
+            snap.forEach(doc => {
+                if (doc.id !== currentUsername) accounts.push(doc.data());
+            });
+
+            if (accounts.length === 0) {
+                list.innerHTML = '<div class="suggest-loading">No suggestions yet — invite your friends!</div>';
+                document.getElementById("followNextBtn").disabled = false;
+                return;
+            }
+
+            list.innerHTML = "";
+            accounts.slice(0, 8).forEach(user => {
+                const item = document.createElement("div");
+                item.className = "suggest-item";
+
+                const avatarContent = user.userProfilePic
+                    ? `<img src="${user.userProfilePic}" alt="${user.username}" onerror="this.style.display='none';this.parentElement.textContent='👤'">`
+                    : `👤`;
+
+                item.innerHTML = `
+                    <div class="suggest-avatar">${avatarContent}</div>
+                    <div class="suggest-info">
+                        <div class="suggest-name">${user.fullName || user.username}</div>
+                        <div class="suggest-username">@${user.username}</div>
+                    </div>
+                    <button class="follow-btn" onclick="toggleFollow(this, '${user.username}')">Follow</button>
+                `;
+                list.appendChild(item);
+            });
+
+        } catch (e) {
+            console.error("Suggestions error:", e);
+            list.innerHTML = '<div class="suggest-loading">Could not load suggestions.</div>';
+            document.getElementById("followNextBtn").disabled = false;
+        }
+    }
+
+    async function toggleFollow(btn, targetUsername) {
+        const isFollowing = followedUsers.has(targetUsername);
+
+        if (isFollowing) {
+            // Unfollow
+            followedUsers.delete(targetUsername);
+            btn.textContent = "Follow";
+            btn.classList.remove("following");
+            try {
+                await db.collection("users").doc(currentUsername)
+                    .collection("following").doc(targetUsername).delete();
+                await db.collection("users").doc(targetUsername)
+                    .collection("followers").doc(currentUsername).delete();
+            } catch(e) { console.error(e); }
+        } else {
+            // Follow
+            followedUsers.add(targetUsername);
+            btn.textContent = "Following";
+            btn.classList.add("following");
+            try {
+                const now = Date.now();
+                await db.collection("users").doc(currentUsername)
+                    .collection("following").doc(targetUsername).set({ followedAt: now });
+                await db.collection("users").doc(targetUsername)
+                    .collection("followers").doc(currentUsername).set({ followedAt: now });
+            } catch(e) { console.error(e); }
+        }
+
+        // Update count display
+        document.getElementById("followCount").textContent = followedUsers.size;
+
+        // Enable Next button after following at least 3
+        document.getElementById("followNextBtn").disabled = followedUsers.size < 3;
+    }
+
+    // ── STEP 4: NOTIFICATIONS ──
+    async function requestNotifications() {
+        const btn = document.getElementById("notifBtn");
+        const granted = document.getElementById("notifGranted");
+
+        if (!("Notification" in window)) {
+            btn.textContent = "Not supported on this browser";
+            btn.disabled = true;
+            return;
+        }
+
+        if (Notification.permission === "granted") {
+            granted.style.display = "block";
+            btn.style.display = "none";
+            return;
+        }
+
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+            granted.style.display = "block";
+            btn.style.display = "none";
+            try {
+                await db.collection("users").doc(currentUsername).update({
+                    notificationsEnabled: true
+                });
+            } catch(e) {}
+        } else {
+            btn.textContent = "Permission denied — you can enable later in settings";
+            btn.disabled = true;
+        }
+    }
+
+    // ── FINISH ONBOARDING ──
+    async function finishOnboarding() {
+        try {
+            await db.collection("users").doc(currentUsername).update({
+                onboardingComplete: true
+            });
+        } catch(e) {
+            console.error("Onboarding finish error:", e);
+        }
+        window.location.href = "social.html";
+    }
+</script>
+</body>
+</html>
