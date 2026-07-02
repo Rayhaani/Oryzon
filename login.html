@@ -296,6 +296,9 @@
                 }
 
                 // STEP 4: Update Firestore — isOnline + sync emailVerified
+                // Also read onboardingComplete to decide where to redirect
+                const userSnap = await db.collection("users").doc(username).get();
+                const onboardingDone = userSnap.exists && userSnap.data().onboardingComplete === true;
                 await db.collection("users").doc(username).update({
                     isOnline: true,
                     emailVerified: true
@@ -306,7 +309,9 @@
                 localStorage.setItem("nexus_user_uid", firebaseUser.uid);
 
                 authCard.classList.add("implode-active");
-                setTimeout(() => { window.location.href = "social.html"; }, 600);
+                // First-time users → onboarding, returning users → social feed
+                const destination = onboardingDone ? "social.html" : "onboarding.html";
+                setTimeout(() => { window.location.href = destination; }, 600);
 
             } catch (err) {
                 console.error("Login error:", err);
@@ -357,4 +362,5 @@
         }
     </script>
 </body>
-</html>
+    </html>
+    
