@@ -3149,6 +3149,15 @@
         <div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">Loading orders...</div>
     </div>
          </div>  
+
+        <!-- ── PENDING ORDER REQUESTS SECTION (Vendor view) ── -->
+<div id="pending-order-requests-section" style="margin-bottom:20px;display:none;">
+    <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">📨 New Order Requests</div>
+    <div id="pending-order-requests-list" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">Loading requests...</div>
+    </div>
+</div>
+                
         <div style="position:sticky;bottom:16px;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);padding:10px 0;display:flex;flex-direction:column;gap:8px;">
          <div style="display:flex;gap:10px;">
         <button style="flex:1;background:#f1f5f9;color:#111827;border:none;border-radius:14px;padding:14px 0;font-weight:700;font-size:13px;cursor:pointer;" onclick="openSecureChat()">Secure Chat 📩</button>
@@ -4656,7 +4665,30 @@
         <div id="currency-picker-list" style="overflow-y:auto;flex:1;padding-bottom:8px;"></div>
     </div>
 </div>  
-   
+
+<!-- ── REJECT REASON MODAL ── -->
+<div class="reject-reason-overlay" id="reject-reason-overlay">
+    <div class="reject-reason-panel">
+        <div class="reject-reason-title">Reject Order Request</div>
+        <div class="reject-reason-sub">Please select why you cannot fulfill this order. This helps us keep the platform reliable for everyone.</div>
+
+        <select class="reject-reason-select" id="reject-reason-select">
+            <option value="">— Select a reason —</option>
+            <option value="item_unavailable">Item/Dish No Longer Available</option>
+            <option value="delivery_unavailable">Unable to Deliver to This Location</option>
+            <option value="time_unavailable">Cannot Meet Requested Delivery Time</option>
+            <option value="other">Other Reason</option>
+        </select>
+
+        <textarea class="reject-reason-note" id="reject-reason-note" placeholder="Add a short note (optional)..."></textarea>
+
+        <div class="reject-reason-actions">
+            <button class="reject-reason-cancel-btn" onclick="closeRejectReasonModal()">Cancel</button>
+            <button class="reject-reason-confirm-btn" onclick="confirmRejectOrderRequest()">Confirm Reject</button>
+        </div>
+    </div>
+</div>
+        
     <!-- PURE TSANTSAR VANILLA JAVASCRIPT ENGINE (NO REACT/BABEL) -->
     <script>
        // Core Static Local Data Context Stores Verbatim
@@ -10407,10 +10439,11 @@ function injectNPReviewsIntoProfile(proId) {
         origFn(proId);
         setTimeout(() => injectNPReviewsIntoProfile(proId), 100);
         setTimeout(() => loadProPendingOrders(proId), 200);
+        setTimeout(() => loadPendingOrderRequests(proId), 250);  // ← SABON LINE
     };
 })();
-
-
+    
+    
     function setOrderMethod(method) {
     const deliveryBtn = document.getElementById('po-method-delivery');
     const pickupBtn = document.getElementById('po-method-pickup');
@@ -10613,6 +10646,307 @@ function validateDeliveryTimePreference() {
     }
     return true;
 }
+
+// ── GLOBAL STATE FOR ORDER REQUESTS ──
+let activeRejectRequestId = null;
+let activeRejectProId = null;
+
+// ════════════════════════════════════════════════════════════
+//  📨 LOAD & RENDER PENDING ORDER REQUESTS (Vendor Side)
+// ════════════════════════════════════════════════════════════
+async function loadPendingOrderRequests(proId) {
+    const section = document.getElementById('pending-order-requests-section');
+    const list = document.getElementById('pending-order-requests-list');
+    if (!section || !list) return;
+
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser || String(proId) !== String(sessionUser)) return; // Only owner sees this
+
+    section.style.display = 'block';
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        const snap = await firebase.database().ref(`providers/${proId}/orderRequests`).once('value');
+        const data = snap.val() || {};
+
+        const requests = Object.entries(data)
+            .map(([id, r]) => ({ id, ...r }))
+            .filter(r => r.status === 'pending_vendor_review')
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        if (requests.length === 0) {
+            list.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;background:#f8fafc;border-radius:12px;">No new order requests</div>`;
+            return;
+        }
+
+        list.innerHTML = requests.map(r => renderOrderRequestCardHtml(r)).join('');
+
+    } catch (err) {
+        console.error('Load order requests error:', err);
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">Failed to load requests</div>`;
+    }
+}
+
+function renderOrderRequestCardHtml(r) {
+    const dtp = r.deliveryTimePreference || {};
+    let timeLabel = 'Left to vendor';
+    if (dtp.mode === 'strict') {
+        const labels = {
+            now_30: 'Now (10 – 30 mins)',
+            '30_60': 'Within 30 mins – 1 hour',
+            '1_2h': 'Within 1 – 2 hours',
+            custom: dtp.customText || 'Custom time'
+        };
+        timeLabel = labels[dtp.windowType] || 'Not specified';
+    }
+
+    return `
+        <div class="order-req-card">
+            <div class="order-req-top">
+                <div>
+                    <div class="order-req-item-name">${r.quantity}x ${r.itemName}</div>
+                    <div class="order-req-meta">📍 ${r.fulfillmentMethod === 'pickup' ? 'Self Pickup' : (r.address || '—')}</div>
+                    <div class="order-req-meta">⏰ ${timeLabel}</div>
+                    <div class="order-req-meta">📞 ${r.phone || '—'}</div>
+                </div>
+                <span class="order-req-badge">PENDING</span>
+            </div>
+            <div class="order-req-actions">
+                <button class="order-req-accept-btn" onclick="acceptOrderRequest('${r.proId}','${r.id}')">✅ Accept</button>
+                <button class="order-req-reject-btn" onclick="openRejectReasonModal('${r.proId}','${r.id}')">✕ Reject</button>
+            </div>
+        </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  ✅ ACCEPT ORDER REQUEST
+// ════════════════════════════════════════════════════════════
+async function acceptOrderRequest(proId, requestId) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const reqSnap = await firebase.database().ref(`providers/${proId}/orderRequests/${requestId}`).once('value');
+        const reqData = reqSnap.val();
+        if (!reqData) return;
+
+        // Set a payment deadline window (e.g. 10 minutes from now)
+        const paymentDeadline = Date.now() + (10 * 60 * 1000);
+
+        await firebase.database().ref(`providers/${proId}/orderRequests/${requestId}`).update({
+            status: 'accepted_awaiting_payment',
+            acceptedAt: Date.now(),
+            paymentDeadline: paymentDeadline
+        });
+
+        await firebase.database().ref(`customers/${reqData.customerUsername}/sentOrderRequests/${requestId}`).update({
+            status: 'accepted_awaiting_payment',
+            acceptedAt: Date.now(),
+            paymentDeadline: paymentDeadline
+        });
+
+        // Notify customer
+        await firebase.database().ref(`customers/${reqData.customerUsername}/notifications`).push({
+            type: 'order_accepted',
+            title: '✅ Order Accepted!',
+            message: `${reqData.proName} accepted your order for ${reqData.itemName}. Complete payment now to confirm.`,
+            requestId: requestId,
+            read: false,
+            createdAt: Date.now()
+        });
+
+        await sendPushToUser(
+            reqData.customerUsername,
+            '✅ Order Accepted!',
+            `${reqData.proName} accepted your order. Complete payment now to confirm.`,
+            { url: 'index.html', requestId: requestId }
+        );
+
+        showGlobalToast('✅ Order accepted! Customer has been notified to complete payment.');
+        loadPendingOrderRequests(proId);
+
+    } catch (err) {
+        console.error('Accept order request error:', err);
+        showGlobalToast('❌ Failed to accept order. Try again.');
+    }
+}
+
+// ════════════════════════════════════════════════════════════
+//  ✕ REJECT ORDER REQUEST (with reason)
+// ════════════════════════════════════════════════════════════
+function openRejectReasonModal(proId, requestId) {
+    activeRejectProId = proId;
+    activeRejectRequestId = requestId;
+    document.getElementById('reject-reason-select').value = '';
+    document.getElementById('reject-reason-note').value = '';
+    document.getElementById('reject-reason-overlay').style.display = 'flex';
+}
+
+function closeRejectReasonModal() {
+    document.getElementById('reject-reason-overlay').style.display = 'none';
+    activeRejectProId = null;
+    activeRejectRequestId = null;
+}
+
+async function confirmRejectOrderRequest() {
+    const reason = document.getElementById('reject-reason-select').value;
+    const note = document.getElementById('reject-reason-note').value.trim();
+
+    if (!reason) { showGlobalToast('⚠️ Please select a reason!'); return; }
+
+    const proId = activeRejectProId;
+    const requestId = activeRejectRequestId;
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const reqSnap = await firebase.database().ref(`providers/${proId}/orderRequests/${requestId}`).once('value');
+        const reqData = reqSnap.val();
+        if (!reqData) return;
+
+        await firebase.database().ref(`providers/${proId}/orderRequests/${requestId}`).update({
+            status: 'rejected',
+            rejectReason: reason,
+            rejectNote: note || null,
+            rejectedAt: Date.now()
+        });
+
+        await firebase.database().ref(`customers/${reqData.customerUsername}/sentOrderRequests/${requestId}`).update({
+            status: 'rejected',
+            rejectReason: reason,
+            rejectNote: note || null,
+            rejectedAt: Date.now()
+        });
+
+        const reasonLabels = {
+            item_unavailable: 'The item is no longer available',
+            delivery_unavailable: 'Vendor cannot deliver to your location',
+            time_unavailable: 'Vendor cannot meet your requested time',
+            other: 'Vendor was unable to fulfill this order'
+        };
+
+        await firebase.database().ref(`customers/${reqData.customerUsername}/notifications`).push({
+            type: 'order_rejected',
+            title: '❌ Order Request Declined',
+            message: `${reqData.proName}: ${reasonLabels[reason] || 'Unable to fulfill this order'}`,
+            read: false,
+            createdAt: Date.now()
+        });
+
+        await sendPushToUser(
+            reqData.customerUsername,
+            '❌ Order Request Declined',
+            reasonLabels[reason] || 'Unable to fulfill this order',
+            { url: 'index.html' }
+        );
+
+        // Track vendor reliability
+        await trackVendorRejection(proId, reason);
+
+        // If item marked unavailable, auto-hide related story/menu visibility
+        if (reason === 'item_unavailable') {
+            await autoHideUnavailableItem(proId, reqData.itemName);
+        }
+
+        closeRejectReasonModal();
+        showGlobalToast('Order rejected. Customer has been notified.');
+        loadPendingOrderRequests(proId);
+
+    } catch (err) {
+        console.error('Reject order request error:', err);
+        showGlobalToast('❌ Failed to reject order. Try again.');
+    }
+}
+
+// ════════════════════════════════════════════════════════════
+//  📉 VENDOR RELIABILITY TRACKER
+// ════════════════════════════════════════════════════════════
+async function trackVendorRejection(proId, reason) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const statsRef = firebase.database().ref(`providers/${proId}/reliabilityStats`);
+        const snap = await statsRef.once('value');
+        const stats = snap.val() || { totalRejections: 0, itemUnavailableCount: 0, rejectionLog: [] };
+
+        stats.totalRejections = (stats.totalRejections || 0) + 1;
+        if (reason === 'item_unavailable') {
+            stats.itemUnavailableCount = (stats.itemUnavailableCount || 0) + 1;
+        }
+
+        // Keep a rolling log of last 30 days for pattern detection
+        const now = Date.now();
+        const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+        const log = (stats.rejectionLog || []).filter(entry => entry.timestamp > thirtyDaysAgo);
+        log.push({ reason, timestamp: now });
+        stats.rejectionLog = log;
+
+        await statsRef.set(stats);
+
+        // Check for suspicious pattern: too many item_unavailable rejections in short window
+        await checkVendorReliabilityFlags(proId, log);
+
+    } catch (err) {
+        console.warn('trackVendorRejection error:', err);
+    }
+}
+
+async function checkVendorReliabilityFlags(proId, rejectionLog) {
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const recentRejections = rejectionLog.filter(entry => entry.timestamp > sevenDaysAgo);
+    const recentItemUnavailable = recentRejections.filter(entry => entry.reason === 'item_unavailable');
+
+    // Flag threshold: 5+ rejections in 7 days, or 3+ item_unavailable claims in 7 days
+    const shouldFlag = recentRejections.length >= 5 || recentItemUnavailable.length >= 3;
+
+    if (shouldFlag) {
+        try {
+            const flagId = `flag_${Date.now()}`;
+            await firebase.database().ref(`admin/reliability_flags/${flagId}`).set({
+                proId: String(proId),
+                reason: recentItemUnavailable.length >= 3
+                    ? 'Repeated "item unavailable" rejections — possible inventory misrepresentation'
+                    : 'High rejection frequency in the past 7 days',
+                rejectionCount7d: recentRejections.length,
+                itemUnavailableCount7d: recentItemUnavailable.length,
+                status: 'unreviewed',
+                createdAt: Date.now()
+            });
+        } catch (err) {
+            console.warn('checkVendorReliabilityFlags error:', err);
+        }
+    }
+}
+
+// ════════════════════════════════════════════════════════════
+//  🚫 AUTO-HIDE UNAVAILABLE ITEM FROM STORY/DISPLAY
+// ════════════════════════════════════════════════════════════
+async function autoHideUnavailableItem(proId, itemName) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const today = getNowNigeria().toISOString().slice(0, 10);
+        const storyRef = firebase.database().ref(`daily_stories/${proId}/${today}`);
+        const snap = await storyRef.once('value');
+        const storyData = snap.val();
+
+        if (storyData && storyData.uploads) {
+            const filteredUploads = storyData.uploads.filter(u => u.dishName !== itemName);
+
+            if (filteredUploads.length === 0) {
+                // No uploads left for today — deactivate the story entirely
+                await storyRef.update({ active: false, expiredAt: Date.now() });
+            } else {
+                await storyRef.update({ uploads: filteredUploads });
+            }
+        }
+
+        showGlobalToast(`📸 "${itemName}" has been removed from today's story.`);
+
+    } catch (err) {
+        console.warn('autoHideUnavailableItem error:', err);
+    }
+    }
+    
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
