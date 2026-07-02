@@ -2616,6 +2616,88 @@
 .emg-dropdown-panel * {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
+
+    /* ── DELIVERY TIME PREFERENCE (Glass style matching CyberDropdown) ── */
+.dtp-container {
+    background: rgba(245, 245, 247, 0.35);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.dtp-question {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.dtp-option-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.dtp-option-btn {
+    flex: 1;
+    padding: 10px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dtp-option-btn.active {
+    background: rgba(0, 242, 254, 0.15);
+    border-color: #00f2fe;
+    color: #ffffff;
+}
+
+.dtp-dropdown-wrap {
+    display: none;
+    margin-top: 10px;
+}
+
+.dtp-dropdown-wrap.visible {
+    display: block;
+}
+
+.dtp-select {
+    width: 100%;
+    background: rgba(20, 25, 45, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    margin-bottom: 8px;
+}
+
+.dtp-custom-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    box-sizing: border-box;
+    display: none;
+}
+
+.dtp-custom-input.visible {
+    display: block;
+        }
         
     </style>
 </head>
@@ -4239,6 +4321,31 @@
                 <span id="po-total-display" style="font-size:16px;font-weight:800;color:#34d399;">—</span>
             </div>
         </div>
+
+    <div class="dtp-container">
+    <div class="dtp-question">When do you need this delivered? *</div>
+    <div class="dtp-option-row">
+        <div class="dtp-option-btn" id="dtp-opt-vendor" onclick="selectDeliveryPreference('vendor')">
+            Leave it to vendor
+        </div>
+        <div class="dtp-option-btn" id="dtp-opt-strict" onclick="selectDeliveryPreference('strict')">
+            I have my strict time
+        </div>
+    </div>
+
+    <div class="dtp-dropdown-wrap" id="dtp-dropdown-wrap">
+        <select class="dtp-select" id="dtp-time-select" onchange="handleDtpTimeChange(this.value)">
+            <option value="">— Select your required window —</option>
+            <option value="now_30">Now (within 10 – 30 minutes)</option>
+            <option value="30_60">Within 30 minutes – 1 hour</option>
+            <option value="1_2h">Within 1 – 2 hours</option>
+            <option value="custom">Custom time</option>
+        </select>
+
+        <input type="text" id="dtp-custom-input" class="dtp-custom-input" placeholder="e.g. Before 6:00 PM today">
+    </div>
+    </div>
+        
         <div style="margin-bottom:12px;">
     <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:8px;">Fulfillment Method</div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
@@ -10265,6 +10372,82 @@ async function submitServiceRequest() {
     btn.disabled = false;
     btn.textContent = 'Submit Request 🚀';
                              }
+
+// ── DELIVERY TIME PREFERENCE STATE ──
+const deliveryTimePreference = {
+    mode: null,          // 'vendor' or 'strict'
+    windowType: null,    // 'now_30' | '30_60' | '1_2h' | 'custom'
+    customText: null
+};
+
+function selectDeliveryPreference(mode) {
+    deliveryTimePreference.mode = mode;
+
+    const vendorBtn = document.getElementById('dtp-opt-vendor');
+    const strictBtn = document.getElementById('dtp-opt-strict');
+    const dropdownWrap = document.getElementById('dtp-dropdown-wrap');
+
+    if (mode === 'vendor') {
+        vendorBtn.classList.add('active');
+        strictBtn.classList.remove('active');
+        dropdownWrap.classList.remove('visible');
+
+        // Reset strict-time fields since vendor will decide
+        deliveryTimePreference.windowType = null;
+        deliveryTimePreference.customText = null;
+        document.getElementById('dtp-time-select').value = '';
+        document.getElementById('dtp-custom-input').classList.remove('visible');
+        document.getElementById('dtp-custom-input').value = '';
+
+    } else {
+        strictBtn.classList.add('active');
+        vendorBtn.classList.remove('active');
+        dropdownWrap.classList.add('visible');
+    }
+}
+
+function handleDtpTimeChange(value) {
+    deliveryTimePreference.windowType = value;
+    const customInput = document.getElementById('dtp-custom-input');
+
+    if (value === 'custom') {
+        customInput.classList.add('visible');
+    } else {
+        customInput.classList.remove('visible');
+        customInput.value = '';
+        deliveryTimePreference.customText = null;
+    }
+}
+
+// Sync custom text as user types
+document.addEventListener('DOMContentLoaded', () => {
+    const customInputEl = document.getElementById('dtp-custom-input');
+    if (customInputEl) {
+        customInputEl.addEventListener('input', (e) => {
+            deliveryTimePreference.customText = e.target.value.trim();
+        });
+    }
+});
+
+// ── VALIDATION HELPER (call this before submitting the request) ──
+function validateDeliveryTimePreference() {
+    if (!deliveryTimePreference.mode) {
+        showGlobalToast('⚠️ Please select a delivery time preference!');
+        return false;
+    }
+    if (deliveryTimePreference.mode === 'strict') {
+        if (!deliveryTimePreference.windowType) {
+            showGlobalToast('⚠️ Please select your required delivery window!');
+            return false;
+        }
+        if (deliveryTimePreference.windowType === 'custom' && !deliveryTimePreference.customText) {
+            showGlobalToast('⚠️ Please enter your custom delivery time!');
+            return false;
+        }
+    }
+    return true;
+}
+    
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
