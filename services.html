@@ -2871,6 +2871,122 @@
     font-weight: 700;
     cursor: pointer;
         }
+
+    /* ── CUSTOMER ORDER STATUS CARD ── */
+.order-status-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 9300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.order-status-panel {
+    width: 100%;
+    max-width: 380px;
+    background: rgba(245, 245, 247, 0.35);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+}
+
+.order-status-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.order-status-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 6px;
+}
+
+.order-status-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.order-status-countdown {
+    font-size: 22px;
+    font-weight: 800;
+    color: #00f2fe;
+    margin-bottom: 16px;
+    font-family: monospace;
+}
+
+.order-status-close-btn {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* ── PAYMENT WINDOW OVERLAY (appears automatically after Accept) ── */
+.payment-window-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 9400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.payment-window-panel {
+    width: 100%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 22px 20px 26px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+.payment-window-timer-badge {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 12px;
+    padding: 10px 14px;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.payment-window-timer-badge .timer-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #fca5a5;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.payment-window-timer-badge .timer-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ef4444;
+    font-family: monospace;
+    margin-top: 2px;
+}
         
     </style>
 </head>
@@ -4686,6 +4802,51 @@
             <button class="reject-reason-cancel-btn" onclick="closeRejectReasonModal()">Cancel</button>
             <button class="reject-reason-confirm-btn" onclick="confirmRejectOrderRequest()">Confirm Reject</button>
         </div>
+    </div>
+</div>
+
+<!-- ── CUSTOMER ORDER STATUS OVERLAY ── -->
+<div class="order-status-overlay" id="order-status-overlay">
+    <div class="order-status-panel">
+        <div class="order-status-icon" id="order-status-icon">⏳</div>
+        <div class="order-status-title" id="order-status-title">Waiting for Vendor...</div>
+        <div class="order-status-sub" id="order-status-sub">Your request has been sent. Please wait while the vendor reviews your order.</div>
+        <div class="order-status-countdown" id="order-status-countdown" style="display:none;"></div>
+        <button class="order-status-close-btn" onclick="closeOrderStatusOverlay()">Close (I'll check later)</button>
+    </div>
+</div>
+
+<!-- ── PAYMENT WINDOW OVERLAY ── -->
+<div class="payment-window-overlay" id="payment-window-overlay">
+    <div class="payment-window-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div style="font-size:15px;font-weight:800;color:#ffffff;">✅ Order Confirmed — Pay Now</div>
+        </div>
+
+        <div class="payment-window-timer-badge">
+            <div class="timer-label">Complete payment within</div>
+            <div class="timer-value" id="payment-window-countdown">10:00</div>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 14px;margin-bottom:16px;">
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:700;text-transform:uppercase;">Item</div>
+            <div style="font-size:14px;font-weight:800;color:#ffffff;margin-top:2px;" id="pw-item-name">—</div>
+            <div style="font-size:13px;font-weight:800;color:#34d399;margin-top:2px;" id="pw-item-total">—</div>
+        </div>
+
+        <div style="background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:14px;margin-bottom:18px;">
+            <div style="font-size:10px;font-weight:700;color:#34d399;text-transform:uppercase;margin-bottom:6px;">💳 Pay To</div>
+            <div style="font-size:13px;color:#ffffff;font-weight:700;" id="pw-vendor-bank">—</div>
+            <div style="font-size:13px;color:#ffffff;font-weight:700;margin-top:2px;" id="pw-vendor-acct">—</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;" id="pw-vendor-acctname">—</div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:6px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;padding:10px 12px;margin-bottom:12px;">
+            <span style="font-size:14px;">⚠️</span>
+            <span style="font-size:11px;font-weight:700;color:#fca5a5;line-height:1.4;">If payment is not completed in time, this order will be automatically cancelled.</span>
+        </div>
+
+        <button onclick="submitFinalPayment()" id="pw-submit-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;">I've Paid — Confirm Order ✅</button>
     </div>
 </div>
         
@@ -10946,6 +11107,352 @@ async function autoHideUnavailableItem(proId, itemName) {
         console.warn('autoHideUnavailableItem error:', err);
     }
     }
+
+// ════════════════════════════════════════════════════════════
+//  📡 CUSTOMER ORDER STATUS LISTENER
+// ════════════════════════════════════════════════════════════
+let activeOrderStatusListener = null;
+let activeOrderStatusRequestId = null;
+let activeOrderStatusProId = null;
+let paymentCountdownInterval = null;
+
+function showOrderStatusOverlay(proId, requestId) {
+    activeOrderStatusProId = proId;
+    activeOrderStatusRequestId = requestId;
+
+    document.getElementById('order-status-icon').textContent = '⏳';
+    document.getElementById('order-status-title').textContent = 'Waiting for Vendor...';
+    document.getElementById('order-status-sub').textContent = 'Your request has been sent. Please wait while the vendor reviews your order.';
+    document.getElementById('order-status-countdown').style.display = 'none';
+
+    document.getElementById('order-status-overlay').style.display = 'flex';
+
+    listenToOrderRequestStatus(proId, requestId);
+}
+
+function closeOrderStatusOverlay() {
+    document.getElementById('order-status-overlay').style.display = 'none';
+    if (paymentCountdownInterval) clearInterval(paymentCountdownInterval);
+}
+
+function listenToOrderRequestStatus(proId, requestId) {
+    if (typeof firebase === 'undefined' || !firebase.database) return;
+
+    // Detach any previous listener
+    if (activeOrderStatusListener) {
+        firebase.database().ref(`providers/${proId}/orderRequests/${requestId}`).off('value', activeOrderStatusListener);
+    }
+
+    activeOrderStatusListener = firebase.database()
+        .ref(`providers/${proId}/orderRequests/${requestId}`)
+        .on('value', (snap) => {
+            const data = snap.val();
+            if (!data) return;
+
+            if (data.status === 'accepted_awaiting_payment') {
+                handleOrderAcceptedUI(proId, requestId, data);
+            } else if (data.status === 'rejected') {
+                handleOrderRejectedUI(data);
+            } else if (data.status === 'cancelled_no_payment') {
+                handleOrderExpiredUI();
+            }
+        });
+}
+
+function handleOrderAcceptedUI(proId, requestId, data) {
+    // Stop listening for further status pings on this screen since we now move to payment
+    if (activeOrderStatusListener) {
+        firebase.database().ref(`providers/${proId}/orderRequests/${requestId}`).off('value', activeOrderStatusListener);
+        activeOrderStatusListener = null;
+    }
+
+    document.getElementById('order-status-icon').textContent = '✅';
+    document.getElementById('order-status-title').textContent = 'Order Accepted!';
+    document.getElementById('order-status-sub').textContent = 'The vendor confirmed your order is available. Complete payment now to secure it.';
+
+    // Show countdown then auto-open payment overlay
+    setTimeout(() => {
+        document.getElementById('order-status-overlay').style.display = 'none';
+        openPaymentWindowOverlay(proId, requestId, data);
+    }, 1200);
+}
+
+function handleOrderRejectedUI(data) {
+    if (activeOrderStatusListener) {
+        firebase.database().ref(`providers/${activeOrderStatusProId}/orderRequests/${activeOrderStatusRequestId}`).off('value', activeOrderStatusListener);
+        activeOrderStatusListener = null;
+    }
+
+    const reasonLabels = {
+        item_unavailable: 'The item is no longer available',
+        delivery_unavailable: 'Vendor cannot deliver to your location',
+        time_unavailable: 'Vendor cannot meet your requested time',
+        other: 'Vendor was unable to fulfill this order'
+    };
+
+    document.getElementById('order-status-icon').textContent = '❌';
+    document.getElementById('order-status-title').textContent = 'Request Declined';
+    document.getElementById('order-status-sub').textContent = reasonLabels[data.rejectReason] || 'This vendor could not fulfill your request.';
+}
+
+function handleOrderExpiredUI() {
+    if (activeOrderStatusListener) {
+        firebase.database().ref(`providers/${activeOrderStatusProId}/orderRequests/${activeOrderStatusRequestId}`).off('value', activeOrderStatusListener);
+        activeOrderStatusListener = null;
+    }
+    document.getElementById('order-status-icon').textContent = '⌛';
+    document.getElementById('order-status-title').textContent = 'Request Expired';
+    document.getElementById('order-status-sub').textContent = 'You did not complete payment in time, so this request was automatically cancelled.';
+}
+
+// ════════════════════════════════════════════════════════════
+//  💳 PAYMENT WINDOW — auto-opens after vendor accepts
+// ════════════════════════════════════════════════════════════
+let activePaymentRequestId = null;
+let activePaymentProId = null;
+let paymentDeadlineTimestamp = null;
+
+function openPaymentWindowOverlay(proId, requestId, requestData) {
+    activePaymentProId = proId;
+    activePaymentRequestId = requestId;
+    paymentDeadlineTimestamp = requestData.paymentDeadline;
+
+    document.getElementById('pw-item-name').textContent = `${requestData.quantity}x ${requestData.itemName}`;
+    const unitPrice = parseInt(String(requestData.itemPrice).replace(/[^\d]/g, '')) || 0;
+    document.getElementById('pw-item-total').textContent = `₦${(unitPrice * requestData.quantity).toLocaleString()}`;
+
+    // Fetch vendor bank details
+    if (typeof firebase !== 'undefined' && firebase.database) {
+        firebase.database().ref(`providers/${proId}/bankDetails`).once('value').then(snap => {
+            const bank = snap.val() || {};
+            document.getElementById('pw-vendor-bank').textContent = bank.bankName || 'Bank info not set';
+            document.getElementById('pw-vendor-acct').textContent = bank.accountNumber || '—';
+            document.getElementById('pw-vendor-acctname').textContent = bank.accountName || '';
+        });
+    }
+
+    document.getElementById('payment-window-overlay').style.display = 'flex';
+    startPaymentCountdown();
+}
+
+function startPaymentCountdown() {
+    if (paymentCountdownInterval) clearInterval(paymentCountdownInterval);
+
+    function tick() {
+        const remaining = paymentDeadlineTimestamp - Date.now();
+        const countdownEl = document.getElementById('payment-window-countdown');
+
+        if (remaining <= 0) {
+            clearInterval(paymentCountdownInterval);
+            countdownEl.textContent = '00:00';
+            handlePaymentDeadlineExpired();
+            return;
+        }
+
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        countdownEl.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    }
+
+    tick();
+    paymentCountdownInterval = setInterval(tick, 1000);
+}
+
+async function handlePaymentDeadlineExpired() {
+    document.getElementById('payment-window-overlay').style.display = 'none';
+    showGlobalToast('⌛ Payment window expired. Order has been cancelled.');
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const reqSnap = await firebase.database()
+            .ref(`providers/${activePaymentProId}/orderRequests/${activePaymentRequestId}`)
+            .once('value');
+        const reqData = reqSnap.val();
+        if (!reqData || reqData.status !== 'accepted_awaiting_payment') return; // already handled
+
+        await firebase.database().ref(`providers/${activePaymentProId}/orderRequests/${activePaymentRequestId}`).update({
+            status: 'cancelled_no_payment',
+            cancelledAt: Date.now()
+        });
+
+        await firebase.database().ref(`customers/${reqData.customerUsername}/sentOrderRequests/${activePaymentRequestId}`).update({
+            status: 'cancelled_no_payment',
+            cancelledAt: Date.now()
+        });
+
+        // Notify vendor their time wasn't wasted for nothing — order is closed
+        await firebase.database().ref(`providers/${activePaymentProId}/notifications`).push({
+            type: 'message',
+            title: '⌛ Order Auto-Cancelled',
+            message: `Customer did not complete payment in time for ${reqData.itemName}. No action needed.`,
+            read: false,
+            createdAt: Date.now()
+        });
+
+        // Track customer no-show strike
+        await trackCustomerNoShowStrike(reqData.customerUsername);
+
+    } catch (err) {
+        console.warn('handlePaymentDeadlineExpired error:', err);
+    }
+}
+
+async function submitFinalPayment() {
+    const btn = document.getElementById('pw-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Confirming...';
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const proId = activePaymentProId;
+        const requestId = activePaymentRequestId;
+
+        const reqSnap = await firebase.database().ref(`providers/${proId}/orderRequests/${requestId}`).once('value');
+        const reqData = reqSnap.val();
+        if (!reqData) { showGlobalToast('❌ Request not found.'); return; }
+
+        // Check deadline hasn't already passed (race condition safety)
+        if (Date.now() > reqData.paymentDeadline) {
+            showGlobalToast('⌛ Payment window has expired.');
+            document.getElementById('payment-window-overlay').style.display = 'none';
+            return;
+        }
+
+        const orderId = `order_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+        const finalOrderPayload = {
+            orderId,
+            itemName: reqData.itemName,
+            itemPrice: reqData.itemPrice,
+            quantity: reqData.quantity,
+            fulfillmentMethod: reqData.fulfillmentMethod,
+            address: reqData.address,
+            phone: reqData.phone,
+            deliveryTimePreference: reqData.deliveryTimePreference,
+            customerUsername: reqData.customerUsername,
+            proName: reqData.proName,
+            proId: String(proId),
+            status: 'pending',
+            paidAt: Date.now(),
+            createdAt: Date.now()
+        };
+
+        await firebase.database().ref(`providers/${proId}/orders/${orderId}`).set(finalOrderPayload);
+        await firebase.database().ref(`customers/${reqData.customerUsername}/sentRequests/${orderId}`).set(finalOrderPayload);
+
+        // Mark original request as completed
+        await firebase.database().ref(`providers/${proId}/orderRequests/${requestId}`).update({
+            status: 'payment_completed',
+            completedAt: Date.now()
+        });
+
+        await firebase.database().ref(`providers/${proId}/notifications`).push({
+            type: 'message',
+            title: '💳 Payment Received',
+            message: `Payment confirmed for ${reqData.quantity}x ${reqData.itemName}. Please prepare and set delivery ETA.`,
+            read: false,
+            createdAt: Date.now()
+        });
+
+        await alertAdminNewOrder(finalOrderPayload);
+
+        clearInterval(paymentCountdownInterval);
+        document.getElementById('payment-window-overlay').style.display = 'none';
+        document.getElementById('ps-success-overlay-inline').style.display = 'flex';
+
+    } catch (err) {
+        console.error('submitFinalPayment error:', err);
+        showGlobalToast('❌ Failed to confirm payment. Try again.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = "I've Paid — Confirm Order ✅";
+}
+
+// ════════════════════════════════════════════════════════════
+//  🚫 CUSTOMER NO-SHOW STRIKE SYSTEM
+// ════════════════════════════════════════════════════════════
+async function trackCustomerNoShowStrike(username) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+
+        const statsRef = firebase.database().ref(`customers/${username}/reliabilityStats`);
+        const snap = await statsRef.once('value');
+        const stats = snap.val() || { totalStrikes: 0, strikeLog: [] };
+
+        const now = Date.now();
+        const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+        const log = (stats.strikeLog || []).filter(entry => entry.timestamp > thirtyDaysAgo);
+        log.push({ reason: 'payment_not_completed', timestamp: now });
+
+        stats.totalStrikes = (stats.totalStrikes || 0) + 1;
+        stats.strikeLog = log;
+
+        await statsRef.set(stats);
+
+        // Check strike thresholds
+        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+        const strikesLast7Days = log.filter(e => e.timestamp > sevenDaysAgo).length;
+        const strikesLast30Days = log.length;
+
+        if (strikesLast7Days >= 3) {
+            await applyCustomerRestriction(username, 24, 'Repeated failure to complete payment within the allowed window (3+ times in 7 days)');
+        } else if (strikesLast30Days >= 5) {
+            await applyCustomerRestriction(username, 72, 'Repeated failure to complete payment within the allowed window (5+ times in 30 days)');
+        }
+
+    } catch (err) {
+        console.warn('trackCustomerNoShowStrike error:', err);
+    }
+}
+
+async function applyCustomerRestriction(username, hours, reason) {
+    try {
+        const restrictedUntil = Date.now() + (hours * 60 * 60 * 1000);
+        await firebase.database().ref(`customers/${username}/restriction`).set({
+            restrictedUntil,
+            reason,
+            appliedAt: Date.now()
+        });
+
+        await firebase.database().ref(`customers/${username}/notifications`).push({
+            type: 'warning',
+            title: '⚠️ Account Temporarily Restricted',
+            message: `You cannot send new order requests for ${hours} hours. Reason: ${reason}`,
+            read: false,
+            createdAt: Date.now()
+        });
+
+        await sendPushToUser(
+            username,
+            '⚠️ Account Temporarily Restricted',
+            `You cannot send new order requests for ${hours} hours.`,
+            { url: 'index.html' }
+        );
+    } catch (err) {
+        console.warn('applyCustomerRestriction error:', err);
+    }
+}
+
+// ── CHECK RESTRICTION BEFORE ALLOWING A NEW REQUEST ──
+async function isCustomerRestricted(username) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return false;
+        const snap = await firebase.database().ref(`customers/${username}/restriction`).once('value');
+        const data = snap.val();
+        if (!data) return false;
+        if (Date.now() < data.restrictedUntil) {
+            const minsLeft = Math.ceil((data.restrictedUntil - Date.now()) / 60000);
+            showGlobalToast(`🚫 You are temporarily restricted. Try again in ${minsLeft} minutes.`);
+            return true;
+        }
+        return false;
+    } catch (err) {
+        console.warn('isCustomerRestricted error:', err);
+        return false;
+    }
+}
     
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
