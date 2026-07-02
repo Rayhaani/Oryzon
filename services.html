@@ -2703,6 +2703,175 @@
 .dtp-custom-input.visible {
     display: block;
         }
+
+/* ── REJECT REASON MODAL (Glass style matching CyberDropdown) ── */
+.reject-reason-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.reject-reason-panel {
+    width: 100%;
+    max-width: 380px;
+    background: rgba(245, 245, 247, 0.35);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.reject-reason-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.reject-reason-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 14px;
+    line-height: 1.4;
+}
+
+.reject-reason-select {
+    width: 100%;
+    background: rgba(20,25,45,0.6);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    margin-bottom: 10px;
+}
+
+.reject-reason-note {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    resize: none;
+    height: 70px;
+    box-sizing: border-box;
+    margin-bottom: 14px;
+    font-family: inherit;
+}
+
+.reject-reason-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.reject-reason-cancel-btn {
+    flex: 1;
+    padding: 11px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.reject-reason-confirm-btn {
+    flex: 1;
+    padding: 11px;
+    background: linear-gradient(135deg,#ef4444,#dc2626);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* ── PENDING ORDER REQUEST CARD (Vendor side) ── */
+.order-req-card {
+    background: rgba(245, 245, 247, 0.08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.order-req-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.order-req-item-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.order-req-meta {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.order-req-badge {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: #d97706;
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.order-req-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.order-req-accept-btn {
+    flex: 1;
+    padding: 9px;
+    background: linear-gradient(135deg,#10b981,#059669);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.order-req-reject-btn {
+    flex: 1;
+    padding: 9px;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 10px;
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+        }
+        
     </style>
 </head>
 <body>
@@ -4326,7 +4495,7 @@
             </div>
         </div>
 
-     <div class="dtp-container">
+    <div class="dtp-container" id="dtp-container-el">
     <div class="dtp-question">When do you need this delivered? *</div>
     <div class="dtp-option-row">
         <div class="dtp-option-btn" id="dtp-opt-vendor" onclick="selectDeliveryPreference('vendor')">
@@ -4369,19 +4538,7 @@
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:6px;">Phone Number</div>
             <input id="po-phone" type="tel" placeholder="08012345678" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;box-sizing:border-box;">
         </div>
-        <div style="background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:14px;margin-bottom:18px;">
-            <div style="font-size:10px;font-weight:700;color:#34d399;text-transform:uppercase;margin-bottom:6px;">💳 Pay To</div>
-            <div style="font-size:13px;color:#ffffff;font-weight:700;" id="po-vendor-bank">—</div>
-            <div style="font-size:13px;color:#ffffff;font-weight:700;margin-top:2px;" id="po-vendor-acct">—</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;" id="po-vendor-acctname">—</div>
-        </div>
-     <div style="display:flex;align-items:center;gap:6px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:10px;padding:10px 12px;margin-bottom:12px;">
-    <span style="font-size:14px;">🔒</span>
-    <span style="font-size:11px;font-weight:700;color:#34d399;line-height:1.4;">Payment validates your order. Transfer the exact amount above before submitting.</span>
-</div>
-<button onclick="submitPlaceOrder()" id="po-submit-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#1e40af);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;">I've Paid — Submit Order ✅</button>   
-    </div>
-</div>
+        <button onclick="submitOrderRequestOnly()" id="por-submit-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#1e40af);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;">📨 Send Order Request</button>
 
 <!-- CUSTOMER ORDERS OVERLAY -->
 <div id="customer-orders-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10300;display:none;align-items:center;justify-content:center;padding:20px;">
@@ -9032,65 +9189,65 @@ function updateOrderTotal() {
     document.getElementById('po-total-display').textContent = total > 0 ? `₦${total.toLocaleString()}` : '—';
 }
     
-async function submitPlaceOrder() {
+async function submitOrderRequestOnly() {
     const qty = parseInt(document.getElementById('po-qty').value) || 1;
     const address = document.getElementById('po-address').value.trim();
     const phone = document.getElementById('po-phone').value.trim();
-
     const method = document.getElementById('po-method-delivery').dataset.active === 'true' ? 'delivery' : 'pickup';
+
     if (method === 'delivery' && (!address || address.length < 5)) { showGlobalToast('⚠️ Enter delivery address!'); return; }
     if (!phone || phone.length < 7) { showGlobalToast('⚠️ Enter phone number!'); return; }
+    if (!validateDeliveryTimePreference()) return;
 
-    const btn = document.getElementById('po-submit-btn');
+    const btn = document.getElementById('por-submit-btn');
     btn.disabled = true;
-    btn.textContent = '⏳ Sending...';
+    btn.textContent = '⏳ Sending Request...';
 
     try {
         const pro = window._activePlaceOrderPro || currentChefMenuPro;
         const sessionUser = localStorage.getItem('nexus_user_session') || 'guest';
-        const orderId = `order_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+        const requestId = `orderreq_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
 
-       if (typeof firebase !== 'undefined' && firebase.database) {
-            const orderPayload = {
-                orderId,
-                itemName: orderDraft.itemName,
-                itemPrice: orderDraft.itemPrice,
-                quantity: qty,
-                address,
-                phone,
-                customerUsername: sessionUser,
-                proName: pro?.name || '—',
-                proId: String(pro?.id || ''),
-                fulfillmentMethod: method,
-                status: 'pending',
-                createdAt: Date.now()
-            };
+        const requestPayload = {
+            requestId,
+            itemName: orderDraft.itemName,
+            itemPrice: orderDraft.itemPrice,
+            quantity: qty,
+            fulfillmentMethod: method,
+            address: method === 'delivery' ? address : null,
+            phone,
+            deliveryTimePreference: { ...deliveryTimePreference },
+            customerUsername: sessionUser,
+            proName: pro?.name || '—',
+            proId: String(pro?.id || ''),
+            status: 'pending_vendor_review',
+            createdAt: Date.now()
+        };
 
-            await firebase.database().ref(`providers/${pro.id}/orders/${orderId}`).set(orderPayload);
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            await firebase.database().ref(`providers/${pro.id}/orderRequests/${requestId}`).set(requestPayload);
+            await firebase.database().ref(`customers/${sessionUser}/sentOrderRequests/${requestId}`).set(requestPayload);
 
             await firebase.database().ref(`providers/${pro.id}/notifications`).push({
                 type: 'message',
-                title: '🛒 New Order',
-                message: `New order: ${qty}x ${orderDraft.itemName}`,
+                title: '📨 New Order Request',
+                message: `New request: ${qty}x ${orderDraft.itemName} — awaiting your review`,
                 read: false,
                 createdAt: Date.now()
             });
-
-            // Alert Admin
-            await alertAdminNewOrder({ ...orderPayload, orderId });
-        } 
+        }
 
         closePlaceOrderOverlay();
-        showGlobalToast('✅ Order submitted! The vendor will confirm shortly.');
+        showGlobalToast('✅ Request sent! Waiting for vendor confirmation.');
 
     } catch (err) {
-        console.error('Order submit error:', err);
-        showGlobalToast('❌ Failed to submit order. Try again.');
+        console.error('Order request error:', err);
+        showGlobalToast('❌ Failed to send request. Try again.');
     }
 
     btn.disabled = false;
-    btn.textContent = "I've Paid — Submit Order ✅";
-}
+    btn.textContent = '📨 Send Order Request';
+    }
 
 // ── LOAD PRO PENDING ORDERS ──
 async function loadProPendingOrders(proId) {
@@ -10253,7 +10410,8 @@ function injectNPReviewsIntoProfile(proId) {
     };
 })();
 
-function setOrderMethod(method) {
+
+    function setOrderMethod(method) {
     const deliveryBtn = document.getElementById('po-method-delivery');
     const pickupBtn = document.getElementById('po-method-pickup');
     const addressWrap = document.getElementById('po-address-wrap');
@@ -10284,7 +10442,7 @@ function setOrderMethod(method) {
     const dtpContainer = document.getElementById('dtp-container-el');
     if (dtpContainer) dtpContainer.classList.add('visible');
 }
-
+    
 // ── TRACK SEARCH/CATEGORY EVENTS ──
 async function trackSearchEvent(query) {
     if (!query) return;
