@@ -34,7 +34,7 @@
             background: linear-gradient(135deg, #1e1c1c 0%, #121111 100%);
             border: 1px solid rgba(255, 255, 255, 0.02);
             border-radius: 20px;
-            padding: 24px 20px;
+            padding: 22px 20px 18px;
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
             position: relative;
             overflow: hidden;
@@ -53,39 +53,31 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
         }
 
-        .step-header h2 {
+        .field-label {
             font-family: 'Orbitron', sans-serif;
             font-size: 15px;
             font-weight: 700;
             letter-spacing: 1px;
-            margin-bottom: 14px;
-            text-transform: capitalize;
             color: #ffffff;
+            margin-bottom: 8px;
         }
 
         .password-label-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
+            margin-bottom: 8px;
         }
-        .password-label-row h2 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #ffffff;
-            margin: 0;
-        }
+        .password-label-row .field-label { margin-bottom: 0; }
         .forgot-link {
             font-family: 'Inter', sans-serif;
             font-size: 11px;
             color: var(--nexus-cyan);
             text-decoration: none;
-            opacity: 0.8;
+            opacity: 0.85;
             transition: opacity 0.2s ease;
         }
         .forgot-link:hover { opacity: 1; }
@@ -97,7 +89,7 @@
             background: #0d0d0f;
             border: 1px solid var(--border-subtle);
             border-radius: 10px;
-            padding: 12px 14px;
+            padding: 11px 14px;
             font-size: 14px;
             color: #ffffff;
             outline: none;
@@ -112,7 +104,7 @@
         .error-message {
             color: var(--error-red);
             font-size: 11px;
-            margin-top: 6px;
+            margin-top: 5px;
             display: none;
             line-height: 1.4;
         }
@@ -122,25 +114,28 @@
             background: rgba(255, 59, 48, 0.08);
             border: 1px solid rgba(255, 59, 48, 0.2);
             border-radius: 10px;
-            padding: 10px 12px;
+            padding: 9px 12px;
             font-size: 11px;
             color: rgba(255,255,255,0.7);
             line-height: 1.5;
             display: none;
         }
-        .verify-banner span {
+        .verify-banner .resend-btn {
             color: var(--nexus-cyan);
             cursor: pointer;
             text-decoration: underline;
+            background: none;
+            border: none;
+            font-size: 11px;
+            font-family: 'Inter', sans-serif;
+            padding: 0;
         }
 
         .btn-container {
-            margin-top: 18px;
+            margin-top: 6px;
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            min-height: 40px;
-            width: 100%;
         }
 
         .nexus-round-next {
@@ -175,7 +170,7 @@
 
         .auth-footer {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 14px;
             font-size: 11px;
             color: var(--text-secondary);
         }
@@ -190,9 +185,7 @@
 
                 <!-- USERNAME -->
                 <div class="input-block">
-                    <div class="step-header">
-                        <h2>Username</h2>
-                    </div>
+                    <div class="field-label">Username</div>
                     <input type="text" id="loginUsername" class="nexus-input-field" required autocomplete="off">
                     <div class="error-message" id="usernameError"></div>
                 </div>
@@ -200,7 +193,7 @@
                 <!-- PASSWORD -->
                 <div class="input-block">
                     <div class="password-label-row">
-                        <h2>Password</h2>
+                        <div class="field-label">Password</div>
                         <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
                     </div>
                     <input type="password" id="loginPassword" class="nexus-input-field" required>
@@ -209,7 +202,8 @@
 
                 <!-- Email not verified banner -->
                 <div class="verify-banner" id="verifyBanner">
-                    Your email is not verified yet. <span onclick="resendVerification()">Resend verification email</span>
+                    Your email is not verified yet.
+                    <button type="button" class="resend-btn" onclick="resendVerification()">Resend verification email</button>
                 </div>
 
                 <div class="btn-container">
@@ -243,7 +237,8 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        let currentAuthUser = null; // hold auth user for resend verification
+        // Riƙe reference ga unverified user don resend
+        let unverifiedUser = null;
 
         async function executeLogin(event) {
             event.preventDefault();
@@ -257,11 +252,11 @@
             const username = document.getElementById("loginUsername").value.trim().toLowerCase();
             const password = document.getElementById("loginPassword").value;
 
-            // Reset all messages
+            // Reset duk messages
             usernameError.style.display = "none";
             passwordError.style.display = "none";
             verifyBanner.style.display  = "none";
-            currentAuthUser = null;
+            unverifiedUser = null;
 
             if (!username || !password) return;
 
@@ -269,7 +264,7 @@
             loginBtn.innerHTML = "VERIFYING... <span>→</span>";
 
             try {
-                // STEP 1: Look up email from Firestore using username
+                // STEP 1: Karɓi email daga Firestore ta username
                 const userDoc = await db.collection("users").doc(username).get();
 
                 if (!userDoc.exists) {
@@ -290,12 +285,14 @@
                     return;
                 }
 
-                // STEP 2: Sign in with Firebase Auth (secure, hashed)
+                // STEP 2: Sign in da Firebase Auth
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                currentAuthUser = userCredential.user;
+                const firebaseUser = userCredential.user;
 
-                // STEP 3: Check email verification
-                if (!currentAuthUser.emailVerified) {
+                // STEP 3: Duba email verification
+                if (!firebaseUser.emailVerified) {
+                    // Riƙe reference kafin signOut domin resend ya yi aiki
+                    unverifiedUser = firebaseUser;
                     verifyBanner.style.display = "block";
                     await auth.signOut();
                     loginBtn.disabled = false;
@@ -303,14 +300,15 @@
                     return;
                 }
 
-                // STEP 4: Update isOnline + sync emailVerified to Firestore
-await db.collection("users").doc(username).update({
-    isOnline: true,
-    emailVerified: true
-});
-                // STEP 5: Save session and redirect
+                // STEP 4: Update Firestore — isOnline + sync emailVerified
+                await db.collection("users").doc(username).update({
+                    isOnline: true,
+                    emailVerified: true
+                });
+
+                // STEP 5: Save session → redirect
                 localStorage.setItem("nexus_user_session", username);
-                localStorage.setItem("nexus_user_uid", currentAuthUser.uid);
+                localStorage.setItem("nexus_user_uid", firebaseUser.uid);
 
                 authCard.classList.add("implode-active");
                 setTimeout(() => { window.location.href = "social.html"; }, 600);
@@ -323,7 +321,7 @@ await db.collection("users").doc(username).update({
                 if (
                     err.code === "auth/wrong-password" ||
                     err.code === "auth/invalid-credential" ||
-                    err.code === "auth/invalid-password"
+                    err.code === "auth/invalid-login-credentials"
                 ) {
                     passwordError.textContent = "Wrong password. Try again or use Forgot password.";
                     passwordError.style.display = "block";
@@ -341,15 +339,26 @@ await db.collection("users").doc(username).update({
         }
 
         function resendVerification() {
-            const user = auth.currentUser;
-            if (!user) return;
-            user.sendEmailVerification()
+            const btn = document.querySelector(".resend-btn");
+            if (!unverifiedUser) {
+                // Idan reference ya ɓace, nuna message mai amfani
+                document.getElementById("verifyBanner").innerHTML =
+                    "Please try logging in again first, then click Resend.";
+                return;
+            }
+            btn.textContent = "Sending...";
+            btn.disabled = true;
+            unverifiedUser.sendEmailVerification()
                 .then(() => {
-                    const banner = document.getElementById("verifyBanner");
-                    banner.innerHTML = "✓ Verification email sent! Check your inbox.";
-                    banner.style.color = "#34c759";
+                    document.getElementById("verifyBanner").innerHTML =
+                        "✓ Verification email sent! Check your inbox.";
+                    document.getElementById("verifyBanner").style.color = "#34c759";
                 })
-                .catch(err => console.error("Resend error:", err));
+                .catch(err => {
+                    btn.textContent = "Failed — try again";
+                    btn.disabled = false;
+                    console.error("Resend error:", err);
+                });
         }
     </script>
 </body>
