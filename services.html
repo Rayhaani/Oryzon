@@ -9310,7 +9310,6 @@ function confirmOrderYes() {
     const wasFromStory = orderDraft.fromStory;
     orderDraft.fromStory = false;
 
-    // Detect which vendor type is active
     let activePro = null;
     let activeItemName = null;
     let activeItemPrice = null;
@@ -9331,35 +9330,19 @@ function confirmOrderYes() {
         activeItemPrice = orderDraft.itemPrice;
     }
 
-  const setText = (id, value) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-};
+    document.getElementById('po-item-name').textContent = activeItemName || orderDraft.itemName;
+    document.getElementById('po-item-price').textContent = activeItemPrice || orderDraft.itemPrice;
+    document.getElementById('po-qty').value = 1;
+    document.getElementById('po-address').value = '';
+    document.getElementById('po-phone').value = '';
 
-const setValue = (id, value) => {
-    const el = document.getElementById(id);
-    if (el) el.value = value;
-};
-
-setText('po-item-name', activeItemName || orderDraft.itemName);
-setText('po-item-price', activeItemPrice || orderDraft.itemPrice);
-
-setValue('po-qty', 1);
-setValue('po-address', '');
-setValue('po-phone', '');
-
-setText('po-vendor-bank', activePro?.bankDetails?.bankName || 'Bank info not set');
-setText('po-vendor-acct', activePro?.bankDetails?.accountNumber || '—');
-setText('po-vendor-acctname', activePro?.bankDetails?.accountName || '');
-
-    // Store active pro for submitPlaceOrder
     window._activePlaceOrderPro = activePro;
 
     orderDraft.returnToStory = wasFromStory;
 
     document.getElementById('place-order-overlay').style.display = 'flex';
     updateOrderTotal();
-    }
+}
 
 function openPlaceOrderOverlay() {
     document.getElementById('po-item-name').textContent = orderDraft.itemName;
