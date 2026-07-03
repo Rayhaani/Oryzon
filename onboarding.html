@@ -3,1100 +3,727 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Nexus Protocol - Welcome</title>
+<title>Nexus Protocol — Welcome</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --cyan: #00F2FF;
-  --purple: #7B2FFF;
-  --pink: #FF2FBD;
-  --black: #000000;
-  --text: rgba(255,255,255,0.7);
-  --subtle: rgba(255,255,255,0.05);
+  --obsidian: #050505;
+  --gold: #FDE08D;
+  --gold-dark: #B8860B;
+  --gold-premium: #ffd700;
+  --glass-border: rgba(253,224,141,0.2);
+  --gold-glow: 0 0 20px rgba(226,176,74,0.35);
+  --text-dim: rgba(255,255,255,0.5);
+  --text-faint: rgba(255,255,255,0.25);
+  --card-bg: rgba(10,10,10,0.8);
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:var(--obsidian); color:#fff; font-family:'Inter',sans-serif; min-height:100vh; overflow:hidden; }
 
-body {
-  background: var(--black);
-  color: #fff;
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-  overflow: hidden;
-  position: relative;
-}
-
-/* ══ SCREEN SYSTEM ══ */
+/* ══ SCREENS ══ */
 .screen {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.4,0,0.2,1);
-  transform: translateY(30px);
-  overflow-y: auto;
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.45s ease, transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  transform:translateY(28px);
+  overflow-y:auto;
 }
-.screen.active {
-  opacity: 1;
-  pointer-events: all;
-  transform: translateY(0);
-}
-.screen.exit-up {
-  opacity: 0;
-  transform: translateY(-30px);
-  pointer-events: none;
-}
+.screen.active { opacity:1; pointer-events:all; transform:translateY(0); }
+.screen.exit-up { opacity:0; transform:translateY(-28px); pointer-events:none; }
 
-/* ══ PROGRESS DOTS ══ */
-.progress-dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  padding: 16px 0 0;
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  z-index: 10;
-}
-.dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  transition: all 0.4s ease;
-}
-.dot.active {
-  width: 20px;
-  border-radius: 3px;
-  background: var(--cyan);
-  box-shadow: 0 0 8px var(--cyan);
-}
-.dot.done { background: rgba(0,242,255,0.35); }
-
-/* ══ NAV BAR ══ */
+/* ══ TOP NAV ══ */
 .top-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 52px 24px 0;
-  min-height: 88px;
-  flex-shrink: 0;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:52px 24px 0; min-height:88px; flex-shrink:0;
 }
 .btn-back {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.7);
-  font-size: 16px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s ease;
-  text-decoration: none;
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(253,224,141,0.06);
+  border:1px solid rgba(253,224,141,0.15);
+  color:rgba(255,255,255,0.6); font-size:16px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s ease;
 }
-.btn-back:hover { background: rgba(255,255,255,0.1); color: #fff; }
-.btn-skip-top {
-  background: none; border: none;
-  color: rgba(255,255,255,0.4);
-  font-family: 'Inter', sans-serif;
-  font-size: 13px; font-weight: 500;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  padding: 8px;
+.btn-back:hover { background:rgba(253,224,141,0.12); color:#fff; }
+.btn-skip-text {
+  background:none; border:none;
+  color:var(--text-dim); font-family:'Inter',sans-serif;
+  font-size:13px; font-weight:500; cursor:pointer;
+  transition:color 0.2s ease; padding:8px;
 }
-.btn-skip-top:hover { color: rgba(255,255,255,0.8); }
+.btn-skip-text:hover { color:#fff; }
 
-/* ══ CONTENT AREA ══ */
-.screen-content {
-  flex: 1;
-  padding: 20px 24px 0;
-  display: flex;
-  flex-direction: column;
-}
-
+/* ══ SCREEN CONTENT ══ */
+.screen-content { flex:1; padding:20px 24px 0; display:flex; flex-direction:column; }
 .screen-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  color: #fff;
-  margin-bottom: 10px;
-  line-height: 1.2;
+  font-family:'Orbitron',sans-serif; font-size:21px; font-weight:900;
+  letter-spacing:0.5px; color:#fff; margin-bottom:8px; line-height:1.2;
 }
-.screen-sub {
-  font-size: 13px;
-  color: var(--text);
-  line-height: 1.6;
-  margin-bottom: 24px;
-}
+.screen-sub { font-size:13px; color:var(--text-dim); line-height:1.6; margin-bottom:22px; }
 
 /* ══ BOTTOM ACTION AREA ══ */
-.bottom-area {
-  padding: 16px 24px 48px;
-  flex-shrink: 0;
-}
-.btn-primary {
-  width: 100%;
-  background: linear-gradient(135deg, var(--cyan) 0%, var(--purple) 100%);
-  border: none;
-  border-radius: 16px;
-  padding: 16px;
-  color: #000;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 2px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 32px rgba(0,242,255,0.25);
-  position: relative;
-  overflow: hidden;
-}
-.btn-primary::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0);
-  transition: background 0.2s ease;
-}
-.btn-primary:hover::after { background: rgba(255,255,255,0.1); }
-.btn-primary:active { transform: scale(0.98); }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.bottom-area { padding:14px 24px 48px; flex-shrink:0; }
 
-.btn-secondary {
-  width: 100%;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  padding: 14px;
-  color: rgba(255,255,255,0.55);
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 10px;
+/* Gold pill button — RIGHT aligned like login.html */
+.btn-row {
+  display:flex; justify-content:space-between;
+  align-items:center; min-height:40px;
+  margin-bottom:12px;
 }
-.btn-secondary:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); }
+.btn-later {
+  background:transparent; border:none;
+  color:var(--text-dim); font-family:'Inter',sans-serif;
+  font-size:13px; font-weight:500; cursor:pointer;
+  transition:color 0.2s ease;
+}
+.btn-later:hover { color:#fff; }
+.btn-next {
+  margin-left:auto;
+  background:transparent;
+  border:1px solid rgba(253,224,141,0.35);
+  border-radius:25px; padding:8px 18px;
+  color:var(--gold); font-family:'Orbitron',sans-serif;
+  font-size:10px; font-weight:700; letter-spacing:1px;
+  cursor:pointer; display:flex; align-items:center; gap:6px;
+  animation:goldPulse 2s infinite alternate;
+  transition:all 0.3s ease;
+}
+.btn-next:disabled { opacity:0.35; cursor:not-allowed; animation:none; }
+.btn-next span { font-size:12px; transition:transform 0.2s ease; }
+.btn-next:hover:not(:disabled) {
+  background:rgba(253,224,141,0.08);
+  border-color:var(--gold);
+  box-shadow:var(--gold-glow);
+}
+.btn-next:hover:not(:disabled) span { transform:translateX(2px); }
+@keyframes goldPulse {
+  0% { box-shadow:0 0 6px rgba(253,224,141,0.05); border-color:rgba(253,224,141,0.2); }
+  100% { box-shadow:0 0 16px rgba(253,224,141,0.3); border-color:rgba(253,224,141,0.6); }
+}
 
-/* ════════════════════════════════
-   SPLASH SCREEN
-════════════════════════════════ */
-#splashScreen {
-  background: #000;
-  overflow: hidden;
+/* "Do this later" full-width subtle button — unchanged */
+.btn-secondary-full {
+  width:100%; background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px; padding:14px;
+  color:rgba(255,255,255,0.55); font-family:'Inter',sans-serif;
+  font-size:13px; font-weight:600; cursor:pointer;
+  transition:all 0.2s ease;
 }
-#splashCanvas {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
+.btn-secondary-full:hover { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.8); }
+
+/* ══ PROGRESS DOTS ══ */
+.prog-dots {
+  display:flex; justify-content:center; gap:6px;
+  padding:16px 0 0; position:absolute;
+  top:0; left:0; right:0; z-index:10;
 }
+.prog-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:rgba(255,255,255,0.1); transition:all 0.4s ease;
+}
+.prog-dot.active { width:20px; border-radius:3px; background:var(--gold); box-shadow:0 0 8px rgba(253,224,141,0.4); }
+.prog-dot.done { background:rgba(253,224,141,0.35); }
+
+/* ════════════════════
+   SPLASH
+════════════════════ */
+#splashScreen { overflow:hidden; }
+#splashCanvas { position:absolute; inset:0; width:100%; height:100%; }
 .splash-center {
-  position: relative;
-  z-index: 2;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 32px;
-  text-align: center;
+  position:relative; z-index:2;
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:40px 32px; text-align:center;
 }
-.splash-ring {
-  position: relative;
-  width: 140px; height: 140px;
-  margin-bottom: 40px;
+/* Outer pulse rings */
+.splash-logo-wrap { position:relative; width:130px; height:130px; margin-bottom:36px; }
+.splash-ring-1, .splash-ring-2 {
+  position:absolute; border-radius:50%;
+  border:1px solid rgba(253,224,141,0.15);
 }
-.splash-ring::before, .splash-ring::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(0,242,255,0.2);
-  animation: ringPulse 3s infinite;
+.splash-ring-1 { inset:-14px; animation:rPulse 3s infinite 0s; }
+.splash-ring-2 { inset:-28px; animation:rPulse 3s infinite 0.6s; opacity:0.5; }
+@keyframes rPulse {
+  0%,100% { transform:scale(1); opacity:0.4; }
+  50% { transform:scale(1.04); opacity:1; }
 }
-.splash-ring::before { inset: -10px; animation-delay: 0s; }
-.splash-ring::after { inset: -25px; animation-delay: 0.5s; opacity: 0.5; }
-@keyframes ringPulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.05); opacity: 1; }
-}
-.splash-logo-circle {
-  width: 140px; height: 140px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #1a1a2e, #000);
-  border: 1.5px solid rgba(0,242,255,0.4);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 40px rgba(0,242,255,0.15), inset 0 0 30px rgba(0,242,255,0.05);
-  animation: logoGlow 3s infinite alternate;
+.splash-logo-bg {
+  width:130px; height:130px; border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #1a1500, #050505);
+  border:1.5px solid rgba(253,224,141,0.35);
+  display:flex; align-items:center; justify-content:center;
+  animation:logoGlow 3s infinite alternate;
 }
 @keyframes logoGlow {
-  from { box-shadow: 0 0 30px rgba(0,242,255,0.1), inset 0 0 20px rgba(0,242,255,0.03); }
-  to { box-shadow: 0 0 60px rgba(0,242,255,0.3), inset 0 0 40px rgba(0,242,255,0.08); }
+  from { box-shadow:0 0 20px rgba(253,224,141,0.1), inset 0 0 20px rgba(253,224,141,0.03); }
+  to   { box-shadow:0 0 50px rgba(253,224,141,0.3), inset 0 0 30px rgba(253,224,141,0.08); }
 }
-.splash-logo-text {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 2px;
-  color: var(--cyan);
-  text-shadow: 0 0 20px var(--cyan);
-}
-.splash-welcome-text {
-  font-size: 14px;
-  color: rgba(255,255,255,0.45);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
+.splash-welcome { font-size:12px; color:rgba(255,255,255,0.35); letter-spacing:4px; text-transform:uppercase; margin-bottom:10px; }
 .splash-name {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 26px;
-  font-weight: 900;
-  background: linear-gradient(135deg, #fff 0%, var(--cyan) 60%, var(--purple) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  min-height: 36px;
-  letter-spacing: 1px;
+  font-family:'Orbitron',sans-serif; font-size:26px; font-weight:900;
+  background:linear-gradient(135deg,#fff 0%,var(--gold) 55%,var(--gold-dark) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; min-height:36px; letter-spacing:1px;
 }
-.splash-tagline {
-  font-size: 12px;
-  color: rgba(255,255,255,0.3);
-  margin-top: 10px;
-  letter-spacing: 1.5px;
-}
-.splash-tap-hint {
-  font-size: 11px;
-  color: rgba(0,242,255,0.5);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  animation: tapPulse 2s infinite;
-  margin-top: 48px;
-}
-@keyframes tapPulse {
-  0%,100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
+.splash-tagline { font-size:11px; color:rgba(255,255,255,0.25); letter-spacing:2px; margin-top:10px; text-transform:uppercase; }
+.splash-tap { font-size:10px; color:rgba(253,224,141,0.5); letter-spacing:2.5px; text-transform:uppercase; margin-top:48px; animation:tapBlink 2s infinite; }
+@keyframes tapBlink { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
 
-/* ════════════════════════════════
-   TOUR SCREEN
-════════════════════════════════ */
-#tourScreen { overflow: hidden; }
-.tour-slides-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-.tour-slides {
-  display: flex;
-  height: 100%;
-  transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
-}
-.tour-slide {
-  min-width: 100%;
-  padding: 0 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+/* ════════════════════
+   TERMS
+════════════════════ */
+.terms-point { display:flex; gap:14px; align-items:flex-start; margin-bottom:16px; }
+.terms-icon { font-size:22px; flex-shrink:0; margin-top:1px; }
+.terms-title { font-size:13px; font-weight:700; color:#fff; margin-bottom:3px; }
+.terms-body { font-size:12px; color:rgba(255,255,255,0.42); line-height:1.55; }
+.terms-body a { color:var(--gold); text-decoration:none; }
+.terms-agree { font-size:11px; color:rgba(255,255,255,0.28); text-align:center; line-height:1.6; margin-top:4px; }
+.terms-agree a { color:var(--gold); }
+
+/* ════════════════════
+   TOUR
+════════════════════ */
+#tourScreen { overflow:hidden; }
+.tour-slides-wrap { flex:1; position:relative; overflow:hidden; }
+.tour-slides { display:flex; height:100%; transition:transform 0.45s cubic-bezier(0.4,0,0.2,1); }
+.tour-slide { min-width:100%; padding:0 24px; display:flex; flex-direction:column; align-items:center; }
 .tour-illus {
-  width: 100%;
-  height: 200px;
-  margin: 16px 0 24px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.04);
-  display: flex; align-items: center; justify-content: center;
-  position: relative;
-  overflow: hidden;
+  width:100%; height:190px; margin:14px 0 20px;
+  border-radius:20px; background:rgba(253,224,141,0.02);
+  border:1px solid rgba(253,224,141,0.07);
+  display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
 }
-.tour-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 18px;
-  font-weight: 900;
-  color: #fff;
-  text-align: center;
-  margin-bottom: 8px;
-  letter-spacing: 0.5px;
-}
-.tour-desc {
-  font-size: 13px;
-  color: var(--text);
-  text-align: center;
-  line-height: 1.6;
-  max-width: 280px;
-}
+.tour-title { font-family:'Orbitron',sans-serif; font-size:17px; font-weight:900; color:#fff; text-align:center; margin-bottom:8px; }
+.tour-desc { font-size:13px; color:var(--text-dim); text-align:center; line-height:1.65; max-width:290px; }
+.tour-dots { display:flex; gap:6px; justify-content:center; padding:14px 0; flex-shrink:0; }
+.t-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.12); transition:all 0.3s ease; cursor:pointer; }
+.t-dot.active { width:18px; border-radius:3px; background:var(--gold); }
 
-/* Tour dot indicators */
-.tour-dots {
-  display: flex; gap: 6px;
-  justify-content: center;
-  padding: 16px 0;
-  flex-shrink: 0;
-}
-.tour-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-.tour-dot.active {
-  width: 18px;
-  border-radius: 3px;
-  background: var(--cyan);
-}
-
-/* ── ILLUSTRATION 1: FEED ── */
-.illus-feed {
-  display: flex;
-  gap: 10px;
-  padding: 16px;
-  align-items: center;
-  justify-content: center;
-}
+/* Illustration 1 — Feed + Rewards */
+.illus-feed { display:flex; gap:10px; padding:14px; align-items:center; justify-content:center; }
 .mock-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 12px;
-  padding: 10px;
-  width: 110px;
+  background:rgba(255,255,255,0.03); border:1px solid rgba(253,224,141,0.08);
+  border-radius:12px; padding:10px; width:108px;
 }
-.mock-card:first-child { transform: rotate(-4deg) translateY(8px); }
-.mock-card:last-child { transform: rotate(3deg) translateY(-5px); }
-.mock-avatar {
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--cyan), var(--purple));
-  margin-bottom: 7px;
+.mock-card:first-child { transform:rotate(-4deg) translateY(8px); }
+.mock-card:last-child { transform:rotate(3deg) translateY(-5px); }
+.mock-av {
+  width:22px; height:22px; border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  margin-bottom:7px;
 }
-.mock-line {
-  height: 5px;
-  border-radius: 3px;
-  background: rgba(255,255,255,0.1);
-  margin-bottom: 5px;
+.mock-av.b { background:linear-gradient(135deg,#fff,rgba(253,224,141,0.6)); }
+.mock-line { height:4px; border-radius:3px; background:rgba(255,255,255,0.08); margin-bottom:4px; }
+.mock-line.s { width:55%; }
+.mock-img { width:100%; height:48px; border-radius:7px; margin:6px 0; background:linear-gradient(135deg,rgba(253,224,141,0.08),rgba(180,140,0,0.12)); }
+.mock-reward {
+  display:flex; align-items:center; gap:4px;
+  font-size:9px; color:var(--gold); font-weight:700;
 }
-.mock-line.short { width: 60%; }
-.mock-img {
-  width: 100%; height: 52px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(0,242,255,0.1), rgba(123,47,255,0.15));
-  margin: 6px 0;
+.coin-float {
+  position:absolute; top:12px; right:20px;
+  font-family:'Orbitron',sans-serif; font-size:13px;
+  color:var(--gold); font-weight:900;
+  text-shadow:0 0 10px rgba(253,224,141,0.6);
+  animation:floatUp 2s ease-in-out infinite;
 }
-.mock-heart {
-  font-size: 11px;
-  color: var(--pink);
-  animation: heartBeat 1.5s infinite;
-  display: inline-block;
-}
-@keyframes heartBeat {
-  0%,100% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-}
+.coin-float.d2 { right:60px; animation-delay:0.7s; top:20px; font-size:10px; }
+.coin-float.d3 { right:110px; animation-delay:1.4s; top:8px; font-size:11px; }
+@keyframes floatUp { 0%,100%{transform:translateY(0);opacity:0.7;} 50%{transform:translateY(-12px);opacity:1;} }
 
-/* ── ILLUSTRATION 2: MARKETPLACE ── */
-.illus-market {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 10px;
-  padding: 20px;
+/* Illustration 2 — Marketplace */
+.illus-market { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; padding:18px; }
+.mkt-chip {
+  background:rgba(255,255,255,0.02); border:1px solid rgba(253,224,141,0.07);
+  border-radius:11px; padding:11px 5px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  font-size:18px;
 }
-.market-chip {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 12px;
-  padding: 12px 6px;
-  display: flex; flex-direction: column;
-  align-items: center; gap: 5px;
-  font-size: 20px;
-}
-.market-chip span {
-  font-size: 8px;
-  color: rgba(255,255,255,0.35);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-.market-chip.glow-chip {
-  border-color: rgba(0,242,255,0.3);
-  background: rgba(0,242,255,0.05);
-  animation: chipGlow 2s infinite alternate;
-}
-@keyframes chipGlow {
-  from { box-shadow: none; }
-  to { box-shadow: 0 0 12px rgba(0,242,255,0.15); }
-}
+.mkt-chip span { font-size:8px; color:rgba(255,255,255,0.3); font-weight:600; letter-spacing:0.5px; }
+.mkt-chip.g { border-color:rgba(253,224,141,0.3); background:rgba(253,224,141,0.05); animation:chipG 2.5s infinite alternate; }
+@keyframes chipG { from{box-shadow:none;} to{box-shadow:0 0 10px rgba(253,224,141,0.15);} }
 
-/* ── ILLUSTRATION 3: WALLET ── */
-.illus-wallet {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
+/* Illustration 3 — Megaphone/Globe */
+.illus-global {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:14px;
 }
-.wallet-coin {
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #1a3a1a, #0a1a0a);
-  border: 2px solid rgba(0,242,255,0.5);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 16px;
-  font-weight: 900;
-  color: var(--cyan);
-  text-shadow: 0 0 12px var(--cyan);
-  animation: coinSpin 4s ease-in-out infinite;
-  box-shadow: 0 0 30px rgba(0,242,255,0.2);
-  position: relative;
+.mega-wrap {
+  width:76px; height:76px; border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(253,224,141,0.1), rgba(0,0,0,0));
+  border:1.5px solid rgba(253,224,141,0.3);
+  display:flex; align-items:center; justify-content:center;
+  font-size:34px; animation:megaGlow 2.5s infinite alternate;
+  box-shadow:0 0 20px rgba(253,224,141,0.1);
 }
-@keyframes coinSpin {
-  0%,100% { transform: rotateY(0deg) scale(1); }
-  25% { transform: rotateY(20deg) scale(1.05); }
-  75% { transform: rotateY(-20deg) scale(1.05); }
-}
-.wallet-stats {
-  display: flex; gap: 16px;
-}
-.wallet-stat {
-  text-align: center;
-}
-.wallet-stat-val {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 13px;
-  color: var(--cyan);
-  font-weight: 700;
-}
-.wallet-stat-lbl {
-  font-size: 9px;
-  color: rgba(255,255,255,0.3);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.wallet-trend {
-  font-size: 11px;
-  color: #34c759;
-  display: flex; align-items: center; gap: 4px;
-}
+@keyframes megaGlow { from{box-shadow:0 0 10px rgba(253,224,141,0.08);} to{box-shadow:0 0 35px rgba(253,224,141,0.25);} }
+.global-stats { display:flex; gap:20px; }
+.g-stat { text-align:center; }
+.g-val { font-family:'Orbitron',sans-serif; font-size:14px; color:var(--gold); font-weight:900; }
+.g-lbl { font-size:9px; color:rgba(255,255,255,0.3); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
 
-/* ════════════════════════════════
-   PROFILE SCREEN
-════════════════════════════════ */
-.avatar-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 0 28px;
+/* Illustration 4 — Problem Solving */
+.illus-solve { display:flex; flex-direction:column; gap:9px; padding:16px; width:100%; }
+.solve-item {
+  display:flex; gap:10px; align-items:center;
+  background:rgba(255,255,255,0.02); border:1px solid rgba(253,224,141,0.06);
+  border-radius:10px; padding:9px 12px;
 }
-.avatar-ring-wrap {
-  position: relative;
-  width: 120px; height: 120px;
-  margin-bottom: 12px;
+.solve-item.answered { border-color:rgba(253,224,141,0.2); }
+.solve-badge {
+  width:22px; height:22px; border-radius:50%;
+  background:rgba(253,224,141,0.08);
+  border:1px solid rgba(253,224,141,0.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; flex-shrink:0; color:var(--gold);
 }
-.avatar-glow-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: conic-gradient(var(--cyan), var(--purple), var(--pink), var(--cyan));
-  animation: ringRotate 3s linear infinite;
-  z-index: 0;
+.solve-badge.ok { background:rgba(253,224,141,0.15); }
+.solve-text { font-size:10px; color:rgba(255,255,255,0.45); line-height:1.3; }
+.solve-ans { font-size:9px; color:var(--gold); margin-top:2px; font-weight:600; }
+
+/* ════════════════════
+   PROFILE
+════════════════════ */
+.avatar-stage { display:flex; flex-direction:column; align-items:center; padding:20px 0 24px; }
+.av-ring-wrap { position:relative; width:120px; height:120px; margin-bottom:10px; }
+.av-glow-ring {
+  position:absolute; inset:-4px; border-radius:50%;
+  background:conic-gradient(var(--gold),var(--gold-dark),#fff,var(--gold));
+  animation:avSpin 3.5s linear infinite; z-index:0;
 }
-@keyframes ringRotate { to { transform: rotate(360deg); } }
-.avatar-glow-inner {
-  position: absolute;
-  inset: 3px;
-  border-radius: 50%;
-  background: #050510;
-  z-index: 1;
+@keyframes avSpin { to{transform:rotate(360deg);} }
+.av-glow-inner { position:absolute; inset:3px; border-radius:50%; background:var(--obsidian); z-index:1; }
+.av-img-wrap {
+  position:absolute; inset:6px; border-radius:50%;
+  background:#0a0a0a; z-index:2; overflow:hidden;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
 }
-.avatar-img-wrap {
-  position: absolute;
-  inset: 6px;
-  border-radius: 50%;
-  background: #0d0d1a;
-  z-index: 2;
-  overflow: hidden;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+.av-img-wrap input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; z-index:3; }
+.av-placeholder { font-size:40px; pointer-events:none; }
+.av-img-wrap img#avatarPreview { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; z-index:2; }
+.av-cam {
+  position:absolute; inset:0; background:rgba(0,0,0,0.35);
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity 0.2s; pointer-events:none; z-index:3; font-size:22px;
 }
-.avatar-img-wrap input[type="file"] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 3;
-}
-.avatar-placeholder { font-size: 40px; pointer-events: none; }
-.avatar-img-wrap img#avatarPreview {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: none; z-index: 2;
-}
-.avatar-camera-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-  z-index: 3;
-  font-size: 22px;
-}
-.avatar-img-wrap:hover .avatar-camera-overlay { opacity: 1; }
-.avatar-tap-hint {
-  font-size: 11px;
-  color: var(--cyan);
-  opacity: 0.7;
-  letter-spacing: 0.5px;
-}
-.field-label {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  color: rgba(255,255,255,0.4);
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
+.av-img-wrap:hover .av-cam { opacity:1; }
+.av-hint { font-size:11px; color:var(--gold); opacity:0.6; }
+.field-label { font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.35); text-transform:uppercase; margin-bottom:8px; }
 .nexus-textarea {
-  width: 100%;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 14px;
-  padding: 14px 16px;
-  font-size: 14px;
-  color: #fff;
-  outline: none;
-  resize: none;
-  height: 80px;
-  font-family: 'Inter', sans-serif;
-  transition: border-color 0.3s ease, background 0.3s ease;
-  line-height: 1.5;
+  width:100%; background:rgba(253,224,141,0.02);
+  border:1px solid rgba(253,224,141,0.08);
+  border-radius:14px; padding:14px 16px;
+  font-size:14px; color:#fff; outline:none;
+  resize:none; height:80px; font-family:'Inter',sans-serif;
+  transition:border-color 0.3s ease; line-height:1.5;
 }
-.nexus-textarea:focus {
-  border-color: rgba(0,242,255,0.4);
-  background: rgba(0,242,255,0.03);
-}
-.nexus-textarea::placeholder { color: rgba(255,255,255,0.2); }
-.char-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 5px;
-  font-size: 10px;
-  color: rgba(255,255,255,0.25);
-}
+.nexus-textarea:focus { border-color:rgba(253,224,141,0.35); background:rgba(253,224,141,0.03); }
+.nexus-textarea::placeholder { color:rgba(255,255,255,0.18); }
+.char-row { display:flex; justify-content:flex-end; margin-top:5px; font-size:10px; color:rgba(255,255,255,0.2); }
 
-/* ════════════════════════════════
-   INTERESTS SCREEN
-════════════════════════════════ */
-.interests-grid {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 10px;
-  margin-bottom: 12px;
-}
+/* ════════════════════
+   INTERESTS
+════════════════════ */
+.int-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:10px; }
 .int-chip {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 14px;
-  padding: 14px 8px 12px;
-  display: flex; flex-direction: column;
-  align-items: center; gap: 6px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
-  position: relative;
-  overflow: hidden;
-  -webkit-tap-highlight-color: transparent;
-}
-.int-chip::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  background: radial-gradient(circle at center, rgba(0,242,255,0.15), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06);
+  border-radius:13px; padding:13px 6px 11px;
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  cursor:pointer; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative; overflow:hidden; -webkit-tap-highlight-color:transparent;
 }
 .int-chip.selected {
-  background: rgba(0,242,255,0.08);
-  border-color: rgba(0,242,255,0.5);
-  transform: scale(1.03);
-  box-shadow: 0 0 16px rgba(0,242,255,0.12);
+  background:rgba(253,224,141,0.08); border-color:rgba(253,224,141,0.45);
+  transform:scale(1.04); box-shadow:0 0 14px rgba(253,224,141,0.1);
 }
-.int-chip.selected::after { opacity: 1; }
-.int-icon { font-size: 22px; position: relative; z-index: 1; }
-.int-label {
-  font-size: 10px;
-  color: rgba(255,255,255,0.55);
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.2;
-  position: relative; z-index: 1;
-  transition: color 0.25s ease;
-}
-.int-chip.selected .int-label { color: var(--cyan); }
-
-.interest-counter {
-  text-align: center;
-  font-size: 12px;
-  color: rgba(255,255,255,0.4);
-  min-height: 18px;
-  transition: all 0.3s ease;
-}
-.interest-counter.ready { color: #34c759; }
-
-/* Celebration ping */
 @keyframes chipPing {
-  0% { transform: scale(1.03); box-shadow: 0 0 0 0 rgba(0,242,255,0.4); }
-  70% { box-shadow: 0 0 0 12px rgba(0,242,255,0); }
-  100% { transform: scale(1.03); box-shadow: 0 0 0 0 rgba(0,242,255,0); }
+  0%{transform:scale(1.04); box-shadow:0 0 0 0 rgba(253,224,141,0.4);}
+  70%{box-shadow:0 0 0 10px rgba(253,224,141,0);}
+  100%{transform:scale(1.04); box-shadow:0 0 0 0 rgba(253,224,141,0);}
 }
-.int-chip.ping { animation: chipPing 0.4s ease-out; }
-
-/* ════════════════════════════════
-   FOLLOW SCREEN
-════════════════════════════════ */
-.follow-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 2px;
+.int-chip.ping { animation:chipPing 0.4s ease-out; }
+.int-icon { font-size:21px; }
+.int-lbl { font-size:10px; color:rgba(255,255,255,0.5); font-weight:600; text-align:center; line-height:1.2; transition:color 0.25s; }
+.int-chip.selected .int-lbl { color:var(--gold); }
+.int-counter { text-align:center; font-size:12px; color:rgba(255,255,255,0.35); min-height:18px; transition:all 0.3s; }
+.int-counter.ready { color:#50FA7B; }
+.show-more-btn {
+  background:none; border:none; cursor:pointer;
+  color:var(--gold); font-size:12px; font-weight:600;
+  text-align:center; width:100%; padding:8px 0 0;
+  opacity:0.75; transition:opacity 0.2s;
 }
-.follow-list::-webkit-scrollbar { width: 2px; }
-.follow-list::-webkit-scrollbar-thumb { background: rgba(0,242,255,0.2); border-radius:2px; }
+.show-more-btn:hover { opacity:1; }
 
+/* ════════════════════
+   FOLLOW
+════════════════════ */
+.follow-list { display:flex; flex-direction:column; gap:10px; flex:1; overflow-y:auto; padding-right:2px; }
+.follow-list::-webkit-scrollbar { width:2px; }
+.follow-list::-webkit-scrollbar-thumb { background:rgba(253,224,141,0.2); border-radius:2px; }
 .follow-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 16px;
-  padding: 12px 14px;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1),
-              border-color 0.3s ease, background 0.3s ease;
+  display:flex; align-items:center; gap:12px;
+  background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04);
+  border-radius:15px; padding:12px 14px;
+  opacity:0; transform:translateY(18px);
+  transition:opacity 0.4s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s;
 }
-.follow-card.visible { opacity: 1; transform: translateY(0); }
-.follow-card.is-following {
-  border-color: rgba(0,242,255,0.2);
-  background: rgba(0,242,255,0.03);
-}
+.follow-card.visible { opacity:1; transform:translateY(0); }
+.follow-card.is-following { border-color:rgba(253,224,141,0.2); }
 .follow-avatar {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.1);
-  background: linear-gradient(135deg, #1a1a2e, #0d0d1a);
-  flex-shrink: 0;
-  overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
+  width:44px; height:44px; border-radius:50%;
+  border:1.5px solid rgba(255,255,255,0.08);
+  background:linear-gradient(135deg,#1a1500,#0a0a0a);
+  flex-shrink:0; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
 }
-.follow-avatar img {
-  width: 100%; height: 100%; object-fit: cover;
-}
-.follow-info { flex: 1; min-width: 0; }
-.follow-name {
-  font-size: 14px; font-weight: 600; color: #fff;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.follow-handle {
-  font-size: 11px; color: rgba(255,255,255,0.35);
-  margin-top: 1px;
-}
+.follow-avatar img { width:100%; height:100%; object-fit:cover; }
+.follow-info { flex:1; min-width:0; }
+.follow-name { font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.follow-handle { font-size:11px; color:rgba(255,255,255,0.3); margin-top:1px; }
 .follow-btn {
-  flex-shrink: 0;
-  background: rgba(0,242,255,0.06);
-  border: 1px solid rgba(0,242,255,0.35);
-  border-radius: 20px;
-  padding: 6px 14px;
-  color: var(--cyan);
-  font-family: 'Inter', sans-serif;
-  font-size: 12px; font-weight: 700;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
-  white-space: nowrap;
+  flex-shrink:0; background:rgba(253,224,141,0.06);
+  border:1px solid rgba(253,224,141,0.35); border-radius:20px;
+  padding:6px 14px; color:var(--gold);
+  font-family:'Inter',sans-serif; font-size:12px; font-weight:700;
+  cursor:pointer; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
-.follow-btn:hover { background: rgba(0,242,255,0.12); }
-.follow-btn.following {
-  background: var(--cyan);
-  border-color: var(--cyan);
-  color: #000;
-  transform: scale(1.05);
-}
-.follow-count-row {
-  text-align: center;
-  font-size: 12px;
-  color: rgba(255,255,255,0.35);
-  padding: 10px 0 0;
-  min-height: 32px;
-}
-.follow-count-row span { color: var(--cyan); font-weight: 700; }
-.follow-loading {
-  text-align: center;
-  padding: 40px 20px;
-  color: rgba(255,255,255,0.3);
-  font-size: 13px;
-}
+.follow-btn.following { background:var(--gold); border-color:var(--gold); color:#000; transform:scale(1.05); }
+.follow-count-row { text-align:center; font-size:12px; color:rgba(255,255,255,0.3); padding:10px 0 0; min-height:28px; }
+.follow-count-row span { color:var(--gold); font-weight:700; }
+.follow-loading { text-align:center; padding:36px 20px; color:rgba(255,255,255,0.25); font-size:13px; }
 
-/* ════════════════════════════════
-   NOTIFICATION SCREEN
-════════════════════════════════ */
+/* ════════════════════
+   NOTIFICATIONS
+════════════════════ */
 .notif-stage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0 24px 20px;
-  text-align: center;
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:0 24px 20px; text-align:center;
 }
-.notif-bell-wrap {
-  width: 100px; height: 100px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, rgba(0,242,255,0.1), rgba(0,0,0,0));
-  border: 1px solid rgba(0,242,255,0.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 42px;
-  margin-bottom: 28px;
-  animation: bellShake 3s infinite;
-  box-shadow: 0 0 30px rgba(0,242,255,0.08);
+.notif-bell {
+  width:100px; height:100px; border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(253,224,141,0.08), transparent);
+  border:1px solid rgba(253,224,141,0.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:42px; margin-bottom:28px;
+  animation:bellShake 3.5s infinite;
+  box-shadow:0 0 24px rgba(253,224,141,0.07);
 }
 @keyframes bellShake {
-  0%,85%,100% { transform: rotate(0deg); }
-  87% { transform: rotate(8deg); }
-  90% { transform: rotate(-8deg); }
-  93% { transform: rotate(6deg); }
-  96% { transform: rotate(-4deg); }
-  99% { transform: rotate(0deg); }
+  0%,82%,100%{transform:rotate(0);} 85%{transform:rotate(9deg);}
+  88%{transform:rotate(-9deg);} 91%{transform:rotate(6deg);}
+  94%{transform:rotate(-4deg);} 97%{transform:rotate(0);}
 }
-.notif-granted { color: #34c759; font-size: 13px; font-weight: 600; display: none; margin-top: -8px; margin-bottom: 16px; }
+.notif-granted { color:#50FA7B; font-size:13px; font-weight:600; display:none; margin-bottom:14px; }
 
-/* ════════════════════════════════
-   SKIP CONFIRM MODAL
-════════════════════════════════ */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(8px);
-  z-index: 100;
-  display: none;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 0;
-}
-.modal-backdrop.open { display: flex; }
+/* ════════════════════
+   SKIP MODAL
+════════════════════ */
+.modal-back { position:fixed; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(8px); z-index:100; display:none; align-items:flex-end; justify-content:center; }
+.modal-back.open { display:flex; }
 .modal-sheet {
-  width: 100%;
-  max-width: 480px;
-  background: #111116;
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 24px 24px 0 0;
-  padding: 28px 24px 48px;
-  animation: sheetUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  width:100%; max-width:480px;
+  background:#0f0f0f; border:1px solid rgba(253,224,141,0.1);
+  border-radius:24px 24px 0 0; padding:26px 24px 48px;
+  animation:sheetUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
 }
-@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.modal-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 14px; font-weight: 900;
-  color: #fff; text-align: center;
-  margin-bottom: 8px; letter-spacing: 0.5px;
+@keyframes sheetUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
+.modal-title { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:900; color:#fff; text-align:center; margin-bottom:7px; letter-spacing:0.5px; }
+.modal-sub { font-size:12px; color:rgba(255,255,255,0.4); text-align:center; line-height:1.5; margin-bottom:22px; }
+.modal-main {
+  width:100%; background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  border:none; border-radius:14px; padding:14px; color:#000;
+  font-family:'Orbitron',sans-serif; font-size:11px; font-weight:900;
+  letter-spacing:1.5px; cursor:pointer; margin-bottom:10px;
 }
-.modal-sub {
-  font-size: 12px; color: rgba(255,255,255,0.45);
-  text-align: center; line-height: 1.5; margin-bottom: 24px;
-}
-.modal-btn-main {
-  width: 100%;
-  background: linear-gradient(135deg, var(--cyan), var(--purple));
-  border: none; border-radius: 14px;
-  padding: 14px; color: #000;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 11px; font-weight: 900; letter-spacing: 1.5px;
-  cursor: pointer; margin-bottom: 10px;
-}
-.modal-btn-skip {
-  width: 100%;
-  background: none; border: none;
-  color: rgba(255,255,255,0.35);
-  font-family: 'Inter', sans-serif;
-  font-size: 13px; cursor: pointer;
-  padding: 10px;
-  transition: color 0.2s ease;
-}
-.modal-btn-skip:hover { color: rgba(255,255,255,0.7); }
+.modal-skip-btn { width:100%; background:none; border:none; color:rgba(255,255,255,0.3); font-family:'Inter',sans-serif; font-size:13px; cursor:pointer; padding:10px; transition:color 0.2s; }
+.modal-skip-btn:hover { color:rgba(255,255,255,0.7); }
 
-/* ════════════════════════════════
-   COMPLETION BURST
-════════════════════════════════ */
-#completionScreen {
-  background: #000;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 16px;
-}
-.completion-icon { font-size: 64px; animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1); }
-@keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.completion-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 20px; font-weight: 900;
-  background: linear-gradient(135deg, #fff, var(--cyan));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.completion-sub { font-size: 13px; color: rgba(255,255,255,0.4); }
-#completionCanvas { position: absolute; inset: 0; pointer-events: none; }
+/* ════════════════════
+   COMPLETION
+════════════════════ */
+#completionScreen { background:var(--obsidian); align-items:center; justify-content:center; text-align:center; gap:14px; }
+.comp-logo { animation:popIn 0.6s cubic-bezier(0.34,1.56,0.64,1); margin-bottom:8px; }
+@keyframes popIn { from{transform:scale(0) rotate(-20deg); opacity:0;} to{transform:scale(1) rotate(0); opacity:1;} }
+.comp-title { font-family:'Orbitron',sans-serif; font-size:22px; font-weight:900; background:linear-gradient(135deg,#fff,var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.comp-sub { font-size:13px; color:rgba(255,255,255,0.35); }
+#completionCanvas { position:absolute; inset:0; pointer-events:none; }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════
-     SPLASH SCREEN
-═══════════════════════════════ -->
+<!-- ═══ SPLASH ═══ -->
 <div class="screen active" id="splashScreen">
   <canvas id="splashCanvas"></canvas>
   <div class="splash-center" onclick="advanceSplash()">
-    <div class="splash-ring">
-      <div class="splash-logo-circle">
-        <div class="splash-logo-text">NEXUS</div>
+    <div class="splash-logo-wrap">
+      <div class="splash-ring-1"></div>
+      <div class="splash-ring-2"></div>
+      <div class="splash-logo-bg">
+        <svg viewBox="0 0 100 100" width="78" height="78">
+          <defs>
+            <linearGradient id="gG" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#FDE08D"/>
+              <stop offset="100%" style="stop-color:#B8860B"/>
+            </linearGradient>
+            <filter id="gF"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <polygon points="50,8 86,29 86,71 50,92 14,71 14,29" fill="none" stroke="url(#gG)" stroke-width="1.5" opacity="0.6" filter="url(#gF)"/>
+          <polygon points="50,20 76,35 76,65 50,80 24,65 24,35" fill="none" stroke="url(#gG)" stroke-width="0.7" opacity="0.3"/>
+          <path d="M30 68 L30 32 L58 62 L58 32" fill="none" stroke="url(#gG)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#gF)"/>
+          <circle cx="50" cy="8" r="2.5" fill="#FDE08D"/><circle cx="86" cy="29" r="2.5" fill="#FDE08D"/>
+          <circle cx="86" cy="71" r="2.5" fill="#FDE08D"/><circle cx="50" cy="92" r="2.5" fill="#FDE08D"/>
+          <circle cx="14" cy="71" r="2.5" fill="#FDE08D"/><circle cx="14" cy="29" r="2.5" fill="#FDE08D"/>
+        </svg>
       </div>
     </div>
-    <div class="splash-welcome-text">Welcome,</div>
+    <div class="splash-welcome">Welcome,</div>
     <div class="splash-name" id="splashName">&nbsp;</div>
-    <div class="splash-tagline">YOUR WORLD. YOUR PROTOCOL.</div>
-    <div class="splash-tap-hint" id="splashTapHint" style="opacity:0">TAP TO CONTINUE</div>
+    <div class="splash-tagline">One Protocol. Every Possibility.</div>
+    <div class="splash-tap" id="splashTapHint" style="opacity:0">TAP TO CONTINUE</div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════
-     TOUR SCREEN
-═══════════════════════════════ -->
+<!-- ═══ TERMS ═══ -->
+<div class="screen" id="termsScreen">
+  <div class="top-nav">
+    <div style="width:36px"></div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3)">NEXUS PROTOCOL</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="screen-content" style="padding-top:6px">
+    <div class="screen-title">Read &amp; Agree to Our Terms</div>
+    <div class="screen-sub">Key points you should know before you begin.</div>
+    <div class="terms-point"><div class="terms-icon">🔐</div><div><div class="terms-title">Your Data, Your Control</div><div class="terms-body">We use your information to personalise your experience. Your data is never sold to third parties. <a href="#">Learn more</a></div></div></div>
+    <div class="terms-point"><div class="terms-icon">🛡️</div><div><div class="terms-title">Privacy Protections</div><div class="terms-body">Any optional information you share (location, phone number) is protected under applicable privacy laws. <a href="#">Learn more</a></div></div></div>
+    <div class="terms-point"><div class="terms-icon">⚙️</div><div><div class="terms-title">Access &amp; Delete Anytime</div><div class="terms-body">You can access, edit, or permanently delete your account and all associated data at any time. <a href="#">Learn more</a></div></div></div>
+    <div class="terms-point"><div class="terms-icon">🌐</div><div><div class="terms-title">Community Standards</div><div class="terms-body">By joining, you agree to treat all members with respect. Violations may result in permanent removal. <a href="#">Learn more</a></div></div></div>
+    <div class="terms-agree">By tapping <strong style="color:rgba(255,255,255,0.6)">I Agree</strong>, you confirm you have read and accept our <a href="#">Terms of Service</a>, <a href="#">Privacy Policy</a>, and <a href="#">Community Guidelines</a>.</div>
+  </div>
+  <div class="bottom-area">
+    <div class="btn-row">
+      <button class="btn-next" onclick="acceptTerms()" style="margin-left:auto">I AGREE &nbsp;<span>→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOUR ═══ -->
 <div class="screen" id="tourScreen">
   <div class="top-nav">
     <div style="width:36px"></div>
-    <button class="btn-skip-top" onclick="showSkipModal('tour')">Skip</button>
+    <button class="btn-skip-text" onclick="showSkipModal('tour')">Skip</button>
   </div>
-
-  <div class="tour-slides-wrap" id="tourSlidesWrap">
+  <div class="tour-slides-wrap" id="tourWrap">
     <div class="tour-slides" id="tourSlides">
 
-      <!-- Slide 1: Social Feed -->
+      <!-- Slide 1: Earn on Every Post -->
       <div class="tour-slide">
         <div class="tour-illus">
           <div class="illus-feed">
-            <div class="mock-card">
-              <div class="mock-avatar"></div>
-              <div class="mock-line"></div>
-              <div class="mock-line short"></div>
-              <div class="mock-img"></div>
-              <div><span class="mock-heart">♥</span> <span style="font-size:9px;color:rgba(255,255,255,0.3)">2.4k</span></div>
-            </div>
-            <div class="mock-card">
-              <div class="mock-avatar" style="background:linear-gradient(135deg,var(--pink),var(--purple))"></div>
-              <div class="mock-line"></div>
-              <div class="mock-line short"></div>
-              <div class="mock-img" style="background:linear-gradient(135deg,rgba(255,47,189,0.1),rgba(123,47,255,0.2))"></div>
-              <div><span class="mock-heart">♥</span> <span style="font-size:9px;color:rgba(255,255,255,0.3)">891</span></div>
-            </div>
+            <div class="mock-card"><div class="mock-av"></div><div class="mock-line"></div><div class="mock-line s"></div><div class="mock-img"></div><div class="mock-reward">⬡ +0.50 Rewards</div></div>
+            <div class="mock-card"><div class="mock-av b"></div><div class="mock-line"></div><div class="mock-line s"></div><div class="mock-img" style="background:linear-gradient(135deg,rgba(253,224,141,0.12),rgba(180,140,0,0.18))"></div><div class="mock-reward">⬡ +1.20 Rewards</div></div>
           </div>
+          <div class="coin-float">⬡</div>
+          <div class="coin-float d2">⬡</div>
+          <div class="coin-float d3">⬡</div>
         </div>
-        <div class="tour-title">Your Social Universe</div>
-        <div class="tour-desc">Share posts, stories, and real-time moments. Connect with people who share your world — from Kano to London.</div>
+        <div class="tour-title">Every Post, Every Reward</div>
+        <div class="tour-desc">Earn Oryzon Rewards on every post you publish — zero followers required. The first platform where every voice gets paid, regardless of fame.</div>
       </div>
 
-      <!-- Slide 2: Marketplace -->
+      <!-- Slide 2: Oryzon Marketplace -->
       <div class="tour-slide">
         <div class="tour-illus">
           <div class="illus-market">
-            <div class="market-chip glow-chip">🍔<span>Food</span></div>
-            <div class="market-chip">🚗<span>Transport</span></div>
-            <div class="market-chip">💊<span>Health</span></div>
-            <div class="market-chip">✂️<span>Beauty</span></div>
-            <div class="market-chip glow-chip">🔧<span>Repair</span></div>
-            <div class="market-chip">📦<span>Delivery</span></div>
+            <div class="mkt-chip g">👗<span>Fashion</span></div>
+            <div class="mkt-chip">📱<span>Electronics</span></div>
+            <div class="mkt-chip">🧵<span>Fabric</span></div>
+            <div class="mkt-chip">💄<span>Beauty</span></div>
+            <div class="mkt-chip g">🛋️<span>Home</span></div>
+            <div class="mkt-chip">📦<span>&amp; More</span></div>
           </div>
         </div>
-        <div class="tour-title">Abokina Marketplace</div>
-        <div class="tour-desc">Discover and book services in your area — food delivery, transport, healthcare, beauty, and so much more. All in one place.</div>
+        <div class="tour-title">Oryzon Marketplace</div>
+        <div class="tour-desc">Shop thousands of products — fashion, fabric, electronics, beauty, home goods and everything in between. All in one seamless platform.</div>
       </div>
 
-      <!-- Slide 3: Wallet -->
+      <!-- Slide 3: Free Global Advertising -->
       <div class="tour-slide">
         <div class="tour-illus">
-          <div class="illus-wallet">
-            <div class="wallet-coin">Pts</div>
-            <div class="wallet-stats">
-              <div class="wallet-stat">
-                <div class="wallet-stat-val">500</div>
-                <div class="wallet-stat-lbl">Points</div>
-              </div>
-              <div class="wallet-stat">
-                <div class="wallet-stat-val" style="color:var(--purple)">12</div>
-                <div class="wallet-stat-lbl">Vonk</div>
-              </div>
+          <div class="illus-global">
+            <div class="mega-wrap">📢</div>
+            <div class="global-stats">
+              <div class="g-stat"><div class="g-val">Millions</div><div class="g-lbl">Buyers Reached</div></div>
+              <div class="g-stat"><div class="g-val" style="color:#50FA7B">$0.00</div><div class="g-lbl">Cost to Advertise</div></div>
             </div>
-            <div class="wallet-trend">↑ Earn by posting & engaging</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.25);text-align:center">No fees. No hidden charges. Ever.</div>
           </div>
         </div>
-        <div class="tour-title">Nexus Wallet</div>
-        <div class="tour-desc">Earn Pts for every post, like, and interaction. Convert to Vonk, send to friends, and unlock exclusive features.</div>
+        <div class="tour-title">Reach Millions. Pay Nothing.</div>
+        <div class="tour-desc">Advertise your products and services to millions of customers worldwide — completely free, with no hidden fees, forever.</div>
+      </div>
+
+      <!-- Slide 4: Problem Solving Forums -->
+      <div class="tour-slide">
+        <div class="tour-illus">
+          <div class="illus-solve">
+            <div class="solve-item answered">
+              <div class="solve-badge ok">✓</div>
+              <div><div class="solve-text">How do I register a business internationally?</div><div class="solve-ans">Legal Expert answered · 3 solutions</div></div>
+            </div>
+            <div class="solve-item">
+              <div class="solve-badge">?</div>
+              <div><div class="solve-text">Best treatment for chronic back pain without surgery?</div></div>
+            </div>
+            <div class="solve-item answered">
+              <div class="solve-badge ok">✓</div>
+              <div><div class="solve-text">How to scale an e-commerce store to $100k?</div><div class="solve-ans">Business Expert answered · 7 solutions</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="tour-title">Every Question. Every Answer.</div>
+        <div class="tour-desc">Get expert solutions to every problem you face — legal, medical, financial, technical — from our global community of verified specialists.</div>
       </div>
 
     </div>
   </div>
-
   <div class="tour-dots">
-    <div class="tour-dot active" onclick="goTourSlide(0)"></div>
-    <div class="tour-dot" onclick="goTourSlide(1)"></div>
-    <div class="tour-dot" onclick="goTourSlide(2)"></div>
+    <div class="t-dot active" onclick="goTourSlide(0)"></div>
+    <div class="t-dot" onclick="goTourSlide(1)"></div>
+    <div class="t-dot" onclick="goTourSlide(2)"></div>
+    <div class="t-dot" onclick="goTourSlide(3)"></div>
   </div>
-
   <div class="bottom-area">
-    <button class="btn-primary" id="tourNextBtn" onclick="tourNext()">NEXT &nbsp;→</button>
+    <div class="btn-row">
+      <button class="btn-next" id="tourNextBtn" onclick="tourNext()">NEXT <span>→</span></button>
+    </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════
-     PROFILE SCREEN
-═══════════════════════════════ -->
+<!-- ═══ PROFILE ═══ -->
 <div class="screen" id="profileScreen">
-  <div class="progress-dots" id="dots1">
-    <div class="dot active"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-  </div>
+  <div class="prog-dots"><div class="prog-dot active"></div><div class="prog-dot"></div><div class="prog-dot"></div><div class="prog-dot"></div></div>
   <div class="top-nav">
     <button class="btn-back" onclick="goScreen('tourScreen','profileScreen')">←</button>
-    <button class="btn-skip-top" onclick="saveProfileAndNext(true)">Skip</button>
+    <button class="btn-skip-text" onclick="saveProfileStep(true)">Skip</button>
   </div>
   <div class="screen-content">
     <div class="screen-title">Set Up Your Profile</div>
-    <div class="screen-sub">Your photo and bio help people know who you are.</div>
+    <div class="screen-sub">Your photo and bio let people know who you are.</div>
     <div class="avatar-stage">
-      <div class="avatar-ring-wrap">
-        <div class="avatar-glow-ring"></div>
-        <div class="avatar-glow-inner"></div>
-        <div class="avatar-img-wrap" id="avatarWrap">
-          <div class="avatar-placeholder" id="avatarIcon">👤</div>
-          <img id="avatarPreview" alt="Profile photo">
-          <div class="avatar-camera-overlay">📷</div>
+      <div class="av-ring-wrap">
+        <div class="av-glow-ring"></div>
+        <div class="av-glow-inner"></div>
+        <div class="av-img-wrap" id="avWrap">
+          <div class="av-placeholder" id="avIcon">👤</div>
+          <img id="avatarPreview" alt="">
+          <div class="av-cam">📷</div>
           <input type="file" id="avatarInput" accept="image/*" onchange="previewAvatar(this)">
         </div>
       </div>
-      <div class="avatar-tap-hint">Tap to add photo</div>
+      <div class="av-hint">Tap to add photo</div>
     </div>
     <div class="field-label">Bio</div>
-    <textarea class="nexus-textarea" id="inpBio" maxlength="120"
-      placeholder="What's your story? (optional)"
-      oninput="document.getElementById('charCount').textContent=this.value.length"></textarea>
+    <textarea class="nexus-textarea" id="inpBio" maxlength="120" placeholder="What's your story? (optional)" oninput="document.getElementById('charCount').textContent=this.value.length"></textarea>
     <div class="char-row"><span id="charCount">0</span>/120</div>
   </div>
   <div class="bottom-area">
-    <button class="btn-primary" onclick="saveProfileAndNext(false)">CONTINUE &nbsp;→</button>
-    <button class="btn-secondary" onclick="saveProfileAndNext(true)">Do this later</button>
+    <div class="btn-row">
+      <button class="btn-next" onclick="saveProfileStep(false)">CONTINUE <span>→</span></button>
+    </div>
+    <button class="btn-secondary-full" onclick="saveProfileStep(true)">Do this later</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════
-     INTERESTS SCREEN
-═══════════════════════════════ -->
+<!-- ═══ INTERESTS ═══ -->
 <div class="screen" id="interestsScreen">
-  <div class="progress-dots">
-    <div class="dot done"></div>
-    <div class="dot active"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-  </div>
+  <div class="prog-dots"><div class="prog-dot done"></div><div class="prog-dot active"></div><div class="prog-dot"></div><div class="prog-dot"></div></div>
   <div class="top-nav">
     <button class="btn-back" onclick="goScreen('profileScreen','interestsScreen')">←</button>
-    <button class="btn-skip-top" onclick="saveInterestsAndNext(true)">Skip</button>
+    <button class="btn-skip-text" onclick="saveInterests(true)">Skip</button>
   </div>
   <div class="screen-content">
     <div class="screen-title">What Moves You?</div>
-    <div class="screen-sub">Pick at least 3 topics — we'll personalise your feed around what you love.</div>
-    <div class="interests-grid" id="interestsGrid"></div>
-    <div class="interest-counter" id="interestCounter">Choose at least 3</div>
+    <div class="screen-sub">Choose at least 3 topics to personalise your feed.</div>
+    <div class="int-grid" id="intGrid"></div>
+    <button class="show-more-btn" id="showMoreBtn" onclick="toggleMoreInterests()">▾ Show more categories</button>
+    <div class="int-counter" id="intCounter">Choose at least 3</div>
   </div>
   <div class="bottom-area">
-    <button class="btn-primary" id="interestContinueBtn" onclick="saveInterestsAndNext(false)" disabled>CONTINUE &nbsp;→</button>
+    <div class="btn-row">
+      <button class="btn-next" id="intNextBtn" onclick="saveInterests(false)" disabled>CONTINUE <span>→</span></button>
+    </div>
+    <button class="btn-secondary-full" onclick="saveInterests(true)">Do this later</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════
-     FOLLOW SCREEN
-═══════════════════════════════ -->
+<!-- ═══ FOLLOW ═══ -->
 <div class="screen" id="followScreen">
-  <div class="progress-dots">
-    <div class="dot done"></div>
-    <div class="dot done"></div>
-    <div class="dot active"></div>
-    <div class="dot"></div>
-  </div>
+  <div class="prog-dots"><div class="prog-dot done"></div><div class="prog-dot done"></div><div class="prog-dot active"></div><div class="prog-dot"></div></div>
   <div class="top-nav">
     <button class="btn-back" onclick="goScreen('interestsScreen','followScreen')">←</button>
-    <button class="btn-skip-top" onclick="showSkipModal('follow')">Skip</button>
+    <button class="btn-skip-text" onclick="showSkipModal('follow')">Skip</button>
   </div>
   <div class="screen-content">
     <div class="screen-title">Connect With People</div>
     <div class="screen-sub">Follow at least 3 people to bring your feed to life.</div>
-    <div class="follow-list" id="followList">
-      <div class="follow-loading">Finding people for you...</div>
-    </div>
+    <div class="follow-list" id="followList"><div class="follow-loading">Finding people for you...</div></div>
     <div class="follow-count-row" id="followCountRow">Following <span id="followCount">0</span> people</div>
   </div>
   <div class="bottom-area">
-    <button class="btn-primary" id="followContinueBtn" onclick="goScreen('notifScreen','followScreen')" disabled>CONTINUE &nbsp;→</button>
+    <div class="btn-row">
+      <button class="btn-next" id="followNextBtn" onclick="goScreen('notifScreen','followScreen')" disabled>CONTINUE <span>→</span></button>
+    </div>
+    <button class="btn-secondary-full" onclick="showSkipModal('follow')">Do this later</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════
-     NOTIFICATION SCREEN
-═══════════════════════════════ -->
+<!-- ═══ NOTIFICATIONS ═══ -->
 <div class="screen" id="notifScreen">
-  <div class="progress-dots">
-    <div class="dot done"></div>
-    <div class="dot done"></div>
-    <div class="dot done"></div>
-    <div class="dot active"></div>
-  </div>
+  <div class="prog-dots"><div class="prog-dot done"></div><div class="prog-dot done"></div><div class="prog-dot done"></div><div class="prog-dot active"></div></div>
   <div class="top-nav">
     <button class="btn-back" onclick="goScreen('followScreen','notifScreen')">←</button>
-    <button class="btn-skip-top" onclick="finishOnboarding()">Skip</button>
+    <button class="btn-skip-text" onclick="finishOnboarding()">Skip</button>
   </div>
   <div class="notif-stage">
-    <div class="notif-bell-wrap">🔔</div>
+    <div class="notif-bell">🔔</div>
     <div class="screen-title" style="margin-bottom:10px">Stay in the Loop</div>
-    <div class="screen-sub" style="margin-bottom:24px">Never miss a message, like, or update. Enable notifications to stay connected with your network.</div>
+    <div class="screen-sub" style="margin-bottom:20px">Never miss a message, reward, or update from your network.</div>
     <div class="notif-granted" id="notifGranted">✓ Notifications enabled!</div>
   </div>
   <div class="bottom-area">
-    <button class="btn-primary" id="notifBtn" onclick="requestNotifications()">ENABLE NOTIFICATIONS</button>
-    <button class="btn-secondary" onclick="finishOnboarding()">Maybe later</button>
+    <div class="btn-row">
+      <button class="btn-next" id="notifBtn" onclick="requestNotifications()">ENABLE <span>→</span></button>
+    </div>
+    <button class="btn-secondary-full" onclick="finishOnboarding()">Do this later</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════
-     COMPLETION SCREEN
-═══════════════════════════════ -->
+<!-- ═══ COMPLETION ═══ -->
 <div class="screen" id="completionScreen">
   <canvas id="completionCanvas"></canvas>
-  <div class="completion-icon">🚀</div>
-  <div class="completion-title">You're All Set!</div>
-  <div class="completion-sub">Welcome to the Protocol.</div>
+  <div class="comp-logo">
+    <svg viewBox="0 0 100 100" width="80" height="80">
+      <defs><linearGradient id="cG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FDE08D"/><stop offset="100%" style="stop-color:#B8860B"/></linearGradient></defs>
+      <polygon points="50,8 86,29 86,71 50,92 14,71 14,29" fill="none" stroke="url(#cG)" stroke-width="1.5" opacity="0.7"/>
+      <path d="M30 68 L30 32 L58 62 L58 32" fill="none" stroke="url(#cG)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="comp-title">You're In.</div>
+  <div class="comp-sub">Welcome to the Protocol.</div>
 </div>
 
-<!-- ═══════════════════════════════
-     SKIP CONFIRM MODAL
-═══════════════════════════════ -->
-<div class="modal-backdrop" id="skipModal">
+<!-- ═══ SKIP MODAL ═══ -->
+<div class="modal-back" id="skipModal">
   <div class="modal-sheet">
     <div class="modal-title" id="modalTitle">Are you sure?</div>
-    <div class="modal-sub" id="modalSub">Nexus is better when you're connected. This only takes a moment.</div>
-    <button class="modal-btn-main" id="modalStayBtn" onclick="closeModal()">STAY &amp; CONNECT</button>
-    <button class="modal-btn-skip" id="modalSkipBtn" onclick="confirmSkip()">Skip for now</button>
+    <div class="modal-sub" id="modalSub">This only takes a moment and makes a real difference.</div>
+    <button class="modal-main" id="modalStayBtn" onclick="closeModal()">STAY &amp; CONTINUE</button>
+    <button class="modal-skip-btn" onclick="confirmSkip()">Skip for now</button>
   </div>
 </div>
 
@@ -1105,13 +732,13 @@ body {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-  authDomain: "oryzon-50ea4.firebaseapp.com",
-  projectId: "oryzon-50ea4",
-  storageBucket: "oryzon-50ea4.firebasestorage.app",
-  messagingSenderId: "782106742622",
-  appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
-  measurementId: "G-K5085DLL2W"
+  apiKey:"AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+  authDomain:"oryzon-50ea4.firebaseapp.com",
+  projectId:"oryzon-50ea4",
+  storageBucket:"oryzon-50ea4.firebasestorage.app",
+  messagingSenderId:"782106742622",
+  appId:"1:782106742622:web:902d512bfe42dd4cf289cf",
+  measurementId:"G-K5085DLL2W"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -1122,344 +749,301 @@ if (!currentUsername) window.location.href = "login.html";
 
 let selectedInterests = new Set();
 let followedUsers = new Set();
-let currentSkipContext = null;
+let currentSkipCtx = null;
 let currentTourSlide = 0;
 let splashReady = false;
-let userData = {};
+let showingMoreInterests = false;
 
-// ══ PARTICLE CANVAS (SPLASH) ══
-(function initSplashParticles() {
+// ══ GOLD PARTICLES ══
+(function(){
   const canvas = document.getElementById('splashCanvas');
   const ctx = canvas.getContext('2d');
-  let particles = [];
-  function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
-  resize(); window.addEventListener('resize', resize);
-  class Particle {
-    constructor() { this.reset(); }
-    reset() {
-      this.x = Math.random() * canvas.width;
-      this.y = canvas.height + 10;
-      this.size = Math.random() * 1.5 + 0.5;
-      this.speedY = -(Math.random() * 0.8 + 0.3);
-      this.speedX = (Math.random() - 0.5) * 0.4;
-      this.opacity = Math.random() * 0.5 + 0.1;
-      this.color = Math.random() > 0.6 ? '#00F2FF' : Math.random() > 0.5 ? '#7B2FFF' : 'rgba(255,255,255,0.5)';
-    }
-    update() {
-      this.y += this.speedY; this.x += this.speedX;
-      this.opacity -= 0.001;
-      if (this.y < -10 || this.opacity <= 0) this.reset();
-    }
-    draw() {
-      ctx.save();
-      ctx.globalAlpha = this.opacity;
-      ctx.fillStyle = this.color;
-      ctx.shadowBlur = 6; ctx.shadowColor = this.color;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-      ctx.fill();
+  function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+  resize(); window.addEventListener('resize',resize);
+  const particles = Array.from({length:70},()=>{
+    const p={};
+    p.reset=()=>{
+      p.x=Math.random()*canvas.width; p.y=canvas.height+5;
+      p.size=Math.random()*1.5+0.5;
+      p.vy=-(Math.random()*0.7+0.25); p.vx=(Math.random()-0.5)*0.3;
+      p.opacity=Math.random()*0.5+0.1;
+      const r=Math.random();
+      p.color=r>0.5?'#FDE08D':r>0.25?'rgba(255,215,0,0.8)':'rgba(255,255,255,0.5)';
+    };
+    p.reset(); p.y=Math.random()*canvas.height;
+    return p;
+  });
+  function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.y+=p.vy; p.x+=p.vx; p.opacity-=0.0008;
+      if(p.y<-5||p.opacity<=0) p.reset();
+      ctx.save(); ctx.globalAlpha=p.opacity; ctx.fillStyle=p.color;
+      ctx.shadowBlur=5; ctx.shadowColor=p.color;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
       ctx.restore();
-    }
-  }
-  for (let i = 0; i < 80; i++) {
-    const p = new Particle();
-    p.y = Math.random() * canvas.height;
-    particles.push(p);
-  }
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => { p.update(); p.draw(); });
+    });
     requestAnimationFrame(animate);
   }
   animate();
 })();
 
-// ══ FETCH USER NAME FOR SPLASH ══
-async function initSplash() {
+// ══ SPLASH INIT ══
+async function initSplash(){
   try {
     const doc = await db.collection("users").doc(currentUsername).get();
-    if (doc.exists) {
-      userData = doc.data();
-      const name = (userData.fullName || currentUsername).split(' ')[0];
-      await typewriterReveal(name);
-    }
-  } catch(e) {
-    await typewriterReveal(currentUsername);
-  }
-  document.getElementById('splashTapHint').style.opacity = '1';
-  splashReady = true;
-  setTimeout(() => { if (splashReady) advanceSplash(); }, 3000);
+    const name = doc.exists ? (doc.data().fullName||currentUsername).split(' ')[0] : currentUsername;
+    await typewriter(name);
+  } catch(e){ await typewriter(currentUsername); }
+  document.getElementById('splashTapHint').style.opacity='1';
+  splashReady=true;
+  setTimeout(()=>{ if(splashReady) advanceSplash(); },3000);
 }
-
-function typewriterReveal(text) {
-  return new Promise(resolve => {
-    const el = document.getElementById('splashName');
-    el.textContent = '';
-    let i = 0;
-    const iv = setInterval(() => {
-      el.textContent += text[i];
-      i++;
-      if (i >= text.length) { clearInterval(iv); setTimeout(resolve, 400); }
-    }, 80);
+function typewriter(text){
+  return new Promise(res=>{
+    const el=document.getElementById('splashName');
+    el.textContent=''; let i=0;
+    const iv=setInterval(()=>{
+      el.textContent+=text[i]; i++;
+      if(i>=text.length){ clearInterval(iv); setTimeout(res,400); }
+    },80);
   });
 }
-
-function advanceSplash() {
-  if (!splashReady) return;
-  splashReady = false;
-  goScreen('tourScreen', 'splashScreen');
+function advanceSplash(){
+  if(!splashReady) return;
+  splashReady=false;
+  goScreen('termsScreen','splashScreen');
 }
 initSplash();
 
+// ══ TERMS ══
+async function acceptTerms(){
+  try { await db.collection("users").doc(currentUsername).update({termsAccepted:true,termsAcceptedAt:Date.now()}); } catch(e){}
+  goScreen('tourScreen','termsScreen');
+}
+
 // ══ SCREEN TRANSITIONS ══
-function goScreen(toId, fromId) {
-  const from = document.getElementById(fromId);
-  const to = document.getElementById(toId);
-  from.classList.add('exit-up');
-  from.classList.remove('active');
-  setTimeout(() => from.classList.remove('exit-up'), 600);
+function goScreen(toId,fromId){
+  const from=document.getElementById(fromId);
+  const to=document.getElementById(toId);
+  from.classList.add('exit-up'); from.classList.remove('active');
+  setTimeout(()=>from.classList.remove('exit-up'),600);
   to.classList.add('active');
-  if (toId === 'followScreen') loadFollowSuggestions();
+  if(toId==='followScreen') loadFollowList();
 }
 
-// ══ TOUR SLIDE LOGIC ══
-let tourSlideCount = 3;
-function goTourSlide(idx) {
-  currentTourSlide = idx;
-  document.getElementById('tourSlides').style.transform = `translateX(-${idx * 100}%)`;
-  document.querySelectorAll('.tour-dot').forEach((d,i) => {
-    d.classList.toggle('active', i === idx);
-  });
-  const btn = document.getElementById('tourNextBtn');
-  btn.textContent = idx === tourSlideCount-1 ? "LET'S GO  →" : "NEXT  →";
+// ══ TOUR ══
+const TOUR_COUNT=4;
+function goTourSlide(idx){
+  currentTourSlide=idx;
+  document.getElementById('tourSlides').style.transform=`translateX(-${idx*100}%)`;
+  document.querySelectorAll('.t-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+  const btn=document.getElementById('tourNextBtn');
+  btn.innerHTML=idx===TOUR_COUNT-1?"GET STARTED <span>→</span>":"NEXT <span>→</span>";
 }
-function tourNext() {
-  if (currentTourSlide < tourSlideCount-1) {
-    goTourSlide(currentTourSlide+1);
-  } else {
-    goScreen('profileScreen','tourScreen');
-  }
+function tourNext(){
+  if(currentTourSlide<TOUR_COUNT-1){ goTourSlide(currentTourSlide+1); }
+  else { goScreen('profileScreen','tourScreen'); }
 }
-// Swipe support on tour
-let touchStartX = 0;
-document.getElementById('tourSlidesWrap').addEventListener('touchstart', e => {
-  touchStartX = e.touches[0].clientX;
-}, { passive: true });
-document.getElementById('tourSlidesWrap').addEventListener('touchend', e => {
-  const diff = touchStartX - e.changedTouches[0].clientX;
-  if (Math.abs(diff) > 40) {
-    if (diff > 0 && currentTourSlide < tourSlideCount-1) goTourSlide(currentTourSlide+1);
-    if (diff < 0 && currentTourSlide > 0) goTourSlide(currentTourSlide-1);
+// Swipe support
+let tStartX=0;
+document.getElementById('tourWrap').addEventListener('touchstart',e=>tStartX=e.touches[0].clientX,{passive:true});
+document.getElementById('tourWrap').addEventListener('touchend',e=>{
+  const diff=tStartX-e.changedTouches[0].clientX;
+  if(Math.abs(diff)>40){
+    if(diff>0&&currentTourSlide<TOUR_COUNT-1) goTourSlide(currentTourSlide+1);
+    if(diff<0&&currentTourSlide>0) goTourSlide(currentTourSlide-1);
   }
-}, { passive: true });
+},{passive:true});
 
-// ══ PROFILE STEP ══
-function previewAvatar(input) {
-  if (!input.files || !input.files[0]) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.getElementById('avatarPreview');
-    document.getElementById('avatarIcon').style.display = 'none';
-    img.src = e.target.result;
-    img.style.display = 'block';
+// ══ PROFILE ══
+function previewAvatar(input){
+  if(!input.files||!input.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=document.getElementById('avatarPreview');
+    document.getElementById('avIcon').style.display='none';
+    img.src=e.target.result; img.style.display='block';
   };
   reader.readAsDataURL(input.files[0]);
 }
-async function saveProfileAndNext(skip) {
-  if (!skip) {
-    const bio = document.getElementById('inpBio').value.trim();
-    if (bio) {
-      try { await db.collection("users").doc(currentUsername).update({ bio }); } catch(e) {}
-    }
+async function saveProfileStep(skip){
+  if(!skip){
+    const bio=document.getElementById('inpBio').value.trim();
+    if(bio){ try{ await db.collection("users").doc(currentUsername).update({bio}); }catch(e){} }
   }
   goScreen('interestsScreen','profileScreen');
 }
 
-// ══ INTERESTS STEP ══
-const INTERESTS_DATA = [
-  {icon:'🛒',label:'Kasuwanci'},{icon:'💻',label:'Fasaha'},
-  {icon:'⚽',label:'Wasanni'},{icon:'🕌',label:'Addini'},
-  {icon:'🎭',label:'Nishadi'},{icon:'🏥',label:'Lafiya'},
-  {icon:'🎵',label:'Kiɗa'},{icon:'🍔',label:'Abinci'},
-  {icon:'✈️',label:'Tafiya'},{icon:'📚',label:'Ilimi'},
-  {icon:'💰',label:'Kudi'},{icon:'🎨',label:'Art'},
+// ══ INTERESTS ══
+const INTERESTS_MAIN=[
+  {icon:'💼',label:'Business'},{icon:'👗',label:'Fashion'},
+  {icon:'💻',label:'Technology'},{icon:'⚽',label:'Sports'},
+  {icon:'🏥',label:'Health'},{icon:'🍽️',label:'Food'},
+  {icon:'✈️',label:'Travel'},{icon:'📚',label:'Education'},
+  {icon:'💰',label:'Finance'},{icon:'🎭',label:'Entertainment'},
+  {icon:'🎨',label:'Arts'},{icon:'🎵',label:'Music'},
 ];
-(function buildInterests() {
-  const grid = document.getElementById('interestsGrid');
-  INTERESTS_DATA.forEach(item => {
-    const chip = document.createElement('div');
-    chip.className = 'int-chip';
-    chip.innerHTML = `<span class="int-icon">${item.icon}</span><span class="int-label">${item.label}</span>`;
-    chip.addEventListener('click', () => {
-      const sel = selectedInterests.has(item.label);
-      if (sel) { selectedInterests.delete(item.label); chip.classList.remove('selected'); }
-      else { selectedInterests.add(item.label); chip.classList.add('selected'); chip.classList.add('ping'); setTimeout(()=>chip.classList.remove('ping'),400); }
-      updateInterestUI();
+const INTERESTS_MORE=[
+  {icon:'🎮',label:'Gaming'},{icon:'💪',label:'Fitness'},
+  {icon:'💄',label:'Beauty'},{icon:'🏡',label:'Real Estate'},
+  {icon:'🚗',label:'Automotive'},{icon:'📸',label:'Photography'},
+  {icon:'🌿',label:'Nature'},{icon:'🔬',label:'Science'},
+  {icon:'📖',label:'Literature'},{icon:'🛠️',label:'DIY'},
+  {icon:'🙏',label:'Spirituality'},{icon:'🍳',label:'Cooking'},
+];
+let moreInterestChips=[];
+function buildInterests(){
+  const grid=document.getElementById('intGrid');
+  [...INTERESTS_MAIN,...INTERESTS_MORE].forEach((item,idx)=>{
+    const chip=document.createElement('div');
+    chip.className='int-chip';
+    if(idx>=INTERESTS_MAIN.length){ chip.style.display='none'; moreInterestChips.push(chip); }
+    chip.innerHTML=`<span class="int-icon">${item.icon}</span><span class="int-lbl">${item.label}</span>`;
+    chip.addEventListener('click',()=>{
+      const sel=selectedInterests.has(item.label);
+      if(sel){ selectedInterests.delete(item.label); chip.classList.remove('selected'); }
+      else{ selectedInterests.add(item.label); chip.classList.add('selected'); chip.classList.add('ping'); setTimeout(()=>chip.classList.remove('ping'),400); }
+      updateIntUI();
     });
     grid.appendChild(chip);
   });
-})();
-function updateInterestUI() {
-  const n = selectedInterests.size;
-  const counter = document.getElementById('interestCounter');
-  const btn = document.getElementById('interestContinueBtn');
-  if (n === 0) { counter.textContent = 'Choose at least 3'; counter.classList.remove('ready'); btn.disabled = true; }
-  else if (n < 3) { counter.textContent = `${n} selected — ${3-n} more to go`; counter.classList.remove('ready'); btn.disabled = true; }
-  else { counter.textContent = `${n} selected ✓`; counter.classList.add('ready'); btn.disabled = false; }
 }
-async function saveInterestsAndNext(skip) {
-  if (!skip && selectedInterests.size > 0) {
-    try { await db.collection("users").doc(currentUsername).update({ interests: Array.from(selectedInterests) }); } catch(e) {}
+function toggleMoreInterests(){
+  showingMoreInterests=!showingMoreInterests;
+  moreInterestChips.forEach(c=>c.style.display=showingMoreInterests?'flex':'none');
+  document.getElementById('showMoreBtn').textContent=showingMoreInterests?'▴ Show fewer categories':'▾ Show more categories';
+}
+function updateIntUI(){
+  const n=selectedInterests.size;
+  const counter=document.getElementById('intCounter');
+  const btn=document.getElementById('intNextBtn');
+  if(n===0){ counter.textContent='Choose at least 3'; counter.classList.remove('ready'); btn.disabled=true; }
+  else if(n<3){ counter.textContent=`${n} selected — ${3-n} more to go`; counter.classList.remove('ready'); btn.disabled=true; }
+  else{ counter.textContent=`${n} selected ✓`; counter.classList.add('ready'); btn.disabled=false; }
+}
+async function saveInterests(skip){
+  if(!skip&&selectedInterests.size>0){
+    try{ await db.collection("users").doc(currentUsername).update({interests:Array.from(selectedInterests)}); }catch(e){}
   }
   goScreen('followScreen','interestsScreen');
 }
+buildInterests();
 
-// ══ FOLLOW STEP ══
-async function loadFollowSuggestions() {
-  const list = document.getElementById('followList');
-  list.innerHTML = '<div class="follow-loading">Finding people for you...</div>';
-  try {
-    const snap = await db.collection("users").limit(15).get();
-    const accounts = [];
-    snap.forEach(doc => { if (doc.id !== currentUsername) accounts.push(doc.data()); });
-    if (accounts.length === 0) {
-      list.innerHTML = '<div class="follow-loading">No suggestions yet. Invite your friends!</div>';
-      document.getElementById('followContinueBtn').disabled = false;
-      return;
+// ══ FOLLOW ══
+async function loadFollowList(){
+  const list=document.getElementById('followList');
+  list.innerHTML='<div class="follow-loading">Finding people for you...</div>';
+  try{
+    const snap=await db.collection("users").limit(15).get();
+    const accounts=[];
+    snap.forEach(doc=>{ if(doc.id!==currentUsername) accounts.push(doc.data()); });
+    if(accounts.length===0){
+      list.innerHTML='<div class="follow-loading">No suggestions yet — invite your friends!</div>';
+      document.getElementById('followNextBtn').disabled=false; return;
     }
-    list.innerHTML = '';
-    accounts.slice(0,8).forEach((user, i) => {
-      const card = document.createElement('div');
-      card.className = 'follow-card';
-      const avatarContent = user.userProfilePic
-        ? `<img src="${user.userProfilePic}" onerror="this.style.display='none'" alt="${user.username}">`
-        : `<span style="font-size:20px">👤</span>`;
-      card.innerHTML = `
-        <div class="follow-avatar">${avatarContent}</div>
-        <div class="follow-info">
-          <div class="follow-name">${user.fullName || user.username}</div>
-          <div class="follow-handle">@${user.username}</div>
-        </div>
-        <button class="follow-btn" data-user="${user.username}" onclick="toggleFollow(this,'${user.username}')">Follow</button>`;
+    list.innerHTML='';
+    accounts.slice(0,8).forEach((user,i)=>{
+      const card=document.createElement('div');
+      card.className='follow-card';
+      const av=user.userProfilePic?`<img src="${user.userProfilePic}" onerror="this.style.display='none'" alt="">`:`<span style="font-size:20px">👤</span>`;
+      card.innerHTML=`<div class="follow-avatar">${av}</div><div class="follow-info"><div class="follow-name">${user.fullName||user.username}</div><div class="follow-handle">@${user.username}</div></div><button class="follow-btn" onclick="toggleFollow(this,'${user.username}')">Follow</button>`;
       list.appendChild(card);
-      setTimeout(() => card.classList.add('visible'), i * 80);
+      setTimeout(()=>card.classList.add('visible'),i*80);
     });
-  } catch(e) {
-    list.innerHTML = '<div class="follow-loading">Could not load suggestions.</div>';
-    document.getElementById('followContinueBtn').disabled = false;
+  }catch(e){
+    list.innerHTML='<div class="follow-loading">Could not load suggestions.</div>';
+    document.getElementById('followNextBtn').disabled=false;
   }
 }
-async function toggleFollow(btn, targetUsername) {
-  const isFollowing = followedUsers.has(targetUsername);
-  const card = btn.closest('.follow-card');
-  if (isFollowing) {
-    followedUsers.delete(targetUsername);
-    btn.textContent = 'Follow';
-    btn.classList.remove('following');
-    card.classList.remove('is-following');
-    try {
-      await db.collection("users").doc(currentUsername).collection("following").doc(targetUsername).delete();
-      await db.collection("users").doc(targetUsername).collection("followers").doc(currentUsername).delete();
-    } catch(e) {}
+async function toggleFollow(btn,targetUsername){
+  const isFollowing=followedUsers.has(targetUsername);
+  const card=btn.closest('.follow-card');
+  if(isFollowing){
+    followedUsers.delete(targetUsername); btn.textContent='Follow'; btn.classList.remove('following'); card.classList.remove('is-following');
+    try{ await db.collection("users").doc(currentUsername).collection("following").doc(targetUsername).delete(); await db.collection("users").doc(targetUsername).collection("followers").doc(currentUsername).delete(); }catch(e){}
   } else {
-    followedUsers.add(targetUsername);
-    btn.textContent = 'Following';
-    btn.classList.add('following');
-    card.classList.add('is-following');
-    try {
-      const t = Date.now();
-      await db.collection("users").doc(currentUsername).collection("following").doc(targetUsername).set({followedAt:t});
-      await db.collection("users").doc(targetUsername).collection("followers").doc(currentUsername).set({followedAt:t});
-    } catch(e) {}
+    followedUsers.add(targetUsername); btn.textContent='Following'; btn.classList.add('following'); card.classList.add('is-following');
+    try{ const t=Date.now(); await db.collection("users").doc(currentUsername).collection("following").doc(targetUsername).set({followedAt:t}); await db.collection("users").doc(targetUsername).collection("followers").doc(currentUsername).set({followedAt:t}); }catch(e){}
   }
-  const n = followedUsers.size;
-  document.getElementById('followCount').textContent = n;
-  document.getElementById('followContinueBtn').disabled = n < 3;
+  const n=followedUsers.size;
+  document.getElementById('followCount').textContent=n;
+  document.getElementById('followNextBtn').disabled=n<3;
 }
 
 // ══ NOTIFICATIONS ══
-async function requestNotifications() {
-  const btn = document.getElementById('notifBtn');
-  const granted = document.getElementById('notifGranted');
-  if (!("Notification" in window)) { btn.textContent = "Not supported on this browser"; btn.disabled = true; return; }
-  if (Notification.permission === 'granted') { granted.style.display='block'; btn.style.display='none'; return; }
-  const perm = await Notification.requestPermission();
-  if (perm === 'granted') {
-    granted.style.display = 'block'; btn.style.display = 'none';
-    try { await db.collection("users").doc(currentUsername).update({ notificationsEnabled: true }); } catch(e) {}
-  } else { btn.textContent = "Permission denied"; btn.disabled = true; }
+async function requestNotifications(){
+  const btn=document.getElementById('notifBtn');
+  const granted=document.getElementById('notifGranted');
+  if(!("Notification" in window)){ btn.textContent="Not supported"; btn.disabled=true; return; }
+  if(Notification.permission==='granted'){ granted.style.display='block'; btn.style.display='none'; return; }
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){
+    granted.style.display='block'; btn.style.display='none';
+    try{ await db.collection("users").doc(currentUsername).update({notificationsEnabled:true}); }catch(e){}
+  } else { btn.innerHTML="Permission denied <span>✕</span>"; btn.disabled=true; }
 }
 
 // ══ SKIP MODAL ══
-function showSkipModal(context) {
-  currentSkipContext = context;
-  const modal = document.getElementById('skipModal');
-  if (context === 'tour') {
-    document.getElementById('modalTitle').textContent = 'Skip the tour?';
-    document.getElementById('modalSub').textContent = 'The tour only takes 30 seconds and shows you everything Nexus can do.';
-    document.getElementById('modalStayBtn').textContent = 'SHOW ME NEXUS';
-  } else if (context === 'follow') {
-    document.getElementById('modalTitle').textContent = 'Skip following people?';
-    document.getElementById('modalSub').textContent = 'Your feed will be empty without connections. Follow at least 3 people to get started.';
-    document.getElementById('modalStayBtn').textContent = 'FIND PEOPLE';
+function showSkipModal(ctx){
+  currentSkipCtx=ctx;
+  document.getElementById('skipModal').classList.add('open');
+  if(ctx==='tour'){
+    document.getElementById('modalTitle').textContent='Skip the tour?';
+    document.getElementById('modalSub').textContent='The tour only takes 60 seconds and shows you exactly why Nexus is unlike anything else.';
+    document.getElementById('modalStayBtn').textContent='SHOW ME NEXUS';
+  } else {
+    document.getElementById('modalTitle').textContent='Skip connecting?';
+    document.getElementById('modalSub').textContent='Your feed will be empty without connections. Follow at least 3 people to get started.';
+    document.getElementById('modalStayBtn').textContent='FIND PEOPLE';
   }
-  modal.classList.add('open');
 }
-function closeModal() { document.getElementById('skipModal').classList.remove('open'); }
-function confirmSkip() {
+function closeModal(){ document.getElementById('skipModal').classList.remove('open'); }
+function confirmSkip(){
   closeModal();
-  if (currentSkipContext === 'tour') goScreen('profileScreen','tourScreen');
-  else if (currentSkipContext === 'follow') goScreen('notifScreen','followScreen');
+  if(currentSkipCtx==='tour') goScreen('profileScreen','tourScreen');
+  else goScreen('notifScreen','followScreen');
 }
-document.getElementById('skipModal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
+document.getElementById('skipModal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
 
-// ══ FINISH ONBOARDING ══
-async function finishOnboarding() {
-  try { await db.collection("users").doc(currentUsername).update({ onboardingComplete: true }); } catch(e) {}
-  // Show completion screen then burst + redirect
-  const notif = document.getElementById('notifScreen');
+// ══ FINISH ══
+async function finishOnboarding(){
+  try{ await db.collection("users").doc(currentUsername).update({onboardingComplete:true}); }catch(e){}
+  const notif=document.getElementById('notifScreen');
   notif.classList.add('exit-up'); notif.classList.remove('active');
-  const comp = document.getElementById('completionScreen');
-  comp.classList.add('active');
+  document.getElementById('completionScreen').classList.add('active');
   launchConfetti();
-  setTimeout(() => { window.location.href = 'social.html'; }, 2800);
+  setTimeout(()=>{ window.location.href='social.html'; },2600);
 }
 
-// ══ CONFETTI BURST ══
-function launchConfetti() {
-  const canvas = document.getElementById('completionCanvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = innerWidth; canvas.height = innerHeight;
-  const colors = ['#00F2FF','#7B2FFF','#FF2FBD','#ffffff','#34c759'];
-  const pieces = Array.from({length:120}, () => ({
-    x: innerWidth/2, y: innerHeight/2,
-    vx: (Math.random()-0.5)*16,
-    vy: (Math.random()-0.9)*14,
-    size: Math.random()*6+3,
-    color: colors[Math.floor(Math.random()*colors.length)],
-    rotation: Math.random()*360,
-    rotSpeed: (Math.random()-0.5)*10,
-    opacity: 1,
+// ══ GOLD CONFETTI ══
+function launchConfetti(){
+  const canvas=document.getElementById('completionCanvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=innerWidth; canvas.height=innerHeight;
+  const colors=['#FDE08D','#ffd700','#B8860B','#ffffff','#50FA7B'];
+  const pieces=Array.from({length:130},()=>({
+    x:innerWidth/2, y:innerHeight/2,
+    vx:(Math.random()-0.5)*18, vy:(Math.random()-0.95)*15,
+    size:Math.random()*7+3,
+    color:colors[Math.floor(Math.random()*colors.length)],
+    rotation:Math.random()*360, rotSpeed:(Math.random()-0.5)*10,
+    opacity:1,
   }));
-  let frame = 0;
-  function draw() {
+  let frame=0;
+  function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    pieces.forEach(p => {
-      p.x += p.vx; p.y += p.vy; p.vy += 0.35;
-      p.rotation += p.rotSpeed; p.opacity -= 0.012;
-      if (p.opacity <= 0) return;
-      ctx.save();
-      ctx.globalAlpha = p.opacity;
-      ctx.fillStyle = p.color;
-      ctx.shadowBlur = 4; ctx.shadowColor = p.color;
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rotation * Math.PI/180);
-      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+    pieces.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.38;
+      p.rotation+=p.rotSpeed; p.opacity-=0.013;
+      if(p.opacity<=0) return;
+      ctx.save(); ctx.globalAlpha=p.opacity; ctx.fillStyle=p.color;
+      ctx.shadowBlur=3; ctx.shadowColor=p.color;
+      ctx.translate(p.x,p.y); ctx.rotate(p.rotation*Math.PI/180);
+      ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size);
       ctx.restore();
     });
-    if (frame++ < 120) requestAnimationFrame(draw);
+    if(frame++<115) requestAnimationFrame(draw);
   }
   draw();
 }
