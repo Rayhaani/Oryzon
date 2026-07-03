@@ -437,6 +437,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
@@ -663,9 +664,13 @@
                     }).then(() => uid);
                 })
                 .then((uid) => {
-                    // 4) Send verification email
-                    return createdUser.sendEmailVerification().then(() => uid);
-                })
+    // 4) Save username→uid mapping in Realtime Database for RTDB security rules
+    return firebase.database().ref('usernames/' + username).set(uid).then(() => uid);
+})
+.then((uid) => {
+    // 5) Send verification email
+    return createdUser.sendEmailVerification().then(() => uid);
+})
                 .then((uid) => {
                     localStorage.setItem("nexus_user_session", username);
                     localStorage.setItem("nexus_user_uid", uid);
