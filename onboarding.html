@@ -1,740 +1,1468 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Protocol - Welcome</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-deep-black: #000000;
-            --nexus-cyan: #00F2FF;
-            --border-subtle: rgba(255, 255, 255, 0.05);
-            --text-secondary: rgba(255, 255, 255, 0.5);
-            --error-red: #ff3b30;
-            --success-green: #34c759;
-            --card-bg: linear-gradient(135deg, #1e1c1c 0%, #121111 100%);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Nexus Protocol - Welcome</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cyan: #00F2FF;
+  --purple: #7B2FFF;
+  --pink: #FF2FBD;
+  --black: #000000;
+  --text: rgba(255,255,255,0.7);
+  --subtle: rgba(255,255,255,0.05);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--black);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
 
-        body {
-            background-color: var(--bg-deep-black);
-            color: #ffffff;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
+/* ══ SCREEN SYSTEM ══ */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  transform: translateY(30px);
+  overflow-y: auto;
+}
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+.screen.exit-up {
+  opacity: 0;
+  transform: translateY(-30px);
+  pointer-events: none;
+}
 
-        .onboard-card {
-            width: 100%;
-            max-width: 340px;
-            background: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.02);
-            border-radius: 20px;
-            padding: 24px 20px 20px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            position: relative;
-        }
+/* ══ PROGRESS DOTS ══ */
+.progress-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 0 0;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+}
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: all 0.4s ease;
+}
+.dot.active {
+  width: 20px;
+  border-radius: 3px;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+.dot.done { background: rgba(0,242,255,0.35); }
 
-        /* ── PROGRESS BAR ── */
-        .progress-engine {
-            width: 100%;
-            height: 2px;
-            background: rgba(255,255,255,0.03);
-            margin-bottom: 20px;
-            border-radius: 2px;
-        }
-        .progress-line-fill {
-            height: 100%;
-            width: 25%;
-            background: var(--nexus-cyan);
-            box-shadow: 0 0 10px var(--nexus-cyan);
-            transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
-        }
+/* ══ NAV BAR ══ */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 52px 24px 0;
+  min-height: 88px;
+  flex-shrink: 0;
+}
+.btn-back {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+.btn-back:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.btn-skip-top {
+  background: none; border: none;
+  color: rgba(255,255,255,0.4);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 8px;
+}
+.btn-skip-top:hover { color: rgba(255,255,255,0.8); }
 
-        /* ── STEP SLIDER ── */
-        .slider-window {
-            position: relative;
-            width: 100%;
-        }
-        .form-step {
-            position: absolute;
-            width: 100%;
-            top: 0; left: 0;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(40px);
-            transition: transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease, visibility 0.5s;
-        }
-        .form-step.active {
-            position: relative;
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(0);
-        }
-        .form-step.exit {
-            position: absolute;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(-40px);
-        }
+/* ══ CONTENT AREA ══ */
+.screen-content {
+  flex: 1;
+  padding: 20px 24px 0;
+  display: flex;
+  flex-direction: column;
+}
 
-        /* ── TYPOGRAPHY ── */
-        .step-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #ffffff;
-            margin-bottom: 4px;
-        }
-        .step-sub {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 18px;
-            line-height: 1.5;
-        }
+.screen-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: #fff;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+.screen-sub {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
 
-        /* ── BUTTONS ── */
-        .btn-row {
-            margin-top: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            min-height: 40px;
-        }
-        .btn-skip {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: color 0.2s ease;
-        }
-        .btn-skip:hover { color: #ffffff; }
-        .btn-next {
-            margin-left: auto;
-            background: transparent;
-            border: 1px solid rgba(0,242,255,0.3);
-            border-radius: 25px;
-            padding: 8px 16px;
-            color: var(--nexus-cyan);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            animation: buttonPulse 2s infinite alternate cubic-bezier(0.4,0,0.6,1);
-            transition: all 0.3s ease;
-        }
-        .btn-next:disabled { opacity: 0.4; cursor: not-allowed; animation: none; }
-        .btn-next span { font-size: 12px; transition: transform 0.2s ease; }
-        .btn-next:hover:not(:disabled) {
-            background: rgba(0,242,255,0.05);
-            border-color: var(--nexus-cyan);
-            box-shadow: 0 0 15px rgba(0,242,255,0.2);
-        }
-        .btn-next:hover:not(:disabled) span { transform: translateX(2px); }
-        @keyframes buttonPulse {
-            0% { box-shadow: 0 0 8px rgba(0,242,255,0.05); border-color: rgba(0,242,255,0.2); }
-            100% { box-shadow: 0 0 15px rgba(0,242,255,0.25); border-color: rgba(0,242,255,0.6); }
-        }
+/* ══ BOTTOM ACTION AREA ══ */
+.bottom-area {
+  padding: 16px 24px 48px;
+  flex-shrink: 0;
+}
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--purple) 100%);
+  border: none;
+  border-radius: 16px;
+  padding: 16px;
+  color: #000;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0,242,255,0.25);
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.2s ease;
+}
+.btn-primary:hover::after { background: rgba(255,255,255,0.1); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* ── STEP 1: PROFILE SETUP ── */
-        .avatar-upload-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .avatar-circle {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid rgba(0,242,255,0.3);
-            background: #0d0d0f;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-            transition: border-color 0.3s ease;
-            margin-bottom: 8px;
-        }
-        .avatar-circle:hover { border-color: var(--nexus-cyan); }
-        .avatar-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
-        .avatar-circle .avatar-icon {
-            font-size: 28px;
-            opacity: 0.4;
-        }
-        .avatar-circle input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-        .avatar-hint {
-            font-size: 10px;
-            color: var(--nexus-cyan);
-            opacity: 0.7;
-        }
-        .nexus-textarea {
-            width: 100%;
-            background: #0d0d0f;
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            padding: 11px 14px;
-            font-size: 13px;
-            color: #ffffff;
-            outline: none;
-            resize: none;
-            height: 72px;
-            font-family: 'Inter', sans-serif;
-            transition: border-color 0.3s ease;
-            line-height: 1.5;
-        }
-        .nexus-textarea:focus { border-color: var(--nexus-cyan); background: #111114; }
-        .nexus-textarea::placeholder { color: rgba(255,255,255,0.25); }
-        .char-count {
-            font-size: 10px;
-            color: var(--text-secondary);
-            text-align: right;
-            margin-top: 4px;
-        }
+.btn-secondary {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 14px;
+  color: rgba(255,255,255,0.55);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); }
 
-        /* ── STEP 2: INTERESTS ── */
-        .interests-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-        .interest-chip {
-            background: #0d0d0f;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 10px;
-            padding: 10px 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .interest-chip .chip-icon { font-size: 20px; }
-        .interest-chip .chip-label {
-            font-size: 10px;
-            color: rgba(255,255,255,0.6);
-            text-align: center;
-            line-height: 1.3;
-            font-weight: 500;
-        }
-        .interest-chip.selected {
-            background: rgba(0,242,255,0.08);
-            border-color: rgba(0,242,255,0.5);
-        }
-        .interest-chip.selected .chip-label { color: var(--nexus-cyan); }
-        .interests-hint {
-            font-size: 10px;
-            color: var(--text-secondary);
-            margin-top: 10px;
-            text-align: center;
-        }
+/* ════════════════════════════════
+   SPLASH SCREEN
+════════════════════════════════ */
+#splashScreen {
+  background: #000;
+  overflow: hidden;
+}
+#splashCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+}
+.splash-center {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  text-align: center;
+}
+.splash-ring {
+  position: relative;
+  width: 140px; height: 140px;
+  margin-bottom: 40px;
+}
+.splash-ring::before, .splash-ring::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0,242,255,0.2);
+  animation: ringPulse 3s infinite;
+}
+.splash-ring::before { inset: -10px; animation-delay: 0s; }
+.splash-ring::after { inset: -25px; animation-delay: 0.5s; opacity: 0.5; }
+@keyframes ringPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+.splash-logo-circle {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1a1a2e, #000);
+  border: 1.5px solid rgba(0,242,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 40px rgba(0,242,255,0.15), inset 0 0 30px rgba(0,242,255,0.05);
+  animation: logoGlow 3s infinite alternate;
+}
+@keyframes logoGlow {
+  from { box-shadow: 0 0 30px rgba(0,242,255,0.1), inset 0 0 20px rgba(0,242,255,0.03); }
+  to { box-shadow: 0 0 60px rgba(0,242,255,0.3), inset 0 0 40px rgba(0,242,255,0.08); }
+}
+.splash-logo-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--cyan);
+  text-shadow: 0 0 20px var(--cyan);
+}
+.splash-welcome-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.splash-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fff 0%, var(--cyan) 60%, var(--purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  min-height: 36px;
+  letter-spacing: 1px;
+}
+.splash-tagline {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 10px;
+  letter-spacing: 1.5px;
+}
+.splash-tap-hint {
+  font-size: 11px;
+  color: rgba(0,242,255,0.5);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: tapPulse 2s infinite;
+  margin-top: 48px;
+}
+@keyframes tapPulse {
+  0%,100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
 
-        /* ── STEP 3: SUGGESTED ACCOUNTS ── */
-        .suggest-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 260px;
-            overflow-y: auto;
-            padding-right: 2px;
-        }
-        .suggest-list::-webkit-scrollbar { width: 3px; }
-        .suggest-list::-webkit-scrollbar-thumb { background: rgba(0,242,255,0.2); border-radius: 2px; }
+/* ════════════════════════════════
+   TOUR SCREEN
+════════════════════════════════ */
+#tourScreen { overflow: hidden; }
+.tour-slides-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.tour-slides {
+  display: flex;
+  height: 100%;
+  transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
+}
+.tour-slide {
+  min-width: 100%;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.tour-illus {
+  width: 100%;
+  height: 200px;
+  margin: 16px 0 24px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.tour-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.tour-desc {
+  font-size: 13px;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.6;
+  max-width: 280px;
+}
 
-        .suggest-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #0d0d0f;
-            border: 1px solid rgba(255,255,255,0.04);
-            border-radius: 12px;
-            padding: 10px 12px;
-        }
-        .suggest-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border: 1px solid rgba(0,242,255,0.15);
-            flex-shrink: 0;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        .suggest-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .suggest-info { flex: 1; min-width: 0; }
-        .suggest-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: #ffffff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .suggest-username {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-        .follow-btn {
-            background: transparent;
-            border: 1px solid rgba(0,242,255,0.35);
-            border-radius: 20px;
-            padding: 5px 12px;
-            color: var(--nexus-cyan);
-            font-family: 'Inter', sans-serif;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .follow-btn.following {
-            background: rgba(0,242,255,0.1);
-            border-color: var(--nexus-cyan);
-        }
-        .follow-count-hint {
-            font-size: 10px;
-            color: var(--text-secondary);
-            margin-top: 10px;
-            text-align: center;
-        }
-        .follow-count-hint span { color: var(--nexus-cyan); }
-        .suggest-loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
+/* Tour dot indicators */
+.tour-dots {
+  display: flex; gap: 6px;
+  justify-content: center;
+  padding: 16px 0;
+  flex-shrink: 0;
+}
+.tour-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.tour-dot.active {
+  width: 18px;
+  border-radius: 3px;
+  background: var(--cyan);
+}
 
-        /* ── STEP 4: NOTIFICATIONS ── */
-        .notif-icon-wrap {
-            text-align: center;
-            font-size: 52px;
-            margin-bottom: 14px;
-        }
-        .notif-btn {
-            width: 100%;
-            background: rgba(0,242,255,0.06);
-            border: 1px solid rgba(0,242,255,0.3);
-            border-radius: 12px;
-            padding: 13px;
-            color: var(--nexus-cyan);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 8px;
-        }
-        .notif-btn:hover { background: rgba(0,242,255,0.1); }
-        .notif-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .notif-granted {
-            text-align: center;
-            font-size: 12px;
-            color: var(--success-green);
-            display: none;
-            margin-bottom: 8px;
-        }
-    </style>
+/* ── ILLUSTRATION 1: FEED ── */
+.illus-feed {
+  display: flex;
+  gap: 10px;
+  padding: 16px;
+  align-items: center;
+  justify-content: center;
+}
+.mock-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 10px;
+  width: 110px;
+}
+.mock-card:first-child { transform: rotate(-4deg) translateY(8px); }
+.mock-card:last-child { transform: rotate(3deg) translateY(-5px); }
+.mock-avatar {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  margin-bottom: 7px;
+}
+.mock-line {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.1);
+  margin-bottom: 5px;
+}
+.mock-line.short { width: 60%; }
+.mock-img {
+  width: 100%; height: 52px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(0,242,255,0.1), rgba(123,47,255,0.15));
+  margin: 6px 0;
+}
+.mock-heart {
+  font-size: 11px;
+  color: var(--pink);
+  animation: heartBeat 1.5s infinite;
+  display: inline-block;
+}
+@keyframes heartBeat {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+/* ── ILLUSTRATION 2: MARKETPLACE ── */
+.illus-market {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+  padding: 20px;
+}
+.market-chip {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 12px 6px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 5px;
+  font-size: 20px;
+}
+.market-chip span {
+  font-size: 8px;
+  color: rgba(255,255,255,0.35);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.market-chip.glow-chip {
+  border-color: rgba(0,242,255,0.3);
+  background: rgba(0,242,255,0.05);
+  animation: chipGlow 2s infinite alternate;
+}
+@keyframes chipGlow {
+  from { box-shadow: none; }
+  to { box-shadow: 0 0 12px rgba(0,242,255,0.15); }
+}
+
+/* ── ILLUSTRATION 3: WALLET ── */
+.illus-wallet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.wallet-coin {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1a3a1a, #0a1a0a);
+  border: 2px solid rgba(0,242,255,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--cyan);
+  text-shadow: 0 0 12px var(--cyan);
+  animation: coinSpin 4s ease-in-out infinite;
+  box-shadow: 0 0 30px rgba(0,242,255,0.2);
+  position: relative;
+}
+@keyframes coinSpin {
+  0%,100% { transform: rotateY(0deg) scale(1); }
+  25% { transform: rotateY(20deg) scale(1.05); }
+  75% { transform: rotateY(-20deg) scale(1.05); }
+}
+.wallet-stats {
+  display: flex; gap: 16px;
+}
+.wallet-stat {
+  text-align: center;
+}
+.wallet-stat-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  color: var(--cyan);
+  font-weight: 700;
+}
+.wallet-stat-lbl {
+  font-size: 9px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.wallet-trend {
+  font-size: 11px;
+  color: #34c759;
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* ════════════════════════════════
+   PROFILE SCREEN
+════════════════════════════════ */
+.avatar-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0 28px;
+}
+.avatar-ring-wrap {
+  position: relative;
+  width: 120px; height: 120px;
+  margin-bottom: 12px;
+}
+.avatar-glow-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(var(--cyan), var(--purple), var(--pink), var(--cyan));
+  animation: ringRotate 3s linear infinite;
+  z-index: 0;
+}
+@keyframes ringRotate { to { transform: rotate(360deg); } }
+.avatar-glow-inner {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: #050510;
+  z-index: 1;
+}
+.avatar-img-wrap {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: #0d0d1a;
+  z-index: 2;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.avatar-img-wrap input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 3;
+}
+.avatar-placeholder { font-size: 40px; pointer-events: none; }
+.avatar-img-wrap img#avatarPreview {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: none; z-index: 2;
+}
+.avatar-camera-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 3;
+  font-size: 22px;
+}
+.avatar-img-wrap:hover .avatar-camera-overlay { opacity: 1; }
+.avatar-tap-hint {
+  font-size: 11px;
+  color: var(--cyan);
+  opacity: 0.7;
+  letter-spacing: 0.5px;
+}
+.field-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.nexus-textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #fff;
+  outline: none;
+  resize: none;
+  height: 80px;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.3s ease, background 0.3s ease;
+  line-height: 1.5;
+}
+.nexus-textarea:focus {
+  border-color: rgba(0,242,255,0.4);
+  background: rgba(0,242,255,0.03);
+}
+.nexus-textarea::placeholder { color: rgba(255,255,255,0.2); }
+.char-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 5px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+}
+
+/* ════════════════════════════════
+   INTERESTS SCREEN
+════════════════════════════════ */
+.interests-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.int-chip {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 14px 8px 12px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.int-chip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: radial-gradient(circle at center, rgba(0,242,255,0.15), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.int-chip.selected {
+  background: rgba(0,242,255,0.08);
+  border-color: rgba(0,242,255,0.5);
+  transform: scale(1.03);
+  box-shadow: 0 0 16px rgba(0,242,255,0.12);
+}
+.int-chip.selected::after { opacity: 1; }
+.int-icon { font-size: 22px; position: relative; z-index: 1; }
+.int-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  position: relative; z-index: 1;
+  transition: color 0.25s ease;
+}
+.int-chip.selected .int-label { color: var(--cyan); }
+
+.interest-counter {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  min-height: 18px;
+  transition: all 0.3s ease;
+}
+.interest-counter.ready { color: #34c759; }
+
+/* Celebration ping */
+@keyframes chipPing {
+  0% { transform: scale(1.03); box-shadow: 0 0 0 0 rgba(0,242,255,0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(0,242,255,0); }
+  100% { transform: scale(1.03); box-shadow: 0 0 0 0 rgba(0,242,255,0); }
+}
+.int-chip.ping { animation: chipPing 0.4s ease-out; }
+
+/* ════════════════════════════════
+   FOLLOW SCREEN
+════════════════════════════════ */
+.follow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.follow-list::-webkit-scrollbar { width: 2px; }
+.follow-list::-webkit-scrollbar-thumb { background: rgba(0,242,255,0.2); border-radius:2px; }
+
+.follow-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 16px;
+  padding: 12px 14px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1),
+              border-color 0.3s ease, background 0.3s ease;
+}
+.follow-card.visible { opacity: 1; transform: translateY(0); }
+.follow-card.is-following {
+  border-color: rgba(0,242,255,0.2);
+  background: rgba(0,242,255,0.03);
+}
+.follow-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: linear-gradient(135deg, #1a1a2e, #0d0d1a);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.follow-avatar img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.follow-info { flex: 1; min-width: 0; }
+.follow-name {
+  font-size: 14px; font-weight: 600; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.follow-handle {
+  font-size: 11px; color: rgba(255,255,255,0.35);
+  margin-top: 1px;
+}
+.follow-btn {
+  flex-shrink: 0;
+  background: rgba(0,242,255,0.06);
+  border: 1px solid rgba(0,242,255,0.35);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: var(--cyan);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap;
+}
+.follow-btn:hover { background: rgba(0,242,255,0.12); }
+.follow-btn.following {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: #000;
+  transform: scale(1.05);
+}
+.follow-count-row {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  padding: 10px 0 0;
+  min-height: 32px;
+}
+.follow-count-row span { color: var(--cyan); font-weight: 700; }
+.follow-loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(255,255,255,0.3);
+  font-size: 13px;
+}
+
+/* ════════════════════════════════
+   NOTIFICATION SCREEN
+════════════════════════════════ */
+.notif-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px 20px;
+  text-align: center;
+}
+.notif-bell-wrap {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(0,242,255,0.1), rgba(0,0,0,0));
+  border: 1px solid rgba(0,242,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 42px;
+  margin-bottom: 28px;
+  animation: bellShake 3s infinite;
+  box-shadow: 0 0 30px rgba(0,242,255,0.08);
+}
+@keyframes bellShake {
+  0%,85%,100% { transform: rotate(0deg); }
+  87% { transform: rotate(8deg); }
+  90% { transform: rotate(-8deg); }
+  93% { transform: rotate(6deg); }
+  96% { transform: rotate(-4deg); }
+  99% { transform: rotate(0deg); }
+}
+.notif-granted { color: #34c759; font-size: 13px; font-weight: 600; display: none; margin-top: -8px; margin-bottom: 16px; }
+
+/* ════════════════════════════════
+   SKIP CONFIRM MODAL
+════════════════════════════════ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0;
+}
+.modal-backdrop.open { display: flex; }
+.modal-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: #111116;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 24px 24px 0 0;
+  padding: 28px 24px 48px;
+  animation: sheetUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px; font-weight: 900;
+  color: #fff; text-align: center;
+  margin-bottom: 8px; letter-spacing: 0.5px;
+}
+.modal-sub {
+  font-size: 12px; color: rgba(255,255,255,0.45);
+  text-align: center; line-height: 1.5; margin-bottom: 24px;
+}
+.modal-btn-main {
+  width: 100%;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  border: none; border-radius: 14px;
+  padding: 14px; color: #000;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px; font-weight: 900; letter-spacing: 1.5px;
+  cursor: pointer; margin-bottom: 10px;
+}
+.modal-btn-skip {
+  width: 100%;
+  background: none; border: none;
+  color: rgba(255,255,255,0.35);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; cursor: pointer;
+  padding: 10px;
+  transition: color 0.2s ease;
+}
+.modal-btn-skip:hover { color: rgba(255,255,255,0.7); }
+
+/* ════════════════════════════════
+   COMPLETION BURST
+════════════════════════════════ */
+#completionScreen {
+  background: #000;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+}
+.completion-icon { font-size: 64px; animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.completion-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px; font-weight: 900;
+  background: linear-gradient(135deg, #fff, var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.completion-sub { font-size: 13px; color: rgba(255,255,255,0.4); }
+#completionCanvas { position: absolute; inset: 0; pointer-events: none; }
+</style>
 </head>
 <body>
 
-<div class="onboard-card" id="onboardCard">
-
-    <div class="progress-engine">
-        <div class="progress-line-fill" id="progressFill"></div>
+<!-- ═══════════════════════════════
+     SPLASH SCREEN
+═══════════════════════════════ -->
+<div class="screen active" id="splashScreen">
+  <canvas id="splashCanvas"></canvas>
+  <div class="splash-center" onclick="advanceSplash()">
+    <div class="splash-ring">
+      <div class="splash-logo-circle">
+        <div class="splash-logo-text">NEXUS</div>
+      </div>
     </div>
+    <div class="splash-welcome-text">Welcome,</div>
+    <div class="splash-name" id="splashName">&nbsp;</div>
+    <div class="splash-tagline">YOUR WORLD. YOUR PROTOCOL.</div>
+    <div class="splash-tap-hint" id="splashTapHint" style="opacity:0">TAP TO CONTINUE</div>
+  </div>
+</div>
 
-    <div class="slider-window">
+<!-- ═══════════════════════════════
+     TOUR SCREEN
+═══════════════════════════════ -->
+<div class="screen" id="tourScreen">
+  <div class="top-nav">
+    <div style="width:36px"></div>
+    <button class="btn-skip-top" onclick="showSkipModal('tour')">Skip</button>
+  </div>
 
-        <!-- ══ STEP 1: PROFILE SETUP ══ -->
-        <div class="form-step active" id="step1">
-            <div class="step-title">Set Up Your Profile</div>
-            <div class="step-sub">Add a photo and tell the world who you are.</div>
+  <div class="tour-slides-wrap" id="tourSlidesWrap">
+    <div class="tour-slides" id="tourSlides">
 
-            <div class="avatar-upload-wrap">
-                <div class="avatar-circle" id="avatarCircle">
-                    <span class="avatar-icon">👤</span>
-                    <img id="avatarPreview" alt="Profile photo">
-                    <input type="file" id="avatarInput" accept="image/*" onchange="previewAvatar(this)">
-                </div>
-                <div class="avatar-hint">Tap to upload photo</div>
+      <!-- Slide 1: Social Feed -->
+      <div class="tour-slide">
+        <div class="tour-illus">
+          <div class="illus-feed">
+            <div class="mock-card">
+              <div class="mock-avatar"></div>
+              <div class="mock-line"></div>
+              <div class="mock-line short"></div>
+              <div class="mock-img"></div>
+              <div><span class="mock-heart">♥</span> <span style="font-size:9px;color:rgba(255,255,255,0.3)">2.4k</span></div>
             </div>
-
-            <textarea
-                class="nexus-textarea"
-                id="inpBio"
-                placeholder="Write a short bio about yourself..."
-                maxlength="120"
-                oninput="updateCharCount(this, 'bioCount', 120)"
-            ></textarea>
-            <div class="char-count"><span id="bioCount">0</span>/120</div>
-
-            <div class="btn-row">
-                <button class="btn-skip" onclick="skipStep(2)">Skip</button>
-                <button class="btn-next" onclick="saveProfileStep()">NEXT <span>→</span></button>
+            <div class="mock-card">
+              <div class="mock-avatar" style="background:linear-gradient(135deg,var(--pink),var(--purple))"></div>
+              <div class="mock-line"></div>
+              <div class="mock-line short"></div>
+              <div class="mock-img" style="background:linear-gradient(135deg,rgba(255,47,189,0.1),rgba(123,47,255,0.2))"></div>
+              <div><span class="mock-heart">♥</span> <span style="font-size:9px;color:rgba(255,255,255,0.3)">891</span></div>
             </div>
+          </div>
         </div>
+        <div class="tour-title">Your Social Universe</div>
+        <div class="tour-desc">Share posts, stories, and real-time moments. Connect with people who share your world — from Kano to London.</div>
+      </div>
 
-        <!-- ══ STEP 2: INTERESTS ══ -->
-        <div class="form-step" id="step2">
-            <div class="step-title">Your Interests</div>
-            <div class="step-sub">Pick at least 3 topics you care about.</div>
-
-            <div class="interests-grid" id="interestsGrid">
-                <!-- populated by JS -->
-            </div>
-            <div class="interests-hint" id="interestHint">Select at least 3</div>
-
-            <div class="btn-row">
-                <button class="btn-skip" onclick="skipStep(3)">Skip</button>
-                <button class="btn-next" id="interestNextBtn" onclick="saveInterests()" disabled>NEXT <span>→</span></button>
-            </div>
+      <!-- Slide 2: Marketplace -->
+      <div class="tour-slide">
+        <div class="tour-illus">
+          <div class="illus-market">
+            <div class="market-chip glow-chip">🍔<span>Food</span></div>
+            <div class="market-chip">🚗<span>Transport</span></div>
+            <div class="market-chip">💊<span>Health</span></div>
+            <div class="market-chip">✂️<span>Beauty</span></div>
+            <div class="market-chip glow-chip">🔧<span>Repair</span></div>
+            <div class="market-chip">📦<span>Delivery</span></div>
+          </div>
         </div>
+        <div class="tour-title">Abokina Marketplace</div>
+        <div class="tour-desc">Discover and book services in your area — food delivery, transport, healthcare, beauty, and so much more. All in one place.</div>
+      </div>
 
-        <!-- ══ STEP 3: SUGGESTED ACCOUNTS ══ -->
-        <div class="form-step" id="step3">
-            <div class="step-title">People to Follow</div>
-            <div class="step-sub">Follow at least 3 people to personalise your feed.</div>
-
-            <div class="suggest-list" id="suggestList">
-                <div class="suggest-loading">Loading suggestions...</div>
+      <!-- Slide 3: Wallet -->
+      <div class="tour-slide">
+        <div class="tour-illus">
+          <div class="illus-wallet">
+            <div class="wallet-coin">Pts</div>
+            <div class="wallet-stats">
+              <div class="wallet-stat">
+                <div class="wallet-stat-val">500</div>
+                <div class="wallet-stat-lbl">Points</div>
+              </div>
+              <div class="wallet-stat">
+                <div class="wallet-stat-val" style="color:var(--purple)">12</div>
+                <div class="wallet-stat-lbl">Vonk</div>
+              </div>
             </div>
-            <div class="follow-count-hint">
-                Following <span id="followCount">0</span> people
-            </div>
-
-            <div class="btn-row">
-                <button class="btn-skip" onclick="skipStep(4)">Skip</button>
-                <button class="btn-next" id="followNextBtn" onclick="goToStep(4)" disabled>NEXT <span>→</span></button>
-            </div>
+            <div class="wallet-trend">↑ Earn by posting & engaging</div>
+          </div>
         </div>
-
-        <!-- ══ STEP 4: NOTIFICATIONS ══ -->
-        <div class="form-step" id="step4">
-            <div class="notif-icon-wrap">🔔</div>
-            <div class="step-title">Stay in the Loop</div>
-            <div class="step-sub">Enable notifications so you never miss a message, like, or update from your network.</div>
-
-            <button class="notif-btn" id="notifBtn" onclick="requestNotifications()">ENABLE NOTIFICATIONS</button>
-            <div class="notif-granted" id="notifGranted">✓ Notifications enabled!</div>
-
-            <div class="btn-row">
-                <button class="btn-skip" onclick="finishOnboarding()">Skip</button>
-                <button class="btn-next" onclick="finishOnboarding()">ENTER NEXUS <span>→</span></button>
-            </div>
-        </div>
+        <div class="tour-title">Nexus Wallet</div>
+        <div class="tour-desc">Earn Pts for every post, like, and interaction. Convert to Vonk, send to friends, and unlock exclusive features.</div>
+      </div>
 
     </div>
+  </div>
+
+  <div class="tour-dots">
+    <div class="tour-dot active" onclick="goTourSlide(0)"></div>
+    <div class="tour-dot" onclick="goTourSlide(1)"></div>
+    <div class="tour-dot" onclick="goTourSlide(2)"></div>
+  </div>
+
+  <div class="bottom-area">
+    <button class="btn-primary" id="tourNextBtn" onclick="tourNext()">NEXT &nbsp;→</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     PROFILE SCREEN
+═══════════════════════════════ -->
+<div class="screen" id="profileScreen">
+  <div class="progress-dots" id="dots1">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="top-nav">
+    <button class="btn-back" onclick="goScreen('tourScreen','profileScreen')">←</button>
+    <button class="btn-skip-top" onclick="saveProfileAndNext(true)">Skip</button>
+  </div>
+  <div class="screen-content">
+    <div class="screen-title">Set Up Your Profile</div>
+    <div class="screen-sub">Your photo and bio help people know who you are.</div>
+    <div class="avatar-stage">
+      <div class="avatar-ring-wrap">
+        <div class="avatar-glow-ring"></div>
+        <div class="avatar-glow-inner"></div>
+        <div class="avatar-img-wrap" id="avatarWrap">
+          <div class="avatar-placeholder" id="avatarIcon">👤</div>
+          <img id="avatarPreview" alt="Profile photo">
+          <div class="avatar-camera-overlay">📷</div>
+          <input type="file" id="avatarInput" accept="image/*" onchange="previewAvatar(this)">
+        </div>
+      </div>
+      <div class="avatar-tap-hint">Tap to add photo</div>
+    </div>
+    <div class="field-label">Bio</div>
+    <textarea class="nexus-textarea" id="inpBio" maxlength="120"
+      placeholder="What's your story? (optional)"
+      oninput="document.getElementById('charCount').textContent=this.value.length"></textarea>
+    <div class="char-row"><span id="charCount">0</span>/120</div>
+  </div>
+  <div class="bottom-area">
+    <button class="btn-primary" onclick="saveProfileAndNext(false)">CONTINUE &nbsp;→</button>
+    <button class="btn-secondary" onclick="saveProfileAndNext(true)">Do this later</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     INTERESTS SCREEN
+═══════════════════════════════ -->
+<div class="screen" id="interestsScreen">
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="top-nav">
+    <button class="btn-back" onclick="goScreen('profileScreen','interestsScreen')">←</button>
+    <button class="btn-skip-top" onclick="saveInterestsAndNext(true)">Skip</button>
+  </div>
+  <div class="screen-content">
+    <div class="screen-title">What Moves You?</div>
+    <div class="screen-sub">Pick at least 3 topics — we'll personalise your feed around what you love.</div>
+    <div class="interests-grid" id="interestsGrid"></div>
+    <div class="interest-counter" id="interestCounter">Choose at least 3</div>
+  </div>
+  <div class="bottom-area">
+    <button class="btn-primary" id="interestContinueBtn" onclick="saveInterestsAndNext(false)" disabled>CONTINUE &nbsp;→</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     FOLLOW SCREEN
+═══════════════════════════════ -->
+<div class="screen" id="followScreen">
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot active"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="top-nav">
+    <button class="btn-back" onclick="goScreen('interestsScreen','followScreen')">←</button>
+    <button class="btn-skip-top" onclick="showSkipModal('follow')">Skip</button>
+  </div>
+  <div class="screen-content">
+    <div class="screen-title">Connect With People</div>
+    <div class="screen-sub">Follow at least 3 people to bring your feed to life.</div>
+    <div class="follow-list" id="followList">
+      <div class="follow-loading">Finding people for you...</div>
+    </div>
+    <div class="follow-count-row" id="followCountRow">Following <span id="followCount">0</span> people</div>
+  </div>
+  <div class="bottom-area">
+    <button class="btn-primary" id="followContinueBtn" onclick="goScreen('notifScreen','followScreen')" disabled>CONTINUE &nbsp;→</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     NOTIFICATION SCREEN
+═══════════════════════════════ -->
+<div class="screen" id="notifScreen">
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot active"></div>
+  </div>
+  <div class="top-nav">
+    <button class="btn-back" onclick="goScreen('followScreen','notifScreen')">←</button>
+    <button class="btn-skip-top" onclick="finishOnboarding()">Skip</button>
+  </div>
+  <div class="notif-stage">
+    <div class="notif-bell-wrap">🔔</div>
+    <div class="screen-title" style="margin-bottom:10px">Stay in the Loop</div>
+    <div class="screen-sub" style="margin-bottom:24px">Never miss a message, like, or update. Enable notifications to stay connected with your network.</div>
+    <div class="notif-granted" id="notifGranted">✓ Notifications enabled!</div>
+  </div>
+  <div class="bottom-area">
+    <button class="btn-primary" id="notifBtn" onclick="requestNotifications()">ENABLE NOTIFICATIONS</button>
+    <button class="btn-secondary" onclick="finishOnboarding()">Maybe later</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     COMPLETION SCREEN
+═══════════════════════════════ -->
+<div class="screen" id="completionScreen">
+  <canvas id="completionCanvas"></canvas>
+  <div class="completion-icon">🚀</div>
+  <div class="completion-title">You're All Set!</div>
+  <div class="completion-sub">Welcome to the Protocol.</div>
+</div>
+
+<!-- ═══════════════════════════════
+     SKIP CONFIRM MODAL
+═══════════════════════════════ -->
+<div class="modal-backdrop" id="skipModal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="modalTitle">Are you sure?</div>
+    <div class="modal-sub" id="modalSub">Nexus is better when you're connected. This only takes a moment.</div>
+    <button class="modal-btn-main" id="modalStayBtn" onclick="closeModal()">STAY &amp; CONNECT</button>
+    <button class="modal-btn-skip" id="modalSkipBtn" onclick="confirmSkip()">Skip for now</button>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-        authDomain: "oryzon-50ea4.firebaseapp.com",
-        projectId: "oryzon-50ea4",
-        storageBucket: "oryzon-50ea4.firebasestorage.app",
-        messagingSenderId: "782106742622",
-        appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
-        measurementId: "G-K5085DLL2W"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+const firebaseConfig = {
+  apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+  authDomain: "oryzon-50ea4.firebaseapp.com",
+  projectId: "oryzon-50ea4",
+  storageBucket: "oryzon-50ea4.firebasestorage.app",
+  messagingSenderId: "782106742622",
+  appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+  measurementId: "G-K5085DLL2W"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    // ── Session check ──
-    const currentUsername = localStorage.getItem("nexus_user_session");
-    if (!currentUsername) window.location.href = "login.html";
+const currentUsername = localStorage.getItem("nexus_user_session");
+if (!currentUsername) window.location.href = "login.html";
 
-    let activeStep = 1;
-    const totalSteps = 4;
-    let followedUsers = new Set();
-    let selectedInterests = new Set();
+let selectedInterests = new Set();
+let followedUsers = new Set();
+let currentSkipContext = null;
+let currentTourSlide = 0;
+let splashReady = false;
+let userData = {};
 
-    // ── INTERESTS DATA ──
-    const INTERESTS = [
-        { icon: "🛒", label: "Kasuwanci" },
-        { icon: "💻", label: "Fasaha" },
-        { icon: "⚽", label: "Wasanni" },
-        { icon: "🕌", label: "Addini" },
-        { icon: "🎭", label: "Nishadi" },
-        { icon: "🏥", label: "Lafiya" },
-        { icon: "🎵", label: "Kiɗa" },
-        { icon: "🍔", label: "Abinci" },
-        { icon: "✈️",  label: "Tafiya" },
-        { icon: "📚", label: "Ilimi" },
-        { icon: "💰", label: "Kudi" },
-        { icon: "🎨", label: "Art" },
-    ];
-
-    // ── Build interests grid ──
-    (function buildInterests() {
-        const grid = document.getElementById("interestsGrid");
-        INTERESTS.forEach(item => {
-            const chip = document.createElement("div");
-            chip.className = "interest-chip";
-            chip.innerHTML = `<span class="chip-icon">${item.icon}</span><span class="chip-label">${item.label}</span>`;
-            chip.addEventListener("click", () => {
-                if (selectedInterests.has(item.label)) {
-                    selectedInterests.delete(item.label);
-                    chip.classList.remove("selected");
-                } else {
-                    selectedInterests.add(item.label);
-                    chip.classList.add("selected");
-                }
-                updateInterestHint();
-            });
-            grid.appendChild(chip);
-        });
-    })();
-
-    function updateInterestHint() {
-        const count = selectedInterests.size;
-        const hint = document.getElementById("interestHint");
-        const btn = document.getElementById("interestNextBtn");
-        if (count === 0) {
-            hint.textContent = "Select at least 3";
-            hint.style.color = "var(--text-secondary)";
-            btn.disabled = true;
-        } else if (count < 3) {
-            hint.textContent = `${count} selected — pick ${3 - count} more`;
-            hint.style.color = "var(--text-secondary)";
-            btn.disabled = true;
-        } else {
-            hint.textContent = `${count} selected ✓`;
-            hint.style.color = "var(--success-green)";
-            btn.disabled = false;
-        }
+// ══ PARTICLE CANVAS (SPLASH) ══
+(function initSplashParticles() {
+  const canvas = document.getElementById('splashCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * canvas.width;
+      this.y = canvas.height + 10;
+      this.size = Math.random() * 1.5 + 0.5;
+      this.speedY = -(Math.random() * 0.8 + 0.3);
+      this.speedX = (Math.random() - 0.5) * 0.4;
+      this.opacity = Math.random() * 0.5 + 0.1;
+      this.color = Math.random() > 0.6 ? '#00F2FF' : Math.random() > 0.5 ? '#7B2FFF' : 'rgba(255,255,255,0.5)';
     }
-
-    // ── STEP NAVIGATION ──
-    function goToStep(target) {
-        const current = document.getElementById(`step${activeStep}`);
-        current.classList.add("exit");
-        current.classList.remove("active");
-        activeStep = target;
-        const next = document.getElementById(`step${activeStep}`);
-        next.classList.remove("exit");
-        next.classList.add("active");
-        document.getElementById("progressFill").style.width = ((activeStep / totalSteps) * 100) + "%";
-
-        if (activeStep === 3) loadSuggestedAccounts();
+    update() {
+      this.y += this.speedY; this.x += this.speedX;
+      this.opacity -= 0.001;
+      if (this.y < -10 || this.opacity <= 0) this.reset();
     }
-
-    function skipStep(target) {
-        goToStep(target);
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = this.opacity;
+      ctx.fillStyle = this.color;
+      ctx.shadowBlur = 6; ctx.shadowColor = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
     }
+  }
+  for (let i = 0; i < 80; i++) {
+    const p = new Particle();
+    p.y = Math.random() * canvas.height;
+    particles.push(p);
+  }
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
 
-    // ── STEP 1: PROFILE SETUP ──
-    function previewAvatar(input) {
-        if (!input.files || !input.files[0]) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            const img = document.getElementById("avatarPreview");
-            const icon = document.querySelector(".avatar-icon");
-            img.src = e.target.result;
-            img.style.display = "block";
-            icon.style.display = "none";
-        };
-        reader.readAsDataURL(input.files[0]);
+// ══ FETCH USER NAME FOR SPLASH ══
+async function initSplash() {
+  try {
+    const doc = await db.collection("users").doc(currentUsername).get();
+    if (doc.exists) {
+      userData = doc.data();
+      const name = (userData.fullName || currentUsername).split(' ')[0];
+      await typewriterReveal(name);
     }
+  } catch(e) {
+    await typewriterReveal(currentUsername);
+  }
+  document.getElementById('splashTapHint').style.opacity = '1';
+  splashReady = true;
+  setTimeout(() => { if (splashReady) advanceSplash(); }, 3000);
+}
 
-    function updateCharCount(el, countId, max) {
-        document.getElementById(countId).textContent = el.value.length;
+function typewriterReveal(text) {
+  return new Promise(resolve => {
+    const el = document.getElementById('splashName');
+    el.textContent = '';
+    let i = 0;
+    const iv = setInterval(() => {
+      el.textContent += text[i];
+      i++;
+      if (i >= text.length) { clearInterval(iv); setTimeout(resolve, 400); }
+    }, 80);
+  });
+}
+
+function advanceSplash() {
+  if (!splashReady) return;
+  splashReady = false;
+  goScreen('tourScreen', 'splashScreen');
+}
+initSplash();
+
+// ══ SCREEN TRANSITIONS ══
+function goScreen(toId, fromId) {
+  const from = document.getElementById(fromId);
+  const to = document.getElementById(toId);
+  from.classList.add('exit-up');
+  from.classList.remove('active');
+  setTimeout(() => from.classList.remove('exit-up'), 600);
+  to.classList.add('active');
+  if (toId === 'followScreen') loadFollowSuggestions();
+}
+
+// ══ TOUR SLIDE LOGIC ══
+let tourSlideCount = 3;
+function goTourSlide(idx) {
+  currentTourSlide = idx;
+  document.getElementById('tourSlides').style.transform = `translateX(-${idx * 100}%)`;
+  document.querySelectorAll('.tour-dot').forEach((d,i) => {
+    d.classList.toggle('active', i === idx);
+  });
+  const btn = document.getElementById('tourNextBtn');
+  btn.textContent = idx === tourSlideCount-1 ? "LET'S GO  →" : "NEXT  →";
+}
+function tourNext() {
+  if (currentTourSlide < tourSlideCount-1) {
+    goTourSlide(currentTourSlide+1);
+  } else {
+    goScreen('profileScreen','tourScreen');
+  }
+}
+// Swipe support on tour
+let touchStartX = 0;
+document.getElementById('tourSlidesWrap').addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+}, { passive: true });
+document.getElementById('tourSlidesWrap').addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 40) {
+    if (diff > 0 && currentTourSlide < tourSlideCount-1) goTourSlide(currentTourSlide+1);
+    if (diff < 0 && currentTourSlide > 0) goTourSlide(currentTourSlide-1);
+  }
+}, { passive: true });
+
+// ══ PROFILE STEP ══
+function previewAvatar(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('avatarPreview');
+    document.getElementById('avatarIcon').style.display = 'none';
+    img.src = e.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+async function saveProfileAndNext(skip) {
+  if (!skip) {
+    const bio = document.getElementById('inpBio').value.trim();
+    if (bio) {
+      try { await db.collection("users").doc(currentUsername).update({ bio }); } catch(e) {}
     }
+  }
+  goScreen('interestsScreen','profileScreen');
+}
 
-    async function saveProfileStep() {
-        const bio = document.getElementById("inpBio").value.trim();
-        const avatarFile = document.getElementById("avatarInput").files[0];
+// ══ INTERESTS STEP ══
+const INTERESTS_DATA = [
+  {icon:'🛒',label:'Kasuwanci'},{icon:'💻',label:'Fasaha'},
+  {icon:'⚽',label:'Wasanni'},{icon:'🕌',label:'Addini'},
+  {icon:'🎭',label:'Nishadi'},{icon:'🏥',label:'Lafiya'},
+  {icon:'🎵',label:'Kiɗa'},{icon:'🍔',label:'Abinci'},
+  {icon:'✈️',label:'Tafiya'},{icon:'📚',label:'Ilimi'},
+  {icon:'💰',label:'Kudi'},{icon:'🎨',label:'Art'},
+];
+(function buildInterests() {
+  const grid = document.getElementById('interestsGrid');
+  INTERESTS_DATA.forEach(item => {
+    const chip = document.createElement('div');
+    chip.className = 'int-chip';
+    chip.innerHTML = `<span class="int-icon">${item.icon}</span><span class="int-label">${item.label}</span>`;
+    chip.addEventListener('click', () => {
+      const sel = selectedInterests.has(item.label);
+      if (sel) { selectedInterests.delete(item.label); chip.classList.remove('selected'); }
+      else { selectedInterests.add(item.label); chip.classList.add('selected'); chip.classList.add('ping'); setTimeout(()=>chip.classList.remove('ping'),400); }
+      updateInterestUI();
+    });
+    grid.appendChild(chip);
+  });
+})();
+function updateInterestUI() {
+  const n = selectedInterests.size;
+  const counter = document.getElementById('interestCounter');
+  const btn = document.getElementById('interestContinueBtn');
+  if (n === 0) { counter.textContent = 'Choose at least 3'; counter.classList.remove('ready'); btn.disabled = true; }
+  else if (n < 3) { counter.textContent = `${n} selected — ${3-n} more to go`; counter.classList.remove('ready'); btn.disabled = true; }
+  else { counter.textContent = `${n} selected ✓`; counter.classList.add('ready'); btn.disabled = false; }
+}
+async function saveInterestsAndNext(skip) {
+  if (!skip && selectedInterests.size > 0) {
+    try { await db.collection("users").doc(currentUsername).update({ interests: Array.from(selectedInterests) }); } catch(e) {}
+  }
+  goScreen('followScreen','interestsScreen');
+}
 
-        // Save bio to Firestore immediately (photo upload handled separately via Storj backend)
-        try {
-            const updateData = {};
-            if (bio) updateData.bio = bio;
-            if (Object.keys(updateData).length > 0) {
-                await db.collection("users").doc(currentUsername).update(updateData);
-            }
-        } catch (e) {
-            console.error("Profile save error:", e);
-        }
-        goToStep(2);
+// ══ FOLLOW STEP ══
+async function loadFollowSuggestions() {
+  const list = document.getElementById('followList');
+  list.innerHTML = '<div class="follow-loading">Finding people for you...</div>';
+  try {
+    const snap = await db.collection("users").limit(15).get();
+    const accounts = [];
+    snap.forEach(doc => { if (doc.id !== currentUsername) accounts.push(doc.data()); });
+    if (accounts.length === 0) {
+      list.innerHTML = '<div class="follow-loading">No suggestions yet. Invite your friends!</div>';
+      document.getElementById('followContinueBtn').disabled = false;
+      return;
     }
+    list.innerHTML = '';
+    accounts.slice(0,8).forEach((user, i) => {
+      const card = document.createElement('div');
+      card.className = 'follow-card';
+      const avatarContent = user.userProfilePic
+        ? `<img src="${user.userProfilePic}" onerror="this.style.display='none'" alt="${user.username}">`
+        : `<span style="font-size:20px">👤</span>`;
+      card.innerHTML = `
+        <div class="follow-avatar">${avatarContent}</div>
+        <div class="follow-info">
+          <div class="follow-name">${user.fullName || user.username}</div>
+          <div class="follow-handle">@${user.username}</div>
+        </div>
+        <button class="follow-btn" data-user="${user.username}" onclick="toggleFollow(this,'${user.username}')">Follow</button>`;
+      list.appendChild(card);
+      setTimeout(() => card.classList.add('visible'), i * 80);
+    });
+  } catch(e) {
+    list.innerHTML = '<div class="follow-loading">Could not load suggestions.</div>';
+    document.getElementById('followContinueBtn').disabled = false;
+  }
+}
+async function toggleFollow(btn, targetUsername) {
+  const isFollowing = followedUsers.has(targetUsername);
+  const card = btn.closest('.follow-card');
+  if (isFollowing) {
+    followedUsers.delete(targetUsername);
+    btn.textContent = 'Follow';
+    btn.classList.remove('following');
+    card.classList.remove('is-following');
+    try {
+      await db.collection("users").doc(currentUsername).collection("following").doc(targetUsername).delete();
+      await db.collection("users").doc(targetUsername).collection("followers").doc(currentUsername).delete();
+    } catch(e) {}
+  } else {
+    followedUsers.add(targetUsername);
+    btn.textContent = 'Following';
+    btn.classList.add('following');
+    card.classList.add('is-following');
+    try {
+      const t = Date.now();
+      await db.collection("users").doc(currentUsername).collection("following").doc(targetUsername).set({followedAt:t});
+      await db.collection("users").doc(targetUsername).collection("followers").doc(currentUsername).set({followedAt:t});
+    } catch(e) {}
+  }
+  const n = followedUsers.size;
+  document.getElementById('followCount').textContent = n;
+  document.getElementById('followContinueBtn').disabled = n < 3;
+}
 
-    // ── STEP 2: INTERESTS ──
-    async function saveInterests() {
-        try {
-            await db.collection("users").doc(currentUsername).update({
-                interests: Array.from(selectedInterests)
-            });
-        } catch (e) {
-            console.error("Interests save error:", e);
-        }
-        goToStep(3);
-    }
+// ══ NOTIFICATIONS ══
+async function requestNotifications() {
+  const btn = document.getElementById('notifBtn');
+  const granted = document.getElementById('notifGranted');
+  if (!("Notification" in window)) { btn.textContent = "Not supported on this browser"; btn.disabled = true; return; }
+  if (Notification.permission === 'granted') { granted.style.display='block'; btn.style.display='none'; return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    granted.style.display = 'block'; btn.style.display = 'none';
+    try { await db.collection("users").doc(currentUsername).update({ notificationsEnabled: true }); } catch(e) {}
+  } else { btn.textContent = "Permission denied"; btn.disabled = true; }
+}
 
-    // ── STEP 3: SUGGESTED ACCOUNTS ──
-    async function loadSuggestedAccounts() {
-        const list = document.getElementById("suggestList");
-        list.innerHTML = '<div class="suggest-loading">Loading suggestions...</div>';
+// ══ SKIP MODAL ══
+function showSkipModal(context) {
+  currentSkipContext = context;
+  const modal = document.getElementById('skipModal');
+  if (context === 'tour') {
+    document.getElementById('modalTitle').textContent = 'Skip the tour?';
+    document.getElementById('modalSub').textContent = 'The tour only takes 30 seconds and shows you everything Nexus can do.';
+    document.getElementById('modalStayBtn').textContent = 'SHOW ME NEXUS';
+  } else if (context === 'follow') {
+    document.getElementById('modalTitle').textContent = 'Skip following people?';
+    document.getElementById('modalSub').textContent = 'Your feed will be empty without connections. Follow at least 3 people to get started.';
+    document.getElementById('modalStayBtn').textContent = 'FIND PEOPLE';
+  }
+  modal.classList.add('open');
+}
+function closeModal() { document.getElementById('skipModal').classList.remove('open'); }
+function confirmSkip() {
+  closeModal();
+  if (currentSkipContext === 'tour') goScreen('profileScreen','tourScreen');
+  else if (currentSkipContext === 'follow') goScreen('notifScreen','followScreen');
+}
+document.getElementById('skipModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
 
-        try {
-            // Fetch up to 10 users, exclude current user
-            const snap = await db.collection("users").limit(12).get();
-            const accounts = [];
-            snap.forEach(doc => {
-                if (doc.id !== currentUsername) accounts.push(doc.data());
-            });
+// ══ FINISH ONBOARDING ══
+async function finishOnboarding() {
+  try { await db.collection("users").doc(currentUsername).update({ onboardingComplete: true }); } catch(e) {}
+  // Show completion screen then burst + redirect
+  const notif = document.getElementById('notifScreen');
+  notif.classList.add('exit-up'); notif.classList.remove('active');
+  const comp = document.getElementById('completionScreen');
+  comp.classList.add('active');
+  launchConfetti();
+  setTimeout(() => { window.location.href = 'social.html'; }, 2800);
+}
 
-            if (accounts.length === 0) {
-                list.innerHTML = '<div class="suggest-loading">No suggestions yet — invite your friends!</div>';
-                document.getElementById("followNextBtn").disabled = false;
-                return;
-            }
-
-            list.innerHTML = "";
-            accounts.slice(0, 8).forEach(user => {
-                const item = document.createElement("div");
-                item.className = "suggest-item";
-
-                const avatarContent = user.userProfilePic
-                    ? `<img src="${user.userProfilePic}" alt="${user.username}" onerror="this.style.display='none';this.parentElement.textContent='👤'">`
-                    : `👤`;
-
-                item.innerHTML = `
-                    <div class="suggest-avatar">${avatarContent}</div>
-                    <div class="suggest-info">
-                        <div class="suggest-name">${user.fullName || user.username}</div>
-                        <div class="suggest-username">@${user.username}</div>
-                    </div>
-                    <button class="follow-btn" onclick="toggleFollow(this, '${user.username}')">Follow</button>
-                `;
-                list.appendChild(item);
-            });
-
-        } catch (e) {
-            console.error("Suggestions error:", e);
-            list.innerHTML = '<div class="suggest-loading">Could not load suggestions.</div>';
-            document.getElementById("followNextBtn").disabled = false;
-        }
-    }
-
-    async function toggleFollow(btn, targetUsername) {
-        const isFollowing = followedUsers.has(targetUsername);
-
-        if (isFollowing) {
-            // Unfollow
-            followedUsers.delete(targetUsername);
-            btn.textContent = "Follow";
-            btn.classList.remove("following");
-            try {
-                await db.collection("users").doc(currentUsername)
-                    .collection("following").doc(targetUsername).delete();
-                await db.collection("users").doc(targetUsername)
-                    .collection("followers").doc(currentUsername).delete();
-            } catch(e) { console.error(e); }
-        } else {
-            // Follow
-            followedUsers.add(targetUsername);
-            btn.textContent = "Following";
-            btn.classList.add("following");
-            try {
-                const now = Date.now();
-                await db.collection("users").doc(currentUsername)
-                    .collection("following").doc(targetUsername).set({ followedAt: now });
-                await db.collection("users").doc(targetUsername)
-                    .collection("followers").doc(currentUsername).set({ followedAt: now });
-            } catch(e) { console.error(e); }
-        }
-
-        // Update count display
-        document.getElementById("followCount").textContent = followedUsers.size;
-
-        // Enable Next button after following at least 3
-        document.getElementById("followNextBtn").disabled = followedUsers.size < 3;
-    }
-
-    // ── STEP 4: NOTIFICATIONS ──
-    async function requestNotifications() {
-        const btn = document.getElementById("notifBtn");
-        const granted = document.getElementById("notifGranted");
-
-        if (!("Notification" in window)) {
-            btn.textContent = "Not supported on this browser";
-            btn.disabled = true;
-            return;
-        }
-
-        if (Notification.permission === "granted") {
-            granted.style.display = "block";
-            btn.style.display = "none";
-            return;
-        }
-
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-            granted.style.display = "block";
-            btn.style.display = "none";
-            try {
-                await db.collection("users").doc(currentUsername).update({
-                    notificationsEnabled: true
-                });
-            } catch(e) {}
-        } else {
-            btn.textContent = "Permission denied — you can enable later in settings";
-            btn.disabled = true;
-        }
-    }
-
-    // ── FINISH ONBOARDING ──
-    async function finishOnboarding() {
-        try {
-            await db.collection("users").doc(currentUsername).update({
-                onboardingComplete: true
-            });
-        } catch(e) {
-            console.error("Onboarding finish error:", e);
-        }
-        window.location.href = "social.html";
-    }
+// ══ CONFETTI BURST ══
+function launchConfetti() {
+  const canvas = document.getElementById('completionCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const colors = ['#00F2FF','#7B2FFF','#FF2FBD','#ffffff','#34c759'];
+  const pieces = Array.from({length:120}, () => ({
+    x: innerWidth/2, y: innerHeight/2,
+    vx: (Math.random()-0.5)*16,
+    vy: (Math.random()-0.9)*14,
+    size: Math.random()*6+3,
+    color: colors[Math.floor(Math.random()*colors.length)],
+    rotation: Math.random()*360,
+    rotSpeed: (Math.random()-0.5)*10,
+    opacity: 1,
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.35;
+      p.rotation += p.rotSpeed; p.opacity -= 0.012;
+      if (p.opacity <= 0) return;
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.fillStyle = p.color;
+      ctx.shadowBlur = 4; ctx.shadowColor = p.color;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI/180);
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+      ctx.restore();
+    });
+    if (frame++ < 120) requestAnimationFrame(draw);
+  }
+  draw();
+}
 </script>
 </body>
 </html>
