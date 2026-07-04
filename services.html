@@ -11464,7 +11464,44 @@ async function isCustomerRestricted(username) {
         return false;
     }
 }
-    
+
+async function ensureAuthReady() {
+    if (firebase.auth().currentUser) return true;
+    const token = localStorage.getItem("nexus_custom_token");
+    if (!token) return false;
+    try {
+        await firebase.auth().signInWithCustomToken(token);
+        return true;
+    } catch(e) {
+        localStorage.removeItem("nexus_custom_token");
+        return false;
+    }
+}
+
+async function refreshAuthToken() {
+    const sessionUser = localStorage.getItem("nexus_user_session");
+    if (!sessionUser) return false;
+    try {
+        const res = await fetch("https://oryzon-backend-ed1q.onrender.com/get-custom-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: sessionUser })
+        });
+        const data = await res.json();
+        if (data.success) {
+            localStorage.setItem("nexus_custom_token", data.token);
+            await firebase.auth().signInWithCustomToken(data.token);
+            return true;
+        }
+    } catch(e) {}
+    return false;
+}
+
+async function guaranteeAuth() {
+    let ok = await ensureAuthReady();
+    if (!ok) ok = await refreshAuthToken();
+    return ok;
+}
 // ═══════════════════════════
 // AUTO-CHECK WARNINGS ON LOAD
 // ═══════════════════════════
