@@ -17,7 +17,6 @@
             position: fixed; width: 100%;
         }
 
-        /* 1. SLIDER BOXES */
         .slim-slider {
             height: 110px; background: #E3DAC9; overflow: hidden;
             position: relative; border-bottom: 1px solid rgba(212, 175, 55, 0.2); flex-shrink: 0;
@@ -30,9 +29,8 @@
         }
         .slide-card img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; }
 
-        /* 2. CHAT AREA WITH GOLD BORDER */
         .chat-space { flex: 1; padding: 15px; overflow-y: auto; scrollbar-width: none; padding-bottom: 140px; }
-        .bubble { max-width: 82%; padding: 11px 15px; margin-bottom: 12px; font-size: 14.5px; line-height: 1.4; position: relative; }
+        .bubble { max-width: 82%; padding: 11px 15px; margin-bottom: 12px; font-size: 14.5px; line-height: 1.4; position: relative; white-space: pre-wrap; }
         .v-bubble { background: #1A0F0D; color: #D4AF37; border-radius: 4px 18px 18px 18px; border-left: 5px solid #FFD700; }
         .u-bubble { 
             background: #FFFFFF; color: #333; border-radius: 18px 18px 4px 18px; 
@@ -40,19 +38,17 @@
             box-shadow: 0 2px 5px rgba(212, 175, 55, 0.2);
         }
 
-        /* 3. WHATSAPP BAR SHAPE & LOGIC */
         .bottom-nav { 
             position: fixed; bottom: 0; left: 0; right: 0; 
             background: #E3DAC9; padding: 10px 10px 25px; 
             display: flex; align-items: flex-end; gap: 8px; z-index: 1000; 
         }
         
-.input-container {
-    flex: 1; background: #E3DAC9; border-radius: 25px;
-    display: flex; align-items: flex-end; padding: 5px 12px;
-    box-shadow: inset 4px 4px 8px #c9c2b3, inset -4px -4px 8px #fdf2df;
-}
-                 
+        .input-container {
+            flex: 1; background: #E3DAC9; border-radius: 25px;
+            display: flex; align-items: flex-end; padding: 5px 12px;
+            box-shadow: inset 4px 4px 8px #c9c2b3, inset -4px -4px 8px #fdf2df;
+        }
 
         .icon-btn { color: #888; font-size: 22px; padding: 10px 5px; cursor: pointer; display: flex; align-items: center; }
 
@@ -76,7 +72,7 @@
     </section>
 
     <main class="chat-space" id="chat">
-        <div class="bubble v-bubble">Sannu abokina! Ina fatan kayan sun iso lafiya.</div>
+        <div class="bubble v-bubble">Sannu abokina! Barka da zuwa Infinity Luxury 👑 Ina nan don taimaka maka. Me kake so ka gani yau?</div>
     </main>
 
     <footer class="bottom-nav">
@@ -98,202 +94,210 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
-     const firebaseConfig = {
-    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-    authDomain: "oryzon-50ea4.firebaseapp.com",
-    projectId: "oryzon-50ea4",
-    storageBucket: "oryzon-50ea4.firebasestorage.app",
-    messagingSenderId: "782106742622",
-    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
-};
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const GEMINI_API_KEY = "AQ.Ab8RN6Jo-9BzG02mUdPUyxyJTezQXwr8D_JNVlnhEAcB-1uoUg";
+    const firebaseConfig = {
+        apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+        authDomain: "oryzon-50ea4.firebaseapp.com",
+        projectId: "oryzon-50ea4",
+        storageBucket: "oryzon-50ea4.firebasestorage.app",
+        messagingSenderId: "782106742622",
+        appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-let chatHistory = [];
-let pendingImageBase64 = null;
-let pendingImageMime = null;
-let isSending = false;
+    // ⚠️ Duba sakon da ke ƙasa game da wannan key
+    const GEMINI_API_KEY = "AQ.Ab8RN6Jo-9BzG02mUdPUyxyJTezQXwr8D_JNVlnhEAcB-1uoUg";
 
-function pick(name, img) {
-    const chat = document.getElementById('chat');
-    chat.innerHTML += `
-        <div class="u-bubble bubble">
-            <div style="background:rgba(212,175,55,0.08);padding:8px;border-radius:10px;display:flex;align-items:center;gap:10px;border-left:3px solid #D4AF37;margin-bottom:8px;">
-                <img src="${img}" style="width:45px;height:45px;border-radius:8px;object-fit:cover;">
-                <span style="font-size:12px;font-weight:600;color:#B8860B;">${name}</span>
-            </div>
-            Ina son wannan...
-        </div>`;
-    chat.scrollTop = chat.scrollHeight;
-}
+    let chatHistory = [];
+    let pendingImageBase64 = null;
+    let pendingImageMime = null;
+    let isSending = false;
+    let storeName = "Infinity Luxury";
 
-async function loadFirestoreProducts() {
-    const track = document.getElementById('product-slider');
-    const vendorId = new URLSearchParams(window.location.search).get('vendorId') || '';
-    try {
-        let snapshot;
-        if (vendorId) {
-            snapshot = await db.collection('products').where('vendorId', '==', vendorId).get();
-            if (snapshot.empty) snapshot = await db.collection('products').where('vendor', '==', vendorId).get();
-            if (snapshot.empty) snapshot = await db.collection('products').where('sellerId', '==', vendorId).get();
-        } else {
-            snapshot = await db.collection('products').limit(10).get();
-        }
-        let list = [];
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            const imgUrl = d.image || d.img || d.imageUrl || '';
-            const name = d.name || d.title || 'Product';
-            if (imgUrl) list.push({ img: imgUrl, name });
-        });
-        if (list.length > 0) {
-            track.innerHTML = [...list, ...list].map(p => `
-                <div class="slide-card" onclick="pick('${p.name}', '${p.img}')">
-                    <img src="${p.img}" onerror="this.style.display='none'">
-                </div>`).join('');
-        }
-    } catch(err) {
-        console.error('Firebase error:', err);
-    }
-}
-
-function toggleInputUI(el) {
-    el.style.height = 'auto';
-    el.style.height = (el.scrollHeight) + 'px';
-    const icon = document.getElementById('actionIcon');
-    const cam = document.getElementById('camBtn');
-    if (el.value.trim() !== "") {
-        icon.className = "fa-solid fa-paper-plane";
-        cam.style.display = "none";
-    } else {
-        icon.className = "fa-solid fa-microphone";
-        cam.style.display = "flex";
-    }
-}
-
-function handleImage(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            pendingImageBase64 = e.target.result.split(',')[1];
-            pendingImageMime = input.files[0].type;
-            document.getElementById('chat').innerHTML += `
-                <div class="bubble u-bubble">
-                    <img src="${e.target.result}" style="max-width:100%;border-radius:10px;">
-                </div>`;
-            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-            sendMessage();
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-function handleAction() {
-    const icon = document.getElementById('actionIcon');
-    if (icon.classList.contains('fa-paper-plane')) sendMessage();
-    else alert("Voice...");
-}
-
-(function loadIncomingMsg() {
-    const msg   = localStorage.getItem('vc_msg');
-    const name  = localStorage.getItem('vc_name');
-    const price = localStorage.getItem('vc_price');
-    const img   = localStorage.getItem('vc_img');
-    if (!msg) return;
-    const chat = document.getElementById('chat');
-    chat.innerHTML += `
-        <div class="u-bubble bubble">
-            <div style="background:rgba(212,175,55,0.1);padding:8px;border-radius:10px;display:flex;align-items:center;gap:10px;border-left:3px solid #D4AF37;margin-bottom:8px;">
-                <img src="${img}" style="width:45px;height:45px;border-radius:8px;object-fit:cover;flex-shrink:0;">
-                <div>
-                    <div style="font-size:12px;font-weight:700;color:#B8860B;">${name}</div>
-                    <div style="font-size:11px;color:#888;margin-top:2px;">${price}</div>
+    function pick(name, img) {
+        const chat = document.getElementById('chat');
+        chat.innerHTML += `
+            <div class="u-bubble bubble">
+                <div style="background:rgba(212,175,55,0.08);padding:8px;border-radius:10px;display:flex;align-items:center;gap:10px;border-left:3px solid #D4AF37;margin-bottom:8px;">
+                    <img src="${img}" style="width:45px;height:45px;border-radius:8px;object-fit:cover;">
+                    <span style="font-size:12px;font-weight:600;color:#B8860B;">${name}</span>
                 </div>
-            </div>
-            ${msg}
-        </div>`;
-    chat.scrollTop = chat.scrollHeight;
-})();
-
-async function sendMessage() {
-    if (isSending) return;
-    const input = document.getElementById('userInput');
-    const text = input.value.trim();
-    if (!text && !pendingImageBase64) return;
-
-    isSending = true;
-    const chat = document.getElementById('chat');
-
-    if (text) chat.innerHTML += `<div class="bubble u-bubble">${text}</div>`;
-    input.value = '';
-    input.style.height = 'auto';
-    toggleInputUI(input);
-    chat.scrollTop = chat.scrollHeight;
-
-    const loadingId = 'load' + Date.now();
-    chat.innerHTML += `<div class="bubble v-bubble" id="${loadingId}">⏳...</div>`;
-    chat.scrollTop = chat.scrollHeight;
-
-    let productList = "Babu kayan da aka saka tukuna.";
-    try {
-        const snap = await db.collection('products').limit(20).get();
-        let items = [];
-        snap.forEach(doc => {
-            const d = doc.data();
-            items.push(`- ${d.name || d.title || 'Kaya'}: ₦${d.price || '?'}`);
-        });
-        if (items.length > 0) productList = items.join('\n');
-    } catch(e) {}
-
-    const systemPrompt = `Kai ne mai wannan shago. Kana magana da customers kai tsaye.
-Kayan da kake da su:
-${productList}
-Ka amsa da harshen customer (Hausa ko Turanci). Ka amsa tambayar kai tsaye.`;
-
-    let userParts = [];
-    if (pendingImageBase64) {
-        userParts.push({ inlineData: { mimeType: pendingImageMime, data: pendingImageBase64 } });
-        pendingImageBase64 = null;
-        pendingImageMime = null;
+                Ina son wannan...
+            </div>`;
+        chat.scrollTop = chat.scrollHeight;
+        sendMessage(true);
     }
-    if (text) userParts.push({ text: text });
-    chatHistory.push({ role: "user", parts: userParts });
 
-      
-    try {
-        // Mayar da API Key jikin URL sannan a cire shi daga headers gaba daya
-        const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    systemInstruction: { parts: [{ text: systemPrompt }] }, // camelCase ne daidai
-                    contents: chatHistory
-                })
+    async function loadFirestoreProducts() {
+        const track = document.getElementById('product-slider');
+        const vendorId = new URLSearchParams(window.location.search).get('vendorId') || '';
+        try {
+            let snapshot;
+            if (vendorId) {
+                snapshot = await db.collection('products').where('vendorId', '==', vendorId).get();
+                if (snapshot.empty) snapshot = await db.collection('products').where('vendor', '==', vendorId).get();
+                if (snapshot.empty) snapshot = await db.collection('products').where('sellerId', '==', vendorId).get();
+            } else {
+                snapshot = await db.collection('products').limit(10).get();
             }
-        );
-        
-        const data = await res.json();
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Yi hakuri, sake gwadawa.";
-        chatHistory.push({ role: "model", parts: [{ text: reply }] });
-        document.getElementById(loadingId).innerHTML = reply;
-        
-    } catch(e) {
-        document.getElementById(loadingId).innerHTML = "Error: " + e.message;
-       }
-    
+            let list = [];
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                const imgUrl = d.image || d.img || d.imageUrl || '';
+                const name = d.name || d.title || 'Product';
+                if (imgUrl) list.push({ img: imgUrl, name });
+            });
+            if (list.length > 0) {
+                track.innerHTML = [...list, ...list].map(p => `
+                    <div class="slide-card" onclick="pick('${p.name.replace(/'/g,"\\'")}', '${p.img}')">
+                        <img src="${p.img}" onerror="this.style.display='none'">
+                    </div>`).join('');
+            }
+        } catch(err) {
+            console.error('Firebase error:', err);
+        }
+    }
 
-    isSending = false;
-    chat.scrollTop = chat.scrollHeight;
+    function toggleInputUI(el) {
+        el.style.height = 'auto';
+        el.style.height = (el.scrollHeight) + 'px';
+        const icon = document.getElementById('actionIcon');
+        const cam = document.getElementById('camBtn');
+        if (el.value.trim() !== "") {
+            icon.className = "fa-solid fa-paper-plane";
+            cam.style.display = "none";
+        } else {
+            icon.className = "fa-solid fa-microphone";
+            cam.style.display = "flex";
+        }
+    }
+
+    function handleImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                pendingImageBase64 = e.target.result.split(',')[1];
+                pendingImageMime = input.files[0].type;
+                document.getElementById('chat').innerHTML += `
+                    <div class="bubble u-bubble">
+                        <img src="${e.target.result}" style="max-width:100%;border-radius:10px;">
+                    </div>`;
+                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+                sendMessage();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function handleAction() {
+        const icon = document.getElementById('actionIcon');
+        if (icon.classList.contains('fa-paper-plane')) sendMessage();
+        else alert("Voice...");
+    }
+
+    (function loadIncomingMsg() {
+        const msg   = localStorage.getItem('vc_msg');
+        const name  = localStorage.getItem('vc_name');
+        const price = localStorage.getItem('vc_price');
+        const img   = localStorage.getItem('vc_img');
+        if (!msg) return;
+        const chat = document.getElementById('chat');
+        chat.innerHTML += `
+            <div class="u-bubble bubble">
+                <div style="background:rgba(212,175,55,0.1);padding:8px;border-radius:10px;display:flex;align-items:center;gap:10px;border-left:3px solid #D4AF37;margin-bottom:8px;">
+                    <img src="${img}" style="width:45px;height:45px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+                    <div>
+                        <div style="font-size:12px;font-weight:700;color:#B8860B;">${name}</div>
+                        <div style="font-size:11px;color:#888;margin-top:2px;">${price}</div>
+                    </div>
+                </div>
+                ${msg}
+            </div>`;
+        chat.scrollTop = chat.scrollHeight;
+    })();
+
+    async function sendMessage(auto) {
+        if (isSending) return;
+        const input = document.getElementById('userInput');
+        const text = auto ? "Ina son sanin ƙarin bayani kan wannan kaya, kuma yaya zan yi oda." : input.value.trim();
+        if (!text && !pendingImageBase64) return;
+
+        isSending = true;
+        const chat = document.getElementById('chat');
+
+        if (text && !auto) chat.innerHTML += `<div class="bubble u-bubble">${text}</div>`;
+        input.value = '';
+        input.style.height = 'auto';
+        toggleInputUI(input);
+        chat.scrollTop = chat.scrollHeight;
+
+        const loadingId = 'load' + Date.now();
+        chat.innerHTML += `<div class="bubble v-bubble" id="${loadingId}">⏳...</div>`;
+        chat.scrollTop = chat.scrollHeight;
+
+        let productList = "Babu kayan da aka saka tukuna.";
+        try {
+            const snap = await db.collection('products').limit(30).get();
+            let items = [];
+            snap.forEach(doc => {
+                const d = doc.data();
+                items.push(`- ${d.name || d.title || 'Kaya'}: ₦${d.price || '?'} | ${d.description || d.desc || ''}`);
+            });
+            if (items.length > 0) productList = items.join('\n');
+        } catch(e) {}
+
+        const systemPrompt = `Kai ne "Ali", babban jami'in sayarwa (top sales closer) na shago mai suna "${storeName}". Kai NE mutum, ba robot ba — kana magana kai tsaye da customer kamar yadda gwanin sayarwa a WhatsApp ke yi: da hankali, da natsuwa, da kwarin gwiwa, kuma ba tare da yin roƙo ba.
+
+MUHIMMAN DOKOKI:
+1. HARSHE: Ka gano yarukan da customer yake amfani da shi a sakon nasa (Hausa, Turanci, Yoruba, Igbo, Faransanci, Larabci, ko kowane yare) sannan KA AMSA DA WANNAN YARE DAIDAI. Kada ka canza yare sai idan customer ya canza.
+2. KASANCE MAI SAURI, TAKAITACCE: Kada ka rubuta babban paragraph. Ka rubuta kamar yadda ake rubutu a WhatsApp — gajerun jimla, kai tsaye kan batu.
+3. KA SANI GA DUKKAN KAYAYYAKI: Ga jerin kayan da shago ke da su a yanzu:
+${productList}
+Ka yi amfani da wannan bayani KAWAI don amsa farashi, bayanin kaya, da samuwa. Kada ka ƙirƙiri farashi ko kaya da babu shi a jerin.
+4. KASANCE MAI RUFE SAYARWA (CLOSER): Bayan ka bayyana wa customer bayanin kaya, KA TAMBAYE SHI kai tsaye idan yana son ya yi oda — misali "Ka so mu tura maka daya ko biyu?", "Wace launi/size kake so?", ko "Ka shirya mu fara aikin?"
+5. IDAN CUSTOMER YANA SHAKKA (objection): Ka amsa masa da tabbaci — kwarewar inganci, dawo da kuɗi (idan akwai), ko misalan wasu customers da suka gamsu — ba tare da ƙarya ba.
+6. DON KAMMALA ODA: Idan customer ya ce yana so ya saya, ka tambaye shi: (1) cikakken suna, (2) lambar waya, (3) adireshin isarwa/jiha, (4) yawan kaya. Bayan ya bada su, ka gode masa ka tabbatar masa cewa za a tuntube shi domin biya da isarwa.
+7. KADA KA TAMBAYI TAMBAYA FIYE DA DAYA a sako daya.
+8. Ka kasance mai kirki, mai godiya, kuma mai kwarin gwiwa — kamar babban sales boy da ke son taimakon customer da kuma kammala oda, ba wai kawai amsa tambaya ba.`;
+
+        let userParts = [];
+        if (pendingImageBase64) {
+            userParts.push({ inlineData: { mimeType: pendingImageMime, data: pendingImageBase64 } });
+            pendingImageBase64 = null;
+            pendingImageMime = null;
+        }
+        if (text) userParts.push({ text: text });
+        chatHistory.push({ role: "user", parts: userParts });
+
+        try {
+            const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        systemInstruction: { parts: [{ text: systemPrompt }] },
+                        contents: chatHistory,
+                        generationConfig: { temperature: 0.8, maxOutputTokens: 400 }
+                    })
                 }
+            );
 
-document.addEventListener('DOMContentLoaded', loadFirestoreProducts);
-        
+            const data = await res.json();
+            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Yi hakuri, sake gwadawa.";
+            chatHistory.push({ role: "model", parts: [{ text: reply }] });
+            document.getElementById(loadingId).innerHTML = reply;
+
+        } catch(e) {
+            document.getElementById(loadingId).innerHTML = "Error: " + e.message;
+        }
+
+        isSending = false;
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFirestoreProducts);
+
     </script>
 </body>
-    </html>
-    
+</html>
