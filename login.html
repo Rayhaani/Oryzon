@@ -308,6 +308,16 @@
                // STEP 5: Backfill username→uid mapping in Realtime Database (for existing users)
 await firebase.database().ref('usernames/' + username).set(firebaseUser.uid);
 
+try {
+    const tokenRes = await fetch("https://oryzon-backend-ed1q.onrender.com/get-custom-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username })
+    });
+    const tokenData = await tokenRes.json();
+    if (tokenData.success) localStorage.setItem("nexus_custom_token", tokenData.token);
+} catch(e) { console.warn("Token fetch failed:", e); }
+                
 // STEP 6: Save session → redirect
 localStorage.setItem("nexus_user_session", username);
 localStorage.setItem("nexus_user_uid", firebaseUser.uid);
