@@ -284,12 +284,17 @@ Ka yi amfani da wannan bayani KAWAI don amsa farashi, bayanin kaya, da samuwa. K
             );
 
             const data = await res.json();
-            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Yi hakuri, sake gwadawa.";
+            console.log("Gemini response:", data);
+            let reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!reply) {
+                const apiErr = data.error?.message || JSON.stringify(data).slice(0, 200);
+                reply = "⚠️ API Error: " + apiErr;
+            }
             chatHistory.push({ role: "model", parts: [{ text: reply }] });
             document.getElementById(loadingId).innerHTML = reply;
 
         } catch(e) {
-            document.getElementById(loadingId).innerHTML = "Error: " + e.message;
+            document.getElementById(loadingId).innerHTML = "⚠️ Fetch Error: " + e.message;
         }
 
         isSending = false;
@@ -300,4 +305,5 @@ Ka yi amfani da wannan bayani KAWAI don amsa farashi, bayanin kaya, da samuwa. K
 
     </script>
 </body>
-</html>
+                </html>
+                
