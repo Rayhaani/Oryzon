@@ -459,20 +459,103 @@ wrapper.remove();
     let allPosts = [];
     let activeVideoTiles = new Map(); // tile el => IntersectionObserver entry
 
-    window.addEventListener('DOMContentLoaded', () => {
-        db.collection('posts')
-            .orderBy('timestamp', 'desc')
-            .limit(30)
-            .onSnapshot(snap => {
-                allPosts = [];
-                snap.forEach(doc => allPosts.push({ id: doc.id, ...doc.data() }));
-                renderGrid();
-            }, err => {
-                console.error('Firebase error:', err);
-                renderGrid();
-            });
-    });
+    window.addEventListener('DOMContentLoaded', async () => {
+    await loadPersonalizedGrid();
+});
 
+async function loadPersonalizedGrid() {
+    try {
+        // 1. Load user context
+        const [userSnap, followSnap, behaviorSnap] = await Promise.all([
+            db.collection('users').doc(currentUser).get(),
+            db.collection('users').doc(currentUser).collection('following').get(),
+            db.collection('users').doc(currentUser).collection('behavior').doc('summary').get()
+        ]);
+
+        const userData    = userSnap.exists ? userSnap.data() : {};
+        const following   = followSnap.docs.map(d => d.id);
+        const behavior    = behaviorSnap.exists ? behaviorSnap.data() : {};
+
+        // 2. Build interest profile
+        const interests   = userData.interests || [];
+        const catScores   = behavior.categoryScores || {};
+        const profile     = {};
+        interests.forEach(c => { profile[c] = (profile[c]||0) + 50; });
+        Object.entries(catScores).forEach(([c,s]) => { profile[c] = (profile[c]||0) + Math.min(s,50); });
+
+        const topCats = Object.entries(profile)
+            .sort((a,b) => b[1]-a[1]).slice(0,10).map(([c])=>c);
+
+        // 3. Fetch from 3 sources — EXCLUDE posts from followed accounts
+        const [interestSnap, trendingSnap, recentSnap] = await Promise.all([
+            topCats.length > 0
+                ? db.collection('posts')
+                    .where('category','in', topCats.slice(0,10))
+                    .orderBy('timestamp','desc').limit(40).get()
+                : Promise.resolve({docs:[]}),
+            db.collection('posts')
+                .orderBy('engagementScore','desc').limit(30).get(),
+            db.collection('posts')
+                .orderBy('timestamp','desc').limit(30).get()
+        ]);
+
+        // 4. Merge, deduplicate, exclude own posts + followed accounts
+        const seen = new Set();
+        const candidates = [];
+        [interestSnap, trendingSnap, recentSnap].forEach(snap => {
+            if (!snap.docs) return;
+            snap.docs.forEach(doc => {
+                const d = doc.data();
+                if (!seen.has(doc.id) &&
+                    d.username !== currentUser &&
+                    !following.includes(d.username)) {
+                    seen.add(doc.id);
+                    candidates.push({ id: doc.id, ...d });
+                }
+            });
+        });
+
+        // 5. Score each post
+        const now = Date.now();
+        allPosts = candidates.map(post => {
+            const ageHrs  = post.timestamp ? (now - post.timestamp.toMillis())/3600000 : 999;
+            const catScore= profile[post.category] || 0;
+            const likes   = post.likes || 0;
+            const comments= post.commentsCount || 0;
+            const shares  = post.sharesCount || 0;
+            const views   = Math.max(post.viewsCount||1, 1);
+            const engRate = ((likes + comments*2 + shares*3) / views) * 100;
+            const recency = Math.pow(0.5, ageHrs/24);
+
+            const score =
+                (catScore/100) * 50 +
+                Math.min(engRate*0.4, 30) +
+                recency * 10 +
+                Math.min((post.engagementVelocity||0)*0.3, 5);
+
+            return { ...post, _score: score };
+        }).sort((a,b) => b._score - a._score);
+
+        // 6. Inject serendipity — every 10th post = unexpected content
+        const random = [...allPosts].sort(()=>Math.random()-0.5).slice(0,3);
+        random.forEach((p,i) => {
+            const insertAt = (i+1)*10;
+            if (insertAt < allPosts.length) allPosts.splice(insertAt, 0, p);
+        });
+
+        // 7. Render using existing grid
+        renderGrid();
+
+    } catch(err) {
+        console.error('[NexusExplore] Error:', err);
+        // Fallback: chronological
+        db.collection('posts').orderBy('timestamp','desc').limit(30).get().then(snap => {
+            allPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderGrid();
+        });
+    }
+            }
+    
     
     // ===== RENDER GRID =====
 function renderGrid() {
