@@ -441,13 +441,15 @@
     }
     function localId() { return 'm' + Date.now() + Math.random().toString(36).slice(2,8); }
 
-    async function saveMessageToFirestore(id, m) {
+    async function saveMessageToFirestore(m) {
         try {
             await db.collection('vendorChats').doc(chatDocId).set({ vendorId, lastActive: Date.now() }, { merge: true });
-            await db.collection('vendorChats').doc(chatDocId).collection('messages').doc(id).set(m);
+            const ref = await db.collection('vendorChats').doc(chatDocId).collection('messages').add(m);
+            return ref.id;
         } catch (e) {
             console.error('Firestore save error', e);
-            showToast('⚠️ Chat not saved — sync error (check Firestore rules)');
+            showToast('⚠️ Sync failed: ' + (e.code || e.message || 'unknown'));
+            return 'local' + Date.now() + Math.random().toString(36).slice(2,6);
         }
     }
     async function updateMessageInFirestore(id, patch) {
@@ -470,11 +472,10 @@
                 text: `Welcome to ${storeName} 👑 I'm here to help you find exactly what you're looking for. What can I show you today?`,
                 time: Date.now()
             };
-            const gid = localId();
-            greeting.id = gid;
+            const id = await saveMessageToFirestore(greeting);
+            greeting.id = id;
             renderedMessages.push(greeting);
             renderMessage(greeting, true);
-            saveMessageToFirestore(gid, greeting);
         }
     }
 
