@@ -439,15 +439,15 @@
             return msgs;
         } catch (e) { console.error('Firestore load error', e); return []; }
     }
-    async function saveMessageToFirestore(m) {
+    function localId() { return 'm' + Date.now() + Math.random().toString(36).slice(2,8); }
+
+    async function saveMessageToFirestore(id, m) {
         try {
             await db.collection('vendorChats').doc(chatDocId).set({ vendorId, lastActive: Date.now() }, { merge: true });
-            const ref = await db.collection('vendorChats').doc(chatDocId).collection('messages').add(m);
-            return ref.id;
+            await db.collection('vendorChats').doc(chatDocId).collection('messages').doc(id).set(m);
         } catch (e) {
             console.error('Firestore save error', e);
             showToast('⚠️ Chat not saved — sync error (check Firestore rules)');
-            return 'local' + Date.now() + Math.random().toString(36).slice(2,6);
         }
     }
     async function updateMessageInFirestore(id, patch) {
@@ -470,10 +470,11 @@
                 text: `Welcome to ${storeName} 👑 I'm here to help you find exactly what you're looking for. What can I show you today?`,
                 time: Date.now()
             };
-            const id = await saveMessageToFirestore(greeting);
-            greeting.id = id;
+            const gid = localId();
+            greeting.id = gid;
             renderedMessages.push(greeting);
             renderMessage(greeting, true);
+            saveMessageToFirestore(gid, greeting);
         }
     }
 
@@ -913,9 +914,12 @@ ${productList}
         chatHistory.push({ role: 'user', content: userContent.length === 1 && userContent[0].type === 'text' ? text : userContent });
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 25000);
             const res = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+                signal: controller.signal,
                 body: JSON.stringify({
                     model: GROQ_MODEL,
                     messages: [{ role: 'system', content: systemPrompt }, ...chatHistory],
@@ -923,6 +927,7 @@ ${productList}
                     max_completion_tokens: 500
                 })
             });
+            clearTimeout(timeoutId);
             const data = await res.json();
             let reply = data.choices?.[0]?.message?.content;
             if (!reply) reply = "⚠️ API Error: " + (data.error?.message || JSON.stringify(data).slice(0,200));
@@ -937,7 +942,8 @@ ${productList}
             await autoSendMatchingProductImages(text, reply);
         } catch(e) {
             hideTyping();
-            const bm = { role: 'theirs', type: 'text', text: "⚠️ Connection error: " + e.message, time: Date.now() };
+            const errMsg = e.name === 'AbortError' ? "⚠️ Took too long to respond — please try again." : "⚠️ Connection error: " + e.message;
+            const bm = { role: 'theirs', type: 'text', text: errMsg, time: Date.now() };
             renderedMessages.push(bm);
             renderMessage(bm, true);
         }
