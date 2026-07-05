@@ -125,7 +125,21 @@
             z-index: 2; transition: 0.3s; color: #fff; mix-blend-mode: overlay;
         }
 
-        /* Near Me states — applied to the .nearme-node header control */
+        /* Near Me states — applied to both the header node and the floating control */
+        .nearme-node .node-signal-badge {
+            position: absolute; top: -2px; right: -2px;
+            width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cyan-neon);
+            border: 1.5px solid var(--obsidian);
+            z-index: 3;
+            animation: signalBlink 2s ease-in-out infinite;
+        }
+        @keyframes signalBlink {
+            0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--cyan-neon); }
+            50% { opacity: 0.45; box-shadow: 0 0 2px var(--cyan-neon); }
+        }
+        .nearme-node.active .node-signal-badge { background: var(--emerald-pulse); animation: none; box-shadow: 0 0 8px var(--emerald-pulse); }
+
         .nearme-node.active .node-circle {
             background: linear-gradient(135deg, var(--emerald-pulse), #00b09b);
             border-color: var(--emerald-pulse);
@@ -146,6 +160,55 @@
             40% { box-shadow: 0 0 26px rgba(80,250,123,0.6); }
             100% { box-shadow: 0 0 18px rgba(80,250,123,0.4); }
         }
+
+        /* Floating Near Me — kept as a second, always-visible entry point while
+           browsing the grid. Radar pings read as "broadcasting your location",
+           the floating counterpart to the header node's orbit-ring language. */
+        .fab-nearme-float {
+            position: fixed; right: 16px; bottom: 68px;
+            width: 56px; height: 56px;
+            z-index: 2500; cursor: pointer;
+        }
+        .fab-nearme-float .fab-circle {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1.5px solid var(--cyan-neon);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 2;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 18px rgba(0,242,255,0.2);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s, transform 0.15s;
+        }
+        .fab-nearme-float:active .fab-circle { transform: scale(0.92); }
+        .fab-nearme-float .fab-circle svg { width: 24px; height: 24px; stroke: var(--cyan-neon); transition: stroke 0.3s, opacity 0.2s; }
+
+        .fab-nearme-float .radar-ring {
+            position: absolute; inset: 0; border-radius: 50%;
+            border: 1.5px solid rgba(0, 242, 255, 0.5);
+            animation: radarPing 2.6s ease-out infinite;
+            z-index: 1;
+        }
+        .fab-nearme-float .radar-ring.r2 { animation-delay: 1.3s; }
+        @keyframes radarPing {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.9); opacity: 0; }
+        }
+
+        .fab-nearme-float.active .fab-circle {
+            background: linear-gradient(135deg, var(--emerald-pulse), #00b09b);
+            border-color: var(--emerald-pulse);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 24px rgba(80,250,123,0.4);
+        }
+        .fab-nearme-float.active .fab-circle svg { stroke: #04140c; }
+        .fab-nearme-float.active .radar-ring { border-color: rgba(80,250,123,0.5); }
+
+        .fab-nearme-float.loading .fab-circle svg { opacity: 0; }
+        .fab-nearme-float.loading .fab-circle::before {
+            content: ''; position: absolute; width: 22px; height: 22px;
+            border: 2.5px solid rgba(0, 242, 255, 0.2); border-top-color: var(--cyan-neon);
+            border-radius: 50%; animation: fabSpin 0.7s linear infinite;
+        }
+        .fab-nearme-float.flash .fab-circle { animation: pillFlash 0.6s ease-out; }
 
         /* ---- The "Neural Menu": an extraordinary vertical marketplace switcher ----
            A glowing spine threads through every marketplace node, like the
@@ -368,6 +431,7 @@
                     <path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/>
                     <circle cx="12" cy="9" r="2.3"/>
                 </svg>
+                <div class="node-signal-badge"></div>
             </div>
             <span class="node-caption">Near Me</span>
         </div>
@@ -398,6 +462,17 @@
 
     <div class="market-grid" id="marketGrid"></div>
 
+    <div class="fab-nearme-float" id="fabNearMeFloat" onclick="toggleNearMe()">
+        <div class="radar-ring r1"></div>
+        <div class="radar-ring r2"></div>
+        <div class="fab-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/>
+                <circle cx="12" cy="9" r="2.3"/>
+            </svg>
+        </div>
+    </div>
+
     <nav class="nexus-footer" id="instaFooter">
         <div class="footer-icon active"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L4 9v12h5v-7h6v7h5V9l-8-6z"/></svg></div>
         <div class="footer-icon" onclick="window.location.href='social.html'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 11-7.6-12.7 8.38 8.38 0 013.8.9L21 3z"/></svg></div>
@@ -423,8 +498,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const marketGrid = document.getElementById('marketGrid');
-        const fab = document.getElementById('fabNearMe');
+        const fabHeader = document.getElementById('fabNearMe');
+        const fabFloat = document.getElementById('fabNearMeFloat');
+        const nearMeControls = [fabHeader, fabFloat];
         const filterBarSlot = document.getElementById('filterBarSlot');
+
+        function setNearMeState(state, on) {
+            nearMeControls.forEach(el => el && el.classList.toggle(state, on));
+        }
 
         /* ---------- 1. NEURAL MENU: vertical marketplace dropdown ---------- */
         // This page belongs to the "fashion" vertical. Duplicate this file for each
@@ -613,19 +694,19 @@
         function hideFilterBar() { filterBarSlot.innerHTML = ''; }
 
         function pulseFabSuccess() {
-            fab.classList.add('flash');
-            fab.addEventListener('animationend', () => fab.classList.remove('flash'), { once: true });
+            setNearMeState('flash', true);
+            setTimeout(() => setNearMeState('flash', false), 650);
         }
 
         window.toggleNearMe = async function () {
             if (nearMeActive) { deactivateNearMe(); return; }
 
-            fab.classList.add('loading');
+            setNearMeState('loading', true);
             let userCoords;
             try {
                 userCoords = await getUserLocation();
             } catch (err) {
-                fab.classList.remove('loading');
+                setNearMeState('loading', false);
                 showToast("Ba a samu izinin wurin ka ba. Ka bude Settings ka kunna Location.");
                 return;
             }
@@ -642,7 +723,7 @@
                 if (found.length) { usedRadius = radius; break; }
             }
 
-            fab.classList.remove('loading');
+            setNearMeState('loading', false);
 
             if (!found.length) {
                 showToast(`Babu wani abu a kusa da kai har zuwa ${RADIUS_STEPS_KM[RADIUS_STEPS_KM.length - 1]}km.`);
@@ -650,7 +731,7 @@
             }
 
             nearMeActive = true;
-            fab.classList.add('active');
+            setNearMeState('active', true);
             pulseFabSuccess();
             showFilterBar(usedRadius, found.length);
             renderProducts(found, { showDistance: true });
@@ -658,7 +739,7 @@
 
         function deactivateNearMe() {
             nearMeActive = false;
-            fab.classList.remove('active');
+            setNearMeState('active', false);
             hideFilterBar();
             renderProducts(allProducts);
         }
