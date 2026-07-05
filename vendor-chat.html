@@ -9,43 +9,19 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
 
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; -webkit-touch-callout: none; }
         body {
             background: #E3DAC9; font-family: 'Outfit', sans-serif;
             height: 100dvh; overflow: hidden; display: flex; flex-direction: column;
-            margin: 0; position: fixed; width: 100%;
+            margin: 0; position: fixed; width: 100%; user-select: none;
         }
+        #userInput, #mediaCaption, .entry-input { user-select: text; -webkit-touch-callout: default; }
 
-        /* ===== RESTORE-CHAT POPUP (optional, non-blocking) ===== */
-        .entry-overlay {
-            position: fixed; inset: 0; background: rgba(20,12,8,0.82); backdrop-filter: blur(3px);
-            z-index: 300; display: none; align-items: center; justify-content: center; padding: 24px;
-        }
-        .entry-overlay.show { display: flex; }
-        .entry-card {
-            background: #FBF6EA; border-radius: 20px; padding: 26px 22px; width: 100%; max-width: 340px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.4); position: relative;
-        }
-        .entry-close { position: absolute; top: 14px; right: 14px; color: #a3936a; font-size: 18px; }
-        .entry-card h2 { font-family: 'Playfair Display', serif; color: #1A0F0D; font-size: 20px; margin: 0 0 6px; }
-        .entry-card p { color: #7a6c4d; font-size: 12.5px; margin: 0 0 16px; line-height: 1.4; }
-        .entry-input {
-            width: 100%; padding: 13px 14px; border-radius: 12px; border: 1.5px solid rgba(212,175,55,0.35);
-            background: #fff; font-size: 14.5px; margin-bottom: 12px; font-family: 'Outfit', sans-serif; color: #1a1a1a;
-        }
-        .entry-input:focus { outline: none; border-color: #D4AF37; }
-        .entry-btn {
-            width: 100%; padding: 14px; border-radius: 12px; background: #1A0F0D; color: #F0DFA8;
-            border: none; font-size: 14.5px; font-weight: 600; letter-spacing: 0.3px; margin-top: 4px;
-        }
-        .entry-btn:disabled { opacity: 0.45; }
-
-        /* ===== WELCOME TRANSITION ===== */
+        /* ===== WELCOME SPLASH (matches chat background, no more dark box) ===== */
         .welcome-splash {
             position: fixed; inset: 0; z-index: 250; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center; padding: 30px;
-            background: radial-gradient(circle at 50% 40%, #241611 0%, #120a08 100%);
-            opacity: 0; transition: opacity 0.5s ease;
+            background: #E3DAC9; opacity: 0; transition: opacity 0.5s ease;
         }
         .welcome-splash.show { opacity: 1; }
         .welcome-splash.hide { opacity: 0; transform: scale(1.06); filter: blur(6px); transition: all 0.55s cubic-bezier(.4,0,.2,1); }
@@ -53,17 +29,17 @@
             width: 74px; height: 74px; border-radius: 50%; margin-bottom: 22px;
             background: conic-gradient(from 180deg, #FFD700, #8a6d1f, #FFD700);
             display: flex; align-items: center; justify-content: center; font-size: 30px; color: #1A0F0D;
-            box-shadow: 0 0 40px rgba(212,175,55,0.35);
+            box-shadow: 0 0 30px rgba(212,175,55,0.3);
             opacity: 0; transform: translateY(14px) scale(0.85);
             animation: sealIn 0.7s cubic-bezier(.2,.9,.3,1) 0.15s forwards;
         }
         @keyframes sealIn { to { opacity: 1; transform: translateY(0) scale(1); } }
         .splash-title {
-            font-family: 'Playfair Display', serif; color: #F5E6C8; font-size: 24px; line-height: 1.35;
+            font-family: 'Playfair Display', serif; color: #1A0F0D; font-size: 24px; line-height: 1.35;
             opacity: 0; transform: translateY(10px); animation: textIn 0.6s ease 0.4s forwards;
         }
         .splash-sub {
-            color: #C9AF74; font-size: 13.5px; margin-top: 10px; letter-spacing: 0.3px;
+            color: #7a6032; font-size: 13.5px; margin-top: 10px; letter-spacing: 0.3px;
             opacity: 0; transform: translateY(10px); animation: textIn 0.6s ease 0.6s forwards;
         }
         @keyframes textIn { to { opacity: 1; transform: translateY(0); } }
@@ -86,28 +62,25 @@
             color: #F5E6C8; font-size: 9.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        /* ===== VENDOR PLAQUE ===== */
-        .vendor-plaque {
-            margin: -20px 14px 8px; position: relative; z-index: 15;
-            background: linear-gradient(135deg, #1A0F0D 0%, #2b1a12 100%);
-            border-radius: 16px; padding: 10px 14px; display: flex; align-items: center; gap: 11px;
-            box-shadow: 0 10px 22px rgba(0,0,0,0.28); border: 1px solid rgba(212,175,55,0.35);
+        /* ===== FLOATING DRAGGABLE AVATAR (replaces header entirely) ===== */
+        .floating-avatar { position: fixed; width: 58px; height: 58px; z-index: 60; touch-action: none; cursor: grab; }
+        .avatar-circle {
+            width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+            border: 3px solid #1A0F0D; box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+            background: linear-gradient(145deg, #FFD700, #B8860B); display: flex; align-items: center; justify-content: center;
         }
-        .plaque-seal {
-            width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
-            background: conic-gradient(from 180deg, #FFD700, #8a6d1f, #FFD700);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 0 3px #1A0F0D, 0 0 0 4px rgba(212,175,55,0.45);
+        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-circle i { color: #1A0F0D; font-size: 22px; }
+        .avatar-status-dot {
+            position: absolute; width: 15px; height: 15px; border-radius: 50%; right: -1px; bottom: -1px;
+            border: 3px solid #E3DAC9;
         }
-        .plaque-seal i { color: #1A0F0D; font-size: 17px; }
-        .plaque-meta { flex: 1; min-width: 0; }
-        .plaque-name { color: #F5E6C8; font-weight: 600; font-size: 14.5px; font-family: 'Playfair Display', serif; }
-        .plaque-status { color: #D4AF37; font-size: 10.5px; opacity: 0.9; display: flex; align-items: center; gap: 5px; margin-top: 1px; }
-        .plaque-status .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 5px #4ADE80; }
-        .plaque-switch { color: #8a7550; font-size: 10.5px; text-decoration: underline; cursor: pointer; white-space: nowrap; }
+        .avatar-status-dot.online { background: #4ADE80; animation: dotBlink 1.4s infinite; }
+        .avatar-status-dot.offline { background: #DC2626; }
+        @keyframes dotBlink { 50% { opacity: 0.35; } }
 
         /* ===== CHAT AREA ===== */
-        .chat-space { flex: 1; padding: 4px 14px 8px; overflow-y: auto; scrollbar-width: none; }
+        .chat-space { flex: 1; padding: 10px 14px 8px; overflow-y: auto; scrollbar-width: none; }
         .chat-space::-webkit-scrollbar { display: none; }
         .msg-row { display: flex; flex-direction: column; margin-bottom: 11px; animation: riseIn 0.28s cubic-bezier(.2,.8,.3,1); }
         .msg-row.mine { align-items: flex-end; }
@@ -173,30 +146,28 @@
         .context-bar .cb-text { font-size: 12.5px; color: #6b5c33; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .context-bar i { color: #a3936a; cursor: pointer; padding: 4px; }
 
-        /* ===== MEDIA TRAY ===== */
-        .media-tray {
-            margin: 0 10px; background: #FBF6EA; border-radius: 16px 16px 0 0; padding: 10px 12px;
-            display: none; border: 1px solid rgba(212,175,55,0.3); border-bottom: none;
+        /* ===== FULL-SCREEN MEDIA COMPOSE (WhatsApp-style) ===== */
+        .media-compose { position: fixed; inset: 0; z-index: 280; background: #0b0b0b; display: none; flex-direction: column; }
+        .media-compose.show { display: flex; }
+        .mc-top { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; }
+        .mc-top i { color: #fff; font-size: 20px; padding: 8px; }
+        .mc-viewport { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        .mc-viewport img, .mc-viewport video { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.2s ease; }
+        .mc-thumbs { display: flex; gap: 8px; padding: 8px 14px; overflow-x: auto; }
+        .mc-thumb { width: 52px; height: 52px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 2px solid transparent; opacity: 0.55; }
+        .mc-thumb.active { border-color: #D4AF37; opacity: 1; }
+        .mc-thumb img, .mc-thumb video { width: 100%; height: 100%; object-fit: cover; }
+        .mc-bottom { padding: 10px 14px 22px; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.35); }
+        .mc-caption {
+            flex: 1; background: rgba(255,255,255,0.14); border-radius: 22px; padding: 11px 16px; color: #fff;
+            border: none; font-family: 'Outfit', sans-serif; font-size: 14.5px; outline: none;
         }
-        .media-tray.show { display: block; }
-        .media-tray-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
-        .media-thumb { position: relative; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; flex-shrink: 0; background: #eee; }
-        .media-thumb img, .media-thumb video { width: 100%; height: 100%; object-fit: cover; }
-        .media-thumb .rm-btn {
-            position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%;
-            background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center;
-        }
-        #mediaCaption {
-            width: 100%; border: 1px solid rgba(212,175,55,0.3); border-radius: 10px; padding: 9px 12px;
-            font-family: 'Outfit', sans-serif; font-size: 13.5px; resize: none; margin-top: 2px; color: #1a1a1a;
-        }
-        .tray-actions { display: flex; justify-content: flex-end; gap: 14px; margin-top: 8px; }
-        .tray-actions span { font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 6px 4px; }
-        .tray-cancel { color: #a3936a; }
-        .tray-send { color: #B8860B; }
+        .mc-caption::placeholder { color: rgba(255,255,255,0.55); }
+        .mc-send { width: 48px; height: 48px; border-radius: 50%; background: #1A0F0D; color: #D4AF37; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
 
         /* ===== INPUT BAR ===== */
-        .bottom-nav { padding: 8px 10px 18px; background: #E3DAC9; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0; position: relative; }
+        .bottom-nav { padding: 8px 10px 18px; background: #E3DAC9; display: flex; flex-direction: column; gap: 0; flex-shrink: 0; position: relative; }
+        .input-row { display:flex; align-items:flex-end; gap:8px; padding: 8px 0 18px; }
         .input-container {
             flex: 1; background: #FBF6EA; border-radius: 26px; display: flex; align-items: flex-end; padding: 6px 6px 6px 14px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(212,175,55,0.18); transition: box-shadow 0.2s ease;
@@ -250,19 +221,6 @@
 </head>
 <body>
 
-    <!-- OPTIONAL RESTORE-CHAT POPUP (never blocks entry) -->
-    <div class="entry-overlay" id="entryOverlay">
-        <div class="entry-card">
-            <i class="fa-solid fa-xmark entry-close" onclick="closeRestorePopup()"></i>
-            <h2>Restore your chat</h2>
-            <p>Enter the phone number you used before to bring back your conversation on this device.</p>
-            <input class="entry-input" id="entryName" placeholder="Your name">
-            <input class="entry-input" id="entryPhone" placeholder="Phone number" type="tel">
-            <button class="entry-btn" id="entryBtn" disabled onclick="submitEntry()">Restore chat</button>
-        </div>
-    </div>
-
-    <!-- WELCOME SPLASH -->
     <div class="welcome-splash" id="welcomeSplash">
         <div class="splash-seal"><i class="fa-solid fa-crown"></i></div>
         <div class="splash-title" id="splashTitle">Welcome to Infinity Luxury</div>
@@ -273,21 +231,32 @@
         <div class="slide-track" id="product-slider"></div>
     </section>
 
-    <div class="vendor-plaque">
-        <div class="plaque-seal"><i class="fa-solid fa-crown"></i></div>
-        <div class="plaque-meta">
-            <div class="plaque-name">Infinity Luxury</div>
-            <div class="plaque-status"><span class="dot"></span> Active now</div>
-        </div>
-        <div class="plaque-switch" onclick="openRestorePopup()">Chatted before?</div>
+    <div class="floating-avatar" id="floatingAvatar">
+        <div class="avatar-circle" id="avatarCircle"><i class="fa-solid fa-crown"></i></div>
+        <div class="avatar-status-dot offline" id="avatarStatusDot"></div>
     </div>
+    <input type="file" id="avatarUploadInput" accept="image/*" style="display:none">
 
     <main class="chat-space" id="chat"></main>
 
     <div class="ctx-backdrop" id="ctxBackdrop" onclick="closeCtxMenu()"></div>
     <div class="ctx-menu" id="ctxMenu"></div>
 
-    <footer class="bottom-nav" style="flex-direction: column; align-items: stretch; padding-bottom: 0;">
+    <!-- FULL-SCREEN MEDIA COMPOSE -->
+    <div class="media-compose" id="mediaCompose">
+        <div class="mc-top">
+            <i class="fa-solid fa-xmark" onclick="cancelMediaCompose()"></i>
+            <i class="fa-solid fa-rotate-right" onclick="rotateActiveMedia()"></i>
+        </div>
+        <div class="mc-viewport" id="mcViewport"></div>
+        <div class="mc-thumbs" id="mcThumbs"></div>
+        <div class="mc-bottom">
+            <input class="mc-caption" id="mcCaption" placeholder="Add a caption…">
+            <div class="mc-send" onclick="sendMediaCompose()"><i class="fa-solid fa-paper-plane"></i></div>
+        </div>
+    </div>
+
+    <footer class="bottom-nav">
         <div class="context-bar" id="contextBar">
             <div class="cb-accent"></div>
             <div class="cb-body">
@@ -297,16 +266,7 @@
             <i class="fa-solid fa-xmark" onclick="cancelContextBar()"></i>
         </div>
 
-        <div class="media-tray" id="mediaTray">
-            <div class="media-tray-strip" id="mediaTrayStrip"></div>
-            <textarea id="mediaCaption" placeholder="Add a caption…" rows="1"></textarea>
-            <div class="tray-actions">
-                <span class="tray-cancel" onclick="cancelMediaTray()">Cancel</span>
-                <span class="tray-send" onclick="sendMediaTray()">Send</span>
-            </div>
-        </div>
-
-        <div style="display:flex; align-items:flex-end; gap:8px; padding: 8px 0 18px;">
+        <div class="input-row">
             <div class="rec-bar" id="recBar">
                 <span class="rec-dot"></span>
                 <span class="rec-timer" id="recTimer">0:00</span>
@@ -350,28 +310,14 @@
     const db = firebase.firestore();
 
     const GROQ_API_KEY = "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";
-    const GROQ_MODEL = "openai/gpt-oss-120b";
+    const GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"; // supports text + vision
 
-    const vendorId = new URLSearchParams(window.location.search).get('vendorId') || 'default';
+    const params = new URLSearchParams(window.location.search);
+    const vendorId = params.get('vendorId') || 'default';
+    const isAdmin = params.get('admin') === '1';
     let storeName = "Infinity Luxury";
 
-    // Identity: guest by default (works instantly, no form). Phone-based identity is OPTIONAL,
-    // only set if the visitor taps "Chatted before?" and restores, or later provides their
-    // number naturally while placing an order (see maybeCaptureContactFromText()).
-    let identity = { name: null, phone: null };
-    let chatDocId = null;
-
-    let chatHistory = [];
-    let renderedMessages = [];
-    let isSending = false;
-    let replyingTo = null;
-    let editingId = null;
-    let pendingMedia = [];
-
-    let mediaRecorder = null, audioChunks = [], isRecording = false, recSeconds = 0, recTimerHandle = null;
-    let previewAudioDataUrl = null;
-    let audioCtx = null, analyser = null, waveDataArr = null, waveAnimId = null;
-
+    // Permanent, device-bound guest identity — no phone/password ever required.
     function uuid() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
             const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
@@ -383,74 +329,122 @@
         if (!g) { g = uuid(); localStorage.setItem('il_guest_' + vendorId, g); }
         return g;
     }
-    function computeChatDocId() {
-        return identity.phone ? `${vendorId}_ph_${identity.phone}` : `${vendorId}_guest_${getGuestId()}`;
-    }
+    const chatDocId = `${vendorId}_guest_${getGuestId()}`;
 
-    // ================= RESTORE POPUP =================
-    document.getElementById('entryName').addEventListener('input', validateEntry);
-    document.getElementById('entryPhone').addEventListener('input', validateEntry);
-    function validateEntry() {
-        const ok = document.getElementById('entryName').value.trim().length > 1 &&
-                   document.getElementById('entryPhone').value.trim().length >= 6;
-        document.getElementById('entryBtn').disabled = !ok;
-    }
-    function openRestorePopup() { document.getElementById('entryOverlay').classList.add('show'); }
-    function closeRestorePopup() { document.getElementById('entryOverlay').classList.remove('show'); }
+    let chatHistory = [];
+    let renderedMessages = [];
+    let isSending = false;
+    let replyingTo = null;
+    let editingId = null;
+    let pendingMedia = [];
+    let mcActiveIndex = 0;
 
-    async function submitEntry() {
-        const name = document.getElementById('entryName').value.trim();
-        const phone = document.getElementById('entryPhone').value.trim().replace(/\s+/g,'');
-        identity = { name, phone };
-        localStorage.setItem('il_identity_' + vendorId, JSON.stringify(identity));
-        closeRestorePopup();
-        document.getElementById('chat').innerHTML = '';
-        renderedMessages = []; chatHistory = [];
-        playWelcomeSplash(true);
-        await loadAndRenderChat();
+    let mediaRecorder = null, audioChunks = [], isRecording = false, recSeconds = 0, recTimerHandle = null;
+    let previewAudioDataUrl = null;
+    let audioCtx = null, analyser = null, waveDataArr = null, waveAnimId = null;
+
+    // ================= FLOATING AVATAR =================
+    function makeDraggable(el) {
+        let startX, startY, origX, origY, dragging = false, moved = false;
+        el.addEventListener('pointerdown', (e) => {
+            dragging = true; moved = false;
+            startX = e.clientX; startY = e.clientY;
+            const rect = el.getBoundingClientRect();
+            origX = rect.left; origY = rect.top;
+            el.setPointerCapture(e.pointerId);
+        });
+        el.addEventListener('pointermove', (e) => {
+            if (!dragging) return;
+            const dx = e.clientX - startX, dy = e.clientY - startY;
+            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+            let nx = Math.max(4, Math.min(window.innerWidth - el.offsetWidth - 4, origX + dx));
+            let ny = Math.max(4, Math.min(window.innerHeight - el.offsetHeight - 4, origY + dy));
+            el.style.left = nx + 'px'; el.style.top = ny + 'px';
+        });
+        el.addEventListener('pointerup', () => {
+            dragging = false;
+            const rect = el.getBoundingClientRect();
+            localStorage.setItem('il_avatar_pos_' + vendorId, JSON.stringify({ x: rect.left, y: rect.top }));
+            if (!moved) handleAvatarTap();
+        });
+    }
+    function restoreAvatarPosition() {
+        const el = document.getElementById('floatingAvatar');
+        const saved = localStorage.getItem('il_avatar_pos_' + vendorId);
+        if (saved) {
+            try { const { x, y } = JSON.parse(saved); el.style.left = x + 'px'; el.style.top = y + 'px'; return; } catch(e) {}
+        }
+        el.style.right = '16px';
+        el.style.top = '112px';
+    }
+    function handleAvatarTap() {
+        if (isAdmin) document.getElementById('avatarUploadInput').click();
+        else window.location.href = `me.html?vendorId=${vendorId}`;
+    }
+    document.getElementById('avatarUploadInput').addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            document.getElementById('avatarCircle').innerHTML = `<img src="${e.target.result}">`;
+            try { await db.collection('vendors').doc(vendorId).set({ photoURL: e.target.result }, { merge: true }); showToast('Profile photo updated'); }
+            catch(err) { showToast('Could not save photo'); }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    async function loadVendorAvatarAndStatus() {
+        try {
+            const doc = await db.collection('vendors').doc(vendorId).get();
+            const d = doc.exists ? doc.data() : {};
+            if (d.photoURL) document.getElementById('avatarCircle').innerHTML = `<img src="${d.photoURL}">`;
+            if (d.name) { storeName = d.name; }
+            updateStatusDot(d.lastActive);
+        } catch(e) { console.warn('vendor status load failed', e); }
+    }
+    function updateStatusDot(lastActive) {
+        const dot = document.getElementById('avatarStatusDot');
+        const online = lastActive && (Date.now() - lastActive < 90000);
+        dot.classList.toggle('online', !!online);
+        dot.classList.toggle('offline', !online);
+    }
+    if (isAdmin) {
+        setInterval(() => { db.collection('vendors').doc(vendorId).set({ lastActive: Date.now() }, { merge: true }).catch(()=>{}); }, 20000);
+        db.collection('vendors').doc(vendorId).set({ lastActive: Date.now() }, { merge: true }).catch(()=>{});
+    } else {
+        setInterval(async () => {
+            try { const doc = await db.collection('vendors').doc(vendorId).get(); updateStatusDot(doc.exists ? doc.data().lastActive : null); } catch(e) {}
+        }, 30000);
     }
 
     // ================= WELCOME SPLASH =================
-    function playWelcomeSplash(named) {
+    function playWelcomeSplash() {
         const splash = document.getElementById('welcomeSplash');
+        document.getElementById('splashTitle').textContent = `Welcome to ${storeName}`;
         splash.style.display = 'flex';
-        document.getElementById('splashTitle').textContent = named && identity.name
-            ? `Welcome back, ${identity.name}!`
-            : `Welcome to ${storeName}`;
-        document.getElementById('splashSub').textContent = named
-            ? "Let's pick up where you left off."
-            : "We're delighted to have you here.";
         splash.classList.remove('hide');
         splash.classList.add('show');
         setTimeout(() => {
             splash.classList.add('hide');
             setTimeout(() => { splash.style.display = 'none'; splash.classList.remove('show'); }, 600);
-        }, 1800);
+        }, 1600);
     }
 
-    // ================= FIRESTORE =================
+    // ================= FIRESTORE CHAT =================
     async function loadMessagesFromFirestore() {
         try {
             const snap = await db.collection('vendorChats').doc(chatDocId).collection('messages').orderBy('time','asc').get();
             const msgs = [];
             snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
             return msgs;
-        } catch (e) {
-            console.error('Firestore load error', e);
-            return [];
-        }
+        } catch (e) { console.error('Firestore load error', e); return []; }
     }
     async function saveMessageToFirestore(m) {
         try {
-            await db.collection('vendorChats').doc(chatDocId).set({
-                vendorId, name: identity.name, phone: identity.phone, lastActive: Date.now()
-            }, { merge: true });
+            await db.collection('vendorChats').doc(chatDocId).set({ vendorId, lastActive: Date.now() }, { merge: true });
             const ref = await db.collection('vendorChats').doc(chatDocId).collection('messages').add(m);
             return ref.id;
-        } catch (e) {
-            console.error('Firestore save error', e);
-            return 'local' + Date.now() + Math.random().toString(36).slice(2,6);
-        }
+        } catch (e) { console.error('Firestore save error', e); return 'local' + Date.now() + Math.random().toString(36).slice(2,6); }
     }
     async function updateMessageInFirestore(id, patch) {
         try { await db.collection('vendorChats').doc(chatDocId).collection('messages').doc(id).update(patch); } catch(e) {}
@@ -459,26 +453,8 @@
         try { await db.collection('vendorChats').doc(chatDocId).collection('messages').doc(id).delete(); } catch(e) {}
     }
 
-    // Detect if the customer just typed their own phone number naturally (e.g. while
-    // placing an order) and silently link this guest chat to that number going forward,
-    // so it becomes restorable from any device later.
-    function maybeCaptureContactFromText(text) {
-        if (identity.phone) return;
-        const match = text.match(/(\+?\d[\d\s-]{7,14}\d)/);
-        if (match) {
-            identity.phone = match[0].replace(/\s|-/g, '');
-            localStorage.setItem('il_identity_' + vendorId, JSON.stringify(identity));
-            const oldDocId = chatDocId;
-            chatDocId = computeChatDocId();
-            // move the guest history under the phone-keyed doc for future restores
-            db.collection('vendorChats').doc(chatDocId).set({
-                vendorId, phone: identity.phone, name: identity.name, lastActive: Date.now(), migratedFrom: oldDocId
-            }, { merge: true }).catch(()=>{});
-        }
-    }
-
-    // ================= SESSION BOOTSTRAP =================
-    async function loadAndRenderChat() {
+    async function beginSession() {
+        playWelcomeSplash();
         const saved = await loadMessagesFromFirestore();
         if (saved.length > 0) {
             renderedMessages = saved;
@@ -487,9 +463,7 @@
         } else {
             const greeting = {
                 role: 'theirs', type: 'text',
-                text: identity.name
-                    ? `Hi ${identity.name} 👋 Welcome to ${storeName} — so glad to have you here. What can I help you find today?`
-                    : `Welcome to ${storeName} 👑 I'm here to help you find exactly what you're looking for. What can I show you today?`,
+                text: `Welcome to ${storeName} 👑 I'm here to help you find exactly what you're looking for. What can I show you today?`,
                 time: Date.now()
             };
             const id = await saveMessageToFirestore(greeting);
@@ -497,14 +471,6 @@
             renderedMessages.push(greeting);
             renderMessage(greeting, true);
         }
-    }
-
-    async function beginSession() {
-        const savedIdentity = localStorage.getItem('il_identity_' + vendorId);
-        if (savedIdentity) { try { identity = JSON.parse(savedIdentity); } catch(e) {} }
-        chatDocId = computeChatDocId();
-        playWelcomeSplash(!!identity.name);
-        await loadAndRenderChat();
     }
 
     // ================= TOAST =================
@@ -523,7 +489,7 @@
 
     function bubbleInner(m) {
         let quote = '';
-        if (m.replyTo) quote = `<div class="reply-quote"><span class="rq-who">${m.replyTo.role === 'mine' ? (identity.name || 'You') : storeName}</span>${escapeHtml(m.replyTo.snippet)}</div>`;
+        if (m.replyTo) quote = `<div class="reply-quote"><span class="rq-who">${m.replyTo.role === 'mine' ? 'You' : storeName}</span>${escapeHtml(m.replyTo.snippet)}</div>`;
         let body = '';
         if (m.type === 'image') body = `<img class="chat-img" src="${m.media}">`;
         else if (m.type === 'video') body = `<video class="chat-video" src="${m.media}" controls></video>`;
@@ -562,11 +528,12 @@
     // ================= LONG PRESS CONTEXT MENU =================
     function attachLongPress(el, id) {
         let timer = null;
-        const start = () => { timer = setTimeout(() => openCtxMenu(id, el), 420); };
+        const start = (e) => { timer = setTimeout(() => openCtxMenu(id, el), 420); };
         const cancel = () => clearTimeout(timer);
         el.addEventListener('touchstart', start, { passive: true });
         el.addEventListener('touchend', cancel);
         el.addEventListener('touchmove', cancel);
+        el.addEventListener('contextmenu', (e) => e.preventDefault());
         el.addEventListener('mousedown', start);
         el.addEventListener('mouseup', cancel);
         el.addEventListener('mouseleave', cancel);
@@ -574,6 +541,7 @@
     function openCtxMenu(id, el) {
         const m = findMsg(id);
         if (!m) return;
+        if (navigator.vibrate) navigator.vibrate(12);
         el.classList.add('selected-for-menu');
         const menu = document.getElementById('ctxMenu');
         let items = `<div class="ctx-item" onclick="ctxReply('${id}')"><i class="fa-solid fa-reply"></i> Reply</div>`;
@@ -605,7 +573,7 @@
     function ctxReply(id) {
         const m = findMsg(id); closeCtxMenu();
         replyingTo = { id: m.id, role: m.role, snippet: snippetOf(m) };
-        document.getElementById('cbLabel').textContent = `Replying to ${m.role === 'mine' ? (identity.name || 'You') : storeName}`;
+        document.getElementById('cbLabel').textContent = `Replying to ${m.role === 'mine' ? 'You' : storeName}`;
         document.getElementById('cbText').textContent = replyingTo.snippet;
         document.getElementById('contextBar').classList.add('show');
         document.getElementById('userInput').focus();
@@ -689,64 +657,98 @@
     }
     function openCamera() { document.getElementById('cameraInput').click(); }
 
+    // ---------- full-screen media compose ----------
     function handleMediaSelect(input) {
         const files = Array.from(input.files || []);
         if (!files.length) return;
+        pendingMedia = [];
         let remaining = files.length;
         files.forEach(file => {
             const reader = new FileReader();
             reader.onload = (e) => {
-                pendingMedia.push({ type: file.type.startsWith('video') ? 'video' : 'image', dataUrl: e.target.result, mime: file.type });
+                pendingMedia.push({ type: file.type.startsWith('video') ? 'video' : 'image', dataUrl: e.target.result, mime: file.type, rotation: 0 });
                 remaining--;
-                if (remaining === 0) openMediaTray();
+                if (remaining === 0) openMediaCompose();
             };
             reader.readAsDataURL(file);
         });
         input.value = '';
     }
-    function openMediaTray() {
-        const strip = document.getElementById('mediaTrayStrip');
+    function openMediaCompose() {
+        mcActiveIndex = 0;
+        document.getElementById('mcCaption').value = '';
+        renderMediaComposeViewport();
+        renderMediaComposeThumbs();
+        document.getElementById('mediaCompose').classList.add('show');
+    }
+    function renderMediaComposeViewport() {
+        const item = pendingMedia[mcActiveIndex];
+        const vp = document.getElementById('mcViewport');
+        vp.innerHTML = item.type === 'video'
+            ? `<video src="${item.dataUrl}" controls style="transform: rotate(${item.rotation}deg)"></video>`
+            : `<img src="${item.dataUrl}" style="transform: rotate(${item.rotation}deg)">`;
+    }
+    function renderMediaComposeThumbs() {
+        const strip = document.getElementById('mcThumbs');
+        if (pendingMedia.length < 2) { strip.innerHTML = ''; return; }
         strip.innerHTML = pendingMedia.map((m, i) => `
-            <div class="media-thumb">
+            <div class="mc-thumb ${i === mcActiveIndex ? 'active' : ''}" onclick="setMcActive(${i})">
                 ${m.type === 'video' ? `<video src="${m.dataUrl}"></video>` : `<img src="${m.dataUrl}">`}
-                <div class="rm-btn" onclick="removeMediaItem(${i})"><i class="fa-solid fa-xmark"></i></div>
             </div>`).join('');
-        document.getElementById('mediaTray').classList.add('show');
     }
-    function removeMediaItem(i) {
-        pendingMedia.splice(i, 1);
-        if (pendingMedia.length === 0) cancelMediaTray(); else openMediaTray();
+    function setMcActive(i) { mcActiveIndex = i; renderMediaComposeViewport(); renderMediaComposeThumbs(); }
+    function rotateActiveMedia() {
+        pendingMedia[mcActiveIndex].rotation = (pendingMedia[mcActiveIndex].rotation + 90) % 360;
+        renderMediaComposeViewport();
     }
-    function cancelMediaTray() {
+    function cancelMediaCompose() {
         pendingMedia = [];
-        document.getElementById('mediaCaption').value = '';
-        document.getElementById('mediaTray').classList.remove('show');
+        document.getElementById('mediaCompose').classList.remove('show');
     }
-    async function sendMediaTray() {
+    function rotateImageDataUrl(dataUrl, degrees) {
+        return new Promise((resolve) => {
+            if (!degrees) { resolve(dataUrl); return; }
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const swap = degrees % 180 !== 0;
+                canvas.width = swap ? img.height : img.width;
+                canvas.height = swap ? img.width : img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.translate(canvas.width/2, canvas.height/2);
+                ctx.rotate(degrees * Math.PI / 180);
+                ctx.drawImage(img, -img.width/2, -img.height/2);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.src = dataUrl;
+        });
+    }
+    async function sendMediaCompose() {
         if (!pendingMedia.length) return;
-        const caption = document.getElementById('mediaCaption').value.trim();
+        const caption = document.getElementById('mcCaption').value.trim();
         const items = [...pendingMedia];
-        cancelMediaTray();
+        cancelMediaCompose();
+
         const imageContentParts = [];
         for (let i = 0; i < items.length; i++) {
             const it = items[i];
             const isLast = i === items.length - 1;
-            const m = { role: 'mine', type: it.type, media: it.dataUrl, time: Date.now(), caption: (isLast && caption) ? caption : null };
+            let finalUrl = it.dataUrl;
+            if (it.type === 'image' && it.rotation) finalUrl = await rotateImageDataUrl(it.dataUrl, it.rotation);
+            const m = { role: 'mine', type: it.type, media: finalUrl, time: Date.now(), caption: (isLast && caption) ? caption : null };
             const id = await saveMessageToFirestore(m);
             m.id = id;
             renderedMessages.push(m);
             renderMessage(m, true);
-            if (it.type === 'image') imageContentParts.push({ type: 'image_url', image_url: { url: it.dataUrl } });
+            if (it.type === 'image') imageContentParts.push({ type: 'image_url', image_url: { url: finalUrl } });
         }
         const videoNote = items.some(i => i.type === 'video') ? "[Customer also sent a video attachment]" : "";
-        if (caption) maybeCaptureContactFromText(caption);
         await triggerAIReply(caption || videoNote || "Please take a look at what I sent.", imageContentParts);
     }
 
-    // ---------- voice recording with REAL waveform (Web Audio API) ----------
+    // ---------- voice recording with real waveform ----------
     function buildWaveBars() {
-        const wave = document.getElementById('recWave');
-        wave.innerHTML = Array.from({length: 28}).map(() => `<span></span>`).join('');
+        document.getElementById('recWave').innerHTML = Array.from({length: 28}).map(() => `<span></span>`).join('');
     }
     function startWaveVisualizer(stream) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -758,10 +760,7 @@
         const bars = document.querySelectorAll('#recWave span');
         function draw() {
             analyser.getByteFrequencyData(waveDataArr);
-            bars.forEach((bar, i) => {
-                const v = waveDataArr[i % waveDataArr.length] / 255;
-                bar.style.height = Math.max(12, v * 100) + '%';
-            });
+            bars.forEach((bar, i) => { bar.style.height = Math.max(12, (waveDataArr[i % waveDataArr.length] / 255) * 100) + '%'; });
             waveAnimId = requestAnimationFrame(draw);
         }
         draw();
@@ -770,7 +769,6 @@
         if (waveAnimId) cancelAnimationFrame(waveAnimId);
         if (audioCtx) { audioCtx.close().catch(()=>{}); audioCtx = null; }
     }
-
     async function toggleRecording() {
         if (isRecording) { stopRecording(); return; }
         try {
@@ -804,18 +802,11 @@
             }, 1000);
         } catch(e) { showToast('Microphone access denied'); }
     }
-    function stopRecording() {
-        if (!isRecording) return;
-        isRecording = false;
-        clearInterval(recTimerHandle);
-        mediaRecorder.stop();
-    }
+    function stopRecording() { if (!isRecording) return; isRecording = false; clearInterval(recTimerHandle); mediaRecorder.stop(); }
     function cancelRecording() {
         if (!isRecording) return;
-        isRecording = false;
-        clearInterval(recTimerHandle);
-        mediaRecorder._cancelled = true;
-        mediaRecorder.stop();
+        isRecording = false; clearInterval(recTimerHandle);
+        mediaRecorder._cancelled = true; mediaRecorder.stop();
         document.getElementById('recBar').classList.remove('show');
     }
     function discardVoicePreview() {
@@ -863,8 +854,6 @@
         const replyPayload = replyingTo;
         cancelContextBar();
         input.value = ''; toggleInputUI(input);
-
-        maybeCaptureContactFromText(text);
 
         const m = { role: 'mine', type: 'text', text, time: Date.now(), replyTo: replyPayload };
         const id = await saveMessageToFirestore(m);
@@ -943,6 +932,9 @@ Ka yi amfani da wannan bayani KAWAI. Kada ka ƙirƙiri farashi ko kaya da babu s
     // ================= INIT =================
     document.addEventListener('DOMContentLoaded', () => {
         loadFirestoreProducts();
+        makeDraggable(document.getElementById('floatingAvatar'));
+        restoreAvatarPosition();
+        loadVendorAvatarAndStatus();
         beginSession();
     });
     </script>
