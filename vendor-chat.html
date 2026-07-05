@@ -106,7 +106,8 @@
     const db = firebase.firestore();
 
     // ⚠️ Duba sakon da ke ƙasa game da wannan key
-    const GEMINI_API_KEY = "AIzaSyC9V-J5xw4tFFP45eaj9IpSM8Z1HZ6g0ao";
+    const GROQ_API_KEY = "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";
+    const GROQ_MODEL = "openai/gpt-oss-120b";
 
     let chatHistory = [];
     let pendingImageBase64 = null;
@@ -249,50 +250,60 @@
         const systemPrompt = `Kai ne "Ali", babban jami'in sayarwa (top sales closer) na shago mai suna "${storeName}". Kai NE mutum, ba robot ba — kana magana kai tsaye da customer kamar yadda gwanin sayarwa a WhatsApp ke yi: da hankali, da natsuwa, da kwarin gwiwa, kuma ba tare da yin roƙo ba.
 
 MUHIMMAN DOKOKI:
-1. HARSHE: Ka gano yarukan da customer yake amfani da shi a sakon nasa (Hausa, Turanci, Yoruba, Igbo, Faransanci, Larabci, ko kowane yare) sannan KA AMSA DA WANNAN YARE DAIDAI. Kada ka canza yare sai idan customer ya canza.
-2. KASANCE MAI SAURI, TAKAITACCE: Kada ka rubuta babban paragraph. Ka rubuta kamar yadda ake rubutu a WhatsApp — gajerun jimla, kai tsaye kan batu.
-3. KA SANI GA DUKKAN KAYAYYAKI: Ga jerin kayan da shago ke da su a yanzu:
+1. HARSHE: Ka gano yarukan da customer yake amfani da shi a sakon nasa (Hausa, Turanci, Yoruba, Igbo, Faransanci, Larabci, ko kowane yare) sannan KA AMSA DA WANNAN YARE DAIDAI. Kada ka canza yare sai idan customer ya canza. Idan Hausa ce, ka rubuta Hausa TSAFTATACCE, ta gaske, kamar yadda ɗan Hausa na asali yake magana — ba fassarar Turanci ba (misali: kada ka ce "Ina za ku so mu tura muku daya ko biyu" a jere mai kaushi; ka rubuta a sauƙaƙe kamar: "Ka so mu tura maka ɗaya ko biyu?").
+2. MISALAN SALON HAUSA NA GASKIYA (KA KWAIKWAYI WANNAN SALON, KADA KA KWAFA KALMA DAYA):
+   - Customer: "Nawa ne farashi" → Kai: "Wannan [suna] farashinta ₦[X] ce kacal. Kina/kana son mu tura maka guda daya?"
+   - Customer: "Ina jinkirin biya" → Kai: "Babu matsala abokina, mun fahimce ka. Ka gaya mana lokacin da za ka iya, mu tsare maka kayan."
+   - Customer: "Kayan din inganci ne?" → Kai: "Wallahi ingancinsu ba abin shakka bane, mun sayar da yawa kuma customer dinmu koyaushe suna godiya."
+3. KASANCE MAI SAURI, TAKAITACCE: Kada ka rubuta babban paragraph. Ka rubuta kamar yadda ake rubutu a WhatsApp — gajerun jimla, kai tsaye kan batu.
+4. KA SANI GA DUKKAN KAYAYYAKI: Ga jerin kayan da shago ke da su a yanzu:
 ${productList}
 Ka yi amfani da wannan bayani KAWAI don amsa farashi, bayanin kaya, da samuwa. Kada ka ƙirƙiri farashi ko kaya da babu shi a jerin.
-4. KASANCE MAI RUFE SAYARWA (CLOSER): Bayan ka bayyana wa customer bayanin kaya, KA TAMBAYE SHI kai tsaye idan yana son ya yi oda — misali "Ka so mu tura maka daya ko biyu?", "Wace launi/size kake so?", ko "Ka shirya mu fara aikin?"
-5. IDAN CUSTOMER YANA SHAKKA (objection): Ka amsa masa da tabbaci — kwarewar inganci, dawo da kuɗi (idan akwai), ko misalan wasu customers da suka gamsu — ba tare da ƙarya ba.
-6. DON KAMMALA ODA: Idan customer ya ce yana so ya saya, ka tambaye shi: (1) cikakken suna, (2) lambar waya, (3) adireshin isarwa/jiha, (4) yawan kaya. Bayan ya bada su, ka gode masa ka tabbatar masa cewa za a tuntube shi domin biya da isarwa.
-7. KADA KA TAMBAYI TAMBAYA FIYE DA DAYA a sako daya.
-8. Ka kasance mai kirki, mai godiya, kuma mai kwarin gwiwa — kamar babban sales boy da ke son taimakon customer da kuma kammala oda, ba wai kawai amsa tambaya ba.`;
+5. IDAN AN AIKA HOTO: Ka duba hoton da kyau, ka bayyana abinda kake gani (misali irin tufa, launi, salo), sannan ka danganta shi da kayayyakin da ke jerinka idan akwai kama, ko ka tambaya idan customer yana son irin wannan.
+6. KASANCE MAI RUFE SAYARWA (CLOSER): Bayan ka bayyana wa customer bayanin kaya, KA TAMBAYE SHI kai tsaye idan yana son ya yi oda.
+7. IDAN CUSTOMER YANA SHAKKA: Ka amsa masa da tabbaci — ba tare da ƙarya ba.
+8. DON KAMMALA ODA: Idan customer ya ce yana so ya saya, ka tambaye shi: (1) cikakken suna, (2) lambar waya, (3) adireshin isarwa/jiha, (4) yawan kaya — TAMBAYA DAYA A LOKACI.
+9. KADA KA TAMBAYI TAMBAYA FIYE DA DAYA a sako daya.
+10. Ka kasance mai kirki, mai godiya, kuma mai kwarin gwiwa.`;
 
-        let userParts = [];
+        let userContent = [];
         if (pendingImageBase64) {
-            userParts.push({ inlineData: { mimeType: pendingImageMime, data: pendingImageBase64 } });
+            userContent.push({ type: "image_url", image_url: { url: `data:${pendingImageMime};base64,${pendingImageBase64}` } });
             pendingImageBase64 = null;
             pendingImageMime = null;
         }
-        if (text) userParts.push({ text: text });
-        chatHistory.push({ role: "user", parts: userParts });
+        if (text) userContent.push({ type: "text", text: text });
+        chatHistory.push({ role: "user", content: userContent.length === 1 && userContent[0].type === "text" ? text : userContent });
 
         try {
             const res = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
+                `https://api.groq.com/openai/v1/chat/completions`,
                 {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${GROQ_API_KEY}`
                     },
                     body: JSON.stringify({
-                        systemInstruction: { parts: [{ text: systemPrompt }] },
-                        contents: chatHistory,
-                        generationConfig: { temperature: 0.8, maxOutputTokens: 400 }
+                        model: GROQ_MODEL,
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            ...chatHistory
+                        ],
+                        temperature: 0.8,
+                        max_completion_tokens: 500
                     })
                 }
             );
 
             const data = await res.json();
-            console.log("Gemini response:", data);
-            let reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            console.log("Groq response:", data);
+            let reply = data.choices?.[0]?.message?.content;
             if (!reply) {
                 const apiErr = data.error?.message || JSON.stringify(data).slice(0, 200);
                 reply = "⚠️ API Error: " + apiErr;
             }
-            chatHistory.push({ role: "model", parts: [{ text: reply }] });
+            chatHistory.push({ role: "assistant", content: reply });
             document.getElementById(loadingId).innerHTML = reply;
 
         } catch(e) {
