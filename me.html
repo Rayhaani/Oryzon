@@ -1793,19 +1793,21 @@ function switchTab(tab) {
     const btnTimeline = document.getElementById('btn-timeline');
 
     if (tab === 'showcase') {
-        showcase.classList.remove('hidden');
         timeline.classList.add('hidden');
+        showcase.classList.remove('hidden');
         btnShowcase.className = 'btn-slim btn-white';
         btnTimeline.className = 'btn-slim btn-trans';
-        loadShowcaseImages();
+        // Tabbatar an kira shi da 'false' domin kada ya yi tsalle zuwa timeline idan babu hotuna a farkon lodi
+        loadShowcaseImages(false); 
     } else {
-        timeline.classList.remove('hidden');
         showcase.classList.add('hidden');
+        timeline.classList.remove('hidden');
         btnTimeline.className = 'btn-slim btn-white';
         btnShowcase.className = 'btn-slim btn-trans';
         loadTimelinePosts();
     }
 }
+            
 
 function openSubModal() {
     document.getElementById("subscriptionModal").style.display = "flex";
@@ -1931,15 +1933,14 @@ if (!isOwnProfile) {
 }
 
         // Load post count na wannan user kadai
-        db.collection('posts')
+               db.collection('posts')
             .where("username", "==", currentUser.username)
             .onSnapshot(snap => {
                 document.getElementById('stats-posts-count').innerText = snap.size;
             });
 
-        // Load posts
-        loadShowcaseImages(true);
-        loadTimelinePosts();
+        // Wannan zai bude shafin a kan Showcase kuma ya loda hotunan sau daya daidai
+        switchTab('showcase');
 
     } catch (e) {
         console.error("Profile init error:", e);
@@ -1952,6 +1953,7 @@ auth.onAuthStateChanged(() => {
     authReadyOnce = true;
     initProfile();
 });
+            
 // ============================================================
 // SAKA WANNAN A CIKIN <script> TAG ɗinka a me.html
 // Ka canza BACKEND_URL zuwa URL ɗinka na Render.com
