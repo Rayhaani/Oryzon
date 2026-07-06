@@ -1254,6 +1254,77 @@ header {
     min-width: 72px;
     flex-shrink: 0;
 }
+
+
+/* HIGHLIGHTS - RESIZE + FONT UPDATE (Instagram-style CRUD) */
+.smart-box-highlights {
+    background: transparent !important;
+    border: none !important;
+    padding: 8px 0 !important;
+    margin-top: 15px !important;
+}
+.highlights-scroll {
+    display: flex !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+}
+.highlight-item {
+    text-align: center !important;
+    min-width: 56px !important;
+    flex-shrink: 0 !important;
+    position: relative;
+}
+.highlight-ring {
+    width: 54px !important;
+    height: 54px !important;
+    border-radius: 16px !important; /* asalin shape, kar a canza */
+    border: 1px solid #fde08d !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    background: #111;
+}
+.highlight-ring img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 13px !important;
+    object-fit: cover !important;
+}
+.highlight-label {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    margin-top: 5px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 56px;
+}
+.highlight-add-ring {
+    width: 54px; height: 54px;
+    border-radius: 16px;
+    border: 1.5px dashed rgba(253,224,141,0.6);
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(253,224,141,0.05);
+    color: #fde08d; font-size: 20px; cursor: pointer;
+}
+.highlight-menu {
+    position: fixed; background: #111;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; overflow: hidden; z-index: 9999;
+    min-width: 160px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+.highlight-menu button {
+    width: 100%; padding: 12px 16px; text-align: left;
+    font-size: 12px; font-weight: 600; color: #fff;
+    background: none; border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer;
+}
+.highlight-menu button:last-child { border-bottom: none; }
+.highlight-menu button.danger { color: #ff4d6d; }
         
     </style>
 </head>
@@ -1387,35 +1458,10 @@ header {
                         
                     </div>
                     <div class="smart-box-highlights">
-    <div class="highlights-scroll">
-        <div class="highlight-item">
-            <div class="highlight-ring" style="width: 72px; height: 72px; border-radius: 20px; border: 1px solid #fde08d; box-shadow: 0 0 8px rgba(253, 224, 141, 0.2); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                <img src="https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5?w=100" style="width: 100%; height: 100%; border-radius: 16px; object-fit: cover;">
-            </div>
-            <p class="highlight-label" style="font-size: 11px; color: #fff; margin-top: 5px; text-align: center;">Toubs</p>
-        </div>
-
-        <div class="highlight-item">
-            <div class="highlight-ring" style="width: 72px; height: 72px; border-radius: 20px; border: 1px solid #fde08d; box-shadow: 0 0 8px rgba(253, 224, 141, 0.2); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                <img src="https://images.unsplash.com/photo-1583944438403-f5260a7c0838?w=100" style="width: 100%; height: 100%; border-radius: 16px; object-fit: cover;">
-            </div>
-            <p class="highlight-label" style="font-size: 11px; color: #fff; margin-top: 5px; text-align: center;">Abaya</p>
-        </div>
-
-        <div class="highlight-item">
-            <div class="highlight-ring" style="width: 72px; height: 72px; border-radius: 20px; border: 1px solid #fde08d; box-shadow: 0 0 8px rgba(253, 224, 141, 0.2); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                <img src="https://images.unsplash.com/photo-1574169208507-84376144848b?w=100" style="width: 100%; height: 100%; border-radius: 16px; object-fit: cover;">
-            </div>
-            <p class="highlight-label" style="font-size: 11px; color: #fff; margin-top: 5px; text-align: center;">Tech</p>
-        </div>
-
-        <div class="highlight-item">
-            <div class="highlight-ring" style="width: 72px; height: 72px; border-radius: 20px; border: 1px solid #fde08d; box-shadow: 0 0 8px rgba(253, 224, 141, 0.2); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=100" style="width: 100%; height: 100%; border-radius: 16px; object-fit: cover;">
-            </div>
-            <p class="highlight-label" style="font-size: 11px; color: #fff; margin-top: 5px; text-align: center;">Logistics</p>
-        </div>
+    <div class="highlights-scroll" id="highlights-scroll">
+        <!-- Sabbin Highlights za su fito anan ta atomatik -->
     </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -1530,7 +1576,6 @@ header {
      
         <script>
 
-     
    const firebaseConfig = {
   apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
   authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -1663,11 +1708,129 @@ if(myUsername){
             timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Kuskure wajen loda posts.</p>';
         });
 }
-// ============================================================
-// 2. GENERATE POST HTML (DYNAMIC AVATAR & USERNAME)
-// ============================================================
 
+let highlightsUnsub = null;
 
+function loadHighlights() {
+    const container = document.getElementById('highlights-scroll');
+    if (!container || !currentUser || !currentUser.username) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUser = urlParams.get('user') || currentUser.username;
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const isOwnProfile = profileUser === myUsername;
+
+    if (highlightsUnsub) { highlightsUnsub(); highlightsUnsub = null; }
+
+    highlightsUnsub = db.collection('users').doc(profileUser)
+        .collection('highlights').orderBy('order', 'asc')
+        .onSnapshot(snapshot => {
+            container.innerHTML = '';
+
+            if (isOwnProfile) {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="highlight-item">
+                        <div class="highlight-add-ring" onclick="openHighlightModal()">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        <p class="highlight-label">New</p>
+                    </div>`);
+            }
+
+            snapshot.forEach(doc => {
+                const h = doc.data();
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="highlight-item" data-id="${doc.id}">
+                        <div class="highlight-ring" onclick="viewHighlight('${doc.id}')">
+                            <img src="${h.imageUrl}" loading="lazy">
+                        </div>
+                        <p class="highlight-label">${h.label || ''}</p>
+                    </div>`);
+
+                if (isOwnProfile) {
+                    const ring = container.querySelector(`.highlight-item[data-id="${doc.id}"] .highlight-ring`);
+                    let pressTimer;
+                    ring.addEventListener('touchstart', (e) => {
+                        pressTimer = setTimeout(() => openHighlightMenu(e, doc.id), 500);
+                    });
+                    ring.addEventListener('touchend', () => clearTimeout(pressTimer));
+                    ring.addEventListener('touchmove', () => clearTimeout(pressTimer));
+                }
+            });
+        });
+}
+
+function viewHighlight(id) { console.log('Viewing highlight:', id); }
+
+function openHighlightMenu(event, id) {
+    event.stopPropagation();
+    document.querySelectorAll('.highlight-menu').forEach(m => m.remove());
+    const menu = document.createElement('div');
+    menu.className = 'highlight-menu';
+    menu.innerHTML = `
+        <button onclick="editHighlightPrompt('${id}')"><i class="fa-solid fa-pen"></i>&nbsp; Edit</button>
+        <button class="danger" onclick="deleteHighlight('${id}')"><i class="fa-solid fa-trash"></i>&nbsp; Delete</button>`;
+    document.body.appendChild(menu);
+    const rect = event.target.getBoundingClientRect();
+    menu.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+    menu.style.left = rect.left + 'px';
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu(e) {
+            if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', closeMenu); }
+        });
+    }, 50);
+}
+
+async function openHighlightModal() {
+    const label = prompt("Sunan Highlight (misali: Toubs, Reviews):");
+    if (!label) return;
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) await uploadHighlight(file, label);
+    };
+    fileInput.click();
+}
+
+async function uploadHighlight(file, label) {
+    const username = localStorage.getItem('nexus_user_session');
+    if (!username) return;
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'highlight');
+        formData.append('username', username);
+        const response = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.success) {
+            const countSnap = await db.collection('users').doc(username).collection('highlights').get();
+            await db.collection('users').doc(username).collection('highlights').add({
+                label: label, imageUrl: data.url, order: countSnap.size,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } else { throw new Error(data.error); }
+    } catch (err) {
+        console.error('Highlight upload kuskure:', err);
+        alert('Kuskure: ' + err.message);
+    }
+}
+
+async function editHighlightPrompt(id) {
+    const username = localStorage.getItem('nexus_user_session');
+    const newLabel = prompt("Sabon suna:");
+    if (!newLabel) return;
+    await db.collection('users').doc(username).collection('highlights').doc(id).update({ label: newLabel });
+}
+
+async function deleteHighlight(id) {
+    if (!confirm("Tabbata za ka goge wannan Highlight?")) return;
+    const username = localStorage.getItem('nexus_user_session');
+    await db.collection('users').doc(username).collection('highlights').doc(id).delete();
+    document.querySelectorAll('.highlight-menu').forEach(m => m.remove());
+}
+            
 // =====================================================================
 // 2. TIMELINE DATABASE SYNC LOADER (INTELLIGENT RUNNER)
 // =====================================================================
@@ -1930,10 +2093,10 @@ async function initProfile() {
             });
 
         // Bude shafin a kan Showcase a matsayin default (wannan shi kadai zai loda hotuna)
-if (typeof switchTab === 'function') {
-    switchTab('showcase');
-}
 
+try { switchTab('showcase'); } catch(e) { console.error(e); }
+try { loadHighlights(); } catch(e) { console.error("Highlights error:", e); }
+        
         // Gyara Contact button ya dauki username
         const contactBtn = document.getElementById('contact-btn');
         if (contactBtn) {
