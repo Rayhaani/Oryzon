@@ -1742,29 +1742,27 @@ document.addEventListener("DOMContentLoaded", () => {
 // ============================================================
 // 3. LODA SHOWCASE IMAGES (DYNAMIC BASED ON LOGGED IN USER)
 // ============================================================
-let showcaseUnsubscribe = null; // don hana listeners suna hadduwa
+let showcaseUnsubscribe = null;
 
-function loadShowcaseImages(isInitialLoad) {
+function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
     if (!currentUser || !currentUser.username) {
         showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Loading showcase...</p>';
         return;
     }
 
-    // Rufe tsohon listener kafin mu bude sabo
     if (showcaseUnsubscribe) {
         showcaseUnsubscribe();
         showcaseUnsubscribe = null;
     }
 
+    // Mun cire tace cache din da yake kawo tsaikon
     showcaseUnsubscribe = db.collection('posts')
         .where("username", "==", currentUser.username)
         .onSnapshot(snapshot => {
-            // Idan wannan cache ne kuma fanko, jira sabon (server) data, kada mu yanke shawara tukunna
-            if (snapshot.metadata.fromCache && snapshot.empty) return;
-
             showcaseArea.innerHTML = '';
             let hasImages = false;
+            
             snapshot.forEach(doc => {
                 const post = doc.data();
                 if (post.category === "business" && post.mediaUrl) {
@@ -1777,15 +1775,13 @@ function loadShowcaseImages(isInitialLoad) {
             });
 
             if (!hasImages) {
-                if (isInitialLoad) {
-                    switchTab('timeline');
-                } else {
-                    showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Babu hotuna a nan.</p>';
-                }
+                showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Babu hotuna a nan.</p>';
             }
-        }, (err) => { console.error("Showcase error: ", err); });
-}
-                             
+        }, (err) => { 
+            console.error("Showcase error: ", err); 
+        });
+                                }
+            
 function switchTab(tab) {
     const showcase = document.getElementById('showcase-area');
     const timeline = document.getElementById('timeline-area');
