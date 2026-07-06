@@ -1869,10 +1869,9 @@ async function initProfile() {
         // Karanta username daga localStorage kai tsaye
         const username = localStorage.getItem("nexus_user_session");
 
-// ↓ SABABBI - KARA KAWAI ↓
-const urlParams = new URLSearchParams(window.location.search);
-const profileUser = urlParams.get('user') || username;
-const isOwnProfile = profileUser === username;
+        const urlParams = new URLSearchParams(window.location.search);
+        const profileUser = urlParams.get('user') || username;
+        const isOwnProfile = profileUser === username;
 
         if (!username) {
             // Babu wanda ya login - tafi login page
@@ -1886,16 +1885,16 @@ const isOwnProfile = profileUser === username;
         if (userDoc.exists) {
             currentUser = { uid: userDoc.id, ...userDoc.data() };
         } else {
-            // Username yana localStorage amma babu document - wani kuskure ne
+            // Username yana localStorage amma babu document
             currentUser = {
-    uid: profileUser,
-    username: profileUser,
-    fullName: profileUser,
-    userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=" + profileUser
-    };
+                uid: profileUser,
+                username: profileUser,
+                fullName: profileUser,
+                userProfilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=" + profileUser
+            };
         }
 
-       // Apply profile UI
+        // Apply profile UI
         applyUserToProfile(currentUser);
         initFollowButton();
         loadFollowerCount();
@@ -1908,35 +1907,42 @@ const isOwnProfile = profileUser === username;
             loadFollowingCount(profileUser);
         } 
 
-        // Preload profile content
-loadShowcaseImages();
-loadTimelinePosts();
-
-// Open Showcase by default
-switchTab('showcase');
-        
-        // Gyara Contact button ya dauki username
-const contactBtn = document.getElementById('contact-btn');
-if (contactBtn) {
-    contactBtn.href = `chat-interior.html?with=${currentUser.username}`;
-}
-        
-        // Idan wani ne, boye camera buttons
-if (!isOwnProfile) {
-    document.querySelector('.camera-cover-main').style.display = 'none';
-    document.querySelector('.camera-profile-main').style.display = 'none';
-    document.getElementById('getVerifiedBtn').style.display = 'none';
-}
-
-        // Load post count na wannan user kadai
-               db.collection('posts')
+        // 1. Zai loda adadin posts na mai asusun
+        db.collection('posts')
             .where("username", "==", currentUser.username)
             .onSnapshot(snap => {
-                document.getElementById('stats-posts-count').innerText = snap.size;
+                const postsCountEl = document.getElementById('stats-posts-count');
+                if (postsCountEl) postsCountEl.innerText = snap.size;
+            }, err => {
+                console.error("Firestore counts error:", err);
             });
 
-        // Wannan zai bude shafin a kan Showcase kuma ya loda hotunan sau daya daidai
-        switchTab('showcase');
+        // 2. Loda hotunan Showcase kai tsaye
+        if (typeof loadShowcaseImages === 'function') {
+            loadShowcaseImages();
+        }
+
+        // 3. Bude shafin a kan Showcase a matsayin default
+        if (typeof switchTab === 'function') {
+            switchTab('showcase');
+        }
+
+        // Gyara Contact button ya dauki username
+        const contactBtn = document.getElementById('contact-btn');
+        if (contactBtn) {
+            contactBtn.href = `chat-interior.html?with=${currentUser.username}`;
+        }
+        
+        // Idan wani ne, boye camera buttons
+        if (!isOwnProfile) {
+            const coverCam = document.querySelector('.camera-cover-main');
+            const profileCam = document.querySelector('.camera-profile-main');
+            const verifyBtn = document.getElementById('getVerifiedBtn');
+            
+            if (coverCam) coverCam.style.style.display = 'none';
+            if (profileCam) profileCam.style.display = 'none';
+            if (verifyBtn) verifyBtn.style.display = 'none';
+        }
 
     } catch (e) {
         console.error("Profile init error:", e);
@@ -1949,6 +1955,9 @@ auth.onAuthStateChanged(() => {
     authReadyOnce = true;
     initProfile();
 });
+            
+        
+
             
 // ============================================================
 // SAKA WANNAN A CIKIN <script> TAG ɗinka a me.html
