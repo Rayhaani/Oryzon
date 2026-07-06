@@ -1895,17 +1895,29 @@ async function initProfile() {
         }
 
         // Apply profile UI
-        applyUserToProfile(currentUser);
-        initFollowButton();
-        loadFollowerCount();
+       applyUserToProfile(currentUser);
 
-        if (isOwnProfile) {
-            document.getElementById('stats-third-label').textContent = 'Friends';
-            loadFriendCount();
-        } else {
-            document.getElementById('stats-third-label').textContent = 'Following';
-            loadFollowingCount(profileUser);
-        } 
+        // Loda showcase nan take - a keɓe domin kada wani kuskure ya hana ta
+        try {
+            switchTab('showcase');
+        } catch(e) {
+            console.error("Showcase auto-load error:", e);
+        }
+
+        try {
+            initFollowButton();
+            loadFollowerCount();
+
+            if (isOwnProfile) {
+                document.getElementById('stats-third-label').textContent = 'Friends';
+                loadFriendCount();
+            } else {
+                document.getElementById('stats-third-label').textContent = 'Following';
+                loadFollowingCount(profileUser);
+            }
+        } catch(e) {
+            console.error("Stats loading error:", e);
+        }
 
         // 1. Zai loda adadin posts na mai asusun
         db.collection('posts')
