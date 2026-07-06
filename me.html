@@ -1275,7 +1275,7 @@ header {
     position: relative;
 }
 .highlight-ring {
-    width: 54px !important;
+    width: 64px !important;
     height: 54px !important;
     border-radius: 16px !important; /* asalin shape, kar a canza */
     border: 1px solid #fde08d !important;
@@ -1303,7 +1303,7 @@ header {
     max-width: 56px;
 }
 .highlight-add-ring {
-    width: 54px; height: 54px;
+    width: 64px; height: 54px;
     border-radius: 16px;
     border: 1.5px dashed rgba(253,224,141,0.6);
     display: flex; align-items: center; justify-content: center;
@@ -1324,6 +1324,37 @@ header {
 }
 .highlight-menu button:last-child { border-bottom: none; }
 .highlight-menu button.danger { color: #ff4d6d; }
+
+.hl-modal-overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.85); z-index: 10000;
+    display: none; align-items: center; justify-content: center;
+}
+.hl-modal-box {
+    background: #111; border: 1px solid rgba(253,224,141,0.3);
+    border-radius: 20px; padding: 20px; width: 85%; max-width: 340px;
+}
+.hl-modal-box h3 { font-size: 14px; color: #fde08d; margin-bottom: 15px; font-family: 'Plus Jakarta Sans'; }
+.hl-modal-box input[type="text"] {
+    width: 100%; padding: 10px 12px; background: #0d0d0f;
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+    color: #fff; font-size: 13px; margin-bottom: 12px;
+}
+.hl-preview-box {
+    width: 100%; height: 140px; border-radius: 12px;
+    border: 1.5px dashed rgba(253,224,141,0.5);
+    display: flex; align-items: center; justify-content: center;
+    color: #fde08d; font-size: 13px; cursor: pointer; overflow: hidden;
+    margin-bottom: 15px; background: rgba(253,224,141,0.05);
+}
+.hl-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+.hl-modal-actions { display: flex; gap: 10px; }
+.hl-modal-actions button {
+    flex: 1; padding: 12px; border-radius: 10px; border: none;
+    font-weight: 700; font-size: 12px; cursor: pointer;
+}
+.hl-btn-cancel { background: rgba(255,255,255,0.1); color: #fff; }
+.hl-btn-save { background: linear-gradient(45deg,#fde08d,#b8860b); color: #000; }
         
     </style>
 </head>
@@ -1572,7 +1603,21 @@ header {
     </div>
 </div>
         
-     
+     <div class="hl-modal-overlay" id="hlModalOverlay">
+    <div class="hl-modal-box">
+        <h3>Sabon Highlight</h3>
+        <input type="text" id="hlLabelInput" placeholder="Sunan Highlight (misali: Toubs)">
+        <div class="hl-preview-box" id="hlPreviewBox" onclick="document.getElementById('hlFileInput').click()">
+            <span id="hlPreviewText">Danna domin zaɓi hoto/video</span>
+            <input type="file" id="hlFileInput" accept="image/*,video/*" style="display:none">
+        </div>
+        <div class="hl-modal-actions">
+            <button class="hl-btn-cancel" onclick="closeHighlightModal()">Soke</button>
+            <button class="hl-btn-save" onclick="saveNewHighlight()">Ajiye</button>
+        </div>
+    </div>
+     </div>
+    
         <script>
 
    const firebaseConfig = {
@@ -1708,6 +1753,7 @@ if(myUsername){
         });
 }
 
+
 let highlightsUnsub = null;
 
 function loadHighlights() {
@@ -1780,17 +1826,43 @@ function openHighlightMenu(event, id) {
     }, 50);
 }
 
-async function openHighlightModal() {
-    const label = prompt("Sunan Highlight (misali: Toubs, Reviews):");
-    if (!label) return;
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (file) await uploadHighlight(file, label);
-    };
-    fileInput.click();
+let hlSelectedFile = null;
+
+function openHighlightModal() {
+    document.getElementById('hlLabelInput').value = '';
+    document.getElementById('hlPreviewText').style.display = 'block';
+    document.getElementById('hlPreviewBox').innerHTML = `
+        <span id="hlPreviewText">Danna domin zaɓi hoto/video</span>
+        <input type="file" id="hlFileInput" accept="image/*,video/*" style="display:none" onchange="handleHlFileSelect(event)">`;
+    hlSelectedFile = null;
+    document.getElementById('hlModalOverlay').style.display = 'flex';
+}
+
+function closeHighlightModal() {
+    document.getElementById('hlModalOverlay').style.display = 'none';
+    hlSelectedFile = null;
+}
+
+function handleHlFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    hlSelectedFile = file;
+    const previewBox = document.getElementById('hlPreviewBox');
+    const url = URL.createObjectURL(file);
+    if (file.type.startsWith('video')) {
+        previewBox.innerHTML = `<video src="${url}" style="width:100%;height:100%;object-fit:cover;" muted></video>`;
+    } else {
+        previewBox.innerHTML = `<img src="${url}">`;
+    }
+}
+
+async function saveNewHighlight() {
+    const label = document.getElementById('hlLabelInput').value.trim();
+    if (!label) { alert("Da fatan za a saka suna."); return; }
+    if (!hlSelectedFile) { alert("Da fatan za a zaɓi hoto ko video."); return; }
+
+    closeHighlightModal();
+    await uploadHighlight(hlSelectedFile, label);
 }
 
 async function uploadHighlight(file, label) {
@@ -1829,7 +1901,8 @@ async function deleteHighlight(id) {
     await db.collection('users').doc(username).collection('highlights').doc(id).delete();
     document.querySelectorAll('.highlight-menu').forEach(m => m.remove());
 }
-            
+
+         
 // =====================================================================
 // 2. TIMELINE DATABASE SYNC LOADER (INTELLIGENT RUNNER)
 // =====================================================================
@@ -1913,24 +1986,32 @@ function loadShowcaseImages() {
         return;
     }
 
-    if (showcaseUnsubscribe) {
-        showcaseUnsubscribe();
-        showcaseUnsubscribe = null;
-    }
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const isOwnProfile = currentUser.username === myUsername;
 
-    // Mun cire tace cache din da yake kawo tsaikon
+    if (showcaseUnsubscribe) { showcaseUnsubscribe(); showcaseUnsubscribe = null; }
+
     showcaseUnsubscribe = db.collection('posts')
         .where("username", "==", currentUser.username)
         .onSnapshot(snapshot => {
             showcaseArea.innerHTML = '';
             let hasImages = false;
-            
+
             snapshot.forEach(doc => {
                 const post = doc.data();
                 if (post.category === "business" && post.mediaUrl) {
                     hasImages = true;
+                    const deleteBtn = isOwnProfile ? `
+                        <div onclick="event.stopPropagation(); deleteShowcasePost('${doc.id}')" style="
+                            position:absolute; top:6px; right:6px; width:24px; height:24px;
+                            background:rgba(0,0,0,0.6); border-radius:50%; display:flex;
+                            align-items:center; justify-content:center; z-index:10; cursor:pointer;">
+                            <i class="fa-solid fa-trash" style="color:#ff4d6d; font-size:11px;"></i>
+                        </div>` : '';
+
                     showcaseArea.insertAdjacentHTML('beforeend', `
-                           <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px;">
+                        <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px; position: relative;">
+                            ${deleteBtn}
                             <img src="${post.mediaUrl}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
                         </div>`);
                 }
@@ -1939,10 +2020,18 @@ function loadShowcaseImages() {
             if (!hasImages) {
                 showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Babu hotuna a nan.</p>';
             }
-        }, (err) => { 
-            console.error("Showcase error: ", err); 
-        });
-            }
+        }, (err) => { console.error("Showcase error: ", err); });
+}
+
+async function deleteShowcasePost(postId) {
+    if (!confirm(" Are you sure you want to delete this post?")) return;
+    try {
+        await db.collection('posts').doc(postId).delete();
+    } catch(err) {
+        console.error("Delete error:", err);
+        alert("Delete error occur: " + err.message);
+    }
+                    }
             
 function switchTab(tab) {
     const showcase = document.getElementById('showcase-area');
