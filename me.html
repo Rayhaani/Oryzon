@@ -1764,11 +1764,15 @@ function loadShowcaseImages(isInitialLoad) {
                 }
             });
             if (!hasImages) {
-                if (isInitialLoad) { switchTab('timeline'); }
-                else { showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Babu hotuna a nan.</p>'; }
+                // Kada mu yanke shawara sai idan bayanan sun tabbata daga SERVER, ba local cache mai yiwuwa fanko ba
+                if (isInitialLoad && !snapshot.metadata.fromCache) {
+                    switchTab('timeline');
+                } else if (!isInitialLoad) {
+                    showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Babu hotuna a nan.</p>';
+                }
             }
         }, (err) => { console.error("Showcase error: ", err); });
-}
+                        }
                              
 function switchTab(tab) {
     const showcase = document.getElementById('showcase-area');
