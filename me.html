@@ -1259,9 +1259,9 @@ header {
 .smart-box-highlights {
     background: transparent !important;
     border: none !important;
-    padding: 8px 0 !important;
-    margin-top: 15px !important;
-}
+    padding: 4px 0;
+    margin-top: 8px;
+        }
 .highlights-scroll {
     display: flex !important;
     gap: 10px !important;
@@ -1296,12 +1296,16 @@ header {
     font-size: 9px !important;
     font-weight: 700 !important;
     color: #fff !important;
-    margin-top: 5px !important;
+    margin-top: 3px !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 56px;
-}
+    text-align: center !important;
+    width: 100%;
+    display: block;
+    }
+
 .highlight-add-ring {
     width: 74px; height: 80px;
     border-radius: 16px;
@@ -1310,6 +1314,9 @@ header {
     background: rgba(253,224,141,0.05);
     color: #fde08d; font-size: 20px; cursor: pointer;
 }
+
+.highlight-ring video { width: 100%; height: 100%; object-fit: cover; }
+        
 .highlight-menu {
     position: fixed; background: #111;
     border: 1px solid rgba(255,255,255,0.1);
@@ -1355,6 +1362,40 @@ header {
 }
 .hl-btn-cancel { background: rgba(255,255,255,0.1); color: #fff; }
 .hl-btn-save { background: linear-gradient(45deg,#fde08d,#b8860b); color: #000; }
+
+.nexus-toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
+    background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+    border: 1px solid #fde08d; color: #fff; padding: 12px 20px;
+    border-radius: 12px; font-size: 13px; font-weight: 600;
+    z-index: 100000; opacity: 0; transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex; align-items: center; gap: 8px; max-width: 85%;
+}
+.nexus-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.nexus-toast i { color: #fde08d; }
+
+.story-viewer-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #000; z-index: 20000; display: none; flex-direction: column;
+}
+.story-progress-row { display: flex; gap: 4px; padding: 10px 10px 0 10px; }
+.story-progress-bar { flex: 1; height: 2.5px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; }
+.story-progress-fill { height: 100%; width: 0%; background: #fff; }
+.story-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+.story-header img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #fde08d; }
+.story-user-info { flex: 1; }
+.story-username { font-size: 13px; font-weight: 700; color: #fff; }
+.story-time { font-size: 11px; color: rgba(255,255,255,0.6); }
+.story-close { color: #fff; font-size: 20px; cursor: pointer; padding: 5px; }
+.story-media-wrap { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.story-media-wrap img, .story-media-wrap video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+.story-tap-zone { position: absolute; top: 0; height: 100%; width: 35%; z-index: 5; }
+.story-tap-left { left: 0; }
+.story-tap-right { right: 0; }
+.story-footer { display: flex; align-items: center; gap: 12px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); }
+.story-reply-input { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 10px 16px; color: #fff; font-size: 13px; }
+.story-footer i { color: #fff; font-size: 20px; cursor: pointer; }
         
     </style>
 </head>
@@ -1487,10 +1528,9 @@ header {
 
                         
                     </div>
-                    <div class="smart-box-highlights">
-    <div class="highlights-scroll" id="highlights-scroll">
-        <!-- Sabbin Highlights za su fito anan ta atomatik -->
-    </div>
+                    <div class="smart-box-highlights" id="highlights-box">
+    <div class="highlights-scroll" id="highlights-scroll"></div>
+                    </div>
                     </div>
                     </div>
                 </div>
@@ -1617,6 +1657,27 @@ header {
         </div>
     </div>
      </div>
+
+<div class="story-viewer-overlay" id="storyViewerOverlay">
+    <div class="story-progress-row" id="storyProgressRow"></div>
+    <div class="story-header">
+        <img id="storyUserAvatar" src="">
+        <div class="story-user-info">
+            <div class="story-username" id="storyUsername"></div>
+            <div class="story-time" id="storyTime"></div>
+        </div>
+        <i class="fa-solid fa-xmark story-close" onclick="closeStoryViewer()"></i>
+    </div>
+    <div class="story-media-wrap" id="storyMediaWrap">
+        <div class="story-tap-zone story-tap-left" onclick="prevStory()"></div>
+        <div class="story-tap-zone story-tap-right" onclick="nextStory()"></div>
+    </div>
+    <div class="story-footer">
+        <input type="text" class="story-reply-input" placeholder="Send message">
+        <i class="fa-regular fa-heart"></i>
+        <i class="fa-regular fa-paper-plane"></i>
+    </div>
+</div>
     
         <script>
 
@@ -1768,9 +1829,16 @@ function loadHighlights() {
     if (highlightsUnsub) { highlightsUnsub(); highlightsUnsub = null; }
 
     highlightsUnsub = db.collection('users').doc(profileUser)
-        .collection('highlights').orderBy('order', 'asc')
-        .onSnapshot(snapshot => {
-            container.innerHTML = '';
+    .collection('highlights').orderBy('order', 'asc')
+    .onSnapshot(snapshot => {
+        const highlightsBox = document.getElementById('highlights-box');
+        container.innerHTML = '';
+
+        if (snapshot.empty && !isOwnProfile) {
+            if (highlightsBox) highlightsBox.style.display = 'none';
+            return;
+        }
+        if (highlightsBox) highlightsBox.style.display = 'block';
 
             if (isOwnProfile) {
                 container.insertAdjacentHTML('beforeend', `
@@ -1783,30 +1851,124 @@ function loadHighlights() {
             }
 
             snapshot.forEach(doc => {
-                const h = doc.data();
-                container.insertAdjacentHTML('beforeend', `
-                    <div class="highlight-item" data-id="${doc.id}">
-                        <div class="highlight-ring" onclick="viewHighlight('${doc.id}')">
-                            <img src="${h.imageUrl}" loading="lazy">
-                        </div>
-                        <p class="highlight-label">${h.label || ''}</p>
-                    </div>`);
+    const h = doc.data();
 
-                if (isOwnProfile) {
-                    const ring = container.querySelector(`.highlight-item[data-id="${doc.id}"] .highlight-ring`);
-                    let pressTimer;
-                    ring.addEventListener('touchstart', (e) => {
-                        pressTimer = setTimeout(() => openHighlightMenu(e, doc.id), 500);
-                    });
-                    ring.addEventListener('touchend', () => clearTimeout(pressTimer));
-                    ring.addEventListener('touchmove', () => clearTimeout(pressTimer));
-                }
-            });
+    const mediaTag = h.mediaType === 'video'
+        ? `<video src="${h.imageUrl}" muted></video>`
+        : `<img src="${h.imageUrl}" loading="lazy">`;
+
+    container.insertAdjacentHTML('beforeend', `
+        <div class="highlight-item" data-id="${doc.id}">
+            <div class="highlight-ring" onclick="viewHighlight('${doc.id}')">
+                ${mediaTag}
+            </div>
+            <p class="highlight-label">${h.label || ''}</p>
+        </div>`);
+
+    if (isOwnProfile) {
+        const ring = container.querySelector(`.highlight-item[data-id="${doc.id}"] .highlight-ring`);
+        let pressTimer;
+        ring.addEventListener('touchstart', (e) => {
+            pressTimer = setTimeout(() => openHighlightMenu(e, doc.id), 500);
         });
+        ring.addEventListener('touchend', () => clearTimeout(pressTimer));
+        ring.addEventListener('touchmove', () => clearTimeout(pressTimer));
+    }
+});
+        
+
+let storyItems = [];
+let storyIndex = 0;
+let storyTimer = null;
+let storyProgressInterval = null;
+const STORY_DURATION = 5000;
+
+async function viewHighlight(id) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUser = urlParams.get('user') || currentUser.username;
+
+    const snap = await db.collection('users').doc(profileUser)
+        .collection('highlights').orderBy('order', 'asc').get();
+
+    storyItems = [];
+    snap.forEach(doc => storyItems.push({ id: doc.id, ...doc.data() }));
+    storyIndex = Math.max(0, storyItems.findIndex(item => item.id === id));
+
+    document.getElementById('storyUserAvatar').src =
+        currentUser.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + profileUser;
+    document.getElementById('storyUsername').textContent = currentUser.fullName || profileUser;
+
+    buildProgressBars();
+    document.getElementById('storyViewerOverlay').style.display = 'flex';
+    showStoryAt(storyIndex);
+
+    history.pushState({ storyViewer: true }, '');
+    window.onpopstate = closeStoryViewer;
 }
 
-function viewHighlight(id) { console.log('Viewing highlight:', id); }
+function buildProgressBars() {
+    document.getElementById('storyProgressRow').innerHTML = storyItems.map((_, i) =>
+        `<div class="story-progress-bar"><div class="story-progress-fill" id="storyFill${i}"></div></div>`
+    ).join('');
+}
 
+function showStoryAt(index) {
+    clearTimeout(storyTimer);
+    clearInterval(storyProgressInterval);
+
+    storyItems.forEach((_, i) => {
+        const fill = document.getElementById('storyFill' + i);
+        if (fill) fill.style.width = i < index ? '100%' : '0%';
+    });
+
+    const item = storyItems[index];
+    const wrap = document.getElementById('storyMediaWrap');
+    wrap.querySelectorAll('img, video').forEach(el => el.remove());
+
+    const isVideo = item.mediaType === 'video';
+    const mediaEl = document.createElement(isVideo ? 'video' : 'img');
+    mediaEl.src = item.imageUrl;
+    if (isVideo) { mediaEl.autoplay = true; mediaEl.playsInline = true; }
+    wrap.insertBefore(mediaEl, wrap.firstChild);
+
+    document.getElementById('storyTime').textContent = formatStoryTime(item.timestamp);
+
+    let elapsed = 0;
+    const fillEl = document.getElementById('storyFill' + index);
+    storyProgressInterval = setInterval(() => {
+        elapsed += 50;
+        if (fillEl) fillEl.style.width = Math.min(100, (elapsed / STORY_DURATION) * 100) + '%';
+    }, 50);
+
+    storyTimer = setTimeout(() => nextStory(), STORY_DURATION);
+}
+
+function formatStoryTime(ts) {
+    if (!ts || !ts.toDate) return '';
+    const diffMs = Date.now() - ts.toDate().getTime();
+    const hrs = Math.floor(diffMs / 3600000);
+    if (hrs < 1) return Math.floor(diffMs / 60000) + "m";
+    if (hrs < 24) return hrs + "h";
+    return Math.floor(hrs / 24) + "d";
+}
+
+function nextStory() {
+    if (storyIndex < storyItems.length - 1) { storyIndex++; showStoryAt(storyIndex); }
+    else closeStoryViewer();
+}
+
+function prevStory() {
+    if (storyIndex > 0) { storyIndex--; showStoryAt(storyIndex); }
+}
+
+function closeStoryViewer() {
+    clearTimeout(storyTimer);
+    clearInterval(storyProgressInterval);
+    document.getElementById('storyViewerOverlay').style.display = 'none';
+    document.getElementById('storyMediaWrap').querySelectorAll('img, video').forEach(el => el.remove());
+    window.onpopstate = null;
+                            }
+            
 function openHighlightMenu(event, id) {
     event.stopPropagation();
     document.querySelectorAll('.highlight-menu').forEach(m => m.remove());
@@ -1867,41 +2029,33 @@ async function saveNewHighlight() {
             }
 async function uploadHighlight(file, label) {
     const username = localStorage.getItem('nexus_user_session');
-    if (!username) { alert("Babu username a session!"); return; }
-    
-    alert("Farawa upload... username: " + username);
-    
+    if (!username) return;
     try {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', 'highlight');
         formData.append('username', username);
-        
         const response = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
         const data = await response.json();
-        
-        alert("Backend response: " + JSON.stringify(data));
-        
         if (data.success) {
             const countSnap = await db.collection('users').doc(username).collection('highlights').get();
-            
-            alert("Yanzu za a rubuta zuwa Firestore, adadin da ake dasu: " + countSnap.size);
-            
             await db.collection('users').doc(username).collection('highlights').add({
-                label: label, imageUrl: data.url, order: countSnap.size,
+                label: label,
+                imageUrl: data.url,
+                mediaType: file.type.startsWith('video') ? 'video' : 'image',
+                order: countSnap.size,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
-            alert("An adana cikin Firestore cikin nasara!");
-        } else { 
-            alert("Backend ya dawo da error: " + data.error);
-            throw new Error(data.error); 
+            showToast("Highlight uploaded successfully");
+        } else {
+            throw new Error(data.error || "Upload failed");
         }
     } catch (err) {
-        alert("KUSKURE: " + err.message);
-        console.error('Highlight upload kuskure:', err);
+        console.error('Highlight upload error:', err);
+        showToast("Upload failed. Please try again.", true);
     }
-                        }
+}
+                        
 async function editHighlightPrompt(id) {
     const username = localStorage.getItem('nexus_user_session');
     const newLabel = prompt("Sabon suna:");
@@ -2801,6 +2955,20 @@ async function handleChatBtn() {
         window.location.href = `chat-interior.html?with=${profileUser}`;
     }
 }
+
+function showToast(message, isError = false) {
+    let toast = document.getElementById('nexus-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'nexus-toast';
+        toast.className = 'nexus-toast';
+        document.body.appendChild(toast);
+    }
+    toast.style.borderColor = isError ? '#ff4d6d' : '#fde08d';
+    toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span>${message}</span>`;
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => toast.classList.remove('show'), 2500);
+        }
             
         </script>
     </main>
