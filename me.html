@@ -1297,14 +1297,12 @@ header {
     font-weight: 700 !important;
     color: #fff !important;
     margin-top: 3px !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 56px;
     text-align: center !important;
-    width: 100%;
-    display: block;
-    }
+    width: 64px;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.2;
+        }
 
 .highlight-add-ring {
     width: 74px; height: 80px;
@@ -1396,7 +1394,23 @@ header {
 .story-footer { display: flex; align-items: center; gap: 12px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); }
 .story-reply-input { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 10px 16px; color: #fff; font-size: 13px; }
 .story-footer i { color: #fff; font-size: 20px; cursor: pointer; }
-        
+
+.story-user-info { flex: 1; display: flex; align-items: baseline; gap: 6px; }
+.story-username { font-size: 13px; font-weight: 700; color: #fff; }
+.story-time { font-size: 12px; color: rgba(255,255,255,0.6); }
+.story-follow-btn {
+    background: transparent; border: 1px solid #fde08d; color: #fde08d;
+    font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 8px;
+    cursor: pointer; margin-right: 8px;
+}
+
+.story-media-wrap { touch-action: pan-y; }
+.story-slide {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    transition: transform 0.25s ease-out;
+}
+.story-slide img, .story-slide video { width:100%; height:100%; object-fit:contain; background:#000; }
+   
     </style>
 </head>
 <body>
@@ -1663,19 +1677,20 @@ header {
     <div class="story-header">
         <img id="storyUserAvatar" src="">
         <div class="story-user-info">
-            <div class="story-username" id="storyUsername"></div>
-            <div class="story-time" id="storyTime"></div>
+            <span class="story-username" id="storyUsername"></span>
+            <span class="story-time" id="storyTime"></span>
         </div>
+        <button id="storyFollowBtn" class="story-follow-btn" onclick="followFromStory()" style="display:none;">Follow</button>
         <i class="fa-solid fa-xmark story-close" onclick="closeStoryViewer()"></i>
     </div>
     <div class="story-media-wrap" id="storyMediaWrap">
         <div class="story-tap-zone story-tap-left" onclick="prevStory()"></div>
         <div class="story-tap-zone story-tap-right" onclick="nextStory()"></div>
     </div>
-    <div class="story-footer">
-        <input type="text" class="story-reply-input" placeholder="Send message">
-        <i class="fa-regular fa-heart"></i>
-        <i class="fa-regular fa-paper-plane"></i>
+    <div class="story-footer" id="storyFooter">
+        <input type="text" class="story-reply-input" placeholder="Send message" id="storyReplyInput">
+        <i class="fa-regular fa-heart" onclick="likeStory()"></i>
+        <i class="fa-regular fa-paper-plane" onclick="sendStoryReply()"></i>
     </div>
 </div>
     
@@ -1900,6 +1915,22 @@ async function viewHighlight(id) {
         currentUser.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + profileUser;
     document.getElementById('storyUsername').textContent = currentUser.fullName || profileUser;
 
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const isOwn = profileUser === myUsername;
+    const followBtn = document.getElementById('storyFollowBtn');
+
+    if (isOwn) {
+        followBtn.style.display = 'none';
+    } else {
+        const followCheck = await db.collection('follows')
+            .where('follower', '==', myUsername)
+            .where('following', '==', profileUser)
+            .get();
+        followBtn.style.display = followCheck.empty ? 'block' : 'none';
+    }
+
+    document.getElementById('storyFooter').style.display = isOwn ? 'none' : 'flex';
+
     buildProgressBars();
     document.getElementById('storyViewerOverlay').style.display = 'flex';
     showStoryAt(storyIndex);
@@ -1914,6 +1945,9 @@ function buildProgressBars() {
     ).join('');
 }
 
+let dragStartX = 0;
+let dragging = false;
+
 function showStoryAt(index) {
     clearTimeout(storyTimer);
     clearInterval(storyProgressInterval);
@@ -1923,15 +1957,17 @@ function showStoryAt(index) {
         if (fill) fill.style.width = i < index ? '100%' : '0%';
     });
 
-    const item = storyItems[index];
     const wrap = document.getElementById('storyMediaWrap');
-    wrap.querySelectorAll('img, video').forEach(el => el.remove());
+    wrap.querySelectorAll('.story-slide').forEach(el => el.remove());
 
+    const item = storyItems[index];
     const isVideo = item.mediaType === 'video';
-    const mediaEl = document.createElement(isVideo ? 'video' : 'img');
-    mediaEl.src = item.imageUrl;
-    if (isVideo) { mediaEl.autoplay = true; mediaEl.playsInline = true; }
-    wrap.insertBefore(mediaEl, wrap.firstChild);
+    const slide = document.createElement('div');
+    slide.className = 'story-slide';
+    slide.innerHTML = isVideo
+        ? `<video src="${item.imageUrl}" autoplay playsinline muted={false}></video>`
+        : `<img src="${item.imageUrl}">`;
+    wrap.insertBefore(slide, wrap.firstChild);
 
     document.getElementById('storyTime').textContent = formatStoryTime(item.timestamp);
 
@@ -1941,8 +1977,40 @@ function showStoryAt(index) {
         elapsed += 50;
         if (fillEl) fillEl.style.width = Math.min(100, (elapsed / STORY_DURATION) * 100) + '%';
     }, 50);
-
     storyTimer = setTimeout(() => nextStory(), STORY_DURATION);
+
+    setupDragListeners(wrap);
+}
+
+function setupDragListeners(wrap) {
+    wrap.ontouchstart = (e) => {
+        dragStartX = e.touches[0].clientX;
+        dragging = true;
+        clearTimeout(storyTimer);
+    };
+    wrap.ontouchmove = (e) => {
+        if (!dragging) return;
+        const deltaX = e.touches[0].clientX - dragStartX;
+        const current = wrap.querySelector('.story-slide');
+        if (current) current.style.transform = `translateX(${deltaX}px)`;
+    };
+    wrap.ontouchend = (e) => {
+        dragging = false;
+        const deltaX = e.changedTouches[0].clientX - dragStartX;
+        const current = wrap.querySelector('.story-slide');
+        const threshold = 80;
+
+        if (deltaX < -threshold && storyIndex < storyItems.length - 1) {
+            if (current) current.style.transform = `translateX(-100%)`;
+            setTimeout(() => nextStory(), 200);
+        } else if (deltaX > threshold && storyIndex > 0) {
+            if (current) current.style.transform = `translateX(100%)`;
+            setTimeout(() => prevStory(), 200);
+        } else {
+            if (current) current.style.transform = `translateX(0)`;
+            storyTimer = setTimeout(() => nextStory(), STORY_DURATION);
+        }
+    };
 }
 
 function formatStoryTime(ts) {
@@ -2971,6 +3039,22 @@ function showToast(message, isError = false) {
     requestAnimationFrame(() => toast.classList.add('show'));
     setTimeout(() => toast.classList.remove('show'), 2500);
         }
+
+    async function followFromStory() {
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUser = urlParams.get('user') || currentUser.username;
+
+    await db.collection('follows').add({
+        follower: myUsername, following: profileUser,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('users').doc(profileUser).update({
+        followerCount: firebase.firestore.FieldValue.increment(1)
+    });
+    document.getElementById('storyFollowBtn').style.display = 'none';
+    if (typeof initFollowButton === 'function') initFollowButton();
+            }
             
         </script>
     </main>
