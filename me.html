@@ -1375,9 +1375,6 @@ header {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background: #000; z-index: 20000; display: none; flex-direction: column;
 }
-.story-progress-row { display: flex; gap: 4px; padding: 10px 10px 0 10px; }
-.story-progress-bar { flex: 1; height: 2.5px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; }
-.story-progress-fill { height: 100%; width: 0%; background: #fff; }
 .story-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
 .story-header img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #fde08d; }
 .story-user-info { flex: 1; }
@@ -1677,16 +1674,16 @@ header {
      </div>
 
 <div class="story-viewer-overlay" id="storyViewerOverlay">
-    <div class="story-progress-row" id="storyProgressRow"></div>
-    <div class="story-header">
-        <img id="storyUserAvatar" src="">
-        <div class="story-user-info">
-            <span class="story-username" id="storyUsername"></span>
-            <span class="story-time" id="storyTime"></span>
-        </div>
-        <button id="storyFollowBtn" class="story-follow-btn" onclick="followFromStory()" style="display:none;">Follow</button>
-        <i class="fa-solid fa-xmark story-close" onclick="closeStoryViewer()"></i>
+ <div class="story-header">
+    <img id="storyUserAvatar" src="">
+    <div class="story-user-info">
+        <span class="story-username" id="storyUsername"></span>
+        <span class="story-time" id="storyTime"></span>
     </div>
+    <button id="storyFollowBtn" class="story-follow-btn" onclick="followFromStory()" style="display:none;">Follow</button>
+    <i class="fa-solid fa-ellipsis-vertical" style="color:#fff; font-size:16px; cursor:pointer; padding:5px;" onclick="openStoryOptionsMenu(event)"></i>
+    <i class="fa-solid fa-xmark story-close" onclick="closeStoryViewer()"></i>
+ </div>   
     <div class="story-media-wrap" id="storyMediaWrap">
         <div class="story-tap-zone story-tap-left" onclick="prevStory()"></div>
         <div class="story-tap-zone story-tap-right" onclick="nextStory()"></div>
@@ -1901,113 +1898,73 @@ function loadHighlights() {
 let storyItems = [];
 let storyIndex = 0;
 let storyTimer = null;
-let storyProgressInterval = null;
 const STORY_DURATION = 5000;
 
 async function viewHighlight(id) {
     const urlParams = new URLSearchParams(window.location.search);
     const profileUser = urlParams.get('user') || currentUser.username;
 
-    const snap = await db.collection('users').doc(profileUser)
-        .collection('highlights').orderBy('order', 'asc').get();
+    const doc = await db.collection('users').doc(profileUser)
+        .collection('highlights').doc(id).get();
 
-    storyItems = [];
-    snap.forEach(doc => storyItems.push({ id: doc.id, ...doc.data() }));
-    storyIndex = Math.max(0, storyItems.findIndex(item => item.id === id));
+    if (!doc.exists) return;
+
+    // Kowane highlight independent ne - hoto/video ɗinsa kaɗai
+    storyItems = [{ id: doc.id, ...doc.data() }];
+    storyIndex = 0;
 
     document.getElementById('storyUserAvatar').src =
         currentUser.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + profileUser;
     document.getElementById('storyUsername').textContent = currentUser.fullName || profileUser;
 
     const myUsername = localStorage.getItem('nexus_user_session');
-const isOwn = profileUser === myUsername;
-const followBtn = document.getElementById('storyFollowBtn');
+    const isOwn = profileUser === myUsername;
+    const followBtn = document.getElementById('storyFollowBtn');
 
-if (isOwn) {
-    followBtn.style.display = 'none';
-} else {
-    const followCheck = await db.collection('follows')
-        .where('follower', '==', myUsername)
-        .where('following', '==', profileUser)
-        .get();
-    followBtn.style.display = followCheck.empty ? 'block' : 'none';
-}
+    if (isOwn) {
+        followBtn.style.display = 'none';
+    } else {
+        const followCheck = await db.collection('follows')
+            .where('follower', '==', myUsername)
+            .where('following', '==', profileUser)
+            .get();
+        followBtn.style.display = followCheck.empty ? 'block' : 'none';
+    }
 
-    buildProgressBars();
     document.getElementById('storyViewerOverlay').style.display = 'flex';
-    showStoryAt(storyIndex);
+    showStoryAt(0);
 
     history.pushState({ storyViewer: true }, '');
     window.onpopstate = closeStoryViewer;
 }
 
-
-function buildProgressBars() {
-    document.getElementById('storyProgressRow').innerHTML = storyItems.map((_, i) =>
-        `<div class="story-progress-bar"><div class="story-progress-fill" id="storyFill${i}"></div></div>`
-    ).join('');
-}
-
-let dragStartX = 0;
-let dragging = false;
-
-function showStoryAt(index, direction = 'next') {
+function showStoryAt(index) {
     clearTimeout(storyTimer);
-    clearInterval(storyProgressInterval);
-
-    storyItems.forEach((_, i) => {
-        const fill = document.getElementById('storyFill' + i);
-        if (fill) fill.style.width = i < index ? '100%' : '0%';
-    });
 
     const wrap = document.getElementById('storyMediaWrap');
-    const oldSlide = wrap.querySelector('.story-slide');
+    wrap.querySelectorAll('.story-slide').forEach(el => el.remove());
 
     const item = storyItems[index];
     const isVideo = item.mediaType === 'video';
-    const newSlide = document.createElement('div');
-    newSlide.className = 'story-slide';
-    newSlide.style.transform = direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)';
-    newSlide.innerHTML = isVideo
+    const slide = document.createElement('div');
+    slide.className = 'story-slide';
+    slide.innerHTML = isVideo
         ? `<video src="${item.imageUrl}" autoplay playsinline muted={false}></video>`
         : `<img src="${item.imageUrl}">`;
-    wrap.appendChild(newSlide);
-
-    void newSlide.offsetWidth; // force reflow
-    newSlide.style.transition = 'transform 0.3s ease-out';
-    newSlide.style.transform = 'translateX(0)';
-
-    if (oldSlide) {
-        oldSlide.style.transition = 'transform 0.3s ease-out';
-        oldSlide.style.transform = direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)';
-        setTimeout(() => oldSlide.remove(), 300);
-    }
+    wrap.insertBefore(slide, wrap.firstChild);
 
     document.getElementById('storyTime').textContent = formatStoryTime(item.timestamp);
 
-    // Wasu highlights ba su da reply bar (misali: business posts)
     const footer = document.getElementById('storyFooter');
     footer.style.display = item.allowReply === false ? 'none' : 'flex';
 
-    let elapsed = 0;
-    const fillEl = document.getElementById('storyFill' + index);
-    storyProgressInterval = setInterval(() => {
-        elapsed += 50;
-        if (fillEl) fillEl.style.width = Math.min(100, (elapsed / STORY_DURATION) * 100) + '%';
-    }, 50);
-    storyTimer = setTimeout(() => nextStory(), STORY_DURATION);
+    storyTimer = setTimeout(() => closeStoryViewer(), STORY_DURATION);
 
     setupDragListeners(wrap);
 }
 
-function nextStory() {
-    if (storyIndex < storyItems.length - 1) { storyIndex++; showStoryAt(storyIndex, 'next'); }
-    else closeStoryViewer();
-}
-
-function prevStory() {
-    if (storyIndex > 0) { storyIndex--; showStoryAt(storyIndex, 'prev'); }
-}
+function nextStory() { closeStoryViewer(); }
+function prevStory() { closeStoryViewer(); }
 
 function setupDragListeners(wrap) {
     wrap.ontouchstart = (e) => {
@@ -3085,6 +3042,40 @@ function showToast(message, isError = false) {
 
     function shareStory() {
     showToast("Story shared");
+    }
+
+    function openStoryOptionsMenu(event) {
+    event.stopPropagation();
+    clearTimeout(storyTimer);
+    document.querySelectorAll('.highlight-menu').forEach(m => m.remove());
+
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUser = urlParams.get('user') || currentUser.username;
+    const isOwn = profileUser === myUsername;
+
+    const menu = document.createElement('div');
+    menu.className = 'highlight-menu';
+    menu.innerHTML = isOwn
+        ? `<button onclick="editHighlightPrompt('${storyItems[storyIndex].id}'); this.parentElement.remove();"><i class="fa-solid fa-pen"></i>&nbsp; Edit</button>
+           <button class="danger" onclick="deleteHighlight('${storyItems[storyIndex].id}'); closeStoryViewer();"><i class="fa-solid fa-trash"></i>&nbsp; Delete</button>`
+        : `<button onclick="this.parentElement.remove();"><i class="fa-solid fa-flag"></i>&nbsp; Report</button>`;
+
+    document.body.appendChild(menu);
+    const rect = event.target.getBoundingClientRect();
+    menu.style.top = (rect.bottom + 8) + 'px';
+    menu.style.right = '15px';
+    menu.style.left = 'auto';
+
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu(e) {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+                storyTimer = setTimeout(() => closeStoryViewer(), STORY_DURATION);
+            }
+        });
+    }, 50);
     }
         </script>
     </main>
