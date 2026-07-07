@@ -1248,12 +1248,6 @@ header {
     scrollbar-width: none;
 }
 
-.highlight-item {
-    text-align: center;
-    min-width: 72px;
-    flex-shrink: 0;
-}
-
 
 /* HIGHLIGHTS - RESIZE + FONT UPDATE (Instagram-style CRUD) */
 .smart-box-highlights {
@@ -1269,6 +1263,9 @@ header {
     scrollbar-width: none !important;
 }
 .highlight-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
     text-align: center !important;
     min-width: 56px !important;
     flex-shrink: 0 !important;
@@ -1291,19 +1288,20 @@ header {
     border-radius: 13px !important;
     object-fit: cover !important;
 }
+
 .highlight-label {
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     font-size: 9px !important;
     font-weight: 700 !important;
     color: #fff !important;
-    margin-top: 3px !important;
+    margin: 3px auto 0 auto !important;
     text-align: center !important;
-    width: 64px;
+    max-width: 74px;
     white-space: normal;
     word-wrap: break-word;
     line-height: 1.2;
-        }
-
+    }
+        
 .highlight-add-ring {
     width: 74px; height: 80px;
     border-radius: 16px;
@@ -1395,7 +1393,13 @@ header {
 .story-reply-input { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 10px 16px; color: #fff; font-size: 13px; }
 .story-footer i { color: #fff; font-size: 20px; cursor: pointer; }
 
-.story-user-info { flex: 1; display: flex; align-items: baseline; gap: 6px; }
+.story-user-info { 
+    flex: 1; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    padding-right: 10px; 
+}
 .story-username { font-size: 13px; font-weight: 700; color: #fff; }
 .story-time { font-size: 12px; color: rgba(255,255,255,0.6); }
 .story-follow-btn {
@@ -1687,11 +1691,11 @@ header {
         <div class="story-tap-zone story-tap-left" onclick="prevStory()"></div>
         <div class="story-tap-zone story-tap-right" onclick="nextStory()"></div>
     </div>
-    <div class="story-footer" id="storyFooter">
-        <input type="text" class="story-reply-input" placeholder="Send message" id="storyReplyInput">
-        <i class="fa-regular fa-heart" onclick="likeStory()"></i>
-        <i class="fa-regular fa-paper-plane" onclick="sendStoryReply()"></i>
-    </div>
+<div class="story-footer" id="storyFooter">
+    <input type="text" class="story-reply-input" placeholder="Send message" id="storyReplyInput">
+    <i class="fa-regular fa-clone" onclick="shareStory()"></i>
+    <i class="fa-regular fa-heart" onclick="likeStory()"></i>
+    <i class="fa-regular fa-paper-plane" onclick="sendStoryReply()"></i>
 </div>
     
         <script>
@@ -1947,7 +1951,7 @@ function buildProgressBars() {
 let dragStartX = 0;
 let dragging = false;
 
-function showStoryAt(index) {
+function showStoryAt(index, direction = 'next') {
     clearTimeout(storyTimer);
     clearInterval(storyProgressInterval);
 
@@ -1957,18 +1961,33 @@ function showStoryAt(index) {
     });
 
     const wrap = document.getElementById('storyMediaWrap');
-    wrap.querySelectorAll('.story-slide').forEach(el => el.remove());
+    const oldSlide = wrap.querySelector('.story-slide');
 
     const item = storyItems[index];
     const isVideo = item.mediaType === 'video';
-    const slide = document.createElement('div');
-    slide.className = 'story-slide';
-    slide.innerHTML = isVideo
+    const newSlide = document.createElement('div');
+    newSlide.className = 'story-slide';
+    newSlide.style.transform = direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)';
+    newSlide.innerHTML = isVideo
         ? `<video src="${item.imageUrl}" autoplay playsinline muted={false}></video>`
         : `<img src="${item.imageUrl}">`;
-    wrap.insertBefore(slide, wrap.firstChild);
+    wrap.appendChild(newSlide);
+
+    void newSlide.offsetWidth; // force reflow
+    newSlide.style.transition = 'transform 0.3s ease-out';
+    newSlide.style.transform = 'translateX(0)';
+
+    if (oldSlide) {
+        oldSlide.style.transition = 'transform 0.3s ease-out';
+        oldSlide.style.transform = direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)';
+        setTimeout(() => oldSlide.remove(), 300);
+    }
 
     document.getElementById('storyTime').textContent = formatStoryTime(item.timestamp);
+
+    // Wasu highlights ba su da reply bar (misali: business posts)
+    const footer = document.getElementById('storyFooter');
+    footer.style.display = item.allowReply === false ? 'none' : 'flex';
 
     let elapsed = 0;
     const fillEl = document.getElementById('storyFill' + index);
@@ -1979,6 +1998,15 @@ function showStoryAt(index) {
     storyTimer = setTimeout(() => nextStory(), STORY_DURATION);
 
     setupDragListeners(wrap);
+}
+
+function nextStory() {
+    if (storyIndex < storyItems.length - 1) { storyIndex++; showStoryAt(storyIndex, 'next'); }
+    else closeStoryViewer();
+}
+
+function prevStory() {
+    if (storyIndex > 0) { storyIndex--; showStoryAt(storyIndex, 'prev'); }
 }
 
 function setupDragListeners(wrap) {
@@ -3054,7 +3082,10 @@ function showToast(message, isError = false) {
     document.getElementById('storyFollowBtn').style.display = 'none';
     if (typeof initFollowButton === 'function') initFollowButton();
             }
-            
+
+    function shareStory() {
+    showToast("Story shared");
+    }
         </script>
     </main>
 </body>
