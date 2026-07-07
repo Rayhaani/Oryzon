@@ -1130,10 +1130,7 @@ header {
     min-height: 200px;
    }   
 
-
-
-
-       
+   
         :root {
     /* Mun mayar da babban launin gwal din zuwa asalin kalar da kake so */
     --premium-gold: #fde08d; 
@@ -1393,10 +1390,10 @@ header {
 .story-user-info { 
     flex: 1; 
     display: flex; 
-    align-items: center; 
-    justify-content: space-between; 
-    padding-right: 10px; 
+    align-items: baseline; 
+    gap: 6px; 
 }
+        
 .story-username { font-size: 13px; font-weight: 700; color: #fff; }
 .story-time { font-size: 12px; color: rgba(255,255,255,0.6); }
 .story-follow-btn {
@@ -1410,6 +1407,8 @@ header {
     position: absolute; top:0; left:0; width:100%; height:100%;
     transition: transform 0.25s ease-out;
 }
+.story-header { flex-shrink: 0 !important; }
+.story-footer { flex-shrink: 0 !important; }
 .story-slide img, .story-slide video { width:100%; height:100%; object-fit:contain; background:#000; }
    
     </style>
@@ -1681,9 +1680,9 @@ header {
         <span class="story-time" id="storyTime"></span>
     </div>
     <button id="storyFollowBtn" class="story-follow-btn" onclick="followFromStory()" style="display:none;">Follow</button>
-    <i class="fa-solid fa-ellipsis-vertical" style="color:#fff; font-size:16px; cursor:pointer; padding:5px;" onclick="openStoryOptionsMenu(event)"></i>
-    <i class="fa-solid fa-xmark story-close" onclick="closeStoryViewer()"></i>
- </div>   
+    <i class="fa-solid fa-ellipsis-vertical" style="color:#fff; font-size:18px; cursor:pointer; padding:5px;" onclick="openStoryOptionsMenu(event)"></i>
+ </div>
+    
     <div class="story-media-wrap" id="storyMediaWrap">
         <div class="story-tap-zone story-tap-left" onclick="prevStory()"></div>
         <div class="story-tap-zone story-tap-right" onclick="nextStory()"></div>
@@ -1694,6 +1693,7 @@ header {
     <i class="fa-regular fa-heart" onclick="likeStory()"></i>
     <i class="fa-regular fa-paper-plane" onclick="sendStoryReply()"></i>
 </div>
+</div> 
     
         <script>
 
@@ -1904,14 +1904,12 @@ async function viewHighlight(id) {
     const urlParams = new URLSearchParams(window.location.search);
     const profileUser = urlParams.get('user') || currentUser.username;
 
-    const doc = await db.collection('users').doc(profileUser)
-        .collection('highlights').doc(id).get();
+    const snap = await db.collection('users').doc(profileUser)
+        .collection('highlights').orderBy('order', 'asc').get();
 
-    if (!doc.exists) return;
-
-    // Kowane highlight independent ne - hoto/video ɗinsa kaɗai
-    storyItems = [{ id: doc.id, ...doc.data() }];
-    storyIndex = 0;
+    storyItems = [];
+    snap.forEach(doc => storyItems.push({ id: doc.id, ...doc.data() }));
+    storyIndex = Math.max(0, storyItems.findIndex(item => item.id === id));
 
     document.getElementById('storyUserAvatar').src =
         currentUser.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + profileUser;
@@ -1920,19 +1918,17 @@ async function viewHighlight(id) {
     const myUsername = localStorage.getItem('nexus_user_session');
     const isOwn = profileUser === myUsername;
     const followBtn = document.getElementById('storyFollowBtn');
-
     if (isOwn) {
         followBtn.style.display = 'none';
     } else {
         const followCheck = await db.collection('follows')
             .where('follower', '==', myUsername)
-            .where('following', '==', profileUser)
-            .get();
+            .where('following', '==', profileUser).get();
         followBtn.style.display = followCheck.empty ? 'block' : 'none';
     }
 
     document.getElementById('storyViewerOverlay').style.display = 'flex';
-    showStoryAt(0);
+    showStoryAt(storyIndex);
 
     history.pushState({ storyViewer: true }, '');
     window.onpopstate = closeStoryViewer;
@@ -1942,48 +1938,69 @@ function showStoryAt(index) {
     clearTimeout(storyTimer);
 
     const wrap = document.getElementById('storyMediaWrap');
-    wrap.querySelectorAll('.story-slide').forEach(el => el.remove());
+    const oldSlide = wrap.querySelector('.story-slide');
 
     const item = storyItems[index];
     const isVideo = item.mediaType === 'video';
-    const slide = document.createElement('div');
-    slide.className = 'story-slide';
-    slide.innerHTML = isVideo
+    const newSlide = document.createElement('div');
+    newSlide.className = 'story-slide';
+    newSlide.innerHTML = isVideo
         ? `<video src="${item.imageUrl}" autoplay playsinline muted={false}></video>`
         : `<img src="${item.imageUrl}">`;
-    wrap.insertBefore(slide, wrap.firstChild);
+    wrap.insertBefore(newSlide, wrap.firstChild);
+    if (oldSlide) oldSlide.remove();
 
     document.getElementById('storyTime').textContent = formatStoryTime(item.timestamp);
 
     const footer = document.getElementById('storyFooter');
     footer.style.display = item.allowReply === false ? 'none' : 'flex';
 
-    storyTimer = setTimeout(() => closeStoryViewer(), STORY_DURATION);
+    // Timer din yana aiki a boye — babu progress bar da za a gani
+    storyTimer = setTimeout(() => nextStory(), STORY_DURATION);
 
     setupDragListeners(wrap);
 }
 
-function nextStory() { closeStoryViewer(); }
-function prevStory() { closeStoryViewer(); }
+function nextStory() {
+    if (storyIndex < storyItems.length - 1) { storyIndex++; showStoryAt(storyIndex); }
+    else closeStoryViewer();
+}
+
+function prevStory() {
+    if (storyIndex > 0) { storyIndex--; showStoryAt(storyIndex); }
+            }
 
 function setupDragListeners(wrap) {
+    let startY = 0;
     wrap.ontouchstart = (e) => {
         dragStartX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
         dragging = true;
         clearTimeout(storyTimer);
     };
     wrap.ontouchmove = (e) => {
         if (!dragging) return;
         const deltaX = e.touches[0].clientX - dragStartX;
+        const deltaY = e.touches[0].clientY - startY;
         const current = wrap.querySelector('.story-slide');
-        if (current) current.style.transform = `translateX(${deltaX}px)`;
+        if (!current) return;
+        if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 0) {
+            current.style.transform = `translateY(${deltaY}px)`;
+        } else {
+            current.style.transform = `translateX(${deltaX}px)`;
+        }
     };
     wrap.ontouchend = (e) => {
         dragging = false;
         const deltaX = e.changedTouches[0].clientX - dragStartX;
+        const deltaY = e.changedTouches[0].clientY - startY;
         const current = wrap.querySelector('.story-slide');
         const threshold = 80;
 
+        if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > threshold) {
+            closeStoryViewer();
+            return;
+        }
         if (deltaX < -threshold && storyIndex < storyItems.length - 1) {
             if (current) current.style.transform = `translateX(-100%)`;
             setTimeout(() => nextStory(), 200);
@@ -1991,7 +2008,7 @@ function setupDragListeners(wrap) {
             if (current) current.style.transform = `translateX(100%)`;
             setTimeout(() => prevStory(), 200);
         } else {
-            if (current) current.style.transform = `translateX(0)`;
+            if (current) current.style.transform = `translateX(0) translateY(0)`;
             storyTimer = setTimeout(() => nextStory(), STORY_DURATION);
         }
     };
