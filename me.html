@@ -1867,27 +1867,41 @@ async function saveNewHighlight() {
 
 async function uploadHighlight(file, label) {
     const username = localStorage.getItem('nexus_user_session');
-    if (!username) return;
+    if (!username) { alert("Babu username a session!"); return; }
+    
+    alert("Farawa upload... username: " + username);
+    
     try {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', 'highlight');
         formData.append('username', username);
+        
         const response = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
         const data = await response.json();
+        
+        alert("Backend response: " + JSON.stringify(data));
+        
         if (data.success) {
             const countSnap = await db.collection('users').doc(username).collection('highlights').get();
+            
+            alert("Yanzu za a rubuta zuwa Firestore, adadin da ake dasu: " + countSnap.size);
+            
             await db.collection('users').doc(username).collection('highlights').add({
                 label: label, imageUrl: data.url, order: countSnap.size,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-        } else { throw new Error(data.error); }
+            
+            alert("An adana cikin Firestore cikin nasara!");
+        } else { 
+            alert("Backend ya dawo da error: " + data.error);
+            throw new Error(data.error); 
+        }
     } catch (err) {
+        alert("KUSKURE: " + err.message);
         console.error('Highlight upload kuskure:', err);
-        alert('Kuskure: ' + err.message);
     }
-}
-
+                        }
 async function editHighlightPrompt(id) {
     const username = localStorage.getItem('nexus_user_session');
     const newLabel = prompt("Sabon suna:");
