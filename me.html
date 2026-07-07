@@ -1410,7 +1410,17 @@ header {
 .story-header { flex-shrink: 0 !important; }
 .story-footer { flex-shrink: 0 !important; }
 .story-slide img, .story-slide video { width:100%; height:100%; object-fit:contain; background:#000; }
-   
+
+.story-footer {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.story-slide {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    }
+        
     </style>
 </head>
 <body>
@@ -1934,7 +1944,7 @@ async function viewHighlight(id) {
     window.onpopstate = closeStoryViewer;
 }
 
-function showStoryAt(index) {
+function showStoryAt(index, direction = 'next') {
     clearTimeout(storyTimer);
 
     const wrap = document.getElementById('storyMediaWrap');
@@ -1947,28 +1957,47 @@ function showStoryAt(index) {
     newSlide.innerHTML = isVideo
         ? `<video src="${item.imageUrl}" autoplay playsinline muted={false}></video>`
         : `<img src="${item.imageUrl}">`;
-    wrap.insertBefore(newSlide, wrap.firstChild);
-    if (oldSlide) oldSlide.remove();
+
+    // Sabon slide ya fara a waje (dama idan 'next', hagu idan 'prev')
+    newSlide.style.transform = direction === 'prev' ? 'translateX(-100%)' : 'translateX(100%)';
+    newSlide.style.transition = 'none';
+    wrap.appendChild(newSlide);
+
+    // Tilasta reflow domin transition ta yi aiki
+    void newSlide.offsetWidth;
+
+    requestAnimationFrame(() => {
+        newSlide.style.transition = 'transform 0.3s ease-out';
+        newSlide.style.transform = 'translateX(0)';
+        if (oldSlide) {
+            oldSlide.style.transition = 'transform 0.3s ease-out';
+            oldSlide.style.transform = direction === 'prev' ? 'translateX(100%)' : 'translateX(-100%)';
+        }
+    });
+
+    // Goge tsohon slide BAYAN transition ya gama (300ms)
+    if (oldSlide) {
+        setTimeout(() => oldSlide.remove(), 320);
+    }
 
     document.getElementById('storyTime').textContent = formatStoryTime(item.timestamp);
 
     const footer = document.getElementById('storyFooter');
     footer.style.display = item.allowReply === false ? 'none' : 'flex';
 
-    // Timer din yana aiki a boye — babu progress bar da za a gani
     storyTimer = setTimeout(() => nextStory(), STORY_DURATION);
 
     setupDragListeners(wrap);
 }
-
+            
 function nextStory() {
-    if (storyIndex < storyItems.length - 1) { storyIndex++; showStoryAt(storyIndex); }
+    if (storyIndex < storyItems.length - 1) { storyIndex++; showStoryAt(storyIndex, 'next'); }
     else closeStoryViewer();
 }
 
 function prevStory() {
-    if (storyIndex > 0) { storyIndex--; showStoryAt(storyIndex); }
-            }
+    if (storyIndex > 0) { storyIndex--; showStoryAt(storyIndex, 'prev'); }
+}
 
 function setupDragListeners(wrap) {
     let startY = 0;
@@ -2460,9 +2489,7 @@ if (document.readyState === 'loading') {
     startProfileOnce();
 }
 auth.onAuthStateChanged(startProfileOnce);
-        
-
-            
+                   
 // ============================================================
 // SAKA WANNAN A CIKIN <script> TAG ɗinka a me.html
 // Ka canza BACKEND_URL zuwa URL ɗinka na Render.com
@@ -3060,6 +3087,18 @@ function showToast(message, isError = false) {
     function shareStory() {
     showToast("Story shared");
     }
+
+    function likeStory() {
+    showToast("Liked");
+}
+
+function sendStoryReply() {
+    const input = document.getElementById('storyReplyInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    showToast("Message sent");
+    input.value = '';
+}
 
     function openStoryOptionsMenu(event) {
     event.stopPropagation();
