@@ -1901,49 +1901,42 @@ let storyProgressInterval = null;
 const STORY_DURATION = 5000;
 
 async function viewHighlight(id) {
-    try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const profileUser = urlParams.get('user') || currentUser.username;
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUser = urlParams.get('user') || currentUser.username;
 
-        const snap = await db.collection('users').doc(profileUser)
-            .collection('highlights').orderBy('order', 'asc').get();
+    const snap = await db.collection('users').doc(profileUser)
+        .collection('highlights').orderBy('order', 'asc').get();
 
-        storyItems = [];
-        snap.forEach(doc => storyItems.push({ id: doc.id, ...doc.data() }));
-        storyIndex = Math.max(0, storyItems.findIndex(item => item.id === id));
+    storyItems = [];
+    snap.forEach(doc => storyItems.push({ id: doc.id, ...doc.data() }));
+    storyIndex = Math.max(0, storyItems.findIndex(item => item.id === id));
 
-        document.getElementById('storyUserAvatar').src =
-            currentUser.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + profileUser;
-        document.getElementById('storyUsername').textContent = currentUser.fullName || profileUser;
+    document.getElementById('storyUserAvatar').src =
+        currentUser.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + profileUser;
+    document.getElementById('storyUsername').textContent = currentUser.fullName || profileUser;
 
-        const myUsername = localStorage.getItem('nexus_user_session');
-        const isOwn = profileUser === myUsername;
-        const followBtn = document.getElementById('storyFollowBtn');
+    const myUsername = localStorage.getItem('nexus_user_session');
+const isOwn = profileUser === myUsername;
+const followBtn = document.getElementById('storyFollowBtn');
 
-        if (isOwn) {
-            followBtn.style.display = 'none';
-        } else {
-            const followCheck = await db.collection('follows')
-                .where('follower', '==', myUsername)
-                .where('following', '==', profileUser)
-                .get();
-            followBtn.style.display = followCheck.empty ? 'block' : 'none';
-        }
-
-        document.getElementById('storyFooter').style.display = isOwn ? 'none' : 'flex';
-
-        buildProgressBars();
-        document.getElementById('storyViewerOverlay').style.display = 'flex';
-        showStoryAt(storyIndex);
-
-        history.pushState({ storyViewer: true }, '');
-        window.onpopstate = closeStoryViewer;
-
-    } catch (err) {
-        console.error("viewHighlight error:", err);
-        showToast("Kuskure wajen buɗe highlight: " + err.message, true);
-    }
+if (isOwn) {
+    followBtn.style.display = 'none';
+} else {
+    const followCheck = await db.collection('follows')
+        .where('follower', '==', myUsername)
+        .where('following', '==', profileUser)
+        .get();
+    followBtn.style.display = followCheck.empty ? 'block' : 'none';
 }
+
+    buildProgressBars();
+    document.getElementById('storyViewerOverlay').style.display = 'flex';
+    showStoryAt(storyIndex);
+
+    history.pushState({ storyViewer: true }, '');
+    window.onpopstate = closeStoryViewer;
+}
+
 
 function buildProgressBars() {
     document.getElementById('storyProgressRow').innerHTML = storyItems.map((_, i) =>
