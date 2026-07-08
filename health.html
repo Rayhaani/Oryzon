@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Nexus Medical City | Global Intelligence Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Outfit:wght@100;300;400;600&family=Orbitron:wght@400;900&family=Space+Grotesk:wght@300;700&family=Inter:wght@300;400;700&display=swap');
+
+        :root {
+            --neon-cyan: #00f2ff;
+            --bg-dark: #050505;
+            --glow: #00f2ff;
+            --emergency: #ff0055;
+            --galaxy-gold: #ff9d00;
+            --nexus-purple: #a855f7;
+        }
+
+        body {
+            background-color: #050505;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(218, 165, 32, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(139, 69, 19, 0.15) 0%, transparent 40%),
+                url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-attachment: fixed;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .galaxy-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(ellipse at center, transparent 0%, rgba(5, 5, 5, 0.9) 100%); z-index: -1; }
+        .header-text { font-family: 'Syncopate', sans-serif; letter-spacing: 0.5rem; text-transform: uppercase; }
+        .futuristic-font { font-family: 'Orbitron', sans-serif; }
+
+        .unit-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        .unit-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: var(--card-accent, var(--neon-cyan)); opacity: 0; transition: opacity 0.3s;
+        }
+        .unit-card:hover { border-color: var(--card-accent, var(--neon-cyan)); transform: translateY(-6px); background: rgba(255,255,255,0.05); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3); }
+        .unit-card:hover::before { opacity: 1; }
+        .unit-card:focus-visible { outline: 2px solid var(--neon-cyan); outline-offset: 2px; }
+        .unit-card .unit-icon-box {
+            width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            background: color-mix(in srgb, var(--card-accent, var(--neon-cyan)) 12%, transparent);
+            margin: 0 auto 12px auto;
+        }
+
+        .category-label { font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.35); display: flex; align-items: center; gap: 10px; margin: 28px 0 12px 0; }
+        .category-label::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+        .category-label:first-of-type { margin-top: 0; }
+
+        .search-bar { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 12px 16px; margin-bottom: 8px; }
+        .search-bar input { background: transparent; border: none; outline: none; color: #fff; font-size: 13px; flex: 1; }
+        .search-bar input::placeholder { color: rgba(255,255,255,0.35); }
+
+        .emergency-section { border: 1px solid var(--emergency); text-align: center; background: rgba(255, 0, 85, 0.05); border-radius: 24px; padding: 24px 20px; position: relative; }
+        .sos-btn { width: 76px; height: 76px; background: var(--emergency); border-radius: 50%; margin: 6px auto; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border: none; color: #fff; position: relative; z-index: 2; }
+        .sos-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+        .beacon-ring { position: absolute; top: 50%; left: 50%; width: 76px; height: 76px; border-radius: 50%; border: 1px solid var(--emergency); transform: translate(-50%,-50%); animation: beaconPulse 2.4s ease-out infinite; }
+        .beacon-ring.r2 { animation-delay: 0.8s; }
+        .beacon-ring.r3 { animation-delay: 1.6s; }
+        @keyframes beaconPulse { 0% { width: 76px; height: 76px; opacity: 0.6; } 100% { width: 160px; height: 160px; opacity: 0; } }
+
+        .btn-nexus { 
+            position: relative; z-index: 100; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 12px 30px; border-radius: 50px; text-transform: uppercase; font-size: 10px; font-weight: 700; transition: 0.4s; cursor: pointer; display: inline-block; background: transparent;
+        }
+        .btn-nexus:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 20px var(--neon-cyan); }
+
+        .golden-heading { background: linear-gradient(to bottom, #fff 0%, #ff9d00 50%, #b26b00 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+        .pharmacy-3d-card { perspective: 1000px; }
+        .inner-card { transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); transform-style: preserve-3d; }
+        .pharmacy-3d-card:hover .inner-card { transform: rotateY(15deg) rotateX(10deg); border-color: var(--galaxy-gold); }
+
+        /* ===== AI TRIAGE - WORLD-CLASS COMPONENTS ===== */
+        .ai-launch-card { border: 1px solid rgba(0,242,255,0.25); background: linear-gradient(135deg, rgba(0,242,255,0.06), rgba(255,255,255,0.02)); border-radius: 24px; padding: 20px; cursor: pointer; transition: 0.35s; }
+        .ai-launch-card:hover { border-color: var(--neon-cyan); box-shadow: 0 10px 30px rgba(0,242,255,0.12); transform: translateY(-4px); }
+
+        .engine-chip { font-size: 8px; letter-spacing: 0.05em; padding: 3px 9px; border-radius: 20px; font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; }
+        .engine-chip.medgemma { background: rgba(0,242,255,0.1); color: var(--neon-cyan); border: 1px solid rgba(0,242,255,0.25); }
+        .engine-chip.llama { background: rgba(255,157,0,0.1); color: var(--galaxy-gold); border: 1px solid rgba(255,157,0,0.25); }
+
+        .symptom-chip { font-size: 11px; padding: 7px 14px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); white-space: nowrap; cursor: pointer; transition: 0.2s; }
+        .symptom-chip:active, .symptom-chip:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); }
+
+        .typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--neon-cyan); display: inline-block; margin: 0 1px; animation: typingBounce 1.2s infinite ease-in-out; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+        /* Language globe picker */
+        .lang-globe-btn { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.7); cursor: pointer; }
+        .lang-globe-btn:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); }
+        .lang-dropdown { position: absolute; top: 44px; right: 0; width: 190px; background: #0a0a0c; border: 1px solid rgba(0,242,255,0.2); border-radius: 16px; padding: 6px; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .lang-option { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 10px; font-size: 12px; color: rgba(255,255,255,0.8); cursor: pointer; }
+        .lang-option:hover { background: rgba(0,242,255,0.08); color: #fff; }
+        .lang-option.selected { color: var(--neon-cyan); }
+
+        /* Trust strip */
+        .trust-step { text-align: center; padding: 14px 10px; }
+        .trust-step .num { font-family: 'Orbitron'; font-size: 10px; color: var(--neon-cyan); opacity: 0.6; }
+
+        /* Nearby care / doctors */
+        .nearby-card { border: 1px solid rgba(255,157,0,0.25); background: linear-gradient(135deg, rgba(255,157,0,0.06), rgba(255,255,255,0.02)); border-radius: 24px; padding: 20px; }
+        .doctors-card { border: 1px solid rgba(168,85,247,0.25); background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(255,255,255,0.02)); border-radius: 24px; padding: 20px; }
+
+        /* Executive checkup wizard */
+        .wizard-progress { display: flex; gap: 4px; margin-bottom: 20px; }
+        .wizard-progress span { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,0.1); }
+        .wizard-progress span.done { background: var(--neon-cyan); }
+        .wizard-option { padding: 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); font-size: 12px; text-align: center; cursor: pointer; }
+        .wizard-option.selected { border-color: var(--neon-cyan); background: rgba(0,242,255,0.08); color: var(--neon-cyan); }
+
+        button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--neon-cyan); outline-offset: 2px; }
+
+        /* ===== WORLD-CLASS PROMO CARDS (Checkup + Pharmacy) ===== */
+        .promo-card { position: relative; border-radius: 2.5rem; padding: 3px; overflow: hidden; }
+        .promo-card.cyan-purple { background: linear-gradient(135deg, rgba(0,242,255,0.4), rgba(168,85,247,0.4), rgba(0,242,255,0.1)); }
+        .promo-card.gold { background: linear-gradient(135deg, rgba(255,157,0,0.4), rgba(255,255,255,0.15), rgba(255,157,0,0.1)); }
+        .promo-card-inner { background: #08080a; border-radius: calc(2.5rem - 3px); padding: 40px 32px; position: relative; overflow: hidden; }
+        .promo-glow { position: absolute; width: 300px; height: 300px; border-radius: 50%; filter: blur(80px); opacity: 0.25; pointer-events: none; }
+        .promo-stat { text-align: center; padding: 10px 6px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+        .promo-feature { display: flex; align-items: flex-start; gap: 10px; font-size: 11px; color: rgba(255,255,255,0.75); text-align: left; }
+        .promo-feature i { margin-top: 2px; flex-shrink: 0; }
+
+        /* ===== Feature grid cards (telehealth, meds, vitals, records, community) ===== */
+        .feature-card { border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); border-radius: 22px; padding: 20px; cursor: pointer; transition: 0.3s; text-align: left; }
+        .feature-card:hover { transform: translateY(-4px); border-color: var(--card-accent, var(--neon-cyan)); box-shadow: 0 12px 24px rgba(0,0,0,0.35); }
+        .feature-card .fi-box { width: 40px; height: 40px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: color-mix(in srgb, var(--card-accent, var(--neon-cyan)) 14%, transparent); margin-bottom: 12px; }
+
+        /* Generic modal overlay */
+        .nx-modal { position: fixed; inset: 0; z-index: 9300; background: rgba(0,0,0,0.92); backdrop-filter: blur(20px); overflow-y: auto; }
+        .nx-modal-inner { max-width: 640px; margin: 0 auto; padding: 24px; min-height: 100vh; }
+        .nx-modal-header { display:flex; align-items:center; justify-content:space-between; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 18px; }
+        .nx-field { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: #fff; outline: none; margin-bottom: 12px; }
+        .nx-field::placeholder { color: rgba(255,255,255,0.35); }
+        .nx-list-item { display:flex; align-items:center; justify-content:space-between; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+        .nx-bar-track { height: 6px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
+        .nx-bar-fill { height: 100%; border-radius: 4px; background: var(--neon-cyan); }
+
+        /* Toast */
+        #nxToast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #0a0a0c; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 12px 22px; border-radius: 50px; font-size: 11px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        /* Trust / privacy strip */
+        .privacy-strip { display:flex; flex-wrap:wrap; gap: 14px; justify-content:center; align-items:center; padding: 16px 20px; border-radius: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+        .privacy-item { display:flex; align-items:center; gap: 8px; font-size: 10px; color: rgba(255,255,255,0.6); }
+        .privacy-item i { color: var(--neon-cyan); }
+
+        /* Subscription */
+        .plan-card { border-radius: 24px; padding: 26px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); }
+        .plan-card.premium { border-color: var(--galaxy-gold); background: linear-gradient(160deg, rgba(255,157,0,0.08), rgba(255,255,255,0.02)); }
+        .plan-price { font-family:'Orbitron'; font-size: 26px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .typing-dots span, .beacon-ring { animation: none !important; }
+            .unit-card, .ai-launch-card, .feature-card { transition: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="galaxy-overlay"></div>
+    <div id="nxToast" class="hidden"></div>
+
+    <!-- ===== PHARMACY ===== -->
+    <div id="nexusOverlay" class="fixed inset-0 z-[9000] hidden backdrop-blur-3xl bg-black/95 overflow-y-auto">
+        <button onclick="closeNexusOverlay()" aria-label="Close Pharmacy" class="fixed top-8 right-8 text-white/50 hover:text-white text-4xl z-[9999] transition-all">
+            <i class="fa-solid fa-circle-xmark"></i>
+        </button>
+        <div class="max-w-6xl mx-auto p-10 min-h-screen flex flex-col items-center justify-center">
+            <h2 class="header-text text-3xl md:text-4xl text-orange-400 text-center mb-12 golden-heading">Nexus 3D Pharmacy</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                <div class="pharmacy-3d-card group"><div class="inner-card p-10 rounded-[2.5rem] bg-white/5 border border-white/10 text-center"><div class="mb-8 mx-auto"><i class="fa-solid fa-prescription-bottle-medical text-7xl text-cyan-400"></i></div><h4 class="futuristic-font text-xl font-bold">NEURO-REGEN</h4><p class="text-[10px] text-gray-500 mt-2 uppercase">Neural Cell Repair</p><button onclick="pharmacyComingSoon()" class="mt-8 text-[11px] font-bold border border-cyan-400/30 px-10 py-3 rounded-full hover:bg-cyan-400 hover:text-black">ORDER</button></div></div>
+                <div class="pharmacy-3d-card group"><div class="inner-card p-10 rounded-[2.5rem] bg-white/5 border border-white/10 text-center"><div class="mb-8 mx-auto"><i class="fa-solid fa-capsules text-7xl text-orange-400"></i></div><h4 class="futuristic-font text-xl font-bold">BIO-VITAL</h4><p class="text-[10px] text-gray-500 mt-2 uppercase">Immune Booster</p><button onclick="pharmacyComingSoon()" class="mt-8 text-[11px] font-bold border border-orange-400/30 px-10 py-3 rounded-full hover:bg-orange-400 hover:text-black">ORDER</button></div></div>
+                <div class="pharmacy-3d-card group"><div class="inner-card p-10 rounded-[2.5rem] bg-white/5 border border-white/10 text-center"><div class="mb-8 mx-auto"><i class="fa-solid fa-flask text-7xl text-red-500"></i></div><h4 class="futuristic-font text-xl font-bold">HEMO-SYNC</h4><p class="text-[10px] text-gray-500 mt-2 uppercase">Blood Purifier</p><button onclick="pharmacyComingSoon()" class="mt-8 text-[11px] font-bold border border-red-500/30 px-10 py-3 rounded-full hover:bg-red-500 hover:text-white">ORDER</button></div></div>
+            </div>
+            <p id="pharmacyToast" class="hidden mt-8 text-[11px] text-cyan-300 bg-cyan-400/5 border border-cyan-400/20 rounded-full px-5 py-2">Not available yet — we are working on it, you will be notified soon.</p>
+        </div>
+    </div>
+
+    <!-- ===== CONSENT MODAL ===== -->
+    <div id="aiConsentModal" class="fixed inset-0 z-[9200] hidden bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+        <div class="max-w-sm w-full rounded-3xl p-6" style="background:#0a0a0c; border:1px solid rgba(0,242,255,0.2);">
+            <div class="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4">
+                <i class="fa-solid fa-shield-heart text-cyan-400"></i>
+            </div>
+            <h3 class="futuristic-font text-sm mb-3">BEFORE WE START</h3>
+            <p class="text-[12px] text-gray-300 leading-relaxed mb-3">Nexus AI is a technology assistant (MedGemma 4B + Llama 3), <b>not a doctor</b>, and does not provide a final diagnosis. If your symptom is severe or gets worse, go to a hospital immediately.</p>
+            <p class="text-[10px] text-gray-500 mb-5">Your conversation is currently saved only on your device so you can return to it later.</p>
+            <button onclick="acceptAiConsent()" class="btn-nexus w-full text-center" style="background:var(--neon-cyan); color:#000;">I Understand, Continue</button>
+        </div>
+    </div>
+
+    <!-- ===== NEXUS AI HEALTH TRIAGE ===== -->
+    <div id="aiTriageOverlay" class="fixed inset-0 z-[8500] hidden backdrop-blur-2xl bg-black/95">
+        <div class="max-w-2xl mx-auto h-full flex flex-col p-4" style="padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom));">
+
+            <div class="flex items-center justify-between py-3 border-b border-white/10 relative">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-full bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-microchip text-cyan-400 text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="futuristic-font text-xs">NEXUS AI TRIAGE</div>
+                        <div class="flex gap-1 mt-1">
+                            <span class="engine-chip medgemma"><i class="fa-solid fa-stethoscope"></i>MedGemma 4B</span>
+                            <span class="engine-chip llama"><i class="fa-solid fa-language"></i>Llama 3</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0 relative">
+                    <button class="lang-globe-btn" onclick="toggleLangDropdown()" aria-label="Choose language">
+                        <i class="fa-solid fa-globe text-xs"></i>
+                    </button>
+                    <div id="langDropdown" class="lang-dropdown hidden"></div>
+                    <button onclick="closeAiTriage()" aria-label="Close AI Triage" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+                </div>
+            </div>
+
+            <div id="aiRedFlagBanner" class="hidden mt-3 p-3 rounded-2xl border" style="border-color: var(--emergency); background: rgba(255,0,85,0.08);">
+                <div class="flex items-center gap-2 text-[11px] font-bold" style="color: var(--emergency);">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>WARNING: Seek hospital care immediately</span>
+                </div>
+                <p class="text-[10px] text-gray-300 mt-1" id="aiRedFlagText"></p>
+            </div>
+
+            <div id="aiChatLog" class="flex-1 overflow-y-auto py-4 space-y-3"></div>
+
+            <div id="aiSymptomChips" class="flex gap-2 overflow-x-auto pb-3 -mx-1 px-1">
+                <button class="symptom-chip" onclick="quickSymptom('Fever')"><i class="fa-solid fa-temperature-high mr-1"></i>Fever</button>
+                <button class="symptom-chip" onclick="quickSymptom('Headache')"><i class="fa-solid fa-head-side-cough mr-1"></i>Headache</button>
+                <button class="symptom-chip" onclick="quickSymptom('Cough')"><i class="fa-solid fa-lungs mr-1"></i>Cough</button>
+                <button class="symptom-chip" onclick="quickSymptom('Stomach pain')"><i class="fa-solid fa-stomach mr-1"></i>Stomach pain</button>
+                <button class="symptom-chip" onclick="quickSymptom('Rash or skin injury')"><i class="fa-solid fa-hand-dots mr-1"></i>Rash/Injury</button>
+            </div>
+
+            <div id="aiImagePreviewWrap" class="hidden pb-2">
+                <img id="aiImagePreview" class="h-20 rounded-xl border border-white/10" alt="Selected photo" />
+                <button onclick="clearAiImage()" class="text-[9px] text-gray-500 ml-2">Remove photo</button>
+            </div>
+
+            <div class="pb-2">
+                <div class="flex items-end gap-2 bg-white/5 border border-white/10 rounded-3xl p-2">
+                    <label class="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 cursor-pointer flex-shrink-0">
+                        <i class="fa-solid fa-camera text-cyan-400 text-sm" aria-hidden="true"></i>
+                        <span class="sr-only">Upload photo</span>
+                        <input type="file" id="aiImageInput" accept="image/*" hidden onchange="handleAiImageUpload(this)">
+                    </label>
+                    <textarea id="aiTextInput" rows="1" placeholder="Describe your symptom..." aria-label="Describe your symptom" class="flex-1 bg-transparent outline-none text-sm resize-none py-2 max-h-24"></textarea>
+                    <button onclick="sendAiTriageMessage()" aria-label="Send message" class="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0" style="background: var(--neon-cyan); color:#000;">
+                        <i class="fa-solid fa-arrow-up text-sm"></i>
+                    </button>
+                </div>
+                <p class="text-[8px] text-gray-600 text-center mt-2 uppercase tracking-wider">Nexus AI is an assistant only, not a final diagnosis</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== EXECUTIVE CHECK-UP WIZARD ===== -->
+    <div id="checkupWizard" class="fixed inset-0 z-[8800] hidden backdrop-blur-2xl bg-black/95">
+        <div class="max-w-xl mx-auto h-full flex flex-col p-5" style="padding-top: max(1.25rem, env(safe-area-inset-top));">
+            <div class="flex items-center justify-between mb-2">
+                <div class="futuristic-font text-xs">EXECUTIVE CHECK-UP</div>
+                <button onclick="closeCheckupWizard()" aria-label="Close check-up" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+            </div>
+            <div class="wizard-progress" id="wizardProgress"></div>
+            <div id="wizardBody" class="flex-1 overflow-y-auto"></div>
+            <div class="flex gap-3 pt-4">
+                <button id="wizardBackBtn" onclick="wizardBack()" class="flex-1 py-3 rounded-full text-[11px] font-bold border border-white/15 text-white/60">Back</button>
+                <button id="wizardNextBtn" onclick="wizardNext()" class="flex-1 py-3 rounded-full text-[11px] font-bold" style="background: var(--neon-cyan); color:#000;">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TELEHEALTH / VIDEO CONSULTATION ===== -->
+    <div id="telehealthModal" class="nx-modal hidden">
+        <div class="nx-modal-inner">
+            <div class="nx-modal-header">
+                <div>
+                    <div class="futuristic-font text-xs">TELEHEALTH</div>
+                    <div class="text-[9px] text-gray-500 mt-1 uppercase tracking-wider">Video &amp; chat consultations</div>
+                </div>
+                <button onclick="closeTelehealth()" aria-label="Close Telehealth" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+            </div>
+            <p class="text-[11px] text-gray-400 mb-4">Choose a doctor and book an instant video call or async chat consultation.</p>
+            <div id="doctorList" class="space-y-3 mb-6"></div>
+            <div class="unit-card rounded-2xl p-4">
+                <div class="text-[10px] text-gray-500 uppercase mb-2">Upcoming Appointments</div>
+                <div id="appointmentList" class="text-[11px] text-gray-400">No appointments yet.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MEDICATION REMINDERS ===== -->
+    <div id="medsModal" class="nx-modal hidden">
+        <div class="nx-modal-inner">
+            <div class="nx-modal-header">
+                <div>
+                    <div class="futuristic-font text-xs">MEDICATION REMINDERS</div>
+                    <div class="text-[9px] text-gray-500 mt-1 uppercase tracking-wider">Never miss a dose</div>
+                </div>
+                <button onclick="closeMeds()" aria-label="Close Medication Reminders" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+            </div>
+            <input id="medName" class="nx-field" placeholder="Medication name (e.g., Amoxicillin)">
+            <div class="grid grid-cols-2 gap-3 mb-1">
+                <input id="medTime" type="time" class="nx-field">
+                <select id="medFreq" class="nx-field">
+                    <option value="Once daily">Once daily</option>
+                    <option value="Twice daily">Twice daily</option>
+                    <option value="Three times daily">Three times daily</option>
+                    <option value="Weekly">Weekly</option>
+                </select>
+            </div>
+            <button onclick="addMedReminder()" class="btn-nexus w-full mt-2 mb-6" style="background:var(--neon-cyan); color:#000;">Add Reminder</button>
+            <div id="medsListWrap">
+                <div class="text-[10px] text-gray-500 uppercase mb-3">Your Reminders</div>
+                <div id="medsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== VITALS TRACKER ===== -->
+    <div id="vitalsModal" class="nx-modal hidden">
+        <div class="nx-modal-inner">
+            <div class="nx-modal-header">
+                <div>
+                    <div class="futuristic-font text-xs">VITALS TRACKER</div>
+                    <div class="text-[9px] text-gray-500 mt-1 uppercase tracking-wider">Heart rate · Blood pressure · Sleep · Steps</div>
+                </div>
+                <button onclick="closeVitals()" aria-label="Close Vitals Tracker" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <input id="vHr" type="number" class="nx-field" placeholder="Heart rate (bpm)">
+                <input id="vSteps" type="number" class="nx-field" placeholder="Steps today">
+                <input id="vBp" class="nx-field" placeholder="Blood pressure (e.g. 120/80)">
+                <input id="vSleep" type="number" step="0.1" class="nx-field" placeholder="Sleep (hours)">
+            </div>
+            <button onclick="saveVitalEntry()" class="btn-nexus w-full mt-1 mb-6" style="background:var(--neon-cyan); color:#000;">Log Vitals</button>
+            <div class="text-[10px] text-gray-500 uppercase mb-3">Recent History</div>
+            <div id="vitalsHistory" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- ===== HEALTH RECORDS VAULT ===== -->
+    <div id="recordsModal" class="nx-modal hidden">
+        <div class="nx-modal-inner">
+            <div class="nx-modal-header">
+                <div>
+                    <div class="futuristic-font text-xs">HEALTH RECORDS VAULT</div>
+                    <div class="text-[9px] text-gray-500 mt-1 uppercase tracking-wider">Lab results &amp; documents, stored on your device</div>
+                </div>
+                <button onclick="closeRecords()" aria-label="Close Health Records" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+            </div>
+            <label class="unit-card rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer mb-6 border-dashed" style="border-style:dashed;">
+                <i class="fa-solid fa-cloud-arrow-up text-2xl text-cyan-400 mb-2"></i>
+                <span class="text-[11px] text-gray-300">Tap to upload a lab result, prescription, or scan</span>
+                <span class="text-[9px] text-gray-500 mt-1">PDF or image · stays only on this device</span>
+                <input type="file" accept="image/*,application/pdf" hidden onchange="uploadRecord(this)">
+            </label>
+            <div class="text-[10px] text-gray-500 uppercase mb-3">Stored Documents</div>
+            <div id="recordsList"></div>
+        </div>
+    </div>
+
+    <!-- ===== COMMUNITY & SUPPORT GROUPS ===== -->
+    <div id="communityModal" class="nx-modal hidden">
+        <div class="nx-modal-inner">
+            <div class="nx-modal-header">
+                <div>
+                    <div class="futuristic-font text-xs">COMMUNITY &amp; SUPPORT</div>
+                    <div class="text-[9px] text-gray-500 mt-1 uppercase tracking-wider">You are not alone</div>
+                </div>
+                <button onclick="closeCommunity()" aria-label="Close Community" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+            </div>
+            <div id="communityGroups" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <div class="min-h-screen py-10 px-6 max-w-7xl mx-auto">
+        <header class="text-center mb-16">
+            <div class="futuristic-font text-cyan-400 text-[11px] tracking-[0.6rem] uppercase mb-3 opacity-90">Nexus</div>
+            <h1 class="header-text text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-white to-cyan-400 whitespace-nowrap">Medical City</h1>
+            <p class="text-[10px] tracking-[0.5rem] mt-2 opacity-50 uppercase">Global Intelligence Hospital</p>
+            <div class="h-[1px] w-40 bg-gradient-to-r from-transparent via-cyan-500 to-transparent mx-auto mt-6"></div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="ai-launch-card" onclick="openAiTriage()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage()">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                        <i class="fa-solid fa-microchip text-cyan-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="futuristic-font text-[12px] font-bold">NEXUS AI TRIAGE</h3>
+                        <div class="flex gap-1 mt-1">
+                            <span class="engine-chip medgemma">MedGemma 4B</span>
+                            <span class="engine-chip llama">Llama 3</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-400 leading-relaxed">Describe your symptom or upload a photo — AI will tell you if it can be handled at home, or if you should see a doctor.</p>
+            </div>
+
+            <div class="emergency-section">
+                <div class="text-[9px] text-pink-500 font-bold tracking-widest uppercase mb-2">Emergency Response Unit</div>
+                <div class="relative w-fit mx-auto">
+                    <div class="beacon-ring"></div>
+                    <div class="beacon-ring r2"></div>
+                    <div class="beacon-ring r3"></div>
+                    <button class="sos-btn" onclick="openAiTriage('EMERGENCY TRAUMA')" aria-label="Open emergency"><span class="futuristic-font">SOS</span></button>
+                </div>
+                <p class="text-[10px] mt-3 opacity-70">I'm listening — tell me what's wrong...</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="trust-step unit-card rounded-2xl">
+                <div class="num">01</div>
+                <i class="fa-solid fa-comment-medical text-cyan-400 text-lg my-2"></i>
+                <div class="text-[10px] font-bold">Describe</div>
+                <div class="text-[9px] text-gray-500 mt-1">Tell Nexus AI your symptom, in text or a photo</div>
+            </div>
+            <div class="trust-step unit-card rounded-2xl">
+                <div class="num">02</div>
+                <i class="fa-solid fa-microchip text-cyan-400 text-lg my-2"></i>
+                <div class="text-[10px] font-bold">Dual-Engine Analysis</div>
+                <div class="text-[9px] text-gray-500 mt-1">MedGemma 4B reasons clinically, Llama 3 keeps it conversational</div>
+            </div>
+            <div class="trust-step unit-card rounded-2xl">
+                <div class="num">03</div>
+                <i class="fa-solid fa-route text-cyan-400 text-lg my-2"></i>
+                <div class="text-[10px] font-bold">Get Guidance</div>
+                <div class="text-[9px] text-gray-500 mt-1">Self-care advice, or a clear signal to see a doctor</div>
+            </div>
+        </div>
+
+        <div class="privacy-strip mb-16">
+            <div class="privacy-item"><i class="fa-solid fa-lock"></i>End-to-end encrypted</div>
+            <div class="privacy-item"><i class="fa-solid fa-shield-halved"></i>HIPAA-aligned data handling</div>
+            <div class="privacy-item"><i class="fa-solid fa-mobile-screen"></i>Sensitive data stays on your device</div>
+            <div class="privacy-item"><i class="fa-solid fa-user-lock"></i>You control what's shared, always</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+            <div class="nearby-card flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                    <h3 class="futuristic-font text-[12px] font-bold mb-1"><i class="fa-solid fa-hospital mr-2" style="color:var(--galaxy-gold);"></i>Nearby Care</h3>
+                    <p class="text-[10px] text-gray-400">Find the closest hospitals and clinics using your current location.</p>
+                </div>
+                <button onclick="findNearbyCare()" class="btn-nexus flex-shrink-0" style="border-color:var(--galaxy-gold); color:var(--galaxy-gold);">Find Nearby</button>
+            </div>
+            <div class="doctors-card flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                    <h3 class="futuristic-font text-[12px] font-bold mb-1"><i class="fa-solid fa-user-doctor mr-2" style="color:var(--nexus-purple);"></i>Doctors Near Me</h3>
+                    <p class="text-[10px] text-gray-400">Find independent doctors and specialists close to your location.</p>
+                </div>
+                <button onclick="findNearbyDoctors()" class="btn-nexus flex-shrink-0" style="border-color:var(--nexus-purple); color:var(--nexus-purple);">Find Doctors</button>
+            </div>
+        </div>
+
+        <h2 class="futuristic-font text-xs mb-6 opacity-40 uppercase tracking-[0.3rem] text-center">Care Beyond The Hospital</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mb-16">
+            <div class="feature-card" style="--card-accent:#00f2ff;" onclick="openTelehealth()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openTelehealth()">
+                <div class="fi-box"><i class="fa-solid fa-video text-cyan-400"></i></div>
+                <h3 class="futuristic-font text-[11px] font-bold">Telehealth</h3>
+                <p class="text-[9px] text-gray-500 mt-1">Video &amp; chat consults, appointment booking</p>
+            </div>
+            <div class="feature-card" style="--card-accent:#22c55e;" onclick="openMeds()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openMeds()">
+                <div class="fi-box"><i class="fa-solid fa-pills text-green-400"></i></div>
+                <h3 class="futuristic-font text-[11px] font-bold">Medication Reminders</h3>
+                <p class="text-[9px] text-gray-500 mt-1">Never miss a dose again</p>
+            </div>
+            <div class="feature-card" style="--card-accent:#f87171;" onclick="openVitals()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openVitals()">
+                <div class="fi-box"><i class="fa-solid fa-heart-pulse text-red-400"></i></div>
+                <h3 class="futuristic-font text-[11px] font-bold">Vitals Tracker</h3>
+                <p class="text-[9px] text-gray-500 mt-1">Heart rate, BP, sleep &amp; steps</p>
+            </div>
+            <div class="feature-card" style="--card-accent:#facc15;" onclick="openRecords()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRecords()">
+                <div class="fi-box"><i class="fa-solid fa-folder-open text-yellow-300"></i></div>
+                <h3 class="futuristic-font text-[11px] font-bold">Health Records</h3>
+                <p class="text-[9px] text-gray-500 mt-1">Lab results &amp; documents vault</p>
+            </div>
+            <div class="feature-card" style="--card-accent:#a855f7;" onclick="openCommunity()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openCommunity()">
+                <div class="fi-box"><i class="fa-solid fa-people-group text-purple-400"></i></div>
+                <h3 class="futuristic-font text-[11px] font-bold">Community</h3>
+                <p class="text-[9px] text-gray-500 mt-1">Peer support groups</p>
+            </div>
+        </div>
+
+        <h2 class="futuristic-font text-xs mb-6 opacity-40 uppercase tracking-[0.3rem] text-center">Visit Specialist Units</h2>
+
+        <div class="search-bar max-w-md mx-auto mb-2">
+            <i class="fa-solid fa-magnifying-glass text-gray-500 text-xs"></i>
+            <input type="text" id="unitSearch" placeholder="Search a specialty or condition..." oninput="filterUnits(this.value)">
+        </div>
+
+        <div class="category-label">Heart &amp; Blood</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-2">
+            <div data-search="cardiology heart chest" onclick="openAiTriage('CARDIOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#ef4444;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('CARDIOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-heart-pulse text-lg text-red-400"></i></div><h3 class="futuristic-font text-[11px] font-bold">Cardiology</h3><p class="text-[9px] text-gray-500 mt-1">Heart &amp; circulation</p></div>
+            <div data-search="hematology blood" onclick="openAiTriage('HEMATOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#dc2626;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('HEMATOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-droplet-slash text-lg text-red-500"></i></div><h3 class="futuristic-font text-[11px] font-bold">Hematology</h3><p class="text-[9px] text-gray-500 mt-1">Blood disorders</p></div>
+        </div>
+
+        <div class="category-label">Brain &amp; Mind</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-2">
+            <div data-search="neurology brain headache" onclick="openAiTriage('NEUROLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#3b82f6;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('NEUROLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-brain text-lg text-blue-400"></i></div><h3 class="futuristic-font text-[11px] font-bold">Neurology</h3><p class="text-[9px] text-gray-500 mt-1">Brain &amp; nerves</p></div>
+            <div data-search="psychiatry mental health mood" onclick="openAiTriage('PSYCHIATRY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#22c55e;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('PSYCHIATRY')"><div class="unit-icon-box"><i class="fa-solid fa-head-side-virus text-lg text-green-400"></i></div><h3 class="futuristic-font text-[11px] font-bold">Psychiatry</h3><p class="text-[9px] text-gray-500 mt-1">Mental wellbeing</p></div>
+        </div>
+
+        <div class="category-label">Digestive &amp; Hormonal</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-2">
+            <div data-search="gastrology stomach digestion" onclick="openAiTriage('GASTROLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#4ade80;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('GASTROLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-stomach text-lg text-green-300"></i></div><h3 class="futuristic-font text-[11px] font-bold">Gastrology</h3><p class="text-[9px] text-gray-500 mt-1">Digestive system</p></div>
+            <div data-search="endocrinology diabetes hormones sugar" onclick="openAiTriage('ENDOCRINOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#f87171;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('ENDOCRINOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-droplet text-lg text-red-300"></i></div><h3 class="futuristic-font text-[11px] font-bold">Endocrinology</h3><p class="text-[9px] text-gray-500 mt-1">Diabetes &amp; hormones</p></div>
+        </div>
+
+        <div class="category-label">Respiratory &amp; Renal</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-2">
+            <div data-search="pulmonology lungs breathing cough" onclick="openAiTriage('PULMONOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#60a5fa;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('PULMONOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-lungs text-lg text-blue-300"></i></div><h3 class="futuristic-font text-[11px] font-bold">Pulmonology</h3><p class="text-[9px] text-gray-500 mt-1">Lungs &amp; breathing</p></div>
+            <div data-search="nephrology kidney" onclick="openAiTriage('NEPHROLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#93c5fd;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('NEPHROLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-bacteria text-lg text-blue-200"></i></div><h3 class="futuristic-font text-[11px] font-bold">Nephrology</h3><p class="text-[9px] text-gray-500 mt-1">Kidney health</p></div>
+            <div data-search="urology bladder urine" onclick="openAiTriage('UROLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#38bdf8;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('UROLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-kidneys text-lg text-blue-400"></i></div><h3 class="futuristic-font text-[11px] font-bold">Urology</h3><p class="text-[9px] text-gray-500 mt-1">Urinary system</p></div>
+        </div>
+
+        <div class="category-label">Senses &amp; Skin</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-2">
+            <div data-search="ophthalmology eyes vision" onclick="openAiTriage('OPHTHALMOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#facc15;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('OPHTHALMOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-eye text-lg text-yellow-300"></i></div><h3 class="futuristic-font text-[11px] font-bold">Ophthalmology</h3><p class="text-[9px] text-gray-500 mt-1">Eye care</p></div>
+            <div data-search="ent ear nose throat" onclick="openAiTriage('ENT UNIT')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#eab308;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('ENT UNIT')"><div class="unit-icon-box"><i class="fa-solid fa-ear-listen text-lg text-yellow-500"></i></div><h3 class="futuristic-font text-[11px] font-bold">ENT Unit</h3><p class="text-[9px] text-gray-500 mt-1">Ear, nose &amp; throat</p></div>
+            <div data-search="dermatology skin rash" onclick="openAiTriage('DERMATOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#fdba74;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('DERMATOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-hand-dots text-lg text-orange-300"></i></div><h3 class="futuristic-font text-[11px] font-bold">Dermatology</h3><p class="text-[9px] text-gray-500 mt-1">Skin health</p></div>
+            <div data-search="dentistry teeth dental" onclick="openAiTriage('DENTISTRY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#e5e7eb;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('DENTISTRY')"><div class="unit-icon-box"><i class="fa-solid fa-tooth text-lg text-gray-200"></i></div><h3 class="futuristic-font text-[11px] font-bold">Dentistry</h3><p class="text-[9px] text-gray-500 mt-1">Dental health</p></div>
+        </div>
+
+        <div class="category-label">Surgical &amp; Specialized Care</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div data-search="surgery operation theatre" onclick="openAiTriage('SURGERY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#a855f7;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('SURGERY')"><div class="unit-icon-box"><i class="fa-solid fa-scalpel-path text-lg text-purple-400"></i></div><h3 class="futuristic-font text-[11px] font-bold">Surgery</h3><p class="text-[9px] text-gray-500 mt-1">Theatre &amp; procedures</p></div>
+            <div data-search="oncology cancer tumor" onclick="openAiTriage('ONCOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#f97316;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('ONCOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-dna text-lg text-orange-400"></i></div><h3 class="futuristic-font text-[11px] font-bold">Oncology</h3><p class="text-[9px] text-gray-500 mt-1">Cancer care</p></div>
+            <div data-search="orthopedics bones joints" onclick="openAiTriage('ORTHOPEDICS')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#d1d5db;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('ORTHOPEDICS')"><div class="unit-icon-box"><i class="fa-solid fa-bone text-lg text-gray-300"></i></div><h3 class="futuristic-font text-[11px] font-bold">Orthopedics</h3><p class="text-[9px] text-gray-500 mt-1">Bones &amp; joints</p></div>
+            <div data-search="pediatrics children kids baby" onclick="openAiTriage('PEDIATRICS')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#f472b6;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('PEDIATRICS')"><div class="unit-icon-box"><i class="fa-solid fa-baby text-lg text-pink-300"></i></div><h3 class="futuristic-font text-[11px] font-bold">Pediatrics</h3><p class="text-[9px] text-gray-500 mt-1">Child health</p></div>
+            <div data-search="gynecology women reproductive" onclick="openAiTriage('GYNECOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#ec4899;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('GYNECOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-venus text-lg text-pink-400"></i></div><h3 class="futuristic-font text-[11px] font-bold">Gynecology</h3><p class="text-[9px] text-gray-500 mt-1">Women's health</p></div>
+            <div data-search="pathology lab blood test" onclick="openAiTriage('PATHOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#4ade80;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('PATHOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-flask-vial text-lg text-green-400"></i></div><h3 class="futuristic-font text-[11px] font-bold">Pathology Lab</h3><p class="text-[9px] text-gray-500 mt-1">Diagnostic tests</p></div>
+            <div data-search="radiology xray scan mri ct" onclick="openAiTriage('RADIOLOGY')" class="unit-card p-6 rounded-[2rem] text-center cursor-pointer" style="--card-accent:#22d3ee;" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openAiTriage('RADIOLOGY')"><div class="unit-icon-box"><i class="fa-solid fa-x-ray text-lg text-cyan-300"></i></div><h3 class="futuristic-font text-[11px] font-bold">Radiology</h3><p class="text-[9px] text-gray-500 mt-1">X-Ray, CT &amp; MRI</p></div>
+
+            <div class="col-span-2 md:col-span-3 lg:col-span-4 mt-4">
+                <div class="promo-card cyan-purple">
+                    <div class="promo-card-inner group cursor-pointer" onclick="openCheckupWizard()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openCheckupWizard()">
+                        <div class="promo-glow" style="background:var(--neon-cyan); top:-80px; left:-60px;"></div>
+                        <div class="promo-glow" style="background:var(--nexus-purple); bottom:-100px; right:-60px;"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-center gap-3 mb-5">
+                                <span class="engine-chip medgemma"><i class="fa-solid fa-microchip"></i>AI-Guided</span>
+                                <span class="engine-chip llama"><i class="fa-solid fa-clock"></i>6 Steps · ~5 min</span>
+                            </div>
+                            <div class="flex justify-center gap-6 mb-4">
+                                <i class="fa-solid fa-user-doctor text-4xl text-cyan-400 group-hover:scale-110 transition-transform"></i>
+                                <i class="fa-solid fa-microchip text-4xl text-purple-400 group-hover:scale-110 transition-transform"></i>
+                            </div>
+                            <h2 class="futuristic-font text-lg font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">EXECUTIVE MEDICAL CHECK-UP</h2>
+                            <p class="text-[10px] text-gray-400 mt-3 uppercase tracking-[0.2rem] text-center">A guided whole-body review, built with Nexus AI</p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 max-w-2xl mx-auto">
+                                <div class="promo-feature"><i class="fa-solid fa-heart-pulse text-cyan-400"></i>Heart &amp; lungs screen</div>
+                                <div class="promo-feature"><i class="fa-solid fa-brain text-cyan-400"></i>Mental wellbeing check</div>
+                                <div class="promo-feature"><i class="fa-solid fa-stomach text-cyan-400"></i>Digestive review</div>
+                                <div class="promo-feature"><i class="fa-solid fa-file-medical text-cyan-400"></i>Personalized report</div>
+                            </div>
+                            <div class="text-center mt-8">
+                                <span class="btn-nexus" style="pointer-events:none;">Start My Check-Up</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 promo-card gold">
+            <div class="promo-card-inner text-center">
+                <div class="promo-glow" style="background:var(--galaxy-gold); top:-60px; right:-80px;"></div>
+                <div class="relative z-10">
+                    <div class="p-6 bg-cyan-500/5 w-fit mx-auto rounded-full mb-6 border border-orange-400/20"><i class="fa-solid fa-pills text-4xl text-orange-400"></i></div>
+                    <h2 class="futuristic-font text-2xl mb-3 golden-heading">NEXUS PHARMACY</h2>
+                    <p class="max-w-xl mx-auto text-[11px] opacity-60 mb-8 uppercase tracking-widest leading-loose">Global Drug Repository: from traditional remedies to modern medicine.</p>
+                    <div class="grid grid-cols-3 gap-3 max-w-md mx-auto mb-8">
+                        <div class="promo-stat"><div class="futuristic-font text-sm text-orange-300">500+</div><div class="text-[8px] text-gray-500 uppercase mt-1">Medicines</div></div>
+                        <div class="promo-stat"><div class="futuristic-font text-sm text-orange-300">24/7</div><div class="text-[8px] text-gray-500 uppercase mt-1">Availability</div></div>
+                        <div class="promo-stat"><div class="futuristic-font text-sm text-orange-300">Verified</div><div class="text-[8px] text-gray-500 uppercase mt-1">Sourcing</div></div>
+                    </div>
+                    <button class="btn-nexus px-16" style="border-color:var(--galaxy-gold); color:var(--galaxy-gold);" onmouseover="this.style.background='var(--galaxy-gold)';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='var(--galaxy-gold)'" onclick="openNexusOverlay()">Enter Pharmacy</button>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="futuristic-font text-xs mt-16 mb-6 opacity-40 uppercase tracking-[0.3rem] text-center">Membership Plans</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="plan-card">
+                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Free</div>
+                <div class="plan-price mb-4">$0<span class="text-[10px] text-gray-500">/month</span></div>
+                <div class="space-y-2 text-[11px] text-gray-400 mb-6">
+                    <div><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Nexus AI Triage (limited daily use)</div>
+                    <div><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Vitals &amp; medication tracking</div>
+                    <div><i class="fa-solid fa-check text-cyan-400 mr-2"></i>Nearby hospitals &amp; doctors</div>
+                </div>
+                <button class="btn-nexus w-full" onclick="showToast('You are on the Free plan already.')">Current Plan</button>
+            </div>
+            <div class="plan-card premium">
+                <div class="text-[10px] text-orange-300 uppercase tracking-widest mb-2">Premium</div>
+                <div class="plan-price mb-4 golden-heading">$9<span class="text-[10px] text-gray-500">/month</span></div>
+                <div class="space-y-2 text-[11px] text-gray-400 mb-6">
+                    <div><i class="fa-solid fa-check text-orange-400 mr-2"></i>Unlimited AI Triage &amp; priority speed</div>
+                    <div><i class="fa-solid fa-check text-orange-400 mr-2"></i>Unlimited video consultations</div>
+                    <div><i class="fa-solid fa-check text-orange-400 mr-2"></i>Pharmacy discounts &amp; fast delivery</div>
+                    <div><i class="fa-solid fa-check text-orange-400 mr-2"></i>Full health records export</div>
+                </div>
+                <button class="btn-nexus w-full" style="border-color:var(--galaxy-gold); color:var(--galaxy-gold);" onclick="showToast('Premium checkout is coming soon.')">Get Premium</button>
+            </div>
+        </div>
+
+        <footer class="mt-20 text-center opacity-20 text-[8px] header-text">Nexus Global Medical Network</footer>
+    </div>
+
+    <script>
+
+/* ================= TOAST ================= */
+        function showToast(msg) {
+            const t = document.getElementById('nxToast');
+            t.textContent = msg;
+            t.classList.remove('hidden');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => t.classList.add('hidden'), 3200);
+        }
+
+        /* ================= PHARMACY ================= */
+        function openNexusOverlay() {
+            document.getElementById('nexusOverlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeNexusOverlay() {
+            document.getElementById('nexusOverlay').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        function pharmacyComingSoon() {
+            const toast = document.getElementById('pharmacyToast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3500);
+        }
+
+        /* ================= UNIT SEARCH ================= */
+        function filterUnits(query) {
+            const q = query.trim().toLowerCase();
+            document.querySelectorAll('[data-search]').forEach(card => {
+                const match = card.getAttribute('data-search').includes(q);
+                card.style.display = (q === '' || match) ? '' : 'none';
+            });
+        }
+
+        /* ================= NEARBY CARE / DOCTORS (real geolocation) ================= */
+        function findNearbyCare() {
+            if (!navigator.geolocation) {
+                showToast('Location is not available on this device/browser.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const url = `https://www.google.com/maps/search/hospitals+near+me/@${latitude},${longitude},14z`;
+                    window.open(url, '_blank');
+                },
+                () => showToast('Could not access your location. Please enable location permissions and try again.')
+            );
+        }
+
+        function findNearbyDoctors() {
+            if (!navigator.geolocation) {
+                showToast('Location is not available on this device/browser.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const url = `https://www.google.com/maps/search/doctors+near+me/@${latitude},${longitude},14z`;
+                    window.open(url, '_blank');
+                },
+                () => showToast('Could not access your location. Please enable location permissions and try again.')
+            );
+        }
+
+        /* ================= LANGUAGE PICKER (only languages the AI engines actually support) ================= */
+        // Llama 3.1's officially supported languages, per Meta's model card, plus English.
+        const SUPPORTED_LANGS = [
+            { code: 'en', label: 'English' },
+            { code: 'es', label: 'Español' },
+            { code: 'fr', label: 'Français' },
+            { code: 'de', label: 'Deutsch' },
+            { code: 'it', label: 'Italiano' },
+            { code: 'pt', label: 'Português' },
+            { code: 'hi', label: 'हिन्दी' },
+            { code: 'th', label: 'ไทย' }
+        ];
+        let aiLang = localStorage.getItem('nexusAiLang') || 'en';
+
+        function renderLangDropdown() {
+            const dd = document.getElementById('langDropdown');
+            dd.innerHTML = SUPPORTED_LANGS.map(l =>
+                `<div class="lang-option ${l.code === aiLang ? 'selected' : ''}" onclick="selectLang('${l.code}')">
+                    <span>${l.label}</span>
+                    ${l.code === aiLang ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                </div>`
+            ).join('');
+        }
+
+        function toggleLangDropdown() {
+            const dd = document.getElementById('langDropdown');
+            if (dd.classList.contains('hidden')) {
+                renderLangDropdown();
+                dd.classList.remove('hidden');
+            } else {
+                dd.classList.add('hidden');
+            }
+        }
+
+        function selectLang(code) {
+            aiLang = code;
+            localStorage.setItem('nexusAiLang', code);
+            document.getElementById('langDropdown').classList.add('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const dd = document.getElementById('langDropdown');
+            const btn = e.target.closest('.lang-globe-btn');
+            if (dd && !dd.contains(e.target) && !btn) dd.classList.add('hidden');
+        });
+
+        /* ================= NEXUS AI TRIAGE (MedGemma 4B + Llama 3) ================= */
+
+        let aiPendingImage = null;
+
+        const AI_RED_FLAGS = [
+            { match: ["chest pain", "tightness in chest"], msg: "Chest pain can be a sign of a heart attack. Go to the nearest hospital right now, or press SOS." },
+            { match: ["shortness of breath", "can't breathe", "trouble breathing"], msg: "Difficulty breathing needs to be checked by a doctor immediately." },
+            { match: ["heavy bleeding", "lots of blood"], msg: "Heavy bleeding needs emergency care at a hospital." },
+            { match: ["unconscious", "passed out", "not moving", "fainted"], msg: "Loss of consciousness is an emergency — get to a hospital right now." },
+            { match: ["pregnant severe pain", "bleeding during pregnancy"], msg: "Severe pain or bleeding during pregnancy needs immediate medical attention." }
+        ];
+
+        function checkRedFlags(text) {
+            const lower = text.toLowerCase();
+            for (const flag of AI_RED_FLAGS) {
+                if (flag.match.some(k => lower.includes(k))) return flag.msg;
+            }
+            return null;
+        }
+
+        function quickSymptom(label) {
+            document.getElementById('aiTextInput').value = label + ' — ';
+            document.getElementById('aiTextInput').focus();
+        }
+
+        function openAiTriage(context) {
+            const consented = localStorage.getItem('nexusAiConsentGiven');
+            if (!consented) {
+                document.getElementById('aiConsentModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                window._pendingAiContext = context;
+                return;
+            }
+            launchAiTriage(context);
+        }
+
+        function acceptAiConsent() {
+            localStorage.setItem('nexusAiConsentGiven', 'true');
+            document.getElementById('aiConsentModal').classList.add('hidden');
+            launchAiTriage(window._pendingAiContext);
+        }
+
+        function launchAiTriage(context) {
+            document.getElementById('aiTriageOverlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            const log = document.getElementById('aiChatLog');
+            if (log.children.length === 0) {
+                appendAiMessage('ai', "Hi! I'm Nexus AI, your health assistant. Describe your symptom or upload a photo, and I'll help you figure out if we can handle it here or if you should see a doctor.", null, 'Llama 3');
+            }
+            if (context && typeof context === 'string' && context !== 'EMERGENCY TRAUMA') {
+                document.getElementById('aiTextInput').value = `I'd like to know more about: ${context}. My symptom is...`;
+                document.getElementById('aiTextInput').focus();
+            }
+            if (context === 'EMERGENCY TRAUMA') {
+                document.getElementById('aiTextInput').value = '';
+                appendAiMessage('ai', "You pressed SOS — if this is a real emergency (chest pain, heavy bleeding, unconsciousness), call your nearest hospital's emergency line RIGHT NOW. Otherwise, tell me what's going on.", null, 'Llama 3');
+            }
+        }
+
+        function closeAiTriage() {
+            document.getElementById('aiTriageOverlay').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function handleAiImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                aiPendingImage = e.target.result;
+                document.getElementById('aiImagePreview').src = aiPendingImage;
+                document.getElementById('aiImagePreviewWrap').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearAiImage() {
+            aiPendingImage = null;
+            document.getElementById('aiImageInput').value = '';
+            document.getElementById('aiImagePreviewWrap').classList.add('hidden');
+        }
+
+        function appendAiMessage(sender, text, imageSrc, engineTag) {
+            const log = document.getElementById('aiChatLog');
+            const bubble = document.createElement('div');
+            const isUser = sender === 'user';
+            bubble.className = `max-w-[80%] p-3 rounded-2xl text-[12px] leading-relaxed ${isUser ? 'ml-auto bg-white/10' : 'mr-auto'}`;
+            if (!isUser) bubble.style.border = '1px solid rgba(0,242,255,0.15)';
+
+            if (!isUser && engineTag) {
+                const tag = document.createElement('div');
+                tag.className = 'text-[8px] text-gray-500 mb-1 uppercase tracking-wide';
+                tag.textContent = engineTag;
+                bubble.appendChild(tag);
+            }
+            if (imageSrc) {
+                const img = document.createElement('img');
+                img.src = imageSrc;
+                img.alt = 'User photo';
+                img.className = 'rounded-xl mb-2 max-h-40';
+                bubble.appendChild(img);
+            }
+            const p = document.createElement('div');
+            p.textContent = text;
+            bubble.appendChild(p);
+
+            const time = document.createElement('div');
+            time.className = 'text-[8px] text-gray-600 mt-1';
+            time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            bubble.appendChild(time);
+
+            log.appendChild(bubble);
+            log.scrollTop = log.scrollHeight;
+            return bubble;
+        }
+
+        function showTypingIndicator() {
+            const log = document.getElementById('aiChatLog');
+            const bubble = document.createElement('div');
+            bubble.className = 'mr-auto max-w-[50%] p-3 rounded-2xl';
+            bubble.style.border = '1px solid rgba(0,242,255,0.15)';
+            bubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+            log.appendChild(bubble);
+            log.scrollTop = log.scrollHeight;
+            return bubble;
+        }
+
+        async function sendAiTriageMessage() {
+            const input = document.getElementById('aiTextInput');
+            const text = input.value.trim();
+            const image = aiPendingImage;
+            if (!text && !image) return;
+
+            appendAiMessage('user', text, image);
+            input.value = '';
+            const sentImage = image;
+            clearAiImage();
+
+            const redFlag = checkRedFlags(text);
+            if (redFlag) {
+                document.getElementById('aiRedFlagText').textContent = redFlag;
+                document.getElementById('aiRedFlagBanner').classList.remove('hidden');
+            } else {
+                document.getElementById('aiRedFlagBanner').classList.add('hidden');
+            }
+
+            const typingBubble = showTypingIndicator();
+
+            try {
+                const result = await askNexusAI(text, sentImage, aiLang);
+                typingBubble.remove();
+                appendAiMessage('ai', result.reply, null, result.engine);
+            } catch (err) {
+                typingBubble.remove();
+                appendAiMessage('ai', 'There was a connection issue. Please try again, or see a doctor if your symptom is severe.', null, 'System');
+                console.error(err);
+            }
+        }
+
+        /**
+         * TODO (next stage - backend, Render):
+         * 1. Llama 3 receives the person's text (in whichever supported language they
+         *    picked, or auto-detected), and turns it into clean, structured English
+         *    for MedGemma.
+         * 2. MedGemma 4B (multimodal) analyzes the text + photo (if any) and produces
+         *    triage guidance.
+         * 3. Llama 3 translates the reply back into the person's chosen language.
+         * All of this goes through your Render backend (oryzon-backend-ed1q.onrender.com)
+         * -> Hugging Face Inference API. No API key lives in this frontend.
+         */
+        async function askNexusAI(text, imageBase64, lang) {
+            // const res = await fetch('https://oryzon-backend-ed1q.onrender.com/ai-triage', {
+            //     method: 'POST', headers: {'Content-Type':'application/json'},
+            //     body: JSON.stringify({ text, image: imageBase64, lang })
+            // });
+            // const data = await res.json();
+            // return { reply: data.reply, engine: data.engineUsed };
+
+            await new Promise(r => setTimeout(r, 900));
+            if (imageBase64) {
+                return {
+                    engine: 'MedGemma 4B',
+                    reply: "Got the image. (Placeholder — MedGemma 4B multimodal will analyze this once the backend is connected.)"
+                };
+            }
+            return {
+                engine: 'MedGemma 4B',
+                reply: `Got it: "${text}". (Placeholder reply — the real MedGemma 4B will analyze this once wired up.)`
+            };
+        }
+
+        /* ================= EXECUTIVE CHECK-UP WIZARD ================= */
+        const wizardSteps = [
+            { title: 'General Wellbeing', question: 'How has your energy and sleep been recently?', options: ['Normal', 'A bit off', 'Poor'] },
+            { title: 'Heart & Lungs', question: 'Any chest discomfort, palpitations, or breathlessness?', options: ['None', 'Occasionally', 'Frequently'] },
+            { title: 'Digestive System', question: 'Any stomach pain, nausea, or changes in appetite?', options: ['None', 'Mild', 'Noticeable'] },
+            { title: 'Mental Wellbeing', question: 'How would you describe your stress or mood lately?', options: ['Good', 'Somewhat stressed', 'Struggling'] },
+            { title: 'Pain & Mobility', question: 'Any joint, muscle, or back pain limiting movement?', options: ['None', 'Mild', 'Significant'] },
+            { title: 'Anything Else?', question: 'Any other symptom you want Nexus AI to know about?', options: [] }
+        ];
+        let wizardIndex = 0;
+        let wizardAnswers = [];
+
+        function openCheckupWizard() {
+            wizardIndex = 0;
+            wizardAnswers = new Array(wizardSteps.length).fill(null);
+            document.getElementById('checkupWizard').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            renderWizardStep();
+        }
+
+        function closeCheckupWizard() {
+            document.getElementById('checkupWizard').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function renderWizardProgress() {
+            const bar = document.getElementById('wizardProgress');
+            bar.innerHTML = wizardSteps.map((_, i) => `<span class="${i <= wizardIndex ? 'done' : ''}"></span>`).join('');
+        }
+
+        function renderWizardStep() {
+            renderWizardProgress();
+            const step = wizardSteps[wizardIndex];
+            const body = document.getElementById('wizardBody');
+            const isLast = wizardIndex === wizardSteps.length - 1;
+
+            if (isLast) {
+                body.innerHTML = `
+                    <div class="unit-card rounded-2xl p-5 mb-4">
+                        <div class="text-[9px] text-gray-500 uppercase mb-2">Step ${wizardIndex + 1} of ${wizardSteps.length}</div>
+                        <h3 class="futuristic-font text-sm mb-3">${step.title}</h3>
+                        <p class="text-[12px] text-gray-300 mb-4">${step.question}</p>
+                        <textarea id="wizardFreeText" rows="4" placeholder="Optional — type anything else here..." class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[12px] outline-none"></textarea>
+                    </div>`;
+            } else {
+                body.innerHTML = `
+                    <div class="unit-card rounded-2xl p-5 mb-4">
+                        <div class="text-[9px] text-gray-500 uppercase mb-2">Step ${wizardIndex + 1} of ${wizardSteps.length}</div>
+                        <h3 class="futuristic-font text-sm mb-3">${step.title}</h3>
+                        <p class="text-[12px] text-gray-300 mb-4">${step.question}</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            ${step.options.map(opt => `<div class="wizard-option ${wizardAnswers[wizardIndex] === opt ? 'selected' : ''}" onclick="selectWizardOption('${opt}')">${opt}</div>`).join('')}
+                        </div>
+                    </div>`;
+            }
+
+            document.getElementById('wizardBackBtn').style.visibility = wizardIndex === 0 ? 'hidden' : 'visible';
+            document.getElementById('wizardNextBtn').textContent = isLast ? 'Get My Report' : 'Next';
+        }
+
+        function selectWizardOption(opt) {
+            wizardAnswers[wizardIndex] = opt;
+            renderWizardStep();
+        }
+
+        function wizardBack() {
+            if (wizardIndex > 0) { wizardIndex--; renderWizardStep(); }
+        }
+
+        async function wizardNext() {
+            const isLast = wizardIndex === wizardSteps.length - 1;
+            if (isLast) {
+                const freeText = document.getElementById('wizardFreeText')?.value.trim() || '';
+                const summary = wizardSteps.map((s, i) => `${s.title}: ${wizardAnswers[i] || 'skipped'}`).join(' | ') +
+                    (freeText ? ` | Additional notes: ${freeText}` : '');
+                closeCheckupWizard();
+                openAiTriage();
+                document.getElementById('aiTextInput').value = `Executive Check-up summary — ${summary}`;
+                await sendAiTriageMessage();
+                return;
+            }
+            wizardIndex++;
+            renderWizardStep();
+        }
+
+        /* ================= TELEHEALTH ================= */
+        const NEXUS_DOCTORS = [
+            { name: 'Dr. Amina Bello', spec: 'General Practice', rating: 4.9, price: '$15' },
+            { name: 'Dr. Chen Wei', spec: 'Cardiology', rating: 4.8, price: '$25' },
+            { name: 'Dr. Fatima Sani', spec: 'Pediatrics', rating: 5.0, price: '$18' },
+            { name: 'Dr. James Okoro', spec: 'Dermatology', rating: 4.7, price: '$20' }
+        ];
+
+        function openTelehealth() {
+            renderDoctorList();
+            renderAppointments();
+            document.getElementById('telehealthModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeTelehealth() {
+            document.getElementById('telehealthModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        function renderDoctorList() {
+            const wrap = document.getElementById('doctorList');
+            wrap.innerHTML = NEXUS_DOCTORS.map((d, i) => `
+                <div class="unit-card rounded-2xl p-4 flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                        <div class="text-[12px] font-bold">${d.name}</div>
+                        <div class="text-[9px] text-gray-500 mt-1">${d.spec} · <i class="fa-solid fa-star text-yellow-400"></i> ${d.rating} · ${d.price}/session</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="bookDoctor(${i}, 'video')" class="btn-nexus text-[9px] px-4 py-2"><i class="fa-solid fa-video mr-1"></i>Video</button>
+                        <button onclick="bookDoctor(${i}, 'chat')" class="btn-nexus text-[9px] px-4 py-2" style="border-color:var(--nexus-purple); color:var(--nexus-purple);"><i class="fa-solid fa-comment mr-1"></i>Chat</button>
+                    </div>
+                </div>`).join('');
+        }
+        function getAppointments() {
+            return JSON.parse(localStorage.getItem('nexusAppointments') || '[]');
+        }
+        function bookDoctor(index, mode) {
+            const d = NEXUS_DOCTORS[index];
+            const appts = getAppointments();
+            const slot = new Date(Date.now() + 60 * 60 * 1000);
+            appts.push({ doctor: d.name, spec: d.spec, mode, time: slot.toISOString() });
+            localStorage.setItem('nexusAppointments', JSON.stringify(appts));
+            renderAppointments();
+            showToast(`${mode === 'video' ? 'Video call' : 'Chat consult'} booked with ${d.name}`);
+        }
+        function renderAppointments() {
+            const appts = getAppointments();
+            const wrap = document.getElementById('appointmentList');
+            if (appts.length === 0) { wrap.textContent = 'No appointments yet.'; return; }
+            wrap.innerHTML = appts.slice(-5).reverse().map(a => `
+                <div class="nx-list-item">
+                    <div>
+                        <div class="text-[11px] font-bold text-white">${a.doctor}</div>
+                        <div class="text-[9px] text-gray-500">${a.spec} · ${a.mode} · ${new Date(a.time).toLocaleString()}</div>
+                    </div>
+                    <i class="fa-solid fa-circle-check text-cyan-400"></i>
+                </div>`).join('');
+        }
+
+        /* ================= MEDICATION REMINDERS ================= */
+        function openMeds() {
+            renderMedsList();
+            document.getElementById('medsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMeds() {
+            document.getElementById('medsModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        function getMeds() {
+            return JSON.parse(localStorage.getItem('nexusMeds') || '[]');
+        }
+        function addMedReminder() {
+            const name = document.getElementById('medName').value.trim();
+            const time = document.getElementById('medTime').value;
+            const freq = document.getElementById('medFreq').value;
+            if (!name || !time) { showToast('Please add a medication name and time.'); return; }
+            const meds = getMeds();
+            meds.push({ id: Date.now(), name, time, freq });
+            localStorage.setItem('nexusMeds', JSON.stringify(meds));
+            document.getElementById('medName').value = '';
+            document.getElementById('medTime').value = '';
+            renderMedsList();
+            showToast(`Reminder set for ${name}`);
+        }
+        function deleteMedReminder(id) {
+            const meds = getMeds().filter(m => m.id !== id);
+            localStorage.setItem('nexusMeds', JSON.stringify(meds));
+            renderMedsList();
+        }
+        function renderMedsList() {
+            const meds = getMeds();
+            const wrap = document.getElementById('medsList');
+            if (meds.length === 0) { wrap.innerHTML = '<p class="text-[11px] text-gray-500">No reminders yet.</p>'; return; }
+            wrap.innerHTML = meds.map(m => `
+                <div class="nx-list-item">
+                    <div>
+                        <div class="text-[11px] font-bold text-white">${m.name}</div>
+                        <div class="text-[9px] text-gray-500">${m.freq} · ${m.time}</div>
+                    </div>
+                    <button onclick="deleteMedReminder(${m.id})" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+                </div>`).join('');
+        }
+
+        /* ================= VITALS TRACKER ================= */
+        function openVitals() {
+            renderVitalsHistory();
+            document.getElementById('vitalsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeVitals() {
+            document.getElementById('vitalsModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        function getVitals() {
+            return JSON.parse(localStorage.getItem('nexusVitals') || '[]');
+        }
+        function saveVitalEntry() {
+            const hr = document.getElementById('vHr').value;
+            const steps = document.getElementById('vSteps').value;
+            const bp = document.getElementById('vBp').value;
+            const sleep = document.getElementById('vSleep').value;
+            if (!hr && !steps && !bp && !sleep) { showToast('Enter at least one value to log.'); return; }
+            const vitals = getVitals();
+            vitals.push({ date: new Date().toISOString(), hr, steps, bp, sleep });
+            localStorage.setItem('nexusVitals', JSON.stringify(vitals));
+            ['vHr', 'vSteps', 'vBp', 'vSleep'].forEach(id => document.getElementById(id).value = '');
+            renderVitalsHistory();
+            showToast('Vitals logged');
+        }
+        function renderVitalsHistory() {
+            const vitals = getVitals().slice(-7).reverse();
+            const wrap = document.getElementById('vitalsHistory');
+            if (vitals.length === 0) { wrap.innerHTML = '<p class="text-[11px] text-gray-500">No entries yet.</p>'; return; }
+            const maxSteps = Math.max(...vitals.map(v => Number(v.steps) || 0), 1);
+            wrap.innerHTML = vitals.map(v => `
+                <div class="unit-card rounded-2xl p-4">
+                    <div class="text-[9px] text-gray-500 mb-2">${new Date(v.date).toLocaleString()}</div>
+                    <div class="grid grid-cols-2 gap-3 text-[11px] mb-2">
+                        <div>❤️ ${v.hr || '—'} bpm</div>
+                        <div>🩸 ${v.bp || '—'}</div>
+                        <div>😴 ${v.sleep || '—'} hrs</div>
+                        <div>👣 ${v.steps || '—'} steps</div>
+                    </div>
+                    <div class="nx-bar-track"><div class="nx-bar-fill" style="width:${Math.min(100, ((Number(v.steps)||0)/maxSteps)*100)}%"></div></div>
+                </div>`).join('');
+        }
+
+        /* ================= HEALTH RECORDS VAULT ================= */
+        function openRecords() {
+            renderRecordsList();
+            document.getElementById('recordsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeRecords() {
+            document.getElementById('recordsModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        function getRecords() {
+            return JSON.parse(localStorage.getItem('nexusRecords') || '[]');
+        }
+        function uploadRecord(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 4 * 1024 * 1024) { showToast('File too large — please use a file under 4MB.'); return; }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const records = getRecords();
+                records.push({ id: Date.now(), name: file.name, type: file.type, data: e.target.result, date: new Date().toISOString() });
+                localStorage.setItem('nexusRecords', JSON.stringify(records));
+                renderRecordsList();
+                showToast('Document saved to your vault');
+            };
+            reader.readAsDataURL(file);
+            input.value = '';
+        }
+        function deleteRecord(id) {
+            const records = getRecords().filter(r => r.id !== id);
+            localStorage.setItem('nexusRecords', JSON.stringify(records));
+            renderRecordsList();
+        }
+        function renderRecordsList() {
+            const records = getRecords();
+            const wrap = document.getElementById('recordsList');
+            if (records.length === 0) { wrap.innerHTML = '<p class="text-[11px] text-gray-500">No documents uploaded yet.</p>'; return; }
+            wrap.innerHTML = records.map(r => `
+                <div class="nx-list-item">
+                    <a href="${r.data}" download="${r.name}" class="flex items-center gap-2 min-w-0">
+                        <i class="fa-solid fa-file-lines text-yellow-300 flex-shrink-0"></i>
+                        <span class="text-[11px] text-white truncate">${r.name}</span>
+                    </a>
+                    <button onclick="deleteRecord(${r.id})" class="text-red-400 text-xs flex-shrink-0"><i class="fa-solid fa-trash"></i></button>
+                </div>`).join('');
+        }
+
+        /* ================= COMMUNITY & SUPPORT GROUPS ================= */
+        const NEXUS_GROUPS = [
+            { name: 'Diabetes Support Circle', members: '2.1k', icon: 'fa-droplet' },
+            { name: 'Cancer Survivors Network', members: '980', icon: 'fa-ribbon' },
+            { name: 'Mental Health Circle', members: '3.4k', icon: 'fa-head-side-heart' },
+            { name: 'New Mothers Group', members: '1.5k', icon: 'fa-baby' },
+            { name: 'Heart Health Warriors', members: '760', icon: 'fa-heart-pulse' }
+        ];
+        function openCommunity() {
+            renderCommunityGroups();
+            document.getElementById('communityModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeCommunity() {
+            document.getElementById('communityModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        function getJoinedGroups() {
+            return JSON.parse(localStorage.getItem('nexusCommunities') || '[]');
+        }
+        function joinCommunity(name) {
+            const joined = getJoinedGroups();
+            if (!joined.includes(name)) joined.push(name);
+            localStorage.setItem('nexusCommunities', JSON.stringify(joined));
+            renderCommunityGroups();
+            showToast(`Joined ${name}`);
+        }
+        function renderCommunityGroups() {
+            const joined = getJoinedGroups();
+            const wrap = document.getElementById('communityGroups');
+            wrap.innerHTML = NEXUS_GROUPS.map(g => `
+                <div class="unit-card rounded-2xl p-4 flex items-center justify-between gap-3 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <div class="unit-icon-box" style="margin:0;"><i class="fa-solid ${g.icon} text-purple-300"></i></div>
+                        <div>
+                            <div class="text-[12px] font-bold">${g.name}</div>
+                            <div class="text-[9px] text-gray-500">${g.members} members</div>
+                        </div>
+                    </div>
+                    ${joined.includes(g.name)
+                        ? `<span class="text-[9px] text-cyan-400 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>Joined</span>`
+                        : `<button onclick="joinCommunity('${g.name}')" class="btn-nexus text-[9px] px-4 py-2">Join</button>`}
+                </div>`).join('');
+        }
+    </script>
+</body>
+</html>
