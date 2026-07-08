@@ -924,21 +924,21 @@
     }
 
     async function triggerAIReply(text, extraImageParts) {
-        isSending = true;
-        showTyping();
+    isSending = true;
+    showTyping();
 
-        let productList = "No products listed yet.";
-        try {
-            const snap = await db.collection('products').limit(30).get();
-            let items = [];
-            snap.forEach(doc => {
-                const d = doc.data();
-                items.push(`- ${d.name || d.title || 'Item'}: ₦${d.price || '?'} | ${d.description || d.desc || ''}`);
-            });
-            if (items.length > 0) productList = items.join('\n');
-        } catch(e) {}
+    let productList = "No products listed yet.";
+    try {
+        const snap = await db.collection('products').limit(30).get();
+        let items = [];
+        snap.forEach(doc => {
+            const d = doc.data();
+            items.push(`- ${d.name || d.title || 'Item'}: ₦${d.price || '?'} | ${d.description || d.desc || ''}`);
+        });
+        if (items.length > 0) productList = items.join('\n');
+    } catch(e) {}
 
-        const systemPrompt = `Kai ne "Ali", babban jami'in sayarwa (top sales closer) na shago mai suna "${storeName}". Kai NE mutum, ba robot ba — kana magana kai tsaye da customer kamar yadda gwanin sayarwa a WhatsApp ke yi: da hankali, da natsuwa, da kwarin gwiwa, kuma ba tare da yin roƙo ba.
+    const systemPrompt = `Kai ne "Ali", babban jami'in sayarwa (top sales closer) na shago mai suna "${storeName}". Kai NE mutum, ba robot ba — kana magana kai tsaye da customer kamar yadda gwanin sayarwa a WhatsApp ke yi: da hankali, da natsuwa, da kwarin gwiwa, kuma ba tare da yin roƙo ba.
 
 MUHIMMAN DOKOKI:
 1. HARSHE: KANA JIN HAUSA SOSAI DA KYAU — kada ka taɓa cewa "ba ka jin Hausa" ko "ba ka fahimta ba" game da kowane yare da customer ya yi amfani da shi. Ka gano yarukan da customer yake amfani da shi sannan KA AMSA DA WANNAN YARE DAIDAI. Idan Hausa ce, ka rubuta Hausa TSAFTATACCE, ba fassarar Turanci ba. Idan Turanci ce, ka rubuta Turanci mai inganci.
@@ -949,68 +949,72 @@ ${productList}
 - Kada ka ƙirƙiri farashi, launi, girma (size), ko nau'in kaya (misali "cotton", "lace", "shadda") da BABU SHI a rubuce a jerin — ko da customer ya ambaci wannan kalmar a tambayarsa.
 - Idan customer ya tambayi wani abu da BAI BAYYANA A SARARI ba a jerin (misali wani launi ko nau'i na musamman), ka amsa da gaskiya: "Ba mu da wannan a yanzu, amma ga abin da muke da shi: [jera abin da AKWAI a jerin]" — KADA KA CE EE MUNA DA SHI face in yana can a zahiri.
 4. IDAN AN AIKA HOTO: ka duba hoton da kyau, ka bayyana abinda kake gani, ka danganta shi da kayayyakinka idan akwai kama a jerin.
-5. IDAN CUSTOMER YA TAMBAYI GANIN HOTON KAYA ko kaya iri-iri (misali "ina son ganin panties dinku", "what do you have"), ka amsa a takaice sannan ka gaya masa cewa za ka nuna masa hotuna — hotuna za su biyo baya ta atomatik.
-6. KASANCE MAI RUFE SAYARWA: bayan bayanin kaya, KA TAMBAYE customer kai tsaye idan yana son ya yi oda.
-7. DON KAMMALA ODA: ka tambaya (1) cikakken suna, (2) lambar waya, (3) adireshi, (4) yawan kaya — TAMBAYA DAYA A LOKACI.
-8. Ka kasance mai kirki, mai godiya, kuma mai kwarin gwiwa. Kada ka taba fadin karya game da samuwar kaya.`;
+5. IDAN CUSTOMER YA TAMBAYI GANIN HOTON KAYA (misali "ina son ganin panties dinku", "what do you have", "hotuna"), KADA KA TURA HOTO NAN TAKE — ka amsa da bayanin kayan a rubuce sannan ka TAMBAYE SHI a fili: "Kana son na tura maka hotuna?"
+6. KAR KA TABA TURA HOTO SAI CUSTOMER YA TABBATAR A SARARI (misali ya ce "ee", "eh", "go ahead", "tura", "yes") BAYAN KA TAMBAYE SHI. Idan bai bada izini ba tukuna, KAR KA SAKA [TURA_HOTO] KWATA-KWATA.
+7. IDAN CUSTOMER YA TABBATAR (bayan ka tambaya, ya ce ee/go ahead/tura), a KARSHEN sakonka, ka RUBUTA layi na daban KAI TSAYE haka: [TURA_HOTO: Sunan Kaya Daidai Kamar Yadda Yake A Jerin]. Kar ka rubuta wani abu bayan wannan tag din.
+8. KASANCE MAI RUFE SAYARWA: bayan bayanin kaya, KA TAMBAYE customer kai tsaye idan yana son ya yi oda.
+9. DON KAMMALA ODA: ka tambaya (1) cikakken suna, (2) lambar waya, (3) adireshi, (4) yawan kaya — TAMBAYA DAYA A LOKACI.
+10. Ka kasance mai kirki, mai godiya, kuma mai kwarin gwiwa. Kada ka taba fadin karya game da samuwar kaya.`;
 
-        let userContent = [];
-        if (extraImageParts && extraImageParts.length) userContent.push(...extraImageParts);
-        if (text) userContent.push({ type: 'text', text });
-        chatHistory.push({ role: 'user', content: userContent.length === 1 && userContent[0].type === 'text' ? text : userContent });
+    let userContent = [];
+    if (extraImageParts && extraImageParts.length) userContent.push(...extraImageParts);
+    if (text) userContent.push({ type: 'text', text });
+    chatHistory.push({ role: 'user', content: userContent.length === 1 && userContent[0].type === 'text' ? text : userContent });
 
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 25000);
-            const res = await fetch('https://oryzon-backend-ed1q.onrender.com/api/chat', {
-        method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    signal: controller.signal,
-    body: JSON.stringify({
-        systemPrompt,
-        messages: chatHistory
-    })
-});
-            
-            clearTimeout(timeoutId);
-            const data = await res.json();
-            let reply = data.choices?.[0]?.message?.content;
-            if (!reply) reply = "⚠️ API Error: " + (data.error?.message || JSON.stringify(data).slice(0,200));
-            chatHistory.push({ role: 'assistant', content: reply });
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+        const res = await fetch('https://oryzon-backend-ed1q.onrender.com/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({ systemPrompt, messages: chatHistory })
+        });
 
-            hideTyping();
-            const bm = { role: 'theirs', type: 'text', text: reply, time: Date.now() };
-            const id = await saveMessageToFirestore(bm);
-            bm.id = id;
-            renderedMessages.push(bm);
-            renderMessage(bm, true);
-            await autoSendMatchingProductImages(text, reply);
-        } catch(e) {
-            hideTyping();
-            const errMsg = e.name === 'AbortError' ? "⚠️ Took too long to respond — please try again." : "⚠️ Connection error: " + e.message;
-            const bm = { role: 'theirs', type: 'text', text: errMsg, time: Date.now() };
-            renderedMessages.push(bm);
-            renderMessage(bm, true);
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        let reply = data.choices?.[0]?.message?.content;
+        if (!reply) reply = "⚠️ API Error: " + (data.error?.message || JSON.stringify(data).slice(0,200));
+
+        // ---- fitar da [TURA_HOTO: ...] tag din kafin nuna wa customer ----
+        let imageRequest = null;
+        const tagMatch = reply.match(/\[TURA_HOTO:\s*(.+?)\]/i);
+        if (tagMatch) {
+            imageRequest = tagMatch[1].trim();
+            reply = reply.replace(/\[TURA_HOTO:.+?\]/i, '').trim();
         }
-        isSending = false;
-    }
 
-    async function autoSendMatchingProductImages(customerText, botReply) {
-        if (!productCatalog.length) return;
-        const haystack = (customerText + ' ' + botReply).toLowerCase();
-        const wantsToSeeAll = /(ganin|gani|nuna|show|see|hoto|hotuna|photos?|pictures?|what.*(have|got)|kaya.*(kuke|kake)|stock)/.test(haystack);
-        let matches = productCatalog.filter(p => haystack.includes(p.name.toLowerCase()));
-        if (matches.length === 0 && wantsToSeeAll) matches = productCatalog.slice(0, 6);
-        matches = matches.slice(0, 6);
-        for (const p of matches) {
-            const m = { role: 'theirs', type: 'image', media: p.img, caption: `${p.name} — ₦${p.price}`, time: Date.now() };
-            const id = await saveMessageToFirestore(m);
-            m.id = id;
-            renderedMessages.push(m);
-            renderMessage(m, true);
+        chatHistory.push({ role: 'assistant', content: reply });
+
+        hideTyping();
+        const bm = { role: 'theirs', type: 'text', text: reply, time: Date.now() };
+        const id = await saveMessageToFirestore(bm);
+        bm.id = id;
+        renderedMessages.push(bm);
+        renderMessage(bm, true);
+
+        if (imageRequest) await sendSpecificProductImage(imageRequest);
+
+    } catch(e) {
+        hideTyping();
+        const errMsg = e.name === 'AbortError' ? "⚠️ Took too long to respond — please try again." : "⚠️ Connection error: " + e.message;
+        const bm = { role: 'theirs', type: 'text', text: errMsg, time: Date.now() };
+        renderedMessages.push(bm);
+        renderMessage(bm, true);
+    }
+    isSending = false;
+}
+
+async function sendSpecificProductImage(productName) {
+    const match = productCatalog.find(p => p.name.toLowerCase().includes(productName.toLowerCase()));
+    if (!match) return;
+    const m = { role: 'theirs', type: 'image', media: match.img, caption: `${match.name} — ₦${match.price}`, time: Date.now() };
+    const id = await saveMessageToFirestore(m);
+    m.id = id;
+    renderedMessages.push(m);
+    renderMessage(m, true);
         }
-    }
-
+        
     // ================= INIT =================
     document.addEventListener('DOMContentLoaded', async () => {
         await authReady;
