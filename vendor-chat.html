@@ -328,9 +328,6 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    const GROQ_API_KEY = "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";
-    const GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"; // supports text + vision
-
     const params = new URLSearchParams(window.location.search);
     const vendorId = params.get('vendorId') || 'default';
     const isAdmin = params.get('admin') === '1';
@@ -965,17 +962,16 @@ ${productList}
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 25000);
-            const res = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
-                signal: controller.signal,
-                body: JSON.stringify({
-                    model: GROQ_MODEL,
-                    messages: [{ role: 'system', content: systemPrompt }, ...chatHistory],
-                    temperature: 0.8,
-                    max_completion_tokens: 500
-                })
-            });
+            const res = await fetch('https://oryzon-media-server.onrender.com/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal: controller.signal,
+    body: JSON.stringify({
+        systemPrompt,
+        messages: chatHistory
+    })
+});
+            
             clearTimeout(timeoutId);
             const data = await res.json();
             let reply = data.choices?.[0]?.message?.content;
