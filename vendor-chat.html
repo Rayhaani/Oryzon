@@ -96,12 +96,13 @@
         .chat-space { flex: 1; padding: 10px 14px 8px; overflow-y: auto; scrollbar-width: none; }
         .chat-space::-webkit-scrollbar { display: none; }
         .msg-row { display: flex; flex-direction: column; margin-bottom: 8px; animation: riseIn 0.28s cubic-bezier(.2,.8,.3,1); }
+        .msg-row.voice-row { margin-bottom: 20px; }
         .msg-row.mine { align-items: flex-end; }
         .msg-row.theirs { align-items: flex-start; }
         @keyframes riseIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         .bubble {
-            max-width: 82%; padding: 9px 42px 10px 14px; font-size: 14.5px; line-height: 1.4;
+            max-width: 82%; padding: 9px 14px 10px 14px; font-size: 14.5px; line-height: 1.4;
             position: relative; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.15s ease;
         }
         .bubble.selected-for-menu { filter: brightness(0.85); }
@@ -114,6 +115,10 @@
         .msg-time-inline { position: absolute; right: 12px; bottom: 6px; font-size: 10px; opacity: 0.6; white-space: nowrap; }
         .u-bubble .msg-time-inline { color: #7a5f2f; }
         .v-bubble .msg-time-inline { color: #d8c48a; }
+        .time-spacer { display: inline-block; visibility: hidden; font-size: 10px; padding-left: 4px; }
+        .voice-bubble .msg-time-inline { bottom: -15px; right: 6px; }
+        .u-bubble.voice-bubble .msg-time-inline { color: #8a7644; }
+        .v-bubble.voice-bubble .msg-time-inline { color: #a3936a; }
         .edited-tag { font-style: italic; opacity: 0.75; margin-right: 3px; }
 
         .reply-quote {
@@ -620,6 +625,7 @@
     function bubbleInner(m) {
         let quote = '';
         if (m.replyTo) quote = `<div class="reply-quote"><span class="rq-who">${m.replyTo.role === 'mine' ? 'You' : storeName}</span>${escapeHtml(m.replyTo.snippet)}</div>`;
+        const spacerHtml = `<span class="time-spacer">${m.edited ? 'edited ' : ''}${timeStr(m.time)}</span>`;
         let body = '';
         if (m.type === 'imageGroup') body = renderImageGrid(m.mediaArr);
         else if (m.type === 'image') body = `<img class="chat-img" src="${m.media}">`;
@@ -632,21 +638,22 @@
             <span class="vn-time" id="vn-time-${m.id}">0:00</span>
             <audio id="vn-audio-${m.id}" src="${m.media}" preload="metadata" style="display:none" oncontextmenu="return false"></audio>
         </div>`;
-        else body = escapeHtml(m.text);
-        if (m.caption) body += `<div style="margin-top:6px;">${escapeHtml(m.caption)}</div>`;
+        else body = escapeHtml(m.text) + spacerHtml;
+        if (m.caption) body += `<div style="margin-top:6px;">${escapeHtml(m.caption)}${spacerHtml}</div>`;
         return quote + body;
     }
 
     function renderMessage(m, animate) {
         const chat = document.getElementById('chat');
         const row = document.createElement('div');
-        row.className = `msg-row ${m.role === 'mine' ? 'mine' : 'theirs'}`;
+        row.className = `msg-row ${m.role === 'mine' ? 'mine' : 'theirs'}${m.type === 'voice' ? ' voice-row' : ''}`;
         row.id = `row-${m.id}`;
         row.dataset.id = m.id;
         if (!animate) row.style.animation = 'none';
         const bubbleClass = m.role === 'mine' ? 'u-bubble' : 'v-bubble';
         const isMedia = ['image','video','voice','imageGroup'].includes(m.type);
-        row.innerHTML = `<div class="bubble ${bubbleClass}${isMedia ? ' media-bubble' : ''}">${bubbleInner(m)}<span class="msg-time-inline">${m.edited ? '<span class="edited-tag">edited</span>' : ''}${timeStr(m.time)}</span></div>`;
+        const isVoice = m.type === 'voice';
+        row.innerHTML = `<div class="bubble ${bubbleClass}${isMedia ? ' media-bubble' : ''}${isVoice ? ' voice-bubble' : ''}">${bubbleInner(m)}<span class="msg-time-inline">${m.edited ? '<span class="edited-tag">edited</span>' : ''}${timeStr(m.time)}</span></div>`;
         const bubbleEl = row.querySelector('.bubble');
         attachLongPress(bubbleEl, m.id);
         chat.appendChild(row);
