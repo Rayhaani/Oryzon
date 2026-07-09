@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Protocol - Poultry & Birds Market</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #050505;
+            --cyan-neon: #00F2FF;
+            --emerald-pulse: #50FA7B;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--obsidian);
+            background-image: radial-gradient(circle at 10% 20%, rgba(98, 114, 164, 0.1) 0%, transparent 50%),
+                              radial-gradient(circle at 90% 80%, rgba(0, 242, 255, 0.05) 0%, transparent 50%);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 45px;
+        }
+
+        /* 1. BALANCED NEURAL HEADER */
+        header {
+            position: fixed;
+            top: 0; width: 100%; height: 62px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 0 14px; z-index: 1000;
+        }
+
+        .header-node {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            position: relative; cursor: pointer;
+        }
+
+        .node-circle {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1.5px solid var(--cyan-neon);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 2;
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.18);
+            transition: box-shadow 0.3s, border-color 0.3s, background 0.3s, transform 0.15s;
+        }
+        .header-node:active .node-circle { transform: scale(0.9); }
+        .node-circle svg { width: 16px; height: 16px; stroke: var(--cyan-neon); transition: stroke 0.3s, opacity 0.2s; }
+
+        .node-caption {
+            font-family: 'Orbitron', sans-serif; font-size: 7px; letter-spacing: 0.6px;
+            text-transform: uppercase; color: rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+        }
+
+        .node-ring {
+            position: absolute; top: 50%; left: 50%;
+            width: 44px; height: 44px; margin: -22px 0 0 -22px;
+            border-radius: 50%;
+            border: 1px dashed rgba(0, 242, 255, 0.35);
+            animation: orbitSpin 7s linear infinite;
+            z-index: 1;
+        }
+        @keyframes orbitSpin { to { transform: rotate(360deg); } }
+
+        .node-chevron-badge {
+            position: absolute; bottom: -2px; right: -2px;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--obsidian); border: 1px solid var(--cyan-neon);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 3;
+        }
+        .node-chevron-badge svg {
+            width: 8px; height: 8px; stroke: var(--cyan-neon);
+            transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+        }
+        .dropdown-trigger.open .node-chevron-badge svg { transform: rotate(180deg); }
+        .dropdown-trigger.open .node-circle { border-color: #fff; box-shadow: 0 0 18px rgba(0, 242, 255, 0.4); }
+        .dropdown-trigger.open .node-caption { color: #fff; }
+
+        .neural-switch-wrapper { display: flex; align-items: center; height: 30px; }
+
+        .neural-switch {
+            width: 135px; height: 30px; background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--glass-border); border-radius: 30px;
+            position: relative; cursor: pointer; overflow: hidden; display: flex;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+        }
+
+        .switch-blob {
+            position: absolute; top: 2px;
+            left: 46px;
+            width: 42px; height: 24px;
+            background: linear-gradient(45deg, #fff, var(--cyan-neon));
+            border-radius: 20px; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1; box-shadow: 0 0 20px #fff;
+        }
+
+        .pos-social .switch-blob { left: 2px; background: linear-gradient(45deg, var(--cyan-neon), #0072ff); box-shadow: 0 0 20px var(--cyan-neon); }
+        .pos-shop .switch-blob { left: 46px; background: linear-gradient(45deg, #fff, var(--cyan-neon)); box-shadow: 0 0 20px #fff; }
+        .pos-earn .switch-blob { left: 91px; background: linear-gradient(45deg, var(--emerald-pulse), #00b09b); box-shadow: 0 0 20px var(--emerald-pulse); }
+
+        .switch-label {
+            flex: 1; font-family: 'Orbitron', sans-serif; font-size: 8px;
+            letter-spacing: 0.5px; text-align: center; line-height: 28px;
+            z-index: 2; transition: 0.3s; color: #fff; mix-blend-mode: overlay;
+        }
+
+        .nearme-node .node-signal-badge {
+            position: absolute; top: -2px; right: -2px;
+            width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cyan-neon);
+            border: 1.5px solid var(--obsidian);
+            z-index: 3;
+            animation: signalBlink 2s ease-in-out infinite;
+        }
+        @keyframes signalBlink {
+            0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--cyan-neon); }
+            50% { opacity: 0.45; box-shadow: 0 0 2px var(--cyan-neon); }
+        }
+        .nearme-node.active .node-signal-badge { background: var(--emerald-pulse); animation: none; box-shadow: 0 0 8px var(--emerald-pulse); }
+
+        .nearme-node.active .node-circle {
+            background: linear-gradient(135deg, var(--emerald-pulse), #00b09b);
+            border-color: var(--emerald-pulse);
+            box-shadow: 0 0 16px rgba(80, 250, 123, 0.45);
+        }
+        .nearme-node.active .node-circle svg { stroke: #04140c; }
+        .nearme-node.active .node-caption { color: var(--emerald-pulse); }
+
+        .nearme-node.loading .node-circle svg { opacity: 0; }
+        .nearme-node.loading .node-circle::before {
+            content: ''; position: absolute; width: 14px; height: 14px;
+            border: 2px solid rgba(0, 242, 255, 0.25); border-top-color: var(--cyan-neon);
+            border-radius: 50%; animation: fabSpin 0.7s linear infinite;
+        }
+        .nearme-node.flash .node-circle { animation: pillFlash 0.6s ease-out; }
+        @keyframes pillFlash {
+            0% { box-shadow: 0 0 0 rgba(80,250,123,0.6); }
+            40% { box-shadow: 0 0 26px rgba(80,250,123,0.6); }
+            100% { box-shadow: 0 0 18px rgba(80,250,123,0.4); }
+        }
+
+        .fab-nearme-float {
+            position: fixed; right: 16px; bottom: 68px;
+            width: 56px; height: 56px;
+            z-index: 2500; cursor: pointer;
+        }
+        .fab-nearme-float .fab-circle {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1.5px solid var(--cyan-neon);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 2;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 18px rgba(0,242,255,0.2);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s, transform 0.15s;
+        }
+        .fab-nearme-float:active .fab-circle { transform: scale(0.92); }
+        .fab-nearme-float .fab-circle svg { width: 24px; height: 24px; stroke: var(--cyan-neon); transition: stroke 0.3s, opacity 0.2s; }
+
+        .fab-nearme-float .radar-ring {
+            position: absolute; inset: 0; border-radius: 50%;
+            border: 1.5px solid rgba(0, 242, 255, 0.5);
+            animation: radarPing 2.6s ease-out infinite;
+            z-index: 1;
+        }
+        .fab-nearme-float .radar-ring.r2 { animation-delay: 1.3s; }
+        @keyframes radarPing {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.9); opacity: 0; }
+        }
+
+        .fab-nearme-float.active .fab-circle {
+            background: linear-gradient(135deg, var(--emerald-pulse), #00b09b);
+            border-color: var(--emerald-pulse);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 24px rgba(80,250,123,0.4);
+        }
+        .fab-nearme-float.active .fab-circle svg { stroke: #04140c; }
+        .fab-nearme-float.active .radar-ring { border-color: rgba(80,250,123,0.5); }
+
+        .fab-nearme-float.loading .fab-circle svg { opacity: 0; }
+        .fab-nearme-float.loading .fab-circle::before {
+            content: ''; position: absolute; width: 22px; height: 22px;
+            border: 2.5px solid rgba(0, 242, 255, 0.2); border-top-color: var(--cyan-neon);
+            border-radius: 50%; animation: fabSpin 0.7s linear infinite;
+        }
+        .fab-nearme-float.flash .fab-circle { animation: pillFlash 0.6s ease-out; }
+
+        .dropdown-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 3400;
+        }
+        .dropdown-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .vertical-dropdown {
+            position: fixed; top: 70px; left: 14px;
+            width: min(78vw, 280px);
+            background: linear-gradient(160deg, rgba(16,16,22,0.98), rgba(4,4,7,0.99));
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 16px 16px 8px;
+            z-index: 3500;
+            opacity: 0; transform: translateY(-14px) scale(0.94);
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(.16,1,.3,1), transform 0.35s cubic-bezier(.16,1,.3,1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(0,242,255,0.08);
+            max-height: 78vh; overflow-y: auto;
+        }
+        .vertical-dropdown.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+        .vertical-dropdown::before {
+            content: '';
+            position: absolute; left: 33px; top: 34px; bottom: 34px; width: 2px;
+            background: linear-gradient(to bottom, var(--cyan-neon), rgba(0,242,255,0.03));
+            opacity: 0.45;
+        }
+
+        .dropdown-title {
+            font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 1.8px;
+            color: rgba(255,255,255,0.4); text-transform: uppercase;
+            margin-bottom: 8px; padding-left: 4px;
+        }
+
+        .drop-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 9px 4px; border-radius: 14px; cursor: pointer;
+            position: relative;
+            opacity: 0; transform: translateX(-10px);
+            transition: opacity 0.35s ease, transform 0.35s ease, background 0.25s;
+        }
+        .vertical-dropdown.open .drop-item { opacity: 1; transform: translateX(0); }
+        .drop-item:active { background: rgba(255,255,255,0.04); }
+
+        .drop-node {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(255,255,255,0.04); border: 1.5px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            z-index: 2; transition: all 0.3s;
+        }
+        .drop-node svg { width: 16px; height: 16px; stroke: rgba(255,255,255,0.55); transition: stroke 0.3s; }
+
+        .drop-item.active .drop-node {
+            background: linear-gradient(135deg, rgba(0,242,255,0.25), rgba(0,242,255,0.05));
+            border-color: var(--cyan-neon);
+            box-shadow: 0 0 14px rgba(0,242,255,0.35);
+        }
+        .drop-item.active .drop-node svg { stroke: var(--cyan-neon); }
+
+        .drop-label { font-family: 'Montserrat', sans-serif; font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.75); }
+        .drop-item.active .drop-label { color: #fff; }
+
+        .drop-pulse {
+            width: 6px; height: 6px; border-radius: 50%; background: var(--cyan-neon);
+            margin-left: auto; box-shadow: 0 0 8px var(--cyan-neon);
+            opacity: 0;
+        }
+        .drop-item.active .drop-pulse { opacity: 1; animation: dotPulse 1.6s ease-in-out infinite; }
+        @keyframes dotPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.4); } }
+
+        /* 3. MARKET NAV */
+        .market-nav {
+            margin-top: 74px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .nav-pill {
+            flex: 1; background: var(--glass-bg); border: 1px solid var(--glass-border);
+            padding: 8px 2px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+
+        .pill-text { font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 600; color: #fff; }
+
+        /* 4. Near Me filter bar */
+        .nearme-filterbar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin: 0 10px 10px; padding: 9px 14px;
+            background: rgba(80, 250, 123, 0.08);
+            border: 1px solid var(--emerald-pulse);
+            border-radius: 14px;
+            font-family: 'Montserrat', sans-serif; font-size: 11px;
+            color: var(--emerald-pulse);
+            animation: slideDown 0.3s ease;
+        }
+        .nearme-filterbar span { display: flex; align-items: center; gap: 6px; }
+        .nearme-filterbar button {
+            background: none; border: none; color: var(--emerald-pulse);
+            font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 11px;
+            cursor: pointer; text-decoration: underline;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 5. MARKET GRID */
+        .market-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 10px; padding: 0 10px 20px; max-width: 500px;
+            margin-left: auto; margin-right: auto;
+        }
+
+        .product-card {
+            background: var(--glass-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 10px; position: relative; overflow: hidden;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .product-card:active { transform: scale(0.97); }
+
+        .image-container { position: relative; width: 100%; aspect-ratio: 1/1; margin-bottom: 8px; }
+        .product-image { width: 100%; height: 100%; background: #111; border-radius: 15px; object-fit: cover; border: 1px solid var(--glass-border); }
+
+        .price-badge {
+            position: absolute; bottom: 8px; right: 8px;
+            background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(5px);
+            border: 1px solid var(--emerald-pulse); padding: 4px 8px;
+            border-radius: 10px; color: var(--emerald-pulse);
+            font-family: 'Orbitron'; font-size: 9px; box-shadow: 0 0 10px rgba(80, 250, 123, 0.2);
+        }
+
+        .distance-badge {
+            position: absolute; bottom: 8px; left: 8px;
+            background: rgba(5, 5, 5, 0.85);
+            border: 1px solid var(--cyan-neon);
+            color: var(--cyan-neon);
+            font-family: 'Orbitron'; font-size: 8px;
+            padding: 4px 7px; border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.15);
+        }
+
+        .product-footer { display: flex; justify-content: space-between; align-items: center; gap: 5px; overflow: hidden; }
+        .product-name { font-family: 'Montserrat', sans-serif; font-size: 11px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .product-location { font-family: 'Inter', sans-serif; font-size: 9px; color: var(--cyan-neon); white-space: nowrap; opacity: 0.8; }
+
+        .empty-state {
+            grid-column: span 2; text-align: center; padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.4); font-size: 12.5px; line-height: 1.6;
+        }
+
+        @keyframes fabSpin { to { transform: rotate(360deg); } }
+
+        /* 7. TOAST */
+        .toast {
+            position: fixed; top: 60px; left: 50%;
+            transform: translateX(-50%) translateY(-16px);
+            background: rgba(10, 10, 10, 0.96);
+            border: 1px solid var(--glass-border);
+            padding: 10px 18px; border-radius: 30px;
+            font-family: 'Inter', sans-serif; font-size: 12px; color: #fff;
+            z-index: 4000; opacity: 0;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            max-width: 85%; text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* 8. FOOTER */
+        .nexus-footer {
+            position: fixed; bottom: 0; width: 100%; height: 45px;
+            background: rgba(5, 5, 5, 0.98); border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; justify-content: space-around; align-items: center; z-index: 3000;
+        }
+
+        .footer-icon { color: #fff; opacity: 0.5; cursor: pointer; }
+        .footer-icon.active { opacity: 1; filter: drop-shadow(0 0 5px var(--cyan-neon)); }
+        .profile-img { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #fff; }
+    </style>
+</head>
+<body class="pos-shop">
+
+    <header>
+        <div class="header-node dropdown-trigger" id="verticalTrigger">
+            <div class="node-ring"></div>
+            <div class="node-circle">
+                <svg id="triggerIcon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+                <div class="node-chevron-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+            </div>
+            <span class="node-caption" id="currentVerticalLabel">Poultry</span>
+        </div>
+
+        <div class="neural-switch-wrapper">
+            <div class="neural-switch" id="nexusSwitch">
+                <div class="switch-blob"></div>
+                <div class="switch-label" onclick="moveSwitch('social')">SOCIAL</div>
+                <div class="switch-label" onclick="moveSwitch('shop')">SHOP</div>
+                <div class="switch-label" onclick="moveSwitch('earn')">EARN</div>
+            </div>
+        </div>
+
+        <div class="header-node nearme-node" id="fabNearMe" onclick="toggleNearMe()">
+            <div class="node-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/>
+                    <circle cx="12" cy="9" r="2.3"/>
+                </svg>
+                <div class="node-signal-badge"></div>
+            </div>
+            <span class="node-caption">Near Me</span>
+        </div>
+    </header>
+
+    <div class="dropdown-overlay" id="dropdownOverlay"></div>
+    <div class="vertical-dropdown" id="verticalDropdown">
+        <div class="dropdown-title">Zaɓi Kasuwa</div>
+        <div id="dropdownList"></div>
+    </div>
+
+    <div class="market-nav">
+        <div class="nav-pill" onclick="window.location.href='categories.html'">
+            <span class="pill-text">Categories</span>
+        </div>
+        <div class="nav-pill" onclick="window.location.href='sell.html'">
+            <span class="pill-text">Sell</span>
+        </div>
+        <div class="nav-pill" onclick="window.location.href='inbox.html'">
+            <span class="pill-text">Message</span>
+        </div>
+        <div class="nav-pill" onclick="window.location.href='search.html'">
+            <span class="pill-text">Search</span>
+        </div>
+    </div>
+
+    <div id="filterBarSlot"></div>
+
+    <div class="market-grid" id="marketGrid"></div>
+
+    <div class="fab-nearme-float" id="fabNearMeFloat" onclick="toggleNearMe()">
+        <div class="radar-ring r1"></div>
+        <div class="radar-ring r2"></div>
+        <div class="fab-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/>
+                <circle cx="12" cy="9" r="2.3"/>
+            </svg>
+        </div>
+    </div>
+
+    <nav class="nexus-footer" id="instaFooter">
+        <div class="footer-icon active"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L4 9v12h5v-7h6v7h5V9l-8-6z"/></svg></div>
+        <div class="footer-icon" onclick="window.location.href='social.html'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 11-7.6-12.7 8.38 8.38 0 013.8.9L21 3z"/></svg></div>
+        <div class="footer-icon active"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg></div>
+        <div class="footer-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 2v20M8 2v20M2 12h20"/></svg></div>
+        <div class="footer-icon" onclick="window.location.href='me.html'"><img src="https://via.placeholder.com/150" alt="Me" class="profile-img"></div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+            authDomain: "oryzon-50ea4.firebaseapp.com",
+            projectId: "oryzon-50ea4",
+            storageBucket: "oryzon-50ea4.firebasestorage.app",
+            messagingSenderId: "782106742622",
+            appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+            measurementId: "G-K5085DLL2W"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const marketGrid = document.getElementById('marketGrid');
+        const fabHeader = document.getElementById('fabNearMe');
+        const fabFloat = document.getElementById('fabNearMeFloat');
+        const nearMeControls = [fabHeader, fabFloat];
+        const filterBarSlot = document.getElementById('filterBarSlot');
+
+        function setNearMeState(state, on) {
+            nearMeControls.forEach(el => el && el.classList.toggle(state, on));
+        }
+
+        /* ---------- 1. NEURAL MENU: vertical marketplace dropdown ---------- */
+        // This page belongs to the "poultry" vertical. Duplicate this file for each
+        // new vertical and just change CURRENT_VERTICAL + defaultProducts + collection name.
+        const CURRENT_VERTICAL = 'poultry';
+
+        const VERTICALS = [
+            { id: 'fashion',     label: 'Fashion',      href: 'shop.html',
+              icon: '<circle cx="12" cy="5" r="1.5"/><path d="M12 6.5v2M4 20h16M4 20l7.3-7.1a1 1 0 0 1 1.4 0L20 20"/>' },
+            { id: 'fabrics',     label: 'Fabrics',      href: 'fabrics.html',
+              icon: '<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M8 7v10M13 7v10"/>' },
+            { id: 'birds',       label: 'Birds & Pets', href: 'birds.html',
+              icon: '<circle cx="17" cy="8" r="1.7"/><path d="M3 16c4-7 11-7 15-3M17 6l3-1.5-1 3"/>' },
+            { id: 'electronics', label: 'Electronics',  href: 'electronics.html',
+              icon: '<rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M9 3v3M12 3v3M15 3v3M9 18v3M12 18v3M15 18v3M3 9h3M3 12h3M3 15h3M18 9h3M18 12h3M18 15h3"/>' },
+            { id: 'vehicles',    label: 'Vehicles',     href: 'vehicles.html',
+              icon: '<path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7" cy="17" r="1.4"/><circle cx="17" cy="17" r="1.4"/>' },
+            { id: 'home',        label: 'Home & Living', href: 'home.html',
+              icon: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>' },
+            { id: 'poultry',     label: 'Poultry Market', href: 'poultry.html',
+              icon: '<path d="M9 8c0-2 1.5-3 3-3s3 1 3 3c0 1-.5 2-1.5 2.5A4 4 0 0 1 16 14a4 4 0 0 1-8 0 4 4 0 0 1 2.5-3.5C9.5 10 9 9 9 8z"/><path d="M10 20l.5-3M14 20l-.5-3M5.5 11.5L8 12"/>' },
+            { id: 'used-market', label: 'Used Market',  href: 'used-market.html',
+              icon: '<path d="M20.5 12.5l-8-8H4v8.5l8 8a2 2 0 0 0 2.8 0l5.7-5.7a2 2 0 0 0 0-2.8z"/><circle cx="8.5" cy="8.5" r="1.5"/>' },
+        ];
+
+        const trigger = document.getElementById('verticalTrigger');
+        const triggerIcon = document.getElementById('triggerIcon');
+        const currentLabel = document.getElementById('currentVerticalLabel');
+        const overlay = document.getElementById('dropdownOverlay');
+        const dropdown = document.getElementById('verticalDropdown');
+        const dropdownList = document.getElementById('dropdownList');
+        let menuOpen = false;
+
+        function initTriggerAndMenu() {
+            const current = VERTICALS.find(v => v.id === CURRENT_VERTICAL) || VERTICALS[0];
+            triggerIcon.innerHTML = current.icon;
+            currentLabel.textContent = current.label;
+
+            dropdownList.innerHTML = VERTICALS.map((v, i) => `
+                <div class="drop-item ${v.id === CURRENT_VERTICAL ? 'active' : ''}" data-index="${i}">
+                    <div class="drop-node">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${v.icon}</svg>
+                    </div>
+                    <span class="drop-label">${v.label}</span>
+                    <div class="drop-pulse"></div>
+                </div>
+            `).join('');
+
+            dropdownList.querySelectorAll('.drop-item').forEach((el, i) => {
+                el.style.transitionDelay = (i * 45) + 'ms';
+                el.addEventListener('click', () => {
+                    const target = VERTICALS[i];
+                    closeMenu();
+                    if (target.id === CURRENT_VERTICAL) return;
+                    setTimeout(() => { window.location.href = target.href; }, 200);
+                });
+            });
+        }
+        initTriggerAndMenu();
+
+        function openMenu() {
+            menuOpen = true;
+            trigger.classList.add('open');
+            overlay.classList.add('open');
+            dropdown.classList.add('open');
+        }
+        function closeMenu() {
+            menuOpen = false;
+            trigger.classList.remove('open');
+            overlay.classList.remove('open');
+            dropdown.classList.remove('open');
+        }
+        trigger.addEventListener('click', () => { menuOpen ? closeMenu() : openMenu(); });
+        overlay.addEventListener('click', closeMenu);
+
+        /* ---------- 2. TOAST ---------- */
+        function showToast(message, duration = 3000) {
+            const el = document.createElement('div');
+            el.className = 'toast';
+            el.textContent = message;
+            document.body.appendChild(el);
+            requestAnimationFrame(() => el.classList.add('show'));
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => el.remove(), 350);
+            }, duration);
+        }
+
+        /* ---------- 3. PRODUCT DATA + RENDERING ---------- */
+        // Default products (used when Firestore is empty/unreachable). Poultry-specific:
+        // tantabaru, kaji, agwagi, turkey, zabuwa, etc. Includes approximate city
+        // coordinates so "Near Me" works out of the box for demos.
+        const defaultProducts = [
+            { id: "def1", name: "Tantabaru (Pigeons) - Pair", price: "₦8,000", location: "Kano", lat: 12.0022, lng: 8.5920, image: "https://via.placeholder.com/300/111/00F2FF?text=Pigeons" },
+            { id: "def2", name: "Kajin Ross (Broiler)", price: "₦6,500", location: "Kano", lat: 12.0022, lng: 8.5920, image: "https://via.placeholder.com/300/111/50FA7B?text=Broiler" },
+            { id: "def3", name: "Agwagi (Ducks) - Pair", price: "₦15,000", location: "Lagos", lat: 6.5244, lng: 3.3792, image: "https://via.placeholder.com/300/111/ffffff?text=Ducks" },
+            { id: "def4", name: "Turkey (Live)", price: "₦35,000", location: "Abuja", lat: 9.0765, lng: 7.3986, image: "https://via.placeholder.com/300/111/FFD700?text=Turkey" },
+            { id: "def5", name: "Kaji na Gida (Local Chicken)", price: "₦5,000", location: "Kano", lat: 12.0022, lng: 8.5920, image: "https://via.placeholder.com/300/111/FF5555?text=Chicken" },
+            { id: "def6", name: "Zabuwa (Guinea Fowl)", price: "₦9,500", location: "Kano", lat: 12.0022, lng: 8.5920, image: "https://via.placeholder.com/300/111/BD93F9?text=Guinea+Fowl" },
+            { id: "def7", name: "Kwan Kaji (Crate of Eggs)", price: "₦3,200", location: "Kaduna", lat: 10.5222, lng: 7.4383, image: "https://via.placeholder.com/300/111/50FA7B?text=Eggs" },
+            { id: "def8", name: "Tantabaru na Racing", price: "₦20,000", location: "Zaria", lat: 11.0804, lng: 7.7076, image: "https://via.placeholder.com/300/111/00F2FF?text=Racing+Pigeon" }
+        ];
+
+        let allProducts = [];
+        let nearMeActive = false;
+
+        function renderProducts(list, opts = {}) {
+            marketGrid.innerHTML = "";
+            if (!list.length) {
+                marketGrid.innerHTML = `<div class="empty-state">Babu wani abu a nan tukuna.<br>Ka kasance farkon wanda ya sayar!</div>`;
+                return;
+            }
+            list.forEach((product) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.onclick = () => { window.location.href = `products-page.html?id=${product.id}`; };
+
+                const distanceBadge = (opts.showDistance && product._distance != null)
+                    ? `<div class="distance-badge">${product._distance < 1 ? Math.round(product._distance * 1000) + 'm' : product._distance.toFixed(1) + 'km'}</div>`
+                    : '';
+
+                card.innerHTML = `
+                    <div class="image-container">
+                        <img src="${product.image}" class="product-image" loading="lazy">
+                        <div class="price-badge">${product.price}</div>
+                        ${distanceBadge}
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-name">${product.name}</span>
+                        <span class="product-location">${product.location}</span>
+                    </div>
+                `;
+                marketGrid.appendChild(card);
+            });
+        }
+
+        function listenToMarketplace() {
+            try {
+                const q = query(collection(db, "poultry_products"), orderBy("createdAt", "desc"));
+                onSnapshot(q, (snapshot) => {
+                    const liveProducts = [];
+                    snapshot.forEach((doc) => liveProducts.push({ id: doc.id, ...doc.data() }));
+                    allProducts = liveProducts.length ? liveProducts : defaultProducts;
+                    if (!nearMeActive) renderProducts(allProducts);
+                }, (error) => {
+                    console.warn("Firebase listener blocked, showing defaults:", error);
+                    allProducts = defaultProducts;
+                    if (!nearMeActive) renderProducts(allProducts);
+                });
+            } catch (error) {
+                console.warn("Firebase init failed, showing defaults:", error);
+                allProducts = defaultProducts;
+                renderProducts(allProducts);
+            }
+        }
+        listenToMarketplace();
+
+        /* ---------- 4. NEAR ME (geolocation + escalating radius search) ---------- */
+        const RADIUS_STEPS_KM = [2, 5, 10, 20, 50, 100];
+
+        function getDistanceKm(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function getUserLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) { reject(new Error('unsupported')); return; }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    (err) => reject(err),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+                );
+            });
+        }
+
+        function showFilterBar(radiusKm, count) {
+            filterBarSlot.innerHTML = `
+                <div class="nearme-filterbar">
+                    <span>📍 ${count} abu a cikin ${radiusKm}km daga wurin ka</span>
+                    <button id="clearNearMe">Share</button>
+                </div>
+            `;
+            document.getElementById('clearNearMe').addEventListener('click', deactivateNearMe);
+        }
+        function hideFilterBar() { filterBarSlot.innerHTML = ''; }
+
+        function pulseFabSuccess() {
+            setNearMeState('flash', true);
+            setTimeout(() => setNearMeState('flash', false), 650);
+        }
+
+        window.toggleNearMe = async function () {
+            if (nearMeActive) { deactivateNearMe(); return; }
+
+            setNearMeState('loading', true);
+            let userCoords;
+            try {
+                userCoords = await getUserLocation();
+            } catch (err) {
+                setNearMeState('loading', false);
+                showToast("Ba a samu izinin wurin ka ba. Ka bude Settings ka kunna Location.");
+                return;
+            }
+
+            const geoTagged = allProducts.filter(p => typeof p.lat === 'number' && typeof p.lng === 'number');
+            let found = [];
+            let usedRadius = null;
+
+            for (const radius of RADIUS_STEPS_KM) {
+                found = geoTagged
+                    .map(p => ({ ...p, _distance: getDistanceKm(userCoords.lat, userCoords.lng, p.lat, p.lng) }))
+                    .filter(p => p._distance <= radius)
+                    .sort((a, b) => a._distance - b._distance);
+                if (found.length) { usedRadius = radius; break; }
+            }
+
+            setNearMeState('loading', false);
+
+            if (!found.length) {
+                showToast(`Babu wani abu a kusa da kai har zuwa ${RADIUS_STEPS_KM[RADIUS_STEPS_KM.length - 1]}km.`);
+                return;
+            }
+
+            nearMeActive = true;
+            setNearMeState('active', true);
+            pulseFabSuccess();
+            showFilterBar(usedRadius, found.length);
+            renderProducts(found, { showDistance: true });
+        };
+
+        function deactivateNearMe() {
+            nearMeActive = false;
+            setNearMeState('active', false);
+            hideFilterBar();
+            renderProducts(allProducts);
+        }
+    </script>
+
+    <script>
+        function moveSwitch(dest) {
+            document.body.className = 'pos-' + dest;
+            setTimeout(() => {
+                if (dest === 'social') window.location.href = 'social.html';
+                if (dest === 'shop') window.location.href = 'shop.html';
+                if (dest === 'earn') window.location.href = 'earn.html';
+            }, 300);
+        }
+    </script>
+</body>
+</html>
