@@ -609,6 +609,9 @@
     function timeStr(ts) { return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
     function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
     function findMsg(id) { return renderedMessages.find(m => m.id === id); }
+    function rebuildChatHistory() {
+        chatHistory = renderedMessages.filter(m => m.type === 'text').map(m => ({ role: m.role === 'mine' ? 'user' : 'assistant', content: m.text }));
+    }
 
     function renderImageGrid(mediaArr) {
         const n = mediaArr.length;
@@ -1224,16 +1227,33 @@
         if (!text) return;
 
         if (editingId) {
-            const m = findMsg(editingId);
+            const idx = renderedMessages.findIndex(x => x.id === editingId);
+            const m = idx !== -1 ? renderedMessages[idx] : findMsg(editingId);
             if (m) {
+                // If a bot reply immediately followed this message, it answered the OLD text —
+                // remove it so the bot can respond fresh to the edited version instead.
+                const nextMsg = idx !== -1 ? renderedMessages[idx + 1] : null;
+                const staleReply = (nextMsg && nextMsg.role === 'theirs' && nextMsg.type === 'text') ? nextMsg : null;
+                if (staleReply) {
+                    const staleRow = document.getElementById(`row-${staleReply.id}`);
+                    if (staleRow) staleRow.remove();
+                    deleteMessageInFirestore(staleReply.id);
+                }
+
                 m.text = text; m.edited = true;
                 const row = document.getElementById(`row-${editingId}`);
-                if (row) { row.remove(); renderedMessages = renderedMessages.filter(x=>x.id!==editingId); renderedMessages.push(m); renderMessage(m, false); }
+                if (row) row.remove();
+                renderedMessages = renderedMessages.filter(x => x.id !== editingId && (!staleReply || x.id !== staleReply.id));
+                renderedMessages.push(m);
+                renderMessage(m, false);
                 updateMessageInFirestore(editingId, { text, edited: true });
+                rebuildChatHistory();
             }
             editingId = null;
             cancelContextBar();
             input.value = ''; toggleInputUI(input);
+
+            if (botActive) await triggerAIReply(text, []);
             return;
         }
 
