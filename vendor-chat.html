@@ -260,15 +260,14 @@
             padding: 2px 7px; flex-shrink: 0; cursor: pointer; font-weight: 600;
         }
 
-        .vc-controls-row { display: flex; align-items: center; justify-content: space-between; height: 34px; }
+        .vc-controls-row { display: flex; align-items: center; gap: 10px; height: 34px; }
         .vc-icon-btn { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; cursor: pointer; }
         .vc-trash { color: #DC2626; }
         .vc-pill {
-            flex: 1; margin: 0 10px; background: rgba(212,175,55,0.14); border-radius: 18px; height: 32px;
+            flex: 1; background: rgba(212,175,55,0.14); border-radius: 18px; height: 32px;
             display: flex; align-items: center; justify-content: center; gap: 7px; color: #6b5c33; font-size: 12.5px;
             font-weight: 500; cursor: pointer;
         }
-        .vc-send { width: 32px; height: 32px; border-radius: 50%; background: #1A0F0D; color: #D4AF37; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
 
         .toast {
             position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -351,7 +350,6 @@
                     <div class="vc-pill" id="vcPausePill" onclick="togglePauseResume()">
                         <i class="fa-solid fa-pause" id="vcPauseIcon"></i><span id="vcPauseLabel">Pause</span>
                     </div>
-                    <div class="vc-send" onclick="sendVoiceCompose()"><i class="fa-solid fa-paper-plane"></i></div>
                 </div>
                 <audio id="vcPreviewAudio" style="display:none;"></audio>
             </div>
@@ -362,7 +360,7 @@
                 <input type="file" id="galleryInput" accept="image/*,video/*" multiple style="display:none" onchange="handleMediaSelect(this)">
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleMediaSelect(this)">
             </div>
-            <div id="actionBtn" class="action-circle" onclick="handleAction()">
+            <div id="actionBtn" class="action-circle" onpointerdown="handleAction()">
                 <i id="actionIcon" class="fa-solid fa-microphone"></i>
             </div>
         </div>
@@ -803,7 +801,7 @@
     function toggleInputUI(el) {
         el.style.height = 'auto';
         el.style.height = el.scrollHeight + 'px';
-        document.getElementById('actionIcon').className = el.value.trim() !== "" ? "fa-solid fa-paper-plane" : "fa-solid fa-microphone";
+        updateActionIcon();
     }
     function openCamera() { document.getElementById('cameraInput').click(); }
 
@@ -959,6 +957,13 @@
         document.getElementById('vcScrubPlayIcon').className = 'fa-solid fa-play vc-scrub-play';
     }
 
+    function updateActionIcon() {
+        const input = document.getElementById('userInput');
+        const icon = document.getElementById('actionIcon');
+        if (isRecording) { icon.className = 'fa-solid fa-paper-plane'; return; }
+        icon.className = input.value.trim() !== '' ? 'fa-solid fa-paper-plane' : 'fa-solid fa-microphone';
+    }
+
     async function toggleRecording() {
         if (isRecording) return; // already composing a voice note
         try {
@@ -987,6 +992,7 @@
             startWaveVisualizer(stream);
             showRecordingRow();
             document.getElementById('voiceCompose').classList.add('show');
+            updateActionIcon();
             recTimerHandle = setInterval(() => {
                 if (isPaused) return;
                 recSeconds++;
@@ -1088,6 +1094,7 @@
         mediaRecorder._cancelled = true;
         try { mediaRecorder.stop(); } catch(e) {}
         document.getElementById('voiceCompose').classList.remove('show');
+        updateActionIcon();
     }
 
     function sendVoiceCompose() {
@@ -1105,6 +1112,7 @@
         } else {
             try { mediaRecorder.stop(); } catch(e) { finalizeSendVoice(); }
         }
+        updateActionIcon();
     }
 
     async function finalizeSendVoice() {
@@ -1128,6 +1136,7 @@
     }
 
     function handleAction() {
+        if (isRecording) { sendVoiceCompose(); return; }
         const icon = document.getElementById('actionIcon');
         if (icon.classList.contains('fa-paper-plane')) sendMessage(); else toggleRecording();
     }
