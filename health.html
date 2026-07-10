@@ -809,20 +809,21 @@
          * All of this goes through your Render backend -> Hugging Face
          * Inference API. No API key lives in this frontend.
          */
-        async function askNexusAI(text, imageBase64, lang) {
-            // const res = await fetch('https://oryzon-backend-ed1q.onrender.com/ai-triage', {
-            //     method: 'POST', headers: {'Content-Type':'application/json'},
-            //     body: JSON.stringify({ text, image: imageBase64, lang })
-            // });
-            // const data = await res.json();
-            // return { reply: data.reply };
+       async function askNexusAI(text, imageBase64, lang) {
+    const res = await fetch('https://oryzon-backend-ed1q.onrender.com/ai-triage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, image: imageBase64, lang })
+    });
 
-            await new Promise(r => setTimeout(r, 900));
-            if (imageBase64) {
-                return { reply: "Got the image. (Placeholder — real analysis will run here once the backend is connected.)" };
-            }
-            return { reply: `Got it: "${text}". (Placeholder reply — real analysis will run here once wired up.)` };
-        }
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || 'AI request failed');
+    }
+
+    const data = await res.json();
+    return { reply: data.reply };
+        } 
 
         /* ================= EXECUTIVE CHECK-UP WIZARD (comprehensive, hospital-style) ================= */
         const wizardSteps = [
