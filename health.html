@@ -324,6 +324,7 @@
             <button onclick="saveVitalEntry()" class="btn-nexus w-full mt-1 mb-6" style="background:var(--neon-cyan); color:#000;">Log Vitals</button>
             <div class="text-[10px] text-gray-500 uppercase mb-3">Recent History</div>
             <div id="vitalsHistory" class="space-y-4"></div>
+            <canvas id="vitalsTrendChart" height="120" class="mt-4"></canvas>
         </div>
     </div>
 
@@ -359,6 +360,24 @@
             <div id="communityGroups" class="space-y-3"></div>
         </div>
     </div>
+
+    <div id="medIdModal" class="nx-modal hidden">
+    <div class="nx-modal-inner">
+        <div class="nx-modal-header">
+            <div><div class="futuristic-font text-xs">MEDICAL ID</div><div class="text-[9px] text-gray-500 mt-1 uppercase">Visible in emergencies</div></div>
+            <button onclick="closeMedId()" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+        </div>
+        <select id="idBloodType" class="nx-field"><option value="">Blood type</option><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select>
+        <input id="idAllergies" class="nx-field" placeholder="Allergies (comma separated)">
+        <input id="idConditions" class="nx-field" placeholder="Chronic conditions">
+        <input id="idEmergencyName" class="nx-field" placeholder="Emergency contact name">
+        <input id="idEmergencyPhone" class="nx-field" placeholder="Emergency contact phone" type="tel">
+        <button onclick="saveMedicalId()" class="btn-nexus w-full mt-2" style="background:var(--neon-cyan); color:#000;">Save Medical ID</button>
+    </div>
+</div>
+<button onclick="openMedId()" aria-label="Medical ID" class="fixed bottom-6 right-6 z-[7000] w-14 h-14 rounded-full flex items-center justify-center" style="background:#0a0a0c; border:1px solid var(--emergency); box-shadow:0 0 20px rgba(255,0,85,0.3);">
+    <i class="fa-solid fa-id-card text-lg" style="color:var(--emergency);"></i>
+</button>
 
     <div class="min-h-screen py-10 px-6 max-w-7xl mx-auto">
         <header class="text-center mb-16">
@@ -462,7 +481,12 @@
                 <h3 class="futuristic-font text-[11px] font-bold">Community</h3>
                 <p class="text-[9px] text-gray-500 mt-1">Peer support groups</p>
             </div>
-        </div>
+            <div class="feature-card" style="--card-accent:#38bdf8;" onclick="openProfiles()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openProfiles()">
+            <div class="fi-box"><i class="fa-solid fa-people-roof text-blue-300"></i></div>
+            <h3 class="futuristic-font text-[11px] font-bold">Family Profiles</h3>
+            <p class="text-[9px] text-gray-500 mt-1">Manage health for the whole family</p>
+            </div>
+            </div>
 
         <h2 class="futuristic-font text-xs mb-6 opacity-40 uppercase tracking-[0.3rem] text-center">Visit Specialist Units</h2>
 
@@ -573,6 +597,40 @@
         <footer class="mt-20 text-center opacity-20 text-[8px] header-text">Nexus Global Medical Network</footer>
                 </div>
 
+    <div id="profilesModal" class="nx-modal hidden">
+    <div class="nx-modal-inner">
+        <div class="nx-modal-header">
+            <div><div class="futuristic-font text-xs">FAMILY PROFILES</div><div class="text-[9px] text-gray-500 mt-1 uppercase">Manage health for your family</div></div>
+            <button onclick="closeProfiles()" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+        </div>
+        <input id="profName" class="nx-field" placeholder="Full name">
+        <div class="grid grid-cols-2 gap-3 mb-1">
+            <select id="profRelation" class="nx-field"><option>Self</option><option>Child</option><option>Spouse</option><option>Parent</option><option>Other</option></select>
+            <input id="profDob" type="date" class="nx-field">
+        </div>
+        <button onclick="addFamilyProfile()" class="btn-nexus w-full mt-2 mb-6" style="background:var(--neon-cyan); color:#000;">Add Profile</button>
+        <div id="profilesList"></div>
+    </div>
+    </div>
+
+<div id="wearableModal" class="nx-modal hidden">
+    <div class="nx-modal-inner">
+        <div class="nx-modal-header">
+            <div><div class="futuristic-font text-xs">WEARABLE SYNC</div><div class="text-[9px] text-gray-500 mt-1 uppercase">Auto-import your health data</div></div>
+            <button onclick="closeWearable()" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
+        </div>
+        <div class="unit-card rounded-2xl p-4 mb-3 flex items-center justify-between">
+            <div class="flex items-center gap-3"><i class="fa-brands fa-apple text-2xl"></i><div><div class="text-[11px] font-bold">Apple Health</div><div id="appleHealthStatus" class="text-[9px] text-gray-500">Not connected</div></div></div>
+            <button onclick="connectWearable('apple')" class="btn-nexus text-[9px] px-4 py-2">Connect</button>
+        </div>
+        <div class="unit-card rounded-2xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3"><i class="fa-brands fa-google text-2xl text-green-400"></i><div><div class="text-[11px] font-bold">Google Fit</div><div id="googleFitStatus" class="text-[9px] text-gray-500">Not connected</div></div></div>
+            <button onclick="connectWearable('google')" class="btn-nexus text-[9px] px-4 py-2">Connect</button>
+        </div>
+        <p class="text-[9px] text-gray-500 mt-4">Requires the Nexus native app (iOS/Android) to access wearable data — not available in the browser version.</p>
+    </div>
+</div>
+    
     <script>
 
         function showToast(msg) {
@@ -992,15 +1050,22 @@
                 </div>`).join('');
         }
         function getAppointments() { return JSON.parse(localStorage.getItem('nexusAppointments') || '[]'); }
-        function bookDoctor(index, mode) {
-            const d = NEXUS_DOCTORS[index];
-            const appts = getAppointments();
-            const slot = new Date(Date.now() + 60 * 60 * 1000);
-            appts.push({ doctor: d.name, spec: d.spec, mode, time: slot.toISOString() });
-            localStorage.setItem('nexusAppointments', JSON.stringify(appts));
-            renderAppointments();
-            showToast(`${mode === 'video' ? 'Video call' : 'Chat consult'} booked with ${d.name}`);
-        }
+       function bookDoctor(index, mode) {
+    const d = NEXUS_DOCTORS[index];
+    const appts = getAppointments();
+    const slot = new Date(Date.now() + 60 * 60 * 1000);
+    appts.push({ doctor: d.name, spec: d.spec, mode, time: slot.toISOString() });
+    localStorage.setItem('nexusAppointments', JSON.stringify(appts));
+    renderAppointments();
+    showToast(`${mode === 'video' ? 'Video call' : 'Chat consult'} booked with ${d.name}`);
+}
+function sendPrescriptionToPharmacy(doctorName, medName) {
+    const rx = JSON.parse(localStorage.getItem('nexusPrescriptions') || '[]');
+    rx.push({ id: Date.now(), doctor: doctorName, med: medName, date: new Date().toISOString(), status: 'Ready for pickup' });
+    localStorage.setItem('nexusPrescriptions', JSON.stringify(rx));
+    showToast(`Prescription sent to Nexus Pharmacy`);
+    openNexusOverlay();
+             } 
         function renderAppointments() {
             const appts = getAppointments();
             const wrap = document.getElementById('appointmentList');
@@ -1159,10 +1224,109 @@
                         : `<button onclick="joinCommunity('${g.name}')" class="btn-nexus text-[9px] px-4 py-2">Join</button>`}
                 </div>`).join('');
         }
+
+    function getFamilyProfiles() {
+    let p = JSON.parse(localStorage.getItem('nexusProfiles') || 'null');
+    if (!p) { p = [{ id: 'self', name: 'Me', relation: 'Self', dob: '' }]; localStorage.setItem('nexusProfiles', JSON.stringify(p)); }
+    return p;
+}
+function getActiveProfileId() { return localStorage.getItem('nexusActiveProfile') || 'self'; }
+function setActiveProfile(id) { localStorage.setItem('nexusActiveProfile', id); renderProfilesList(); renderMedsList(); renderVitalsHistory(); showToast('Switched profile'); }
+function openProfiles() { renderProfilesList(); document.getElementById('profilesModal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeProfiles() { document.getElementById('profilesModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
+function addFamilyProfile() {
+    const name = document.getElementById('profName').value.trim();
+    const relation = document.getElementById('profRelation').value;
+    const dob = document.getElementById('profDob').value;
+    if (!name) { showToast('Enter a name.'); return; }
+    const profiles = getFamilyProfiles();
+    profiles.push({ id: 'p' + Date.now(), name, relation, dob });
+    localStorage.setItem('nexusProfiles', JSON.stringify(profiles));
+    document.getElementById('profName').value = '';
+    renderProfilesList();
+    showToast(`${name} added`);
+}
+function renderProfilesList() {
+    const profiles = getFamilyProfiles();
+    const active = getActiveProfileId();
+    document.getElementById('profilesList').innerHTML = profiles.map(p => `
+        <div class="nx-list-item">
+            <div><div class="text-[11px] font-bold text-white">${p.name} ${p.id === active ? '<span style="color:var(--neon-cyan)">● Active</span>' : ''}</div>
+            <div class="text-[9px] text-gray-500">${p.relation}${p.dob ? ' · ' + p.dob : ''}</div></div>
+            ${p.id !== active ? `<button onclick="setActiveProfile('${p.id}')" class="btn-nexus text-[9px] px-3 py-1">Switch</button>` : ''}
+        </div>`).join('');
+    }
+
+
+function getMedicalId() { return JSON.parse(localStorage.getItem('nexusMedicalId_' + getActiveProfileId()) || '{}'); }
+function openMedId() {
+    const id = getMedicalId();
+    document.getElementById('idBloodType').value = id.bloodType || '';
+    document.getElementById('idAllergies').value = id.allergies || '';
+    document.getElementById('idConditions').value = id.conditions || '';
+    document.getElementById('idEmergencyName').value = id.emergencyName || '';
+    document.getElementById('idEmergencyPhone').value = id.emergencyPhone || '';
+    document.getElementById('medIdModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function closeMedId() { document.getElementById('medIdModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
+function saveMedicalId() {
+    const id = {
+        bloodType: document.getElementById('idBloodType').value,
+        allergies: document.getElementById('idAllergies').value,
+        conditions: document.getElementById('idConditions').value,
+        emergencyName: document.getElementById('idEmergencyName').value,
+        emergencyPhone: document.getElementById('idEmergencyPhone').value
+    };
+    localStorage.setItem('nexusMedicalId_' + getActiveProfileId(), JSON.stringify(id));
+    showToast('Medical ID saved');
+    closeMedId();
+}
+
+function openWearable() { document.getElementById('wearableModal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeWearable() { document.getElementById('wearableModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
+function connectWearable(provider) {
+    // TODO: bayan an gina native app (Capacitor), a maye gurbin wannan da
+    // ainihin HealthKit/Google Fit permission request + data sync.
+    showToast(`${provider === 'apple' ? 'Apple Health' : 'Google Fit'} needs the native app — coming soon.`);
+        }
+
+async function enablePushReminders() {
+    if (!('Notification' in window)) { showToast('Push not supported on this browser.'); return; }
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') { showToast('Notification permission denied.'); return; }
+    // MUHIMMI: ka canza wannan zuwa ainihin yadda kake samun FCM token
+    // (Firebase Messaging SDK, getToken()) — wannan misali ne kawai.
+    const messaging = firebase.messaging();
+    const fcmToken = await messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY' });
+    await fetch('https://oryzon-backend-ed1q.onrender.com/save-fcm-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: firebase.auth().currentUser.uid, token: fcmToken })
+    });
+    showToast('Push reminders enabled!');
+}
+
+function renderTrendChart() {
+    const vitals = getVitals().slice(-14);
+    const canvas = document.getElementById('vitalsTrendChart');
+    if (!canvas || vitals.length < 2) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth; canvas.height = 120;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const values = vitals.map(v => Number(v.hr) || 0);
+    const max = Math.max(...values, 1), min = Math.min(...values);
+    ctx.strokeStyle = '#00f2ff'; ctx.lineWidth = 2; ctx.beginPath();
+    values.forEach((v, i) => {
+        const x = (i / (values.length - 1)) * canvas.width;
+        const y = canvas.height - ((v - min) / (max - min || 1)) * (canvas.height - 20) - 10;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+}
+// Kira renderTrendChart() a karshen renderVitalsHistory() function din da ke can
+        
     </script>
 </body>
 </html>
-        
- 
-
         
