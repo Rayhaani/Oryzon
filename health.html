@@ -321,6 +321,10 @@
                 <input id="vSleep" type="number" step="0.1" class="nx-field" placeholder="Sleep (hours)" autocomplete="off">
                 <input id="vWeight" type="number" step="0.1" class="nx-field" placeholder="Weight (kg)" autocomplete="off">
             </div>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+    <button onclick="connectBluetoothBP()" class="btn-nexus text-[9px]"><i class="fa-brands fa-bluetooth-b mr-1"></i>Connect BP Cuff</button>
+    <button onclick="connectBluetoothGlucose()" class="btn-nexus text-[9px]"><i class="fa-brands fa-bluetooth-b mr-1"></i>Connect Glucometer</button>
+            </div>
             <button onclick="saveVitalEntry()" class="btn-nexus w-full mt-1 mb-6" style="background:var(--neon-cyan); color:#000;">Log Vitals</button>
             <div class="text-[10px] text-gray-500 uppercase mb-3">Recent History</div>
             <div id="vitalsHistory" class="space-y-4"></div>
@@ -1342,7 +1346,79 @@ function renderTrendChart() {
     ctx.stroke();
 }
 // Kira renderTrendChart() a karshen renderVitalsHistory() function din da ke can
-        
+
+/* ================= BLUETOOTH VITALS (Web Bluetooth API) ================= */
+// NOTE: Web Bluetooth API works in CHROME/EDGE (Android & Desktop) ONLY.
+// It does NOT work in Safari/iOS — Apple has not implemented this API.
+// If the user is on iPhone, this feature should be hidden or show a fallback message.
+
+const BP_SERVICE_UUID = 0x1810;
+const BP_MEASUREMENT_UUID = 0x2A35;
+const GLUCOSE_SERVICE_UUID = 0x1808;
+const GLUCOSE_MEASUREMENT_UUID = 0x2A18;
+
+// IEEE-11073 16-bit SFLOAT decoder — used by every official Bluetooth SIG
+// GATT device for BP/Glucose.
+function decodeSFLOAT(raw) {
+    const mantissa = raw & 0x0FFF;
+    let exponent = raw >> 12;
+    if (exponent >= 0x8) exponent -= 0x10;
+    let m = mantissa;
+    if (m >= 0x0800) m -= 0x1000;
+    if (m === 0x07FF) return NaN;
+    return m * Math.pow(10, exponent);
+}
+
+async function connectBluetoothBP() {
+    if (!navigator.bluetooth) { showToast('Bluetooth is not supported in this browser (Chrome/Edge required).'); return; }
+    try {
+        const device = await navigator.bluetooth.requestDevice({ filters: [{ services: [BP_SERVICE_UUID] }] });
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(BP_SERVICE_UUID);
+        const characteristic = await service.getCharacteristic(BP_MEASUREMENT_UUID);
+        await characteristic.startNotifications();
+        characteristic.addEventListener('characteristicvaluechanged', (event) => {
+            const value = event.target.value;
+            const systolic = decodeSFLOAT(value.getUint16(1, true));
+            const diastolic = decodeSFLOAT(value.getUint16(3, true));
+            document.getElementById('vBp').value = `${Math.round(systolic)}/${Math.round(diastolic)}`;
+            showToast(`BP: ${Math.round(systolic)}/${Math.round(diastolic)} mmHg received`);
+        });
+        showToast(`Connected to ${device.name || 'BP monitor'}`);
+    } catch (err) {
+        console.error(err);
+        showToast('Connection failed — make sure the device is powered on and in pairing mode.');
+    }
+}
+
+async function connectBluetoothGlucose() {
+    if (!navigator.bluetooth) { showToast('Bluetooth is not supported in this browser (Chrome/Edge required).'); return; }
+    try {
+        const device = await navigator.bluetooth.requestDevice({ filters: [{ services: [GLUCOSE_SERVICE_UUID] }] });
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(GLUCOSE_SERVICE_UUID);
+        const characteristic = await service.getCharacteristic(GLUCOSE_MEASUREMENT_UUID);
+        await characteristic.startNotifications();
+        characteristic.addEventListener('characteristicvaluechanged', (event) => {
+            const value = event.target.value;
+            const flags = value.getUint8(0);
+            const isMolL = (flags & 0x04) !== 0;
+            const timePresent = (flags & 0x02) !== 0;
+            let offset = 3;
+            if (timePresent) offset += 7;
+            let concentration = decodeSFLOAT(value.getUint16(offset, true));
+            concentration = isMolL ? concentration * 18016 : concentration * 100000; // normalize to mg/dL
+            document.getElementById('vGlucose').value = Math.round(concentration);
+            showToast(`Blood sugar: ${Math.round(concentration)} mg/dL received`);
+        });
+        showToast(`Connected to ${device.name || 'Glucose meter'}`);
+    } catch (err) {
+        console.error(err);
+        showToast('Connection failed — make sure the device is powered on and in pairing mode.');
+    }
+}
+
+
     </script>
 </body>
 </html>
