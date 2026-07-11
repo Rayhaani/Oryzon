@@ -868,20 +868,37 @@
          * Inference API. No API key lives in this frontend.
          */
        async function askNexusAI(text, imageBase64, lang) {
+    // MUHIMMI: /ai-triage yanzu yana bukatar Firebase Auth token domin ya
+    // san ko user Pro ne ko Free. Wannan yana zaton firebase.auth() ya
+    // riga ya kasance a wannan shafi (kamar yadda verification upload
+    // ke amfani da shi a wani wuri). Idan ba haka ba, sanar da ni.
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+        throw new Error('Da fatan za a shiga (login) kafin amfani da Nexus Intelligence.');
+    }
+    const idToken = await currentUser.getIdToken();
+
     const res = await fetch('https://oryzon-backend-ed1q.onrender.com/ai-triage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+        },
         body: JSON.stringify({ text, image: imageBase64, lang })
     });
 
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || 'AI request failed');
+    const data = await res.json().catch(() => ({}));
+
+    if (res.status === 403 && data.error === 'image_requires_pro') {
+        return { reply: data.reply, requiresPro: true };
     }
 
-    const data = await res.json();
-    return { reply: data.reply };
-        } 
+    if (!res.ok) {
+        throw new Error(data.detail || 'AI request failed');
+    }
+
+    return { reply: data.reply, tier: data.tier };
+       }
 
         /* ================= EXECUTIVE CHECK-UP WIZARD (comprehensive, hospital-style) ================= */
         const wizardSteps = [
