@@ -183,7 +183,7 @@
 .ai-markdown-body th { background: rgba(0,242,255,0.08); color: var(--neon-cyan); }
 .ai-markdown-body hr { display: none; }
 .ai-markdown-body > *:first-child { margin-top: 0; }
-.ai-markdown-body > *:last-child { margin-bottom: 0; }
+.msg-time-inline { float: right; font-size: 9px; color: rgba(255,255,255,0.4); margin-left: 8px; margin-top: 4px; user-select: none; }
     </style>
 </head>
 <body>
@@ -843,25 +843,32 @@
             const log = document.getElementById('aiChatLog');
             const bubble = document.createElement('div');
             const isUser = sender === 'user';
-            bubble.className = `relative max-w-[85%] pl-4 pr-4 pt-3 pb-6 rounded-2xl text-[15px] leading-relaxed ${isUser ? 'ml-auto bg-white/10' : 'mr-auto'}`;
-            if (!isUser) bubble.style.border = '1px solid rgba(0,242,255,0.15)';
-            if (imageSrc) {
-                const img = document.createElement('img');
-                img.src = imageSrc; img.alt = 'User photo'; img.className = 'rounded-xl mb-2 max-h-40';
-                bubble.appendChild(img);
-            }
-            const p = document.createElement('div');
+           bubble.className = `max-w-[85%] px-4 py-3 rounded-2xl text-[15px] leading-relaxed ${isUser ? 'ml-auto bg-white/10' : 'mr-auto'}`;
+if (!isUser) bubble.style.border = '1px solid rgba(0,242,255,0.15)';
+if (imageSrc) {
+    const img = document.createElement('img');
+    img.src = imageSrc; img.alt = 'User photo'; img.className = 'rounded-xl mb-2 max-h-40';
+    bubble.appendChild(img);
+}
+const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const p = document.createElement('div');
 if (isUser) {
     p.textContent = text;
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'msg-time-inline';
+    timeSpan.textContent = timeStr;
+    p.appendChild(timeSpan);
 } else {
     p.innerHTML = DOMPurify.sanitize(marked.parse(text));
     p.classList.add('ai-markdown-body');
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'msg-time-inline';
+    timeSpan.textContent = timeStr;
+    const lastBlock = p.lastElementChild;
+    if (lastBlock) lastBlock.appendChild(timeSpan);
+    else p.appendChild(timeSpan);
 }
-           bubble.appendChild(p);
-            const time = document.createElement('div');
-            time.className = 'absolute bottom-1.5 right-3 text-[9px] text-gray-500';
-            time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            bubble.appendChild(time); 
+bubble.appendChild(p);
             log.appendChild(bubble);
             log.scrollTop = log.scrollHeight;
             return bubble;
