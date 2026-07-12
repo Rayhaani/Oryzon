@@ -831,8 +831,8 @@
 
                 if (saved && Array.isArray(saved.messages) && saved.messages.length > 0) {
                     saved.messages.forEach(msg => {
-                        appendAiMessage(msg.role === 'user' ? 'user' : 'ai', msg.content);
-                        aiConversationHistory.push({ role: msg.role, content: msg.content });
+                        appendAiMessage(msg.role === 'user' ? 'user' : 'ai', msg.content, null, msg.timestamp);
+                        aiConversationHistory.push({ role: msg.role, content: msg.content, timestamp: msg.timestamp });
                     });
                 } else {
                     appendAiMessage('ai', GREETING);
@@ -882,7 +882,7 @@
             document.getElementById('aiImageInput').value = '';
             document.getElementById('aiImagePreviewWrap').classList.add('hidden');
         }
-        function appendAiMessage(sender, text, imageSrc) {
+        function appendAiMessage(sender, text, imageSrc, timestamp) {
             const log = document.getElementById('aiChatLog');
             const bubble = document.createElement('div');
             const isUser = sender === 'user';
@@ -893,7 +893,7 @@ if (imageSrc) {
     img.src = imageSrc; img.alt = 'User photo'; img.className = 'rounded-xl mb-2 max-h-40';
     bubble.appendChild(img);
 }
-const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+const timeStr = new Date(timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 const p = document.createElement('div');
 if (isUser) {
     p.textContent = text;
@@ -940,7 +940,8 @@ async function saveChatHistoryForContext(contextKey) {
             const text = input.value.trim();
             const image = aiPendingImage;
             if (!text && !image) return;
-            appendAiMessage('user', text, image);
+            const userTimestamp = Date.now();
+            appendAiMessage('user', text, image, userTimestamp);
             input.value = '';
             const sentImage = image;
             clearAiImage();
@@ -951,14 +952,15 @@ async function saveChatHistoryForContext(contextKey) {
             } else {
                 document.getElementById('aiRedFlagBanner').classList.add('hidden');
             }
-            aiConversationHistory.push({ role: 'user', content: text });
+            aiConversationHistory.push({ role: 'user', content: text, timestamp: userTimestamp });
             saveChatHistoryForContext(aiCurrentContextKey);
             const typingBubble = showTypingIndicator();
             try {
                 const result = await askNexusAI(text, sentImage, aiLang);
                 typingBubble.remove();
-                appendAiMessage('ai', result.reply);
-                aiConversationHistory.push({ role: 'assistant', content: result.reply });
+                const aiTimestamp = Date.now();
+                appendAiMessage('ai', result.reply, null, aiTimestamp);
+                aiConversationHistory.push({ role: 'assistant', content: result.reply, timestamp: aiTimestamp });
                 saveChatHistoryForContext(aiCurrentContextKey);
             } catch (err) {
                 typingBubble.remove();
