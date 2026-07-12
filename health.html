@@ -811,30 +811,37 @@
     }
        } 
         
-      async function loadChatHistoryForContext(contextKey) {
+     async function loadChatHistoryForContext(contextKey) {
             const log = document.getElementById('aiChatLog');
             log.innerHTML = '';
             aiConversationHistory = [];
 
-            const currentUser = await window._authReadyPromise;
-            if (!currentUser) {
-                appendAiMessage('ai', "Hi! I'm Nexus Intelligence, your health assistant. Describe your symptom or upload a photo, and I'll help you figure out if we can handle it here or if you should see a doctor.");
-                return;
-            }
+            const GREETING = "Hi! I'm Nexus Intelligence, your health assistant. Describe your symptom or upload a photo, and I'll help you figure out if we can handle it here or if you should see a doctor.";
 
-            const db = firebase.database();
-            const snap = await db.ref(`users/${currentUser.uid}/aiChatHistory/${contextKey}`).once('value');
-            const saved = snap.val();
+            try {
+                const currentUser = await window._authReadyPromise;
+                if (!currentUser) {
+                    appendAiMessage('ai', GREETING);
+                    return;
+                }
 
-            if (saved && Array.isArray(saved.messages) && saved.messages.length > 0) {
-                saved.messages.forEach(msg => {
-                    appendAiMessage(msg.role === 'user' ? 'user' : 'ai', msg.content);
-                    aiConversationHistory.push({ role: msg.role, content: msg.content });
-                });
-            } else {
-                appendAiMessage('ai', "Hi! I'm Nexus Intelligence, your health assistant. Describe your symptom or upload a photo, and I'll help you figure out if we can handle it here or if you should see a doctor.");
+                const db = firebase.database();
+                const snap = await db.ref(`users/${currentUser.uid}/aiChatHistory/${contextKey}`).once('value');
+                const saved = snap.val();
+
+                if (saved && Array.isArray(saved.messages) && saved.messages.length > 0) {
+                    saved.messages.forEach(msg => {
+                        appendAiMessage(msg.role === 'user' ? 'user' : 'ai', msg.content);
+                        aiConversationHistory.push({ role: msg.role, content: msg.content });
+                    });
+                } else {
+                    appendAiMessage('ai', GREETING);
+                }
+            } catch (err) {
+                console.error('loadChatHistoryForContext error:', err);
+                appendAiMessage('ai', GREETING);
             }
-        }
+     } 
 
         async function launchAiTriage(context) {
             document.getElementById('aiTriageOverlay').classList.remove('hidden');
