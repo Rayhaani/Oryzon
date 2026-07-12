@@ -760,6 +760,7 @@
         });
 
         let aiPendingImage = null;
+        let aiConversationHistory = [];
 
         const AI_RED_FLAGS = [
             { match: ["chest pain", "tightness in chest"], msg: "Chest pain can be a sign of a heart attack. Go to the nearest hospital right now, or press SOS." },
@@ -802,6 +803,7 @@
             document.body.style.overflow = 'hidden';
             const log = document.getElementById('aiChatLog');
             if (log.children.length === 0) {
+                aiConversationHistory = [];
                 appendAiMessage('ai', "Hi! I'm Nexus Intelligence, your health assistant. Describe your symptom or upload a photo, and I'll help you figure out if we can handle it here or if you should see a doctor.");
             }
             if (context && typeof context === 'string' && context !== 'EMERGENCY TRAUMA') {
@@ -871,31 +873,33 @@ if (isUser) {
             return bubble;
         }
         async function sendAiTriageMessage() {
-            const input = document.getElementById('aiTextInput');
-            const text = input.value.trim();
-            const image = aiPendingImage;
-            if (!text && !image) return;
-            appendAiMessage('user', text, image);
-            input.value = '';
-            const sentImage = image;
-            clearAiImage();
-            const redFlag = checkRedFlags(text);
-            if (redFlag) {
-                document.getElementById('aiRedFlagText').textContent = redFlag;
-                document.getElementById('aiRedFlagBanner').classList.remove('hidden');
-            } else {
-                document.getElementById('aiRedFlagBanner').classList.add('hidden');
-            }
-            const typingBubble = showTypingIndicator();
-            try {
-                const result = await askNexusAI(text, sentImage, aiLang);
-                typingBubble.remove();
-                appendAiMessage('ai', result.reply);
-            } catch (err) {
-                typingBubble.remove();
-                appendAiMessage('ai', 'There was a connection issue. Please try again, or see a doctor if your symptom is severe.');
-                console.error(err);
-            }
+    const input = document.getElementById('aiTextInput');
+    const text = input.value.trim();
+    const image = aiPendingImage;
+    if (!text && !image) return;
+    appendAiMessage('user', text, image);
+    input.value = '';
+    const sentImage = image;
+    clearAiImage();
+    const redFlag = checkRedFlags(text);
+    if (redFlag) {
+        document.getElementById('aiRedFlagText').textContent = redFlag;
+        document.getElementById('aiRedFlagBanner').classList.remove('hidden');
+    } else {
+        document.getElementById('aiRedFlagBanner').classList.add('hidden');
+    }
+    aiConversationHistory.push({ role: 'user', content: text });
+    const typingBubble = showTypingIndicator();
+    try {
+        const result = await askNexusAI(text, sentImage, aiLang);
+        typingBubble.remove();
+        appendAiMessage('ai', result.reply);
+        aiConversationHistory.push({ role: 'assistant', content: result.reply });
+    } catch (err) {
+        typingBubble.remove();
+        appendAiMessage('ai', 'There was a connection issue. Please try again, or see a doctor if your symptom is severe.');
+        console.error(err);
+    }
         }
 
         /**
@@ -930,7 +934,7 @@ if (isUser) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${idToken}`
         },
-        body: JSON.stringify({ text, image: imageBase64, lang })
+        body: JSON.stringify({ text, image: imageBase64, lang, history: aiConversationHistory.slice(0, -1) })
     });
 
     const data = await res.json().catch(() => ({}));
