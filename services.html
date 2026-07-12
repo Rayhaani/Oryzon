@@ -1077,6 +1077,38 @@
     transform: scale(1.05);
 }
 
+.chef-menu-tabs-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    scrollbar-width: none;
+}
+.chef-menu-tabs-row::-webkit-scrollbar { display: none; }
+
+.chef-menu-tab-pill {
+    flex-shrink: 0;
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.6);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.chef-menu-tab-pill.active {
+    background: linear-gradient(135deg,#ec4899,#be185d);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(236,72,153,0.35);
+}
+
 .menu-item-card {
     display: flex;
     align-items: center;
@@ -5727,6 +5759,7 @@ function closeProfileSheet() {
         
 // ── CHEF MENU ──
 let currentChefMenuPro = null;
+let chefMenuActiveCategory = 'All';
 
 function openChefMenuOverlay(pro) {
     currentChefMenuPro = pro;
@@ -6321,13 +6354,28 @@ function renderChefMenuOverlayItems(pro) {
     if (!slot) return;
 
     if (!chefMenuEditMode) {
-        // Normal customer view — exactly as before
-        slot.innerHTML = (pro.menu || []).map((item, idx) => `
+        const allItems = pro.menu || [];
+        const categories = ['All', ...new Set(allItems.map(i => i.category).filter(Boolean))];
+
+        const tabsHtml = categories.length > 1 ? `
+            <div class="chef-menu-tabs-row" id="chef-menu-tabs-row">
+                ${categories.map(cat => `
+                    <button class="chef-menu-tab-pill ${cat === chefMenuActiveCategory ? 'active' : ''}" onclick="filterChefMenuByCategory('${cat.replace(/'/g, "\\'")}')">${cat}</button>
+                `).join('')}
+            </div>` : '';
+
+        const filteredItems = chefMenuActiveCategory === 'All'
+            ? allItems
+            : allItems.filter(i => i.category === chefMenuActiveCategory);
+
+        const itemsHtml = filteredItems.map((item, idx) => `
             <div class="menu-item-card" style="animation-delay:${idx * 0.1}s" onclick="openOrderConfirm('${(item.name||'').replace(/'/g, "\\'")}','${item.price}')">
                 <div class="menu-item-emoji">${item.icon || '🍽️'}</div>
                 <div class="menu-item-info"><div class="menu-item-name">${item.name}</div><div class="menu-item-desc">${item.desc || ''}</div></div>
                 <div class="menu-item-price">${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}</div>
-            </div>`).join('');
+            </div>`).join('') || `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.35);font-size:12px;">Babu dishes a wannan category tukuna</div>`;
+
+        slot.innerHTML = tabsHtml + itemsHtml;
         return;
     }
 
@@ -6350,6 +6398,11 @@ function renderChefMenuOverlayItems(pro) {
     slot.innerHTML += `<button class="chef-menu-save-changes-btn" onclick="saveChefMenuChanges()">💾 Save Menu Changes</button>`;
 }
 
+function filterChefMenuByCategory(cat) {
+    chefMenuActiveCategory = cat;
+    renderChefMenuOverlayItems(currentChefMenuPro);
+        }
+
 // ── ADD / EDIT FORM ──
 function openChefMenuItemForm(itemIdx) {
     chefMenuEditingItemId = itemIdx; // null = new item, number = index of item being edited
@@ -6360,6 +6413,15 @@ function openChefMenuItemForm(itemIdx) {
     const formHtml = `
         <div class="chef-menu-edit-form" id="chef-menu-inline-form">
             <input type="text" id="cmf-name" placeholder="Sunan Dish" value="${existing ? existing.name.replace(/"/g,'&quot;') : ''}">
+            <select id="cmf-category" style="width:100%;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:12px;padding:10px 8px;outline:none;margin-bottom:8px;font-family:inherit;">
+                <option value="">— Zaɓi Category —</option>
+                <option value="Breakfast" ${existing && existing.category==='Breakfast' ? 'selected' : ''}>🌅 Breakfast</option>
+                <option value="Lunch" ${existing && existing.category==='Lunch' ? 'selected' : ''}>☀️ Lunch</option>
+                <option value="Dinner" ${existing && existing.category==='Dinner' ? 'selected' : ''}>🌙 Dinner</option>
+                <option value="Snacks" ${existing && existing.category==='Snacks' ? 'selected' : ''}>🍿 Snacks</option>
+                <option value="Drinks" ${existing && existing.category==='Drinks' ? 'selected' : ''}>🥤 Drinks</option>
+                <option value="Dessert" ${existing && existing.category==='Dessert' ? 'selected' : ''}>🍰 Dessert</option>
+            </select>
             <input type="number" id="cmf-price" placeholder="Farashi (₦)" value="${existing ? existing.price : ''}">
             <input type="text" id="cmf-desc" placeholder="Short Description" value="${existing ? (existing.desc||'').replace(/"/g,'&quot;') : ''}">
             <input type="text" id="cmf-icon" placeholder="Emoji (misali 🍛)" value="${existing ? (existing.icon||'') : ''}" maxlength="4">
@@ -6381,26 +6443,28 @@ function cancelChefMenuItemForm() {
 
 function confirmChefMenuItemForm() {
     const name = document.getElementById('cmf-name').value.trim();
+    const category = document.getElementById('cmf-category').value;
     const price = parseInt(document.getElementById('cmf-price').value);
     const desc = document.getElementById('cmf-desc').value.trim();
     const icon = document.getElementById('cmf-icon').value.trim() || '🍽️';
 
     if (!name) { showGlobalToast('⚠️ Saka sunan dish!'); return; }
+    if (!category) { showGlobalToast('⚠️ Zaɓi category!'); return; }
     if (!price || price <= 0) { showGlobalToast('⚠️ Saka farashi mai inganci!'); return; }
 
     if (!currentChefMenuPro.menu) currentChefMenuPro.menu = [];
 
     if (chefMenuEditingItemId === null) {
-        currentChefMenuPro.menu.push({ name, price, desc, icon });
+        currentChefMenuPro.menu.push({ name, price, desc, icon, category });
         showGlobalToast(`✅ "${name}" an ƙara!`);
     } else {
-        currentChefMenuPro.menu[chefMenuEditingItemId] = { name, price, desc, icon };
+        currentChefMenuPro.menu[chefMenuEditingItemId] = { name, price, desc, icon, category };
         showGlobalToast(`✅ "${name}" an update!`);
     }
 
     chefMenuEditingItemId = null;
     renderChefMenuOverlayItems(currentChefMenuPro);
-}
+        }
 
 function deleteChefMenuOverlayItem(idx) {
     const item = currentChefMenuPro.menu[idx];
