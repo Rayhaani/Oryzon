@@ -8,7 +8,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
+    // Domin cire rubutu (text) daga PDF na lab report a cikin browser,
+    // ba tare da dole a tura raw PDF zuwa server ba.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script>
     const firebaseConfig = {
         apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
         authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -775,11 +784,16 @@
             }
             launchAiTriage(context);
         }
-        function acceptAiConsent() {
-            localStorage.setItem('nexusAiConsentGiven', 'true');
-            document.getElementById('aiConsentModal').classList.add('hidden');
-            launchAiTriage(window._pendingAiContext);
-        }
+       function acceptAiConsent() {
+    localStorage.setItem('nexusAiConsentGiven', 'true');
+    document.getElementById('aiConsentModal').classList.add('hidden');
+    launchAiTriage(window._pendingAiContext);
+    if (window._pendingRecordId) {
+        const pendingId = window._pendingRecordId;
+        window._pendingRecordId = null;
+        runRecordAnalysis(pendingId);
+    }
+       } 
         function launchAiTriage(context) {
             document.getElementById('aiTriageOverlay').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -923,8 +937,118 @@
 
     return { reply: data.reply, tier: data.tier };
         }
+
+    /**
+ * Records Vault -> AI analysis pipeline.
+ * - Image records (photo of a lab result/scan) go through the same
+ *   `image` field as the AI Triage camera upload — MedGemma reads it visually.
+ * - PDF records: text is extracted client-side with pdf.js, then sent
+ *   as `structuredData` — this is the EHR/lab-report path that also
+ *   requires a Pro account, same as image analysis.
+ */
+function analyzeRecordWithAI(id) {
+    closeRecords();
+    const consented = localStorage.getItem('nexusAiConsentGiven');
+    if (!consented) {
+        document.getElementById('aiConsentModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        window._pendingAiContext = null;
+        window._pendingRecordId = id;
+        return;
+    }
+    launchAiTriage();
+    runRecordAnalysis(id);
+}
+
+async function runRecordAnalysis(id) {
+    const record = getRecords().find(r => r.id === id);
+    if (!record) return;
+
+    const isImage = record.type && record.type.startsWith('image/');
+    const isPdf = record.type === 'application/pdf';
+
+    if (!isImage && !isPdf) {
+        appendAiMessage('ai', "I can only analyze images or PDF documents right now — this file type isn't supported yet.");
+        return;
+    }
+
+    appendAiMessage('user', `Please analyze this document: ${record.name}`, isImage ? record.data : null);
+    const typingBubble = showTypingIndicator();
+
+    try {
+        let result;
+        if (isImage) {
+            result = await askNexusAI('Please analyze this lab result / medical document photo and explain what it shows in plain language.', record.data, aiLang);
+        } else {
+            const extractedText = await extractPdfText(record.data);
+            if (!extractedText) {
+                typingBubble.remove();
+                appendAiMessage('ai', "I couldn't read any text from this PDF — it may be a scanned image without selectable text. Try uploading it as a photo instead.");
+                return;
+            }
+            result = await askNexusAiStructured(extractedText, record.name, aiLang);
+        }
+        typingBubble.remove();
+        appendAiMessage('ai', result.reply);
+    } catch (err) {
+        typingBubble.remove();
+        appendAiMessage('ai', 'There was a connection issue analyzing this document. Please try again.');
+        console.error(err);
+    }
+}
+
+async function extractPdfText(dataUrl) {
+    const base64 = dataUrl.split(',')[1];
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+    const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        fullText += content.items.map(item => item.str).join(' ') + '\n';
+    }
+    return fullText.trim();
+}
+
+async function askNexusAiStructured(extractedText, fileName, lang) {
+    const currentUser = await window._authReadyPromise;
+
+    if (!currentUser) {
+        throw new Error('Da fatan za a shiga (login) daga babban shafin kafin amfani da Nexus Intelligence.');
+    }
+
+    const idToken = await currentUser.getIdToken();
+
+    const res = await fetch('https://oryzon-backend-ed1q.onrender.com/ai-triage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+            text: `Please review this lab report / clinical document (${fileName}) and explain what it shows in plain language.`,
+            structuredData: { fileName, extractedText },
+            lang
+        })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.status === 403 && data.error === 'image_requires_pro') {
+        return { reply: data.reply, requiresPro: true };
+    }
+
+    if (!res.ok) {
+        throw new Error(data.detail || 'AI request failed');
+    }
+
+    return { reply: data.reply, tier: data.tier };
+}
         
-       
+    
         /* ================= EXECUTIVE CHECK-UP WIZARD (comprehensive, hospital-style) ================= */
         const wizardSteps = [
             { title: 'General Wellbeing', question: 'How has your energy, appetite, and sleep been recently?', options: ['Normal', 'A bit off', 'Poor'] },
@@ -1217,19 +1341,22 @@ function sendPrescriptionToPharmacy(doctorName, medName) {
             localStorage.setItem('nexusRecords', JSON.stringify(getRecords().filter(r => r.id !== id)));
             renderRecordsList();
         }
-        function renderRecordsList() {
-            const records = getRecords();
-            const wrap = document.getElementById('recordsList');
-            if (records.length === 0) { wrap.innerHTML = '<p class="text-[11px] text-gray-500">No documents uploaded yet.</p>'; return; }
-            wrap.innerHTML = records.map(r => `
-                <div class="nx-list-item">
-                    <a href="${r.data}" download="${r.name}" class="flex items-center gap-2 min-w-0">
-                        <i class="fa-solid fa-file-lines text-yellow-300 flex-shrink-0"></i>
-                        <span class="text-[11px] text-white truncate">${r.name}</span>
-                    </a>
-                    <button onclick="deleteRecord(${r.id})" class="text-red-400 text-xs flex-shrink-0"><i class="fa-solid fa-trash"></i></button>
-                </div>`).join('');
-        }
+       function renderRecordsList() {
+    const records = getRecords();
+    const wrap = document.getElementById('recordsList');
+    if (records.length === 0) { wrap.innerHTML = '<p class="text-[11px] text-gray-500">No documents uploaded yet.</p>'; return; }
+    wrap.innerHTML = records.map(r => `
+        <div class="nx-list-item">
+            <a href="${r.data}" download="${r.name}" class="flex items-center gap-2 min-w-0">
+                <i class="fa-solid fa-file-lines text-yellow-300 flex-shrink-0"></i>
+                <span class="text-[11px] text-white truncate">${r.name}</span>
+            </a>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <button onclick="analyzeRecordWithAI(${r.id})" class="btn-nexus text-[9px] px-3 py-2" style="border-color:var(--neon-cyan); color:var(--neon-cyan);"><i class="fa-solid fa-microchip mr-1"></i>Analyze with AI</button>
+                <button onclick="deleteRecord(${r.id})" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </div>`).join('');
+       } 
 
         /* ================= COMMUNITY & SUPPORT GROUPS ================= */
         const NEXUS_GROUPS = [
