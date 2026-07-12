@@ -14,6 +14,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script>
     const firebaseConfig = {
         apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
@@ -763,10 +764,17 @@
             if (dd && !dd.contains(e.target) && !btn) dd.classList.add('hidden');
         });
 
-        let aiPendingImage = null;
+       let aiPendingImage = null;
         let aiConversationHistory = [];
+        let aiCurrentContextKey = 'general';
 
-        const AI_RED_FLAGS = [
+        function getContextKey(context) {
+            if (!context || typeof context !== 'string') return 'general';
+            if (context === 'EMERGENCY TRAUMA') return 'emergency';
+            return context.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+        }
+
+        const AI_RED_FLAGS = [ 
             { match: ["chest pain", "tightness in chest"], msg: "Chest pain can be a sign of a heart attack. Go to the nearest hospital right now, or press SOS." },
             { match: ["shortness of breath", "can't breathe", "trouble breathing"], msg: "Difficulty breathing needs to be checked by a doctor immediately." },
             { match: ["heavy bleeding", "lots of blood"], msg: "Heavy bleeding needs emergency care at a hospital." },
@@ -802,14 +810,42 @@
         runRecordAnalysis(pendingId);
     }
        } 
-        function launchAiTriage(context) {
-            document.getElementById('aiTriageOverlay').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+        
+      async function loadChatHistoryForContext(contextKey) {
             const log = document.getElementById('aiChatLog');
-            if (log.children.length === 0) {
-                aiConversationHistory = [];
+            log.innerHTML = '';
+            aiConversationHistory = [];
+
+            const currentUser = await window._authReadyPromise;
+            if (!currentUser) {
+                appendAiMessage('ai', "Hi! I'm Nexus Intelligence, your health assistant. Describe your symptom or upload a photo, and I'll help you figure out if we can handle it here or if you should see a doctor.");
+                return;
+            }
+
+            const db = firebase.database();
+            const snap = await db.ref(`users/${currentUser.uid}/aiChatHistory/${contextKey}`).once('value');
+            const saved = snap.val();
+
+            if (saved && Array.isArray(saved.messages) && saved.messages.length > 0) {
+                saved.messages.forEach(msg => {
+                    appendAiMessage(msg.role === 'user' ? 'user' : 'ai', msg.content);
+                    aiConversationHistory.push({ role: msg.role, content: msg.content });
+                });
+            } else {
                 appendAiMessage('ai', "Hi! I'm Nexus Intelligence, your health assistant. Describe your symptom or upload a photo, and I'll help you figure out if we can handle it here or if you should see a doctor.");
             }
+        }
+
+        async function launchAiTriage(context) {
+            document.getElementById('aiTriageOverlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            const newContextKey = getContextKey(context);
+            if (newContextKey !== aiCurrentContextKey || document.getElementById('aiChatLog').children.length === 0) {
+                aiCurrentContextKey = newContextKey;
+                await loadChatHistoryForContext(newContextKey);
+            }
+
             if (context && typeof context === 'string' && context !== 'EMERGENCY TRAUMA') {
                 document.getElementById('aiTextInput').value = `I'd like to know more about: ${context}. My symptom is...`;
                 document.getElementById('aiTextInput').focus();
@@ -818,7 +854,7 @@
                 document.getElementById('aiTextInput').value = '';
                 appendAiMessage('ai', "You pressed SOS — if this is a real emergency (chest pain, heavy bleeding, unconsciousness), call your nearest hospital's emergency line RIGHT NOW. Otherwise, tell me what's going on.");
             }
-        }
+        } 
         function closeAiTriage() {
             document.getElementById('aiTriageOverlay').classList.add('hidden');
             document.body.style.overflow = 'auto';
@@ -877,36 +913,52 @@ bubble.appendChild(timeRow);
             log.scrollTop = log.scrollHeight;
             return bubble;
         }
-        async function sendAiTriageMessage() {
-    const input = document.getElementById('aiTextInput');
-    const text = input.value.trim();
-    const image = aiPendingImage;
-    if (!text && !image) return;
-    appendAiMessage('user', text, image);
-    input.value = '';
-    const sentImage = image;
-    clearAiImage();
-    const redFlag = checkRedFlags(text);
-    if (redFlag) {
-        document.getElementById('aiRedFlagText').textContent = redFlag;
-        document.getElementById('aiRedFlagBanner').classList.remove('hidden');
-    } else {
-        document.getElementById('aiRedFlagBanner').classList.add('hidden');
-    }
-    aiConversationHistory.push({ role: 'user', content: text });
-    const typingBubble = showTypingIndicator();
-    try {
-        const result = await askNexusAI(text, sentImage, aiLang);
-        typingBubble.remove();
-        appendAiMessage('ai', result.reply);
-        aiConversationHistory.push({ role: 'assistant', content: result.reply });
-    } catch (err) {
-        typingBubble.remove();
-        appendAiMessage('ai', 'There was a connection issue. Please try again, or see a doctor if your symptom is severe.');
-        console.error(err);
-    }
+        
+async function saveChatHistoryForContext(contextKey) {
+            try {
+                const currentUser = await window._authReadyPromise;
+                if (!currentUser) return;
+                const db = firebase.database();
+                await db.ref(`users/${currentUser.uid}/aiChatHistory/${contextKey}`).set({
+                    messages: aiConversationHistory,
+                    updatedAt: Date.now()
+                });
+            } catch (err) {
+                console.error('Save chat history error:', err);
+            }
         }
 
+        async function sendAiTriageMessage() {
+            const input = document.getElementById('aiTextInput');
+            const text = input.value.trim();
+            const image = aiPendingImage;
+            if (!text && !image) return;
+            appendAiMessage('user', text, image);
+            input.value = '';
+            const sentImage = image;
+            clearAiImage();
+            const redFlag = checkRedFlags(text);
+            if (redFlag) {
+                document.getElementById('aiRedFlagText').textContent = redFlag;
+                document.getElementById('aiRedFlagBanner').classList.remove('hidden');
+            } else {
+                document.getElementById('aiRedFlagBanner').classList.add('hidden');
+            }
+            aiConversationHistory.push({ role: 'user', content: text });
+            saveChatHistoryForContext(aiCurrentContextKey);
+            const typingBubble = showTypingIndicator();
+            try {
+                const result = await askNexusAI(text, sentImage, aiLang);
+                typingBubble.remove();
+                appendAiMessage('ai', result.reply);
+                aiConversationHistory.push({ role: 'assistant', content: result.reply });
+                saveChatHistoryForContext(aiCurrentContextKey);
+            } catch (err) {
+                typingBubble.remove();
+                appendAiMessage('ai', 'There was a connection issue. Please try again, or see a doctor if your symptom is severe.');
+                console.error(err);
+            }
+        }
         /**
          * INTERNAL NOTE (not user-facing): the underlying engines are a clinical
          * multimodal model plus a general-purpose conversational/translation
