@@ -183,7 +183,7 @@
 .ai-markdown-body th { background: rgba(0,242,255,0.08); color: var(--neon-cyan); }
 .ai-markdown-body hr { display: none; }
 .ai-markdown-body > *:first-child { margin-top: 0; }
-.msg-time-inline { display: inline; position: relative; top: 1px; font-size: 9px; color: rgba(255,255,255,0.45); margin-left: 6px; white-space: nowrap; user-select: none; }
+ .msg-time-row { text-align: right; position: relative; top: 0px; font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 2px; user-select: none; }  
     </style>
 </head>
 <body>
@@ -850,25 +850,19 @@ if (imageSrc) {
     img.src = imageSrc; img.alt = 'User photo'; img.className = 'rounded-xl mb-2 max-h-40';
     bubble.appendChild(img);
 }
-const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 const p = document.createElement('div');
 if (isUser) {
     p.textContent = text;
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'msg-time-inline';
-    timeSpan.textContent = timeStr;
-    p.appendChild(timeSpan);
 } else {
     p.innerHTML = DOMPurify.sanitize(marked.parse(text));
     p.classList.add('ai-markdown-body');
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'msg-time-inline';
-    timeSpan.textContent = timeStr;
-    const lastBlock = p.lastElementChild;
-    if (lastBlock) lastBlock.appendChild(timeSpan);
-    else p.appendChild(timeSpan);
 }
 bubble.appendChild(p);
+const timeRow = document.createElement('div');
+timeRow.className = 'msg-time-row';
+timeRow.textContent = timeStr;
+bubble.appendChild(timeRow);
             log.appendChild(bubble);
             log.scrollTop = log.scrollHeight;
             return bubble;
