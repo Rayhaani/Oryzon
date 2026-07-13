@@ -936,10 +936,13 @@
    ══════════════════════════════════════════ */
         #nxfm-food-menu-section {
             background: #fdece0;
-            margin: 0 -20px;
-            padding: 0 0 24px;
+            margin: -20px -20px 0;
+            padding: 24px 0 24px;
+            border-radius: 24px 24px 0 0;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 -10px 24px rgba(0,0,0,0.06);
         }
-
         .nxfm-top-card {
             background: #ffffff;
             margin: -18px 16px 0;
@@ -3619,31 +3622,13 @@
                 </div>
                 </div>
 
-                <!-- ══ NEXUS FOOD MENU — Chef / Snacks / Beverages pro sheets only ══ -->
-                <div id="nxfm-food-menu-section" style="display:none;">
-                    <div class="nxfm-top-card">
-                        <div class="nxfm-status-pill">
-                            <span class="nxfm-status-dot" id="nxfm-status-dot"></span>
-                            <span id="nxfm-status-text">Open Now</span>
-                        </div>
-                        <div class="nxfm-status-sub" id="nxfm-status-sub">Available today</div>
-                        <div class="nxfm-meta-row">
-                            <div class="nxfm-meta-item">
-                                <div class="nxfm-meta-label">📍 Location</div>
-                                <div class="nxfm-meta-value" id="nxfm-location-value">—</div>
-                            </div>
-                            <div class="nxfm-meta-item">
-                                <div class="nxfm-meta-label">⏱️ Prep Time</div>
-                                <div class="nxfm-meta-value" id="nxfm-preptime-value">15 - 25 mins</div>
-                            </div>
-                        </div>
-                    </div>
-
+               <div id="nxfm-food-menu-section" style="display:none;">
                     <div class="nxfm-tabs-row" id="nxfm-tabs-row"></div>
                     <div id="nxfm-categories-slot"></div>
                     <button class="nxfm-cart-fab" id="nxfm-cart-fab" onclick="openHireSheet()">🛒</button>
-                </div>
-         <div id="pro-pending-orders-section" style="margin-bottom:20px;display:none;">
+               </div> 
+        
+                <div id="pro-pending-orders-section" style="margin-bottom:20px;display:none;">
     <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">📦 Pending Orders</div>
     <div id="pro-pending-orders-list" style="display:flex;flex-direction:column;gap:8px;">
         <div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">Loading orders...</div>
@@ -6046,24 +6031,6 @@ function renderFoodMenuSection(pro) {
     nxfmCurrentPro = pro;
     const items = pro.menu || pro.products || [];
 
-    // Status pill (Open Now / Closed)
-    const statusDot = document.getElementById("nxfm-status-dot");
-    const statusText = document.getElementById("nxfm-status-text");
-    const statusSub = document.getElementById("nxfm-status-sub");
-    if (pro.online) {
-        statusDot.style.background = "#16a34a";
-        statusText.style.color = "#16a34a";
-        statusText.innerText = "Open Now";
-        statusSub.innerText = pro.schedule && pro.schedule.length ? `Available: ${pro.schedule.join(', ')}` : "Available today";
-    } else {
-        statusDot.style.background = "#ef4444";
-        statusText.style.color = "#ef4444";
-        statusText.innerText = "Closed";
-        statusSub.innerText = pro.schedule && pro.schedule.length ? `Opens: ${pro.schedule.join(', ')}` : "Currently unavailable";
-    }
-
-    document.getElementById("nxfm-location-value").innerText = pro.address || pro.city || "—";
-    document.getElementById("nxfm-preptime-value").innerText = pro.prepTime || "15 - 25 mins";
 
     // Build category tabs from item.category, falling back to a single "All" list
     const cats = [];
@@ -11098,11 +11065,13 @@ function injectNPReviewsIntoProfile(proId) {
         ${renderNPReviewCards(reviews, category)}
     `;
 
-    // Saka bayan portfolio section
-    const gallery = document.getElementById('profile-gallery-grid-slot');
-    if (gallery && gallery.parentNode) {
-        gallery.parentNode.insertAdjacentElement('afterend', container);
-    }
+  // Saka bayan food-menu-section (ko generic-info-wrap idan ba food pro ba) — a WAJEN duk wani hideable wrapper
+    const foodSection = document.getElementById('nxfm-food-menu-section');
+    const genericWrap = document.getElementById('nxh-generic-info-wrap');
+    const anchor = (foodSection && foodSection.style.display !== 'none') ? foodSection : genericWrap;
+    if (anchor && anchor.parentNode) {
+        anchor.insertAdjacentElement('afterend', container);
+    }  
 }
 
 // ── PATCH openProfileSheet don auto-inject reviews ──
