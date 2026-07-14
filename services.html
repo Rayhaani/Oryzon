@@ -3619,7 +3619,10 @@
                 <div class="nxh-hero-overlay"></div>
                 <div class="nxh-iconbar">
                     <button id="close-profile-sheet-btn" class="nxh-icon-btn">←</button>
-                    <button id="edit-profile-btn" onclick="toggleEditMode()" class="nxh-icon-btn" style="display:none;width:auto;padding:0 14px;font-size:12px;font-weight:800;">✏️ Edit</button>
+                    <div style="display:flex;gap:8px;">
+                        <button id="share-profile-btn" onclick="shareProviderProfile()" class="nxh-icon-btn">🔗</button>
+                        <button id="edit-profile-btn" onclick="toggleEditMode()" class="nxh-icon-btn" style="display:none;width:auto;padding:0 14px;font-size:12px;font-weight:800;">✏️ Edit</button>
+                    </div>
                 </div>
            <div class="nxh-avatar-wrap">
     <div class="nxh-avatar-inner">
@@ -8274,9 +8277,17 @@ function removeDailyUploadBlockPhoto(blockId, slotIdx) {
 // ── DOMContentLoaded ──
 document.addEventListener("DOMContentLoaded", () => {
    populateCurrencyDropdowns();
-    loadContentFromFirebase().then(() => {
+   loadContentFromFirebase().then(() => {
         initAppElements();
-    });
+
+        // ── Idan an bude shafin ta hanyar shared link (?pro=ID) ──
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedProId = urlParams.get('pro');
+        if (sharedProId) {
+            const targetPro = PROS.find(p => String(p.id) === sharedProId);
+            if (targetPro) openProfileSheet(targetPro.id);
+        }
+    }); 
 
     document.getElementById("search-input").addEventListener("keydown", (e) => { if(e.key==="Enter") triggerRouterCheck(); });
     document.getElementById("search-trigger-btn").addEventListener("click", triggerRouterCheck);
@@ -8464,6 +8475,23 @@ const _originalOpenProfileSheet = openProfileSheet;
     };
 })();
 
+// ── SHARE PROVIDER MENU LINK ──
+function shareProviderProfile() {
+    if (!currentProfileProId) return;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?pro=${currentProfileProId}`;
+    const pro = PROS.find(p => p.id === currentProfileProId);
+    const shareTitle = pro ? `${pro.name} — Menu` : 'Duba Menu';
+
+    if (navigator.share) {
+        navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            showGlobalToast('🔗 An kwafa link ɗin! Yanzu za ka iya turawa wani.');
+        }).catch(() => {
+            showGlobalToast('⚠️ An kasa kwafa link ɗin.');
+        });
+    }
+    }
 // ═══════════════════════════
 // 🚩 REPORT FUNCTIONS
 // ═══════════════════════════
