@@ -1025,10 +1025,16 @@
 
         .nxfm-cat-block { padding: 8px 16px 0; }
         .nxfm-cat-title {
-            display: none;
+            font-size: 20px;
+            font-weight: 800;
+            color: #ea580c;
+            margin-top: 14px;
         }
         .nxfm-cat-desc {
-            display: none;
+            font-size: 12.5px;
+            color: #6b7280;
+            margin-top: 4px;
+            line-height: 1.5;
         }
 
         .nxfm-item-card {
@@ -1096,6 +1102,10 @@
     gap: 4px;
     padding: 0 -15px;
     margin-top: 14px;
+        }
+        .nxfm-item-grid-3col {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
         }
         .nxfm-item-card-grid {
     background: #ffffff;
@@ -5645,11 +5655,23 @@ const PROS = [
         schedule: ["Mondays", "Wednesdays", "Fridays", "Saturdays"],
         gallery: ["Premium Banqueting Platter", "Pastry Fine Art Design", "Corporate Event Spread", "Gourmet Kitchen Prep"],
         menu: [
-            { name: "Jollof Rice", price: "₦2,200", icon: "🍛", desc: "Smoky party-style jollof" },
-            { name: "Danwake", price: "₦1,500", icon: "🥣", desc: "Fresh with groundnut oil" },
-            { name: "Fried Rice", price: "₦2,500", icon: "🍚", desc: "Spiced with vegetables" },
-            { name: "Masa", price: "₦800", icon: "🫓", desc: "Hot & crispy rice cakes" },
-            { name: "Tuwo Shinkafa", price: "₦1,800", icon: "🍲", desc: "With miyan kuka" }
+            { name: "Jollof Rice", price: "₦2,200", icon: "🍛", desc: "Smoky party-style jollof", category: "Rice Dishes" },
+            { name: "Fried Rice", price: "₦2,500", icon: "🍚", desc: "Spiced with vegetables", category: "Rice Dishes" },
+            { name: "Danwake", price: "₦1,500", icon: "🥣", desc: "Fresh with groundnut oil", category: "Soups" },
+            { name: "Tuwo Shinkafa", price: "₦1,800", icon: "🍲", desc: "With miyan kuka", category: "Soups" },
+            { name: "Masa", price: "₦800", icon: "🫓", desc: "Hot & crispy rice cakes", category: "Snacks" },
+            { name: "Beef", price: "₦1,500", icon: "🥩", desc: "Rich tomato beef stew", category: "Proteins & Sides" },
+            { name: "Goat Meat", price: "₦2,200", icon: "🍖", desc: "Peppered goat meat", category: "Proteins & Sides" },
+            { name: "Grilled Fish", price: "₦3,000", icon: "🐟", desc: "Smoky grilled fish", category: "Proteins & Sides" },
+            { name: "Ponmo", price: "₦1,500", icon: "🥘", desc: "Soft peppered cow skin", category: "Proteins & Sides" },
+            { name: "Moi Moi", price: "₦1,200", icon: "🍮", desc: "Steamed bean pudding", category: "Proteins & Sides" },
+            { name: "Plantain", price: "₦1,500", icon: "🍌", desc: "Sweet fried plantain", category: "Proteins & Sides" },
+            { name: "Pounded Yam", price: "₦1,800", icon: "🍡", desc: "Smooth pounded yam", category: "Swallow" },
+            { name: "Amala", price: "₦1,300", icon: "🟤", desc: "Soft yam flour swallow", category: "Swallow" },
+            { name: "Eba", price: "₦1,200", icon: "🟡", desc: "Smooth garri swallow", category: "Swallow" },
+            { name: "Semovita", price: "₦1,800", icon: "🍚", desc: "Smooth semolina swallow", category: "Swallow" },
+            { name: "Wheat", price: "₦1,400", icon: "🌾", desc: "Soft wheat meal swallow", category: "Swallow" },
+            { name: "Fufu", price: "₦1,000", icon: "⚪", desc: "Soft cassava fufu", category: "Swallow" }
     ]
     },
     {
@@ -6187,11 +6209,12 @@ function nxfmRenderItems(items, cats, activeTab) {
         if (activeTab !== "All" && activeTab !== cat) return;
         const catItems = cats.length > 0 ? items.filter(it => it.category === cat) : items;
         if (!catItems.length) return;
+        const headingHtml = cats.length > 0 ? `<div class="nxfm-cat-title">${cat}</div><div class="nxfm-cat-desc">${nxfmCatDesc(cat)}</div>` : '';
+        const gridClass = (cat === 'Proteins & Sides' || cat === 'Swallow') ? 'nxfm-item-grid nxfm-item-grid-3col' : 'nxfm-item-grid';
         html += `<div class="nxfm-cat-block">
-            <div class="nxfm-cat-title">${cat}</div>
-            <div class="nxfm-cat-desc">${nxfmCatDesc(cat)}</div>
-            <div class="nxfm-item-grid">
-            ${catItems.map(item => `
+            ${headingHtml}
+            <div class="${gridClass}">
+        ${catItems.map(item => `
              <div class="nxfm-item-card-grid" onclick="openOrderConfirm('${(item.name||'').replace(/'/g, "\\'")}','${item.price}')">
                     <div class="nxfm-grid-thumb">
                         ${item.image ? `<img src="${item.image}">` : (item.icon || '🍽️')}
@@ -6212,12 +6235,15 @@ function nxfmRenderItems(items, cats, activeTab) {
 }
 
 function nxfmCatDesc(cat) {
-    const map = {
+   const map = {
         'Soups': "Rich, well-seasoned soups cooked the traditional way.",
         'Rice': "Signature rice dishes made fresh to order.",
+        'Rice Dishes': "Signature rice dishes made fresh to order.",
         'Snacks': "Freshly prepared snacks, ready to go.",
-        'Drinks': "Chilled and freshly made beverages."
-    };
+        'Drinks': "Chilled and freshly made beverages.",
+        'Proteins & Sides': "Assorted proteins and side dishes to complete your meal.",
+        'Swallow': "Traditional Nigerian swallows are served hot and fresh."
+    }; 
     return map[cat] || "Freshly prepared and ready to order.";
         }
 // REPLACE: closeProfileSheet() function
