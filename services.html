@@ -930,6 +930,41 @@
             border: 1px solid #e2e8f0;
         }
 
+        .nxh-gallery-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 16px 20px 24px;
+        }
+        .nxh-gallery-card {
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            background-color: #f1f5f9;
+            background-size: cover;
+            background-position: center;
+            aspect-ratio: 1 / 1.05;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 11.5px;
+            border: 1px solid #e2e8f0;
+        }
+        .nxh-gallery-card.nxh-gallery-has-img {
+            color: transparent;
+        }
+        .nxh-gallery-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+        }
         /* ══════════════════════════════════════════
    NEXUS FOOD MENU (nxfm) — Chef / Snacks / Beverages
    Pro-sheet food ordering layout, Mama T's Kitchen style
@@ -3754,8 +3789,12 @@
      <button class="nxfm-cart-fab" id="nxfm-cart-fab" onclick="openHireSheet()" style="position:fixed;bottom:130px;right:16px;margin:0;float:none;width:40px;height:40px;border-radius:50%;background:#ea580c;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 8px 20px rgba(234,88,12,0.4);cursor:grab;border:none;z-index:9999;touch-action:none;">🛒</button>
      </div>
                </div>
+
+               <div id="nxh-gallery-section" style="display:none;">
+                    <div class="nxh-gallery-grid" id="nxh-gallery-grid"></div>
+               </div>
         
-                <div id="pro-pending-orders-section" style="margin-bottom:20px;display:none;">
+                <div id="pro-pending-orders-section" style="margin-bottom:20px;display:none;"> 
     <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">📦 Pending Orders</div>
     <div id="pro-pending-orders-list" style="display:flex;flex-direction:column;gap:8px;">
         <div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">Loading orders...</div>
@@ -6136,6 +6175,24 @@ document.getElementById("profile-expert-bio-p").innerText = pro.bio;
     document.getElementById("profile-gallery-grid-slot").innerHTML = targetGallery.map(title =>
         `<div class="portfolio-img-card"><div style="text-align:center;padding:8px;"><div style="font-size:18px;margin-bottom:4px;">📷</div><div>${title}</div></div></div>`).join('');
 
+    // ── Gallery tab: real photo/video grid ──
+    const nxhGalleryGrid = document.getElementById("nxh-gallery-grid");
+    if (nxhGalleryGrid) {
+        if (!targetGallery.length) {
+            nxhGalleryGrid.innerHTML = `<div class="nxh-gallery-empty">📷 No photos uploaded yet</div>`;
+        } else {
+            nxhGalleryGrid.innerHTML = targetGallery.map(item => {
+                const isMediaObj = item && typeof item === 'object' && item.url;
+                if (isMediaObj) {
+                    const isVideo = item.type === 'video' || /\.(mp4|mov|webm)$/i.test(item.url);
+                    return isVideo
+                        ? `<div class="nxh-gallery-card nxh-gallery-has-img" style="background-image:url('${item.thumbnail || item.url}');" onclick="openGalleryLightbox('${item.url}', true)"><span style="position:relative;z-index:1;background:rgba(0,0,0,0.5);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">▶</span></div>`
+                        : `<div class="nxh-gallery-card nxh-gallery-has-img" style="background-image:url('${item.url}');" onclick="openGalleryLightbox('${item.url}', false)"></div>`;
+                }
+                return `<div class="nxh-gallery-card">📷 ${item}</div>`;
+            }).join('');
+        }
+        }
 // ── Chef / Snacks / Beverages pro sheets get the Nexus Food Menu layout instead of the generic info block ──
     const isFoodPro = (pro.category === "chef" || pro.category === "snacks" || pro.category === "beverages");
     const genericWrap = document.getElementById("nxh-generic-info-wrap");
@@ -12161,6 +12218,8 @@ function switchSeg(tab) {
     const foodSection = document.getElementById('nxfm-food-menu-section');
     if (foodSection) foodSection.style.display = (tab === 'menu') ? '' : 'none';
     const reviewsInject = document.getElementById('np-reviews-inject');
+    const gallerySection = document.getElementById('nxh-gallery-section');
+    if (gallerySection) gallerySection.style.display = (tab === 'gallery') ? '' : 'none';
     if (reviewsInject) reviewsInject.style.display = (tab === 'reviews') ? '' : 'none';
 }
 // ═══════════════════════════
@@ -12208,5 +12267,33 @@ function switchSeg(tab) {
   });
 })();
 </script>
-</body>
+<!-- ══ GALLERY LIGHTBOX OVERLAY ══ -->
+<div id="nxh-gallery-lightbox" onclick="closeGalleryLightbox()" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(5,5,8,0.96);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
+    <button onclick="closeGalleryLightbox()" style="position:absolute;top:20px;right:20px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:16px;cursor:pointer;">✕</button>
+    <img id="nxh-gallery-lightbox-img" style="max-width:100%;max-height:85vh;border-radius:16px;display:none;object-fit:contain;">
+    <video id="nxh-gallery-lightbox-video" controls autoplay style="max-width:100%;max-height:85vh;border-radius:16px;display:none;"></video>
+</div>
+<script>
+function openGalleryLightbox(url, isVideo) {
+    event.stopPropagation();
+    const overlay = document.getElementById('nxh-gallery-lightbox');
+    const imgEl = document.getElementById('nxh-gallery-lightbox-img');
+    const videoEl = document.getElementById('nxh-gallery-lightbox-video');
+    if (isVideo) {
+        videoEl.src = url; videoEl.style.display = 'block';
+        imgEl.style.display = 'none'; imgEl.src = '';
+    } else {
+        imgEl.src = url; imgEl.style.display = 'block';
+        videoEl.style.display = 'none'; videoEl.pause(); videoEl.src = '';
+    }
+    overlay.style.display = 'flex';
+}
+function closeGalleryLightbox() {
+    const overlay = document.getElementById('nxh-gallery-lightbox');
+    const videoEl = document.getElementById('nxh-gallery-lightbox-video');
+    videoEl.pause(); videoEl.src = '';
+    overlay.style.display = 'none';
+}
+</script>
+        </body>
 </html>
