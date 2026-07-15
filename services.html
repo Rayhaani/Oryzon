@@ -12620,32 +12620,46 @@ function closeGalleryLightbox() {
 </script>
 <!-- ══ VIEW ALL STORIES OVERLAY ══ -->
 <div id="all-stories-overlay" style="display:none;position:fixed;inset:0;z-index:8500;background:#ffffff;overflow-y:auto;-webkit-overflow-scrolling:touch;">
-    <div style="position:sticky;top:0;background:#ffffff;z-index:2;padding:16px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #f1f5f9;">
+<div style="position:sticky;top:0;background:#ffffff;z-index:2;padding:16px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #f1f5f9;">
         <button onclick="closeAllStoriesOverlay()" style="width:34px;height:34px;border-radius:50%;background:#f1f5f9;border:none;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;">←</button>
-        <div style="font-weight:800;font-size:16px;color:#111827;">Available Now Near You</div>
-    </div>
+        <div style="font-weight:800;font-size:16px;color:#111827;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Available Now Near You</div>
+        <div style="flex-shrink:0; display:flex; align-items:center; gap:6px; background:#14161b; border:1.6px solid #3b82f6; border-radius:16px; padding:8px 12px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="all-stories-search-input" placeholder="Search" oninput="filterAllStoriesGrid(this.value)" style="background:transparent;border:none;outline:none;font-size:12px;color:#e5e7eb;width:56px;">
+        </div>
+</div>
     <div id="all-stories-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:16px 20px 40px;"></div>
 </div>
 <script>
-function renderAllStoriesGrid() {
+function renderAllStoriesGrid(query) {
     const grid = document.getElementById('all-stories-grid');
-    if (!grid) return;
-    if (!PRO_STORIES.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:#94a3b8;font-size:13px;font-weight:600;">No listings available right now</div>`;
+    const q = (query || '').trim().toLowerCase();
+    const filtered = PRO_STORIES.map((proStory, index) => ({ proStory, index })).filter(({ proStory }) => {
+        if (!q) return true;
+        const pro = PROS.find(p => p.id === proStory.proId);
+        const firstStory = proStory.stories[0];
+        const haystack = `${pro ? pro.name : ''} ${firstStory.name}`.toLowerCase();
+        return haystack.includes(q);
+    });
+    if (!filtered.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:#94a3b8;font-size:13px;font-weight:600;">No matches found</div>`;
         return;
     }
-    grid.innerHTML = PRO_STORIES.map((proStory, index) => {
+    grid.innerHTML = filtered.map(({ proStory, index }) => {
         const pro = PROS.find(p => p.id === proStory.proId);
         const firstStory = proStory.stories[0];
         return `<div onclick="closeAllStoriesOverlay(); openStoryDeck(${index});" style="border-radius:18px;overflow:hidden;cursor:pointer;background:#f8fafc;border:1px solid #f1f5f9;">
             <div style="width:100%;aspect-ratio:1/1;background-image:url('${firstStory.image}');background-size:cover;background-position:center;"></div>
             <div style="padding:10px 12px 12px;">
-                <div style="font-weight:800;font-size:13px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${pro ? pro.name : firstStory.name}</div>
-                <div style="font-size:11.5px;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${firstStory.name} · ${firstStory.price}</div>
-                <div style="font-size:11px;color:#38bdf8;font-weight:700;margin-top:2px;">${pro ? pro.distance + 'km away' : ''}</div>
+                <div style="font-weight:800;font-size:13px;color:#111827;">${pro?pro.name:firstStory.name}</div>
+                <div style="font-size:11.5px;color:#64748b;margin-top:2px;">${firstStory.name} · ${firstStory.price}</div>
+                <div style="font-size:11px;color:#38bdf8;font-weight:700;margin-top:2px;">${pro?pro.distance+'km away':''}</div>
             </div>
         </div>`;
     }).join('');
+}
+function filterAllStoriesGrid(query) {
+    renderAllStoriesGrid(query);
 }
 function openAllStoriesOverlay() {
     renderAllStoriesGrid();
