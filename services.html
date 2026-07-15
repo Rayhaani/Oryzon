@@ -6298,6 +6298,7 @@ document.getElementById("profile-expert-bio-p").innerText = pro.bio;
 let nxfmCurrentPro = null;
 function renderFoodMenuSection(pro) {
     nxfmCurrentPro = pro;
+    localStorage.setItem('nxfm_last_viewed_pro', JSON.stringify(pro));
     nxfmUpdateCartBadge();
     const items = pro.menu || pro.products || [];
 
@@ -6361,7 +6362,7 @@ function nxfmRenderItems(items, cats, activeTab) {
                         <div class="nxfm-grid-desc">${item.desc || ''}</div>
                         <div class="nxfm-grid-bottom-row">
                             <div class="nxfm-grid-price">${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}</div>
-                            <button class="nxfm-grid-add-btn" onclick="event.stopPropagation();openItemDetail('${(item.name||'').replace(/'/g, "\\'")}','${item.price}','${item.image||''}','${(item.icon||'🍽️').replace(/'/g,"\\'")}','${(item.desc||'').replace(/'/g,"\\'")}')">+</button>
+                            <button class="nxfm-grid-add-btn" onclick="event.stopPropagation();nxfmGridQuickAdd('${(item.name||'').replace(/'/g, "\\'")}','${item.price}','${item.image||''}','${(item.icon||'🍽️').replace(/'/g,"\\'")}','${(item.desc||'').replace(/'/g,"\\'")}')">+</button>
                         </div>
                     </div>
                 </div>`).join('')} 
@@ -10046,8 +10047,11 @@ let itemDetailData = { name: '', price: '', image: '', icon: '', desc: '' };
 
 // ══════════ NXFM PER-VENDOR CART ENGINE ══════════
 function nxfmGetActiveViewedPro() {
-    return nxfmCurrentPro || currentChefMenuPro || currentSnacksMenuPro || currentBeveragesMenuPro || null;
-}
+    const live = nxfmCurrentPro || currentChefMenuPro || currentSnacksMenuPro || currentBeveragesMenuPro;
+    if (live) return live;
+    const saved = localStorage.getItem('nxfm_last_viewed_pro');
+    return saved ? JSON.parse(saved) : null;
+    }
 function nxfmCartRef(proId) {
     const sessionUser = localStorage.getItem('nexus_user_session');
     if (!sessionUser) return null;
@@ -10074,6 +10078,12 @@ async function nxfmAddToCart(proId, item) {
     if (existing) { existing.qty += item.qty; }
     else { cart.push(item); }
     await nxfmSaveCart(proId, cart);
+}
+async function nxfmGridQuickAdd(name, price, image, icon, desc) {
+    const pro = nxfmGetActiveViewedPro();
+    if (!pro) { showGlobalToast('⚠️ Vendor not found.'); return; }
+    await nxfmAddToCart(pro.id, { name, price, image, icon, desc, qty: 1 });
+    showGlobalToast('✅ Added to cart');
 }
 async function nxfmUpdateCartBadge() {
     const pro = nxfmGetActiveViewedPro();
