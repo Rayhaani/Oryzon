@@ -2461,7 +2461,7 @@
 
 /* ── RATING OVERVIEW SECTION ── */
 .np-rating-section {
-    margin: 0 0 28px;
+    margin: 0 0 20px;
     padding: 0 20px 20px;
     background: transparent;
     border-radius: 20px;
@@ -2657,7 +2657,6 @@
 .np-reviewer-date {
     font-size: 10px;
     color: #94a3b8;
-    margin-top: 1px;
     font-weight: 600;
 }
 
@@ -2666,6 +2665,30 @@
     gap: 2px;
 }
 
+.np-reviewer-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
+}
+
+.np-verified-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(16,185,129,0.08);
+    color: #059669;
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 20px;
+    padding: 5px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: inherit;
+}
+        
 .np-review-star {
     font-size: 12px;
     color: #f59e0b;
@@ -6250,8 +6273,9 @@ function renderFoodMenuSection(pro) {
         tabsRow.innerHTML = "";
     }
 
-    nxfmRenderItems(items, cats, "All");
-}
+nxfmRenderItems(items, cats, "All");
+    switchSeg('menu');
+        }
 
 function nxfmSelectTab(el, cat) {
     document.querySelectorAll('#nxfm-tabs-row .nxfm-tab').forEach(t => t.classList.remove('active'));
@@ -11206,7 +11230,7 @@ function renderNPReviewCards(reviews, category) {
     const cards = reviews.map(r => `
         <div class="np-review-card">
             <div class="np-review-top">
-                <div class="np-reviewer-left" onclick="openIdentityOverlay(${JSON.stringify(r).replace(/"/g, '&quot;')})">
+                <div class="np-reviewer-left">
                     <div class="np-reviewer-avatar" style="background:${r.reviewerColor};">
                         ${r.reviewerInitials}
                         <div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;background:#10b981;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;">
@@ -11215,12 +11239,13 @@ function renderNPReviewCards(reviews, category) {
                     </div>
                     <div>
                         <div class="np-reviewer-name">${r.reviewerName}</div>
-                        <div class="np-reviewer-date">${r.date}</div>
+                        <div class="np-reviewer-meta">
+                            ${renderNPStars(r.rating, 12)}
+                            <span class="np-reviewer-date">${r.date}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="np-review-stars">
-                    ${renderNPStars(r.rating, 13)}
-                </div>
+                <button class="np-verified-badge" onclick="openIdentityOverlay(${JSON.stringify(r).replace(/"/g, '&quot;')})">✅ Verified Purchase</button>
             </div>
 
             <div class="np-review-comment">${r.comment}</div>
