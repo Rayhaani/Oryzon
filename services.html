@@ -5920,7 +5920,7 @@ function createProCardHtml(pro) {
             </div>
 
             <div style="display:flex;align-items:center;gap:14px;z-index:2;position:relative;padding-right:78px;">
-                <div class="lens-viewport"><div class="lens-glass-reflection"></div></div>
+                <div class="lens-viewport" onclick="event.stopPropagation();window.location.href='me.html?pro=${pro.id}';"><div class="lens-glass-reflection"></div></div>
                 <div style="flex:1;padding-left:2px;min-width:0;">
                     <div class="sentinel-title-text" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayHandle}</div>
                     <div class="sentinel-sub-text">${pro.display_cat}</div>
@@ -9378,7 +9378,7 @@ function openSecureChat() {
 
             if (snap.exists()) {
                 // Wannan USER shine PRO — je chats.html ya ga duk messages ɗinsa
-                window.location.href = 'chats.html';
+                window.location.href = `vendor-chat.html?with=${encodeURIComponent(currentProfileProId || sessionUser)}`;
             } else {
                 // Wannan CUSTOMER ne — je chat-interior.html da pro ɗin da yake kallo
                 if (!currentProfileProId) {
@@ -10059,44 +10059,55 @@ let itemDetailData = { name: '', price: '', image: '', icon: '', desc: '' };
 function nxfmGetActiveViewedPro() {
     return nxfmCurrentPro || currentChefMenuPro || currentSnacksMenuPro || currentBeveragesMenuPro || null;
 }
-function nxfmCartKey(proId) { return `nxfmCart_${proId}`; }
-function nxfmGetCart(proId) {
-    try { return JSON.parse(localStorage.getItem(nxfmCartKey(proId))) || []; }
-    catch (e) { return []; }
+function nxfmCartRef(proId) {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) return null;
+    return firebase.database().ref(`carts/${sessionUser}/${proId}`);
 }
-function nxfmSaveCart(proId, cart) {
-    localStorage.setItem(nxfmCartKey(proId), JSON.stringify(cart));
+async function nxfmGetCart(proId) {
+    const ref = nxfmCartRef(proId);
+    if (!ref) return [];
+    try {
+        const snap = await ref.once('value');
+        const val = snap.val();
+        return val ? Object.values(val) : [];
+    } catch (e) { return []; }
+}
+async function nxfmSaveCart(proId, cart) {
+    const ref = nxfmCartRef(proId);
+    if (!ref) return;
+    await ref.set(cart);
     nxfmUpdateCartBadge();
 }
-function nxfmAddToCart(proId, item) {
-    const cart = nxfmGetCart(proId);
+async function nxfmAddToCart(proId, item) {
+    const cart = await nxfmGetCart(proId);
     const existing = cart.find(i => i.name === item.name);
     if (existing) { existing.qty += item.qty; }
     else { cart.push(item); }
-    nxfmSaveCart(proId, cart);
+    await nxfmSaveCart(proId, cart);
 }
-function nxfmUpdateCartBadge() {
+async function nxfmUpdateCartBadge() {
     const pro = nxfmGetActiveViewedPro();
     const badge = document.getElementById('nxfm-cart-badge');
     if (!badge) return;
     if (!pro) { badge.style.display = 'none'; return; }
-    const cart = nxfmGetCart(pro.id);
+    const cart = await nxfmGetCart(pro.id);
     const count = cart.reduce((sum, i) => sum + i.qty, 0);
     if (count > 0) { badge.textContent = count; badge.style.display = 'flex'; }
     else { badge.style.display = 'none'; }
-}
+        }
 
-function openNxfmCartPage() {
+async function openNxfmCartPage() {
     const pro = nxfmGetActiveViewedPro();
     if (!pro) { showGlobalToast('⚠️ Open a vendor profile first.'); return; }
-    renderNxfmCartPage(pro.id);
+    await renderNxfmCartPage(pro.id);
     document.getElementById('nxfm-cart-page-overlay').style.display = 'flex';
-}
+    }
 function closeNxfmCartPage() {
     document.getElementById('nxfm-cart-page-overlay').style.display = 'none';
 }
-function renderNxfmCartPage(proId) {
-    const cart = nxfmGetCart(proId);
+async function renderNxfmCartPage(proId) {
+    const cart = await nxfmGetCart(proId);
     const list = document.getElementById('nxfm-cart-items-list');
     if (!cart.length) {
         list.innerHTML = `<div style="text-align:center;padding:40px 10px;color:#9ca3af;font-size:13px;">🛒 Your cart is empty</div>`;
@@ -10118,28 +10129,28 @@ function renderNxfmCartPage(proId) {
             </div>
         </div>`).join('');
     }
-    const total = cart.reduce((sum, i) => sum + (Number(i.price) || 0) * i.qty, 0);
+    const total = cart.reduce((sum, i) => sum + (parseInt(String(i.price).replace(/[^\d]/g,'')) || 0) * i.qty, 0);
     document.getElementById('nxfm-cart-total').textContent = '₦' + total.toLocaleString();
 }
-function nxfmCartQtyChange(proId, itemName, delta) {
-    const cart = nxfmGetCart(proId);
+async function nxfmCartQtyChange(proId, itemName, delta) {
+    const cart = await nxfmGetCart(proId);
     const item = cart.find(i => i.name === itemName);
     if (!item) return;
     item.qty += delta;
     if (item.qty <= 0) { cart.splice(cart.indexOf(item), 1); }
-    nxfmSaveCart(proId, cart);
-    renderNxfmCartPage(proId);
-}
-function nxfmCartPlaceOrder() {
+    await nxfmSaveCart(proId, cart);
+    await renderNxfmCartPage(proId);
+    }
+async function nxfmCartPlaceOrder() {
     const pro = nxfmGetActiveViewedPro();
-    if (!pro) return;
-    const cart = nxfmGetCart(pro.id);
+    if (!pro) { showGlobalToast('⚠️ Vendor not found — open a profile first.'); return; }
+    const cart = await nxfmGetCart(pro.id);
     if (!cart.length) { showGlobalToast('⚠️ Your cart is empty.'); return; }
 
     window._activeCartOrder = { proId: pro.id, items: cart };
     window._activePlaceOrderPro = pro;
 
-    const total = cart.reduce((sum, i) => sum + (Number(i.price) || 0) * i.qty, 0);
+    const total = cart.reduce((sum, i) => sum + (parseInt(String(i.price).replace(/[^\d]/g,'')) || 0) * i.qty, 0);
     document.getElementById('po-item-name').innerHTML = cart.map(i => `${i.qty}× ${i.name}`).join('<br>');
     document.getElementById('po-item-price').textContent = '₦' + total.toLocaleString();
     document.getElementById('po-qty-row').style.display = 'none';
@@ -10187,10 +10198,10 @@ function itemDetailQtyChange(delta) {
     document.getElementById('item-detail-qty').textContent = itemDetailQty;
 }
 
-function itemDetailAddToCart() {
+async function itemDetailAddToCart() {
     const pro = nxfmGetActiveViewedPro();
     if (!pro) { showGlobalToast('⚠️ Vendor not found.'); return; }
-    nxfmAddToCart(pro.id, {
+    await nxfmAddToCart(pro.id, {
         name: itemDetailData.name,
         price: itemDetailData.price,
         image: itemDetailData.image,
@@ -10200,7 +10211,7 @@ function itemDetailAddToCart() {
     });
     document.getElementById('item-detail-overlay').style.display = 'none';
     showGlobalToast('✅ Added to cart');
-}
+    }
 function openOrderConfirm(itemName, itemPrice) {
     orderDraft.itemName = itemName;
     orderDraft.itemPrice = itemPrice;
@@ -10290,7 +10301,7 @@ function closePlaceOrderOverlay() {
 
 function updateOrderTotal() {
     if (window._activeCartOrder) {
-        const total = window._activeCartOrder.items.reduce((sum, i) => sum + (Number(i.price) || 0) * i.qty, 0);
+        const total = window._activeCartOrder.items.reduce((sum, i) => sum + (parseInt(String(i.price).replace(/[^\d]/g,'')) || 0) * i.qty, 0);
         document.getElementById('po-total-display').textContent = total > 0 ? `₦${total.toLocaleString()}` : '—';
         return;
     }
@@ -12523,8 +12534,8 @@ function switchSeg(tab) {
 <!-- ══ GALLERY LIGHTBOX OVERLAY ══ -->
 <div id="nxh-gallery-lightbox" onclick="closeGalleryLightbox()" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(5,5,8,0.96);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
     <button onclick="closeGalleryLightbox()" style="position:absolute;top:20px;right:20px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:16px;cursor:pointer;">✕</button>
-    <img id="nxh-gallery-lightbox-img" style="max-width:100%;max-height:85vh;border-radius:16px;display:none;object-fit:contain;">
-    <video id="nxh-gallery-lightbox-video" controls autoplay style="max-width:100%;max-height:85vh;border-radius:16px;display:none;"></video>
+   <img id="nxh-gallery-lightbox-img" style="width:100vw;height:100vh;border-radius:0;display:none;object-fit:contain;"> 
+    <video id="nxh-gallery-lightbox-video" controls autoplay style="width:100vw;height:100vh;border-radius:0;display:none;object-fit:contain;"></video>
 </div>
 <script>
 function openGalleryLightbox(url, isVideo) {
