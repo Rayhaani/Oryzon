@@ -5144,7 +5144,34 @@
         <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:28px;">Sana'arka an saka a cikin tsarin Abokina. Masu buƙata kusa da kai za su iya ganinka yanzu.</p>
         <button onclick="document.getElementById('ps-success-overlay-inline').style.display='none';closePSManual();" style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:800;padding:14px 28px;cursor:pointer;font-family:inherit;">Koma Home →</button>
     </div>
-                                                          </div>
+        </div>
+
+<!-- ITEM DETAIL OVERLAY -->
+<div id="item-detail-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10090;display:none;align-items:center;justify-content:center;padding:24px;">
+    <div style="width:100%;max-width:380px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+        <div style="position:relative;">
+            <div style="width:100%;aspect-ratio:1/0.85;background:#fdece0;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <img id="item-detail-image" src="" style="width:100%;height:100%;object-fit:cover;display:none;">
+                <span id="item-detail-icon" style="font-size:64px;"></span>
+            </div>
+            <button onclick="closeItemDetail()" style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.45);color:#fff;border:none;font-size:16px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:20px;">
+            <div id="item-detail-name" style="font-size:20px;font-weight:800;color:#78350f;margin-bottom:4px;">—</div>
+            <div id="item-detail-desc" style="font-size:14px;color:#6b7280;margin-bottom:14px;">—</div>
+            <div id="item-detail-price" style="font-size:22px;font-weight:800;color:#ea580c;margin-bottom:18px;">—</div>
+            <div style="height:1px;background:#f1e4d8;margin-bottom:16px;"></div>
+            <div style="display:flex;gap:12px;align-items:center;">
+                <div style="display:flex;align-items:center;background:#f8fafc;border-radius:14px;padding:4px;">
+                    <button onclick="itemDetailQtyChange(-1)" style="width:36px;height:36px;border-radius:10px;background:#ffffff;border:none;font-size:18px;font-weight:700;color:#78350f;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.06);">−</button>
+                    <div id="item-detail-qty" style="width:40px;text-align:center;font-size:16px;font-weight:800;color:#78350f;">1</div>
+                    <button onclick="itemDetailQtyChange(1)" style="width:36px;height:36px;border-radius:10px;background:#ffffff;border:none;font-size:18px;font-weight:700;color:#78350f;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.06);">+</button>
+                </div>
+                <button onclick="itemDetailAddToCart()" style="flex:1;background:#ea580c;color:#ffffff;border:none;border-radius:14px;padding:14px 0;font-weight:800;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">🛒 Add to Cart</button>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- ORDER CONFIRM MODAL -->
 <div id="order-confirm-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10100;display:none;align-items:center;justify-content:center;padding:24px;">
     <div style="width:100%;max-width:360px;background:#11182b;border:1px solid rgba(255,255,255,0.1);border-radius:22px;padding:24px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
@@ -6309,7 +6336,7 @@ function nxfmRenderItems(items, cats, activeTab) {
             ${headingHtml}
             <div class="${gridClass}">
         ${catItems.map(item => `
-             <div class="nxfm-item-card-grid" onclick="openOrderConfirm('${(item.name||'').replace(/'/g, "\\'")}','${item.price}')">
+        <div class="nxfm-item-card-grid" onclick="openItemDetail('${(item.name||'').replace(/'/g, "\\'")}','${item.price}','${item.image||''}','${(item.icon||'🍽️').replace(/'/g,"\\'")}','${(item.desc||'').replace(/'/g,"\\'")}')">     
                     <div class="nxfm-grid-thumb">
                         ${item.image ? `<img src="${item.image}">` : (item.icon || '🍽️')}
                     </div>
@@ -6318,7 +6345,7 @@ function nxfmRenderItems(items, cats, activeTab) {
                         <div class="nxfm-grid-desc">${item.desc || ''}</div>
                         <div class="nxfm-grid-bottom-row">
                             <div class="nxfm-grid-price">${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}</div>
-                            <button class="nxfm-grid-add-btn" onclick="event.stopPropagation();openOrderConfirm('${(item.name||'').replace(/'/g, "\\'")}','${item.price}')">+</button>
+                            <button class="nxfm-grid-add-btn" onclick="event.stopPropagation();openItemDetail('${(item.name||'').replace(/'/g, "\\'")}','${item.price}','${item.image||''}','${(item.icon||'🍽️').replace(/'/g,"\\'")}','${(item.desc||'').replace(/'/g,"\\'")}')">+</button>
                         </div>
                     </div>
                 </div>`).join('')} 
@@ -6952,7 +6979,7 @@ function renderChefMenuOverlayItems(pro) {
     if (!chefMenuEditMode) {
         // Normal customer view — exactly as before
         slot.innerHTML = (pro.menu || []).map((item, idx) => `
-            <div class="menu-item-card" style="animation-delay:${idx * 0.1}s" onclick="openOrderConfirm('${(item.name||'').replace(/'/g, "\\'")}','${item.price}')">
+            <div class="menu-item-card" style="animation-delay:${idx * 0.1}s" onclick="openItemDetail('${(item.name||'').replace(/'/g, "\\'")}','${item.price}','${item.image||''}','${(item.icon||'🍽️').replace(/'/g,"\\'")}','${(item.desc||'').replace(/'/g,"\\'")}')">
                 <div class="menu-item-emoji">${item.icon || '🍽️'}</div>
                 <div class="menu-item-info"><div class="menu-item-name">${item.name}</div><div class="menu-item-desc">${item.desc || ''}</div></div>
                 <div class="menu-item-price">${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}</div>
@@ -10020,6 +10047,47 @@ function submitHireChatFirst() {
 }
 
 let orderDraft = { itemName: null, itemPrice: null, fromStory: false, returnToStory: false };
+let itemDetailQty = 1;
+let itemDetailData = { name: '', price: '' };
+
+function openItemDetail(name, price, image, icon, desc) {
+    itemDetailQty = 1;
+    itemDetailData.name = name;
+    itemDetailData.price = price;
+
+    document.getElementById('item-detail-name').textContent = name;
+    document.getElementById('item-detail-desc').textContent = desc || '';
+    document.getElementById('item-detail-price').textContent = typeof price === 'number' ? '₦' + Number(price).toLocaleString() : price;
+    document.getElementById('item-detail-qty').textContent = '1';
+
+    const imgEl = document.getElementById('item-detail-image');
+    const iconEl = document.getElementById('item-detail-icon');
+    if (image) {
+        imgEl.src = image;
+        imgEl.style.display = 'block';
+        iconEl.style.display = 'none';
+    } else {
+        imgEl.style.display = 'none';
+        iconEl.style.display = 'block';
+        iconEl.textContent = icon || '🍽️';
+    }
+
+    document.getElementById('item-detail-overlay').style.display = 'flex';
+}
+
+function closeItemDetail() {
+    document.getElementById('item-detail-overlay').style.display = 'none';
+}
+
+function itemDetailQtyChange(delta) {
+    itemDetailQty = Math.max(1, itemDetailQty + delta);
+    document.getElementById('item-detail-qty').textContent = itemDetailQty;
+}
+
+function itemDetailAddToCart() {
+    document.getElementById('item-detail-overlay').style.display = 'none';
+    openOrderConfirm(itemDetailData.name, itemDetailData.price);
+    }
 function openOrderConfirm(itemName, itemPrice) {
     orderDraft.itemName = itemName;
     orderDraft.itemPrice = itemPrice;
