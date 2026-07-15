@@ -10058,6 +10058,7 @@ function nxfmCartRef(proId) {
     return firebase.database().ref(`carts/${sessionUser}/${proId}`);
 }
 async function nxfmGetCart(proId) {
+    await guaranteeAuth();
     const ref = nxfmCartRef(proId);
     if (!ref) return [];
     try {
@@ -10195,7 +10196,9 @@ function closeItemDetail() {
 function itemDetailQtyChange(delta) {
     itemDetailQty = Math.max(1, itemDetailQty + delta);
     document.getElementById('item-detail-qty').textContent = itemDetailQty;
-}
+    const unitPrice = parseInt(String(itemDetailData.price).replace(/[^\d]/g,'')) || 0;
+    document.getElementById('item-detail-price').textContent = '₦' + (unitPrice * itemDetailQty).toLocaleString();
+    }
 
 async function itemDetailAddToCart() {
     if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); setTimeout(()=>window.location.href='login.html',1200); return; }
