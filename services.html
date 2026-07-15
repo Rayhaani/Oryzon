@@ -5191,6 +5191,17 @@
         </div>
     </div>
 </div>
+    
+<div id="order-confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(14px);z-index:10250;align-items:center;justify-content:center;padding:20px;">
+    <div style="width:100%;max-width:360px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:24px 20px;text-align:center;">
+        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;">Order this item?</div>
+        <div id="order-confirm-item-name" style="font-size:14px;color:#94a3b8;margin-bottom:20px;"></div>
+        <div style="display:flex;gap:10px;">
+            <button onclick="closeOrderConfirm()" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:none;border-radius:12px;padding:12px 0;font-weight:700;cursor:pointer;">Cancel</button>
+            <button onclick="confirmOrderYes()" style="flex:1;background:#1d4ed8;color:#fff;border:none;border-radius:12px;padding:12px 0;font-weight:800;cursor:pointer;">Yes, Order</button>
+        </div>
+    </div>
+</div>
 <!-- PLACE ORDER OVERLAY -->
 <div id="place-order-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(14px);z-index:10200;display:none;align-items:center;justify-content:center;padding:20px;">
     <div style="width:100%;max-width:400px;max-height:85vh;overflow-y:auto;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:22px 20px 26px;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
@@ -9371,34 +9382,12 @@ function openSecureChat() {
     }
 
     // Samu pro username daga Firebase
-    if (typeof firebase !== 'undefined' && firebase.database) {
-
-        // Check: shin wannan user pro ne (owner)?
-        firebase.database().ref('providers/' + sessionUser).once('value').then(snap => {
-
-            if (snap.exists()) {
-                // Wannan USER shine PRO — je chats.html ya ga duk messages ɗinsa
-                window.location.href = `vendor-chat.html?with=${encodeURIComponent(currentProfileProId || sessionUser)}`;
-            } else {
-                // Wannan CUSTOMER ne — je chat-interior.html da pro ɗin da yake kallo
-                if (!currentProfileProId) {
-                    showGlobalToast('⚠️ Could not identify provider!');
-                    return;
-                }
-                // currentProfileProId shine username na pro a Firebase
-                window.location.href = `chat-interior.html?with=${encodeURIComponent(currentProfileProId)}`;
-            }
-        }).catch(() => {
-            // Idan error, treat as customer
-            if (currentProfileProId) {
-                window.location.href = `chat-interior.html?with=${encodeURIComponent(currentProfileProId)}`;
-            }
-        });
-
-    } else {
-        showGlobalToast('❌ Firebase not ready. Try again.');
+    if (!currentProfileProId) {
+        showGlobalToast('⚠️ Could not identify provider!');
+        return;
     }
-}
+    window.location.href = `vendor-chat.html?with=${encodeURIComponent(currentProfileProId)}`;
+    }
 
 // ══════════════════════════════════════════════════════════════
 //  🚨 EMERGENCY: DROPDOWN + ORIGINAL SCANNING ENGINE
@@ -10201,16 +10190,20 @@ function itemDetailQtyChange(delta) {
 async function itemDetailAddToCart() {
     const pro = nxfmGetActiveViewedPro();
     if (!pro) { showGlobalToast('⚠️ Vendor not found.'); return; }
-    await nxfmAddToCart(pro.id, {
-        name: itemDetailData.name,
-        price: itemDetailData.price,
-        image: itemDetailData.image,
-        icon: itemDetailData.icon,
-        desc: itemDetailData.desc,
-        qty: itemDetailQty
-    });
-    document.getElementById('item-detail-overlay').style.display = 'none';
-    showGlobalToast('✅ Added to cart');
+    try {
+        await nxfmAddToCart(pro.id, {
+            name: itemDetailData.name,
+            price: itemDetailData.price,
+            image: itemDetailData.image,
+            icon: itemDetailData.icon,
+            desc: itemDetailData.desc,
+            qty: itemDetailQty
+        });
+        document.getElementById('item-detail-overlay').style.display = 'none';
+        showGlobalToast('✅ Added to cart');
+    } catch (err) {
+        showGlobalToast('❌ Cart save failed: ' + err.message);
+    }
     }
 function openOrderConfirm(itemName, itemPrice) {
     orderDraft.itemName = itemName;
@@ -12532,7 +12525,7 @@ function switchSeg(tab) {
 })();
 </script>
 <!-- ══ GALLERY LIGHTBOX OVERLAY ══ -->
-<div id="nxh-gallery-lightbox" onclick="closeGalleryLightbox()" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(5,5,8,0.96);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
+<div id="nxh-gallery-lightbox" onclick="closeGalleryLightbox()" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(5,5,8,0.96);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:0px;">
     <button onclick="closeGalleryLightbox()" style="position:absolute;top:20px;right:20px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:16px;cursor:pointer;">✕</button>
    <img id="nxh-gallery-lightbox-img" style="width:100vw;height:100vh;border-radius:0;display:none;object-fit:contain;"> 
     <video id="nxh-gallery-lightbox-video" controls autoplay style="width:100vw;height:100vh;border-radius:0;display:none;object-fit:contain;"></video>
