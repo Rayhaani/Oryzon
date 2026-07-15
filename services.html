@@ -2462,7 +2462,7 @@
 /* ── RATING OVERVIEW SECTION ── */
 .np-rating-section {
     margin: 0 0 28px;
-    padding: 20px;
+    padding: 0 20px 20px;
     background: transparent;
     border-radius: 20px;
     border: none;
@@ -2597,15 +2597,14 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 14px;
-}
+    padding: 0 20px;
+    }
 
 .np-reviews-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+    font-size: 17px;
+    font-weight: 800;
+    color: #ea580c;
+    }
 
 .np-reviews-count {
     font-size: 11px;
@@ -11155,7 +11154,9 @@ function renderNPDimAverages(reviews, category) {
             : '0.0';
     });
 
-    return dims.map(d => `
+    const sortedDims = [...dims].sort((a, b) => averages[b.key] - averages[a.key]);
+
+    return sortedDims.map(d => `
         <div class="np-dim-row">
             <div class="np-dim-label">${d.label}</div>
             <div class="np-dim-bar-wrap">
@@ -11163,8 +11164,7 @@ function renderNPDimAverages(reviews, category) {
             </div>
             <div class="np-dim-score">${averages[d.key]}</div>
         </div>`).join('');
-}
-
+    }
 // ── RENDER MINI DIM BARS IN CARD ──
 function renderNPMiniDims(review, category) {
     const dims = getNPDimensions(category);
@@ -11299,11 +11299,15 @@ function injectNPReviewsIntoProfile(proId) {
     container.id = 'np-reviews-inject';
     container.style.cssText = 'display:none;background:#fdece0;margin:-48px -20px 0;padding:46px 0 24px;border-radius:36px 36px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,0.04);position:relative;z-index:2;';
     container.innerHTML = `
-        <div style="font-weight:700;font-size:11px;color:#94a3b8;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.5px;">
-            Ratings & Reviews
+        <div style="font-weight:800;font-size:17px;color:#ea580c;margin-bottom:14px;padding:0 20px;">
+            Ratings
         </div>
         ${renderNPRatingSection(reviews, category)}
         ${renderNPReviewCards(reviews, category)}
+        <div style="position:sticky;bottom:0;background:#fdece0;padding:8px 20px 12px;display:flex;gap:10px;z-index:10;margin-top:20px;">
+            <button onclick="openReportModal()" style="flex:1;background:rgba(239,68,68,0.06);color:#dc2626;border:1.5px solid rgba(239,68,68,0.2);border-radius:14px;padding:10px 0;font-weight:700;font-size:12px;cursor:pointer;">🚩 Report Provider</button>
+            <button onclick="openReviewModal()" style="flex:1;background:rgba(245,158,11,0.06);color:#d97706;border:1.5px solid rgba(245,158,11,0.2);border-radius:14px;padding:10px 0;font-weight:700;font-size:12px;cursor:pointer;">⭐ Leave Review</button>
+        </div>
     `;
 
   // Saka bayan food-menu-section (ko generic-info-wrap idan ba food pro ba) — a WAJEN duk wani hideable wrapper
