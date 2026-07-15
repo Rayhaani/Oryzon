@@ -574,9 +574,17 @@
     async function deleteMessageInFirestore(id) {
         try { await db.collection('vendorChats').doc(chatDocId).collection('messages').doc(id).delete(); } catch(e) {}
     }
-
+async function clearChatMessages() {
+        try {
+            const snap = await db.collection('vendorChats').doc(chatDocId).collection('messages').get();
+            const batch = db.batch();
+            snap.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        } catch(e) { console.warn('clear chat failed', e); }
+}
     async function beginSession() {
         playWelcomeSplash();
+        if (params.get('reset') === '1') { await clearChatMessages(); }
         const saved = await loadMessagesFromFirestore();
         if (saved.length > 0) {
             renderedMessages = saved;
