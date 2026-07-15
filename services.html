@@ -3823,8 +3823,8 @@
     <div id="pro-action-bar" style="position:sticky;bottom:0;background:#fdece0;padding:8px 16px 12px;display:flex;align-items:center;gap:8px;z-index:10;">
         <button style="flex:1;background:#ffffff;color:#111827;border:none;border-radius:12px;padding:11px 0;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.05);" onclick="openSecureChat()">Secure Chat 📩</button>
         <button style="flex:1;background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);color:#fff;border:none;border-radius:12px;padding:11px 0;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 4px 15px rgba(29,78,216,0.3);" onclick="openHireSheet()">Hire Expert 📞</button> 
-     <button class="nxfm-cart-fab" id="nxfm-cart-fab" onclick="openHireSheet()" style="position:fixed;bottom:130px;right:16px;margin:0;float:none;width:40px;height:40px;border-radius:50%;background:#ea580c;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 8px 20px rgba(234,88,12,0.4);cursor:grab;border:none;z-index:9999;touch-action:none;">🛒</button>
-     </div>
+     <button class="nxfm-cart-fab" id="nxfm-cart-fab" onclick="openNxfmCartPage()" style="position:fixed;bottom:130px;right:16px;margin:0;float:none;width:40px;height:40px;border-radius:50%;background:#ea580c;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 8px 20px rgba(234,88,12,0.4);cursor:grab;border:none;z-index:9999;touch-action:none;">🛒<span id="nxfm-cart-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 4px;">0</span></button>
+    </div>
                </div>
 
                <div id="nxh-gallery-section" style="display:none;">
@@ -5174,6 +5174,23 @@
         </div>
     </div>
 </div>
+<!-- NXFM CART PAGE OVERLAY -->
+<div id="nxfm-cart-page-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10095;display:none;align-items:flex-end;justify-content:center;">
+    <div style="width:100%;max-width:480px;max-height:85vh;background:#fdf6f0;border-radius:24px 24px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;">
+            <div style="font-size:17px;font-weight:800;color:#78350f;">🛒 Your Cart</div>
+            <button onclick="closeNxfmCartPage()" style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.08);border:none;font-size:14px;cursor:pointer;color:#78350f;">✕</button>
+        </div>
+        <div id="nxfm-cart-items-list" style="flex:1;overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px;"></div>
+        <div style="padding:14px 20px 22px;background:#ffffff;border-top:1px solid #f1e4d8;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <span style="font-size:13px;font-weight:700;color:#6b7280;">Total</span>
+                <span id="nxfm-cart-total" style="font-size:19px;font-weight:800;color:#ea580c;">₦0</span>
+            </div>
+            <button id="nxfm-cart-place-order-btn" onclick="nxfmCartPlaceOrder()" style="width:100%;background:#ea580c;color:#ffffff;border:none;border-radius:14px;padding:14px 0;font-weight:800;font-size:15px;cursor:pointer;">Place Order</button>
+        </div>
+    </div>
+</div>
 <!-- PLACE ORDER OVERLAY -->
 <div id="place-order-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(14px);z-index:10200;display:none;align-items:center;justify-content:center;padding:20px;">
     <div style="width:100%;max-width:400px;max-height:85vh;overflow-y:auto;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:22px 20px 26px;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
@@ -5186,7 +5203,7 @@
             <div style="font-size:14px;font-weight:800;color:#ffffff;margin-top:2px;" id="po-item-name">—</div>
             <div style="font-size:13px;font-weight:800;color:#34d399;margin-top:2px;" id="po-item-price">—</div>
         </div>
-        <div style="margin-bottom:12px;">
+        <div id="po-qty-row" style="margin-bottom:12px;">
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:6px;">Quantity</div>
             <input id="po-qty" type="number" min="1" value="1" oninput="updateOrderTotal()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;box-sizing:border-box;">
             <div style="margin-top:8px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
@@ -6270,6 +6287,7 @@ document.getElementById("profile-expert-bio-p").innerText = pro.bio;
 let nxfmCurrentPro = null;
 function renderFoodMenuSection(pro) {
     nxfmCurrentPro = pro;
+    nxfmUpdateCartBadge();
     const items = pro.menu || pro.products || [];
 
 
@@ -10035,12 +10053,110 @@ function submitHireChatFirst() {
 
 let orderDraft = { itemName: null, itemPrice: null, fromStory: false, returnToStory: false };
 let itemDetailQty = 1;
-let itemDetailData = { name: '', price: '' };
+let itemDetailData = { name: '', price: '', image: '', icon: '', desc: '' };
 
+// ══════════ NXFM PER-VENDOR CART ENGINE ══════════
+function nxfmGetActiveViewedPro() {
+    return nxfmCurrentPro || currentChefMenuPro || currentSnacksMenuPro || currentBeveragesMenuPro || null;
+}
+function nxfmCartKey(proId) { return `nxfmCart_${proId}`; }
+function nxfmGetCart(proId) {
+    try { return JSON.parse(localStorage.getItem(nxfmCartKey(proId))) || []; }
+    catch (e) { return []; }
+}
+function nxfmSaveCart(proId, cart) {
+    localStorage.setItem(nxfmCartKey(proId), JSON.stringify(cart));
+    nxfmUpdateCartBadge();
+}
+function nxfmAddToCart(proId, item) {
+    const cart = nxfmGetCart(proId);
+    const existing = cart.find(i => i.name === item.name);
+    if (existing) { existing.qty += item.qty; }
+    else { cart.push(item); }
+    nxfmSaveCart(proId, cart);
+}
+function nxfmUpdateCartBadge() {
+    const pro = nxfmGetActiveViewedPro();
+    const badge = document.getElementById('nxfm-cart-badge');
+    if (!badge) return;
+    if (!pro) { badge.style.display = 'none'; return; }
+    const cart = nxfmGetCart(pro.id);
+    const count = cart.reduce((sum, i) => sum + i.qty, 0);
+    if (count > 0) { badge.textContent = count; badge.style.display = 'flex'; }
+    else { badge.style.display = 'none'; }
+}
+
+function openNxfmCartPage() {
+    const pro = nxfmGetActiveViewedPro();
+    if (!pro) { showGlobalToast('⚠️ Open a vendor profile first.'); return; }
+    renderNxfmCartPage(pro.id);
+    document.getElementById('nxfm-cart-page-overlay').style.display = 'flex';
+}
+function closeNxfmCartPage() {
+    document.getElementById('nxfm-cart-page-overlay').style.display = 'none';
+}
+function renderNxfmCartPage(proId) {
+    const cart = nxfmGetCart(proId);
+    const list = document.getElementById('nxfm-cart-items-list');
+    if (!cart.length) {
+        list.innerHTML = `<div style="text-align:center;padding:40px 10px;color:#9ca3af;font-size:13px;">🛒 Your cart is empty</div>`;
+    } else {
+        list.innerHTML = cart.map(item => `
+        <div style="display:flex;align-items:center;gap:12px;background:#ffffff;border-radius:16px;padding:10px;">
+            <div style="width:64px;height:64px;border-radius:12px;overflow:hidden;background:#fdece0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;">
+                ${item.image ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;">` : (item.icon || '🍽️')}
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:800;color:#78350f;">${item.name}</div>
+                <div style="font-size:12px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.desc || ''}</div>
+                <div style="font-size:13px;font-weight:800;color:#ea580c;margin-top:2px;">${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}</div>
+            </div>
+            <div style="display:flex;align-items:center;background:#f8fafc;border-radius:10px;">
+                <button onclick="nxfmCartQtyChange('${proId}','${item.name.replace(/'/g,"\\'")}',-1)" style="width:26px;height:26px;border:none;background:transparent;font-size:15px;font-weight:700;color:#78350f;cursor:pointer;">−</button>
+                <div style="width:22px;text-align:center;font-size:13px;font-weight:800;color:#78350f;">${item.qty}</div>
+                <button onclick="nxfmCartQtyChange('${proId}','${item.name.replace(/'/g,"\\'")}',1)" style="width:26px;height:26px;border:none;background:transparent;font-size:15px;font-weight:700;color:#78350f;cursor:pointer;">+</button>
+            </div>
+        </div>`).join('');
+    }
+    const total = cart.reduce((sum, i) => sum + (Number(i.price) || 0) * i.qty, 0);
+    document.getElementById('nxfm-cart-total').textContent = '₦' + total.toLocaleString();
+}
+function nxfmCartQtyChange(proId, itemName, delta) {
+    const cart = nxfmGetCart(proId);
+    const item = cart.find(i => i.name === itemName);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) { cart.splice(cart.indexOf(item), 1); }
+    nxfmSaveCart(proId, cart);
+    renderNxfmCartPage(proId);
+}
+function nxfmCartPlaceOrder() {
+    const pro = nxfmGetActiveViewedPro();
+    if (!pro) return;
+    const cart = nxfmGetCart(pro.id);
+    if (!cart.length) { showGlobalToast('⚠️ Your cart is empty.'); return; }
+
+    window._activeCartOrder = { proId: pro.id, items: cart };
+    window._activePlaceOrderPro = pro;
+
+    const total = cart.reduce((sum, i) => sum + (Number(i.price) || 0) * i.qty, 0);
+    document.getElementById('po-item-name').innerHTML = cart.map(i => `${i.qty}× ${i.name}`).join('<br>');
+    document.getElementById('po-item-price').textContent = '₦' + total.toLocaleString();
+    document.getElementById('po-qty-row').style.display = 'none';
+    document.getElementById('po-address').value = '';
+    document.getElementById('po-phone').value = '';
+
+    closeNxfmCartPage();
+    document.getElementById('place-order-overlay').style.display = 'flex';
+    updateOrderTotal();
+}
 function openItemDetail(name, price, image, icon, desc) {
     itemDetailQty = 1;
     itemDetailData.name = name;
     itemDetailData.price = price;
+    itemDetailData.image = image || '';
+    itemDetailData.icon = icon || '🍽️';
+    itemDetailData.desc = desc || '';
 
     document.getElementById('item-detail-name').textContent = name;
     document.getElementById('item-detail-desc').textContent = desc || '';
@@ -10072,9 +10188,19 @@ function itemDetailQtyChange(delta) {
 }
 
 function itemDetailAddToCart() {
+    const pro = nxfmGetActiveViewedPro();
+    if (!pro) { showGlobalToast('⚠️ Vendor not found.'); return; }
+    nxfmAddToCart(pro.id, {
+        name: itemDetailData.name,
+        price: itemDetailData.price,
+        image: itemDetailData.image,
+        icon: itemDetailData.icon,
+        desc: itemDetailData.desc,
+        qty: itemDetailQty
+    });
     document.getElementById('item-detail-overlay').style.display = 'none';
-    openOrderConfirm(itemDetailData.name, itemDetailData.price);
-    }
+    showGlobalToast('✅ Added to cart');
+}
 function openOrderConfirm(itemName, itemPrice) {
     orderDraft.itemName = itemName;
     orderDraft.itemPrice = itemPrice;
@@ -10152,15 +10278,22 @@ function openPlaceOrderOverlay() {
 // REPLACE: closePlaceOrderOverlay() function
 function closePlaceOrderOverlay() {
     document.getElementById('place-order-overlay').style.display = 'none';
+    document.getElementById('po-qty-row').style.display = '';
+    window._activeCartOrder = null;
     
     if (orderDraft.returnToStory) {
         orderDraft.returnToStory = false;
         state.isStoryPaused = false;
         startStoryInterval();
     }
-}
+    }
 
 function updateOrderTotal() {
+    if (window._activeCartOrder) {
+        const total = window._activeCartOrder.items.reduce((sum, i) => sum + (Number(i.price) || 0) * i.qty, 0);
+        document.getElementById('po-total-display').textContent = total > 0 ? `₦${total.toLocaleString()}` : '—';
+        return;
+    }
     const qty = parseInt(document.getElementById('po-qty').value) || 1;
     const priceText = document.getElementById('po-item-price').textContent || '';
     const priceNum = parseInt(priceText.replace(/[^\d]/g, '')) || 0;
@@ -10173,7 +10306,8 @@ async function submitOrderRequestOnly() {
     const sessionUserCheck = localStorage.getItem('nexus_user_session') || 'guest';
     if (await isCustomerRestricted(sessionUserCheck)) return;
 
-    const qty = parseInt(document.getElementById('po-qty').value) || 1;
+    const isCartOrder = !!window._activeCartOrder;
+    const qty = isCartOrder ? null : (parseInt(document.getElementById('po-qty').value) || 1);
     const address = document.getElementById('po-address').value.trim();
     const phone = document.getElementById('po-phone').value.trim();
     const method = document.getElementById('po-method-delivery').dataset.active === 'true' ? 'delivery' : 'pickup';
@@ -10191,7 +10325,22 @@ async function submitOrderRequestOnly() {
         const sessionUser = localStorage.getItem('nexus_user_session') || 'guest';
         const requestId = `orderreq_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
 
-        const requestPayload = {
+        const requestPayload = isCartOrder ? {
+            requestId,
+            items: window._activeCartOrder.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
+            itemName: window._activeCartOrder.items.map(i => `${i.qty}× ${i.name}`).join(', '),
+            itemPrice: window._activeCartOrder.items.reduce((sum, i) => sum + (Number(i.price) || 0) * i.qty, 0),
+            quantity: window._activeCartOrder.items.reduce((sum, i) => sum + i.qty, 0),
+            fulfillmentMethod: method,
+            address: method === 'delivery' ? address : null,
+            phone,
+            deliveryTimePreference: { ...deliveryTimePreference },
+            customerUsername: sessionUser,
+            proName: pro?.name || '—',
+            proId: String(pro?.id || ''),
+            status: 'pending_vendor_review',
+            createdAt: Date.now()
+        } : {
             requestId,
             itemName: orderDraft.itemName,
             itemPrice: orderDraft.itemPrice,
@@ -10214,10 +10363,15 @@ async function submitOrderRequestOnly() {
             await firebase.database().ref(`providers/${pro.id}/notifications`).push({
                 type: 'message',
                 title: '📨 New Order Request',
-                message: `New request: ${qty}x ${orderDraft.itemName} — awaiting your review`,
+                message: isCartOrder ? `New request: ${requestPayload.itemName} — awaiting your review` : `New request: ${qty}x ${orderDraft.itemName} — awaiting your review`,
                 read: false,
                 createdAt: Date.now()
             });
+        }
+
+        if (isCartOrder) {
+            nxfmSaveCart(pro.id, []);
+            window._activeCartOrder = null;
         }
 
         closePlaceOrderOverlay();
@@ -10230,7 +10384,7 @@ async function submitOrderRequestOnly() {
     
     btn.disabled = false;
     btn.textContent = '📨 Send Order Request';
-    }
+}
 
 // ── LOAD PRO PENDING ORDERS ──
 async function loadProPendingOrders(proId) {
