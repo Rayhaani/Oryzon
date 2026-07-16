@@ -8437,7 +8437,10 @@ function renderDailyUploadBlocks() {
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
                 <select onchange="setDailyUploadBlockDish(${block.blockId}, this.value)" style="flex:1;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;color:#111827;font-size:12px;padding:8px 10px;outline:none;">
                     <option value="">— Zaɓi Dish daga Menu —</option>
-                    ${menu.map(item => `<option value="${item.name.replace(/"/g,'&quot;')}|${item.price}" ${block.dishName === item.name ? 'selected' : ''}>${item.name} (₦${Number(item.price).toLocaleString()})</option>`).join('')}
+                    ${menu.map(item => {
+                        const usedElsewhere = dailyUploadBlocks.some(b => b.blockId !== block.blockId && b.dishName === item.name);
+                        return `<option value="${item.name.replace(/"/g,'&quot;')}|${item.price}" ${block.dishName === item.name ? 'selected' : ''} ${usedElsewhere ? 'disabled' : ''}>${item.name}${usedElsewhere ? ' (An riga an zaɓa)' : ''} (₦${Number(item.price).toLocaleString()})</option>`;
+                    }).join('')}
                 </select>
                 <button onclick="removeDailyUploadBlock(${block.blockId})" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#ef4444;font-size:11px;padding:8px 10px;cursor:pointer;flex-shrink:0;">✕</button>
             </div>
@@ -8469,11 +8472,18 @@ function renderDailyUploadBlocks() {
 function setDailyUploadBlockDish(blockId, value) {
     const block = dailyUploadBlocks.find(b => b.blockId === blockId);
     if (!block) return;
-    if (!value) { block.dishName = ''; block.dishPrice = null; return; }
+    if (!value) { block.dishName = ''; block.dishPrice = null; renderDailyUploadBlocks(); return; }
     const [name, price] = value.split('|');
+    const alreadyUsed = dailyUploadBlocks.some(b => b.blockId !== blockId && b.dishName === name);
+    if (alreadyUsed) {
+        showGlobalToast(`⚠️ Ka riga ka zaɓi "${name}" a wani block! Kowace dish sau ɗaya kacal a rana guda.`);
+        renderDailyUploadBlocks();
+        return;
+    }
     block.dishName = name;
     block.dishPrice = parseInt(price);
-}
+    renderDailyUploadBlocks();
+        }
 
 function handleDailyUploadBlockPhoto(input, blockId, slotIdx) {
     const file = input.files[0];
@@ -11197,7 +11207,15 @@ async function submitDailyUploads() {
             return;
         }
     }
-
+// Tsaro na ƙarshe: tabbatar babu dish da aka maimaita a rana guda
+    const dishNamesSoFar = new Set();
+    for (const block of dailyUploadBlocks) {
+        if (dishNamesSoFar.has(block.dishName)) {
+            showGlobalToast(`⚠️ Ba za a iya loda "${block.dishName}" fiye da sau ɗaya a rana guda ba!`);
+            return;
+        }
+        dishNamesSoFar.add(block.dishName);
+    }
     const btn = document.getElementById('daily-upload-submit-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Ana aika...'; }
 
