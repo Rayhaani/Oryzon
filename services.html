@@ -5891,6 +5891,9 @@ let state = {
     isLiveStoryMode: false,
     liveStoryData: null,
     storyOpenedFromProfile: false,
+    storyOpenedFromAllStories: false,
+    storySingleMode: false,
+    storyOriginCardIndex: null,
 };
 
 const STORY_DURATION_MS = 5000;
@@ -6135,8 +6138,22 @@ function openStoryDeck(proStoriesIndex) {
     if (state.storyIntervalId) clearInterval(state.storyIntervalId);
     document.getElementById("story-overlay-deck").style.display = "flex";
     updateStoryOverlayUi();
-    startStoryInterval();
+    const indicatorContainer = document.getElementById("story-progress-indicators-bar");
+    if (state.storySingleMode) {
+        if (indicatorContainer) indicatorContainer.style.display = "none";
+    } else {
+        if (indicatorContainer) indicatorContainer.style.display = "flex";
+        startStoryInterval();
+    }
 }
+
+function openStoryFromAllStories(index) {
+    state.storyOpenedFromAllStories = true;
+    state.storySingleMode = true;
+    state.storyOriginCardIndex = index;
+    closeAllStoriesOverlay();
+    openStoryDeck(index);
+        }
 
 function openLiveDailyStory(username, uploads) {
     state.isLiveStoryMode = true;
@@ -6267,6 +6284,22 @@ function closeStoryDeck() {
     state.isLiveStoryMode = false;
     state.liveStoryData = null;
     document.getElementById("story-overlay-deck").style.display = "none";
+
+    const indicatorContainer = document.getElementById("story-progress-indicators-bar");
+    if (indicatorContainer) indicatorContainer.style.display = "flex";
+    state.storySingleMode = false;
+
+    if (state.storyOpenedFromAllStories) {
+        state.storyOpenedFromAllStories = false;
+        const returnIndex = state.storyOriginCardIndex;
+        state.storyOriginCardIndex = null;
+        openAllStoriesOverlay();
+        setTimeout(() => {
+            const grid = document.getElementById('all-stories-grid');
+            const cardEl = grid && grid.children[returnIndex];
+            if (cardEl) cardEl.scrollIntoView({ block: 'center' });
+        }, 50);
+    }
         }
 
  // ── PROFILE SHEET ──
@@ -8530,7 +8563,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return;
     }
-
+if (state.storySingleMode) return;
     const currentProData = PRO_STORIES[state.activeProStoryIndex];
     if (x >= half) {
         const nextSlide = state.activeStorySlide + 1;
@@ -12650,7 +12683,7 @@ function renderAllStoriesGrid(query) {
     grid.innerHTML = filtered.map(({ proStory, index }) => {
         const pro = PROS.find(p => p.id === proStory.proId);
         const firstStory = proStory.stories[0];
-        return `<div onclick="closeAllStoriesOverlay(); openStoryDeck(${index});" style="border-radius:18px;overflow:hidden;cursor:pointer;background:#f8fafc;border:1px solid #f1f5f9;">
+        return `<div onclick="openStoryFromAllStories(${index});" style="border-radius:18px;overflow:hidden;cursor:pointer;background:#f8fafc;border:1px solid #f1f5f9;">
             <div style="width:100%;aspect-ratio:1/1;background-image:url('${firstStory.image}');background-size:cover;background-position:center;border-radius:18px;"></div>
             <div style="padding:10px 12px 12px;">
                 <div style="font-weight:800;font-size:13px;color:#111827;">${pro?pro.name:firstStory.name}</div>
