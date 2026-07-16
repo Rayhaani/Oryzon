@@ -686,7 +686,6 @@
             overflow-y: hidden;
             padding: 10px 0;
             position: relative;
-            -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
@@ -801,6 +800,8 @@
             display: none; /* An sauya shi zuwa hidden ta pure JS */
             flex-direction: column;
             box-sizing: border-box;
+            transform: translateZ(0);
+            will-change: transform;
                -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
@@ -8538,6 +8539,16 @@ document.addEventListener('DOMContentLoaded', () => {
     storyWrapper.addEventListener('pointerdown', pauseMarquee, { passive: true });
     storyWrapper.addEventListener('touchstart', pauseMarquee, { passive: true });
     storyWrapper.addEventListener('scroll', scheduleResume, { passive: true });
+    storyWrapper.addEventListener('scroll', () => {
+        const singleSetWidth = storyTrack.scrollWidth / 2;
+        if (singleSetWidth > 0) {
+            if (storyWrapper.scrollLeft >= singleSetWidth) {
+                storyWrapper.scrollLeft -= singleSetWidth;
+            } else if (storyWrapper.scrollLeft <= 0) {
+                storyWrapper.scrollLeft += singleSetWidth;
+            }
+        }
+    }, { passive: true });
     storyWrapper.addEventListener('pointerup', scheduleResume, { passive: true });
     storyWrapper.addEventListener('touchend', scheduleResume, { passive: true });
 });        
