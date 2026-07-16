@@ -680,12 +680,20 @@
             text-align: justify;
         }
 
-        .quantum-story-container {
+       .quantum-story-container {
             width: 100%;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
             padding: 10px 0;
             position: relative;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
+        .quantum-story-container::-webkit-scrollbar { display: none; }
+        .quantum-story-track.marquee-paused {
+            animation-play-state: paused !important;
+        } 
 
         .quantum-story-track {
             display: flex;
@@ -3597,6 +3605,7 @@
                     <button onclick="openAllStoriesOverlay()" style="background: none; border: none; color: #1d4ed8; font-weight: 700; font-size: 12px; cursor: pointer; flex-shrink:0; padding-left:8px;">View All</button>
                 </div>
                 <div class="quantum-story-container">
+                    <div class="quantum-story-container" id="quantum-story-wrapper">
                     <div class="quantum-story-track" id="stories-track-container">
                         <!-- Content auto-injected by core JS layout script verbatim -->
                     </div>
@@ -8507,7 +8516,31 @@ function removeDailyUploadBlockPhoto(blockId, slotIdx) {
     delete block.photos[slotIdx];
     renderDailyUploadBlocks();
         }
-        
+document.addEventListener('DOMContentLoaded', () => {
+    const storyWrapper = document.getElementById('quantum-story-wrapper');
+    const storyTrack = document.getElementById('stories-track-container');
+    if (!storyWrapper || !storyTrack) return;
+
+    let resumeTimer = null;
+
+    function pauseMarquee() {
+        storyTrack.classList.add('marquee-paused');
+        if (resumeTimer) clearTimeout(resumeTimer);
+    }
+
+    function scheduleResume() {
+        if (resumeTimer) clearTimeout(resumeTimer);
+        resumeTimer = setTimeout(() => {
+            storyTrack.classList.remove('marquee-paused');
+        }, 4000);
+    }
+
+    storyWrapper.addEventListener('pointerdown', pauseMarquee, { passive: true });
+    storyWrapper.addEventListener('touchstart', pauseMarquee, { passive: true });
+    storyWrapper.addEventListener('scroll', scheduleResume, { passive: true });
+    storyWrapper.addEventListener('pointerup', scheduleResume, { passive: true });
+    storyWrapper.addEventListener('touchend', scheduleResume, { passive: true });
+});        
 // ── DOMContentLoaded ──
 document.addEventListener("DOMContentLoaded", () => {
    populateCurrencyDropdowns();
