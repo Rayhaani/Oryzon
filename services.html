@@ -1244,6 +1244,16 @@
     line-height: 1;
     margin-top: 2px;
         }
+.nxfm-tiers-badge {
+    font-size: 10px;
+    font-weight: 800;
+    color: #ea580c;
+    background: #fdece0;
+    border: 1px solid #fbd9bd;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+        }
         .nxfm-empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -5198,6 +5208,16 @@
         </div>
     </div>
 </div>
+</div>
+<!-- NXFM TIERS SHEET OVERLAY -->
+<div id="tiers-sheet-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10096;display:none;align-items:flex-end;justify-content:center;">
+    <div style="width:100%;max-width:480px;max-height:85vh;background:#fdf6f0;border-radius:24px 24px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;">
+            <div id="tiers-sheet-title" style="font-size:17px;font-weight:800;color:#78350f;">—</div>
+            <button onclick="closeTiersSheet()" style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.08);border:none;font-size:14px;cursor:pointer;color:#78350f;">✕</button>
+        </div>
+        <div id="tiers-sheet-list" style="flex:1;overflow-y:auto;padding:4px 16px 20px;display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
 <!-- NXFM CART PAGE OVERLAY -->
 <div id="nxfm-cart-page-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10095;display:none;align-items:flex-end;justify-content:center;">
     <div style="width:100%;max-width:480px;max-height:85vh;background:#fdf6f0;border-radius:24px 24px 0 0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,0.3);">
@@ -10412,6 +10432,54 @@ async function itemDetailAddToCart() {
             qty: itemDetailQty
         });
         document.getElementById('item-detail-overlay').style.display = 'none';
+        showGlobalToast('✅ Added to cart');
+    } catch (err) {
+        showGlobalToast('❌ Cart save failed: ' + err.message);
+    }
+    }
+
+}
+let tiersSheetData = null;
+function openTiersSheet(itemName) {
+    const pro = nxfmCurrentPro;
+    const items = (pro && (pro.menu || pro.products || pro.services)) || [];
+    const item = items.find(it => it.name === itemName);
+    if (!item || !item.tiers) return;
+    tiersSheetData = item;
+    document.getElementById('tiers-sheet-title').textContent = item.name;
+    document.getElementById('tiers-sheet-list').innerHTML = item.tiers.map((tier, i) => `
+        <div style="background:#ffffff;border:1px solid #f1e4d8;border-radius:16px;padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <div style="font-size:15px;font-weight:800;color:#78350f;">${tier.name}</div>
+                <div style="font-size:16px;font-weight:800;color:#ea580c;">₦${tier.price.toLocaleString()}</div>
+            </div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">⏱️ ${tier.delivery || ''}</div>
+            <ul style="margin:0 0 12px;padding-left:18px;font-size:12.5px;color:#374151;">
+                ${(tier.includes || []).map(f => `<li style="margin-bottom:2px;">${f}</li>`).join('')}
+            </ul>
+            <button onclick="tiersSheetSelect(${i})" style="width:100%;background:#ea580c;color:#ffffff;border:none;border-radius:12px;padding:11px 0;font-weight:800;font-size:13px;cursor:pointer;">Select ${tier.name}</button>
+        </div>`).join('');
+    document.getElementById('tiers-sheet-overlay').style.display = 'flex';
+}
+function closeTiersSheet() {
+    document.getElementById('tiers-sheet-overlay').style.display = 'none';
+}
+async function tiersSheetSelect(tierIndex) {
+    if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); setTimeout(()=>window.location.href='login.html',1200); return; }
+    const pro = nxfmGetActiveViewedPro();
+    const item = tiersSheetData;
+    if (!pro || !item) return;
+    const tier = item.tiers[tierIndex];
+    try {
+        await nxfmAddToCart(pro.id, {
+            name: `${item.name} (${tier.name})`,
+            price: tier.price,
+            image: item.image || '',
+            icon: item.icon || '🛠️',
+            desc: item.desc || '',
+            qty: 1
+        });
+        closeTiersSheet();
         showGlobalToast('✅ Added to cart');
     } catch (err) {
         showGlobalToast('❌ Cart save failed: ' + err.message);
