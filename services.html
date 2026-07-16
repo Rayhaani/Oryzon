@@ -5775,7 +5775,26 @@ const PROS = [
         avatar: "BM", color: "linear-gradient(135deg, #d97706 0%, #b45309 100%)", jobs: 245, price: "₦5,000",
         bio: "Certified electrical engineer specializing in industrial solar setups and smart residential home automation.",
         skills: ["Auto-Wiring", "Solar Systems", "Generators"], online: true,
-        gallery: ["Inverter Bank Hookup", "Smart DB Box Clean Setup", "Industrial Control Panel", "Conduit Grid Layout"]
+        gallery: ["Inverter Bank Hookup", "Smart DB Box Clean Setup", "Industrial Control Panel", "Conduit Grid Layout"],
+        services: [
+            { name: "Socket & Switch Repair", desc: "Gyaran soket da switch da suka lalace", icon: "🔌", category: "Repair & Maintenance", pricingType: "flat", price: 3000 },
+            { name: "Ceiling Fan Installation", desc: "Shigar da fan na rufi cikin sauri", icon: "🌀", category: "Installation", pricingType: "flat", price: 5000 },
+            { name: "Home Rewiring", desc: "Sauya waya na gida gaba daya", icon: "🏠", category: "Installation", pricingType: "flat", price: 45000 },
+            { name: "Solar Panel Installation", desc: "Cikakken shigarwa da wiring da battery setup", icon: "☀️", category: "Solar & Power", pricingType: "tiered",
+                tiers: [
+                    { name: "Basic", price: 30000, delivery: "2 ranaku", includes: ["Panel guda 1", "Wiring na yau da kullum"] },
+                    { name: "Standard", price: 50000, delivery: "1 rana", includes: ["Panel guda 2", "Battery backup"] },
+                    { name: "Premium", price: 80000, delivery: "Yau", includes: ["Full setup", "1 shekara warranty"] }
+                ]
+            },
+            { name: "Generator Installation & Automation", desc: "Sanya sabon janareta tare da auto-changeover switch", icon: "⚡", category: "Solar & Power", pricingType: "tiered",
+                tiers: [
+                    { name: "Basic", price: 20000, delivery: "1 rana", includes: ["Sanya janareta", "Basic wiring"] },
+                    { name: "Standard", price: 35000, delivery: "1 rana", includes: ["Auto-changeover switch", "Testing"] },
+                    { name: "Premium", price: 60000, delivery: "Yau", includes: ["Full automation", "Remote monitoring", "6 watanni warranty"] }
+                ]
+            }
+        ]
     },
     {
         id: 3, name: "Usman Garba", username: "Usman", category: "carpenter", display_cat: "Master Carpenter",
@@ -6391,7 +6410,7 @@ document.getElementById("profile-expert-bio-p").innerText = pro.bio;
         }
         }
 // ── Chef / Snacks / Beverages pro sheets get the Nexus Food Menu layout instead of the generic info block ──
-    const isFoodPro = (pro.category === "chef" || pro.category === "snacks" || pro.category === "beverages");
+    const isFoodPro = (pro.category === "chef" || pro.category === "snacks" || pro.category === "beverages" || (pro.services && pro.services.length > 0));
     const genericWrap = document.getElementById("nxh-generic-info-wrap");
     const foodSection = document.getElementById("nxfm-food-menu-section");
     const statusCard = document.getElementById("nxh-status-card");
@@ -6418,7 +6437,7 @@ function renderFoodMenuSection(pro) {
     nxfmCurrentPro = pro;
     localStorage.setItem('nxfm_last_viewed_pro', JSON.stringify(pro));
     nxfmUpdateCartBadge();
-    const items = pro.menu || pro.products || [];
+    const items = pro.menu || pro.products || pro.services || [];
 
 
     // Build category tabs from item.category, falling back to a single "All" list
@@ -6443,7 +6462,7 @@ function nxfmSelectTab(el, cat) {
     document.querySelectorAll('#nxfm-tabs-row .nxfm-tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
     const pro = nxfmCurrentPro;
-    const items = (pro && (pro.menu || pro.products)) || [];
+    const items = (pro && (pro.menu || pro.products || pro.services)) || [];
     const cats = [];
     items.forEach(it => { if (it.category && !cats.includes(it.category)) cats.push(it.category); });
     nxfmRenderItems(items, cats, cat);
@@ -6470,7 +6489,20 @@ function nxfmRenderItems(items, cats, activeTab) {
         html += `<div class="nxfm-cat-block">
             ${headingHtml}
             <div class="${gridClass}">
-        ${catItems.map(item => `
+        ${catItems.map(item => item.pricingType === "tiered" ? `
+        <div class="nxfm-item-card-grid" onclick="openTiersSheet('${(item.name||'').replace(/'/g, "\\'")}')">     
+                    <div class="nxfm-grid-thumb">
+                        ${item.image ? `<img src="${item.image}">` : (item.icon || '🛠️')}
+                    </div>
+                    <div class="nxfm-grid-info">
+                        <div class="nxfm-grid-name">${item.name}</div>
+                        <div class="nxfm-grid-desc">${item.desc || ''}</div>
+                        <div class="nxfm-grid-bottom-row">
+                            <div class="nxfm-grid-price">Daga ₦${Math.min(...item.tiers.map(t=>t.price)).toLocaleString()}</div>
+                            <div class="nxfm-tiers-badge">${item.tiers.length} Options</div>
+                        </div>
+                    </div>
+                </div>` : `
         <div class="nxfm-item-card-grid" onclick="openItemDetail('${(item.name||'').replace(/'/g, "\\'")}','${item.price}','${item.image||''}','${(item.icon||'🍽️').replace(/'/g,"\\'")}','${(item.desc||'').replace(/'/g,"\\'")}')">     
                     <div class="nxfm-grid-thumb">
                         ${item.image ? `<img src="${item.image}">` : (item.icon || '🍽️')}
