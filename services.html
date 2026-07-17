@@ -5290,7 +5290,51 @@
     </div>
     <div id="mb-orders-list" style="display:flex;flex-direction:column;gap:12px;"></div>
         </div>
-        <div id="mb-panel-sales" style="display:none;padding:16px;"></div>
+        <div id="mb-panel-sales" style="display:none;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div>
+            <div style="font-size:19px;font-weight:800;color:#1e293b;">Sales</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">Revenue, transactions and order performance</div>
+        </div>
+        <select id="mb-sales-range" onchange="mbLoadSales()" style="border:1.5px solid #e2e8f0;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:700;color:#334155;outline:none;background:#ffffff;">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="365">Last 12 months</option>
+            <option value="0">All time</option>
+        </select>
+    </div>
+
+    <div style="background:#ffffff;border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.04);margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Total Sales</div>
+        <div style="font-size:26px;font-weight:800;color:#1e293b;margin-top:4px;" id="mb-sales-total">₦0</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px;" id="mb-sales-total-sub">0 completed orders</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Total Orders</div>
+            <div style="font-size:20px;font-weight:800;color:#1e293b;margin-top:4px;" id="mb-sales-total-orders">0</div>
+        </div>
+        <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Completed</div>
+            <div style="font-size:20px;font-weight:800;color:#16a34a;margin-top:4px;" id="mb-sales-completed">0</div>
+        </div>
+        <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;">In Progress</div>
+            <div style="font-size:20px;font-weight:800;color:#d97706;margin-top:4px;" id="mb-sales-progress">0</div>
+        </div>
+        <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Cancelled</div>
+            <div style="font-size:20px;font-weight:800;color:#dc2626;margin-top:4px;" id="mb-sales-cancelled">0</div>
+        </div>
+    </div>
+
+    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:24px;margin-bottom:10px;">Top Selling Items</div>
+    <div id="mb-top-items" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:24px;margin-bottom:10px;">Recent Transactions</div>
+    <div id="mb-recent-transactions" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
     </div>
 </div>
 <!-- MY BUSINESS: ADD/EDIT ITEM FORM -->
@@ -10703,6 +10747,7 @@ function mbSwitchTab(tabName) {
         document.getElementById('mb-panel-' + t).style.display = (t === tabName) ? 'block' : 'none';
     });
     if (tabName === 'orders') mbLoadOrders();
+    if (tabName === 'sales') mbLoadSales();
     }
 
 function mbRenderCategoryPills(categoryKeys) {
@@ -11006,6 +11051,72 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
         mbLoadOrders();
     } catch (err) {
         showGlobalToast('❌ Failed to update order: ' + err.message);
+    }
+}
+async function mbLoadSales() {
+    const username = localStorage.getItem("nexus_user_session");
+    const rangeDays = Number(document.getElementById('mb-sales-range').value);
+    const cutoff = rangeDays === 0 ? 0 : Date.now() - (rangeDays * 86400000);
+
+    try {
+        const snap = await firebase.database().ref('providers/' + username + '/orders').once('value');
+        const data = snap.val() || {};
+        const allOrders = Object.entries(data).map(([id, o]) => ({ id, ...o }));
+        const orders = allOrders.filter(o => (o.createdAt || 0) >= cutoff);
+
+        const completed = orders.filter(o => o.status === 'completed');
+        const inProgress = orders.filter(o => o.status === 'pending' || o.status === 'confirmed');
+        const cancelled = orders.filter(o => o.status === 'cancelled');
+
+        const lineTotal = o => (Number(o.itemPrice) || 0) * (Number(o.quantity) || 1);
+        const totalSales = completed.reduce((sum, o) => sum + lineTotal(o), 0);
+
+        document.getElementById('mb-sales-total').textContent = '₦' + totalSales.toLocaleString();
+        document.getElementById('mb-sales-total-sub').textContent = `${completed.length} completed order${completed.length === 1 ? '' : 's'}`;
+        document.getElementById('mb-sales-total-orders').textContent = orders.length;
+        document.getElementById('mb-sales-completed').textContent = completed.length;
+        document.getElementById('mb-sales-progress').textContent = inProgress.length;
+        document.getElementById('mb-sales-cancelled').textContent = cancelled.length;
+
+        // Top selling items (by qty, among completed orders)
+        const itemStats = {};
+        completed.forEach(o => {
+            const key = o.itemName || 'Unknown';
+            if (!itemStats[key]) itemStats[key] = { qty: 0, revenue: 0 };
+            itemStats[key].qty += Number(o.quantity) || 1;
+            itemStats[key].revenue += lineTotal(o);
+        });
+        const topItems = Object.entries(itemStats).sort((a,b) => b[1].qty - a[1].qty).slice(0, 5);
+
+        const topItemsEl = document.getElementById('mb-top-items');
+        topItemsEl.innerHTML = topItems.length === 0
+            ? `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No completed sales yet</div>`
+            : topItems.map(([name, stat], i) => `
+                <div style="background:#ffffff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                    <div style="width:26px;height:26px;border-radius:50%;background:#fff7ed;color:#ea580c;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;">${i+1}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;font-size:13px;color:#1e293b;">${name}</div>
+                        <div style="font-size:11px;color:#64748b;">${stat.qty} sold</div>
+                    </div>
+                    <div style="font-weight:800;font-size:13px;color:#ea580c;flex-shrink:0;">₦${stat.revenue.toLocaleString()}</div>
+                </div>`).join('');
+
+        // Recent transactions (completed, most recent first)
+        const recent = completed.sort((a,b) => (b.createdAt||0) - (a.createdAt||0)).slice(0, 10);
+        const recentEl = document.getElementById('mb-recent-transactions');
+        recentEl.innerHTML = recent.length === 0
+            ? `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No transactions yet</div>`
+            : recent.map(o => `
+                <div style="background:#ffffff;border-radius:14px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                    <div>
+                        <div style="font-weight:700;font-size:13px;color:#1e293b;">${o.itemName || '—'}</div>
+                        <div style="font-size:11px;color:#64748b;margin-top:2px;">@${o.customerUsername || 'customer'} · ${o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : ''}</div>
+                    </div>
+                    <div style="font-weight:800;font-size:13px;color:#16a34a;">+₦${lineTotal(o).toLocaleString()}</div>
+                </div>`).join('');
+
+    } catch (err) {
+        showGlobalToast('❌ Failed to load sales: ' + err.message);
     }
 }
 function mbOpenAddCategory() {
