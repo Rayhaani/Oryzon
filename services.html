@@ -3590,9 +3590,9 @@
     <span style="font-weight:700;font-size:13px;color:#ffffff;">Emergency</span>
     </button>
                 
-    <div class="glass-btn" id="post-service-btn" onclick="openPostServiceSheet()" style="grid-column: 1 / -1; width: calc(50% - 7px); margin: 0 auto; background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;">
-    <span style="font-size: 18px;">🚀</span>
-    <span style="font-weight: 700; font-size: 13px; color: #ffffff;">Post Your Service</span>
+    <div class="glass-btn" id="post-service-btn" onclick="handlePostServiceBtnClick()" style="grid-column: 1 / -1; width: calc(50% - 7px); margin: 0 auto; background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;">
+    <span id="post-service-btn-icon" style="font-size: 18px;">🚀</span>
+    <span id="post-service-btn-label" style="font-weight: 700; font-size: 13px; color: #ffffff;">Post Your Service</span>
     </div>
 </div>
         </div>
@@ -11119,6 +11119,37 @@ async function mbLoadSales() {
         showGlobalToast('❌ Failed to load sales: ' + err.message);
     }
 }
+let mbApprovedProviderData = null;
+
+async function checkProviderApprovalStatus() {
+    const username = localStorage.getItem("nexus_user_session");
+    if (!username) return;
+    try {
+        const snap = await firebase.database().ref('providers/' + username).once('value');
+        const data = snap.val();
+        const btnIcon = document.getElementById('post-service-btn-icon');
+        const btnLabel = document.getElementById('post-service-btn-label');
+        if (data && data.status === 'approved') {
+            mbApprovedProviderData = data;
+            btnIcon.textContent = '💼';
+            btnLabel.textContent = 'My Business';
+        } else {
+            mbApprovedProviderData = null;
+            btnIcon.textContent = '🚀';
+            btnLabel.textContent = 'Post Your Service';
+        }
+    } catch (err) {
+        console.warn('Could not check provider status:', err.message);
+    }
+}
+
+function handlePostServiceBtnClick() {
+    if (mbApprovedProviderData) {
+        openMyBusinessDashboard();
+    } else {
+        openPostServiceSheet();
+    }
+    }
 function mbOpenAddCategory() {
     const name = prompt('New category name:');
     if (!name || !name.trim()) return;
