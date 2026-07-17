@@ -5280,7 +5280,16 @@
     <div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:24px;margin-bottom:10px;">Complete Your Setup</div>
     <div id="mb-setup-checklist" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
-        <div id="mb-panel-orders" style="display:none;padding:16px;"></div>
+        <div id="mb-panel-orders" style="display:none;padding:16px;">
+    <div id="mb-order-pills" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;">
+        <button onclick="mbFilterOrders('all')" class="mb-order-pill" data-status="all" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #ea580c;background:#fff7ed;color:#ea580c;font-weight:700;font-size:12px;cursor:pointer;">All</button>
+        <button onclick="mbFilterOrders('pending')" class="mb-order-pill" data-status="pending" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #e2e8f0;background:#ffffff;color:#334155;font-weight:700;font-size:12px;cursor:pointer;">Pending</button>
+        <button onclick="mbFilterOrders('confirmed')" class="mb-order-pill" data-status="confirmed" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #e2e8f0;background:#ffffff;color:#334155;font-weight:700;font-size:12px;cursor:pointer;">Confirmed</button>
+        <button onclick="mbFilterOrders('completed')" class="mb-order-pill" data-status="completed" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #e2e8f0;background:#ffffff;color:#334155;font-weight:700;font-size:12px;cursor:pointer;">Completed</button>
+        <button onclick="mbFilterOrders('cancelled')" class="mb-order-pill" data-status="cancelled" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #e2e8f0;background:#ffffff;color:#334155;font-weight:700;font-size:12px;cursor:pointer;">Cancelled</button>
+    </div>
+    <div id="mb-orders-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
         <div id="mb-panel-sales" style="display:none;padding:16px;"></div>
     </div>
 </div>
@@ -10693,7 +10702,8 @@ function mbSwitchTab(tabName) {
         document.getElementById('mb-tab-' + t).classList.toggle('active', t === tabName);
         document.getElementById('mb-panel-' + t).style.display = (t === tabName) ? 'block' : 'none';
     });
-}
+    if (tabName === 'orders') mbLoadOrders();
+    }
 
 function mbRenderCategoryPills(categoryKeys) {
     const wrap = document.getElementById('mb-category-pills');
@@ -10868,13 +10878,14 @@ async function mbRenderOverview(data) {
     const todayKey = new Date().toISOString().slice(0,10);
     let salesToday = 0, ordersToday = 0, pendingCount = 0;
     try {
-        const ordersSnap = await firebase.database().ref('orders').orderByChild('providerUsername').equalTo(username).once('value');
+        const ordersSnap = await firebase.database().ref('providers/' + username + '/orders').once('value');
         ordersSnap.forEach(child => {
             const o = child.val();
             const orderDate = new Date(o.createdAt || 0).toISOString().slice(0,10);
+            const lineTotal = (Number(o.itemPrice) || 0) * (Number(o.quantity) || 1);
             if (orderDate === todayKey) {
                 ordersToday++;
-                if (o.status === 'completed') salesToday += Number(o.total) || 0;
+                if (o.status === 'completed') salesToday += lineTotal;
             }
             if (o.status === 'pending') pendingCount++;
         });
@@ -10907,7 +10918,96 @@ async function mbPublish() {
         openMyBusinessDashboard();
     } catch (err) { showGlobalToast('❌ Publish failed: ' + err.message); }
     }
-    
+
+let mbOrdersAll = [], mbOrdersFilter = 'all';
+
+async function mbLoadOrders() {
+    const username = localStorage.getItem("nexus_user_session");
+    const list = document.getElementById('mb-orders-list');
+    list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Loading orders...</div>`;
+    try {
+        const snap = await firebase.database().ref('providers/' + username + '/orders').once('value');
+        const data = snap.val() || {};
+        mbOrdersAll = Object.entries(data).map(([id, o]) => ({ id, ...o })).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+        mbRenderOrders();
+    } catch (err) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Failed to load orders</div>`;
+    }
+}
+
+function mbFilterOrders(status) {
+    mbOrdersFilter = status;
+    document.querySelectorAll('.mb-order-pill').forEach(btn => {
+        const active = btn.dataset.status === status;
+        btn.style.background = active ? '#fff7ed' : '#ffffff';
+        btn.style.borderColor = active ? '#ea580c' : '#e2e8f0';
+        btn.style.color = active ? '#ea580c' : '#334155';
+    });
+    mbRenderOrders();
+}
+
+function mbRenderOrders() {
+    const list = document.getElementById('mb-orders-list');
+    const orders = mbOrdersFilter === 'all' ? mbOrdersAll : mbOrdersAll.filter(o => (o.status||'pending') === mbOrdersFilter);
+
+    if (orders.length === 0) {
+        list.innerHTML = `
+        <div style="text-align:center;padding:50px 20px;color:#94a3b8;">
+            <div style="font-size:36px;margin-bottom:10px;">📋</div>
+            <div style="font-weight:800;font-size:14px;color:#334155;margin-bottom:4px;">No ${mbOrdersFilter === 'all' ? '' : mbOrdersFilter + ' '}orders</div>
+            <div style="font-size:12px;">Orders will appear here when customers place them through your menu.</div>
+        </div>`;
+        return;
+    }
+
+    const statusMeta = {
+        pending:   { label: 'PENDING',   bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
+        confirmed: { label: 'CONFIRMED', bg: 'rgba(16,185,129,0.1)', color: '#059669' },
+        completed: { label: 'COMPLETED', bg: 'rgba(59,130,246,0.1)', color: '#2563eb' },
+        cancelled: { label: 'CANCELLED', bg: 'rgba(239,68,68,0.1)',  color: '#dc2626' },
+    };
+
+    list.innerHTML = orders.map(o => {
+        const meta = statusMeta[o.status] || statusMeta.pending;
+        const lineTotal = (Number(o.itemPrice)||0) * (Number(o.quantity)||1);
+        let actions = '';
+        if (o.status === 'pending' || !o.status) {
+            actions = `
+                <button onclick="mbUpdateOrderStatus('${o.id}','confirmed')" style="flex:1;padding:10px;background:#16a34a;border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">✓ Confirm</button>
+                <button onclick="mbUpdateOrderStatus('${o.id}','cancelled')" style="flex:1;padding:10px;background:#fee2e2;border:1px solid #fecaca;border-radius:10px;color:#dc2626;font-size:12px;font-weight:800;cursor:pointer;">✕ Decline</button>`;
+        } else if (o.status === 'confirmed') {
+            actions = `<button onclick="mbUpdateOrderStatus('${o.id}','completed')" style="flex:1;padding:10px;background:#2563eb;border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">✓ Mark Completed</button>`;
+        }
+        return `
+        <div style="background:#ffffff;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                <div>
+                    <div style="font-weight:800;font-size:14px;color:#1e293b;">${o.itemName || '—'}</div>
+                    <div style="font-size:12px;color:#64748b;margin-top:2px;">@${o.customerUsername || 'customer'} · Qty: ${o.quantity || 1}</div>
+                </div>
+                <span style="background:${meta.bg};color:${meta.color};border-radius:8px;padding:4px 10px;font-size:10px;font-weight:800;flex-shrink:0;">${meta.label}</span>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-bottom:2px;">📍 ${o.fulfillmentMethod === 'pickup' ? 'Self Pickup' : (o.address || '—')}</div>
+            <div style="font-size:12px;color:#64748b;margin-bottom:10px;">📞 ${o.phone || '—'}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f1f5f9;padding-top:10px;">
+                <div style="font-weight:800;font-size:14px;color:#ea580c;">₦${lineTotal.toLocaleString()}</div>
+                <div style="font-size:11px;color:#94a3b8;">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : ''}</div>
+            </div>
+            ${actions ? `<div style="display:flex;gap:8px;margin-top:10px;">${actions}</div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+async function mbUpdateOrderStatus(orderId, newStatus) {
+    const username = localStorage.getItem("nexus_user_session");
+    try {
+        await firebase.database().ref('providers/' + username + '/orders/' + orderId + '/status').set(newStatus);
+        showGlobalToast(`✅ Order marked ${newStatus}`);
+        mbLoadOrders();
+    } catch (err) {
+        showGlobalToast('❌ Failed to update order: ' + err.message);
+    }
+}
 function mbOpenAddCategory() {
     const name = prompt('New category name:');
     if (!name || !name.trim()) return;
