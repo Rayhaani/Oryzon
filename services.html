@@ -5246,7 +5246,40 @@
             <button onclick="mbOpenAddCategory()" style="width:100%;margin-top:14px;border:1.5px dashed #cbd5e1;background:#ffffff;color:#334155;border-radius:16px;padding:22px 16px;font-weight:700;font-size:14px;cursor:pointer;">+ Add Category</button>
         </div>
 
-        <div id="mb-panel-overview" style="display:none;padding:16px;"></div>
+        <div id="mb-panel-overview" style="display:none;padding:16px;">
+    <div style="font-size:19px;font-weight:800;color:#1e293b;" id="mb-greeting">Good morning</div>
+    <div style="font-size:13px;color:#64748b;margin-top:2px;" id="mb-greeting-sub">Here's how your business is doing today</div>
+
+    <div id="mb-publish-banner" style="display:none;margin-top:16px;background:#f8fafc;border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+            <div style="font-weight:800;font-size:14px;color:#1e293b;">Your menu is unpublished <span style="color:#dc2626;">●</span></div>
+            <div style="font-size:12px;color:#64748b;margin-top:3px;">Hidden from customers. Publish to make it visible.</div>
+        </div>
+        <button onclick="mbPublish()" style="flex-shrink:0;background:#0f172a;color:#ffffff;border:none;border-radius:12px;padding:10px 16px;font-size:12px;font-weight:800;cursor:pointer;">Publish</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+        <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:20px;font-weight:800;color:#1e293b;" id="mb-stat-sales">₦0</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">Sales Today</div>
+        </div>
+        <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:20px;font-weight:800;color:#1e293b;" id="mb-stat-orders">0</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">Orders Today</div>
+        </div>
+        <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:20px;font-weight:800;color:#1e293b;" id="mb-stat-pending">0</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">Pending Orders</div>
+        </div>
+        <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:20px;font-weight:800;color:#1e293b;" id="mb-stat-visitors">0</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">Visitors Today</div>
+        </div>
+    </div>
+
+    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:24px;margin-bottom:10px;">Complete Your Setup</div>
+    <div id="mb-setup-checklist" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
         <div id="mb-panel-orders" style="display:none;padding:16px;"></div>
         <div id="mb-panel-sales" style="display:none;padding:16px;"></div>
     </div>
@@ -10643,8 +10676,9 @@ async function openMyBusinessDashboard() {
                 mbAllItems.push({ id: itemKey, category: catKey, ...catItems[itemKey] });
             });
         });
-        mbRenderCategoryPills(Object.keys(categories));
+       mbRenderCategoryPills(Object.keys(categories));
         mbRenderMenuList();
+        mbRenderOverview(data); 
     } catch (err) {
         showGlobalToast('❌ Failed to load menu: ' + err.message);
     }
@@ -10822,6 +10856,58 @@ async function mbDeleteItem(idx) {
     }
 }
 
+async function mbRenderOverview(data) {
+    const username = localStorage.getItem("nexus_user_session");
+    const businessName = data.businessName || data.categoryLabel || username;
+    document.getElementById('mb-greeting').textContent = `Good morning, ${businessName}`;
+    document.getElementById('mb-greeting-sub').textContent = `Here's how ${businessName} is doing today`;
+
+    const isPublished = data.published === true;
+    document.getElementById('mb-publish-banner').style.display = isPublished ? 'none' : 'flex';
+
+    const todayKey = new Date().toISOString().slice(0,10);
+    let salesToday = 0, ordersToday = 0, pendingCount = 0;
+    try {
+        const ordersSnap = await firebase.database().ref('orders').orderByChild('providerUsername').equalTo(username).once('value');
+        ordersSnap.forEach(child => {
+            const o = child.val();
+            const orderDate = new Date(o.createdAt || 0).toISOString().slice(0,10);
+            if (orderDate === todayKey) {
+                ordersToday++;
+                if (o.status === 'completed') salesToday += Number(o.total) || 0;
+            }
+            if (o.status === 'pending') pendingCount++;
+        });
+    } catch (err) { console.warn('Orders stats unavailable:', err.message); }
+
+    document.getElementById('mb-stat-sales').textContent = '₦' + salesToday.toLocaleString();
+    document.getElementById('mb-stat-orders').textContent = ordersToday;
+    document.getElementById('mb-stat-pending').textContent = pendingCount;
+    document.getElementById('mb-stat-visitors').textContent = data.visitorsToday || 0;
+
+    const categories = data.categories || {};
+    const totalItems = Object.values(categories).reduce((sum, c) => sum + Object.keys(c.items || {}).length, 0);
+    const checklist = [
+        { label: 'Complete business info', done: !!(data.businessName && data.bio && data.location) },
+        { label: 'Add your first menu item', done: totalItems > 0 },
+        { label: 'Publish your menu', done: isPublished },
+    ];
+    document.getElementById('mb-setup-checklist').innerHTML = checklist.map(step => `
+        <div style="background:#ffffff;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="width:20px;height:20px;border-radius:50%;border:2px solid ${step.done ? '#16a34a' : '#cbd5e1'};background:${step.done ? '#16a34a' : 'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:11px;">${step.done ? '✓' : ''}</div>
+            <div style="flex:1;font-size:13px;font-weight:600;color:#1e293b;">${step.label}</div>
+        </div>`).join('');
+}
+
+async function mbPublish() {
+    const username = localStorage.getItem("nexus_user_session");
+    try {
+        await firebase.database().ref('providers/' + username).update({ published: true });
+        showGlobalToast('✅ Menu published!');
+        openMyBusinessDashboard();
+    } catch (err) { showGlobalToast('❌ Publish failed: ' + err.message); }
+    }
+    
 function mbOpenAddCategory() {
     const name = prompt('New category name:');
     if (!name || !name.trim()) return;
