@@ -9102,17 +9102,24 @@ const _originalOpenProfileSheet = openProfileSheet;
 // ── SHARE PROVIDER MENU LINK ──
 function shareProviderProfile() {
     if (!currentProfileProId) return;
-    const shareUrl = `${window.location.origin}${window.location.pathname}?pro=${currentProfileProId}`;
     const pro = PROS.find(p => p.id === currentProfileProId);
-    const shareTitle = pro ? `${pro.name} — Menu` : 'Duba Menu';
+    const shareTitle = pro ? `${pro.name} — Menu` : 'View Menu';
+
+    // If this provider has a real registered username (linked to live
+    // Firebase provider data), use the backend share-preview route so
+    // WhatsApp/Facebook can render the image+description directly.
+    // Otherwise, fall back to the regular demo link.
+    const shareUrl = (pro && pro.realUsername)
+        ? `https://oryzon-backend-ed1q.onrender.com/share/${pro.realUsername}`
+        : `${window.location.origin}${window.location.pathname}?pro=${currentProfileProId}`;
 
     if (navigator.share) {
         navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
     } else {
         navigator.clipboard.writeText(shareUrl).then(() => {
-            showGlobalToast('🔗 An kwafa link ɗin! Yanzu za ka iya turawa wani.');
+            showGlobalToast('🔗 Link copied! You can now share it with anyone.');
         }).catch(() => {
-            showGlobalToast('⚠️ An kasa kwafa link ɗin.');
+            showGlobalToast('⚠️ Failed to copy link.');
         });
     }
     }
