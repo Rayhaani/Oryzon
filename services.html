@@ -5392,6 +5392,31 @@
         </div>
     </div>
 </div>
+
+<!-- HIDDEN MENU FLYER TEMPLATE (used for html2canvas capture, never shown to user) -->
+<div id="mb-flyer-capture" style="position:fixed;left:-9999px;top:0;width:1080px;background:linear-gradient(160deg,#fff7ed 0%,#fed7aa 100%);font-family:'Segoe UI',sans-serif;">
+    <div style="padding:48px 48px 32px;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px;">
+            <div id="mb-flyer-avatar" style="width:64px;height:64px;border-radius:50%;background:#ea580c;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:26px;font-weight:900;flex-shrink:0;">B</div>
+            <div>
+                <div id="mb-flyer-business-name" style="font-size:30px;font-weight:900;color:#78350f;line-height:1.1;">Business Name</div>
+                <div id="mb-flyer-category" style="font-size:16px;font-weight:700;color:#ea580c;margin-top:2px;">Category</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="background:#ffffff;border-radius:36px 36px 0 0;padding:40px 48px 48px;min-height:600px;">
+        <div style="font-size:40px;font-weight:900;color:#78350f;margin-bottom:6px;">Our Menu 🍽️</div>
+        <div style="width:64px;height:6px;background:#ea580c;border-radius:4px;margin-bottom:32px;"></div>
+        <div id="mb-flyer-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"></div>
+    </div>
+
+    <div style="background:#78350f;padding:24px 48px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="color:#fdba74;font-size:18px;font-weight:800;">🛍️ Order now on Nexus</div>
+        <div style="color:#ffffff;font-size:15px;font-weight:700;">nexus.app</div>
+    </div>
+</div>
+    
 <!-- RATINGS & REVIEWS FILTER PAGE -->
 <div id="ratings-filter-page" style="position:fixed;inset:0;background:#ffffff;z-index:10097;display:none;flex-direction:column;">
     <div style="display:flex;align-items:center;gap:16px;padding:14px 16px;border-bottom:1px solid #f1f5f9;flex-shrink:0;">
@@ -9032,6 +9057,8 @@ window.addEventListener("popstate", function() {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="nearme-engine.js"></script>
 <script>
  const firebaseConfig = {
@@ -10969,6 +10996,10 @@ async function mbRenderOverview(data) {
 async function mbPublish() {
     const username = localStorage.getItem("nexus_user_session");
     try {
+        showGlobalToast('⏳ Publishing menu...');
+        const snap = await firebase.database().ref('providers/' + username).once('value');
+        const data = snap.val() || {};
+        await mbGenerateAndUploadFlyer(username, data);
         await firebase.database().ref('providers/' + username).update({ published: true });
         showGlobalToast('✅ Menu published!');
         openMyBusinessDashboard();
@@ -11270,6 +11301,56 @@ async function mbConfirmPlanChange(planId) {
     }
 }
 
+async function mbGenerateAndUploadFlyer(username, data) {
+    const categories = data.categories || {};
+    const allItems = [];
+    Object.keys(categories).forEach(cat => {
+        const items = categories[cat].items || {};
+        Object.keys(items).forEach(id => allItems.push(items[id]));
+    });
+    if (allItems.length === 0) return null;
+
+    document.getElementById('mb-flyer-avatar').textContent = (data.businessName || username).charAt(0).toUpperCase();
+    document.getElementById('mb-flyer-business-name').textContent = data.businessName || username;
+    document.getElementById('mb-flyer-category').textContent = data.categoryLabel || '';
+
+    const gridItems = allItems.slice(0, 6);
+    document.getElementById('mb-flyer-grid').innerHTML = gridItems.map(item => {
+        const priceLabel = item.pricingType === 'tiered'
+            ? 'From ₦' + Math.min(...item.tiers.map(t => t.price)).toLocaleString()
+            : '₦' + Number(item.price || 0).toLocaleString();
+        return `
+        <div style="background:#fff7ed;border-radius:20px;padding:20px;text-align:center;">
+            <div style="font-size:56px;margin-bottom:10px;">${item.icon || '🍽️'}</div>
+            <div style="font-size:18px;font-weight:800;color:#78350f;margin-bottom:4px;">${item.name}</div>
+            <div style="font-size:20px;font-weight:900;color:#ea580c;">${priceLabel}</div>
+        </div>`;
+    }).join('');
+
+    const captureEl = document.getElementById('mb-flyer-capture');
+    const canvas = await html2canvas(captureEl, { scale: 2, useCORS: true, backgroundColor: null });
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.95));
+
+    const formData = new FormData();
+    formData.append('file', blob, username + '_flyer.png');
+    formData.append('type', 'menu_flyers');
+    formData.append('username', username);
+
+    const uploadRes = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', {
+        method: 'POST',
+        body: formData
+    });
+    const uploadData = await uploadRes.json();
+    if (!uploadData.success) throw new Error(uploadData.error || 'Upload failed');
+
+    await firebase.database().ref('providers/' + username).update({
+        menuImageUrl: uploadData.url,
+        menuImageUpdatedAt: Date.now()
+    });
+
+    return uploadData.url;
+}
+    
 function mbOpenAddCategory() {
     const name = prompt('New category name:');
     if (!name || !name.trim()) return;
