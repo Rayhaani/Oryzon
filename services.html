@@ -5222,7 +5222,10 @@
     <div style="background:#ffffff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eef2f7;flex-shrink:0;">
         <div style="display:flex;align-items:center;gap:10px;">
             <button onclick="closeMyBusinessDashboard()" style="width:34px;height:34px;border-radius:50%;background:#f1f5f9;border:none;font-size:16px;cursor:pointer;">←</button>
-            <div style="font-size:16px;font-weight:800;color:#1e293b;" id="mb-business-name">My Business</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div style="font-size:16px;font-weight:800;color:#1e293b;" id="mb-business-name">My Business</div>
+                <span id="mb-plan-badge" style="background:#e0f2fe;color:#0369a1;font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;">FREE</span>
+            </div>
         </div>
         <button onclick="mbPublish()" style="background:#0f172a;color:#ffffff;border:none;border-radius:20px;padding:9px 16px;font-size:12px;font-weight:800;cursor:pointer;">Publish</button>
     </div>
@@ -5327,11 +5330,17 @@
         </div>
     </div>
 
-    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:24px;margin-bottom:10px;">Top Selling Items</div>
-    <div id="mb-top-items" style="display:flex;flex-direction:column;gap:8px;"></div>
+   <div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:24px;margin-bottom:10px;">Top Selling Items</div>
+    <div id="mb-top-items-wrap" style="position:relative;">
+        <div id="mb-top-items" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div id="mb-top-items-lock" style="display:none;"></div>
+    </div>
 
     <div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:24px;margin-bottom:10px;">Recent Transactions</div>
-    <div id="mb-recent-transactions" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div id="mb-recent-tx-wrap" style="position:relative;">
+        <div id="mb-recent-transactions" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div id="mb-recent-tx-lock" style="display:none;"></div>
+    </div> 
         </div>
     </div>
 </div>
@@ -11044,10 +11053,19 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
         showGlobalToast('❌ Failed to update order: ' + err.message);
     }
 }
-async function mbLoadSales() {
+        async function mbLoadSales() {
     const username = localStorage.getItem("nexus_user_session");
     const rangeDays = Number(document.getElementById('mb-sales-range').value);
-    const cutoff = rangeDays === 0 ? 0 : Date.now() - (rangeDays * 86400000);
+    const planSnap = await firebase.database().ref('providers/' + username + '/plan').once('value');
+    const currentPlan = planSnap.val() || 'free';
+    const isPaid = currentPlan === 'pro' || currentPlan === 'max';
+    const badge = document.getElementById('mb-plan-badge');
+    if (badge) {
+        badge.textContent = currentPlan.toUpperCase();
+        badge.style.background = isPaid ? '#dcfce7' : '#e0f2fe';
+        badge.style.color = isPaid ? '#15803d' : '#0369a1';
+    }
+        const cutoff = rangeDays === 0 ? 0 : Date.now() - (rangeDays * 86400000);
 
     try {
         const snap = await firebase.database().ref('providers/' + username + '/orders').once('value');
@@ -11080,6 +11098,17 @@ async function mbLoadSales() {
         const topItems = Object.entries(itemStats).sort((a,b) => b[1].qty - a[1].qty).slice(0, 5);
 
         const topItemsEl = document.getElementById('mb-top-items');
+        const topLockEl = document.getElementById('mb-top-items-lock');
+        if (!isPaid) {
+            topItemsEl.style.filter = 'blur(4px)';
+            topItemsEl.style.pointerEvents = 'none';
+            topLockEl.style.display = 'flex';
+            topLockEl.innerHTML = mbLockOverlayHTML();
+        } else {
+            topItemsEl.style.filter = 'none';
+            topItemsEl.style.pointerEvents = 'auto';
+            topLockEl.style.display = 'none';
+        }
         topItemsEl.innerHTML = topItems.length === 0
             ? `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No completed sales yet</div>`
             : topItems.map(([name, stat], i) => `
@@ -11095,6 +11124,17 @@ async function mbLoadSales() {
         // Recent transactions (completed, most recent first)
         const recent = completed.sort((a,b) => (b.createdAt||0) - (a.createdAt||0)).slice(0, 10);
         const recentEl = document.getElementById('mb-recent-transactions');
+        const recentLockEl = document.getElementById('mb-recent-tx-lock');
+        if (!isPaid) {
+            recentEl.style.filter = 'blur(4px)';
+            recentEl.style.pointerEvents = 'none';
+            recentLockEl.style.display = 'flex';
+            recentLockEl.innerHTML = mbLockOverlayHTML();
+        } else {
+            recentEl.style.filter = 'none';
+            recentEl.style.pointerEvents = 'auto';
+            recentLockEl.style.display = 'none';
+        }
         recentEl.innerHTML = recent.length === 0
             ? `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No transactions yet</div>`
             : recent.map(o => `
@@ -11111,6 +11151,18 @@ async function mbLoadSales() {
     }
 }
 let mbApprovedProviderData = null;
+
+function mbLockOverlayHTML() {
+    return `
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(255,255,255,0.4);backdrop-filter:blur(2px);border-radius:14px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#0f172a;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">🔒</div>
+            <button onclick="mbOpenUpgradeModal()" style="background:#0f172a;color:#ffffff;border:none;border-radius:20px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;">Upgrade to unlock</button>
+        </div>`;
+}
+
+function mbOpenUpgradeModal() {
+    alert('Pro and Max plans coming soon — this will unlock Top Selling Items, Recent Transactions, and advanced analytics.');
+}
 
 async function checkProviderApprovalStatus() {
     const username = localStorage.getItem("nexus_user_session");
