@@ -1430,7 +1430,16 @@ ${vendorInfo}${learningExamples}`;
             renderedMessages.push(bm);
             renderMessage(bm, true);
 
-            if (imageRequest) await sendSpecificProductImage(imageRequest);
+            if (imageRequest) {
+                const sent = await sendSpecificProductImage(imageRequest);
+                if (!sent) {
+                    const fallbackMsg = { role: 'theirs', type: 'text', text: "Sorry, I couldn't pull up that photo right now — let me know if you'd like to see something else from what we have in stock.", time: Date.now() };
+                    const fid = await saveMessageToFirestore(fallbackMsg);
+                    fallbackMsg.id = fid;
+                    renderedMessages.push(fallbackMsg);
+                    renderMessage(fallbackMsg, true);
+                }
+            }
 
             if (escalateMatch) {
                 await db.collection('vendorChats').doc(chatDocId).set({ botActive: false }, { merge: true });
@@ -1459,16 +1468,23 @@ ${vendorInfo}${learningExamples}`;
     }
 
     async function sendSpecificProductImage(productName) {
-        if (!productCatalog.length) return;
+        if (!productCatalog.length) {
+            console.warn('sendSpecificProductImage: product catalog is empty, requested:', productName);
+            return false;
+        }
         const match = productCatalog.find(p => p.name.toLowerCase().includes(productName.toLowerCase()))
             || productCatalog.find(p => productName.toLowerCase().includes(p.name.toLowerCase()));
-        if (!match) return;
+        if (!match) {
+            console.warn('sendSpecificProductImage: no matching product found for:', productName, '— available:', productCatalog.map(p => p.name));
+            return false;
+        }
         const m = { role: 'theirs', type: 'image', media: match.img, caption: `${match.name} — ₦${match.price}`, time: Date.now() };
         const id = await saveMessageToFirestore(m);
         m.id = id;
         renderedMessages.push(m);
         renderMessage(m, true);
-    }
+        return true;
+            }
 
     // ================= INIT =================
     document.addEventListener('DOMContentLoaded', async () => {
