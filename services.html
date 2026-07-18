@@ -1648,23 +1648,21 @@
 .review-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(10px);
+    background: #ffffff;
     z-index: 8000;
     display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    flex-direction: column;
+    padding: 0;
 }
 .review-modal-box {
     width: 100%;
-    max-width: 400px;
+    height: 100%;
     background: #ffffff;
-    border-radius: 24px;
-    padding: 24px 20px 28px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
-}
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    overflow-y: auto;
+        }
 .star-picker {
     display: flex;
     gap: 8px;
@@ -5383,6 +5381,22 @@
 
             <button onclick="mbSaveItem()" style="width:100%;background:#ea580c;color:#ffffff;border:none;border-radius:14px;padding:14px;font-weight:800;font-size:14px;cursor:pointer;margin-top:8px;">Save Item</button>
         </div>
+    </div>
+</div>
+<!-- RATINGS & REVIEWS FILTER PAGE -->
+<div id="ratings-filter-page" style="position:fixed;inset:0;background:#ffffff;z-index:10097;display:none;flex-direction:column;">
+    <div style="display:flex;align-items:center;gap:16px;padding:14px 16px;border-bottom:1px solid #f1f5f9;flex-shrink:0;">
+        <button onclick="closeRatingsFilterPage()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#111827;">←</button>
+        <div style="font-size:16px;font-weight:800;color:#111827;">Ratings and reviews</div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px;">
+        <div id="rf-dim-pills" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
+        <div style="height:1px;background:#f1f5f9;margin:4px 0 16px;"></div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="rfFilterSentiment('positive')" id="rf-pill-positive" style="flex:1;padding:12px;border-radius:24px;border:1.5px solid #16a34a;background:#ffffff;color:#16a34a;font-weight:700;font-size:13px;cursor:pointer;">👍 Positive Reviews</button>
+            <button onclick="rfFilterSentiment('negative')" id="rf-pill-negative" style="flex:1;padding:12px;border-radius:24px;border:1.5px solid #dc2626;background:#ffffff;color:#dc2626;font-weight:700;font-size:13px;cursor:pointer;">👎 Negative Reviews</button>
+        </div>
+        <div id="rf-reviews-list" style="margin-top:20px;display:flex;flex-direction:column;gap:12px;"></div>
     </div>
 </div>
 <!-- NXFM CART PAGE OVERLAY -->
@@ -9213,66 +9227,42 @@ function openReviewModal() {
 
     // Gina dimension stars rows
     const dimsHTML = dims.map(d => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9;">
-            <div style="font-size:12px;font-weight:700;color:#374151;flex:1;">${d.label}</div>
-            <div class="np-dim-star-picker" data-key="${d.key}" style="display:flex;gap:4px;">
+        <div style="border:1.5px solid #e2e8f0;border-radius:16px;padding:14px 16px;margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:10px;">${d.label}</div>
+            <div class="np-dim-star-picker" data-key="${d.key}" style="display:flex;justify-content:space-between;max-width:260px;">
                 ${[1,2,3,4,5].map(n => `
-                    <span onclick="setDimStar('${d.key}', ${n}, this)"
-                        data-val="${n}"
-                        style="font-size:22px;color:#e2e8f0;cursor:pointer;
-                        transition:all 0.15s ease;-webkit-tap-highlight-color:transparent;">★</span>
+                    <span onclick="setDimStar('${d.key}', ${n}, this)" data-val="${n}"
+                        style="font-size:28px;color:#cbd5e1;cursor:pointer;transition:all 0.15s ease;">☆</span>
                 `).join('')}
             </div>
         </div>`).join('');
 
-    // Inject into existing modal
     const box = document.querySelector('.review-modal-box');
     if (!box) return;
 
     box.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <div>
-                <div style="font-size:17px;font-weight:800;color:#111827;">⭐ Leave a Review</div>
-                <div style="font-size:11px;color:#64748b;margin-top:2px;">${pro.name}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid #f1f5f9;">
+            <button onclick="closeReviewModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#111827;">✕</button>
+            <div style="text-align:center;">
+                <div style="font-size:15px;font-weight:800;color:#111827;">${pro.name}</div>
+                <div style="font-size:11px;color:#64748b;">Rate this provider</div>
             </div>
-            <button onclick="closeReviewModal()" 
-                style="background:#f1f5f9;border:none;border-radius:50%;width:30px;height:30px;
-                font-size:14px;cursor:pointer;color:#64748b;">✕</button>
+            <button onclick="submitReview()" style="background:none;border:none;font-size:14px;font-weight:800;color:#ea580c;cursor:pointer;">Post</button>
         </div>
+        <div style="padding:20px;">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Your Review *</div>
+            <textarea id="review-comment-input" maxlength="400" placeholder="Share your experience with this provider..."
+                style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;resize:none;height:80px;line-height:1.5;font-family:inherit;box-sizing:border-box;margin-bottom:20px;"></textarea>
 
-        <!-- Comment -->
-        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;
-            letter-spacing:0.5px;margin-bottom:6px;">Your Review *</div>
-        <textarea id="review-comment-input" maxlength="400"
-            placeholder="Share your experience with this provider..."
-            style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
-            padding:10px 12px;font-size:13px;color:#111827;outline:none;resize:none;
-            height:80px;line-height:1.5;font-family:inherit;box-sizing:border-box;
-            margin-bottom:16px;"></textarea>
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Rate Each Category *</div>
+            <div id="np-dim-stars-container">${dimsHTML}</div>
 
-        <!-- Dimension Stars -->
-        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;
-            letter-spacing:0.5px;margin-bottom:4px;">Rate Each Category *</div>
-        <div id="np-dim-stars-container">
-            ${dimsHTML}
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin:6px 0 6px;">Your Name (Optional)</div>
+            <input type="text" id="review-customer-name-input" placeholder="Anonymous if left blank"
+                style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13px;color:#111827;outline:none;box-sizing:border-box;margin-bottom:20px;">
+
+            <button onclick="submitReview()" style="width:100%;padding:14px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:14px;color:#ffffff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Post Review ⭐</button>
         </div>
-
-        <!-- Customer Name -->
-        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;
-            letter-spacing:0.5px;margin:14px 0 6px;">Your Name (Optional)</div>
-        <input type="text" id="review-customer-name-input"
-            placeholder="Anonymous if left blank"
-            style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
-            padding:10px 12px;font-size:13px;color:#111827;outline:none;box-sizing:border-box;">
-
-        <!-- Submit -->
-        <button onclick="submitReview()"
-            style="width:100%;margin-top:20px;padding:14px;
-            background:linear-gradient(135deg,#f59e0b,#d97706);
-            border:none;border-radius:14px;color:#ffffff;font-size:14px;
-            font-weight:800;cursor:pointer;font-family:inherit;">
-            Post Review ⭐
-        </button>
     `;
 
     document.getElementById('review-modal-overlay').style.display = 'flex';
@@ -12176,11 +12166,11 @@ async function fetchFirebaseProviderAsPro(username) {
 // ── DIMENSION CONFIG PER CATEGORY ──
 const NP_DIMENSIONS = {
     chef: [
-        { key: 'taste',     label: 'Taste & Quality',    color: '#f59e0b' },
-        { key: 'delivery',  label: 'Delivery Speed',      color: '#3b82f6' },
-        { key: 'value',     label: 'Value for Money',     color: '#10b981' },
-        { key: 'presentation', label: 'Presentation',    color: '#ec4899' },
-        { key: 'freshness', label: 'Freshness',           color: '#8b5cf6' },
+        { key: 'taste',     label: 'Taste and Quality',   color: '#f59e0b' },
+        { key: 'packing',   label: 'Packing',              color: '#3b82f6' },
+        { key: 'value',     label: 'Value for Money',      color: '#10b981' },
+        { key: 'freshness', label: 'Freshness',            color: '#8b5cf6' },
+        { key: 'delivery',  label: 'Timely Delivery',      color: '#ec4899' },
     ],
     snacks: [
         { key: 'taste',     label: 'Taste & Quality',    color: '#f59e0b' },
@@ -12437,8 +12427,59 @@ function renderNPReviewCards(reviews, category) {
         <div class="np-reviews-section" style="margin-top:4px;">
             ${cards}
         </div>`;
+    }
+
+let rfActiveDim = null, rfActiveSentiment = null;
+
+function openRatingsFilterPage() {
+    if (!currentProfileProId) return;
+    const pro = PROS.find(p => p.id === currentProfileProId);
+    if (!pro) return;
+    rfActiveDim = null; rfActiveSentiment = null;
+    const dims = getNPDimensions(pro.category || 'default');
+    document.getElementById('rf-dim-pills').innerHTML = dims.map(d => `
+        <button onclick="rfFilterDim('${d.key}')" id="rf-pill-${d.key}" style="padding:10px 16px;border-radius:24px;border:1.5px solid #e2e8f0;background:#ffffff;color:#374151;font-weight:700;font-size:12.5px;cursor:pointer;">${d.label}</button>`).join('');
+    rfRenderReviews(pro);
+    document.getElementById('ratings-filter-page').style.display = 'flex';
 }
 
+function closeRatingsFilterPage() {
+    document.getElementById('ratings-filter-page').style.display = 'none';
+}
+
+function rfFilterDim(key) {
+    rfActiveDim = (rfActiveDim === key) ? null : key;
+    document.querySelectorAll('#rf-dim-pills button').forEach(b => {
+        const active = b.id === 'rf-pill-' + rfActiveDim;
+        b.style.background = active ? '#fff7ed' : '#ffffff';
+        b.style.borderColor = active ? '#ea580c' : '#e2e8f0';
+        b.style.color = active ? '#ea580c' : '#374151';
+    });
+    const pro = PROS.find(p => p.id === currentProfileProId);
+    rfRenderReviews(pro);
+}
+
+function rfFilterSentiment(type) {
+    rfActiveSentiment = (rfActiveSentiment === type) ? null : type;
+    const posBtn = document.getElementById('rf-pill-positive'), negBtn = document.getElementById('rf-pill-negative');
+    posBtn.style.background = rfActiveSentiment === 'positive' ? '#16a34a' : '#ffffff';
+    posBtn.style.color = rfActiveSentiment === 'positive' ? '#ffffff' : '#16a34a';
+    negBtn.style.background = rfActiveSentiment === 'negative' ? '#dc2626' : '#ffffff';
+    negBtn.style.color = rfActiveSentiment === 'negative' ? '#ffffff' : '#dc2626';
+    const pro = PROS.find(p => p.id === currentProfileProId);
+    rfRenderReviews(pro);
+}
+
+function rfRenderReviews(pro) {
+    let reviews = NP_DEMO_REVIEWS;
+    if (rfActiveDim) reviews = reviews.filter(r => (r.dimensions?.[rfActiveDim] || 0) >= 4);
+    if (rfActiveSentiment === 'positive') reviews = reviews.filter(r => r.rating >= 4);
+    if (rfActiveSentiment === 'negative') reviews = reviews.filter(r => r.rating <= 2);
+    document.getElementById('rf-reviews-list').innerHTML = reviews.length
+        ? renderNPReviewCards(reviews, pro.category || 'default')
+        : `<div style="text-align:center;padding:40px 20px;color:#94a3b8;font-size:13px;">No matching reviews</div>`;
+    }
+    
 // ── HELPFUL BUTTON ──
 function handleNPHelpful(btn, reviewId, isYes) {
     const row = btn.closest('.np-helpful-btns');
@@ -12491,11 +12532,12 @@ function injectNPReviewsIntoProfile(proId) {
     container.id = 'np-reviews-inject';
     container.style.cssText = 'display:none;background:#fdece0;margin:-48px -20px 0;padding:46px 0 24px;border-radius:36px 36px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,0.04);position:relative;z-index:2;';
     container.innerHTML = `
-        <div style="font-weight:800;font-size:17px;color:#ea580c;margin-bottom:12px;padding:0 20px;">
-            Ratings and Reviews
+        <div onclick="openRatingsFilterPage()" style="display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:17px;color:#ea580c;margin-bottom:12px;padding:0 20px;cursor:pointer;">
+            <span>Ratings and Reviews</span>
+            <span style="font-size:20px;color:#ea580c;">›</span>
         </div>
-        <div style="display:flex;gap:6px;padding:0 20px;margin-bottom:8px;">
-            ${[1,2,3,4,5].map(() => `<span onclick="openReviewModal()" style="font-size:26px;line-height:1;cursor:pointer;color:#f59e0b;">★</span>`).join('')}
+        <div style="display:flex;justify-content:space-between;padding:0 20px;margin-bottom:10px;">
+            ${[1,2,3,4,5].map(() => `<span onclick="openReviewModal()" style="font-size:32px;line-height:1;cursor:pointer;color:#94a3b8;font-family:'Segoe UI Symbol',sans-serif;">☆</span>`).join('')}
         </div>
         <div onclick="openReviewModal()" style="padding:0 20px;margin-bottom:16px;font-size:13px;font-weight:700;color:#1d4ed8;cursor:pointer;">Write a review</div>
         ${renderNPRatingSection(reviews, category)}
