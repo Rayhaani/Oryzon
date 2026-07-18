@@ -119,13 +119,6 @@
         .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
         @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
 
-        .lang-globe-btn { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.7); cursor: pointer; }
-        .lang-globe-btn:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); }
-        .lang-dropdown { position: absolute; top: 44px; right: 0; width: 190px; background: #0a0a0c; border: 1px solid rgba(0,242,255,0.2); border-radius: 16px; padding: 6px; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .lang-option { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 10px; font-size: 12px; color: rgba(255,255,255,0.8); cursor: pointer; }
-        .lang-option:hover { background: rgba(0,242,255,0.08); color: #fff; }
-        .lang-option.selected { color: var(--neon-cyan); }
-
         .trust-step { text-align: center; padding: 14px 10px; }
         .trust-step .num { font-family: 'Orbitron'; font-size: 10px; color: var(--neon-cyan); opacity: 0.6; }
 
@@ -236,10 +229,6 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0 relative">
-                    <button class="lang-globe-btn" onclick="toggleLangDropdown()" aria-label="Choose language">
-                        <i class="fa-solid fa-globe text-xs"></i>
-                    </button>
-                    <div id="langDropdown" class="lang-dropdown hidden"></div>
                     <button onclick="closeAiTriage()" aria-label="Close AI Triage" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
                 </div>
             </div>
@@ -728,43 +717,8 @@
             );
         }
 
-        const SUPPORTED_LANGS = [
-            { code: 'en', label: 'English' },
-            { code: 'es', label: 'Español' },
-            { code: 'fr', label: 'Français' },
-            { code: 'de', label: 'Deutsch' },
-            { code: 'it', label: 'Italiano' },
-            { code: 'pt', label: 'Português' },
-            { code: 'hi', label: 'हिन्दी' },
-            { code: 'th', label: 'ไทย' }
-        ];
-        let aiLang = localStorage.getItem('nexusAiLang') || 'en';
-
-        function renderLangDropdown() {
-            const dd = document.getElementById('langDropdown');
-            dd.innerHTML = SUPPORTED_LANGS.map(l =>
-                `<div class="lang-option ${l.code === aiLang ? 'selected' : ''}" onclick="selectLang('${l.code}')">
-                    <span>${l.label}</span>
-                    ${l.code === aiLang ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
-                </div>`
-            ).join('');
-        }
-        function toggleLangDropdown() {
-            const dd = document.getElementById('langDropdown');
-            if (dd.classList.contains('hidden')) { renderLangDropdown(); dd.classList.remove('hidden'); }
-            else { dd.classList.add('hidden'); }
-        }
-        function selectLang(code) {
-            aiLang = code;
-            localStorage.setItem('nexusAiLang', code);
-            document.getElementById('langDropdown').classList.add('hidden');
-        }
-        document.addEventListener('click', (e) => {
-            const dd = document.getElementById('langDropdown');
-            const btn = e.target.closest('.lang-globe-btn');
-            if (dd && !dd.contains(e.target) && !btn) dd.classList.add('hidden');
-        });
-
+        const aiLang = 'en';
+        
        let aiPendingImage = null;
         let aiConversationHistory = [];
         let aiCurrentContextKey = 'general';
