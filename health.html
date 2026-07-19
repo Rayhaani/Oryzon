@@ -263,7 +263,21 @@
         </div>
     </div>
 
-
+<div id="nexaTriageGateModal" class="fixed inset-0 z-[9250] hidden bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+        <div class="max-w-sm w-full rounded-3xl p-6" style="background:#0a0a0c; border:1px solid rgba(0,242,255,0.2);">
+            <div class="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4">
+                <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i>
+            </div>
+            <h3 class="futuristic-font text-sm mb-3">QUICK CHECK FIRST?</h3>
+            <p class="text-[12px] text-gray-300 leading-relaxed mb-5">Many symptoms can be handled at home or with a pharmacy visit — no hospital trip needed. Want Nexus Intelligence to take a quick look before you head out?</p>
+            <button onclick="chooseTriageGate('triage')" class="btn-nexus w-full text-center mb-3" style="background:var(--neon-cyan); color:#000;">Yes, check with Nexus Intelligence</button>
+            <button onclick="chooseTriageGate('map')" class="btn-nexus w-full text-center" style="border-color:rgba(255,255,255,0.15); color:rgba(255,255,255,0.6);">No, just show me nearby hospitals</button>
+            <label class="flex items-center gap-2 mt-4 text-[10px] text-gray-500 cursor-pointer">
+                <input type="checkbox" id="nexaGateDontAskAgain">
+                Don't ask me this again
+            </label>
+        </div>
+</div>
 
     <div id="aiTriageOverlay" class="fixed inset-0 z-[8500] hidden backdrop-blur-2xl bg-black/95">
         <div class="max-w-2xl mx-auto h-full flex flex-col p-4" style="padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom));">
@@ -806,6 +820,30 @@
         }
 
         function findNearbyCare() {
+            if (localStorage.getItem('nexusSkipTriageGate') === 'true') {
+                proceedToNearbyCareMap();
+                return;
+            }
+            document.getElementById('nexaTriageGateModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function chooseTriageGate(choice) {
+            if (document.getElementById('nexaGateDontAskAgain').checked) {
+                localStorage.setItem('nexusSkipTriageGate', 'true');
+            }
+            document.getElementById('nexaTriageGateModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+
+            if (choice === 'triage') {
+                openAiTriage();
+            } else {
+                logSelfReferral('nearby_care_direct');
+                proceedToNearbyCareMap();
+            }
+        }
+
+        function proceedToNearbyCareMap() {
             if (!navigator.geolocation) { showToast('Location is not available on this device/browser.'); return; }
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
@@ -815,6 +853,15 @@
                 () => showToast('Could not access your location. Please enable location permissions and try again.')
             );
         }
+
+        function logSelfReferral(source) {
+            try {
+                const log = JSON.parse(localStorage.getItem('nexusSelfReferrals') || '[]');
+                log.push({ source, timestamp: Date.now() });
+                localStorage.setItem('nexusSelfReferrals', JSON.stringify(log.slice(-50)));
+            } catch (e) {}
+        }
+        
         function findNearbyDoctors() {
             openTelehealth('near');
              }
@@ -885,7 +932,7 @@
             log.innerHTML = '';
             aiConversationHistory = [];
 
-            const GREETING = "Hi! I'm Nexus Intelligence, your health assistant. Describe your symptom or upload a photo, and I'll help you figure out if we can handle it here or if you should see a doctor.";
+            const GREETING = "Hi! I'm Nexus Intelligence, your health assistant. Describe your symptom or upload a photo, and I'll give you one clear next step: care for it at home, visit a pharmacy, book a doctor consultation, or go to the hospital right now if it's urgent.";
 
             try {
                 const currentUser = await window._authReadyPromise;
