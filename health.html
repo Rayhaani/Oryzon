@@ -816,15 +816,8 @@
             );
         }
         function findNearbyDoctors() {
-            if (!navigator.geolocation) { showToast('Location is not available on this device/browser.'); return; }
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    window.open(`https://www.google.com/maps/search/doctors+near+me/@${latitude},${longitude},14z`, '_blank');
-                },
-                () => showToast('Could not access your location. Please enable location permissions and try again.')
-            );
-        }
+            openTelehealth('near');
+             }
 
         const aiLang = 'en';
         
@@ -1339,53 +1332,175 @@ async function askNexusAiStructured(extractedText, fileName, lang) {
             `;
         }
 
-        /* ================= TELEHEALTH ================= */
-        const NEXUS_DOCTORS = [
-            { name: 'Dr. Amina Bello', spec: 'General Practice', rating: 4.9, price: '$15' },
-            { name: 'Dr. Chen Wei', spec: 'Cardiology', rating: 4.8, price: '$25' },
-            { name: 'Dr. Fatima Sani', spec: 'Pediatrics', rating: 5.0, price: '$18' },
-            { name: 'Dr. James Okoro', spec: 'Dermatology', rating: 4.7, price: '$20' }
+        /* ================= NEXA DOCTORS: DATA MODEL ================= */
+        const NEXA_SPECIALTIES = ['General Practitioner', 'Cardiology', 'Pediatrics', 'Dermatology', 'Psychiatry', 'Gynecology'];
+
+        const NEXA_DOCTORS = [
+            { id: 'd1', name: 'Dr. Amina Bello', specialty: 'General Practitioner', rating: 4.9, reviews: 128, duration: 30, price: 15, availability: 'today', verified: true, bio: 'General practitioner focused on everyday concerns — colds, infections, prescriptions, and lifestyle advice.', initials: 'AB', accentA: '#00f2ff', accentB: '#3b82f6', lat: 6.5244, lng: 3.3792 },
+            { id: 'd2', name: 'Dr. Chen Wei', specialty: 'Cardiology', rating: 4.8, reviews: 94, duration: 30, price: 25, availability: 'today', verified: true, bio: 'Cardiologist with a decade of experience in hypertension management and heart health screening.', initials: 'CW', accentA: '#ff9d00', accentB: '#ef4444', lat: 6.5834, lng: 3.3499 },
+            { id: 'd3', name: 'Dr. Fatima Sani', specialty: 'Pediatrics', rating: 5.0, reviews: 210, duration: 30, price: 18, availability: 'today', verified: true, bio: 'Pediatrician passionate about compassionate, family-centered child healthcare.', initials: 'FS', accentA: '#a855f7', accentB: '#ec4899', lat: 6.4550, lng: 3.3841 },
+            { id: 'd4', name: 'Dr. James Okoro', specialty: 'Dermatology', rating: 4.7, reviews: 76, duration: 25, price: 20, availability: 'ahead', verified: true, bio: 'Dermatologist specializing in skin conditions, acne treatment, and cosmetic dermatology.', initials: 'JO', accentA: '#4ade80', accentB: '#facc15', lat: 6.6018, lng: 3.3515 },
+            { id: 'd5', name: 'Dr. Ngozi Adeyemi', specialty: 'Psychiatry', rating: 4.9, reviews: 63, duration: 45, price: 22, availability: 'today', verified: true, bio: 'Psychiatrist with experience in anxiety, depression, and mental wellbeing support.', initials: 'NA', accentA: '#22c55e', accentB: '#00f2ff', lat: 6.5095, lng: 3.3711 },
+            { id: 'd6', name: 'Dr. Yusuf Danladi', specialty: 'General Practitioner', rating: 4.6, reviews: 51, duration: 30, price: 15, availability: 'ahead', verified: true, bio: 'General practitioner with 10 years of experience, also skilled in mental health first response.', initials: 'YD', accentA: '#38bdf8', accentB: '#a855f7', lat: 6.4698, lng: 3.5852 },
+            { id: 'd7', name: 'Dr. Grace Umeh', specialty: 'Gynecology', rating: 4.9, reviews: 87, duration: 30, price: 20, availability: 'today', verified: true, bio: "Gynecologist supporting women's health, reproductive care, and prenatal guidance.", initials: 'GU', accentA: '#ec4899', accentB: '#a855f7', lat: 6.6432, lng: 3.3018 }
         ];
-        function openTelehealth() {
-            renderDoctorList(); renderAppointments();
+
+        let nexaDoctorDirectoryMode = 'general';
+        let nexaUserLocation = null;
+        let nexaCurrentRadiusKm = 5;
+        const NEXA_RADIUS_STEPS = [5, 10, 20, 50, 100, 500];
+
+        function haversineKm(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function renderDoctorAvatar(doc) {
+            return `<div class="nexa-avatar-circle" style="--av-a:${doc.accentA}; --av-b:${doc.accentB};">${doc.initials}</div>`;
+        }
+
+        function renderDoctorCard(doc, distanceKm) {
+            const statusLabel = doc.availability === 'today' ? 'Available today' : 'Booking ahead';
+            const statusClass = doc.availability === 'today' ? 'today' : 'ahead';
+            return `
+                <div class="nexa-doc-card">
+                    <div class="flex items-start gap-3">
+                        ${renderDoctorAvatar(doc)}
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center flex-wrap gap-1">
+                                <span class="text-[13px] font-bold text-white">${doc.name}</span>
+                                ${doc.verified ? '<i class="fa-solid fa-circle-check nexa-verified-tick"></i>' : ''}
+                            </div>
+                            <div class="text-[11px] text-gray-400 mt-0.5">${doc.specialty}</div>
+                            <div class="flex items-center gap-3 mt-2 flex-wrap">
+                                ${doc.rating ? `<span class="text-[10px] text-yellow-400"><i class="fa-solid fa-star"></i> ${doc.rating.toFixed(1)} (${doc.reviews})</span>` : ''}
+                                <span class="text-[10px] text-gray-500"><i class="fa-regular fa-clock"></i> ${doc.duration}-min consult</span>
+                            </div>
+                            <div class="mt-2"><span class="nexa-status-pill ${statusClass}"><span class="dot"></span>${statusLabel}</span></div>
+                            ${typeof distanceKm === 'number' ? `<div class="nexa-doc-distance"><i class="fa-solid fa-location-dot"></i>${distanceKm < 1 ? Math.round(distanceKm * 1000) + 'm' : distanceKm.toFixed(1) + 'km'} away</div>` : ''}
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">${doc.bio}</p>
+                    <div class="flex items-center justify-between mt-4 pt-3 border-t border-white/5">
+                        <div><div class="text-[9px] text-gray-500 uppercase">From</div><div class="futuristic-font text-sm text-white">£${doc.price}.00</div></div>
+                        <button onclick="startDoctorBooking('${doc.id}')" class="btn-nexus text-[9px] px-5 py-2.5" style="background:var(--neon-cyan); color:#000; border:none;">Book Consultation</button>
+                    </div>
+                </div>`;
+        }
+
+        function populateSpecialtyFilter() {
+            const sel = document.getElementById('nexaSpecialtyFilter');
+            if (sel.dataset.populated) return;
+            sel.dataset.populated = '1';
+            NEXA_SPECIALTIES.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s; opt.textContent = s;
+                sel.appendChild(opt);
+            });
+        }
+
+        function renderDoctorList() {
+            populateSpecialtyFilter();
+            const q = (document.getElementById('nexaDocSearch')?.value || '').trim().toLowerCase();
+            const specialty = document.getElementById('nexaSpecialtyFilter')?.value || '';
+            const todayOnly = document.getElementById('nexaAvailableTodayFilter')?.checked;
+            const wrap = document.getElementById('doctorList');
+
+            let list = NEXA_DOCTORS.filter(d => {
+                if (specialty && d.specialty !== specialty) return false;
+                if (todayOnly && d.availability !== 'today') return false;
+                if (q && !(`${d.name} ${d.specialty}`.toLowerCase().includes(q))) return false;
+                return true;
+            });
+
+            if (list.length === 0) {
+                wrap.innerHTML = `<div class="nexa-empty-state"><i class="fa-solid fa-user-doctor"></i>No doctors match your search — try a different specialty or keyword.</div>`;
+                return;
+            }
+            wrap.innerHTML = list.map(d => renderDoctorCard(d)).join('');
+        }
+
+        function renderNearDoctors() {
+            const statusWrap = document.getElementById('nexaNearStatus');
+            const listWrap = document.getElementById('nexaNearList');
+
+            if (!navigator.geolocation) {
+                statusWrap.innerHTML = `<div class="nexa-empty-state"><i class="fa-solid fa-location-crosshairs"></i>Location isn't available on this device/browser. Try "Find a Doctor" instead.</div>`;
+                listWrap.innerHTML = '';
+                return;
+            }
+            statusWrap.innerHTML = `<div class="text-[11px] text-gray-400 mb-3"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Finding your location…</div>`;
+            listWrap.innerHTML = '';
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    nexaUserLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    nexaCurrentRadiusKm = NEXA_RADIUS_STEPS[0];
+                    expandUntilFoundAndRender();
+                },
+                () => {
+                    statusWrap.innerHTML = `<div class="nexa-empty-state"><i class="fa-solid fa-location-crosshairs"></i>Couldn't access your location. Please enable location permissions, or use "Find a Doctor" to browse all doctors.</div>`;
+                }
+            );
+        }
+
+        function expandUntilFoundAndRender() {
+            const statusWrap = document.getElementById('nexaNearStatus');
+            const listWrap = document.getElementById('nexaNearList');
+            if (!nexaUserLocation) return;
+
+            let matches = [];
+            let radiusIndex = NEXA_RADIUS_STEPS.indexOf(nexaCurrentRadiusKm);
+            if (radiusIndex === -1) radiusIndex = 0;
+
+            while (radiusIndex < NEXA_RADIUS_STEPS.length) {
+                const radius = NEXA_RADIUS_STEPS[radiusIndex];
+                matches = NEXA_DOCTORS
+                    .map(d => ({ doc: d, distance: haversineKm(nexaUserLocation.lat, nexaUserLocation.lng, d.lat, d.lng) }))
+                    .filter(m => m.distance <= radius)
+                    .sort((a, b) => a.distance - b.distance);
+                if (matches.length > 0) { nexaCurrentRadiusKm = radius; break; }
+                radiusIndex++;
+            }
+
+            if (matches.length === 0) {
+                matches = NEXA_DOCTORS
+                    .map(d => ({ doc: d, distance: haversineKm(nexaUserLocation.lat, nexaUserLocation.lng, d.lat, d.lng) }))
+                    .sort((a, b) => a.distance - b.distance);
+                statusWrap.innerHTML = `<div class="nexa-radius-note"><i class="fa-solid fa-circle-info"></i>No doctors within our usual range — showing the closest doctors available anywhere.</div>`;
+            } else if (nexaCurrentRadiusKm > NEXA_RADIUS_STEPS[0]) {
+                statusWrap.innerHTML = `<div class="nexa-radius-note"><i class="fa-solid fa-circle-info"></i>No doctors within ${NEXA_RADIUS_STEPS[0]}km, so we widened the search to ${nexaCurrentRadiusKm}km.</div>`;
+            } else {
+                statusWrap.innerHTML = `<div class="text-[11px] text-gray-400 mb-3">Showing doctors within ${nexaCurrentRadiusKm}km of you.</div>`;
+            }
+
+            listWrap.innerHTML = matches.map(m => renderDoctorCard(m.doc, m.distance)).join('');
+        }
+
+        function switchDoctorDirectory(mode) {
+            nexaDoctorDirectoryMode = mode;
+            document.getElementById('nexaTabGeneral').classList.toggle('active', mode === 'general');
+            document.getElementById('nexaTabNear').classList.toggle('active', mode === 'near');
+            document.getElementById('nexaGeneralView').classList.toggle('hidden', mode !== 'general');
+            document.getElementById('nexaNearView').classList.toggle('hidden', mode !== 'near');
+            if (mode === 'general') renderDoctorList();
+            else renderNearDoctors();
+        }
+
+        function openTelehealth(mode) {
+            renderAppointments();
             document.getElementById('telehealthModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+            switchDoctorDirectory(mode === 'near' ? 'near' : 'general');
         }
         function closeTelehealth() {
             document.getElementById('telehealthModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
         }
-        function renderDoctorList() {
-            const wrap = document.getElementById('doctorList');
-            wrap.innerHTML = NEXUS_DOCTORS.map((d, i) => `
-                <div class="unit-card rounded-2xl p-4 flex items-center justify-between gap-3 flex-wrap">
-                    <div>
-                        <div class="text-[12px] font-bold">${d.name}</div>
-                        <div class="text-[9px] text-gray-500 mt-1">${d.spec} · <i class="fa-solid fa-star text-yellow-400"></i> ${d.rating} · ${d.price}/session</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="bookDoctor(${i}, 'video')" class="btn-nexus text-[9px] px-4 py-2"><i class="fa-solid fa-video mr-1"></i>Video</button>
-                        <button onclick="bookDoctor(${i}, 'chat')" class="btn-nexus text-[9px] px-4 py-2" style="border-color:var(--nexus-purple); color:var(--nexus-purple);"><i class="fa-solid fa-comment mr-1"></i>Chat</button>
-                    </div>
-                </div>`).join('');
-        }
         function getAppointments() { return JSON.parse(localStorage.getItem('nexusAppointments') || '[]'); }
-       function bookDoctor(index, mode) {
-    const d = NEXUS_DOCTORS[index];
-    const appts = getAppointments();
-    const slot = new Date(Date.now() + 60 * 60 * 1000);
-    appts.push({ doctor: d.name, spec: d.spec, mode, time: slot.toISOString() });
-    localStorage.setItem('nexusAppointments', JSON.stringify(appts));
-    renderAppointments();
-    showToast(`${mode === 'video' ? 'Video call' : 'Chat consult'} booked with ${d.name}`);
-}
-function sendPrescriptionToPharmacy(doctorName, medName) {
-    const rx = JSON.parse(localStorage.getItem('nexusPrescriptions') || '[]');
-    rx.push({ id: Date.now(), doctor: doctorName, med: medName, date: new Date().toISOString(), status: 'Ready for pickup' });
-    localStorage.setItem('nexusPrescriptions', JSON.stringify(rx));
-    showToast(`Prescription sent to Nexus Pharmacy`);
-    openNexusOverlay();
-             } 
         function renderAppointments() {
             const appts = getAppointments();
             const wrap = document.getElementById('appointmentList');
@@ -1399,6 +1514,13 @@ function sendPrescriptionToPharmacy(doctorName, medName) {
                     <i class="fa-solid fa-circle-check text-cyan-400"></i>
                 </div>`).join('');
         }
+        function sendPrescriptionToPharmacy(doctorName, medName) {
+            const rx = JSON.parse(localStorage.getItem('nexusPrescriptions') || '[]');
+            rx.push({ id: Date.now(), doctor: doctorName, med: medName, date: new Date().toISOString(), status: 'Ready for pickup' });
+            localStorage.setItem('nexusPrescriptions', JSON.stringify(rx));
+            showToast(`Prescription sent to Nexus Pharmacy`);
+            openNexusOverlay();
+                                                }
 
         /* ================= MEDICATION REMINDERS ================= */
         function openMeds() { renderMedsList(); document.getElementById('medsModal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
