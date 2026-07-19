@@ -50,12 +50,12 @@
         .incoming { align-self: flex-start; background: var(--vendor-bubble); border-bottom-left-radius: 4px; }
         .outgoing { align-self: flex-end; background: var(--user-bubble); border-bottom-right-radius: 4px; border-color: rgba(0, 242, 255, 0.2); }
         .timestamp {
-            font-size: 7.5px;
-            color: rgba(255,255,255,0.4);
-            display: block;
-            text-align: right;
-            font-family: 'Orbitron', sans-serif;
-            margin-bottom: 4px;
+    font-size: 7.5px;
+    color: rgba(255,255,255,0.4);
+    float: right;
+    clear: both;
+    margin: 4px 0 -4px 8px;
+    font-family: 'Orbitron', sans-serif;
         }
         .input-area {
             position: fixed;
@@ -368,37 +368,39 @@ function listenToNexusMessages() {
       });
 }
 
-  async function sendNeuralMessage() {
+async function sendNeuralMessage() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
     if (!text) return;
 
-    // Jiran Firebase Auth ya shirya (yana warware race condition na farkon buɗewa)
+    // Share input nan take (optimistic) — kada mai amfani ya jira network
+    input.value = '';
+    autoExpand(input);
+    toggleButtons();
+
     await authReadyPromise;
 
     if (!firebase.auth().currentUser) {
         alert('An kasa tabbatar da shiga (session). Don Allah sake login sannan ka gwada.');
+        input.value = text;
+        autoExpand(input);
+        toggleButtons();
         return;
     }
 
     db.collection('personalChats').doc(chatRoomId).collection('messages').add({
-    senderId: myId, receiverId: chatWith, text, timestamp: Date.now()
-    }).then(() => {
-        return db.collection('personalChats').doc(chatRoomId).set({
-            lastMessage: text.substring(0, 60),
-            lastMessageTime: Date.now(),
-            members: [myId, chatWith]
-        }, { merge: true }).catch((setErr) => {
-            console.error('Nexus SET error (parent doc):', setErr);
-            alert('An samu sakon amma an kasa sabunta chat list: ' + setErr.message);
-        });
-    }).then(() => {
-        input.value = '';
+        senderId: myId, receiverId: chatWith, text, timestamp: Date.now()
+    }).then(() => db.collection('personalChats').doc(chatRoomId).set({
+        lastMessage: text.substring(0, 60),
+        lastMessageTime: Date.now(),
+        members: [myId, chatWith]
+    }, { merge: true })).catch((err) => {
+        console.error('Nexus send error:', err);
+        alert('Sakon bai tafi ba: ' + err.message);
+        // Dawo da rubutun domin kada ya ɓace idan an kasa turawa
+        input.value = text;
         autoExpand(input);
         toggleButtons();
-    }).catch((addErr) => {
-        console.error('Nexus ADD error (message):', addErr);
-        alert('Sakon bai tafi ba (ADD ya kasa): ' + addErr.message);
     });
 }
 
