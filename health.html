@@ -1521,7 +1521,198 @@ async function askNexusAiStructured(extractedText, fileName, lang) {
             showToast(`Prescription sent to Nexus Pharmacy`);
             openNexusOverlay();
                                                 }
+/* ================= DOCTOR BOOKING WIZARD (Date&Time -> Doctor -> Confirm&Pay) ================= */
+        const NEXA_CONSULT_TYPES = [
+            { id: 'general', label: 'General consultation', desc: 'Talk to a GP about everyday concerns — colds, infections, scripts, lifestyle advice.', icon: 'fa-stethoscope', priceOverride: null },
+            { id: 'followup', label: 'Follow-up consultation', desc: 'A shorter check-in to review progress on an existing issue or prescription.', icon: 'fa-rotate', priceOverride: 10 },
+            { id: 'specialist', label: 'Specialist review', desc: 'An in-depth session for a specific condition needing specialist attention.', icon: 'fa-user-doctor', priceOverride: null }
+        ];
 
+        let nexaBooking = { step: 1, doctorId: null, date: null, time: null, consultTypeId: 'general', notes: '' };
+
+        function generateNextDates(count) {
+            const dates = [];
+            const today = new Date();
+            for (let i = 0; i < count; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                dates.push(d);
+            }
+            return dates;
+        }
+        function generateTimeSlots() {
+            const slots = [];
+            for (let h = 8; h < 18; h++) {
+                [0, 25, 35].forEach(m => {
+                    if (h === 8 && m === 0) { slots.push(`${String(h).padStart(2,'0')}:00`); return; }
+                    slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+                });
+            }
+            return slots;
+        }
+        function formatDateInput(d) {
+            return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+        }
+        function formatDateLong(d) {
+            return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function startDoctorBooking(doctorId) {
+            nexaBooking = { step: 1, doctorId, date: generateNextDates(1)[0], time: null, consultTypeId: 'general', notes: '' };
+            document.getElementById('telehealthModal').classList.add('hidden');
+            document.getElementById('doctorBookingWizard').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            renderNexaWizard();
+        }
+        function closeDoctorBookingWizard() {
+            document.getElementById('doctorBookingWizard').classList.add('hidden');
+            document.getElementById('telehealthModal').classList.remove('hidden');
+        }
+
+        function updateNexaStepTrack() {
+            for (let i = 1; i <= 3; i++) {
+                const circle = document.getElementById(`nexaStepCircle${i}`);
+                const label = document.getElementById(`nexaStepLabel${i}`);
+                circle.classList.remove('active', 'complete');
+                label.classList.remove('active');
+                if (i < nexaBooking.step) circle.classList.add('complete');
+                else if (i === nexaBooking.step) { circle.classList.add('active'); label.classList.add('active'); }
+                if (i < nexaBooking.step) circle.innerHTML = '<i class="fa-solid fa-check" style="font-size:11px;"></i>';
+                else circle.textContent = i;
+            }
+            document.getElementById('nexaStepLine1').classList.toggle('done', nexaBooking.step > 1);
+            document.getElementById('nexaStepLine2').classList.toggle('done', nexaBooking.step > 2);
+        }
+
+        function renderNexaWizard() {
+            updateNexaStepTrack();
+            const body = document.getElementById('nexaWizardBody');
+            if (nexaBooking.step === 1) body.innerHTML = renderNexaStep1();
+            else if (nexaBooking.step === 2) body.innerHTML = renderNexaStep2();
+            else body.innerHTML = renderNexaStep3();
+        }
+
+        function renderNexaStep1() {
+            const dates = generateNextDates(21);
+            const slots = generateTimeSlots();
+            const selectedDate = nexaBooking.date;
+            return `
+                <div class="nexa-panel">
+                    <div class="nexa-panel-title"><i class="fa-regular fa-calendar text-cyan-400"></i>1. Pick a date and time</div>
+                    <div class="nexa-panel-sub">We'll show you doctors who are available at the time you choose.</div>
+                    <label class="text-[11px] text-gray-400 mb-2 block">Date</label>
+                    <select class="nx-field" onchange="nexaBooking.date = new Date(this.value); nexaBooking.time = null; renderNexaWizard();">
+                        ${dates.map(d => `<option value="${d.toISOString()}" ${d.toDateString() === selectedDate.toDateString() ? 'selected' : ''}>${formatDateLong(d)}</option>`).join('')}
+                    </select>
+                    <label class="text-[11px] text-gray-400 mb-2 mt-2 block">Available times (30 minutes each)</label>
+                    <div class="nexa-slot-grid">
+                        ${slots.map(t => `<div class="nexa-slot ${nexaBooking.time === t ? 'selected' : ''}" onclick="nexaBooking.time='${t}'; renderNexaWizard();">${t}</div>`).join('')}
+                    </div>
+                </div>
+                <button ${nexaBooking.time ? '' : 'disabled'} onclick="nexaBooking.step=2; renderNexaWizard();" class="btn-nexus w-full text-center ${nexaBooking.time ? '' : 'opacity-30 pointer-events-none'}" style="background:var(--neon-cyan); color:#000;">Continue to doctor selection</button>
+            `;
+        }
+
+        function renderNexaStep2() {
+            const chosen = NEXA_DOCTORS.find(d => d.id === nexaBooking.doctorId);
+            const others = NEXA_DOCTORS.filter(d => d.id !== nexaBooking.doctorId && d.specialty === chosen.specialty).slice(0, 3);
+            const timeLabel = nexaBooking.time;
+            const dateLabel = formatDateLong(nexaBooking.date);
+            return `
+                <div class="nexa-panel">
+                    <div class="nexa-panel-title"><i class="fa-solid fa-user-doctor text-cyan-400"></i>2. Choose your doctor</div>
+                    <div class="nexa-panel-sub">These doctors are confirmed free at <b style="color:#fff;">${timeLabel}</b> on ${dateLabel}.</div>
+                    <div class="nexa-select-card chosen" onclick="nexaBooking.doctorId='${chosen.id}'; renderNexaWizard();">
+                        <i class="fa-solid fa-circle-check nexa-check-mark"></i>
+                        <div class="flex items-center gap-3">
+                            ${renderDoctorAvatar(chosen)}
+                            <div>
+                                <div class="text-[13px] font-bold text-white">${chosen.name}</div>
+                                <span class="nexa-chosen-pill"><i class="fa-solid fa-check"></i>Your chosen doctor</span>
+                                <div class="text-[11px] text-gray-400 mt-1">${chosen.specialty}</div>
+                            </div>
+                        </div>
+                    </div>
+                    ${others.map(d => `
+                        <div class="nexa-select-card" onclick="nexaBooking.doctorId='${d.id}'; renderNexaWizard();">
+                            <div class="flex items-center gap-3">
+                                ${renderDoctorAvatar(d)}
+                                <div>
+                                    <div class="text-[13px] font-bold text-white">${d.name}</div>
+                                    <div class="text-[11px] text-gray-400 mt-1">${d.specialty}</div>
+                                    <div class="text-[11px] text-gray-500 mt-1">${d.bio.slice(0, 70)}…</div>
+                                </div>
+                            </div>
+                        </div>`).join('')}
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="nexaBooking.step=1; renderNexaWizard();" class="flex-1 py-3 rounded-full text-[11px] font-bold border border-white/15 text-white/60">Back</button>
+                    <button onclick="nexaBooking.step=3; renderNexaWizard();" class="flex-1 py-3 rounded-full text-[11px] font-bold" style="background:var(--neon-cyan); color:#000;">Continue</button>
+                </div>
+            `;
+        }
+
+        function renderNexaStep3() {
+            const doc = NEXA_DOCTORS.find(d => d.id === nexaBooking.doctorId);
+            const consultType = NEXA_CONSULT_TYPES.find(c => c.id === nexaBooking.consultTypeId);
+            const price = consultType.priceOverride ?? doc.price;
+            return `
+                <div class="nexa-panel">
+                    <div class="nexa-panel-title"><i class="fa-solid fa-clipboard-list text-cyan-400"></i>3. Consultation type</div>
+                    ${NEXA_CONSULT_TYPES.map(c => `
+                        <div class="nexa-consult-card ${nexaBooking.consultTypeId === c.id ? 'chosen' : ''}" onclick="nexaBooking.consultTypeId='${c.id}'; renderNexaWizard();">
+                            <div class="nexa-consult-icon"><i class="fa-solid ${c.icon}"></i></div>
+                            <div>
+                                <div class="text-[13px] font-bold text-white">${c.label}</div>
+                                <div class="text-[10.5px] text-gray-400 mt-0.5">${c.desc}</div>
+                            </div>
+                            <div class="nexa-consult-price">£${c.priceOverride ?? doc.price}</div>
+                        </div>`).join('')}
+                </div>
+
+                <div class="nexa-panel">
+                    <div class="nexa-panel-title" style="font-size:13px;">Notes <span style="color:rgba(255,255,255,0.3); font-weight:400;">(optional)</span></div>
+                    <div class="nexa-panel-sub">Anything the doctor should know before your call.</div>
+                    <textarea id="nexaBookingNotes" rows="4" maxlength="2000" placeholder="Symptoms, history, things you want to discuss…" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[12px] outline-none text-white" oninput="nexaBooking.notes=this.value; document.getElementById('nexaNotesCount').textContent=this.value.length;">${nexaBooking.notes}</textarea>
+                    <div class="text-right text-[9px] text-gray-500 mt-1"><span id="nexaNotesCount">${nexaBooking.notes.length}</span>/2000</div>
+                </div>
+
+                <div class="nexa-panel">
+                    <div class="nexa-panel-title"><i class="fa-regular fa-clock text-cyan-400"></i>Booking summary</div>
+                    <div class="nexa-summary-row"><div class="label">Doctor</div><div class="value">${doc.name}</div></div>
+                    <div class="nexa-summary-row"><div class="label">Time</div><div class="value">${formatDateLong(nexaBooking.date)} at ${nexaBooking.time} GMT+1</div></div>
+                    <div class="nexa-summary-row"><div class="label">Type</div><div class="value">${consultType.label}</div></div>
+                    <div class="nexa-summary-total"><div>Total</div><div class="amt">£${price}</div></div>
+                    <p class="text-[10px] text-gray-500 mb-4">Your doctor and time are locked in as soon as your payment succeeds. You'll receive a confirmation email with the video call link.</p>
+                    <button onclick="confirmNexaBooking()" class="btn-nexus w-full text-center" style="background:var(--neon-cyan); color:#000;">Pay £${price} and confirm booking</button>
+                </div>
+
+                <button onclick="nexaBooking.step=2; renderNexaWizard();" class="w-full py-3 rounded-full text-[11px] font-bold border border-white/15 text-white/60">Back</button>
+            `;
+        }
+
+        function confirmNexaBooking() {
+            const doc = NEXA_DOCTORS.find(d => d.id === nexaBooking.doctorId);
+            const consultType = NEXA_CONSULT_TYPES.find(c => c.id === nexaBooking.consultTypeId);
+            const price = consultType.priceOverride ?? doc.price;
+            const slot = new Date(nexaBooking.date);
+            const [hh, mm] = nexaBooking.time.split(':').map(Number);
+            slot.setHours(hh, mm, 0, 0);
+
+            const appts = getAppointments();
+            appts.push({ doctor: doc.name, spec: doc.specialty, mode: consultType.label, time: slot.toISOString(), price, notes: nexaBooking.notes });
+            localStorage.setItem('nexusAppointments', JSON.stringify(appts));
+
+            closeDoctorBookingWizard();
+            renderAppointments();
+            showToast(`Booking confirmed with ${doc.name} — £${price} paid`);
+        }
+
+        function bookDoctor(index, mode) {
+            const d = NEXA_DOCTORS[index];
+            if (!d) return;
+            startDoctorBooking(d.id);
+         }
         /* ================= MEDICATION REMINDERS ================= */
         function openMeds() { renderMedsList(); document.getElementById('medsModal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
         function closeMeds() { document.getElementById('medsModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
