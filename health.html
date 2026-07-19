@@ -338,7 +338,7 @@
         </div>
     </div>
 
-    <div id="telehealthModal" class="nx-modal hidden">
+<div id="telehealthModal" class="nx-modal hidden">
         <div class="nx-modal-inner">
             <div class="nx-modal-header">
                 <div>
@@ -347,14 +347,73 @@
                 </div>
                 <button onclick="closeTelehealth()" aria-label="Close Telehealth" class="text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-circle-xmark"></i></button>
             </div>
-            <p class="text-[11px] text-gray-400 mb-4">Choose a doctor and book an instant video call or async chat consultation.</p>
-            <div id="doctorList" class="space-y-3 mb-6"></div>
-            <div class="unit-card rounded-2xl p-4">
+
+            <div class="nexa-directory-tabs">
+                <div class="nexa-directory-tab active" id="nexaTabGeneral" onclick="switchDoctorDirectory('general')"><i class="fa-solid fa-list-ul"></i>Find a Doctor</div>
+                <div class="nexa-directory-tab" id="nexaTabNear" onclick="switchDoctorDirectory('near')"><i class="fa-solid fa-location-dot"></i>Doctors Near Me</div>
+            </div>
+
+            <div id="nexaGeneralView">
+                <h2 class="futuristic-font text-lg font-bold mb-1">Find your doctor</h2>
+                <p class="text-[11px] text-gray-400 mb-4">Verified specialists. Transparent pricing.</p>
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass text-gray-500 text-xs"></i>
+                    <input type="text" id="nexaDocSearch" placeholder="Search by name, specialty or keyword" autocomplete="off" oninput="renderDoctorList()">
+                </div>
+                <select id="nexaSpecialtyFilter" class="nx-field" onchange="renderDoctorList()">
+                    <option value="">All specialties</option>
+                </select>
+                <label class="nx-list-item" style="cursor:pointer;">
+                    <span class="text-[12px]">Available today</span>
+                    <input type="checkbox" id="nexaAvailableTodayFilter" onchange="renderDoctorList()">
+                </label>
+                <div id="doctorList" class="space-y-3 mt-4"></div>
+            </div>
+
+            <div id="nexaNearView" class="hidden">
+                <h2 class="futuristic-font text-lg font-bold mb-1">Doctors near me</h2>
+                <p class="text-[11px] text-gray-400 mb-4">We use your location to find the closest available doctors first.</p>
+                <div id="nexaNearStatus"></div>
+                <div id="nexaNearList" class="space-y-3"></div>
+            </div>
+
+            <div class="unit-card rounded-2xl p-4 mt-4">
                 <div class="text-[10px] text-gray-500 uppercase mb-2">Upcoming Appointments</div>
                 <div id="appointmentList" class="text-[11px] text-gray-400">No appointments yet.</div>
             </div>
         </div>
     </div>
+
+    <div id="doctorBookingWizard" class="nx-modal hidden">
+        <div class="nx-modal-inner">
+            <button onclick="closeDoctorBookingWizard()" class="text-gray-400 hover:text-white text-[11px] mb-5 flex items-center gap-2"><i class="fa-solid fa-chevron-left"></i>Back to doctors</button>
+
+            <div class="flex items-start gap-4 mb-6">
+                <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-clipboard-list text-cyan-400"></i>
+                </div>
+                <div>
+                    <h2 class="futuristic-font text-lg font-bold">Book a consultation</h2>
+                    <p class="text-[11px] text-gray-400 mt-1">Pick your time, choose your doctor, pay securely.</p>
+                </div>
+            </div>
+
+            <div class="nexa-step-track">
+                <div class="nexa-step-node"><div class="nexa-step-circle" id="nexaStepCircle1">1</div><div class="nexa-step-label" id="nexaStepLabel1">Date &amp; time</div></div>
+                <div class="nexa-step-line" id="nexaStepLine1"></div>
+                <div class="nexa-step-node"><div class="nexa-step-circle" id="nexaStepCircle2">2</div><div class="nexa-step-label" id="nexaStepLabel2">Doctor</div></div>
+                <div class="nexa-step-line" id="nexaStepLine2"></div>
+                <div class="nexa-step-node"><div class="nexa-step-circle" id="nexaStepCircle3">3</div><div class="nexa-step-label" id="nexaStepLabel3">Confirm &amp; pay</div></div>
+            </div>
+
+            <div class="nexa-warn-box">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div><b>Not for emergencies.</b> If this is life-threatening, call your local emergency number now.</div>
+            </div>
+
+            <div id="nexaWizardBody"></div>
+        </div>
+                </div>
 
     <div id="medsModal" class="nx-modal hidden">
         <div class="nx-modal-inner">
