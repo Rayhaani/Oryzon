@@ -260,8 +260,16 @@
         appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
         measurementId: "G-K5085DLL2W"
     };
-   firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(); 
+
+    firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Jiran Firebase Auth ya "farfaɗo" session kafin a bar sending
+let authReadyResolve;
+const authReadyPromise = new Promise((resolve) => { authReadyResolve = resolve; });
+firebase.auth().onAuthStateChanged((user) => {
+    authReadyResolve(user);
+});
 </script>
 
 <!-- ── CALL ENGINE ── -->
@@ -360,14 +368,18 @@ function listenToNexusMessages() {
       });
 }
 
-  function sendNeuralMessage() {
+  async function sendNeuralMessage() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
     if (!text) return;
 
-    // ── DEBUG NA WUCIN GADI ──
-    const currentUser = firebase.auth().currentUser;
-    alert('DEBUG A LOKACIN SEND: ' + (currentUser ? ('UID=' + currentUser.uid) : 'BABU USER!'));
+    // Jiran Firebase Auth ya shirya (yana warware race condition na farkon buɗewa)
+    await authReadyPromise;
+
+    if (!firebase.auth().currentUser) {
+        alert('An kasa tabbatar da shiga (session). Don Allah sake login sannan ka gwada.');
+        return;
+    }
 
     db.collection('personalChats').doc(chatRoomId).collection('messages').add({
     senderId: myId, receiverId: chatWith, text, timestamp: Date.now()
