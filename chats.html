@@ -540,10 +540,7 @@
         </div>
 
         <div id="friends" class="tab-view">
-            <a href="chat-interior.html" class="chat-item">
-                <div class="profile-stack"><img src="https://via.placeholder.com/46/333/fff?text=S" class="user-img"></div>
-                <div class="chat-details"><span class="name">Salisu Synergy</span><p class="preview-text">Active Now</p></div>
-            </a>
+            <div id="friends-list-container"></div>
         </div>
     </div>
 
@@ -828,6 +825,66 @@
             }
         }
 
+        async function loadFriendsList() {
+            const container = document.getElementById('friends-list-container');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
+
+            try {
+                const snapshot = await db.collection('friends')
+                    .where('users', 'array-contains', myId)
+                    .get();
+
+                container.innerHTML = '';
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No friends yet</p>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (!Array.isArray(data.users)) return;
+                    const otherUser = data.users.find(u => u !== myId);
+                    if (!otherUser) return;
+
+                    const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${otherUser}`;
+                    const initialName = otherUser.charAt(0).toUpperCase() + otherUser.slice(1);
+
+                    container.insertAdjacentHTML('beforeend', `
+                        <a href="chat-interior.html?with=${encodeURIComponent(otherUser)}&avatar=${encodeURIComponent(defaultAvatar)}" class="chat-item" id="friend-link-${otherUser}">
+                            <div class="profile-stack"><img src="${defaultAvatar}" id="friend-avatar-${otherUser}" class="user-img"></div>
+                            <div class="chat-details">
+                                <span class="name" id="friend-name-${otherUser}">${initialName}</span>
+                                <p class="preview-text">Active Now</p>
+                            </div>
+                        </a>
+                    `);
+
+                    db.collection('users').doc(otherUser).get().then(userDoc => {
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            const fullName = userData.fullName || userData.name || userData.username;
+                            if (fullName) {
+                                const nameEl = document.getElementById(`friend-name-${otherUser}`);
+                                if (nameEl) {
+                                    nameEl.textContent = fullName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                                }
+                            }
+                            if (userData.userProfilePic) {
+                                const imgEl = document.getElementById(`friend-avatar-${otherUser}`);
+                                if (imgEl) imgEl.src = userData.userProfilePic;
+                            }
+                        }
+                    });
+                });
+
+            } catch(err) {
+                console.error("Friends load error:", err);
+                container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading friends</p>';
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             const personalLinks = document.querySelectorAll("#personal .chat-item");
             personalLinks.forEach(link => {
@@ -835,16 +892,10 @@
                 const avatarSrc = link.querySelector(".user-img").src;
                 link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
             });
-
-            const friendLinks = document.querySelectorAll("#friends .chat-item");
-            friendLinks.forEach(link => {
-                const nameText = link.querySelector(".name").innerText;
-                const avatarSrc = link.querySelector(".user-img").src;
-                link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
-            });
         });
 
         db.collection("personalChats").onSnapshot(() => { loadChats(); });
+        db.collection("friends").onSnapshot(() => { loadFriendsList(); });
     </script>
 </body>
 </html>
