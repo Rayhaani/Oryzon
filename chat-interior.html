@@ -360,13 +360,17 @@ function listenToNexusMessages() {
       });
 }
 
-function sendNeuralMessage() {
+  function sendNeuralMessage() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
     if (!text) return;
 
+    // ── DEBUG NA WUCIN GADI ──
+    const currentUser = firebase.auth().currentUser;
+    alert('DEBUG A LOKACIN SEND: ' + (currentUser ? ('UID=' + currentUser.uid) : 'BABU USER!'));
+
     db.collection('personalChats').doc(chatRoomId).collection('messages').add({
-        senderId: myId, receiverId: chatWith, text, timestamp: Date.now()
+    senderId: myId, receiverId: chatWith, text, timestamp: Date.now()
     }).then(() => {
         return db.collection('personalChats').doc(chatRoomId).set({
             lastMessage: text.substring(0, 60),
