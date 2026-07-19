@@ -6166,9 +6166,18 @@ async function loadRealProvidersFromFirebase() {
             const p = data[username];
             if (!p || p.status !== 'approved') return;
             if (PROS.some(existing => String(existing.id) === username)) return;
-            PROS.push({
+           const catalog = p.categories || {};
+            const flatItems = [];
+            Object.keys(catalog).forEach(catKey => {
+                const items = catalog[catKey].items || {};
+                Object.keys(items).forEach(itemId => flatItems.push({ ...items[itemId], category: catKey }));
+            });
+            const isFoodCategory = ['chef', 'snacks', 'beverages'].includes(p.category);
+
+            const newPro = {
                 id: username,
-                name: p.name || username,
+                realUsername: username,
+                name: p.businessName || p.name || username,
                 username: username,
                 category: p.category || '',
                 display_cat: p.categoryLabel || p.category || '',
@@ -6176,19 +6185,26 @@ async function loadRealProvidersFromFirebase() {
                 reviews: p.reviewsCount || 0,
                 distance: p.distance || 0,
                 city: p.city || '',
-                address: p.address || '',
-                verified: !!p.verification,
-                avatar: (p.name || username).slice(0,2).toUpperCase(),
-                color: 'linear-gradient(135deg, #64748b 0%, #334155 100%)',
+                address: p.address || 'Location available on request',
+                verified: p.status === 'approved',
+                avatar: (p.businessName || p.name || username).slice(0,2).toUpperCase(),
+                color: 'linear-gradient(135deg, #ea580c 0%, #78350f 100%)',
                 jobs: p.jobsDone || 0,
-                price: p.pricing ? '₦' + Number(p.pricing.base).toLocaleString() : '',
+                price: p.pricing ? '₦' + Number(p.pricing.base).toLocaleString() : '₦0',
                 bio: p.bio || '',
-                skills: p.skills || [],
+                skills: p.categoryLabel ? [p.categoryLabel] : [],
                 online: p.online !== undefined ? p.online : true,
-                gallery: p.portfolio || [],
-                menu: p.menu || undefined,
-                products: p.products || undefined
-            });
+                gallery: (p.portfolio || []).map(url => typeof url === 'string' ? { url } : url),
+                menuImageUrl: p.menuImageUrl || null
+            };
+
+            if (isFoodCategory) {
+                newPro.menu = flatItems;
+            } else {
+                newPro.services = flatItems;
+            }
+
+            PROS.push(newPro); 
         });
     } catch (e) {
         console.warn('Could not load real providers:', e);
@@ -6295,7 +6311,7 @@ function createProCardHtml(pro) {
     const addressLine = pro.address || pro.city || '';
 
     return `
-        <div class="biometric-sentinel-card" onclick="openProfileSheet(${pro.id})">
+        <div class="biometric-sentinel-card" onclick="openProfileSheet('${pro.id}')">
             <div class="sentinel-screw scr-tl"></div>
             <div class="sentinel-screw scr-bl"></div><div class="sentinel-screw scr-br"></div>
 
@@ -6305,7 +6321,7 @@ function createProCardHtml(pro) {
             </div>
 
             <div style="display:flex;align-items:center;gap:14px;z-index:2;position:relative;padding-right:78px;">
-                <div class="lens-viewport" onclick="event.stopPropagation();openProfileSheet(${pro.id})"><div class="lens-glass-reflection"></div></div>
+                <div class="lens-viewport" onclick="event.stopPropagation();openProfileSheet('${pro.id}')"><div class="lens-glass-reflection"></div></div>
                 <div style="flex:1;padding-left:2px;min-width:0;">
                     <div class="sentinel-title-text" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayHandle}</div>
                     <div class="sentinel-sub-text">${pro.display_cat}</div>
@@ -6640,7 +6656,7 @@ function closeStoryDeck() {
 
  // ── PROFILE SHEET ──
  function openProfileSheet(proId) {
-    const pro = PROS.find(p => p.id === proId);
+    const pro = PROS.find(p => String(p.id) === String(proId));
     if (!pro) return;
 
     // Hero banner: real portfolio photo idan yana akwai, in ba haka ba, gradient default
