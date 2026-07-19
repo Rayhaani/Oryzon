@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus - Unified Inbox</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&family=Orbitron:wght=600;700&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --obsidian: #050505;
@@ -591,7 +592,14 @@
 
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.firestore();
-        const myId = localStorage.getItem("nexus_user_session") || "Sadiq_Alhassan"; 
+        const myId = localStorage.getItem("nexus_user_session");
+        if (!myId) window.location.href = 'login.html';
+
+        // Jiran Firebase Auth ya farfaɗo session kafin a yi query
+        let authReadyResolve;
+        const authReadyPromise = new Promise((resolve) => { authReadyResolve = resolve; });
+        firebase.auth().onAuthStateChanged((user) => { authReadyResolve(user); });
+
         let selectedNodes = [];
         let identifiedContacts = new Set(); 
         let currentPortalMode = "menu"; 
@@ -599,10 +607,16 @@
         async function loadChats() {
             const container = document.getElementById('chats-list-container');
             container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
-            
+
+            await authReadyPromise;
+            if (!firebase.auth().currentUser) {
+                container.innerHTML = '<p style="text-align:center; padding:30px; color:#ff4444; font-size:13px;">Ba a tabbatar da shiga ba. Sake login.</p>';
+                return;
+            }
+
             try {
                 const snapshot = await db.collection("personalChats").get();
-                container.innerHTML = '';
+        container.innerHTML = '';
                 let hasChats = false;
                 identifiedContacts.clear(); 
 
@@ -830,9 +844,12 @@
             if (!container) return;
             container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
 
+            await authReadyPromise;
+            if (!firebase.auth().currentUser) return;
+
             try {
                 const snapshot = await db.collection('friends')
-                    .where('users', 'array-contains', myId)
+        .where('users', 'array-contains', myId)
                     .get();
 
                 container.innerHTML = '';
@@ -894,8 +911,11 @@
             });
         });
 
-        db.collection("personalChats").onSnapshot(() => { loadChats(); });
-        db.collection("friends").onSnapshot(() => { loadFriendsList(); });
+      authReadyPromise.then((user) => {
+            if (!user) return;
+            db.collection("personalChats").onSnapshot(() => { loadChats(); });
+            db.collection("friends").onSnapshot(() => { loadFriendsList(); });
+        }); 
     </script>
 </body>
 </html>
