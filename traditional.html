@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus Health</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2f4f7;
+    --card:#ffffff;
+    --blue:#0a84ff;
+    --green:#30c46e;
+    --grey:#98a1ad;
+    --red:#ff3b30;
+    --red-bg:#fff1f0;
+    --text-hi:#101418;
+    --text-lo:#6b7380;
+    --text-faint:#a7aeb8;
+    --line:#e9ecf1;
+    --shadow:0 1px 2px rgba(16,20,24,0.04), 0 6px 18px rgba(16,20,24,0.05);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+
+  body{
+    background:var(--bg);
+    color:var(--text-hi);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+  }
+
+  .app{
+    width:100%; max-width:440px; min-height:100vh;
+    display:flex; flex-direction:column;
+    background:var(--bg);
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    padding:20px 20px 14px;
+    background:var(--card);
+    border-bottom:1px solid var(--line);
+  }
+  .brandrow{ display:flex; align-items:center; gap:11px; }
+
+  .mark{
+    width:38px; height:38px; border-radius:11px;
+    background:linear-gradient(135deg, var(--blue), #52b6ff);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .mark svg{ width:20px; height:20px; color:#fff; }
+
+  .brandtext .name{ font-size:17px; font-weight:700; letter-spacing:-0.2px; }
+  .brandtext .tag{ font-size:12px; color:var(--text-lo); margin-top:1px; }
+
+  .pulse-dot{
+    margin-left:auto;
+    display:flex; align-items:center; gap:6px;
+    font-size:11.5px; font-weight:600; color:var(--green);
+  }
+  .pulse-dot::before{
+    content:""; width:7px; height:7px; border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 0 3px rgba(48,196,110,0.18);
+  }
+
+  /* ---------- EVIDENCE RINGS LEGEND ---------- */
+  .rings-card{
+    margin:16px 20px 0;
+    background:var(--card);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .ring-visual{
+    width:56px; height:56px; flex-shrink:0;
+    border-radius:50%;
+    background:
+      conic-gradient(var(--blue) 0deg 130deg, transparent 130deg 132deg,
+                      var(--green) 132deg 250deg, transparent 250deg 252deg,
+                      var(--grey) 252deg 355deg, transparent 355deg 360deg);
+    -webkit-mask:radial-gradient(circle, transparent 58%, black 60%);
+    mask:radial-gradient(circle, transparent 58%, black 60%);
+  }
+  .rings-text{ flex:1; }
+  .rings-text .t{ font-size:13px; font-weight:700; margin-bottom:6px; }
+  .legend-row{ display:flex; gap:12px; flex-wrap:wrap; }
+  .legend-row span{
+    font-size:10.5px; font-weight:600; color:var(--text-lo);
+    display:flex; align-items:center; gap:5px;
+  }
+  .legend-row i{ width:7px; height:7px; border-radius:50%; display:inline-block; }
+  .legend-row .lb{ background:var(--blue); }
+  .legend-row .lg{ background:var(--green); }
+  .legend-row .lr{ background:var(--grey); }
+
+  /* ---------- ALERT CARD ---------- */
+  .alert-card{
+    margin:14px 20px 0;
+    background:var(--red-bg);
+    border-radius:16px;
+    padding:14px 15px;
+    display:flex; gap:11px;
+    align-items:flex-start;
+  }
+  .alert-card .aicon{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    background:var(--red);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .alert-card .aicon svg{ width:17px; height:17px; color:#fff; }
+  .alert-card strong{ font-size:13px; font-weight:700; color:var(--red); display:block; margin-bottom:2px; }
+  .alert-card p{ font-size:12.5px; color:#7a2a24; line-height:1.5; }
+
+  /* ---------- CHAT ---------- */
+  .chat{
+    flex:1;
+    padding:18px 16px 10px;
+    display:flex; flex-direction:column; gap:12px;
+  }
+
+  .msg{ display:flex; gap:9px; max-width:88%; }
+  .msg.user{ align-self:flex-end; flex-direction:row-reverse; }
+
+  .avatar{
+    width:28px; height:28px; border-radius:9px; flex-shrink:0;
+    background:linear-gradient(135deg, var(--blue), #52b6ff);
+    display:flex; align-items:center; justify-content:center;
+    margin-top:2px;
+  }
+  .avatar svg{ width:14px; height:14px; color:#fff; }
+
+  .bubble{
+    background:var(--card);
+    border-radius:18px 18px 18px 5px;
+    padding:12px 15px;
+    font-size:14px;
+    line-height:1.55;
+    box-shadow:var(--shadow);
+    color:var(--text-hi);
+  }
+  .msg.user .bubble{
+    background:var(--blue);
+    color:#fff;
+    border-radius:18px 18px 5px 18px;
+    box-shadow:none;
+  }
+
+  .qline{ display:flex; gap:8px; margin-top:9px; }
+  .qline .qn{
+    width:16px; height:16px; border-radius:50%;
+    background:var(--blue); color:#fff;
+    font-size:9px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1.5px;
+  }
+
+  /* remedy card */
+  .remedy{
+    margin-top:12px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 13px;
+    background:#fafbfc;
+  }
+  .remedy-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+  .remedy-head .rname{ font-weight:700; font-size:13.5px; }
+  .evidence{
+    font-size:9.5px; font-weight:700; letter-spacing:0.2px;
+    padding:4px 9px; border-radius:20px;
+    display:flex; align-items:center; gap:4px;
+  }
+  .evidence i{ width:6px; height:6px; border-radius:50%; }
+  .evidence.clinical{ background:rgba(10,132,255,0.1); color:var(--blue); }
+  .evidence.clinical i{ background:var(--blue); }
+  .evidence.traditional{ background:rgba(48,196,110,0.1); color:#1f9c53; }
+  .evidence.traditional i{ background:var(--green); }
+  .evidence.folk{ background:rgba(152,161,173,0.15); color:#6b7380; }
+  .evidence.folk i{ background:var(--grey); }
+  .remedy p{ font-size:12.5px; color:var(--text-lo); line-height:1.5; }
+
+  .practitioner-cta{
+    margin-top:11px;
+    display:flex; align-items:center; gap:9px;
+    padding:11px 13px;
+    border-radius:13px;
+    background:rgba(10,132,255,0.07);
+    font-size:12.5px; font-weight:600; color:var(--blue);
+  }
+  .practitioner-cta svg{ width:16px; height:16px; flex-shrink:0; }
+
+  .typing{ display:flex; gap:4px; padding:3px 2px; }
+  .typing i{ width:6px; height:6px; border-radius:50%; background:var(--text-faint); animation:tb 1.2s infinite ease-in-out; }
+  .typing i:nth-child(2){ animation-delay:0.15s; }
+  .typing i:nth-child(3){ animation-delay:0.3s; }
+  @keyframes tb{0%,60%,100%{ transform:translateY(0); opacity:0.4; } 30%{ transform:translateY(-3px); opacity:1; }}
+
+  /* ---------- INPUT ---------- */
+  .inputbar{
+    position:sticky; bottom:0;
+    padding:10px 16px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top, var(--bg) 70%, transparent);
+  }
+  .inputwrap{
+    display:flex; align-items:center; gap:8px;
+    background:var(--card);
+    border-radius:26px;
+    padding:5px 5px 5px 17px;
+    box-shadow:var(--shadow);
+  }
+  .inputwrap input{
+    flex:1; background:none; border:none; outline:none;
+    font-family:'Inter',sans-serif; font-size:14px;
+    padding:10px 0; color:var(--text-hi);
+  }
+  .inputwrap input::placeholder{ color:var(--text-faint); }
+  .sendbtn{
+    width:36px; height:36px; border-radius:50%; border:none;
+    background:var(--blue);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0;
+    transition:transform 0.15s ease;
+  }
+  .sendbtn:active{ transform:scale(0.92); }
+  .sendbtn svg{ width:15px; height:15px; color:#fff; }
+
+  .disclaimer{
+    text-align:center; font-size:10.5px; color:var(--text-faint);
+    padding-top:9px; font-weight:500;
+  }
+
+  @media (prefers-reduced-motion: reduce){ .typing i{ animation:none; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brandrow">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v18M4.5 8.5c2.5 3 6.5 3 8 0M4.5 15.5c2.5-3 6.5-3 8 0M20.5 8.5c-2.5 3-6.5 3-8 0M20.5 15.5c-2.5-3-6.5-3-8 0"/></svg>
+      </div>
+      <div class="brandtext">
+        <div class="name">Nexus Health</div>
+        <div class="tag">Symptom Screener</div>
+      </div>
+      <div class="pulse-dot">Online</div>
+    </div>
+  </header>
+
+  <div class="rings-card">
+    <div class="ring-visual"></div>
+    <div class="rings-text">
+      <div class="t">Amsoshinka na dauke da tabbaci</div>
+      <div class="legend-row">
+        <span><i class="lb"></i>Clinical</span>
+        <span><i class="lg"></i>Traditional</span>
+        <span><i class="lr"></i>Folk</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-card" id="redflag" hidden>
+    <div class="aicon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.6" fill="#fff" stroke="none"/><circle cx="12" cy="12" r="9"/></svg>
+    </div>
+    <div>
+      <strong>Alamun gaggawa</strong>
+      <p>Ka je asibiti mafi kusa da kai YANZU. Kada ka jira amsar AI.</p>
+    </div>
+  </div>
+
+  <main class="chat" id="chat">
+
+    <div class="msg ai">
+      <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 L12 22 M2 12 L22 12"/></svg></div>
+      <div class="bubble">Sannu! Ni Nexus Health AI ne. Ka gaya mani irin damuwar da kake fama da ita.</div>
+    </div>
+
+    <div class="msg user">
+      <div class="bubble">Ciwon ciki tun jiya</div>
+    </div>
+
+    <div class="msg ai">
+      <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 L12 22 M2 12 L22 12"/></svg></div>
+      <div class="bubble">
+        Kafin komai —
+        <div class="qline"><span class="qn">1</span><span>Shin akwai zafi mai tsanani ko zubar jini?</span></div>
+        <div class="qline"><span class="qn">2</span><span>Shin kina da ciki, ko hawan jini?</span></div>
+      </div>
+    </div>
+
+    <div class="msg user">
+      <div class="bubble">A'a, zafi mai sauki ne, ba ni da ciki</div>
+    </div>
+
+    <div class="msg ai">
+      <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 L12 22 M2 12 L22 12"/></svg></div>
+      <div class="bubble">
+        Wannan yayi kama da ciwon ciki na yau da kullum. Ga zabin da aka tabbatar:
+
+        <div class="remedy">
+          <div class="remedy-head">
+            <span class="rname">Citta &middot; Ginger</span>
+            <span class="evidence clinical"><i></i>Clinical</span>
+          </div>
+          <p>Bincike ya tabbatar da amfaninsa wajen rage tashin zuciya da zafin ciki mai sauki.</p>
+        </div>
+
+        <div class="remedy">
+          <div class="remedy-head">
+            <span class="rname">Kanwa</span>
+            <span class="evidence traditional"><i></i>Traditional</span>
+          </div>
+          <p>An rubuta a pharmacopoeia na gargajiya — a nemi jagorancin kwararre kan yawan amfani.</p>
+        </div>
+
+        <div class="practitioner-cta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          Tuntubi verified practitioner
+        </div>
+      </div>
+    </div>
+
+    <div class="msg ai">
+      <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 L12 22 M2 12 L22 12"/></svg></div>
+      <div class="bubble"><div class="typing"><i></i><i></i><i></i></div></div>
+    </div>
+
+  </main>
+
+  <div class="inputbar">
+    <div class="inputwrap">
+      <input type="text" placeholder="Rubuta damuwarka anan&hellip;" id="msgInput">
+      <button class="sendbtn" id="sendBtn" aria-label="Aika">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <div class="disclaimer">Bayani ne, ba maganin likita kai-tsaye ba</div>
+  </div>
+
+</div>
+
+<script>
+  const chat = document.getElementById('chat');
+  const input = document.getElementById('msgInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const redflag = document.getElementById('redflag');
+  const RED_FLAG_WORDS = ['zubar jini','wahalar numfashi','zafin kirji','suma','ba na numfashi','jini mai yawa'];
+
+  function scrollBottom(){ chat.scrollTop = chat.scrollHeight; }
+
+  function addUserMsg(text){
+    const div = document.createElement('div');
+    div.className = 'msg user';
+    div.innerHTML = `<div class="bubble"></div>`;
+    div.querySelector('.bubble').textContent = text;
+    chat.appendChild(div); scrollBottom();
+  }
+
+  function addAiMsg(html){
+    const div = document.createElement('div');
+    div.className = 'msg ai';
+    div.innerHTML = `<div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 L12 22 M2 12 L22 12"/></svg></div><div class="bubble">${html}</div>`;
+    chat.appendChild(div); scrollBottom();
+  }
+
+  function handleSend(){
+    const val = input.value.trim();
+    if(!val) return;
+    addUserMsg(val);
+    input.value = '';
+    const lower = val.toLowerCase();
+    const isRedFlag = RED_FLAG_WORDS.some(w => lower.includes(w));
+
+    if(isRedFlag){
+      redflag.hidden = false;
+      redflag.scrollIntoView({behavior:'smooth', block:'nearest'});
+      setTimeout(()=> addAiMsg('Na gano alamun gaggawa. Ka je asibiti mafi kusa da kai YANZU.'), 500);
+      return;
+    }
+    setTimeout(()=> addAiMsg('Na gode. Ina duba database domin nemo zabin da suka dace&hellip;'), 500);
+  }
+
+  sendBtn.addEventListener('click', handleSend);
+  input.addEventListener('keydown', e => { if(e.key === 'Enter') handleSend(); });
+</script>
+</body>
+</html>
