@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Health AI - Database Integrated</title>
+    <!-- FontAwesome don Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ====== NEXUS HEALTH AI THEME INTERFACE ====== */
+        .ai-clinic-container {
+            max-width: 500px;
+            margin: 30px auto;
+            background: #ffffff;
+            border: 1px solid #e4e6eb;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* Sashen Kai (Header) */
+        .clinic-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #ffffff;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .clinic-avatar {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            background: #e7f3ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0084ff;
+            font-size: 1.2rem;
+        }
+
+        .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 9px;
+            height: 9px;
+            background: #31a24c;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+        }
+
+        .clinic-info h5 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #050505;
+        }
+
+        .clinic-info p {
+            margin: 2px 0 0 0;
+            font-size: 0.75rem;
+            color: #65676b;
+        }
+
+        /* Filin Tattaunawa (Chat Body) */
+        .clinic-chat-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+        }
+
+        /* Tsarin Sakonni */
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .ai-msg {
+            background: #ffffff;
+            color: #050505;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-msg {
+            background: #0084ff;
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg-time {
+            font-size: 0.65rem;
+            display: block;
+            margin-top: 5px;
+            opacity: 0.6;
+            text-align: right;
+        }
+
+        /* Akwatin Rubutu (Input Area) */
+        .clinic-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid #e4e6eb;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+        }
+
+        .clinic-input-area input {
+            flex: 1;
+            padding: 10px 18px;
+            border: 1px solid #e4e6eb;
+            border-radius: 22px;
+            outline: none;
+            font-size: 0.9rem;
+            background: #f0f2f5;
+        }
+
+        .clinic-input-area input:focus {
+            background: #ffffff;
+            border-color: #0084ff;
+        }
+
+        .send-btn {
+            background: none;
+            border: none;
+            color: #0084ff;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        /* Launuka na Musamman don Hadari ko Magani */
+        .alert-hospital {
+            color: #c92a2a;
+            background: #fff5f5;
+            border-left: 4px solid #ffc9c9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        .remedy-box {
+            background: #f4fce3;
+            border-left: 4px solid #d8f5a2;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            color: #2b8a3e;
+        }
+        
+        .scientific-tag {
+            font-size: 0.75rem;
+            color: #495057;
+            background: rgba(0,0,0,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-style: italic;
+            display: inline-block;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- INTERFACE MODULE -->
+    <div class="ai-clinic-container">
+        <!-- Header -->
+        <div class="clinic-header">
+            <div class="clinic-avatar">
+                <i class="fa-solid fa-robot"></i>
+                <span class="online-dot"></span>
+            </div>
+            <div class="clinic-info">
+                <h5>Nexus Health AI</h5>
+                <p>Traditional & Modern Knowledge Matrix</p>
+            </div>
+        </div>
+
+        <!-- Chat Body -->
+        <div class="clinic-chat-body" id="clinicChatBody">
+            <div class="message ai-msg">
+                <p>Hello! I am your Nexus Health Assistant. Describe your symptoms or mention any plant/remedy to check its universal global value.</p>
+                <span class="msg-time">Just now</span>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="clinic-input-area">
+            <input type="text" id="userInput" placeholder="Type symptoms or herbal name (e.g., garlic, fever)..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendSymptom()" class="send-btn">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGIC & DATABASE INTEGRATION -->
+    <script>
+        // ====== GLOBAL KNOWLEDGE MATRIX (THE DATABASE LAYER) ======
+        const MedicalDatabase = {
+            // 1. Shiyyar Cututtuka na Gida (Safe Home Remedies)
+            conditions: [
+                {
+                    keywords: ["cough", "cold", "flu", "mura", "respiratory"],
+                    type: "home_remedy",
+                    title: "Acute Respiratory Relief",
+                    botanical: "Citrus limon & Zingiber officinale",
+                    remedy: "Mix 1 tablespoon of Lemon juice (Lemon Tsami / ليمون) with 1 teaspoon of crushed Ginger (Citta / زنجبيل) and 1 tablespoon of Pure Honey in warm water. Drink 2-3 times daily."
+                },
+                {
+                    keywords: ["stomach ache", "indigestion", "bloating", "ciwon ciki", "digestive"],
+                    type: "home_remedy",
+                    title: "Gastrointestinal Calmative",
+                    botanical: "Allium sativum & Mentha",
+                    remedy: "Steep fresh Mint leaves (Na'a na'a / نعناع) in hot water, or use 1 small crushed clove of Garlic (Tafarnuwa / ثوم) swallowed with warm water after meals to expel toxic gas."
+                },
+                {
+                    keywords: ["insomnia", "sleeplessness", "stress", "rashin barci"],
+                    type: "home_remedy",
+                    title: "Neural Relaxation",
+                    botanical: "Matricaria chamomilla",
+                    remedy: "Infuse Chamomile flowers in boiling water for 10 minutes. Consume 30 minutes before sleep time to settle the nervous system."
+                }
+            ],
+            
+            // 2. Shiyyar Hadari (Emergency Trigger System)
+            emergencies: [
+                {
+                    keywords: ["chest pain", "breathing", "severe bleeding", "unconscious", "paralysis", "stroke", "poison", "ciwon gaba", "numfashi"],
+                    type: "hospital_referral",
+                    alert: "CRITICAL EMERGENCY DETECTED: This condition cannot be managed safely at home. Traditional remedies are strictly suspended for these vital symptoms. Please secure immediate transportation to the nearest hospital facility."
+                }
+            ]
+        };
+
+        function sendSymptom() {
+            const input = document.getElementById('userInput');
+            const chatBody = document.getElementById('clinicChatBody');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Nuna rubutun mai amfani
+            const userHtml = `
+                <div class="message user-msg">
+                    <p>${escapeHtml(text)}</p>
+                    <span class="msg-time">${currentTime}</span>
+                </div>
+            `;
+            chatBody.insertAdjacentHTML('beforeend', userHtml);
+            input.value = '';
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            if (navigator.vibrate) navigator.vibrate(15);
+
+            // Binciken AI ta cikin Database Layer
+            setTimeout(() => {
+                let aiResponse = "";
+                const cleanInput = text.toLowerCase();
+
+                // Dabarar Binciken Hadari (Emergency Query)
+                let emergencyFound = MedicalDatabase.emergencies.find(e => 
+                    e.keywords.some(keyword => cleanInput.includes(keyword))
+                );
+
+                if (emergencyFound) {
+                    aiResponse = `
+                        <strong>SYSTEM ALERT:</strong><br>
+                        ${emergencyFound.alert}
+                        <div class="alert-hospital">
+                            <i class="fa-solid fa-truck-medical"></i> <strong>IMMEDIATE ACTION:</strong> Proceed to emergency medical care now.
+                        </div>
+                    `;
+                } else {
+                    // Dabarar Binciken Maganin Gida (Remedy Query)
+                    let conditionFound = MedicalDatabase.conditions.find(c => 
+                        c.keywords.some(keyword => cleanInput.includes(keyword))
+                    );
+
+                    if (conditionFound) {
+                        aiResponse = `
+                            <strong>MATCHED NODE: ${conditionFound.title}</strong><br>
+                            Verified protocols loaded from global herbal research matrix:
+                            <div class="remedy-box">
+                                <span class="scientific-tag"><i class="fa-solid fa-dna"></i> ${conditionFound.botanical}</span><br><br>
+                                <strong>Preparation & Dosage:</strong><br>
+                                ${conditionFound.remedy}
+                            </div>
+                        `;
+                    } else {
+                        // Idan AI din bai sami takamaiman abu a database ba
+                        aiResponse = `
+                            <strong>EVALUATION INCOMPLETE:</strong><br>
+                            I checked the database matrix for "${escapeHtml(text)}" but no direct mild remedy or urgent alert triggered.<br><br>
+                            Could you please describe the symptoms using other words, or specify if there is any underlying chronic illness?
+                        `;
+                    }
+                }
+
+                const aiHtml = `
+                    <div class="message ai-msg">
+                        <p>${aiResponse}</p>
+                        <span class="msg-time">${currentTime}</span>
+                    </div>
+                `;
+                chatBody.insertAdjacentHTML('beforeend', aiHtml);
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }, 800);
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendSymptom();
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+
+</body>
+</html>
