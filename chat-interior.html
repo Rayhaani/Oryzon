@@ -364,19 +364,25 @@ function sendNeuralMessage() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
     if (!text) return;
+
     db.collection('personalChats').doc(chatRoomId).collection('messages').add({
         senderId: myId, receiverId: chatWith, text, timestamp: Date.now()
-    }).then(() => db.collection('personalChats').doc(chatRoomId).set({
-        lastMessage: text.substring(0, 60),
-        lastMessageTime: Date.now(),
-        members: [myId, chatWith]
-    }, { merge: true })).then(() => {
+    }).then(() => {
+        return db.collection('personalChats').doc(chatRoomId).set({
+            lastMessage: text.substring(0, 60),
+            lastMessageTime: Date.now(),
+            members: [myId, chatWith]
+        }, { merge: true }).catch((setErr) => {
+            console.error('Nexus SET error (parent doc):', setErr);
+            alert('An samu sakon amma an kasa sabunta chat list: ' + setErr.message);
+        });
+    }).then(() => {
         input.value = '';
         autoExpand(input);
         toggleButtons();
-    }).catch((err) => {
-        console.error('Nexus send error:', err);
-        alert('Sakon bai tafi ba: ' + err.message);
+    }).catch((addErr) => {
+        console.error('Nexus ADD error (message):', addErr);
+        alert('Sakon bai tafi ba (ADD ya kasa): ' + addErr.message);
     });
 }
 
