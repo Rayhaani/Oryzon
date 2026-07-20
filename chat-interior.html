@@ -7,13 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
+       :root {
     --obsidian: #050505;
     --cyan-neon: #00F2FF;
+    --presence-live: #34C759;
     --glass-border: rgba(255, 255, 255, 0.08);
     --user-bubble: linear-gradient(135deg, rgba(255, 215, 130, 0.18), rgba(255, 179, 71, 0.06));
     --vendor-bubble: rgba(255, 255, 255, 0.05);
-        }
+       } 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
        body {
             background-color: #050505;
@@ -117,6 +118,7 @@
             flex-shrink: 0;
         }
         #sendBtn { display: none; }
+        @keyframes recPulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
         @supports (-webkit-touch-callout: none) {
             body { height: -webkit-fill-available; }
             #chat-flow { padding-bottom: 90px; }
@@ -149,7 +151,7 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             font-family: 'Inter', sans-serif;
         ">Loading...</div>
-        <div style="font-size: 10px; color: #50FA7B; margin-top: 1px;">● Active now</div>
+        <div style="font-size: 10px; color: var(--presence-live); margin-top: 1px;">● Active now</div>
     </div>
 
     <div style="display: flex; gap: 8px; flex-shrink: 0;">
@@ -197,6 +199,9 @@
 
 <!-- ── INPUT AREA ── -->
 <div class="input-area">
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+    <input type="file" id="galleryInput" accept="image/*,video/*" hidden>
+
     <div id="emojiPanel" style="
         display: none; position: fixed; bottom: 70px; left: 0; width: 100%;
         background: #111; border-top: 1px solid rgba(255,255,255,0.1);
@@ -213,44 +218,70 @@
         "></div>
     </div>
 
-    <div class="neural-search-bar">
-        <div class="icon-btn" id="emojiToggleBtn" onclick="toggleEmojiPanel()" style="padding-bottom:11px;flex-shrink:0;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                <line x1="9" y1="9" x2="9.01" y2="9" stroke-width="2.5"/>
-                <line x1="15" y1="9" x2="15.01" y2="9" stroke-width="2.5"/>
-            </svg>
+    <div id="normalInputRow" style="display:flex; align-items:flex-end; gap:8px; flex:1;">
+        <div class="neural-search-bar">
+            <div class="icon-btn" id="emojiToggleBtn" onclick="toggleEmojiPanel()" style="padding-bottom:11px;flex-shrink:0;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                    <line x1="9" y1="9" x2="9.01" y2="9" stroke-width="2.5"/>
+                    <line x1="15" y1="9" x2="15.01" y2="9" stroke-width="2.5"/>
+                </svg>
+            </div>
+            <textarea id="msgInput" placeholder="Neural Message..." rows="1"></textarea>
+            <div class="icon-btn" onclick="document.getElementById('galleryInput').click()" style="padding-bottom:11px;flex-shrink:0;" title="Gallery">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <path d="M21 15l-5-5L5 21"/>
+                </svg>
+            </div>
+            <div class="icon-btn" onclick="document.getElementById('cameraInput').click()" style="padding-bottom:11px;flex-shrink:0;" title="Camera">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+            </div>
         </div>
-        <textarea id="msgInput" placeholder="Neural Message..." rows="1"></textarea>
-        <div class="icon-btn" style="padding-bottom:11px;flex-shrink:0;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
+
+        <button id="voiceBtn" class="action-trigger" onclick="toggleVoiceRecording()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
             </svg>
-        </div>
+        </button>
+        <button id="sendBtn" class="action-trigger">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+        </button>
     </div>
 
-    <button id="voiceBtn" class="action-trigger">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-            <line x1="8" y1="23" x2="16" y2="23"/>
-        </svg>
-    </button>
-    <button id="sendBtn" class="action-trigger">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5">
-            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
-    </button>
+    <div id="recordingRow" style="display:none; align-items:center; gap:10px; flex:1;">
+        <div onclick="stopRecording(false)" style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,59,48,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
+        </div>
+        <div style="flex:1; display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:22px; padding:11px 16px;">
+            <div style="width:9px;height:9px;border-radius:50%;background:#ff3b30;animation:recPulse 1.2s ease-in-out infinite;"></div>
+            <span id="recordingTimerLabel" style="font-family:'Orbitron',sans-serif; font-size:13px; color:#fff;">00:00</span>
+            <span style="font-size:11px; color:rgba(255,255,255,0.5); margin-left:auto;">Rikodin murya...</span>
+        </div>
+        <button onclick="stopRecording(true)" class="action-trigger" style="flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+        </button>
+    </div>
 </div>
 
 <!-- ── FIREBASE ── -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script>
     const firebaseConfig = {
         apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
         authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -263,6 +294,7 @@
 
     firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 // Jiran Firebase Auth ya "farfaɗo" session kafin a bar sending
 let authReadyResolve;
@@ -358,7 +390,26 @@ function listenToNexusMessages() {
                   : 'Just Now';
               const bubble = document.createElement('div');
               bubble.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
-              bubble.innerHTML = `${d.text}<span class="timestamp">${time}</span>`;
+
+              if (d.type === 'image') {
+                  bubble.innerHTML = `<img src="${d.mediaUrl}" style="max-width:100%; border-radius:10px; display:block;" onclick="window.open('${d.mediaUrl}','_blank')"><span class="timestamp">${time}</span>`;
+              } else if (d.type === 'video') {
+                  bubble.innerHTML = `<video src="${d.mediaUrl}" controls style="max-width:100%; border-radius:10px; display:block;"></video><span class="timestamp">${time}</span>`;
+              } else if (d.type === 'audio') {
+                  const audioId = 'audio_' + doc.id;
+                  bubble.innerHTML = `
+                      <div style="display:flex; align-items:center; gap:10px; min-width:150px; padding:2px 0;">
+                          <div onclick="toggleAudioPlay('${audioId}', this)" style="width:30px;height:30px;border-radius:50%;background:var(--cyan-neon);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+                              <svg class="play-icon" width="13" height="13" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+                          </div>
+                          <div style="flex:1; height:3px; background:rgba(255,255,255,0.15); border-radius:2px;"></div>
+                          <span style="font-size:9px; color:rgba(255,255,255,0.5);">🎤</span>
+                      </div>
+                      <audio id="${audioId}" src="${d.mediaUrl}" style="display:none;"></audio>
+                      <span class="timestamp">${time}</span>`;
+              } else {
+                  bubble.innerHTML = `${d.text}<span class="timestamp">${time}</span>`;
+              }
               chatFlow.appendChild(bubble);
           });
           const lastMsg = snapshot.docs[snapshot.docs.length - 1];
@@ -415,7 +466,112 @@ function toggleButtons() {
     document.getElementById('sendBtn').style.display = has ? 'flex' : 'none';
 }
 
-window.addEventListener('resize', () => {
+// ══════════════════════════════════════════════
+//  MEDIA UPLOAD (Camera / Gallery / Voice)
+// ══════════════════════════════════════════════
+async function uploadAndSendMedia(file, kind) {
+    await authReadyPromise;
+    if (!firebase.auth().currentUser) {
+        alert('An kasa tabbatar da shiga. Sake login sannan ka gwada.');
+        return;
+    }
+    const path = `chatMedia/${chatRoomId}/${Date.now()}_${file.name}`;
+    const ref = storage.ref(path);
+    try {
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+        const lastLabel = kind === 'image' ? '📷 Photo' : kind === 'video' ? '🎥 Video' : '🎤 Voice message';
+        await db.collection('personalChats').doc(chatRoomId).collection('messages').add({
+            senderId: myId, receiverId: chatWith, type: kind, mediaUrl: url, timestamp: Date.now()
+        });
+        await db.collection('personalChats').doc(chatRoomId).set({
+            lastMessage: lastLabel, lastMessageTime: Date.now(), members: [myId, chatWith]
+        }, { merge: true });
+    } catch (err) {
+        console.error('Media upload error:', err);
+        alert('An kasa tura fayil: ' + err.message);
+    }
+}
+
+document.getElementById('cameraInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) uploadAndSendMedia(file, 'image');
+    e.target.value = '';
+});
+document.getElementById('galleryInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    uploadAndSendMedia(file, file.type.startsWith('video') ? 'video' : 'image');
+    e.target.value = '';
+});
+
+// ══════════════════════════════════════════════
+//  VOICE RECORDING
+// ══════════════════════════════════════════════
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let recordingSeconds = 0;
+let recordingTimerInterval = null;
+let recordingStream = null;
+
+async function toggleVoiceRecording() {
+    if (isRecording) return;
+    try {
+        recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+        alert('An kasa samun izinin amfani da makirifo.');
+        return;
+    }
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(recordingStream);
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.start();
+    isRecording = true;
+    recordingSeconds = 0;
+    document.getElementById('normalInputRow').style.display = 'none';
+    document.getElementById('recordingRow').style.display = 'flex';
+    document.getElementById('recordingTimerLabel').textContent = '00:00';
+    recordingTimerInterval = setInterval(() => {
+        recordingSeconds++;
+        const m = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+        const s = String(recordingSeconds % 60).padStart(2, '0');
+        document.getElementById('recordingTimerLabel').textContent = `${m}:${s}`;
+    }, 1000);
+}
+
+function stopRecording(shouldSend) {
+    if (!isRecording || !mediaRecorder) return;
+    isRecording = false;
+    clearInterval(recordingTimerInterval);
+    mediaRecorder.onstop = async () => {
+        recordingStream.getTracks().forEach(t => t.stop());
+        document.getElementById('normalInputRow').style.display = 'flex';
+        document.getElementById('recordingRow').style.display = 'none';
+        if (shouldSend && recordedChunks.length > 0) {
+            const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+            const file = new File([blob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+            await uploadAndSendMedia(file, 'audio');
+        }
+    };
+    mediaRecorder.stop();
+}
+
+function toggleAudioPlay(audioId, btnEl) {
+    const audio = document.getElementById(audioId);
+    const icon = btnEl.querySelector('.play-icon');
+    if (audio.paused) {
+        document.querySelectorAll('#chat-flow audio').forEach(a => { if (a.id !== audioId) a.pause(); });
+        audio.play();
+        icon.innerHTML = '<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>';
+    } else {
+        audio.pause();
+        icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    }
+    audio.onended = () => { icon.innerHTML = '<path d="M8 5v14l11-7z"/>'; };
+ }
+
+    window.addEventListener('resize', () => {
     const cf = document.getElementById('chat-flow');
     if (cf) setTimeout(() => { cf.scrollTop = cf.scrollHeight; }, 100);
 });
