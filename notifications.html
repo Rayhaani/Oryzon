@@ -385,8 +385,8 @@ async function loadNotifications() {
             container.innerHTML = `
                 <div class="state-msg">
                     <i class="fa-regular fa-bell"></i>
-                    <div class="state-title">Babu wani notification</div>
-                    <p>Duk lokacin da wani ya bi ka, ya karɓi request ɗinka, ko ya yi wani abu da ya shafe ka, zai bayyana a nan.</p>
+                    <div class="state-title">No notifications yet</div>
+                    <p>You'll see it here whenever someone follows you, accepts your request, or does something that involves you.</p>
                 </div>`;
             updateUnreadBadge(0);
             return;
@@ -628,10 +628,11 @@ async function loadFollowBackList() {
         if (candidates.length === 0) {
             container.innerHTML = `
                 <div class="state-msg">
-                    <i class="fa-solid fa-user-check"></i>
-                    <div class="state-title">Kai ka bi kowa da ke bin ka</div>
-                    <p>Babu sauran wanda ya bi ka wanda ba ka bi shi back ba tukuna.</p>
-                </div>`;
+
+              <i class="fa-solid fa-user-check"></i>
+                    <div class="state-title">You're all caught up</div>
+                    <p>You follow everyone who follows you back.</p>
+                </div>`;      
             return;
         }
 
@@ -644,7 +645,7 @@ async function loadFollowBackList() {
 
     } catch (err) {
         console.error('Follow-back load error:', err);
-        container.innerHTML = `<div class="state-msg"><i class="fa-solid fa-triangle-exclamation"></i><p>Kuskure wajen loda jerin.</p></div>`;
+        container.innerHTML = `<div class="state-msg"><i class="fa-solid fa-triangle-exclamation"></i><p>Error loading list.</p></div>`;
     }
 }
 
@@ -727,7 +728,7 @@ async function performFollowBack(targetUsername) {
 
     await db.collection('notifications').add({
         to: targetUsername, from: myUsername, type: 'new_friend',
-        message: `${myUsername} ya fara bin ka — yanzu Nodes ne!`,
+        message: `${myUsername} started following you — you're Nodes now!`,
         read: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 }
@@ -777,8 +778,8 @@ function refreshFollowBackBadgeCount() {
         document.getElementById('followBackContainer').innerHTML = `
             <div class="state-msg">
                 <i class="fa-solid fa-user-check"></i>
-                <div class="state-title">Kai ka bi kowa da ke bin ka</div>
-                <p>Babu sauran wanda ya bi ka wanda ba ka bi shi back ba tukuna.</p>
+                <div class="state-title">You're all caught up</div>
+                <p>You follow everyone who follows you back.</p>
             </div>`;
     }
 }
