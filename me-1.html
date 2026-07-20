@@ -1933,8 +1933,9 @@ async function viewHighlight(id) {
     } else {
         const followCheck = await db.collection('follows')
             .where('follower', '==', myUsername)
-            .where('following', '==', profileUser).get();
-        followBtn.style.display = followCheck.empty ? 'block' : 'none';
+            .get();
+        const alreadyFollowing = followCheck.docs.some(d => d.data().following === profileUser);
+        followBtn.style.display = alreadyFollowing ? 'none' : 'block';
     }
 
     document.getElementById('storyViewerOverlay').style.display = 'flex';
@@ -2575,10 +2576,10 @@ async function sendFriendRequest(targetUsername) {
         // Duba ko request ta riga ta wanzu
         const existing = await db.collection('friendRequests')
             .where('from', '==', myUsername)
-            .where('to', '==', targetUsername)
             .get();
+        const alreadySent = existing.docs.some(d => d.data().to === targetUsername);
 
-        if (!existing.empty) {
+        if (alreadySent) {
             alert('Ka riga ka aika request!');
             return;
         }
@@ -2594,7 +2595,7 @@ async function sendFriendRequest(targetUsername) {
         });
 
         if (alreadyFriends) {
-            alert('Kun riga kun zama Nodes!');
+            alert('Kun riga kun zama Abokai!');
             return;
         }
 
@@ -2612,7 +2613,7 @@ async function sendFriendRequest(targetUsername) {
             from: myUsername,
             type: 'friend_request',
             requestId: requestRef.id,
-            message: `${myUsername} ya aiko maka Node Request`,
+            message: `${myUsername} ya aiko maka Friend Request`,
             read: false,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -2625,7 +2626,7 @@ async function sendFriendRequest(targetUsername) {
             btn.style.opacity = '0.6';
         }
 
-        alert('Node Request an aika!');
+        alert('Friend Request an aika!');
 
     } catch (err) {
         console.error('Friend request kuskure:', err);
@@ -2650,7 +2651,7 @@ async function respondToRequest(requestId, fromUsername, accept) {
                 to: fromUsername,
                 from: myUsername,
                 type: 'friend_accepted',
-                message: `${myUsername} ya karɓi Node Request ɗinka!`,
+                message: `${myUsername} ya karɓi Friend Request ɗinka!`,
                 read: false,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -2687,13 +2688,16 @@ function listenToNotifications() {
     const myUsername = localStorage.getItem('nexus_user_session');
     if (!myUsername) return;
 
+    // GYARAN: cire 'read'=='false' filter domin ya kaucewa buƙatar
+    // composite index (wanda ke sa listener ya fāɗi cikin shiru) —
+    // yanzu ana tace unread a JS bayan an karɓi data.
     db.collection('notifications')
         .where('to', '==', myUsername)
-        .where('read', '==', false)
         .orderBy('timestamp', 'desc')
         .onSnapshot(snapshot => {
-            const count = snapshot.size;
-            
+            const unreadDocs = snapshot.docs.filter(d => d.data().read === false);
+            const count = unreadDocs.length;
+
             // Nuna count a badge
             const badge = document.getElementById('notif-badge');
             if (badge) {
@@ -2702,8 +2706,8 @@ function listenToNotifications() {
             }
 
             // Render notifications
-            renderNotifications(snapshot.docs);
-        });
+            renderNotifications(unreadDocs);
+        }, err => console.error('Notification listener error:', err));
 }
 
 function renderNotifications(docs) {
@@ -2770,13 +2774,13 @@ async function initFollowButton() {
     }
 
     // Duba ko ina following shi riga
-    const existingFollow = await db.collection('follows')
+    const followerSnap = await db.collection('follows')
         .where('follower', '==', myUsername)
-        .where('following', '==', profileUser)
         .get();
+    const existingFollow = followerSnap.docs.some(d => d.data().following === profileUser);
 
     const btn = document.getElementById('follow-btn');
-    if (!existingFollow.empty) {
+    if (existingFollow) {
         btn.textContent = 'FOLLOWING';
         btn.dataset.state = 'following';
         btn.style.background = 'rgba(255,255,255,0.1)';
@@ -2813,11 +2817,12 @@ async function toggleFollow() {
     try {
         if (btn.dataset.state === 'following') {
             // === UNFOLLOW ===
-            const snap = await db.collection('follows')
+            // GYARAN: query mai filter guda ɗaya kawai (babu buƙatar composite index)
+            const myFollowsSnap = await db.collection('follows')
                 .where('follower', '==', myUsername)
-                .where('following', '==', profileUser)
                 .get();
-            snap.forEach(doc => doc.ref.delete());
+            const toDelete = myFollowsSnap.docs.filter(d => d.data().following === profileUser);
+            for (const doc of toDelete) { await doc.ref.delete(); }
 
             // Rage follower count na profileUser
             await db.collection('users').doc(profileUser).update({
@@ -2830,12 +2835,13 @@ async function toggleFollow() {
             }, { merge: true });
 
             // Duba ko sun kasance mutual (friends) - idan haka, rage friends count
-            const mutualCheck = await db.collection('follows')
+            // GYARAN: query mai filter guda ɗaya kawai
+            const theirFollowsSnap = await db.collection('follows')
                 .where('follower', '==', profileUser)
-                .where('following', '==', myUsername)
                 .get();
+            const wasMutual = theirFollowsSnap.docs.some(d => d.data().following === myUsername);
 
-            if (!mutualCheck.empty) {
+            if (wasMutual) {
                 await db.collection('users').doc(profileUser).update({
                     friendCount: firebase.firestore.FieldValue.increment(-1)
                 });
@@ -2875,12 +2881,16 @@ async function toggleFollow() {
             }, { merge: true });
 
             // Duba ko profileUser yana following myUsername riga (mutual check)
-            const mutualCheck = await db.collection('follows')
+            // ← MUHIMMIN GYARA: query mai filter guda ɗaya kawai (babu buƙatar
+            // composite index) — a baya wannan query yana amfani da filters
+            // guda biyu tare, wanda ke fāɗuwa cikin shiru kuma yana hana
+            // notification ɗin "X ya fara bin ka" gudana gaba ɗaya.
+            const theirFollowsSnap = await db.collection('follows')
                 .where('follower', '==', profileUser)
-                .where('following', '==', myUsername)
                 .get();
+            const isMutual = theirFollowsSnap.docs.some(d => d.data().following === myUsername);
 
-            if (!mutualCheck.empty) {
+            if (isMutual) {
                 await db.collection('users').doc(profileUser).update({
                     friendCount: firebase.firestore.FieldValue.increment(1)
                 });
@@ -2902,7 +2912,7 @@ async function toggleFollow() {
                     to: profileUser,
                     from: myUsername,
                     type: 'new_friend',
-                    message: `${myUsername} ya fara bin ka — yanzu Nodes ne!`,
+                    message: `${myUsername} ya fara bin ka — yanzu Abokai ne!`,
                     read: false,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
