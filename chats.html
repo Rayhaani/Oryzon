@@ -9,13 +9,15 @@
    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
-        :root {
+       :root {
             --obsidian: #050505;
             --cyan-neon: #00F2FF;
             --glass-border: rgba(255, 255, 255, 0.08);
             --text-dim: rgba(255, 255, 255, 0.6);
             --neon-glow: 0 0 12px rgba(0, 242, 255, 0.25);
-        }
+            --presence-live: #34C759;
+            --row-divider: rgba(255, 255, 255, 0.04);
+       } 
 
         * {
             margin: 0; padding: 0; box-sizing: border-box;
@@ -148,32 +150,85 @@
         .tab-view { display: none; }
         .tab-view.active { display: block; }
 
-        .chat-item {
+       .chat-item {
             display: flex; align-items: center;
-            padding: 10px 15px; 
+            padding: 12px 15px 12px 66px;
+            position: relative;
             text-decoration: none; color: inherit;
-            height: 65px;
+            min-height: 68px;
+            transition: background 0.15s ease;
         }
 
-        .chat-item:active { background: rgba(255, 255, 255, 0.05); }
+        .chat-item:active { background: rgba(255, 255, 255, 0.04); }
 
-        .profile-stack { position: relative; margin-right: 12px; }
+        /* Layin rabuwa — yana farawa bayan avatar, ba cikakken fadi ba */
+        .chat-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 66px; right: 15px; bottom: 0;
+            height: 1px;
+            background: var(--row-divider);
+        }
+
+        .profile-stack {
+            position: absolute;
+            left: 15px; top: 50%;
+            transform: translateY(-50%);
+            width: 46px; height: 46px;
+        }
+
         .user-img {
-            width: 46px; height: 46px; border-radius: 50%;
+            width: 46px; height: 46px;
+            border-radius: 14px;
             object-fit: cover;
             border: 1px solid var(--glass-border);
+            position: relative; z-index: 2;
+            display: block;
+        }
+
+        /* Pulsing ring — yana bayyana kawai lokacin da user yake "online" (data-online="true") */
+        .profile-stack::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 18px;
+            border: 1.5px solid var(--presence-live);
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+        .profile-stack[data-online="true"]::before {
+            opacity: 0.55;
+            transform: scale(1);
+            animation: presencePulse 2.4s ease-in-out infinite;
+        }
+        @keyframes presencePulse {
+            0%, 100% { opacity: 0.55; transform: scale(1); }
+            50% { opacity: 0.15; transform: scale(1.12); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .profile-stack[data-online="true"]::before { animation: none; }
         }
 
         .status-ring { border: 2px solid var(--cyan-neon); padding: 2px; }
 
-        .chat-details { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
-        .chat-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
-        .name { font-size: 13.5px; font-weight: 600; color: #fff; }
-        .time { font-size: 9px; color: var(--text-dim); }
-        .preview-text {
-            font-size: 11.5px; color: var(--text-dim);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        .chat-details { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+        .chat-header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .name {
+            font-size: 14px; font-weight: 600; color: #fff;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
+        .time {
+            font-size: 9.5px; color: var(--text-dim);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+        }
+        .preview-text {
+            font-size: 12px; color: var(--text-dim);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        } 
 
         /* STYLES FOR PAGES SECTION COPIED FROM UPDATES */
         .section-title-area {
@@ -650,7 +705,7 @@
                     
                     container.insertAdjacentHTML('beforeend', `
                         <a href="chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item" id="chat-link-${rawUser}">
-                            <div class="profile-stack"><img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img"></div>
+                            <div class="profile-stack" id="stack-${rawUser}" data-online="false"><img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img"></div>
                             <div class="chat-details">
                                 <div class="chat-header">
                                     <span class="name" id="name-${rawUser}">${initialName}</span>
@@ -660,7 +715,6 @@
                             </div>
                         </a>
                     `);
-                    
                     db.collection('users').doc(rawUser).get().then(userDoc => {
                         if (userDoc.exists) {
                             const userData = userDoc.data();
@@ -682,8 +736,11 @@
                                 const overlayImg = document.getElementById(`overlay-avatar-${rawUser}`);
                                 if (overlayImg) overlayImg.src = userData.userProfilePic;
                             }
+                            const stackEl = document.getElementById(`stack-${rawUser}`);
+                            if (stackEl) stackEl.setAttribute('data-online', userData.isOnline === true ? 'true' : 'false');
                         }
                     });
+                    
                 });
 
                 if (!hasChats) {
