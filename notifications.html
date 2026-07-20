@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications | Synergy</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+    :root{
+        --obsidian:#050505;
+        --card-bg: rgba(255,255,255,0.035);
+        --premium-gold:#fde08d;
+        --deep-gold:#b8860b;
+        --gold-glow:0 0 15px rgba(253,224,141,0.22);
+        --glass-border: rgba(255,255,255,0.08);
+        --gold-border: rgba(253,224,141,0.16);
+        --text-dim: rgba(255,255,255,0.52);
+        --text-mid: rgba(255,255,255,0.78);
+        --danger:#ff4d6d;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    body{
+        background:var(--obsidian);
+        background-image: radial-gradient(circle at 50% -10%, rgba(253,224,141,0.06), transparent 55%);
+        color:#fff;
+        font-family:'Plus Jakarta Sans', sans-serif;
+        min-height:100vh;
+        padding-bottom:40px;
+        overflow-x:hidden;
+    }
+
+    /* ===== HEADER ===== */
+    header{
+        position:sticky; top:0; z-index:200;
+        background:rgba(5,5,5,0.85);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom:1px solid rgba(255,255,255,0.05);
+    }
+    .header-row{
+        display:flex; align-items:center; justify-content:space-between;
+        padding:16px 16px 10px;
+    }
+    .back-trigger{
+        width:34px; height:34px; border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        background:rgba(255,255,255,0.05); cursor:pointer; color:#fff;
+        transition:0.25s;
+    }
+    .back-trigger:active{ background:rgba(253,224,141,0.15); }
+    .header-title{
+        font-size:17px; font-weight:800; letter-spacing:-0.2px; color:#fff;
+    }
+    .mark-read-btn{
+        width:34px; height:34px; border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        background:rgba(253,224,141,0.08); border:1px solid var(--gold-border);
+        color:var(--premium-gold); cursor:pointer; font-size:13px;
+        transition:0.25s;
+    }
+    .mark-read-btn:active{ transform:scale(0.9); background:rgba(253,224,141,0.2); }
+
+    /* ===== TAB SWITCHER (Promos/Referrals style, upgraded) ===== */
+    .tab-switch-wrap{
+        position:relative;
+        display:flex;
+        padding:0 16px;
+    }
+    .tab-btn{
+        flex:1; text-align:center; padding:14px 0 12px;
+        font-size:13.5px; font-weight:700; letter-spacing:0.2px;
+        color:var(--text-dim); cursor:pointer; position:relative; z-index:2;
+        transition: color 0.3s ease;
+        display:flex; align-items:center; justify-content:center; gap:6px;
+    }
+    .tab-btn .tab-count{
+        font-size:10px; font-weight:800; color:#000;
+        background:var(--premium-gold);
+        min-width:16px; height:16px; padding:0 4px;
+        border-radius:9px; display:flex; align-items:center; justify-content:center;
+        opacity:0; transform:scale(0.6); transition:0.25s;
+    }
+    .tab-btn .tab-count.show{ opacity:1; transform:scale(1); }
+    .tab-btn.active{ color:var(--premium-gold); }
+    .tab-underline-track{
+        position:absolute; bottom:0; left:16px; right:16px; height:1px;
+        background:rgba(255,255,255,0.06);
+    }
+    .tab-underline{
+        position:absolute; bottom:0; height:2.5px; width:50%;
+        background:linear-gradient(90deg, var(--deep-gold), var(--premium-gold));
+        border-radius:4px 4px 0 0;
+        box-shadow:0 0 10px rgba(253,224,141,0.5);
+        transition: transform 0.35s cubic-bezier(0.65,0,0.35,1);
+        transform: translateX(0%);
+    }
+    .tab-underline.pos-1{ transform: translateX(100%); }
+
+    /* ===== SECTIONS ===== */
+    .tab-content{ display:none; animation: fadeIn 0.35s ease; }
+    .tab-content.active{ display:block; }
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+    .section-header{
+        font-size:11px; font-weight:800; text-transform:uppercase;
+        letter-spacing:0.8px; color:var(--text-dim);
+        padding:18px 16px 8px;
+    }
+
+    /* ===== NOTIFICATION CARD ===== */
+    .notif-card{
+        display:flex; align-items:flex-start; gap:12px;
+        margin:6px 12px; padding:12px 12px;
+        background:var(--card-bg);
+        border:1px solid var(--glass-border);
+        border-radius:16px;
+        transition: 0.3s ease;
+        animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+    .notif-card.unread{
+        border-color: var(--gold-border);
+        background: linear-gradient(135deg, rgba(253,224,141,0.05), rgba(255,255,255,0.02));
+    }
+    .notif-card:active{ background: rgba(255,255,255,0.06); }
+
+    .notif-avatar-wrap{ position:relative; flex-shrink:0; }
+    .notif-avatar{
+        width:46px; height:46px; border-radius:50%;
+        object-fit:cover; border:1.5px solid rgba(255,255,255,0.12);
+        background:#111;
+    }
+    .notif-card.unread .notif-avatar{ border-color: var(--premium-gold); }
+    .notif-unread-dot{
+        position:absolute; bottom:-1px; right:-1px;
+        width:11px; height:11px; border-radius:50%;
+        background: var(--premium-gold);
+        border:2px solid var(--obsidian);
+        box-shadow:0 0 6px rgba(253,224,141,0.7);
+        display:none;
+    }
+    .notif-card.unread .notif-unread-dot{ display:block; }
+
+    .notif-body{ flex:1; min-width:0; }
+    .notif-text{ font-size:13px; line-height:1.42; color:var(--text-mid); }
+    .notif-text b{ color:#fff; font-weight:700; }
+    .notif-time{ font-size:10.5px; color:var(--text-dim); margin-top:4px; display:block; text-transform:lowercase; }
+
+    .notif-thumb{
+        width:44px; height:44px; border-radius:9px; object-fit:cover;
+        flex-shrink:0; border:1px solid rgba(255,255,255,0.08);
+        background:#111;
+    }
+
+    .notif-actions{ display:flex; gap:8px; margin-top:10px; }
+    .notif-actions button{
+        flex:1; padding:8px 0; border-radius:10px; border:none;
+        font-size:11.5px; font-weight:800; letter-spacing:0.2px; cursor:pointer;
+        transition:0.2s;
+    }
+    .btn-accept{ background:linear-gradient(45deg,#fde08d,#b8860b); color:#000; }
+    .btn-accept:active{ transform:scale(0.96); }
+    .btn-decline{ background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.1) !important; }
+    .btn-decline:active{ transform:scale(0.96); }
+
+    .inline-follow-btn{
+        flex-shrink:0; align-self:center;
+        padding:6px 14px; border-radius:9px;
+        background:transparent; border:1.3px solid var(--premium-gold);
+        color:var(--premium-gold); font-size:10.5px; font-weight:800;
+        cursor:pointer; transition:0.25s; white-space:nowrap;
+    }
+    .inline-follow-btn.following{
+        background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.15); color:#aaa;
+    }
+    .inline-follow-btn:active{ transform:scale(0.93); }
+
+    .notif-status-tag{
+        margin-top:8px; font-size:11px; font-weight:700; color:var(--premium-gold);
+        display:flex; align-items:center; gap:5px;
+    }
+
+    /* ===== FOLLOW BACK LIST ===== */
+    .fb-card{
+        display:flex; align-items:center; gap:12px;
+        padding:12px 16px;
+        background:transparent;
+        animation: slideIn 0.3s ease;
+    }
+    .fb-avatar{
+        width:52px; height:52px; border-radius:50%; object-fit:cover;
+        border:1px solid rgba(255,255,255,0.1); flex-shrink:0; background:#111;
+    }
+    .fb-info{ flex:1; min-width:0; }
+    .fb-name{
+        font-size:14px; font-weight:700; color:#fff;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .fb-mutuals{ display:flex; align-items:center; gap:6px; margin-top:3px; }
+    .fb-mutual-avatars{ display:flex; }
+    .fb-mutual-avatars img{
+        width:16px; height:16px; border-radius:50%; object-fit:cover;
+        border:1.5px solid var(--obsidian); margin-left:-6px; background:#222;
+    }
+    .fb-mutual-avatars img:first-child{ margin-left:0; }
+    .fb-mutual-text{ font-size:11.5px; color:var(--text-dim); }
+
+    .fb-actions{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    .fb-follow-btn{
+        padding:8px 18px; border-radius:9px; border:none;
+        background:linear-gradient(45deg,#fde08d,#b8860b); color:#000;
+        font-size:11.5px; font-weight:800; cursor:pointer; letter-spacing:0.2px;
+        transition:0.2s; white-space:nowrap;
+    }
+    .fb-follow-btn:active{ transform:scale(0.94); }
+    .fb-follow-btn.done{ background:rgba(255,255,255,0.08); color:#aaa; }
+    .fb-dismiss-btn{
+        width:22px; height:22px;
+        color:var(--text-dim);
+        display:flex; align-items:center; justify-content:center;
+        font-size:13px; cursor:pointer; transition:0.2s; flex-shrink:0;
+    }
+    .fb-dismiss-btn:active{ color:var(--danger); transform:scale(0.85); }
+
+    .fb-card.removing{
+        animation: cardOut 0.3s ease forwards;
+    }
+    @keyframes cardOut{
+        to{ opacity:0; transform: translateX(30px) scale(0.95); height:0; margin:0; padding:0; overflow:hidden; }
+    }
+
+    /* ===== STATES ===== */
+    .state-msg{
+        text-align:center; padding:70px 30px; color:var(--text-dim);
+    }
+    .state-msg i{
+        font-size:34px; color:rgba(253,224,141,0.35); margin-bottom:14px; display:block;
+    }
+    .state-msg p{ font-size:13px; line-height:1.5; }
+    .state-msg .state-title{ font-size:14.5px; font-weight:700; color:#fff; margin-bottom:6px; }
+
+    .skeleton{
+        margin:6px 12px; padding:12px; border-radius:16px;
+        background:var(--card-bg); border:1px solid var(--glass-border);
+        display:flex; gap:12px; align-items:center;
+    }
+    .skeleton-circle{
+        width:46px; height:46px; border-radius:50%; flex-shrink:0;
+        background:linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.09), rgba(255,255,255,0.04));
+        background-size:200% 100%; animation: shimmer 1.4s infinite;
+    }
+    .skeleton-lines{ flex:1; }
+    .skeleton-line{
+        height:9px; border-radius:5px; margin-bottom:7px;
+        background:linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.09), rgba(255,255,255,0.04));
+        background-size:200% 100%; animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="header-row">
+        <div class="back-trigger" onclick="history.back()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+        </div>
+        <span class="header-title" id="dynamicHeaderTitle">Notifications</span>
+        <div class="mark-read-btn" id="markReadBtn" onclick="markAllNotifsRead()" title="Mark all as read">
+            <i class="fa-solid fa-check-double"></i>
+        </div>
+    </div>
+
+    <div class="tab-switch-wrap">
+        <div class="tab-btn active" id="tabBtnNotif" onclick="switchNotifTab(0)">
+            All
+            <span class="tab-count" id="notifUnreadBadge">0</span>
+        </div>
+        <div class="tab-btn" id="tabBtnFollow" onclick="switchNotifTab(1)">
+            Follow Back
+            <span class="tab-count" id="followBackBadge">0</span>
+        </div>
+        <div class="tab-underline-track"></div>
+        <div class="tab-underline" id="tabUnderline"></div>
+    </div>
+</header>
+
+<div class="tab-content active" id="content-notifications">
+    <div id="notifListContainer">
+        <div class="skeleton"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line" style="width:85%"></div><div class="skeleton-line" style="width:40%"></div></div></div>
+        <div class="skeleton"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line" style="width:70%"></div><div class="skeleton-line" style="width:30%"></div></div></div>
+    </div>
+</div>
+
+<div class="tab-content" id="content-followback">
+    <div id="followBackContainer">
+        <div class="skeleton"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line" style="width:60%"></div><div class="skeleton-line" style="width:35%"></div></div></div>
+    </div>
+</div>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+};
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+const db = firebase.firestore();
+
+const myUsername = localStorage.getItem('nexus_user_session');
+if (!myUsername) { window.location.href = "login.html"; }
+
+let followBackLoaded = false;
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+function switchNotifTab(index) {
+    document.getElementById('tabBtnNotif').classList.toggle('active', index === 0);
+    document.getElementById('tabBtnFollow').classList.toggle('active', index === 1);
+    document.getElementById('content-notifications').classList.toggle('active', index === 0);
+    document.getElementById('content-followback').classList.toggle('active', index === 1);
+    document.getElementById('tabUnderline').classList.toggle('pos-1', index === 1);
+
+    // Babban heading ("Notifications") baya canzawa ko wanne tab aka zaɓa —
+    // shi ne sunan babban shafin gaba ɗaya. "mark all read" kawai yana boyewa
+    // a tab na Follow Back domin ba shi da alaƙa da wancan sashe.
+    const markReadBtn = document.getElementById('markReadBtn');
+    markReadBtn.style.display = (index === 0) ? 'flex' : 'none';
+
+    if (index === 1 && !followBackLoaded) {
+        followBackLoaded = true;
+        loadFollowBackList();
+    }
+}
+
+/* ============================================================
+   TIME FORMATTER
+   ============================================================ */
+function timeAgo(ts) {
+    if (!ts || !ts.toDate) return '';
+    const diffMs = Date.now() - ts.toDate().getTime();
+    const min = Math.floor(diffMs / 60000);
+    if (min < 1) return 'yanzu';
+    if (min < 60) return min + 'm';
+    const hrs = Math.floor(min / 60);
+    if (hrs < 24) return hrs + 'h';
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return days + 'd';
+    const weeks = Math.floor(days / 7);
+    if (weeks < 4) return weeks + 'w';
+    return Math.floor(days / 30) + 'mo';
+}
+
+function ucfirst(str) {
+    if (!str) return str;
+    return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+/* ============================================================
+   1. NOTIFICATIONS TAB
+   ============================================================ */
+async function loadNotifications() {
+    const container = document.getElementById('notifListContainer');
+    try {
+        const snap = await db.collection('notifications')
+            .where('to', '==', myUsername)
+            .orderBy('timestamp', 'desc')
+            .limit(100)
+            .get();
+
+        container.innerHTML = '';
+
+        if (snap.empty) {
+            container.innerHTML = `
+                <div class="state-msg">
+                    <i class="fa-regular fa-bell"></i>
+                    <div class="state-title">No notifications yet</div>
+                    <p>You'll see it here whenever something involves you — follows, requests, and more.</p>
+                </div>`;
+            updateUnreadBadge(0);
+            return;
+        }
+
+        const now = Date.now();
+        const buckets = { fresh: [], week: [], month: [], older: [] };
+        let unreadCount = 0;
+
+        snap.forEach(doc => {
+            const data = doc.data();
+            if (data.read === false) unreadCount++;
+            const t = data.timestamp && data.timestamp.toDate ? data.timestamp.toDate().getTime() : now;
+            const diffDays = (now - t) / 86400000;
+            if (diffDays < 2) buckets.fresh.push({ id: doc.id, ...data });
+            else if (diffDays < 7) buckets.week.push({ id: doc.id, ...data });
+            else if (diffDays < 30) buckets.month.push({ id: doc.id, ...data });
+            else buckets.older.push({ id: doc.id, ...data });
+        });
+
+        updateUnreadBadge(unreadCount);
+
+        const sections = [
+            { label: 'New', items: buckets.fresh },
+            { label: 'This Week', items: buckets.week },
+            { label: 'This Month', items: buckets.month },
+            { label: 'Older', items: buckets.older }
+        ];
+
+        sections.forEach(sec => {
+            if (sec.items.length === 0) return;
+            container.insertAdjacentHTML('beforeend', `<div class="section-header">${sec.label}</div>`);
+            sec.items.forEach(notif => {
+                container.insertAdjacentHTML('beforeend', buildNotifCard(notif));
+                hydrateNotifCard(notif);
+            });
+        });
+
+        setTimeout(() => markVisibleNotifsRead(snap), 1200);
+
+    } catch (err) {
+        console.error('Notif load error:', err);
+        container.innerHTML = `<div class="state-msg"><i class="fa-solid fa-triangle-exclamation"></i><p>Kuskure wajen loda notifications.</p></div>`;
+    }
+}
+
+function updateUnreadBadge(count) {
+    const badge = document.getElementById('notifUnreadBadge');
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.classList.toggle('show', count > 0);
+}
+
+function buildNotifCard(notif) {
+    const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${notif.from || 'user'}`;
+    const isUnread = notif.read === false;
+
+    let actionsHTML = '';
+    if (notif.type === 'friend_request') {
+        actionsHTML = `
+            <div class="notif-actions" id="notif-actions-${notif.id}">
+                <button class="btn-accept" onclick="notifRespond('${notif.id}','${notif.requestId}','${notif.from}',true)">Karɓa</button>
+                <button class="btn-decline" onclick="notifRespond('${notif.id}','${notif.requestId}','${notif.from}',false)">Ki</button>
+            </div>`;
+    } else if (notif.type === 'new_follower') {
+        actionsHTML = `<span id="notif-follow-slot-${notif.id}"></span>`;
+    }
+
+    const thumbHTML = notif.mediaUrl ? `<img class="notif-thumb" src="${notif.mediaUrl}" loading="lazy">` : '';
+
+    return `
+        <div class="notif-card ${isUnread ? 'unread' : ''}" id="notif-card-${notif.id}" data-id="${notif.id}">
+            <div class="notif-avatar-wrap">
+                <img class="notif-avatar" id="notif-avatar-${notif.id}" src="${defaultAvatar}">
+                <div class="notif-unread-dot"></div>
+            </div>
+            <div class="notif-body">
+                <p class="notif-text">${notif.message || ''}</p>
+                <span class="notif-time">${timeAgo(notif.timestamp)}</span>
+                ${notif.type !== 'new_follower' ? actionsHTML : ''}
+            </div>
+            ${thumbHTML}
+        </div>
+        ${notif.type === 'new_follower' ? `<div style="margin:-8px 12px 6px 70px;">${actionsHTML}</div>` : ''}
+    `;
+}
+
+async function hydrateNotifCard(notif) {
+    try {
+        const userDoc = await db.collection('users').doc(notif.from).get();
+        if (userDoc.exists) {
+            const u = userDoc.data();
+            const avatarEl = document.getElementById(`notif-avatar-${notif.id}`);
+            if (avatarEl && u.userProfilePic) avatarEl.src = u.userProfilePic;
+        }
+    } catch (e) { /* silent */ }
+
+    if (notif.type === 'new_follower') {
+        try {
+            const check = await db.collection('follows')
+                .where('follower', '==', myUsername)
+                .get();
+            const alreadyFollowing = check.docs.some(d => d.data().following === notif.from);
+            const slot = document.getElementById(`notif-follow-slot-${notif.id}`);
+            if (!slot) return;
+            if (alreadyFollowing) {
+                slot.innerHTML = `<button class="inline-follow-btn following" disabled>FOLLOWING</button>`;
+            } else {
+                slot.innerHTML = `<button class="inline-follow-btn" onclick="notifFollowBack('${notif.from}', this)">FOLLOW BACK</button>`;
+            }
+        } catch (e) { /* silent */ }
+    }
+}
+
+async function markVisibleNotifsRead(snap) {
+    const batch = db.batch();
+    let hasUnread = false;
+    snap.forEach(doc => {
+        if (doc.data().read === false) {
+            batch.update(doc.ref, { read: true });
+            hasUnread = true;
+            const card = document.getElementById(`notif-card-${doc.id}`);
+            if (card) card.classList.remove('unread');
+        }
+    });
+    if (hasUnread) {
+        try { await batch.commit(); updateUnreadBadge(0); } catch (e) { console.error(e); }
+    }
+}
+
+async function markAllNotifsRead() {
+    try {
+        const snap = await db.collection('notifications')
+            .where('to', '==', myUsername)
+            .get();
+        const unreadDocs = snap.docs.filter(d => d.data().read === false);
+        if (unreadDocs.length === 0) return;
+        const batch = db.batch();
+        unreadDocs.forEach(doc => batch.update(doc.ref, { read: true }));
+        await batch.commit();
+        document.querySelectorAll('.notif-card.unread').forEach(c => c.classList.remove('unread'));
+        updateUnreadBadge(0);
+    } catch (e) { console.error('Mark all read error:', e); }
+}
+
+/* Accept / decline friend request directly from notification card */
+async function notifRespond(notifId, requestId, fromUsername, accept) {
+    try {
+        if (accept) {
+            const existing = await db.collection('friends')
+                .where('users', 'array-contains', myUsername).get();
+            let already = false;
+            existing.forEach(d => { if (d.data().users.includes(fromUsername)) already = true; });
+
+            if (!already) {
+                await db.collection('friends').add({
+                    users: [myUsername, fromUsername],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await db.collection('users').doc(myUsername).update({
+                    friendCount: firebase.firestore.FieldValue.increment(1)
+                });
+                await db.collection('users').doc(fromUsername).update({
+                    friendCount: firebase.firestore.FieldValue.increment(1)
+                });
+            }
+            await db.collection('notifications').add({
+                to: fromUsername, from: myUsername, type: 'friend_accepted',
+                message: `${myUsername} ya karɓi Friend Request ɗinka!`,
+                read: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        if (requestId && requestId !== 'undefined') {
+            await db.collection('friendRequests').doc(requestId).update({
+                status: accept ? 'accepted' : 'rejected'
+            });
+        }
+
+        await db.collection('notifications').doc(notifId).update({ read: true });
+
+        const actionsEl = document.getElementById(`notif-actions-${notifId}`);
+        if (actionsEl) {
+            actionsEl.outerHTML = `<div class="notif-status-tag"><i class="fa-solid ${accept ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>${accept ? 'Kun zama Abokai yanzu' : 'An ki request ɗin'}</div>`;
+        }
+        const card = document.getElementById(`notif-card-${notifId}`);
+        if (card) card.classList.remove('unread');
+
+    } catch (err) {
+        console.error('Notif respond error:', err);
+        alert('Kuskure: ' + err.message);
+    }
+}
+
+/* Follow back straight from a "new_follower" notification */
+async function notifFollowBack(targetUsername, btnEl) {
+    btnEl.disabled = true;
+    btnEl.textContent = '...';
+    try {
+        await performFollowBack(targetUsername);
+        btnEl.textContent = 'FOLLOWING';
+        btnEl.classList.add('following');
+    } catch (err) {
+        console.error(err);
+        btnEl.disabled = false;
+        btnEl.textContent = 'FOLLOW BACK';
+    }
+}
+
+/* ============================================================
+   2. FOLLOW BACK TAB
+   ============================================================ */
+async function loadFollowBackList() {
+    const container = document.getElementById('followBackContainer');
+    try {
+        const [followersSnap, followingSnap, dismissedSnap] = await Promise.all([
+            db.collection('follows').where('following', '==', myUsername).get(),
+            db.collection('follows').where('follower', '==', myUsername).get(),
+            db.collection('users').doc(myUsername).collection('dismissed').get()
+        ]);
+
+        const followerSet = new Set();
+        followersSnap.forEach(d => followerSet.add(d.data().follower));
+
+        const followingSet = new Set();
+        followingSnap.forEach(d => followingSet.add(d.data().following));
+
+        const dismissedSet = new Set();
+        dismissedSnap.forEach(d => dismissedSet.add(d.id));
+
+        const candidates = [...followerSet].filter(u =>
+            u !== myUsername && !followingSet.has(u) && !dismissedSet.has(u)
+        );
+
+        document.getElementById('followBackBadge').textContent = candidates.length > 99 ? '99+' : candidates.length;
+        document.getElementById('followBackBadge').classList.toggle('show', candidates.length > 0);
+
+        container.innerHTML = '';
+
+        if (candidates.length === 0) {
+            container.innerHTML = `
+                <div class="state-msg">
+                    <i class="fa-solid fa-user-check"></i>
+                    <div class="state-title">You're all caught up</div>
+                    <p>You follow everyone who follows you back.</p>
+                </div>`;
+            return;
+        }
+
+        container.insertAdjacentHTML('beforeend', `<div class="section-header">People you don't follow back</div>`);
+
+        candidates.forEach(username => {
+            container.insertAdjacentHTML('beforeend', buildFollowBackRow(username));
+            hydrateFollowBackRow(username, followingSet);
+        });
+
+    } catch (err) {
+        console.error('Follow-back load error:', err);
+        container.innerHTML = `<div class="state-msg"><i class="fa-solid fa-triangle-exclamation"></i><p>Kuskure wajen loda jerin.</p></div>`;
+    }
+}
+
+function buildFollowBackRow(username) {
+    const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`;
+    const initialName = ucfirst(username);
+    return `
+        <div class="fb-card" id="fb-card-${username}">
+            <img class="fb-avatar" id="fb-avatar-${username}" src="${defaultAvatar}">
+            <div class="fb-info">
+                <div class="fb-name" id="fb-name-${username}">${initialName}</div>
+                <div class="fb-mutuals" id="fb-mutuals-${username}"></div>
+            </div>
+            <div class="fb-actions">
+                <button class="fb-follow-btn" id="fb-btn-${username}" onclick="fbFollowBack('${username}')">Follow back</button>
+                <div class="fb-dismiss-btn" onclick="fbDismiss('${username}')"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+        </div>`;
+}
+
+async function hydrateFollowBackRow(username, followingSet) {
+    try {
+        const userDoc = await db.collection('users').doc(username).get();
+        if (userDoc.exists) {
+            const u = userDoc.data();
+            const nameEl = document.getElementById(`fb-name-${username}`);
+            const avatarEl = document.getElementById(`fb-avatar-${username}`);
+            if (nameEl) nameEl.textContent = ucfirst(u.fullName || u.username || username);
+            if (avatarEl && u.userProfilePic) avatarEl.src = u.userProfilePic;
+        }
+    } catch (e) { /* silent */ }
+
+    try {
+        const theirFollowersSnap = await db.collection('follows').where('following', '==', username).get();
+        const theirFollowers = [];
+        theirFollowersSnap.forEach(d => theirFollowers.push(d.data().follower));
+        const mutuals = theirFollowers.filter(u => followingSet.has(u) && u !== myUsername);
+
+        const mutualsEl = document.getElementById(`fb-mutuals-${username}`);
+        if (!mutualsEl) return;
+
+        if (mutuals.length === 0) { mutualsEl.innerHTML = ''; return; }
+
+        const shown = mutuals.slice(0, 3);
+        let avatarsHTML = shown.map(u => `<img src="https://api.dicebear.com/7.x/bottts/svg?seed=${u}">`).join('');
+        mutualsEl.innerHTML = `<div class="fb-mutual-avatars">${avatarsHTML}</div><span class="fb-mutual-text">${mutuals.length} mutual${mutuals.length > 1 ? 's' : ''}</span>`;
+    } catch (e) { /* silent */ }
+}
+
+async function performFollowBack(targetUsername) {
+    await db.collection('follows').add({
+        follower: myUsername, following: targetUsername,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('users').doc(targetUsername).update({
+        followerCount: firebase.firestore.FieldValue.increment(1)
+    });
+    await db.collection('users').doc(myUsername).set({
+        followingCount: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true });
+
+    // Since they already follow me, following back always completes the mutual
+    const existingFriend = await db.collection('friends')
+        .where('users', 'array-contains', myUsername).get();
+    let already = false;
+    existingFriend.forEach(d => { if (d.data().users.includes(targetUsername)) already = true; });
+
+    if (!already) {
+        await db.collection('friends').add({
+            users: [myUsername, targetUsername],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await db.collection('users').doc(targetUsername).update({
+            friendCount: firebase.firestore.FieldValue.increment(1)
+        });
+        await db.collection('users').doc(myUsername).update({
+            friendCount: firebase.firestore.FieldValue.increment(1)
+        });
+    }
+
+    await db.collection('notifications').add({
+        to: targetUsername, from: myUsername, type: 'new_friend',
+        message: `${myUsername} ya fara bin ka — yanzu Abokai ne!`,
+        read: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
+
+async function fbFollowBack(username) {
+    const btn = document.getElementById(`fb-btn-${username}`);
+    if (!btn) return;
+    btn.disabled = true; btn.textContent = '...';
+    try {
+        await performFollowBack(username);
+        btn.textContent = 'Following'; btn.classList.add('done');
+        const card = document.getElementById(`fb-card-${username}`);
+        setTimeout(() => {
+            if (card) {
+                card.classList.add('removing');
+                setTimeout(() => { card.remove(); refreshFollowBackBadgeCount(); }, 320);
+            }
+        }, 900);
+    } catch (err) {
+        console.error('Follow back error:', err);
+        btn.disabled = false; btn.textContent = 'Follow back';
+        alert('Kuskure: ' + err.message);
+    }
+}
+
+async function fbDismiss(username) {
+    const card = document.getElementById(`fb-card-${username}`);
+    try {
+        await db.collection('users').doc(myUsername).collection('dismissed').doc(username).set({
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        if (card) {
+            card.classList.add('removing');
+            setTimeout(() => { card.remove(); refreshFollowBackBadgeCount(); }, 320);
+        }
+    } catch (err) {
+        console.error('Dismiss error:', err);
+    }
+}
+
+function refreshFollowBackBadgeCount() {
+    const remaining = document.querySelectorAll('.fb-card').length;
+    const badge = document.getElementById('followBackBadge');
+    badge.textContent = remaining;
+    badge.classList.toggle('show', remaining > 0);
+    if (remaining === 0) {
+        document.getElementById('followBackContainer').innerHTML = `
+            <div class="state-msg">
+                <i class="fa-solid fa-user-check"></i>
+                <div class="state-title">You're all caught up</div>
+                <p>You follow everyone who follows you back.</p>
+            </div>`;
+    }
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+loadNotifications();
+</script>
+</body>
+</html>
