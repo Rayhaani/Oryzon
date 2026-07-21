@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Infinity Luxury | Final Fixed Build</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700;900&display=swap');
+   
+    body {
+            background-color: #050505;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(218, 165, 32, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(139, 69, 19, 0.15) 0%, transparent 40%),
+                url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-attachment: fixed;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            min-height: 100dvh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .galaxy-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(ellipse at center, transparent 0%, rgba(5, 5, 5, 0.9) 100%); z-index: -1; }
+
+    .floating-card { 
+        background: transparent; 
+        margin: -30px 20px 20px 20px; 
+        padding: 20px 4px; 
+        border-radius: 0; 
+        border: none; 
+        box-shadow: none;
+    }
+
+    .floating-card h1 { 
+        color: #F5F5DC !important; 
+        font-family: 'Quicksand', sans-serif;
+        font-size: 1.5rem; 
+        font-weight: 800; 
+        line-height: 1.25;
+        margin-bottom: 8px;
+        display: block;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.5); 
+    }
+
+    .floating-card .text-gray-400 { color: rgba(245,245,220,0.55) !important; }
+        
+    h1 { 
+        font-family: 'Quicksand', sans-serif;
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        text-transform: capitalize;
+        color: #fff;
+    }
+
+    .price-tag { 
+        font-size: 40px; 
+        font-weight: 900; 
+        color: #00f2ff; 
+        font-family: 'Quicksand', sans-serif;
+        text-shadow: 0 0 10px rgba(0, 242, 255, 0.6), 0 0 20px rgba(0, 242, 255, 0.2);
+        letter-spacing: -1px;
+        position: relative;
+        display: inline-block;
+    }
+
+    .price-tag::after {
+        content: '';
+        position: absolute;
+        bottom: 5px;
+        left: 0;
+        width: 100%;
+        height: 15px;
+        background: rgba(0, 242, 255, 0.15);
+        filter: blur(15px);
+        z-index: -1;
+    }
+    .price-tag.skeleton, .floating-card h1.skeleton {
+        color: transparent !important; text-shadow: none;
+        background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 75%);
+        background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; display: inline-block; min-width: 140px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+    .content-layer { position: relative; z-index: 10; width: 100%; }
+
+    #fullscreen-viewer { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; z-index: 999999; }
+    .fs-slider { display: flex; width: 100%; height: 100%; overflow-x: scroll; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+    .fs-slider img { min-width: 100vw; width: 100vw; height: 100vh; object-fit: cover; scroll-snap-align: start; scroll-snap-stop: always; transition: transform 0.3s ease; }
+    .fs-slider img.zoomed { transform: scale(2); object-fit: contain; }
+    .close-fs { position: absolute; top: 20px; right: 20px; font-size: 35px; z-index: 2001; cursor: pointer; color: white; }
+    .fs-counter { position: absolute; top: 24px; left: 20px; z-index: 2001; color: #fff; font-family: 'Quicksand', sans-serif; font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 5px 12px; border-radius: 20px; }
+    .fs-dots { position: absolute; bottom: 28px; left: 0; width: 100%; z-index: 2001; display: flex; justify-content: center; gap: 6px; }
+    .fs-dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.35); transition: all 0.25s ease; }
+    .fs-dots span.active { background: #00f2ff; width: 18px; border-radius: 4px; box-shadow: 0 0 8px rgba(0,242,255,0.6); }
+
+    .hero-container { width: 100%; height: 115vw; position: relative; overflow: hidden; }
+    .hero-slider { display: flex; width: 100%; height: 100%; overflow-x: scroll; scroll-snap-type: x mandatory; }
+    .hero-slider img { min-width: 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; }
+
+    .hologram-stage {
+        perspective: 1000px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 180px; 
+        margin-top: -90px; 
+        position: relative;
+        z-index: 50;
+    }
+    .virtual-card {
+        width: 150px;
+        height: 200px;
+        position: relative;
+        transform-style: preserve-3d;
+        animation: floatAndRotate 8s infinite linear;
+    }
+    .card-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 15px;
+        border: 2px solid rgba(0, 242, 255, 0.5);
+        overflow: hidden;
+        box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+    }
+    .card-back { transform: rotateY(180deg); }
+    .card-face img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.5s; }
+    @keyframes floatAndRotate {
+        0% { transform: translateY(0) rotateY(0deg); }
+        50% { transform: translateY(-15px) rotateY(180deg); }
+        100% { transform: translateY(0) rotateY(360deg); }
+    }
+
+    .ai-module { background: linear-gradient(145deg, rgba(20,20,20,0.9), rgba(0,0,0,0.9)); border: 1px solid rgba(0, 242, 255, 0.2); padding: 20px; border-radius: 24px; margin-top: 20px; position: relative; overflow: hidden; }
+    .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #00f2ff; box-shadow: 0 0 15px #00f2ff; animation: scanMove 4s infinite linear; }
+    @keyframes scanMove { 0% { top: 0% } 100% { top: 100% } }
+
+    .proof-section { position: relative; width: 100%; margin-top: 20px; }
+    #tripleStack { position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; width: 100vw; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    .section-title { 
+        font-size: 11px; 
+        font-weight: 800; 
+        color: #1A0F0D !important; 
+        letter-spacing: 5px; 
+        text-transform: uppercase; 
+        margin: 40px 20px 20px 20px; 
+        display: block;
+    }
+
+    #sales-boy-container {
+        position: fixed; bottom: 80px; right: 15px; width: 120px; height: 120px; z-index: 10000; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(0, 242, 255, 0.1) 0%, transparent 70%);
+    }
+    .dna-strand {
+        position: absolute; width: 40px; height: 80px; border-left: 3px solid #00f2ff; border-radius: 50%;
+        animation: rotateDNA 2s linear infinite; filter: drop-shadow(0 0 10px #00f2ff);
+    }
+    .dna-strand:nth-child(2) { border-left: 3px solid #ff00f2; animation-delay: -1s; }
+    @keyframes rotateDNA {
+        0% { transform: rotateY(0deg) skewY(10deg); opacity: 0.3; }
+        50% { opacity: 1; }
+        100% { transform: rotateY(360deg) skewY(10deg); opacity: 0.3; }
+    }
+    .core-glow {
+        position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%;
+        box-shadow: 0 0 30px #00f2ff, 0 0 60px #ff00f2; z-index: 5;
+    }
+    .particle {
+        position: absolute; width: 3px; height: 3px; background: #00f2ff; border-radius: 50%;
+        animation: floatParticle 3s infinite linear;
+    }
+    @keyframes floatParticle {
+        0% { transform: translateY(0) scale(1); opacity: 0; }
+        50% { opacity: 0.8; }
+        100% { transform: translateY(-50px) scale(0); opacity: 0; }
+    }
+    .ai-label-elite {
+        position: absolute; bottom: -15px; font-size: 8px; font-weight: 900; color: #fff;
+        text-shadow: 0 0 5px #00f2ff; letter-spacing: 3px; text-transform: uppercase;
+    }
+    .is-talking .dna-strand { animation-duration: 0.5s; border-width: 5px; }
+    .is-talking .core-glow { animation: pulseCore 0.3s infinite alternate; }
+    @keyframes pulseCore { 0% { transform: scale(1); } 100% { transform: scale(2); background: #ff00f2; } }
+
+    #chat-window {
+        display: none; position: fixed; bottom: 145px; right: 20px; 
+        width: 280px; height: 350px; background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px); border-radius: 25px; z-index: 10001;
+        flex-direction: column; border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+    #chat-header { padding: 12px 18px; background: rgba(0, 242, 255, 0.08); border-bottom: 1px solid rgba(0, 242, 255, 0.2); display: flex; justify-content: space-between; align-items: center; }
+    .online-indicator { width: 6px; height: 6px; background: #00f2ff; border-radius: 50%; box-shadow: 0 0 8px #00f2ff; animation: blink 1.5s infinite; }
+    #chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .msg-ai { align-self: flex-start; max-width: 90%; font-size: 12px; color: #b0fbff; background: rgba(0, 242, 255, 0.05); padding: 10px 14px; border-radius: 18px 18px 18px 4px; border: 1px solid rgba(0, 242, 255, 0.1); }
+    #chat-input-area { padding: 12px 15px; background: rgba(0,0,0,0.2); }
+    .pill-wrapper { display: flex; align-items: center; background: rgba(255, 255, 255, 0.03); border: 2px solid #fff; border-radius: 50px; padding: 3px 5px; }
+    #chat-input { flex: 1; background: transparent; border: none; padding: 6px 10px; color: white; font-size: 12px; outline: none; }
+    #send-btn { width: 30px; height: 30px; background: #00f2ff; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+
+    .glass-dock-container {
+        position: fixed; 
+        bottom: 15px; 
+        left: 50%; 
+        transform: translateX(-50%);
+        width: 90%; 
+        max-width: 350px; 
+        height: 65px; 
+        background: rgba(15, 15, 15, 0.95);
+        backdrop-filter: blur(20px); 
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        border-radius: 25px;
+        display: flex; 
+        align-items: center; 
+        justify-content: space-around;
+        z-index: 9999; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .dock-item { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; position: relative; }
+    .dock-icon-box { color: #fff; font-size: 18px; }
+    .dock-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
+    .dock-badge { position: absolute; top: -4px; right: -8px; background: #00f2ff; color: #000; font-size: 9px; font-weight: 900; min-width: 15px; height: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 6px rgba(0,242,255,0.7); }
+
+    .sticky-buy-bar {
+        position: fixed; left: 0; right: 0; bottom: -100px; z-index: 9998;
+        background: rgba(10,10,10,0.92); backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom,0px));
+        display: flex; align-items: center; gap: 12px;
+        transition: bottom 0.35s ease;
+    }
+    .sticky-buy-bar.show { bottom: 90px; }
+    .sticky-buy-bar img { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+    .sticky-buy-bar .sbb-info { flex: 1; min-width: 0; }
+    .sticky-buy-bar .sbb-name { font-family:'Quicksand',sans-serif; font-size: 11px; font-weight: 700; color: #F5F5DC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sticky-buy-bar .sbb-price { font-family:'Quicksand',sans-serif; font-size: 15px; font-weight: 900; color: #00f2ff; }
+    .sticky-buy-bar button { background: linear-gradient(135deg,#ff8a65,#ff7043); color:#fff; border:none; border-radius:14px; padding:12px 20px; font-family:'Quicksand',sans-serif; font-size:12px; font-weight:800; cursor:pointer; flex-shrink:0; }
+
+    .inf-overlay {
+        position: fixed; inset: 0; z-index: 99999;
+        display: none; align-items: center; justify-content: center;
+        font-family: 'Quicksand', sans-serif;
+    }
+    .glass-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(30px); }
+    .inf-card.style-5 { position: relative; width: 90%; max-width: 400px; background: none; text-align: center; }
+    .atamfa-magic-stage { height: 250px; width: 100%; display: flex; align-items: center; justify-content: center; perspective: 1200px; margin-bottom: 5px; }
+    .atamfa-float-engine { max-width: 85%; max-height: 90%; opacity: 0; transform: scale(0.6); transition: all 0.5s ease; border-radius: 20px; }
+    .atamfa-float-engine.active { opacity: 1; transform: scale(1); }
+    
+    .magic-grid { display: flex; justify-content: center; gap: 12px; margin: 20px 0; }
+    .item-card-mini { position: relative; min-width: 95px; background: #fff; border-radius: 15px; overflow: hidden; border: 2px solid transparent; cursor: pointer; transition: 0.3s; }
+    .item-img { width: 100%; height: 100px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; }
+    .item-price-bar { position: absolute; bottom: 0; width: 100%; color: #ff8a65; font-size: 13px; font-weight: 600; text-align: center; padding: 10px 0; text-shadow: 2px 2px 8px rgba(0,0,0,1); }
+    .item-card-mini.active-node { border-color: #ff7043; transform: translateY(-10px); }
+    .pay-secure-btn { width: 90%; height: 55px; border-radius: 20px; border: none; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); font-weight: 700; font-size: 16px; }
+    .pay-secure-btn.active { background: linear-gradient(135deg, #ff8a65 0%, #ff7043 100%); color: white; cursor: pointer; }
+
+    #cart-modal {
+        position: fixed; bottom: -100%; left: 0; width: 100%; height: 85%; background: #ffffff; border-radius: 30px 30px 0 0; z-index: 999999; display: flex; flex-direction: column; transition: 0.5s ease;
+    }
+    #cart-modal.active { bottom: 0; }
+    .promo-grid { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; background: white; }
+    .promo-item { display: flex; flex-direction: column; align-items: center; }
+    .item-box { width: 100%; aspect-ratio: 1; background: #f7f7f7; border-radius: 15px; overflow: hidden; border: 1px solid #eee; }
+    .item-box img { width: 100%; height: 100%; object-fit: cover; }
+    .stock-label { background: #ff5e00; color: white; font-size: 10px; padding: 3px 10px; border-radius: 20px; font-weight: 700; margin-top: -12px; z-index: 5; }
+</style>
+</head>
+<body>
+    <div class="galaxy-overlay"></div>
+
+<div id="fullscreen-viewer">
+    <span class="close-fs" onclick="closeFS()">&times;</span>
+    <div class="fs-counter" id="fsCounter">1/1</div>
+    <div class="fs-dots" id="fsDots"></div>
+    <div class="fs-slider no-scrollbar" id="fsSlider"></div>
+</div>
+
+<div class="content-layer">
+  <div class="hero-container">
+    <div class="hero-slider no-scrollbar" id="main-slider">
+        <img src="" id="dynamic-img" onclick="openFS([this.src])">
+    </div>
+  </div>
+
+    <div class="hologram-stage">
+        <div class="virtual-card">
+            <div class="card-face card-front"><img src="" class="holo-img"></div>
+            <div class="card-face card-back"><img src="" class="holo-img"></div>
+        </div>
+    </div>
+    
+    <div class="floating-card">
+        <div class="flex justify-between items-start">
+            <div><h1 class="text-2xl font-bold mb-2 skeleton" id="product-title">Signature Ice Fiber<br>Elite Edition</h1><div class="price-tag skeleton" id="main-price">₦0</div></div>
+            <div class="px-3 py-1 rounded-full text-[10px] font-bold" style="background:rgba(255,255,255,0.12); color:#F5F5DC;">-69%</div>
+        </div>
+        
+        <div class="flex items-center gap-2 mt-6 flex-wrap">
+            <div class="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full" style="background:rgba(255,255,255,0.08); color:#F5F5DC;">
+                <i class="fa-solid fa-bag-shopping text-[9px]"></i> 145 sold
+            </div>
+            <a href="vendor-storefront.html" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full active:scale-95 transition-transform" style="background:rgba(255,255,255,0.08);">
+                <span class="text-black px-2 py-0.5 rounded-full font-black text-[8px]" style="background:#F5F5DC;">WOLAY</span>
+                <i class="fa-solid fa-chevron-right text-[8px]" style="color:#F5F5DC;"></i>
+            </a>
+            <div class="text-[#ff9500] font-bold flex items-center gap-1 bg-[#ff95001a] px-3 py-1.5 rounded-full text-[11px]">
+                5.0 
+                <div class="flex text-[8px] gap-0.5">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                </div>
+            </div>
+        </div>
+
+    
+    
+<!-- CONTACT VENDOR BOX -->
+<div id="contact-vendor-box" style="
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 16px;
+    margin-top: 20px;
+">
+    <!-- STATE 1: Before sending -->
+    <div id="cv-before">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+            <div style="width:28px; height:28px; background:linear-gradient(135deg,#D4AF37,#B8860B); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <i class="fa-solid fa-store" style="font-size:12px; color:#000;"></i>
+            </div>
+            <span style="font-family:'Quicksand',sans-serif; font-size:13px; font-weight:800; color:#F5F5DC;">Contact Vendor</span>
+            <div style="margin-left:auto; background:rgba(0,230,118,0.15); border:1px solid rgba(0,230,118,0.3); border-radius:20px; padding:3px 10px; display:flex; align-items:center; gap:5px;">
+                <div style="width:6px; height:6px; background:#00e676; border-radius:50%; animation:blink 1.5s infinite;"></div>
+                <span style="font-size:9px; font-weight:800; color:#00e676; font-family:'Quicksand',sans-serif;">ONLINE</span>
+            </div>
+        </div>
+
+        <!-- Quick message pills -->
+        <div style="display:flex; gap:7px; margin-bottom:12px; overflow-x:auto; scrollbar-width:none; padding-bottom:2px;">
+            <div onclick="selectQuickMsg(this)" class="quick-pill" style="background:rgba(253,224,141,0.15); border:1.5px solid rgba(253,224,141,0.5); border-radius:20px; padding:7px 14px; font-size:11px; font-weight:700; color:#fde08d; white-space:nowrap; cursor:pointer; font-family:'Quicksand',sans-serif; flex-shrink:0;">Is this available? 😊</div>
+            <div onclick="selectQuickMsg(this)" class="quick-pill" style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:7px 14px; font-size:11px; font-weight:700; color:#F5F5DC; white-space:nowrap; cursor:pointer; font-family:'Quicksand',sans-serif; flex-shrink:0;">What's the price? 💰</div>
+            <div onclick="selectQuickMsg(this)" class="quick-pill" style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:7px 14px; font-size:11px; font-weight:700; color:#F5F5DC; white-space:nowrap; cursor:pointer; font-family:'Quicksand',sans-serif; flex-shrink:0;">Do you deliver? 🚚</div>
+        </div>
+
+        <!-- Input row — yana nuna "Is this still available?" a default -->
+        <div style="display:flex; gap:8px; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:6px 6px 6px 14px;">
+            <input id="vendorMsgInput" type="text"
+                value="Is this still available? 😊"
+                style="flex:1; background:none; border:none; outline:none; font-family:'Quicksand',sans-serif; font-size:13px; font-weight:500; color:#F5F5DC; caret-color:#D4AF37;"
+                onkeydown="if(event.key==='Enter') sendVendorMsg()">
+            <button onclick="sendVendorMsg()" style="width:38px; height:38px; background:linear-gradient(135deg,#D4AF37,#B8860B); border:none; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;"
+                onmousedown="this.style.transform='scale(0.9)'"
+                ontouchstart="this.style.transform='scale(0.9)'"
+                onmouseup="this.style.transform=''"
+                ontouchend="this.style.transform=''">
+                <i class="fa-solid fa-paper-plane" style="font-size:14px; color:#000;"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- STATE 2: After sending — See Conversation -->
+    <div id="cv-after" style="display:none;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+            <div style="width:28px; height:28px; background:linear-gradient(135deg,#D4AF37,#B8860B); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <i class="fa-solid fa-store" style="font-size:12px; color:#000;"></i>
+            </div>
+            <span style="font-family:'Quicksand',sans-serif; font-size:13px; font-weight:800; color:#F5F5DC;">Contact Vendor</span>
+            <div style="margin-left:auto; background:rgba(0,230,118,0.15); border:1px solid rgba(0,230,118,0.3); border-radius:20px; padding:3px 10px; display:flex; align-items:center; gap:5px;">
+                <div style="width:6px; height:6px; background:#00e676; border-radius:50%; animation:blink 1.5s infinite;"></div>
+                <span style="font-size:9px; font-weight:800; color:#00e676; font-family:'Quicksand',sans-serif;">ONLINE</span>
+            </div>
+        </div>
+
+        <!-- See Conversation button -->
+        <button onclick="window.location.href='vendor-chat.html?vendorId=' + (window.currentVendorId || '')" style="
+            width:100%; height:48px;
+            background:linear-gradient(135deg,#D4AF37,#B8860B);
+            border:none; border-radius:14px;
+            font-family:'Quicksand',sans-serif;
+            font-size:14px; font-weight:800;
+            color:#000; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            transition: all 0.2s;
+        "
+        onmousedown="this.style.transform='scale(0.97)'"
+        ontouchstart="this.style.transform='scale(0.97)'"
+        onmouseup="this.style.transform=''"
+        ontouchend="this.style.transform=''">
+            <i class="fa-regular fa-comment-dots" style="font-size:16px;"></i>
+            See Conversation
+        </button>
+    </div>
+</div>
+    </div>
+    
+<style>
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+</style>
+        
+   
+    <div style="background:#F2EDE4; border-radius:35px; padding:20px; margin:15px; font-family:'Quicksand',sans-serif;">
+
+    <span style="font-size:11px; font-weight:800; color:#1A0F0D; letter-spacing:5px; text-transform:uppercase; display:block; margin-bottom:12px;">Description</span>
+    <p id="product-description" style="font-size:13px; font-weight:500; color:#1A0F0D; line-height:1.7; margin-bottom:20px;">
+        Premium Swiss Appliqué Lace — High Quality fabric. Available for retail and wholesale nationwide. Fast delivery across Nigeria.
+    </p>
+
+    
+
+    <!-- CHAT VENDOR + SAVE ROW -->
+    <div style="display:flex; gap:10px; align-items:center;">
+
+        <!-- CHAT VENDOR BUTTON -->
+        <button onclick="window.location.href='vendor-chat.html?vendorId=' + (window.currentVendorId || '')" style="
+            flex:1; height:48px;
+            background:#1A0F0D;
+            border:none; border-radius:14px;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            cursor:pointer; transition:all 0.2s;
+            font-family:'Quicksand',sans-serif;
+            font-size:13px; font-weight:800;
+            color:white; letter-spacing:0.5px;
+        "
+        onmousedown="this.style.transform='scale(0.96)'"
+        ontouchstart="this.style.transform='scale(0.96)'"
+        onmouseup="this.style.transform=''"
+        ontouchend="this.style.transform=''">
+            <i class="fa-brands fa-facebook-messenger" style="font-size:16px; color:#00B2FF;"></i>
+            Chat Vendor
+        </button>
+
+        <!-- SAVE BUTTON -->
+        <button id="save-btn" onclick="toggleSave(this)" style="
+            width:48px; height:48px;
+            background:white;
+            border:1px solid rgba(0,0,0,0.08);
+            border-radius:14px;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; transition:all 0.2s; flex-shrink:0;
+        "
+        onmousedown="this.style.transform='scale(0.9)'"
+        ontouchstart="this.style.transform='scale(0.9)'"
+        onmouseup="this.style.transform=''"
+        ontouchend="this.style.transform=''">
+            <i id="save-icon" class="fa-regular fa-bookmark" style="font-size:18px; color:#1A0F0D;"></i>
+        </button>
+
+    </div>
+
+    </div>
+
+
+    <!-- SELLER INFORMATION -->
+<div style="background:#F2EDE4; border-radius:35px; padding:20px; margin:15px; font-family:'Quicksand',sans-serif;">
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+    <span style="font-size:11px; font-weight:800; color:#1A0F0D; letter-spacing:5px; text-transform:uppercase;">Seller Information</span>
+    <a id="seller-details-link" href="me.html" style="font-size:12px; font-weight:700; color:#1d9bf0; text-decoration:none;">Seller Details</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+
+        <!-- Avatar -->
+        <div style="position:relative; flex-shrink:0;">
+            <img id="seller-avatar"
+                 src="https://api.dicebear.com/7.x/bottts/svg?seed=vendor"
+                 style="width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid #1A0F0D;">
+            <!-- Online dot -->
+            <div style="position:absolute; bottom:2px; right:2px; width:11px; height:11px; background:#22c55e; border-radius:50%; border:2px solid #F2EDE4;"></div>
+        </div>
+
+        <!-- Name + joined -->
+        <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:5px; margin-bottom:3px;">
+                <span id="seller-name" style="font-size:14px; font-weight:800; color:#1A0F0D;">Rad Ibrahim Tukur</span>
+                <!-- Verified badge -->
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C10.74 2 9.53 2.62 8.78 3.67L8.2 4.49C7.84 5 7.28 5.33 6.66 5.39L5.67 5.48C4.31 5.61 3.24 6.68 3.11 8.04L3.02 9.03C2.96 9.65 2.63 10.21 2.12 10.57L1.3 11.15C0.25 11.9 0.25 13.47 1.3 14.22L2.12 14.8C2.63 15.16 2.96 15.72 3.02 16.34L3.11 17.33C3.24 18.69 4.31 19.76 5.67 19.89L6.66 19.98C7.28 20.04 7.84 20.37 8.2 20.88L8.78 21.7C9.53 22.75 11.08 22.75 11.83 21.7L12.41 20.88C12.77 20.37 13.33 20.04 13.95 19.98L14.94 19.89C16.3 19.76 17.37 18.69 17.5 17.33L17.59 16.34C17.65 15.72 17.98 15.16 18.49 14.8L19.31 14.22C20.36 13.47 20.36 11.9 19.31 11.15L18.49 10.57C17.98 10.21 17.65 9.65 17.59 9.03L17.5 8.04C17.37 6.68 16.3 5.61 14.94 5.48L13.95 5.39C13.33 5.33 12.77 5 12.41 4.49L11.83 3.67C11.23 2.82 10.45 2 12 2Z" fill="#1d9bf0"/>
+                    <path d="M9.5 12L11 13.5L15 9.5" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <span id="seller-joined" style="font-size:11px; font-weight:500; color:rgba(26,15,13,0.5);">Joined Facebook in 2019</span>
+        </div>
+
+        <!-- FOLLOW BUTTON -->
+        <button id="follow-seller-btn" onclick="toggleFollow(this)" style="
+            height:36px; padding:0 18px;
+            background:#1A0F0D;
+            border:none; border-radius:20px;
+            font-family:'Quicksand',sans-serif;
+            font-size:12px; font-weight:800;
+            color:white; cursor:pointer;
+            display:flex; align-items:center; gap:6px;
+            transition:all 0.2s; flex-shrink:0;
+        "
+        onmousedown="this.style.transform='scale(0.93)'"
+        ontouchstart="this.style.transform='scale(0.93)'"
+        onmouseup="this.style.transform=''"
+        ontouchend="this.style.transform=''">
+            <i class="fa-solid fa-plus" style="font-size:10px;" id="follow-icon"></i>
+            <span id="follow-text">Follow</span>
+        </button>
+
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:flex; gap:8px; margin-top:16px;">
+        <div style="flex:1; background:white; border-radius:14px; padding:10px; text-align:center;">
+            <div style="font-size:15px; font-weight:800; color:#1A0F0D; font-family:'Quicksand',sans-serif;">145</div>
+            <div style="font-size:9px; font-weight:700; color:rgba(26,15,13,0.45); letter-spacing:1px; text-transform:uppercase;">Sales</div>
+        </div>
+        <div style="flex:1; background:white; border-radius:14px; padding:10px; text-align:center;">
+            <div style="font-size:15px; font-weight:800; color:#1A0F0D; font-family:'Quicksand',sans-serif;">5.0 ⭐</div>
+            <div style="font-size:9px; font-weight:700; color:rgba(26,15,13,0.45); letter-spacing:1px; text-transform:uppercase;">Rating</div>
+        </div>
+        <div style="flex:1; background:white; border-radius:14px; padding:10px; text-align:center;">
+            <div style="font-size:15px; font-weight:800; color:#1A0F0D; font-family:'Quicksand',sans-serif;">Fast</div>
+            <div style="font-size:9px; font-weight:700; color:rgba(26,15,13,0.45); letter-spacing:1px; text-transform:uppercase;">Delivery</div>
+        </div>
+    </div>
+
+</div>
+
+        
+
+    <div id="review-section-pro" style="background: #F2EDE4; border-radius: 25px; padding: 15px; margin: 10px 15px; font-family: 'Quicksand', sans-serif;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-weight: 800; font-size: 13px; color: #1A0F0D;">Rate this fabric</span>
+            <div class="star-input" id="star-box" style="display: flex; gap: 3px;">
+                <span onclick="rate(1)" style="font-size: 20px; cursor: pointer; color: #e0e0e0;">★</span>
+                <span onclick="rate(2)" style="font-size: 20px; cursor: pointer; color: #e0e0e0;">★</span>
+                <span onclick="rate(3)" style="font-size: 20px; cursor: pointer; color: #e0e0e0;">★</span>
+                <span onclick="rate(4)" style="font-size: 20px; cursor: pointer; color: #e0e0e0;">★</span>
+                <span onclick="rate(5)" style="font-size: 20px; cursor: pointer; color: #e0e0e0;">★</span>
+            </div>
+        </div>
+        <textarea id="review-text" placeholder="Write a short review..." style="width: 100%; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.05); padding: 10px; border-radius: 15px; height: 60px; font-size: 13px; color: #1A0F0D; outline: none; margin-bottom: 10px; resize: none;"></textarea>
+        <button id="submit-review" onclick="postReview()" disabled style="width: 100%; background: #ccc; color: white; border: none; padding: 10px; border-radius: 15px; font-weight: 800; font-size: 13px; transition: 0.3s; cursor: not-allowed;">Submit Review</button>
+    </div>
+
+    <div id="reviews-feed" style="max-height: 400px; overflow-y: auto; padding-bottom: 20px;"></div>
+
+    <div class="px-5 mb-3"><span class="section-title">Visual Proof</span></div>
+
+    <div class="proof-section mb-10">
+        <div id="croppedView" class="relative cursor-pointer -mx-5 overflow-hidden" style="height: 95vw;" onclick="showStack();"> 
+            <img id="visual-main-img" src="" class="w-full h-full object-cover block">
+            <div class="absolute inset-0" style="background: linear-gradient(to bottom, transparent 50%, #E8E1D5 100%); pointer-events: none;"></div>
+            <div class="absolute bottom-6 left-0 w-full text-center">
+                <div class="flex flex-col items-center">
+                    <span class="text-[12px] font-bold text-gray-700 uppercase" style="color:#1A0F0D;">See all</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-gray-700"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tripleStack" class="hidden">
+            <img src="" class="stack-img visual-proof-img w-full block" onclick="openVisualProofFS(0)">
+            <img src="" class="stack-img visual-proof-img w-full block" onclick="openVisualProofFS(1)">
+            <img src="" class="stack-img visual-proof-img w-full block" onclick="openVisualProofFS(2)">
+        </div>
+            
+        <div class="mt-8 border-t border-white/5 pt-4 mb-24 px-5">
+            <div class="flex gap-6 overflow-x-auto no-scrollbar"><span class="text-xs font-black text-gray-800 border-b-2 border-gray-800 pb-2">Recommended</span></div>
+            <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-white/20 aspect-square rounded-2xl relative"><div class="absolute bottom-2 right-2 bg-green-500 rounded-full p-1"><i class="fa-solid fa-cart-shopping text-[8px] text-white"></i></div></div>
+                <div class="bg-white/20 aspect-square rounded-2xl relative"><div class="absolute bottom-2 right-2 bg-green-500 rounded-full p-1"><i class="fa-solid fa-cart-shopping text-[8px] text-white"></i></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
+<div id="infinity-overlay" class="inf-overlay">
+    <div class="glass-backdrop" onclick="closeInf()"></div>
+    <div id="inf-card" class="inf-card style-5">
+        <div class="atamfa-magic-stage"><img src="" id="magic-atamfa-display" class="atamfa-float-engine"></div>
+        <div class="inf-title-area">
+            <span class="inf-subtitle">EXQUISITE SELECTION</span>
+            <h2 class="inf-main-title">Zabi kalar da kake so</h2>
+        </div>
+        <div class="inventory-scroll magic-grid">
+            <div class="item-card-mini" id="mini-1" onclick="selectColor('GREEN', '#3fae5c', this)"><div class="item-img" style="background:#3fae5c;"></div><div class="item-price-bar" style="color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.6);">GREEN</div></div>
+            <div class="item-card-mini" id="mini-2" onclick="selectColor('PURPLE', '#7c3aed', this)"><div class="item-img" style="background:#7c3aed;"></div><div class="item-price-bar" style="color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.6);">PURPLE</div></div>
+            <div class="item-card-mini" id="mini-3" onclick="selectColor('MILK', '#f3e9dc', this)"><div class="item-img" style="background:#f3e9dc;"></div><div class="item-price-bar" style="color:#7a5c3e;text-shadow:none;">MILK</div></div>
+        </div>
+        <button id="inf-action" disabled onclick="infProceed()" class="pay-secure-btn"><span>Zabi kala domin ci gaba</span></button>
+        <p class="inf-close" onclick="closeInf()">DISMISS</p>
+    </div>
+</div>
+
+<div id="cart-modal">
+    <div class="modal-header">
+        <div class="popup-content-inner">
+            <div class="pop-txt"><i class="fa-solid fa-circle-check" style="color:#28a745"></i> Added to cart</div>
+            <div class="timer-circle"><svg><circle cx="16" cy="16" r="14"></circle><circle id="progress" cx="16" cy="16" r="14"></circle></svg><span id="num">5s</span></div>
+        </div>
+    </div>
+    <div class="promo-grid"></div>
+    <div class="footer"><button class="btn-checkout" onclick="closeModal()">Check out</button></div>
+</div>
+
+<!-- STICKY ADD-TO-CART BAR -->
+<div class="sticky-buy-bar" id="stickyBuyBar">
+    <img id="sbb-img" src="" alt="">
+    <div class="sbb-info">
+        <div class="sbb-name" id="sbb-name">Signature Ice Fiber Elite Edition</div>
+        <div class="sbb-price" id="sbb-price">₦0</div>
+    </div>
+    <button onclick="openInf()"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+</div>
+
+<!-- BOTTOM DOCK -->
+<div class="glass-dock-container">
+    <div class="dock-item" onclick="window.location.href='home.html'">
+        <div class="dock-icon-box"><i class="fa-solid fa-house"></i></div>
+        <div class="dock-label">Home</div>
+    </div>
+    <div class="dock-item" onclick="window.location.href='vendor-chat.html?vendorId=' + (window.currentVendorId || '')">
+        <div class="dock-icon-box"><i class="fa-regular fa-comment-dots"></i></div>
+        <div class="dock-label">Chat</div>
+    </div>
+    <div class="dock-item" onclick="openModal()">
+        <div class="dock-icon-box"><i class="fa-solid fa-cart-shopping"></i></div>
+        <span class="dock-badge" id="dockCartBadge" style="display:none;">0</span>
+        <div class="dock-label">Cart</div>
+    </div>
+    <div class="dock-item" onclick="window.location.href='me.html'">
+        <div class="dock-icon-box"><i class="fa-solid fa-user"></i></div>
+        <div class="dock-label">Profile</div>
+    </div>
+</div>
+
+<script>
+
+let qty = 1;
+let selectedColor = null;
+let popTimer;
+let selectedStars = 0;
+let currentUser = { name: "Sadiq Developer" };
+
+function updateQty(change) {
+    qty += change;
+    if (qty < 1) qty = 1;
+    document.getElementById('qty-display').innerText = qty;
+}
+
+    function sendVendorMsg() {
+    const input = document.getElementById('vendorMsgInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    // Samu product info don tag
+    const productName  = document.querySelector('.floating-card h1')?.innerText || '';
+    const productPrice = document.getElementById('main-price')?.innerText || '';
+    const productImg   = document.getElementById('dynamic-img')?.src || '';
+
+    // Adana a localStorage don vendor-chat.html ya karba
+    localStorage.setItem('vc_msg',   msg);
+    localStorage.setItem('vc_name',  productName);
+    localStorage.setItem('vc_price', productPrice);
+    localStorage.setItem('vc_img',   productImg);
+
+    // Nuna "See Conversation" state
+    document.getElementById('cv-before').style.display = 'none';
+    document.getElementById('cv-after').style.display  = 'block';
+
+    // Adana a localStorage don page ta tuna state
+    const currentProductId = new URLSearchParams(window.location.search).get('id') || 'default';
+localStorage.setItem('vc_sent', currentProductId);
+
+    // Je vendor-chat.html
+    setTimeout(() => {
+        window.location.href = 'vendor-chat.html';
+    }, 400);
+}
+
+// Duba state da page ta buɗe — idan an riga an aika
+(function checkVendorState() {
+    const currentProductId = new URLSearchParams(window.location.search).get('id') || 'default';
+if (localStorage.getItem('vc_sent') === currentProductId) {
+        const before = document.getElementById('cv-before');
+        const after  = document.getElementById('cv-after');
+        if (before) before.style.display = 'none';
+        if (after)  after.style.display  = 'block';
+    }
+})();
+
+
+        // Saka selected pill a cikin input
+function selectQuickMsg(pill) {
+    document.getElementById('vendorMsgInput').value = pill.innerText.trim();
+    document.querySelectorAll('.quick-pill').forEach(p => {
+        p.style.background = 'rgba(255,255,255,0.07)';
+        p.style.border = '1px solid rgba(255,255,255,0.12)';
+        p.style.color = '#F5F5DC';
+    });
+    pill.style.background = 'rgba(253,224,141,0.15)';
+    pill.style.border = '1.5px solid rgba(253,224,141,0.5)';
+    pill.style.color = '#fde08d';
+}
+
+
+    
+
+function showStack() {
+    document.getElementById('croppedView').style.display = 'none';
+    const stack = document.getElementById('tripleStack');
+    stack.classList.remove('hidden');
+    stack.style.display = 'block';
+}
+
+function openFS(imgs) {
+    const s = document.getElementById('fsSlider');
+    s.innerHTML = imgs.map(i => `<img src="${i}" ondblclick="this.classList.toggle('zoomed')">`).join('');
+    document.getElementById('fullscreen-viewer').style.display = 'block';
+
+    const dotsWrap = document.getElementById('fsDots');
+    const counter = document.getElementById('fsCounter');
+    dotsWrap.innerHTML = imgs.map((_, idx) => `<span class="${idx === 0 ? 'active' : ''}"></span>`).join('');
+    counter.innerText = `1/${imgs.length}`;
+
+    s.onscroll = () => {
+        const idx = Math.round(s.scrollLeft / window.innerWidth);
+        counter.innerText = `${idx + 1}/${imgs.length}`;
+        [...dotsWrap.children].forEach((dot, i) => dot.classList.toggle('active', i === idx));
+    };
+
+    // Double-tap-to-zoom don touch devices (wanda ba sa harba 'dblclick' koyaushe)
+    if (!s.dataset.zoomBound) {
+        let lastTap = 0;
+        s.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTap < 300 && e.target.tagName === 'IMG') {
+                e.preventDefault();
+                e.target.classList.toggle('zoomed');
+            }
+            lastTap = now;
+        });
+        s.dataset.zoomBound = '1';
+    }
+}
+function closeFS() { document.getElementById('fullscreen-viewer').style.display = 'none'; }
+
+function openVisualProofFS(startIndex) {
+    const images = document.querySelectorAll('.stack-img');
+    const imageUrls = Array.from(images).map(img => img.src).filter(src => src && src.trim() !== "");
+    if(imageUrls.length === 0) return;
+    openFS(imageUrls);
+    setTimeout(() => {
+        document.getElementById('fsSlider').scrollTo({ left: window.innerWidth * startIndex, behavior: "instant" });
+    }, 50);
+}
+
+function checkSelection() {
+    const currentImg = document.getElementById('dynamic-img').src;
+    window.location.href = `checkout.html?qty=${qty}&img=${encodeURIComponent(currentImg)}`;
+}
+
+function openChat() { window.location.href = 'chat-room.html'; }
+
+function openInf() {
+    const img = document.getElementById('dynamic-img').src;
+    document.getElementById('magic-atamfa-display').src = img;
+    document.getElementById('magic-atamfa-display').classList.add('active');
+    document.getElementById('infinity-overlay').style.display = 'flex';
+}
+function closeInf() { document.getElementById('infinity-overlay').style.display = 'none'; }
+
+function selectColor(name, hex, el) {
+    selectedColor = name;
+    document.querySelectorAll('.item-card-mini').forEach(c => c.classList.remove('active-node'));
+    el.classList.add('active-node');
+
+    // Live preview — tint the floating product image toward the chosen color
+    const preview = document.getElementById('magic-atamfa-display');
+    preview.style.filter = `saturate(1.3) drop-shadow(0 10px 25px ${hex}66)`;
+    preview.style.boxShadow = `0 0 40px ${hex}55`;
+    preview.style.border = `3px solid ${hex}`;
+
+    const btn = document.getElementById('inf-action');
+    btn.disabled = false;
+    btn.classList.add('active');
+    btn.querySelector('span').innerText = `Add ${name} to Cart`;
+}
+
+function infProceed() {
+    if (!selectedColor) return;
+    addToCartFunction(selectedColor);
+    closeInf();
+}
+
+function addToCartFunction(color) {
+    const currentImg = document.getElementById('dynamic-img').src;
+    const currentName = document.querySelector('.floating-card h1').innerText;
+    const currentPrice = document.getElementById('main-price').innerText.replace(/[^\d]/g, '');
+    
+    let cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+    cart.push({ name: currentName, price: currentPrice, img: currentImg, color: color || null });
+    localStorage.setItem('cartItems', JSON.stringify(cart));
+    updateDockBadge();
+    openModal();
+}
+
+function updateDockBadge() {
+    const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const badge = document.getElementById('dockCartBadge');
+    if (!badge) return;
+    if (cart.length > 0) { badge.style.display = 'flex'; badge.innerText = cart.length; }
+    else { badge.style.display = 'none'; }
+}
+
+function openModal() {
+    const modal = document.getElementById('cart-modal');
+    const prog = document.getElementById('progress');
+    const num = document.getElementById('num');
+    const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const promoGrid = document.querySelector('.promo-grid');
+    
+    if (promoGrid && cart.length > 0) {
+        promoGrid.innerHTML = cart.slice(-12).reverse().map(item => `
+            <div class="promo-item">
+                <div class="item-box"><img src="${item.img}"></div>
+                <div class="stock-label">In Cart</div>
+                <div class="price-label">₦${Number(item.price).toLocaleString()}</div>
+            </div>
+        `).join('');
+    }
+    const checkoutBtn = document.querySelector('.btn-checkout');
+    if (checkoutBtn) checkoutBtn.innerText = `Check out these items (${cart.length})`;
+    modal.classList.add('active');
+    
+    clearInterval(popTimer);
+    let time = 5;
+    if(prog) prog.style.strokeDashoffset = 88;
+    const runTimer = () => {
+        if(num) num.innerText = time + 's';
+        if(prog) prog.style.strokeDashoffset = 88 - (88 * (5 - time) / 5);
+        if(time <= 0) { clearInterval(popTimer); closeModal(); }
+        time--;
+    };
+    runTimer();
+    popTimer = setInterval(runTimer, 1000);
+}
+
+function closeModal() {
+    clearInterval(popTimer);
+    document.getElementById('cart-modal').classList.remove('active');
+}
+
+function rate(n) {
+    selectedStars = n;
+    const stars = document.querySelectorAll('#star-box span');
+    stars.forEach((s, index) => { s.style.color = index < n ? '#FFB800' : '#e0e0e0'; });
+    const btn = document.getElementById('submit-review');
+    btn.disabled = false;
+    btn.style.background = '#1A0F0D';
+    btn.style.cursor = 'pointer';
+}
+
+function postReview() {
+    const text = document.getElementById('review-text').value;
+    if(!text) return;
+    const feed = document.getElementById('reviews-feed');
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    const reviewHTML = `
+        <div style="background:white;border-radius:20px;padding:15px;margin:10px 15px;font-family:'Quicksand';">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <div style="width:32px;height:32px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#888;">${currentUser.name[0]}</div>
+                <div style="flex-grow:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <h4 style="font-size:12px;font-weight:800;margin:0;color:#1A0F0D;">${currentUser.name}</h4>
+                        <span style="font-size:10px;color:#bbb;">${dateStr}</span>
+                    </div>
+                    <div style="color:#FFB800;font-size:8px;">${"★".repeat(selectedStars)}</div>
+                </div>
+            </div>
+            <p style="font-size:12px;color:#555;line-height:1.4;margin-left:42px;">${text}</p>
+        </div>`;
+    feed.insertAdjacentHTML('afterbegin', reviewHTML);
+    document.getElementById('review-text').value = "";
+    selectedStars = 0; rate(0);
+    const btn = document.getElementById('submit-review');
+    btn.disabled = true;
+    btn.style.background = '#ccc';
+}
+
+// STICKY ADD-TO-CART BAR — yana bayyana bayan an wuce hero image
+window.addEventListener('scroll', () => {
+    const bar = document.getElementById('stickyBuyBar');
+    if (!bar) return;
+    if (window.scrollY > window.innerHeight * 0.55) bar.classList.add('show');
+    else bar.classList.remove('show');
+});
+
+document.addEventListener('DOMContentLoaded', updateDockBadge);
+
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadProduct() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
+    
+    if (!productId) {
+        console.warn("⚠️ Babu Product ID a cikin URL. Ana duba localStorage...");
+        const backup = localStorage.getItem('selectedProduct');
+        if(backup) {
+            const p = JSON.parse(backup);
+            applyProductData(p.name, p.price, p.img);
+        }
+        return;
+    }
+
+    try {
+        const docRef = doc(db, "products", productId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const p = docSnap.data();
+            const imgUrl = p.image || p.img || "";
+            const priceVal = p.price || "0";
+            const nameVal = p.name || "Signature Fabric";
+            const descVal = p.description || "";
+
+            window.currentVendorId = p.vendorId || p.vendor || p.sellerId || '';
+            const sellerLink = document.getElementById('seller-details-link');
+if (sellerLink && window.currentVendorId) {
+    sellerLink.href = `me.html?user=${encodeURIComponent(window.currentVendorId)}`;
+}
+applyProductData(nameVal, priceVal, imgUrl, descVal);
+            
+            // Adana shi don kariya
+            localStorage.setItem('selectedProduct', JSON.stringify({ name: nameVal, price: priceVal, img: imgUrl }));
+            console.log("✅ Successfully loaded from Firebase:", nameVal);
+        } else {
+            console.error("❌ Babu wannan ID din a database!");
+        }
+    } catch (err) {
+        console.error("❌ Firebase Retrieval Error:", err);
+    }
+}
+
+
+
+function toggleSave(btn) {
+    const icon = document.getElementById('save-icon');
+    const saved = icon.classList.contains('fa-solid');
+    if (saved) {
+        icon.classList.replace('fa-solid', 'fa-regular');
+        icon.style.color = '#1A0F0D';
+        btn.style.background = 'white';
+    } else {
+        icon.classList.replace('fa-regular', 'fa-solid');
+        icon.style.color = '#1A0F0D';
+        btn.style.background = '#f0f0f0';
+    }
+    if (navigator.vibrate) navigator.vibrate(10);
+}
+
+function toggleFollow(btn) {
+    const icon = document.getElementById('follow-icon');
+    const text = document.getElementById('follow-text');
+    const isFollowing = text.textContent === 'Following';
+    if (isFollowing) {
+        icon.className = 'fa-solid fa-plus';
+        icon.style.fontSize = '10px';
+        text.textContent = 'Follow';
+        btn.style.background = '#1A0F0D';
+        btn.style.color = 'white';
+    } else {
+        icon.className = 'fa-solid fa-check';
+        icon.style.fontSize = '10px';
+        text.textContent = 'Following';
+        btn.style.background = 'white';
+        btn.style.color = '#1A0F0D';
+        btn.style.border = '1px solid rgba(0,0,0,0.1)';
+    }
+    if (navigator.vibrate) navigator.vibrate(10);
+}
+    
+
+
+    
+function applyProductData(name, price, img, desc) {
+    // 1. Hotuna duka su canza lokaci guda
+    document.getElementById('dynamic-img').src = img;
+    document.getElementById('visual-main-img').src = img;
+    
+    document.querySelectorAll('.holo-img').forEach(el => el.src = img);
+    document.querySelectorAll('.stack-img').forEach(el => el.src = img);
+    const sbbImg = document.getElementById('sbb-img');
+    if (sbbImg) sbbImg.src = img;
+
+    // 2. Sanya suna
+    const nameEl = document.querySelector('.floating-card h1');
+    if (nameEl) { nameEl.innerHTML = name; nameEl.classList.remove('skeleton'); }
+    const sbbName = document.getElementById('sbb-name');
+    if (sbbName) sbbName.innerText = name;
+
+    // 3. Gyara farashi ya fito radau da Alamar Naira
+    const priceEl = document.getElementById('main-price');
+    if (priceEl) {
+        let cleanPrice = price.toString().replace(/[^\d]/g, '');
+        priceEl.innerText = "₦" + Number(cleanPrice).toLocaleString();
+        priceEl.classList.remove('skeleton');
+        const sbbPrice = document.getElementById('sbb-price');
+        if (sbbPrice) sbbPrice.innerText = "₦" + Number(cleanPrice).toLocaleString();
+    }
+   const descEl = document.getElementById('product-description');
+  if (descEl && desc) descEl.innerText = desc;
+  }
+
+// GUDANAR DA SHI NAN TAKE DA AN BUDE SHAFIN!
+document.addEventListener('DOMContentLoaded', loadProduct);
+</script>
+
+</body>
+</html>
