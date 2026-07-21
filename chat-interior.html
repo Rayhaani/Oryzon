@@ -56,8 +56,29 @@
     word-wrap: break-word;
     word-break: break-word;
         }
-        .incoming { align-self: flex-start; background: var(--vendor-bubble); border-bottom-left-radius: 4px; }
+        .incoming { align-self: flex-start; background: var(--vendor-bubble); border-bottom-left-radius: 4px; }      
         .outgoing { align-self: flex-end; background: var(--user-bubble); border-bottom-right-radius: 4px; border-color: rgba(255, 215, 130, 0.25); }
+        .message.media-bubble { padding: 0; overflow: hidden; }
+        .media-timestamp {
+    position: absolute; bottom: 6px; right: 8px;
+    background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.85);
+    font-size: 7.5px; font-family: 'Orbitron', sans-serif;
+    padding: 2px 6px; border-radius: 8px; pointer-events: none;
+}
+.video-duration-badge {
+    position: absolute; bottom: 6px; left: 8px;
+    display: flex; align-items: center; gap: 4px;
+    background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.9);
+    font-size: 7.5px; font-family: 'Orbitron', sans-serif;
+    padding: 2px 6px; border-radius: 8px; pointer-events: none;
+}
+.album-grid { display: grid; gap: 2px; }
+.album-grid img, .album-grid video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.album-more-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 22px; font-weight: 700; font-family: 'Orbitron', sans-serif;
+}
         .timestamp {
     font-size: 7.5px;
     color: rgba(255,255,255,0.4);
@@ -132,6 +153,8 @@
 <div style="
     position: fixed; top: 0; left: 0; width: 100%; height: 56px;
     background: transparent;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     display: flex; align-items: center; padding: 0 12px; gap: 10px;
     z-index: 9999; box-sizing: border-box;
 ">
@@ -200,7 +223,7 @@
 <!-- ── INPUT AREA ── -->
 <div class="input-area">
     <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
-    <input type="file" id="galleryInput" accept="image/*,video/*" hidden>
+    <input type="file" id="galleryInput" accept="image/*,video/*" multiple hidden>
 
     <div id="emojiPanel" style="
         display: none; position: fixed; bottom: 70px; left: 0; width: 100%;
@@ -229,7 +252,7 @@
                 </svg>
             </div>
             <textarea id="msgInput" placeholder="Neural Message..." rows="1"></textarea>
-            <div class="icon-btn" onclick="document.getElementById('galleryInput').click()" style="padding-bottom:11px;flex-shrink:0;" title="Gallery">
+            <div class="icon-btn" onclick="document.getElementById('galleryInput').click()" style="padding-bottom:11px;flex-shrink:0;margin-right:6px;" title="Gallery">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2"/>
                     <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -388,12 +411,14 @@ function listenToNexusMessages() {
               const bubble = document.createElement('div');
               bubble.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
 
-              if (d.type === 'image') {
-                  bubble.innerHTML = `<img src="${d.mediaUrl}" style="max-width:100%; border-radius:10px; display:block;" onclick="window.open('${d.mediaUrl}','_blank')"><span class="timestamp">${time}</span>`;
-              } else if (d.type === 'video') {
-                  bubble.innerHTML = `<video src="${d.mediaUrl}" controls style="max-width:100%; border-radius:10px; display:block;"></video><span class="timestamp">${time}</span>`;
+               if (d.type === 'image' || d.type === 'video') {
+                  bubble.classList.add('media-bubble');
+                  bubble.innerHTML = renderSingleMedia(d.mediaUrl, d.type, time);
+              } else if (d.type === 'album') {
+                  bubble.classList.add('media-bubble');
+                  bubble.innerHTML = renderAlbum(d.mediaItems || [], time);
               } else if (d.type === 'audio') {
-                  const audioId = 'audio_' + doc.id;
+              const audioId = 'audio_' + doc.id;
                   bubble.innerHTML = `
                       <div style="display:flex; align-items:center; gap:10px; min-width:150px; padding:2px 0;">
                           <div onclick="toggleAudioPlay('${audioId}', this)" style="width:30px;height:30px;border-radius:50%;background:var(--cyan-neon);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
@@ -466,6 +491,17 @@ function toggleButtons() {
 // ══════════════════════════════════════════════
 //  MEDIA UPLOAD (Camera / Gallery / Voice)
 // ══════════════════════════════════════════════
+async function uploadSingleFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'chatMedia');
+    formData.append('username', chatRoomId);
+    const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+    return data.url;
+}
+
 async function uploadAndSendMedia(file, kind) {
     await authReadyPromise;
     if (!firebase.auth().currentUser) {
@@ -473,21 +509,10 @@ async function uploadAndSendMedia(file, kind) {
         return;
     }
     try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('type', 'chatMedia');
-        formData.append('username', chatRoomId);
-
-        const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
-
+        const url = await uploadSingleFile(file);
         const lastLabel = kind === 'image' ? '📷 Photo' : kind === 'video' ? '🎥 Video' : '🎤 Voice message';
         await db.collection('personalChats').doc(chatRoomId).collection('messages').add({
-            senderId: myId, receiverId: chatWith, type: kind, mediaUrl: data.url, timestamp: Date.now()
+            senderId: myId, receiverId: chatWith, type: kind, mediaUrl: url, timestamp: Date.now()
         });
         await db.collection('personalChats').doc(chatRoomId).set({
             lastMessage: lastLabel, lastMessageTime: Date.now(), members: [myId, chatWith]
@@ -496,17 +521,44 @@ async function uploadAndSendMedia(file, kind) {
         console.error('Media upload error:', err);
         alert('An kasa tura fayil: ' + err.message);
     }
-        }
+}
 
+async function uploadAndSendAlbum(files) {
+    await authReadyPromise;
+    if (!firebase.auth().currentUser) {
+        alert('An kasa tabbatar da shiga. Sake login sannan ka gwada.');
+        return;
+    }
+    try {
+        const mediaItems = [];
+        for (const file of files) {
+            const url = await uploadSingleFile(file);
+            mediaItems.push({ url, kind: file.type.startsWith('video') ? 'video' : 'image' });
+        }
+        await db.collection('personalChats').doc(chatRoomId).collection('messages').add({
+            senderId: myId, receiverId: chatWith, type: 'album', mediaItems, timestamp: Date.now()
+        });
+        await db.collection('personalChats').doc(chatRoomId).set({
+            lastMessage: `📷 ${mediaItems.length} Photos`, lastMessageTime: Date.now(), members: [myId, chatWith]
+        }, { merge: true });
+    } catch (err) {
+        console.error('Album upload error:', err);
+        alert('An kasa tura hotuna: ' + err.message);
+    }
+    }
 document.getElementById('cameraInput').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) uploadAndSendMedia(file, 'image');
     e.target.value = '';
 });
 document.getElementById('galleryInput').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    uploadAndSendMedia(file, file.type.startsWith('video') ? 'video' : 'image');
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    if (files.length === 1) {
+        uploadAndSendMedia(files[0], files[0].type.startsWith('video') ? 'video' : 'image');
+    } else {
+        uploadAndSendAlbum(files);
+    }
     e.target.value = '';
 });
 
@@ -560,6 +612,65 @@ function stopRecording(shouldSend) {
         }
     };
     mediaRecorder.stop();
+}
+
+function formatDuration(seconds) {
+    if (!seconds || isNaN(seconds)) return '';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+}
+
+function renderSingleMedia(url, kind, time) {
+    if (kind === 'video') {
+        const vid = 'video_' + Math.random().toString(36).slice(2);
+        setTimeout(() => {
+            const v = document.getElementById(vid);
+            if (v) v.addEventListener('loadedmetadata', () => {
+                const badge = document.getElementById(vid + '_dur');
+                if (badge) badge.textContent = formatDuration(v.duration);
+            });
+        }, 0);
+        return `
+            <div style="position:relative;">
+                <video id="${vid}" src="${url}" controls style="width:100%; display:block;"></video>
+                <div class="video-duration-badge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                    <span id="${vid}_dur"></span>
+                </div>
+                <span class="media-timestamp">${time}</span>
+            </div>`;
+    }
+    return `
+        <div style="position:relative;">
+            <img src="${url}" style="width:100%; display:block;" onclick="window.open('${url}','_blank')">
+            <span class="media-timestamp">${time}</span>
+        </div>`;
+}
+
+function renderAlbum(mediaItems, time) {
+    const count = mediaItems.length;
+    if (count === 1) return renderSingleMedia(mediaItems[0].url, mediaItems[0].kind, time);
+
+    const shown = mediaItems.slice(0, 4);
+    const extra = count - 4;
+    let gridStyle = 'grid-template-columns:1fr 1fr; height:160px;';
+    if (count >= 3) gridStyle = 'grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:200px;';
+
+    let itemsHtml = '';
+    shown.forEach((item, i) => {
+        let cellStyle = 'position:relative;';
+        if (count === 3 && i === 0) cellStyle += 'grid-row: 1 / span 2;';
+        const isLastWithMore = (i === 3 && extra > 0);
+        const mediaTag = item.kind === 'video' ? `<video src="${item.url}" muted></video>` : `<img src="${item.url}">`;
+        itemsHtml += `<div style="${cellStyle}">${mediaTag}${isLastWithMore ? `<div class="album-more-overlay">+${extra}</div>` : ''}</div>`;
+    });
+
+    return `
+        <div style="position:relative;">
+            <div class="album-grid" style="${gridStyle}">${itemsHtml}</div>
+            <span class="media-timestamp">${time}</span>
+        </div>`;
 }
 
 function toggleAudioPlay(audioId, btnEl) {
