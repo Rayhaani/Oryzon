@@ -1564,11 +1564,11 @@
                       }
               
     </script>
-
-   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
  
     <script>
       const firebaseConfig = {
@@ -1582,10 +1582,48 @@
       };
 
       firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      const storage = firebase.storage();
-      const analytics = firebase.analytics();
+const db = firebase.firestore();
+const storage = firebase.storage();
+const analytics = firebase.analytics();
 
+// SABON: Jira Auth ya tabbata kafin komai
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        console.log("Auth ready, uid:", user.uid);
+        listenNotifBadgeCount();       // ← matsar da wannan daga waje
+        renderNexusFeed();             // ← idan wannan ba a kira ba a wani wuri, kira shi nan
+    } else {
+        window.location.href = "login.html";
+    }
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    NexusAlgorithm.init(currentUser);
+    loadFooterProfile();
+
+    const savedProfile = localStorage.getItem('userProfilePic');
+    const storyAvatar = document.getElementById('story-avatar-preview');
+    if (savedProfile && storyAvatar) { storyAvatar.src = savedProfile; }
+    observeVideos();
+
+    if (currentUser) {
+        db.collection("users").doc(currentUser).get()
+        .then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                if (document.getElementById("userProfileName")) {
+                    document.getElementById("userProfileName").innerText = data.fullName;
+                }
+                if (document.getElementById("dropFullName")) {
+                    document.getElementById("dropFullName").innerText = data.fullName || currentUser;
+                }
+                if (document.getElementById("dropUsername")) {
+                    document.getElementById("dropUsername").innerText = "@" + (data.username || currentUser);
+                }
+            }
+        }).catch((err) => { console.error("Error fetching user data:", err); });
+    }
+});
       // ============================================================
       // NOTIFICATION BELL BADGE (real-time, kamar Facebook)
       // Amfani da query mai filter guda ɗaya kawai (babu buƙatar
