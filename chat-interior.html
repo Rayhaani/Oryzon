@@ -41,9 +41,7 @@
     gap: 12px;
     scrollbar-width: none;
     min-height: 0;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 56px, black 100%);
-    mask-image: linear-gradient(to bottom, transparent 0px, black 56px, black 100%);
-       } 
+       }
         .message {
     max-width: 78%;
     padding: 4px 12px 2px 12px;
@@ -147,6 +145,7 @@
         }
         #sendBtn { display: none; }
         @keyframes recPulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+        @keyframes spin { to { transform: rotate(360deg); } }
         @supports (-webkit-touch-callout: none) {
             body { height: -webkit-fill-available; }
             #chat-flow { padding-bottom: 90px; }
@@ -514,6 +513,37 @@ function toggleButtons() {
 // ══════════════════════════════════════════════
 //  MEDIA UPLOAD (Camera / Gallery / Voice)
 // ══════════════════════════════════════════════
+function appendPendingBubble(kind, previewUrl) {
+    const chatFlow = document.getElementById('chat-flow');
+    const tempId = 'pending_' + Date.now();
+    const bubble = document.createElement('div');
+    bubble.id = tempId;
+    bubble.className = 'message outgoing media-bubble';
+    let mediaTag;
+    if (kind === 'video') {
+        mediaTag = `<video src="${previewUrl}" muted style="width:100%; display:block;"></video>`;
+    } else if (kind === 'audio') {
+        mediaTag = `<div style="padding:14px 16px; font-size:12px; color:rgba(255,255,255,0.75); min-width:150px;">🎤 Ana tura murya...</div>`;
+    } else {
+        mediaTag = `<img src="${previewUrl}" style="width:100%; display:block;">`;
+    }
+    bubble.innerHTML = `
+        <div style="position:relative;">
+            ${mediaTag}
+            <div style="position:absolute; inset:0; background:rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center;">
+                <div style="width:26px;height:26px;border-radius:50%;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;animation:spin 0.8s linear infinite;"></div>
+            </div>
+        </div>`;
+    chatFlow.appendChild(bubble);
+    chatFlow.scrollTop = chatFlow.scrollHeight;
+    return tempId;
+}
+
+function removePendingBubble(tempId) {
+    const el = document.getElementById(tempId);
+    if (el) el.remove();
+}
+
 async function uploadSingleFile(file) {
     const formData = new FormData();
     formData.append('file', file);
@@ -531,6 +561,8 @@ async function uploadAndSendMedia(file, kind) {
         alert('An kasa tabbatar da shiga. Sake login sannan ka gwada.');
         return;
     }
+    const previewUrl = URL.createObjectURL(file);
+    const tempId = appendPendingBubble(kind, previewUrl);
     try {
         const url = await uploadSingleFile(file);
         const lastLabel = kind === 'image' ? '📷 Photo' : kind === 'video' ? '🎥 Video' : '🎤 Voice message';
@@ -541,10 +573,11 @@ async function uploadAndSendMedia(file, kind) {
             lastMessage: lastLabel, lastMessageTime: Date.now(), members: [myId, chatWith]
         }, { merge: true });
     } catch (err) {
+        removePendingBubble(tempId);
         console.error('Media upload error:', err);
         alert('An kasa tura fayil: ' + err.message);
     }
-}
+        }
 
 async function uploadAndSendAlbum(files) {
     await authReadyPromise;
