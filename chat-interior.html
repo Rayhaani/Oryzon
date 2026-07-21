@@ -68,6 +68,47 @@
     position: relative;
     top: 4px;
         }
+    /* ===== MEDIA BUBBLES ===== */
+.message.media-bubble {
+    padding: 2px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    backdrop-filter: none;
+}
+.message.media-bubble.outgoing { border-color: rgba(255, 215, 130, 0.3); }
+.media-wrap { position: relative; display: block; border-radius: 9px; overflow: hidden; line-height: 0; }
+.media-wrap img, .media-wrap video { display: block; width: 100%; border-radius: 9px; }
+.media-time-overlay {
+    position: absolute; right: 6px; bottom: 6px;
+    background: rgba(0,0,0,0.5); color: #fff; font-size: 9.5px;
+    padding: 2px 6px; border-radius: 8px; font-family: 'Orbitron', sans-serif;
+    pointer-events: none; z-index: 2;
+}
+.video-badge {
+    position: absolute; left: 6px; bottom: 6px;
+    background: rgba(0,0,0,0.55); color: #fff; font-size: 10px;
+    padding: 3px 7px; border-radius: 6px; display: flex; align-items: center; gap: 4px;
+    pointer-events: none; z-index: 2;
+}
+
+/* ===== IMAGE GRID (WhatsApp-style) ===== */
+.img-grid { display: grid; gap: 3px; border-radius: 9px; overflow: hidden; position: relative; }
+.img-grid.n1 { grid-template-columns: 1fr; }
+.img-grid.n2 { grid-template-columns: 1fr 1fr; }
+.img-grid.n3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; aspect-ratio: 3/4; }
+.img-grid.n3 .gi:first-child { grid-row: 1 / 3; }
+.img-grid.n4plus { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.img-grid .gi { position: relative; overflow: hidden; background: #111; }
+.img-grid .gi img, .img-grid .gi video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-grid.n1 .gi { aspect-ratio: auto; max-height: 420px; }
+.img-grid.n2 .gi { aspect-ratio: 3/4; }
+.img-grid.n3 .gi { aspect-ratio: auto; height: 100%; }
+.img-grid.n4plus .gi { aspect-ratio: 1; }
+.img-grid .gi .more-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.55); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700;
+}
         .input-area {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -129,9 +170,10 @@
     <div class="galaxy-overlay"></div>
 
 <!-- ── HEADER ── -->
-<div style="
+<div id="chat-header-bar" style="
     position: fixed; top: 0; left: 0; width: 100%; height: 56px;
-    background: transparent;
+    background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     display: flex; align-items: center; padding: 0 12px; gap: 10px;
     z-index: 9999; box-sizing: border-box;
 ">
@@ -200,7 +242,7 @@
 <!-- ── INPUT AREA ── -->
 <div class="input-area">
     <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
-    <input type="file" id="galleryInput" accept="image/*,video/*" hidden>
+    <input type="file" id="galleryInput" accept="image/*,video/*" multiple hidden>
 
     <div id="emojiPanel" style="
         display: none; position: fixed; bottom: 70px; left: 0; width: 100%;
@@ -236,7 +278,7 @@
                     <path d="M21 15l-5-5L5 21"/>
                 </svg>
             </div>
-            <div class="icon-btn" onclick="document.getElementById('cameraInput').click()" style="padding-bottom:11px;flex-shrink:0;" title="Camera">
+            <div class="icon-btn" onclick="document.getElementById('cameraInput').click()" style="padding-bottom:11px;flex-shrink:0;margin-left:9px;" title="Camera">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                     <circle cx="12" cy="13" r="4"/>
@@ -389,10 +431,15 @@ function listenToNexusMessages() {
               bubble.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
 
               if (d.type === 'image') {
-                  bubble.innerHTML = `<img src="${d.mediaUrl}" style="max-width:100%; border-radius:10px; display:block;" onclick="window.open('${d.mediaUrl}','_blank')"><span class="timestamp">${time}</span>`;
-              } else if (d.type === 'video') {
-                  bubble.innerHTML = `<video src="${d.mediaUrl}" controls style="max-width:100%; border-radius:10px; display:block;"></video><span class="timestamp">${time}</span>`;
-              } else if (d.type === 'audio') {
+    bubble.classList.add('media-bubble');
+    bubble.innerHTML = `<div class="media-wrap" onclick="window.open('${d.mediaUrl}','_blank')"><img src="${d.mediaUrl}">${mediaTimeOverlay(time)}</div>`;
+} else if (d.type === 'video') {
+    bubble.classList.add('media-bubble');
+    bubble.innerHTML = `<div class="media-wrap"><video src="${d.mediaUrl}" controls></video><span class="video-badge"><i class="fa-solid fa-video" style="font-size:9px;"></i></span>${mediaTimeOverlay(time)}</div>`;
+} else if (d.type === 'imageGroup') {
+    bubble.classList.add('media-bubble');
+    bubble.innerHTML = buildImageGrid(d.mediaArr || [], time);
+} else if (d.type === 'audio') {
                   const audioId = 'audio_' + doc.id;
                   bubble.innerHTML = `
                       <div style="display:flex; align-items:center; gap:10px; min-width:150px; padding:2px 0;">
@@ -504,9 +551,13 @@ document.getElementById('cameraInput').addEventListener('change', (e) => {
     e.target.value = '';
 });
 document.getElementById('galleryInput').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    uploadAndSendMedia(file, file.type.startsWith('video') ? 'video' : 'image');
+    const files = Array.from(e.target.files || []);
+    if (!files.length) { e.target.value = ''; return; }
+    if (files.length === 1) {
+        uploadAndSendMedia(files[0], files[0].type.startsWith('video') ? 'video' : 'image');
+    } else {
+        uploadAndSendMediaGroup(files);
+    }
     e.target.value = '';
 });
 
@@ -660,6 +711,53 @@ document.addEventListener('click', (e) => {
         panel.style.display = 'none';
     }
 });
+function mediaTimeOverlay(time) {
+    return `<span class="media-time-overlay">${time}</span>`;
+}
+function buildImageGrid(mediaArr, time) {
+    const n = mediaArr.length;
+    const cls = n === 1 ? 'n1' : n === 2 ? 'n2' : n === 3 ? 'n3' : 'n4plus';
+    const shown = cls === 'n4plus' ? mediaArr.slice(0, 4) : mediaArr;
+    const extra = n > 4 ? n - 4 : 0;
+    const cells = shown.map((item, i) => {
+        const isLast = extra > 0 && i === 3;
+        const isVideo = item.type === 'video';
+        const el = isVideo ? `<video src="${item.mediaUrl}"></video>` : `<img src="${item.mediaUrl}">`;
+        const badge = (isVideo && !isLast) ? `<span class="video-badge"><i class="fa-solid fa-video" style="font-size:9px;"></i></span>` : '';
+        const overlay = isLast ? `<div class="more-overlay">+${extra}</div>` : '';
+        return `<div class="gi" onclick="window.open('${item.mediaUrl}','_blank')">${el}${badge}${overlay}</div>`;
+    }).join('');
+    return `<div class="img-grid ${cls}">${cells}</div>${mediaTimeOverlay(time)}`;
+    }
+async function uploadAndSendMediaGroup(files) {
+    await authReadyPromise;
+    if (!firebase.auth().currentUser) {
+        alert('An kasa tabbatar da shiga. Sake login sannan ka gwada.');
+        return;
+    }
+    try {
+        const uploaded = [];
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', 'chatMedia');
+            formData.append('username', chatRoomId);
+            const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+            uploaded.push({ type: file.type.startsWith('video') ? 'video' : 'image', mediaUrl: data.url });
+        }
+        await db.collection('personalChats').doc(chatRoomId).collection('messages').add({
+            senderId: myId, receiverId: chatWith, type: 'imageGroup', mediaArr: uploaded, timestamp: Date.now()
+        });
+        await db.collection('personalChats').doc(chatRoomId).set({
+            lastMessage: `📷 ${uploaded.length} Photos`, lastMessageTime: Date.now(), members: [myId, chatWith]
+        }, { merge: true });
+    } catch (err) {
+        console.error('Group media upload error:', err);
+        alert('An kasa tura fayiloli: ' + err.message);
+    }
+    }
 </script>
 </body>
 </html>
