@@ -280,7 +280,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <script>
     const firebaseConfig = {
         apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
@@ -291,11 +290,9 @@
         appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
         measurementId: "G-K5085DLL2W"
     };
-
-    firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const storage = firebase.storage();
-
+    
 // Jiran Firebase Auth ya "farfaɗo" session kafin a bar sending
 let authReadyResolve;
 const authReadyPromise = new Promise((resolve) => { authReadyResolve = resolve; });
@@ -475,14 +472,22 @@ async function uploadAndSendMedia(file, kind) {
         alert('An kasa tabbatar da shiga. Sake login sannan ka gwada.');
         return;
     }
-    const path = `chatMedia/${chatRoomId}/${Date.now()}_${file.name}`;
-    const ref = storage.ref(path);
     try {
-        await ref.put(file);
-        const url = await ref.getDownloadURL();
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'chatMedia');
+        formData.append('username', chatRoomId);
+
+        const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+
         const lastLabel = kind === 'image' ? '📷 Photo' : kind === 'video' ? '🎥 Video' : '🎤 Voice message';
         await db.collection('personalChats').doc(chatRoomId).collection('messages').add({
-            senderId: myId, receiverId: chatWith, type: kind, mediaUrl: url, timestamp: Date.now()
+            senderId: myId, receiverId: chatWith, type: kind, mediaUrl: data.url, timestamp: Date.now()
         });
         await db.collection('personalChats').doc(chatRoomId).set({
             lastMessage: lastLabel, lastMessageTime: Date.now(), members: [myId, chatWith]
@@ -491,7 +496,7 @@ async function uploadAndSendMedia(file, kind) {
         console.error('Media upload error:', err);
         alert('An kasa tura fayil: ' + err.message);
     }
-}
+        }
 
 document.getElementById('cameraInput').addEventListener('change', (e) => {
     const file = e.target.files[0];
