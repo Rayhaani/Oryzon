@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Infinity Luxury</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; -webkit-touch-callout: none; }
+        body {
+            background: #E3DAC9; font-family: 'Outfit', sans-serif;
+            height: 100dvh; overflow: hidden; display: flex; flex-direction: column;
+            margin: 0; position: fixed; width: 100%; user-select: none;
+        }
+        #userInput, #mediaCaption, .entry-input { user-select: text; -webkit-touch-callout: default; }
+
+        /* ===== WELCOME SPLASH (matches chat background, no more dark box) ===== */
+        .welcome-splash {
+            position: fixed; inset: 0; z-index: 250; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center; padding: 30px;
+            background: #E3DAC9; opacity: 0; transition: opacity 0.5s ease;
+        }
+        .welcome-splash.show { opacity: 1; }
+        .welcome-splash.hide { opacity: 0; transform: scale(1.06); filter: blur(6px); transition: all 0.55s cubic-bezier(.4,0,.2,1); }
+        .splash-seal {
+            width: 74px; height: 74px; border-radius: 50%; margin-bottom: 22px;
+            background: conic-gradient(from 180deg, #FFD700, #8a6d1f, #FFD700);
+            display: flex; align-items: center; justify-content: center; font-size: 30px; color: #1A0F0D;
+            box-shadow: 0 0 30px rgba(212,175,55,0.3);
+            opacity: 0; transform: translateY(14px) scale(0.85);
+            animation: sealIn 0.7s cubic-bezier(.2,.9,.3,1) 0.15s forwards;
+        }
+        @keyframes sealIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+        .splash-title {
+            font-family: 'Playfair Display', serif; color: #1A0F0D; font-size: 24px; line-height: 1.35;
+            opacity: 0; transform: translateY(10px); animation: textIn 0.6s ease 0.4s forwards;
+        }
+        .splash-sub {
+            color: #7a6032; font-size: 13.5px; margin-top: 10px; letter-spacing: 0.3px;
+            opacity: 0; transform: translateY(10px); animation: textIn 0.6s ease 0.6s forwards;
+        }
+        @keyframes textIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== SLIDER ===== */
+        .slim-slider { height: 104px; background: #E3DAC9; overflow: hidden; position: relative; flex-shrink: 0; }
+        .slide-track { display: flex; width: max-content; animation: scroll 40s linear infinite; height: 100%; align-items: center; padding: 6px 4px 0; }
+        .slim-slider:active .slide-track { animation-play-state: paused; }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .slide-card {
+            width: 128px; height: 78px; margin: 0 7px; border-radius: 14px; overflow: hidden; flex-shrink: 0;
+            border: 1px solid rgba(212,175,55,0.45); background: #FDF5E6; cursor: pointer;
+            position: relative; box-shadow: 0 3px 10px rgba(0,0,0,0.08); transition: transform 0.15s ease;
+        }
+        .slide-card:active { transform: scale(0.95); }
+        .slide-card img { width: 100%; height: 100%; object-fit: cover; }
+        .slide-card .tag {
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 3px 7px;
+            background: linear-gradient(to top, rgba(0,0,0,0.65), transparent);
+            color: #F5E6C8; font-size: 9.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* ===== FLOATING DRAGGABLE AVATAR (replaces header entirely) ===== */
+        .floating-avatar { position: fixed; width: 44px; height: 44px; z-index: 60; touch-action: none; cursor: grab; }
+        .avatar-circle {
+            width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+            border: 3px solid #1A0F0D; box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+            background: conic-gradient(from 180deg, #FFD700, #8a6d1f, #FFD700); display: flex; align-items: center; justify-content: center;
+        }
+        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-circle i { color: #1A0F0D; font-size: 17px; }
+        .avatar-status-dot {
+            position: absolute; width: 14px; height: 14px; border-radius: 50%; right: -1px; bottom: -1px;
+            border: 3px solid #E3DAC9;
+        }
+        .avatar-status-dot.online { background: #4ADE80; animation: dotBlink 1.4s infinite; }
+        .avatar-status-dot.offline { background: #DC2626; }
+        @keyframes dotBlink { 50% { opacity: 0.35; } }
+
+        /* ===== BOT TOGGLE (admin only) ===== */
+        .bot-toggle-bar {
+            position: fixed; top: 10px; right: 10px; z-index: 60; display: none;
+            background: #1A0F0D; border-radius: 20px; padding: 7px 12px 7px 10px;
+            align-items: center; gap: 7px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 1px solid rgba(212,175,55,0.35); font-size: 11.5px; color: #E8D9B5;
+        }
+        .bot-toggle-bar.visible { display: flex; }
+        .bot-toggle-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .bot-toggle-dot.on { background: #4ADE80; }
+        .bot-toggle-dot.off { background: #DC2626; }
+        .bot-toggle-switch { cursor: pointer; color: #D4AF37; font-weight: 600; text-decoration: underline; }
+
+        /* ===== CHAT AREA ===== */
+        .chat-space { flex: 1; padding: 10px 14px 8px; overflow-y: auto; scrollbar-width: none; }
+        .chat-space::-webkit-scrollbar { display: none; }
+        .msg-row { display: flex; flex-direction: column; margin-bottom: 8px; animation: riseIn 0.28s cubic-bezier(.2,.8,.3,1); }
+        .msg-row.voice-row { margin-bottom: 20px; }
+        .msg-row.mine { align-items: flex-end; }
+        .msg-row.theirs { align-items: flex-start; }
+        @keyframes riseIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .bubble {
+            max-width: 82%; padding: 9px 14px 10px 14px; font-size: 14.5px; line-height: 1.4;
+            position: relative; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.15s ease;
+        }
+        .bubble.selected-for-menu { filter: brightness(0.85); }
+        .v-bubble { background: #1A0F0D; color: #F0DFA8; border-radius: 4px 16px 16px 16px; border-left: 4px solid #FFD700; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+        .u-bubble {
+            background: #F6ECD4; color: #3a2c1a; border-radius: 16px 4px 16px 16px;
+            border: 1px solid rgba(212,175,55,0.4); border-right: 4px solid #B8860B;
+            box-shadow: 0 2px 8px rgba(212,175,55,0.15);
+        }
+        .msg-time-inline { position: absolute; right: 12px; bottom: 6px; font-size: 10px; opacity: 0.6; white-space: nowrap; }
+        .u-bubble .msg-time-inline { color: #7a5f2f; }
+        .v-bubble .msg-time-inline { color: #d8c48a; }
+        .time-spacer { display: inline-block; visibility: hidden; font-size: 10px; padding-left: 4px; }
+        .voice-bubble .msg-time-inline { bottom: -15px; right: 6px; }
+        .u-bubble.voice-bubble .msg-time-inline { color: #8a7644; }
+        .v-bubble.voice-bubble .msg-time-inline { color: #a3936a; }
+        .edited-tag { font-style: italic; opacity: 0.75; margin-right: 3px; }
+
+        .reply-quote {
+            border-left: 3px solid #D4AF37; background: rgba(212,175,55,0.12); border-radius: 8px;
+            padding: 5px 9px; margin-bottom: 6px; font-size: 11.5px; opacity: 0.85;
+        }
+        .reply-quote .rq-who { font-weight: 600; display: block; font-size: 10.5px; }
+        .u-bubble .reply-quote { background: rgba(184,134,11,0.1); }
+
+        .typing-bubble { display: flex; gap: 4px; align-items: center; padding: 13px 16px !important; }
+        .typing-dot { width: 6px; height: 6px; border-radius: 50%; background: #D4AF37; animation: bounce 1.2s infinite; }
+        .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+        .chat-img, .chat-video { max-width: 100%; border-radius: 10px; display: block; }
+        .media-bubble { padding: 4px !important; border-width: 1px !important; border-radius: 14px !important; }
+        .media-bubble.v-bubble { border-left-width: 1px !important; }
+        .media-bubble.u-bubble { border-right-width: 1px !important; }
+        .img-grid { display: grid; gap: 3px; border-radius: 10px; overflow: hidden; }
+        .img-grid.n1 { grid-template-columns: 1fr; }
+        .img-grid.n2 { grid-template-columns: 1fr 1fr; }
+        .img-grid.n3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .img-grid.n3 .gi:first-child { grid-row: 1 / 3; }
+        .img-grid.n4plus { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .img-grid .gi { position: relative; overflow: hidden; background: #ddd; aspect-ratio: 1; }
+        .img-grid.n1 .gi { aspect-ratio: auto; }
+        .img-grid .gi img, .img-grid .gi video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .img-grid .gi .more-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.55); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700;
+        }
+        /* ===== CUSTOM VOICE PLAYER FOR SENT BUBBLES (no native controls, no download/speed menu) ===== */
+        .voice-note { display: flex; align-items: center; gap: 9px; min-width: 195px; padding: 2px 4px; }
+        .vn-play-btn { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; cursor: pointer; }
+        .v-bubble .vn-play-btn { background: #F0DFA8; color: #1A0F0D; }
+        .u-bubble .vn-play-btn { background: #1A0F0D; color: #D4AF37; }
+        .vn-track { flex: 1; height: 20px; display: flex; align-items: center; position: relative; cursor: pointer; touch-action: none; }
+        .vn-track-line { width: 100%; height: 3px; border-radius: 2px; position: relative; }
+        .v-bubble .vn-track-line { background: rgba(240,223,168,0.25); }
+        .u-bubble .vn-track-line { background: rgba(212,175,55,0.3); }
+        .vn-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 2px; width: 0%; }
+        .v-bubble .vn-fill { background: #D4AF37; }
+        .u-bubble .vn-fill { background: #B8860B; }
+        .vn-dot { position: absolute; top: 50%; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%,-50%); left: 0%; }
+        .v-bubble .vn-dot { background: #F0DFA8; }
+        .u-bubble .vn-dot { background: #B8860B; }
+        .vn-time { font-size: 10.5px; flex-shrink: 0; min-width: 30px; text-align: right; }
+        .v-bubble .vn-time { color: #d8c48a; }
+        .u-bubble .vn-time { color: #7a5f2f; }
+
+        /* ===== CONTEXT MENU ===== */
+        .ctx-menu {
+            position: fixed; z-index: 400; background: #1A0F0D; border-radius: 14px; overflow: hidden;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45); border: 1px solid rgba(212,175,55,0.3);
+            min-width: 165px; display: none; animation: popIn 0.15s ease;
+        }
+        .ctx-menu.show { display: block; }
+        .ctx-item { padding: 12px 16px; color: #E8D9B5; font-size: 13.5px; display: flex; align-items: center; gap: 10px; }
+        .ctx-item:active { background: rgba(212,175,55,0.12); }
+        .ctx-item.danger { color: #F87171; }
+        .ctx-backdrop { position: fixed; inset: 0; z-index: 399; display: none; }
+        .ctx-backdrop.show { display: block; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+
+        /* ===== REPLY / EDIT BAR ===== */
+        .context-bar {
+            background: #FBF6EA; margin: 0 10px; border-radius: 12px 12px 0 0; padding: 8px 12px;
+            display: none; align-items: center; gap: 10px; border: 1px solid rgba(212,175,55,0.3); border-bottom: none;
+        }
+        .context-bar.show { display: flex; }
+        .context-bar .cb-accent { width: 3px; align-self: stretch; background: #D4AF37; border-radius: 2px; }
+        .context-bar .cb-body { flex: 1; min-width: 0; }
+        .context-bar .cb-label { font-size: 11px; color: #B8860B; font-weight: 600; }
+        .context-bar .cb-text { font-size: 12.5px; color: #6b5c33; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .context-bar i { color: #a3936a; cursor: pointer; padding: 4px; }
+
+        /* ===== FULL-SCREEN MEDIA COMPOSE (WhatsApp-style) ===== */
+        .media-compose { position: fixed; inset: 0; z-index: 280; background: #0b0b0b; display: none; flex-direction: column; }
+        .media-compose.show { display: flex; }
+        .mc-top { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; }
+        .mc-top i { color: #fff; font-size: 20px; padding: 8px; }
+        .mc-viewport { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        .mc-viewport img, .mc-viewport video { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.2s ease; }
+        .mc-thumbs { display: flex; gap: 8px; padding: 8px 14px; overflow-x: auto; }
+        .mc-thumb { width: 52px; height: 52px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 2px solid transparent; opacity: 0.55; }
+        .mc-thumb.active { border-color: #D4AF37; opacity: 1; }
+        .mc-thumb img, .mc-thumb video { width: 100%; height: 100%; object-fit: cover; }
+        .mc-bottom { padding: 10px 14px 22px; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.35); }
+        .mc-caption {
+            flex: 1; background: rgba(255,255,255,0.14); border-radius: 22px; padding: 11px 16px; color: #fff;
+            border: none; font-family: 'Outfit', sans-serif; font-size: 14.5px; outline: none;
+        }
+        .mc-caption::placeholder { color: rgba(255,255,255,0.55); }
+        .mc-send { width: 48px; height: 48px; border-radius: 50%; background: #1A0F0D; color: #D4AF37; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+
+        /* ===== INPUT BAR ===== */
+        .bottom-nav { padding: 8px 10px 18px; background: #E3DAC9; display: flex; flex-direction: column; gap: 0; flex-shrink: 0; position: relative; }
+        .input-row { display:flex; align-items:flex-end; gap:8px; padding: 8px 0 18px; }
+        .input-container {
+            flex: 1; background: #FBF6EA; border-radius: 26px; display: flex; align-items: flex-end; padding: 6px 6px 6px 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(212,175,55,0.18); transition: box-shadow 0.2s ease;
+        }
+        .input-container:focus-within { box-shadow: 0 2px 12px rgba(212,175,55,0.25), inset 0 0 0 1.5px rgba(212,175,55,0.55); }
+        .icon-btn { color: #9c8a52; font-size: 20px; padding: 9px 6px; cursor: pointer; display: flex; align-items: center; }
+        .icon-btn:active { color: #B8860B; transform: scale(0.92); }
+        #userInput {
+            flex: 1; background: transparent; border: none !important; outline: none !important; padding: 9px 6px;
+            max-height: 110px; font-size: 15.5px; font-family: 'Outfit', sans-serif; resize: none; color: #1a1a1a; line-height: 1.35;
+        }
+        #userInput::placeholder { color: #b3a582; }
+        .action-circle {
+            width: 48px; height: 48px; background: #1A0F0D; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; color: #D4AF37; font-size: 19px; flex-shrink: 0; cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.22); transition: transform 0.15s ease;
+        }
+        .action-circle:active { transform: scale(0.9); }
+
+        /* ===== VOICE COMPOSE — unified recording + pause/scrub preview, WhatsApp-style ===== */
+        .voice-compose {
+            position: absolute; left: 10px; right: 68px; bottom: 22px; top: -2px; background: #FBF6EA;
+            border-radius: 26px; display: none; flex-direction: column; justify-content: center;
+            padding: 6px 14px; gap: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); z-index: 5;
+        }
+        .voice-compose.show { display: flex; }
+
+        .vc-top-row { display: flex; align-items: center; gap: 8px; height: 24px; }
+        .vc-rec-dot { width: 9px; height: 9px; border-radius: 50%; background: #DC2626; animation: recBlink 1s infinite; flex-shrink: 0; }
+        @keyframes recBlink { 50% { opacity: 0.25; } }
+        .vc-timer { font-size: 13px; color: #6b5c33; font-variant-numeric: tabular-nums; flex-shrink: 0; min-width: 32px; }
+        .vc-wave { flex: 1; display: flex; align-items: center; gap: 2.5px; height: 22px; overflow: hidden; }
+        .vc-wave span { width: 2.5px; border-radius: 2px; background: #D4AF37; height: 15%; transition: height 0.05s linear; }
+
+        .vc-scrub-play { color: #6b5c33; font-size: 13px; cursor: pointer; flex-shrink: 0; width: 16px; text-align: center; }
+        .vc-track { flex: 1; height: 22px; display: flex; align-items: center; position: relative; cursor: pointer; touch-action: none; }
+        .vc-track-line { width: 100%; height: 3px; border-radius: 2px; background: rgba(212,175,55,0.3); position: relative; }
+        .vc-track-fill { position: absolute; left: 0; top: 0; height: 100%; background: #D4AF37; border-radius: 2px; width: 0%; }
+        .vc-track-dot {
+            position: absolute; top: 50%; width: 11px; height: 11px; border-radius: 50%; background: #B8860B;
+            transform: translate(-50%, -50%); left: 0%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .vc-speed-badge {
+            font-size: 10.5px; color: #B8860B; border: 1px solid rgba(212,175,55,0.45); border-radius: 10px;
+            padding: 2px 7px; flex-shrink: 0; cursor: pointer; font-weight: 600;
+        }
+
+        .vc-controls-row { display: flex; align-items: center; gap: 10px; height: 34px; }
+        .vc-icon-btn { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; cursor: pointer; }
+        .vc-trash { color: #DC2626; }
+        .vc-pill {
+            flex: 1; background: rgba(212,175,55,0.14); border-radius: 18px; height: 32px;
+            display: flex; align-items: center; justify-content: center; gap: 7px; color: #6b5c33; font-size: 12.5px;
+            font-weight: 500; cursor: pointer;
+        }
+
+        .toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: #1A0F0D; color: #F0DFA8; padding: 9px 18px; border-radius: 20px; font-size: 12.5px;
+            opacity: 0; pointer-events: none; transition: all 0.25s ease; z-index: 999; box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="welcome-splash" id="welcomeSplash">
+        <div class="splash-seal"><i class="fa-solid fa-crown"></i></div>
+        <div class="splash-title" id="splashTitle">Welcome to Infinity Luxury</div>
+        <div class="splash-sub" id="splashSub">We're delighted to have you here.</div>
+    </div>
+
+    <section class="slim-slider">
+        <div class="slide-track" id="product-slider"></div>
+    </section>
+
+    <div class="floating-avatar" id="floatingAvatar">
+        <div class="avatar-circle" id="avatarCircle"><i class="fa-solid fa-crown"></i></div>
+        <div class="avatar-status-dot offline" id="avatarStatusDot"></div>
+    </div>
+    <input type="file" id="avatarUploadInput" accept="image/*" style="display:none">
+
+    <div class="bot-toggle-bar" id="botToggleBar">
+        <span class="bot-toggle-dot on" id="botToggleDot"></span>
+        <span id="botToggleText">Bot: Active</span>
+        <span class="bot-toggle-switch" onclick="toggleBot(event)">Canza</span>
+    </div>
+
+    <main class="chat-space" id="chat"></main>
+
+    <div class="ctx-backdrop" id="ctxBackdrop" onclick="closeCtxMenu()"></div>
+    <div class="ctx-menu" id="ctxMenu"></div>
+
+    <!-- FULL-SCREEN MEDIA COMPOSE -->
+    <div class="media-compose" id="mediaCompose">
+        <div class="mc-top">
+            <i class="fa-solid fa-xmark" onclick="cancelMediaCompose()"></i>
+            <i class="fa-solid fa-rotate-right" onclick="rotateActiveMedia()"></i>
+        </div>
+        <div class="mc-viewport" id="mcViewport"></div>
+        <div class="mc-thumbs" id="mcThumbs"></div>
+        <div class="mc-bottom">
+            <input class="mc-caption" id="mcCaption" placeholder="Add a caption…">
+            <div class="mc-send" onclick="sendMediaCompose()"><i class="fa-solid fa-paper-plane"></i></div>
+        </div>
+    </div>
+
+    <footer class="bottom-nav">
+        <div class="context-bar" id="contextBar">
+            <div class="cb-accent"></div>
+            <div class="cb-body">
+                <div class="cb-label" id="cbLabel">Replying to</div>
+                <div class="cb-text" id="cbText"></div>
+            </div>
+            <i class="fa-solid fa-xmark" onclick="cancelContextBar()"></i>
+        </div>
+
+        <div class="input-row">
+            <div class="voice-compose" id="voiceCompose">
+                <div class="vc-top-row" id="vcTopRowRecording">
+                    <span class="vc-rec-dot"></span>
+                    <span class="vc-timer" id="vcTimer">0:00</span>
+                    <div class="vc-wave" id="vcWave"></div>
+                </div>
+                <div class="vc-top-row" id="vcTopRowPreview" style="display:none;">
+                    <i class="fa-solid fa-play vc-scrub-play" id="vcScrubPlayIcon" onclick="togglePreviewPlayback()"></i>
+                    <div class="vc-track" id="vcTrack" onpointerdown="startScrub(event)">
+                        <div class="vc-track-line"><div class="vc-track-fill" id="vcTrackFill"></div><div class="vc-track-dot" id="vcTrackDot"></div></div>
+                    </div>
+                    <span class="vc-timer" id="vcPreviewTime">0:00</span>
+                    <span class="vc-speed-badge" id="vcSpeedBadge" onclick="cycleSpeed()">1x</span>
+                </div>
+                <div class="vc-controls-row">
+                    <div class="vc-icon-btn vc-trash" onclick="cancelRecording()"><i class="fa-solid fa-trash"></i></div>
+                    <div class="vc-pill" id="vcPausePill" onclick="togglePauseResume()">
+                        <i class="fa-solid fa-pause" id="vcPauseIcon"></i><span id="vcPauseLabel">Pause</span>
+                    </div>
+                </div>
+                <audio id="vcPreviewAudio" style="display:none;"></audio>
+            </div>
+            <div class="input-container">
+                <div class="icon-btn" onclick="document.getElementById('galleryInput').click()"><i class="fa-solid fa-image"></i></div>
+                <textarea id="userInput" placeholder="Message" rows="1" oninput="toggleInputUI(this)"></textarea>
+                <div class="icon-btn" onclick="openCamera()"><i class="fa-solid fa-camera"></i></div>
+                <input type="file" id="galleryInput" accept="image/*,video/*" multiple style="display:none" onchange="handleMediaSelect(this)">
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleMediaSelect(this)">
+            </div>
+            <div id="actionBtn" class="action-circle" onpointerdown="handleAction()">
+                <i id="actionIcon" class="fa-solid fa-microphone"></i>
+            </div>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+        authDomain: "oryzon-50ea4.firebaseapp.com",
+        projectId: "oryzon-50ea4",
+        storageBucket: "oryzon-50ea4.firebasestorage.app",
+        messagingSenderId: "782106742622",
+        appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const params = new URLSearchParams(window.location.search);
+   const vendorId = params.get('vendorId') || params.get('with') || 'default'; 
+    const isAdmin = params.get('admin') === '1';
+   let storeName = params.get('name') || ""; 
+
+    // Real Oryzon account identity — same pattern as chat-interior.html.
+    // A customer must be logged into their real Oryzon account to chat, exactly like
+    // messaging a business on Instagram/Facebook requires being logged into your own
+    // real account there. This is what makes chat history permanent across any device.
+    const myUsername = localStorage.getItem('nexus_user_session');
+    if (!myUsername) {
+        window.location.href = `login.html?next=${encodeURIComponent(window.location.href)}`;
+    }
+    function getChatRoomId(a, b) { return [a, b].sort().join('__'); }
+    const chatDocId = getChatRoomId(vendorId, myUsername);
+
+    // Firebase Auth restores the persisted login session from IndexedDB asynchronously —
+    // every Firestore read/write below must wait for this to resolve, or request.auth
+    // will be null even though the person is really logged in.
+    let authReadyResolve;
+    const authReady = new Promise(res => { authReadyResolve = res; });
+    auth.onAuthStateChanged(user => {
+        if (!user) {
+            console.warn('No active Firebase Auth session — Firestore writes will fail permission checks.');
+        }
+        authReadyResolve(user);
+    });
+
+    let chatHistory = [];
+    let renderedMessages = [];
+    let isSending = false;
+    let replyingTo = null;
+    let editingId = null;
+    let pendingMedia = [];
+    let mcActiveIndex = 0;
+    let botActive = true; // whether the AI bot is currently allowed to auto-reply in this chat
+
+    let mediaRecorder = null, audioChunks = [], isRecording = false, isPaused = false, recSeconds = 0, recTimerHandle = null;
+    let finalAudioDataUrl = null;
+    let audioCtx = null, analyser = null, waveDataArr = null, waveAnimId = null;
+    let recordedStream = null;
+    let previewSpeed = 1;
+    let isScrubbingCompose = false;
+    let currentlyPlayingBubbleId = null;
+
+    // ================= FLOATING AVATAR =================
+    function makeDraggable(el) {
+        let startX, startY, origX, origY, dragging = false, moved = false;
+        el.addEventListener('pointerdown', (e) => {
+            dragging = true; moved = false;
+            startX = e.clientX; startY = e.clientY;
+            const rect = el.getBoundingClientRect();
+            origX = rect.left; origY = rect.top;
+            el.setPointerCapture(e.pointerId);
+        });
+        el.addEventListener('pointermove', (e) => {
+            if (!dragging) return;
+            const dx = e.clientX - startX, dy = e.clientY - startY;
+            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+            let nx = Math.max(4, Math.min(window.innerWidth - el.offsetWidth - 4, origX + dx));
+            let ny = Math.max(4, Math.min(window.innerHeight - el.offsetHeight - 4, origY + dy));
+            el.style.left = nx + 'px'; el.style.top = ny + 'px';
+        });
+        el.addEventListener('pointerup', () => {
+            dragging = false;
+            const rect = el.getBoundingClientRect();
+            localStorage.setItem('il_avatar_pos_' + vendorId, JSON.stringify({ x: rect.left, y: rect.top }));
+            if (!moved) handleAvatarTap();
+        });
+    }
+    function restoreAvatarPosition() {
+        const el = document.getElementById('floatingAvatar');
+        const saved = localStorage.getItem('il_avatar_pos_' + vendorId);
+        if (saved) {
+            try { const { x, y } = JSON.parse(saved); el.style.left = x + 'px'; el.style.top = y + 'px'; return; } catch(e) {}
+        }
+        el.style.left = '10px';
+        el.style.top = '10px';
+    }
+    function handleAvatarTap() {
+        if (isAdmin) document.getElementById('avatarUploadInput').click();
+        else window.location.href = `me.html?user=${vendorId}`;
+    }
+    document.getElementById('avatarUploadInput').addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            document.getElementById('avatarCircle').innerHTML = `<img src="${e.target.result}">`;
+            try { await db.collection('vendors').doc(vendorId).set({ photoURL: e.target.result }, { merge: true }); showToast('Profile photo updated'); }
+            catch(err) { showToast('Could not save photo'); }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    async function loadVendorAvatarAndStatus() {
+        try {
+            const doc = await db.collection('vendors').doc(vendorId).get();
+            const d = doc.exists ? doc.data() : {};
+            if (d.photoURL) document.getElementById('avatarCircle').innerHTML = `<img src="${d.photoURL}">`;
+            if (d.name) { storeName = d.name; }
+            updateStatusDot(d.lastActive);
+        } catch(e) { console.warn('vendor status load failed', e); }
+    }
+    function updateStatusDot(lastActive) {
+        const dot = document.getElementById('avatarStatusDot');
+        const online = lastActive && (Date.now() - lastActive < 90000);
+        dot.classList.toggle('online', !!online);
+        dot.classList.toggle('offline', !online);
+    }
+    if (isAdmin) {
+        setInterval(() => { db.collection('vendors').doc(vendorId).set({ lastActive: Date.now() }, { merge: true }).catch(()=>{}); }, 20000);
+        db.collection('vendors').doc(vendorId).set({ lastActive: Date.now() }, { merge: true }).catch(()=>{});
+    } else {
+        setInterval(async () => {
+            try { const doc = await db.collection('vendors').doc(vendorId).get(); updateStatusDot(doc.exists ? doc.data().lastActive : null); } catch(e) {}
+        }, 30000);
+    }
+
+    // ================= BOT ACTIVE/PAUSED TOGGLE (admin only) =================
+    function updateBotToggleUI() {
+        if (!isAdmin) return;
+        document.getElementById('botToggleBar').classList.add('visible');
+        document.getElementById('botToggleDot').className = `bot-toggle-dot ${botActive ? 'on' : 'off'}`;
+        document.getElementById('botToggleText').textContent = `Bot: ${botActive ? 'Active' : 'Paused'}`;
+    }
+    async function toggleBot(e) {
+        if (e) e.preventDefault();
+        botActive = !botActive;
+        try {
+            await db.collection('vendorChats').doc(chatDocId).set({ botActive }, { merge: true });
+        } catch(err) {}
+        updateBotToggleUI();
+        showToast(botActive ? 'Bot ya farka' : 'Bot ya tsaya — kai ne kake magana yanzu');
+    }
+    async function loadBotStatus() {
+        try {
+            const chatDoc = await db.collection('vendorChats').doc(chatDocId).get();
+            botActive = !chatDoc.exists || chatDoc.data().botActive !== false;
+        } catch(e) { botActive = true; }
+        updateBotToggleUI();
+    }
+
+    // ================= WELCOME SPLASH =================
+    function playWelcomeSplash() {
+        const splash = document.getElementById('welcomeSplash');
+        document.getElementById('splashTitle').textContent = storeName ? `Welcome to ${storeName}` : 'Welcome to our page';
+        splash.style.display = 'flex';
+        splash.classList.remove('hide');
+        splash.classList.add('show');
+        setTimeout(() => {
+            splash.classList.add('hide');
+            setTimeout(() => { splash.style.display = 'none'; splash.classList.remove('show'); }, 600);
+        }, 1600);
+    }
+
+    // ================= FIRESTORE CHAT =================
+    async function loadMessagesFromFirestore() {
+        try {
+            const snap = await db.collection('vendorChats').doc(chatDocId).collection('messages').orderBy('time','asc').get();
+            const msgs = [];
+            snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+            return msgs;
+        } catch (e) { console.error('Firestore load error', e); return []; }
+    }
+    function localId() { return 'm' + Date.now() + Math.random().toString(36).slice(2,8); }
+
+    async function saveMessageToFirestore(m) {
+        try {
+            await db.collection('vendorChats').doc(chatDocId).set({ vendorId, lastActive: Date.now() }, { merge: true });
+            const ref = await db.collection('vendorChats').doc(chatDocId).collection('messages').add(m);
+            return ref.id;
+        } catch (e) {
+            console.error('Firestore save error', e);
+            showToast('⚠️ Sync failed: ' + (e.code || e.message || 'unknown'));
+            return 'local' + Date.now() + Math.random().toString(36).slice(2,6);
+        }
+    }
+    async function updateMessageInFirestore(id, patch) {
+        try { await db.collection('vendorChats').doc(chatDocId).collection('messages').doc(id).update(patch); } catch(e) {}
+    }
+    async function deleteMessageInFirestore(id) {
+        try { await db.collection('vendorChats').doc(chatDocId).collection('messages').doc(id).delete(); } catch(e) {}
+    }
+async function clearChatMessages() {
+        try {
+            const snap = await db.collection('vendorChats').doc(chatDocId).collection('messages').get();
+            const batch = db.batch();
+            snap.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        } catch(e) { console.warn('clear chat failed', e); }
+}
+    async function beginSession() {
+        playWelcomeSplash();
+        if (params.get('reset') === '1') { await clearChatMessages(); }
+        const saved = await loadMessagesFromFirestore();
+        if (saved.length > 0) {
+            renderedMessages = saved;
+            saved.forEach(m => renderMessage(m, false));
+            chatHistory = saved.filter(m => m.type === 'text').map(m => ({ role: m.role === 'mine' ? 'user' : 'assistant', content: m.text }));
+        } else {
+            const greeting = {
+                role: 'theirs', type: 'text',
+                text: `Welcome to ${storeName} 👑 I'm here to help you find exactly what you're looking for. What can I show you today?`,
+                time: Date.now()
+            };
+            const id = await saveMessageToFirestore(greeting);
+            greeting.id = id;
+            renderedMessages.push(greeting);
+            renderMessage(greeting, true);
+        }
+        await loadBotStatus();
+    }
+
+    // ================= TOAST =================
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._hideTimer);
+        t._hideTimer = setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    // ================= RENDERING =================
+    function timeStr(ts) { return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+    function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
+    function findMsg(id) { return renderedMessages.find(m => m.id === id); }
+    function rebuildChatHistory() {
+        chatHistory = renderedMessages.filter(m => m.type === 'text').map(m => ({ role: m.role === 'mine' ? 'user' : 'assistant', content: m.text }));
+    }
+
+    function renderImageGrid(mediaArr) {
+        const n = mediaArr.length;
+        const cls = n === 1 ? 'n1' : n === 2 ? 'n2' : n === 3 ? 'n3' : 'n4plus';
+        const shown = cls === 'n4plus' ? mediaArr.slice(0, 4) : mediaArr;
+        const extra = n > 4 ? n - 4 : 0;
+        return `<div class="img-grid ${cls}">${shown.map((item, i) => {
+            const isLast = extra > 0 && i === 3;
+            const el = item.type === 'video' ? `<video src="${item.url}"></video>` : `<img src="${item.url}">`;
+            return `<div class="gi">${el}${isLast ? `<div class="more-overlay">+${extra}</div>` : ''}</div>`;
+        }).join('')}</div>`;
+    }
+
+    function bubbleInner(m) {
+        let quote = '';
+        if (m.replyTo) quote = `<div class="reply-quote"><span class="rq-who">${m.replyTo.role === 'mine' ? 'You' : storeName}</span>${escapeHtml(m.replyTo.snippet)}</div>`;
+        const spacerHtml = `<span class="time-spacer">${m.edited ? 'edited ' : ''}${timeStr(m.time)}</span>`;
+        let body = '';
+        if (m.type === 'imageGroup') body = renderImageGrid(m.mediaArr);
+        else if (m.type === 'image') body = `<img class="chat-img" src="${m.media}">`;
+        else if (m.type === 'video') body = `<video class="chat-video" src="${m.media}" controls></video>`;
+        else if (m.type === 'voice') body = `<div class="voice-note" data-vn-id="${m.id}">
+            <div class="vn-play-btn" id="vn-btn-${m.id}" onclick="toggleBubbleAudio('${m.id}')"><i class="fa-solid fa-play" id="vn-icon-${m.id}"></i></div>
+            <div class="vn-track" onpointerdown="startBubbleScrub(event,'${m.id}')">
+                <div class="vn-track-line"><div class="vn-fill" id="vn-fill-${m.id}"></div><div class="vn-dot" id="vn-dot-${m.id}"></div></div>
+            </div>
+            <span class="vn-time" id="vn-time-${m.id}">0:00</span>
+            <audio id="vn-audio-${m.id}" src="${m.media}" preload="metadata" style="display:none" oncontextmenu="return false"></audio>
+        </div>`;
+        else body = escapeHtml(m.text) + spacerHtml;
+        if (m.caption) body += `<div style="margin-top:6px;">${escapeHtml(m.caption)}${spacerHtml}</div>`;
+        return quote + body;
+    }
+
+    function renderMessage(m, animate) {
+        const chat = document.getElementById('chat');
+        const row = document.createElement('div');
+        row.className = `msg-row ${m.role === 'mine' ? 'mine' : 'theirs'}${m.type === 'voice' ? ' voice-row' : ''}`;
+        row.id = `row-${m.id}`;
+        row.dataset.id = m.id;
+        if (!animate) row.style.animation = 'none';
+        const bubbleClass = m.role === 'mine' ? 'u-bubble' : 'v-bubble';
+        const isMedia = ['image','video','voice','imageGroup'].includes(m.type);
+        const isVoice = m.type === 'voice';
+        row.innerHTML = `<div class="bubble ${bubbleClass}${isMedia ? ' media-bubble' : ''}${isVoice ? ' voice-bubble' : ''}">${bubbleInner(m)}<span class="msg-time-inline">${m.edited ? '<span class="edited-tag">edited</span>' : ''}${timeStr(m.time)}</span></div>`;
+        const bubbleEl = row.querySelector('.bubble');
+        attachLongPress(bubbleEl, m.id);
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+        if (m.type === 'voice') wireBubbleAudio(m.id);
+    }
+
+    function showTyping() {
+        const chat = document.getElementById('chat');
+        const row = document.createElement('div');
+        row.className = 'msg-row theirs';
+        row.id = 'typing-row';
+        row.innerHTML = `<div class="bubble v-bubble typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+    }
+    function hideTyping() { const r = document.getElementById('typing-row'); if (r) r.remove(); }
+
+    // ================= LONG PRESS CONTEXT MENU =================
+    function attachLongPress(el, id) {
+        let timer = null;
+        const start = (e) => { timer = setTimeout(() => openCtxMenu(id, el), 420); };
+        const cancel = () => clearTimeout(timer);
+        el.addEventListener('touchstart', start, { passive: true });
+        el.addEventListener('touchend', cancel);
+        el.addEventListener('touchmove', cancel);
+        el.addEventListener('contextmenu', (e) => e.preventDefault());
+        el.addEventListener('mousedown', start);
+        el.addEventListener('mouseup', cancel);
+        el.addEventListener('mouseleave', cancel);
+    }
+    function openCtxMenu(id, el) {
+        const m = findMsg(id);
+        if (!m) return;
+        if (navigator.vibrate) navigator.vibrate(12);
+        el.classList.add('selected-for-menu');
+        const menu = document.getElementById('ctxMenu');
+        let items = `<div class="ctx-item" onclick="ctxReply('${id}')"><i class="fa-solid fa-reply"></i> Reply</div>`;
+        items += `<div class="ctx-item" onclick="ctxCopy('${id}')"><i class="fa-regular fa-copy"></i> Copy</div>
+            <div class="ctx-item" onclick="ctxShare('${id}')"><i class="fa-solid fa-share-nodes"></i> Share</div>`;
+        if (m.role === 'mine' && m.type === 'text') items += `<div class="ctx-item" onclick="ctxEdit('${id}')"><i class="fa-solid fa-pen"></i> Edit</div>`;
+        items += `<div class="ctx-item danger" onclick="ctxDelete('${id}')"><i class="fa-solid fa-trash"></i> Delete</div>`;
+        menu.innerHTML = items;
+        const rect = el.getBoundingClientRect();
+        menu.style.top = Math.min(rect.bottom + 6, window.innerHeight - 220) + 'px';
+        menu.style.left = (m.role === 'mine' ? Math.max(rect.right - 180, 10) : rect.left) + 'px';
+        menu.classList.add('show');
+        document.getElementById('ctxBackdrop').classList.add('show');
+        menu._targetEl = el;
+    }
+    function closeCtxMenu() {
+        const menu = document.getElementById('ctxMenu');
+        if (menu._targetEl) menu._targetEl.classList.remove('selected-for-menu');
+        menu.classList.remove('show');
+        document.getElementById('ctxBackdrop').classList.remove('show');
+    }
+    function snippetOf(m) {
+        if (m.type === 'text') return m.text.slice(0, 60);
+        if (m.type === 'image') return '📷 Photo';
+        if (m.type === 'video') return '🎬 Video';
+        if (m.type === 'voice') return '🎤 Voice note';
+        return '';
+    }
+    function ctxReply(id) {
+        const m = findMsg(id); closeCtxMenu();
+        replyingTo = { id: m.id, role: m.role, snippet: snippetOf(m) };
+        document.getElementById('cbLabel').textContent = `Replying to ${m.role === 'mine' ? 'You' : storeName}`;
+        document.getElementById('cbText').textContent = replyingTo.snippet;
+        document.getElementById('contextBar').classList.add('show');
+        document.getElementById('userInput').focus();
+    }
+    function ctxCopy(id) {
+        const m = findMsg(id); closeCtxMenu();
+        navigator.clipboard.writeText(m.type === 'text' ? m.text : snippetOf(m)).then(()=>showToast('Copied'));
+    }
+    function ctxShare(id) {
+        const m = findMsg(id); closeCtxMenu();
+        const text = m.type === 'text' ? m.text : snippetOf(m);
+        if (navigator.share) navigator.share({ text }).catch(()=>{});
+        else navigator.clipboard.writeText(text).then(()=>showToast('Copied'));
+    }
+    function ctxEdit(id) {
+        const m = findMsg(id); closeCtxMenu();
+        if (m.type !== 'text') return;
+        editingId = id;
+        document.getElementById('cbLabel').textContent = 'Editing message';
+        document.getElementById('cbText').textContent = m.text;
+        document.getElementById('contextBar').classList.add('show');
+        const input = document.getElementById('userInput');
+        input.value = m.text;
+        toggleInputUI(input);
+        input.focus();
+    }
+    function ctxDelete(id) {
+        closeCtxMenu();
+        if (!confirm('Delete this message?')) return;
+        renderedMessages = renderedMessages.filter(m => m.id !== id);
+        const row = document.getElementById(`row-${id}`);
+        if (row) row.remove();
+        deleteMessageInFirestore(id);
+    }
+    function cancelContextBar() {
+        const wasEditing = editingId;
+        replyingTo = null; editingId = null;
+        document.getElementById('contextBar').classList.remove('show');
+        if (wasEditing) { const input = document.getElementById('userInput'); input.value = ''; toggleInputUI(input); }
+    }
+
+    // ================= PRODUCT SLIDER =================
+    let productCatalog = []; // [{name, img, price}]
+
+    async function loadFirestoreProducts() {
+        const track = document.getElementById('product-slider');
+        try {
+            let snapshot;
+            if (vendorId && vendorId !== 'default') {
+                snapshot = await db.collection('products').where('vendorId', '==', vendorId).get();
+                if (snapshot.empty) snapshot = await db.collection('products').where('vendor', '==', vendorId).get();
+                if (snapshot.empty) snapshot = await db.collection('products').where('sellerId', '==', vendorId).get();
+            } else {
+                snapshot = await db.collection('products').limit(10).get();
+            }
+            let list = [];
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                const imgUrl = d.image || d.img || d.imageUrl || '';
+                const name = d.name || d.title || 'Product';
+                if (imgUrl) list.push({ img: imgUrl, name, price: d.price || '?' });
+            });
+            productCatalog = list;
+            if (list.length > 0) {
+                track.innerHTML = [...list, ...list].map(p => `
+                    <div class="slide-card" onclick="pick('${p.name.replace(/'/g,"\\'")}','${p.img}')">
+                        <img src="${p.img}" onerror="this.parentElement.style.display='none'">
+                        <div class="tag">${p.name}</div>
+                    </div>`).join('');
+            }
+        } catch(err) { console.error('Firebase error:', err); }
+    }
+
+    async function pick(name, img) {
+        const caption = `Tell me more about ${name}, and how I can place an order.`;
+        const m = { role: 'mine', type: 'image', media: img, caption, time: Date.now() };
+        const id = await saveMessageToFirestore(m);
+        m.id = id;
+        renderedMessages.push(m);
+        renderMessage(m, true);
+        if (botActive) await triggerAIReply(caption, [{ type: 'image_url', image_url: { url: img } }]);
+    }
+
+    // ================= INPUT BAR =================
+    function toggleInputUI(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+        updateActionIcon();
+    }
+    function openCamera() { document.getElementById('cameraInput').click(); }
+
+    // ---------- full-screen media compose ----------
+    function handleMediaSelect(input) {
+        const files = Array.from(input.files || []);
+        if (!files.length) return;
+        pendingMedia = [];
+        let remaining = files.length;
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                pendingMedia.push({ type: file.type.startsWith('video') ? 'video' : 'image', dataUrl: e.target.result, mime: file.type, rotation: 0 });
+                remaining--;
+                if (remaining === 0) openMediaCompose();
+            };
+            reader.readAsDataURL(file);
+        });
+        input.value = '';
+    }
+    function openMediaCompose() {
+        mcActiveIndex = 0;
+        document.getElementById('mcCaption').value = '';
+        renderMediaComposeViewport();
+        renderMediaComposeThumbs();
+        document.getElementById('mediaCompose').classList.add('show');
+    }
+    function renderMediaComposeViewport() {
+        const item = pendingMedia[mcActiveIndex];
+        const vp = document.getElementById('mcViewport');
+        vp.innerHTML = item.type === 'video'
+            ? `<video src="${item.dataUrl}" controls style="transform: rotate(${item.rotation}deg)"></video>`
+            : `<img src="${item.dataUrl}" style="transform: rotate(${item.rotation}deg)">`;
+    }
+    function renderMediaComposeThumbs() {
+        const strip = document.getElementById('mcThumbs');
+        if (pendingMedia.length < 2) { strip.innerHTML = ''; return; }
+        strip.innerHTML = pendingMedia.map((m, i) => `
+            <div class="mc-thumb ${i === mcActiveIndex ? 'active' : ''}" onclick="setMcActive(${i})">
+                ${m.type === 'video' ? `<video src="${m.dataUrl}"></video>` : `<img src="${m.dataUrl}">`}
+            </div>`).join('');
+    }
+    function setMcActive(i) { mcActiveIndex = i; renderMediaComposeViewport(); renderMediaComposeThumbs(); }
+    function rotateActiveMedia() {
+        pendingMedia[mcActiveIndex].rotation = (pendingMedia[mcActiveIndex].rotation + 90) % 360;
+        renderMediaComposeViewport();
+    }
+    function cancelMediaCompose() {
+        pendingMedia = [];
+        document.getElementById('mediaCompose').classList.remove('show');
+    }
+    function rotateImageDataUrl(dataUrl, degrees) {
+        return new Promise((resolve) => {
+            if (!degrees) { resolve(dataUrl); return; }
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const swap = degrees % 180 !== 0;
+                canvas.width = swap ? img.height : img.width;
+                canvas.height = swap ? img.width : img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.translate(canvas.width/2, canvas.height/2);
+                ctx.rotate(degrees * Math.PI / 180);
+                ctx.drawImage(img, -img.width/2, -img.height/2);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.src = dataUrl;
+        });
+    }
+    async function sendMediaCompose() {
+        if (!pendingMedia.length) return;
+        const caption = document.getElementById('mcCaption').value.trim();
+        const items = [...pendingMedia];
+        cancelMediaCompose();
+
+        const finalItems = [];
+        for (const it of items) {
+            let finalUrl = it.dataUrl;
+            if (it.type === 'image' && it.rotation) finalUrl = await rotateImageDataUrl(it.dataUrl, it.rotation);
+            finalItems.push({ type: it.type, url: finalUrl });
+        }
+        const imageContentParts = finalItems.filter(i => i.type === 'image').map(i => ({ type: 'image_url', image_url: { url: i.url } }));
+
+        let m;
+        if (finalItems.length === 1) {
+            m = { role: isAdmin ? 'theirs' : 'mine', type: finalItems[0].type, media: finalItems[0].url, time: Date.now(), caption: caption || null };
+        } else {
+            m = { role: isAdmin ? 'theirs' : 'mine', type: 'imageGroup', mediaArr: finalItems, time: Date.now(), caption: caption || null };
+        }
+        const id = await saveMessageToFirestore(m);
+        m.id = id;
+        renderedMessages.push(m);
+        renderMessage(m, true);
+
+        if (isAdmin) {
+            // Vendor sent media directly to customer — pause bot, no AI call
+            await db.collection('vendorChats').doc(chatDocId).set({ botActive: false }, { merge: true });
+            botActive = false;
+            updateBotToggleUI();
+            return;
+        }
+
+        if (!botActive) return; // bot paused, vendor is handling this chat manually
+
+        const videoNote = finalItems.some(i => i.type === 'video') ? "[Customer also sent a video attachment]" : "";
+        await triggerAIReply(caption || videoNote || "Please take a look at what I sent.", imageContentParts);
+    }
+
+    // ================= VOICE COMPOSE — WhatsApp-style recording/pause/scrub/send =================
+    function formatTime(sec) {
+        sec = Math.max(0, Math.floor(sec || 0));
+        const mm = Math.floor(sec/60), ss = sec%60;
+        return `${mm}:${ss.toString().padStart(2,'0')}`;
+    }
+    function buildWaveBars() {
+        document.getElementById('vcWave').innerHTML = Array.from({length: 24}).map(() => `<span></span>`).join('');
+    }
+    function startWaveVisualizer(stream) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
+        waveDataArr = new Uint8Array(analyser.frequencyBinCount);
+        const bars = document.querySelectorAll('#vcWave span');
+        function draw() {
+            if (!isRecording || isPaused) return;
+            analyser.getByteFrequencyData(waveDataArr);
+            bars.forEach((bar, i) => { bar.style.height = Math.max(12, (waveDataArr[i % waveDataArr.length] / 255) * 100) + '%'; });
+            waveAnimId = requestAnimationFrame(draw);
+        }
+        draw();
+    }
+    function stopWaveVisualizer() {
+        if (waveAnimId) cancelAnimationFrame(waveAnimId);
+        if (audioCtx) { audioCtx.close().catch(()=>{}); audioCtx = null; }
+    }
+
+    function showRecordingRow() {
+        document.getElementById('vcTopRowRecording').style.display = 'flex';
+        document.getElementById('vcTopRowPreview').style.display = 'none';
+        document.getElementById('vcPauseIcon').className = 'fa-solid fa-pause';
+        document.getElementById('vcPauseLabel').textContent = 'Pause';
+    }
+    function showPreviewRow() {
+        document.getElementById('vcTopRowRecording').style.display = 'none';
+        document.getElementById('vcTopRowPreview').style.display = 'flex';
+        document.getElementById('vcPauseIcon').className = 'fa-solid fa-microphone';
+        document.getElementById('vcPauseLabel').textContent = 'Resume';
+        document.getElementById('vcPreviewTime').textContent = formatTime(recSeconds);
+        document.getElementById('vcTrackFill').style.width = '0%';
+        document.getElementById('vcTrackDot').style.left = '0%';
+        document.getElementById('vcScrubPlayIcon').className = 'fa-solid fa-play vc-scrub-play';
+    }
+
+    function updateActionIcon() {
+        const input = document.getElementById('userInput');
+        const icon = document.getElementById('actionIcon');
+        if (isRecording) { icon.className = 'fa-solid fa-paper-plane'; return; }
+        icon.className = input.value.trim() !== '' ? 'fa-solid fa-paper-plane' : 'fa-solid fa-microphone';
+    }
+
+    async function toggleRecording() {
+        if (isRecording) return; // already composing a voice note
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recordedStream = stream;
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                stopWaveVisualizer();
+                stream.getTracks().forEach(t => t.stop());
+                if (mediaRecorder._cancelled) return;
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.onload = () => {
+                    finalAudioDataUrl = reader.result;
+                    if (mediaRecorder._pendingSend) finalizeSendVoice();
+                };
+                reader.readAsDataURL(blob);
+            };
+            mediaRecorder.start();
+            isRecording = true; isPaused = false; recSeconds = 0;
+            previewSpeed = 1;
+            document.getElementById('vcSpeedBadge').textContent = '1x';
+            buildWaveBars();
+            startWaveVisualizer(stream);
+            showRecordingRow();
+            document.getElementById('voiceCompose').classList.add('show');
+            updateActionIcon();
+            recTimerHandle = setInterval(() => {
+                if (isPaused) return;
+                recSeconds++;
+                document.getElementById('vcTimer').textContent = formatTime(recSeconds);
+            }, 1000);
+        } catch(e) { showToast('Microphone access denied'); }
+    }
+
+    function togglePauseResume() {
+        if (!isRecording) return;
+        if (!isPaused) {
+            // PAUSE — build a preview from what's recorded so far
+            isPaused = true;
+            mediaRecorder.pause();
+            stopWaveVisualizer();
+            try { mediaRecorder.requestData(); } catch(e) {}
+            setTimeout(() => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                const previewAudio = document.getElementById('vcPreviewAudio');
+                previewAudio.src = url;
+                previewAudio.playbackRate = previewSpeed;
+                showPreviewRow();
+            }, 120);
+        } else {
+            // RESUME recording
+            isPaused = false;
+            const previewAudio = document.getElementById('vcPreviewAudio');
+            previewAudio.pause();
+            mediaRecorder.resume();
+            startWaveVisualizer(recordedStream);
+            showRecordingRow();
+        }
+    }
+
+    function togglePreviewPlayback() {
+        const previewAudio = document.getElementById('vcPreviewAudio');
+        const icon = document.getElementById('vcScrubPlayIcon');
+        if (previewAudio.paused) {
+            previewAudio.play();
+            icon.className = 'fa-solid fa-pause vc-scrub-play';
+        } else {
+            previewAudio.pause();
+            icon.className = 'fa-solid fa-play vc-scrub-play';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        const previewAudio = document.getElementById('vcPreviewAudio');
+        if (!previewAudio) return;
+        previewAudio.addEventListener('timeupdate', () => {
+            if (!previewAudio.duration || isScrubbingCompose) return;
+            const pct = (previewAudio.currentTime / previewAudio.duration) * 100;
+            document.getElementById('vcTrackFill').style.width = pct + '%';
+            document.getElementById('vcTrackDot').style.left = pct + '%';
+            document.getElementById('vcPreviewTime').textContent = formatTime(previewAudio.currentTime);
+        });
+        previewAudio.addEventListener('ended', () => {
+            document.getElementById('vcScrubPlayIcon').className = 'fa-solid fa-play vc-scrub-play';
+            document.getElementById('vcPreviewTime').textContent = formatTime(recSeconds);
+        });
+    });
+    function scrubComposeToClientX(clientX) {
+        const track = document.getElementById('vcTrack');
+        const rect = track.getBoundingClientRect();
+        let pct = (clientX - rect.left) / rect.width;
+        pct = Math.max(0, Math.min(1, pct));
+        const previewAudio = document.getElementById('vcPreviewAudio');
+        if (previewAudio.duration) previewAudio.currentTime = pct * previewAudio.duration;
+        document.getElementById('vcTrackFill').style.width = (pct*100) + '%';
+        document.getElementById('vcTrackDot').style.left = (pct*100) + '%';
+    }
+    function startScrub(e) {
+        if (!isPaused) return;
+        isScrubbingCompose = true;
+        scrubComposeToClientX(e.clientX);
+        const move = (ev) => scrubComposeToClientX(ev.clientX);
+        const up = () => {
+            isScrubbingCompose = false;
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+        };
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', up);
+    }
+    function cycleSpeed() {
+        const speeds = [1, 1.5, 2];
+        const idx = speeds.indexOf(previewSpeed);
+        previewSpeed = speeds[(idx + 1) % speeds.length];
+        document.getElementById('vcSpeedBadge').textContent = previewSpeed + 'x';
+        document.getElementById('vcPreviewAudio').playbackRate = previewSpeed;
+    }
+
+    function cancelRecording() {
+        if (!isRecording) return;
+        isRecording = false; isPaused = false; clearInterval(recTimerHandle);
+        stopWaveVisualizer();
+        const previewAudio = document.getElementById('vcPreviewAudio');
+        previewAudio.pause(); previewAudio.src = '';
+        mediaRecorder._cancelled = true;
+        try { mediaRecorder.stop(); } catch(e) {}
+        document.getElementById('voiceCompose').classList.remove('show');
+        updateActionIcon();
+    }
+
+    function sendVoiceCompose() {
+        if (!isRecording) return;
+        document.getElementById('voiceCompose').classList.remove('show');
+        const wasPaused = isPaused;
+        isRecording = false; isPaused = false; clearInterval(recTimerHandle);
+        stopWaveVisualizer();
+        const previewAudio = document.getElementById('vcPreviewAudio');
+        previewAudio.pause(); previewAudio.src = '';
+        mediaRecorder._pendingSend = true;
+        if (wasPaused) {
+            // recorder is already paused/stopped state-wise — just stop to flush final blob
+            try { mediaRecorder.stop(); } catch(e) { finalizeSendVoice(); }
+        } else {
+            try { mediaRecorder.stop(); } catch(e) { finalizeSendVoice(); }
+        }
+        updateActionIcon();
+    }
+
+    async function finalizeSendVoice() {
+        if (!finalAudioDataUrl) return;
+        const dataUrl = finalAudioDataUrl;
+        finalAudioDataUrl = null;
+        const m = { role: isAdmin ? 'theirs' : 'mine', type: 'voice', media: dataUrl, time: Date.now() };
+        const id = await saveMessageToFirestore(m);
+        m.id = id;
+        renderedMessages.push(m);
+        renderMessage(m, true);
+
+        if (isAdmin) {
+            await db.collection('vendorChats').doc(chatDocId).set({ botActive: false }, { merge: true });
+            botActive = false;
+            updateBotToggleUI();
+            return;
+        }
+        if (!botActive) return;
+        await triggerAIReply("I just sent a voice note. Since you can't listen to audio yet, kindly ask me to type out what I need.", []);
+    }
+
+    function handleAction() {
+        if (isRecording) { sendVoiceCompose(); return; }
+        const icon = document.getElementById('actionIcon');
+        if (icon.classList.contains('fa-paper-plane')) sendMessage(); else toggleRecording();
+    }
+
+    // ================= CUSTOM PLAYER FOR SENT VOICE BUBBLES (no native menu, WhatsApp-style) =================
+    function wireBubbleAudio(id) {
+        const audio = document.getElementById(`vn-audio-${id}`);
+        if (!audio || audio.dataset.wired) return;
+        audio.dataset.wired = '1';
+        audio.addEventListener('loadedmetadata', () => {
+            const timeEl = document.getElementById(`vn-time-${id}`);
+            if (timeEl && audio.duration && isFinite(audio.duration)) timeEl.textContent = formatTime(audio.duration);
+        });
+        audio.addEventListener('timeupdate', () => {
+            if (!audio.duration || !isFinite(audio.duration)) return;
+            const pct = (audio.currentTime / audio.duration) * 100;
+            const fill = document.getElementById(`vn-fill-${id}`);
+            const dot = document.getElementById(`vn-dot-${id}`);
+            const timeEl = document.getElementById(`vn-time-${id}`);
+            if (fill) fill.style.width = pct + '%';
+            if (dot) dot.style.left = pct + '%';
+            if (timeEl) timeEl.textContent = formatTime(audio.currentTime);
+        });
+        audio.addEventListener('ended', () => {
+            const icon = document.getElementById(`vn-icon-${id}`);
+            if (icon) icon.className = 'fa-solid fa-play';
+            const timeEl = document.getElementById(`vn-time-${id}`);
+            if (timeEl && audio.duration) timeEl.textContent = formatTime(audio.duration);
+            if (currentlyPlayingBubbleId === id) currentlyPlayingBubbleId = null;
+        });
+    }
+    function toggleBubbleAudio(id) {
+        const audio = document.getElementById(`vn-audio-${id}`);
+        if (!audio) return;
+        // pause whichever bubble is currently playing (WhatsApp-style single playback)
+        if (currentlyPlayingBubbleId && currentlyPlayingBubbleId !== id) {
+            const prevAudio = document.getElementById(`vn-audio-${currentlyPlayingBubbleId}`);
+            const prevIcon = document.getElementById(`vn-icon-${currentlyPlayingBubbleId}`);
+            if (prevAudio) prevAudio.pause();
+            if (prevIcon) prevIcon.className = 'fa-solid fa-play';
+        }
+        const icon = document.getElementById(`vn-icon-${id}`);
+        if (audio.paused) {
+            audio.play();
+            if (icon) icon.className = 'fa-solid fa-pause';
+            currentlyPlayingBubbleId = id;
+        } else {
+            audio.pause();
+            if (icon) icon.className = 'fa-solid fa-play';
+            currentlyPlayingBubbleId = null;
+        }
+    }
+    function startBubbleScrub(e, id) {
+        const audio = document.getElementById(`vn-audio-${id}`);
+        if (!audio || !audio.duration || !isFinite(audio.duration)) return;
+        const track = e.currentTarget;
+        const scrubTo = (clientX) => {
+            const rect = track.getBoundingClientRect();
+            let pct = (clientX - rect.left) / rect.width;
+            pct = Math.max(0, Math.min(1, pct));
+            audio.currentTime = pct * audio.duration;
+        };
+        scrubTo(e.clientX);
+        const move = (ev) => scrubTo(ev.clientX);
+        const up = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+        };
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', up);
+    }
+
+    // ================= SEND TEXT / AI REPLY =================
+    async function sendMessage() {
+        if (isSending) return;
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        if (editingId) {
+            const idx = renderedMessages.findIndex(x => x.id === editingId);
+            const m = idx !== -1 ? renderedMessages[idx] : findMsg(editingId);
+            if (m) {
+                // If a bot reply immediately followed this message, it answered the OLD text —
+                // remove it so the bot can respond fresh to the edited version instead.
+                const nextMsg = idx !== -1 ? renderedMessages[idx + 1] : null;
+                const staleReply = (nextMsg && nextMsg.role === 'theirs' && nextMsg.type === 'text') ? nextMsg : null;
+                if (staleReply) {
+                    const staleRow = document.getElementById(`row-${staleReply.id}`);
+                    if (staleRow) staleRow.remove();
+                    deleteMessageInFirestore(staleReply.id);
+                }
+
+                m.text = text; m.edited = true;
+                const row = document.getElementById(`row-${editingId}`);
+                if (row) row.remove();
+                renderedMessages = renderedMessages.filter(x => x.id !== editingId && (!staleReply || x.id !== staleReply.id));
+                renderedMessages.push(m);
+                renderMessage(m, false);
+                updateMessageInFirestore(editingId, { text, edited: true });
+                rebuildChatHistory();
+            }
+            editingId = null;
+            cancelContextBar();
+            input.value = ''; toggleInputUI(input);
+
+            if (botActive) await triggerAIReply(text, []);
+            return;
+        }
+
+        const replyPayload = replyingTo;
+        cancelContextBar();
+        input.value = ''; toggleInputUI(input);
+
+        // ---- VENDOR (admin) SENDING DIRECTLY TO CUSTOMER ----
+        if (isAdmin) {
+            const m = { role: 'theirs', type: 'text', text, time: Date.now(), replyTo: replyPayload };
+            const id = await saveMessageToFirestore(m);
+            m.id = id;
+            renderedMessages.push(m);
+            renderMessage(m, true);
+            chatHistory.push({ role: 'assistant', content: text });
+
+            // Pause the bot immediately — vendor is now handling this chat
+            await db.collection('vendorChats').doc(chatDocId).set({ botActive: false }, { merge: true });
+            botActive = false;
+            updateBotToggleUI();
+
+            // Save this as a learning example so the bot improves for next time
+            const lastCustomerMsg = [...renderedMessages].reverse().find(x => x.role === 'mine' && x.type === 'text' && x.id !== m.id);
+            if (lastCustomerMsg) {
+                db.collection('vendors').doc(vendorId).collection('learningExamples').add({
+                    customerMsg: lastCustomerMsg.text,
+                    vendorReply: text,
+                    time: Date.now()
+                }).catch(()=>{});
+            }
+            return;
+        }
+
+        // ---- CUSTOMER SENDING TO VENDOR/BOT ----
+        const m = { role: 'mine', type: 'text', text, time: Date.now(), replyTo: replyPayload };
+        const id = await saveMessageToFirestore(m);
+        m.id = id;
+        renderedMessages.push(m);
+        renderMessage(m, true);
+
+        if (!botActive) return; // vendor has taken over this chat manually — bot stays silent
+
+        await triggerAIReply(text, []);
+    }
+
+    async function triggerAIReply(text, extraImageParts) {
+        isSending = true;
+        showTyping();
+
+        let productList = "No products listed yet.";
+        try {
+            const snap = await db.collection('products').limit(30).get();
+            let items = [];
+            snap.forEach(doc => {
+                const d = doc.data();
+               const cleanPrice = String(d.price || '?').replace(/₦/g, '').trim();
+                items.push(`- ${d.name || d.title || 'Item'}: ₦${cleanPrice} | ${d.description || d.desc || ''}`); 
+            });
+            if (items.length > 0) productList = items.join('\n');
+        } catch(e) {}
+
+        // ---- VENDOR-SPECIFIC BUSINESS PROFILE ----
+        let vendorInfo = "";
+        let businessType = "shago na gama-gari";
+        try {
+            const vDoc = await db.collection('vendors').doc(vendorId).get();
+            if (vDoc.exists) {
+                const v = vDoc.data();
+                businessType = v.businessType || businessType;
+                vendorInfo = `
+IRIN KASUWANCIN: ${businessType}
+SA'O'IN AIKI: ${v.businessHours || 'Ba a saita ba'}
+MANUFOFIN DAWO DA KAYA/SERVICE: ${v.returnPolicy || 'Babu dawowa sai an tabbatar da lahani'}
+WURI: ${v.location || 'Ba a bayar ba'}
+HANYAR BIYAN KUDI: ${v.paymentMethods || 'Bank transfer / Cash on delivery'}
+FAQ NA MUSAMMAN:
+${(v.customFAQs || []).map(f => `Q: ${f.q}\nA: ${f.a}`).join('\n\n')}
+TONE/HALIN VENDOR: ${v.toneInstructions || 'Mai kirki, natsuwa, kai tsaye'}`;
+            }
+        } catch(e) {}
+
+        // ---- LEARN FROM VENDOR'S OWN PAST TAKEOVER REPLIES ----
+        let learningExamples = "";
+        try {
+            const learnSnap = await db.collection('vendors').doc(vendorId).collection('learningExamples')
+                .orderBy('time', 'desc').limit(5).get();
+            const examples = [];
+            learnSnap.forEach(doc => {
+                const d = doc.data();
+                examples.push(`Customer: "${d.customerMsg}"\nVendor ya amsa: "${d.vendorReply}"`);
+            });
+            if (examples.length) {
+                learningExamples = `\n\nGA YADDA VENDOR KANSA YAKE AMSAWA A IRIN WANNAN YANAYI — KA KWAIKWAYI WANNAN SALON:\n${examples.join('\n\n')}`;
+            }
+        } catch(e) {}
+
+        const systemPrompt = `Kai ne "Ali", business agent na "${storeName}" — wani ${businessType}. Kai NE mutum, ba robot ba — kana magana kai tsaye da customer kamar yadda gwanin sayarwa a WhatsApp ke yi: da hankali, da natsuwa, da kwarin gwiwa, kuma ba tare da yin roƙo ba.
+
+DOKA TA FI KOWACCE MUHIMMANCI (KADA KA TABA KETARE WANNAN, KO DA TAMBAYA TA YI TSAWO KO TA GAURAYA YARE): Kai KANA JIN HAUSA DA TURANCI DUKA SOSAI DA KYAU, 100%. AN HANA KA GABA DAYA daga fitar da wadannan jimloli ko kwatankwacinsu KO DA A WANI YanaYI: "I don't understand Hausa", "ba na jin Hausa", "I'm working on it", "ina koyon harshen", "I'll message you when I can speak Hausa", ko duk wata magana da ke nuna rashin fahimtar wani yare. IDAN CUSTOMER YA RUBUTA SAKO MAI GAURAYA HARSHE (misali Hausa da Turanci a jumla daya), KA AMSA DA HAUSA TSAFTATACCE koyaushe sai in DUKKAN sakon customer Turanci ne kacal babu ko kalma daya ta Hausa a ciki. Ka amsa kai tsaye kan ainihin abin da customer ya tambaya, koda tambayar tana da sassa da yawa ko doguwa ce — ka rusa ta zuwa amsoshi a takaice daya bayan daya, KADA KA GUJE WA AMSAWA.
+
+MUHIMMAN DOKOKI:
+1. HARSHE: KANA JIN HAUSA SOSAI DA KYAU — kada ka taɓa cewa "ba ka jin Hausa" ko "ba ka fahimta ba" game da kowane yare da customer ya yi amfani da shi. Ka gano yarukan da customer yake amfani da shi sannan KA AMSA DA WANNAN YARE DAIDAI. Idan Hausa ce, ka rubuta Hausa TSAFTATACCE, ba fassarar Turanci ba. Idan Turanci ce, ka rubuta Turanci mai inganci.
+2. KASANCE MAI SAURI, TAKAITACCE: gajerun jimla, kai tsaye kan batu, kamar rubutun WhatsApp.
+3. MUHIMMI SOSAI — KA SANI GA DUKKAN KAYAYYAKI KAWAI DAGA WANNAN JERIN, KADA KA ƘIRƘIRA KOMAI:
+${productList}
+- Kada ka taɓa cewa "muna da shi" sai idan SUNAN KAYAN yana bayyane KAI TSAYE a cikin jerin da ke sama.
+- Kada ka ƙirƙiri farashi, launi, girma (size), ko nau'in kaya (misali "cotton", "lace", "shadda") da BABU SHI a rubuce a jerin — ko da customer ya ambaci wannan kalmar a tambayarsa.
+- Idan customer ya tambayi wani abu da BAI BAYYANA A SARARI ba a jerin (misali wani launi ko nau'i na musamman), ka amsa da gaskiya: "Ba mu da wannan a yanzu, amma ga abin da muke da shi: [jera abin da AKWAI a jerin]" — KADA KA CE EE MUNA DA SHI face in yana can a zahiri.
+4. IDAN AN AIKA HOTO: ka duba hoton da kyau, ka bayyana abinda kake gani, ka danganta shi da kayayyakinka idan akwai kama a jerin.
+5. IDAN CUSTOMER YA TAMBAYI GANIN HOTON KAYA (misali "ina son ganin panties dinku", "what do you have", "hotuna"), KADA KA TURA HOTO NAN TAKE — ka amsa da bayanin kayan a rubuce sannan ka TAMBAYE SHI a fili: "Kana son na tura maka hotuna?"
+6. KAR KA TABA TURA HOTO SAI CUSTOMER YA TABBATAR A SARARI (misali ya ce "ee", "eh", "go ahead", "tura", "yes") BAYAN KA TAMBAYE SHI. Idan bai bada izini ba tukuna, KAR KA SAKA [TURA_HOTO] KWATA-KWATA.
+7. IDAN CUSTOMER YA TABBATAR (bayan ka tambaya, ya ce ee/go ahead/tura), a KARSHEN sakonka, ka RUBUTA layi na daban KAI TSAYE haka: [TURA_HOTO: Sunan Kaya Daidai Kamar Yadda Yake A Jerin]. Kar ka rubuta wani abu bayan wannan tag din.
+8. KASANCE MAI RUFE SAYARWA: bayan bayanin kaya, KA TAMBAYE customer kai tsaye idan yana son ya yi oda.
+9. DON KAMMALA ODA: ka tambaya (1) cikakken suna, (2) lambar waya, (3) adireshi, (4) yawan kaya — TAMBAYA DAYA A LOKACI.
+10. Ka kasance mai kirki, mai godiya, kuma mai kwarin gwiwa. Kada ka taba fadin karya game da samuwar kaya.
+11. IDAN CUSTOMER: (a) ya nemi magana da mutum a fili, (b) yana korafi/fushi, (c) yana neman rangwamen farashi fiye da abin da ka iya bayarwa, (d) tambayarsa ta wuce iyakar abin da ka sani — KADA KA CI GABA DA AMSAWA. A maimakon haka, ka rubuta KAWAI: "Zan tuntubi shugaban shago don taimaka maka nan take." sannan a KARSHEN sakonka ka rubuta layi na daban: [ESCALATE]
+
+MUHIMMI: Kai KAWAI wakilin "${storeName}" ne, wani ${businessType}. Kada ka taɓa yin magana kamar wani nau'in kasuwanci daban — misali idan wannan shago ne na turare, kar ka yi magana kamar kana sayar da na'urorin gida; idan wannan chef ne, kar ka yi magana kamar kana sayar da kaya, sai dai ka karɓi oda na abinci; idan wannan mechanic ne, kai tsaye ka mayar da hankali kan yin booking/tantance matsalar mota, ba tallace-tallacen kaya ba.
+${vendorInfo}${learningExamples}`;
+
+        let userContent = [];
+        if (extraImageParts && extraImageParts.length) userContent.push(...extraImageParts);
+        if (text) userContent.push({ type: 'text', text });
+        chatHistory.push({ role: 'user', content: userContent.length === 1 && userContent[0].type === 'text' ? text : userContent });
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 25000);
+            const res = await fetch('https://oryzon-backend-ed1q.onrender.com/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    systemPrompt,
+                    messages: chatHistory
+                })
+            });
+
+            clearTimeout(timeoutId);
+            const data = await res.json();
+            let reply = data.choices?.[0]?.message?.content;
+            if (!reply) {
+                console.error('API Error:', data.error?.message || JSON.stringify(data).slice(0,200));
+                reply = "Sorry, I'm having a small hiccup on my end. Please try again in a moment, or send your message once more.";
+                    }
+            // ---- fitar da [TURA_HOTO: ...] tag din kafin nuna wa customer ----
+            let imageRequest = null;
+            const tagMatch = reply.match(/\[TURA_HOTO:\s*(.+?)\]/i);
+            if (tagMatch) {
+                imageRequest = tagMatch[1].trim();
+                reply = reply.replace(/\[TURA_HOTO:.+?\]/i, '').trim();
+            }
+
+            // ---- fitar da [ESCALATE] tag din ----
+            const escalateMatch = reply.match(/\[ESCALATE\]/i);
+            if (escalateMatch) {
+                reply = reply.replace(/\[ESCALATE\]/i, '').trim();
+            }
+
+            chatHistory.push({ role: 'assistant', content: reply });
+
+            hideTyping();
+            const bm = { role: 'theirs', type: 'text', text: reply, time: Date.now() };
+            const id = await saveMessageToFirestore(bm);
+            bm.id = id;
+            renderedMessages.push(bm);
+            renderMessage(bm, true);
+
+            if (imageRequest) {
+                const sent = await sendSpecificProductImage(imageRequest);
+                if (!sent) {
+                    const fallbackMsg = { role: 'theirs', type: 'text', text: "Sorry, I couldn't pull up that photo right now — let me know if you'd like to see something else from what we have in stock.", time: Date.now() };
+                    const fid = await saveMessageToFirestore(fallbackMsg);
+                    fallbackMsg.id = fid;
+                    renderedMessages.push(fallbackMsg);
+                    renderMessage(fallbackMsg, true);
+                }
+            }
+
+            if (escalateMatch) {
+                await db.collection('vendorChats').doc(chatDocId).set({ botActive: false }, { merge: true });
+                botActive = false;
+                updateBotToggleUI();
+                fetch('https://oryzon-backend-ed1q.onrender.com/send-push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: vendorId,
+                        title: '⚠️ Customer yana bukatar ka',
+                        body: text.slice(0, 80),
+                        data: { url: window.location.href }
+                    })
+                }).catch(()=>{});
+            }
+        } catch(e) {
+            hideTyping();
+            console.error('AI request failed:', e.name, e.message);
+            const errMsg = "Sorry, I'm having a small hiccup on my end. Please try again in a moment, or send your message once more.";
+            const bm = { role: 'theirs', type: 'text', text: errMsg, time: Date.now() };
+            renderedMessages.push(bm);
+            renderMessage(bm, true);
+    }
+        isSending = false;
+    }
+
+    async function sendSpecificProductImage(productName) {
+        if (!productCatalog.length) {
+            console.warn('sendSpecificProductImage: product catalog is empty, requested:', productName);
+            return false;
+        }
+        const match = productCatalog.find(p => p.name.toLowerCase().includes(productName.toLowerCase()))
+            || productCatalog.find(p => productName.toLowerCase().includes(p.name.toLowerCase()));
+        if (!match) {
+            console.warn('sendSpecificProductImage: no matching product found for:', productName, '— available:', productCatalog.map(p => p.name));
+            return false;
+        }
+        const m = { role: 'theirs', type: 'image', media: match.img, caption: `${match.name} — ₦${match.price}`, time: Date.now() };
+        const id = await saveMessageToFirestore(m);
+        m.id = id;
+        renderedMessages.push(m);
+        renderMessage(m, true);
+        return true;
+            }
+
+    // ================= INIT =================
+    document.addEventListener('DOMContentLoaded', async () => {
+        await authReady;
+        loadFirestoreProducts();
+        makeDraggable(document.getElementById('floatingAvatar'));
+        restoreAvatarPosition();
+        await loadVendorAvatarAndStatus();
+        beginSession();
+    });
+    </script>
+</body>
+</html>
