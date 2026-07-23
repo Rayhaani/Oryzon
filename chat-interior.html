@@ -367,6 +367,7 @@ firebase.auth().onAuthStateChanged((user) => {
 const urlParams = new URLSearchParams(window.location.search);
 const chatWith = urlParams.get('with') || 'Unknown User';
 const myId = localStorage.getItem('nexus_user_session');
+if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
 
 if (!myId) window.location.href = 'login.html';
 
@@ -440,7 +441,13 @@ document.addEventListener('DOMContentLoaded', () => {
         isUserNearBottom = (cf.scrollHeight - cf.scrollTop - cf.clientHeight) < 80;
     });
 });
-
+window.addEventListener('pageshow', (e) => {
+    const cf = document.getElementById('chat-flow');
+    if (!cf) return;
+    isUserNearBottom = true;
+    requestAnimationFrame(() => { cf.scrollTop = cf.scrollHeight; });
+    setTimeout(() => { cf.scrollTop = cf.scrollHeight; }, 300);
+});
 function listenToNexusMessages() {
     db.collection('personalChats').doc(chatRoomId).collection('messages')
       .orderBy('timestamp', 'asc')
@@ -494,7 +501,8 @@ function listenToNexusMessages() {
           if (wasNearBottom || isMyMsg) {
               isUserNearBottom = true;
               requestAnimationFrame(() => { chatFlow.scrollTop = chatFlow.scrollHeight; });
-              setTimeout(() => { chatFlow.scrollTop = chatFlow.scrollHeight; }, 60);
+             setTimeout(() => { chatFlow.scrollTop = chatFlow.scrollHeight; }, 60);
+              setTimeout(() => { chatFlow.scrollTop = chatFlow.scrollHeight; }, 500);
           }
       });
 }
