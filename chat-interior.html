@@ -82,6 +82,19 @@
     padding: 2px 7px; border-radius: 8px; font-family: 'Orbitron', sans-serif;
     pointer-events: none; z-index: 2; display: flex; align-items: center; gap: 4px;
 }
+.video-indicator {
+    position: absolute; left: 6px; bottom: 6px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(0,0,0,0.55); color: #fff; font-size: 9px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none; z-index: 2;
+}
+.message.selected-highlight { filter: brightness(1.3); box-shadow: 0 0 0 2px var(--cyan-neon); }
+.reply-quote-preview {
+    border-left: 3px solid var(--cyan-neon); background: rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 5px 9px; margin-bottom: 4px; font-size: 11px; opacity: 0.85;
+}
+.reply-quote-preview .rq-who { font-weight: 700; display: block; font-size: 10.5px; color: var(--cyan-neon); }
 
 /* ===== FULLSCREEN MEDIA VIEWER (in-app, no external navigation) ===== */
 #mediaViewerOverlay {
@@ -246,9 +259,40 @@
     </div>
 </div>
 
+<!-- ── SELECTION ACTION BAR (long-press on a message) ── -->
+<div id="selectionActionBar" style="
+    display:none; position: fixed; top:0; left:0; width:100%; height:56px;
+    background:#151515; align-items:center; padding:0 14px; gap:22px;
+    z-index:10001; box-sizing:border-box;
+">
+    <i class="fa-solid fa-xmark" onclick="cancelSelection()" style="color:#fff; font-size:18px; cursor:pointer;"></i>
+    <span id="selectionCount" style="color:#fff; font-size:16px; font-weight:700;">1</span>
+    <div style="flex:1;"></div>
+    <i class="fa-solid fa-reply" onclick="replySelected()" style="color:#fff; font-size:17px; cursor:pointer;" title="Reply"></i>
+    <i class="fa-solid fa-star" onclick="starSelected()" style="color:#fff; font-size:16px; cursor:pointer;" title="Favourite"></i>
+    <i class="fa-solid fa-thumbtack" onclick="pinSelected()" style="color:#fff; font-size:16px; cursor:pointer;" title="Pin"></i>
+    <i class="fa-solid fa-trash" onclick="deleteSelected()" style="color:#fff; font-size:16px; cursor:pointer;" title="Delete"></i>
+    <i class="fa-solid fa-share" onclick="forwardSelected()" style="color:#fff; font-size:16px; cursor:pointer;" title="Forward"></i>
+</div>
 <!-- ── CHAT FLOW ── -->
 <div id="chat-flow"></div>
 
+<!-- ── REPLY PREVIEW BAR (shows above the input while composing a reply) ── -->
+<div id="replyPreviewBar" style="
+    display:none; position:fixed; left:12px; right:12px; bottom:74px;
+    background: rgba(20,20,20,0.92); border:1px solid rgba(255,255,255,0.15);
+    border-radius:12px; padding:8px 10px; align-items:center; gap:10px;
+    z-index:99; backdrop-filter: blur(8px);
+">
+    <div style="width:3px; align-self:stretch; background:var(--cyan-neon); border-radius:2px;"></div>
+    <img id="replyPreviewThumb" style="width:36px;height:36px;border-radius:6px;object-fit:cover;display:none;flex-shrink:0;">
+    <div style="flex:1; min-width:0;">
+        <div id="replyPreviewName" style="font-size:11px; font-weight:700; color:var(--cyan-neon);">Replying to</div>
+        <div id="replyPreviewText" style="font-size:12px; color:rgba(255,255,255,0.7); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+    </div>
+    <i class="fa-solid fa-xmark" onclick="cancelReply()" style="color:rgba(255,255,255,0.5); cursor:pointer; padding:4px;"></i>
+</div>
+    
 <!-- ── INPUT AREA ── -->
 <div class="input-area">
     <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
@@ -469,10 +513,10 @@ function listenToNexusMessages() {
 
               if (d.type === 'image') {
     bubble.classList.add('media-bubble');
-    bubble.innerHTML = `<div class="media-wrap" onclick="openImageViewer('${d.mediaUrl}')"><img src="${d.mediaUrl}">${mediaTimeOverlay(time, false)}</div>`;
+    bubble.innerHTML = `<div class="media-wrap" onclick="openImageViewer('${d.mediaUrl}')"><img src="${d.mediaUrl}">${mediaTimeOverlay(time)}</div>`;
 } else if (d.type === 'video') {
     bubble.classList.add('media-bubble');
-    bubble.innerHTML = `<div class="media-wrap" onclick="openVideoViewer('${d.mediaUrl}')"><video src="${d.mediaUrl}" preload="metadata" muted playsinline style="pointer-events:none;"></video>${mediaTimeOverlay(time, true)}</div>`;
+    bubble.innerHTML = `<div class="media-wrap" onclick="openVideoViewer('${d.mediaUrl}')"><video src="${d.mediaUrl}" preload="metadata" muted playsinline style="pointer-events:none;"></video>${videoIndicator()}${mediaTimeOverlay(time)}</div>`;
 } else if (d.type === 'imageGroup') {
     bubble.classList.add('media-bubble');
     bubble.innerHTML = buildImageGrid(d.mediaArr || [], time);
@@ -488,17 +532,19 @@ function listenToNexusMessages() {
                       </div>
                       <audio id="${audioId}" src="${d.mediaUrl}" style="display:none;"></audio>
                       <span class="timestamp">${time}</span>`;
-              } else {
-                  bubble.innerHTML = `${d.text}<span class="timestamp">${time}</span>`;
+             } else {
+                  const quoteHtml = d.replyTo ? `<div class="reply-quote-preview"><span class="rq-who">${d.replyTo.senderId === myId ? 'You' : chatWith}</span>${d.replyTo.snippet}</div>` : '';
+                  bubble.innerHTML = `${quoteHtml}${d.text}<span class="timestamp">${time}</span>`;
               }
               chatFlow.appendChild(bubble);
+              attachLongPress(bubble, doc.id, d);
               bubble.querySelectorAll('img, video').forEach(el => {
                   const evt = el.tagName === 'VIDEO' ? 'loadedmetadata' : 'load';
                   el.addEventListener(evt, () => {
                       if (wasNearBottom || isMe) chatFlow.scrollTop = chatFlow.scrollHeight;
                   });
               });
-          });
+          }); 
           const lastMsg = snapshot.docs[snapshot.docs.length - 1];
           const isMyMsg = lastMsg && lastMsg.data().senderId === myId;
           if (wasNearBottom || isMyMsg) {
@@ -516,6 +562,8 @@ async function sendNeuralMessage() {
     if (!text) return;
 
     // Share input nan take (optimistic) — kada mai amfani ya jira network
+    const replyPayload = activeReply;
+    cancelReply();
     input.value = '';
     autoExpand(input);
     toggleButtons();
@@ -531,7 +579,7 @@ async function sendNeuralMessage() {
     }
 
     db.collection('personalChats').doc(chatRoomId).collection('messages').add({
-        senderId: myId, receiverId: chatWith, text, timestamp: Date.now()
+        senderId: myId, receiverId: chatWith, text, timestamp: Date.now(), replyTo: replyPayload || null
     }).then(() => db.collection('personalChats').doc(chatRoomId).set({
         lastMessage: text.substring(0, 60),
         lastMessageTime: Date.now(),
@@ -758,9 +806,11 @@ document.addEventListener('click', (e) => {
         panel.style.display = 'none';
     }
 });
-function mediaTimeOverlay(time, isVideo) {
-    const icon = isVideo ? `<i class="fa-solid fa-video" style="font-size:9px;"></i>` : '';
-    return `<span class="media-time-overlay">${icon}${time}</span>`;
+function mediaTimeOverlay(time) {
+    return `<span class="media-time-overlay">${time}</span>`;
+}
+function videoIndicator() {
+    return `<span class="video-indicator"><i class="fa-solid fa-video"></i></span>`;
 }
 function buildImageGrid(mediaArr, time) {
     const n = mediaArr.length;
@@ -773,12 +823,109 @@ function buildImageGrid(mediaArr, time) {
         const el = isVideo
             ? `<video src="${item.mediaUrl}" preload="metadata" muted playsinline style="pointer-events:none;"></video>`
             : `<img src="${item.mediaUrl}">`;
+        const badge = isVideo ? videoIndicator() : '';
         const overlay = isLast ? `<div class="more-overlay">+${extra}</div>` : '';
         const openFn = isVideo ? `openVideoViewer('${item.mediaUrl}')` : `openImageViewer('${item.mediaUrl}')`;
-        return `<div class="gi" onclick="${openFn}">${el}${overlay}</div>`;
+        return `<div class="gi" onclick="${openFn}">${el}${badge}${overlay}</div>`;
     }).join('');
-    return `<div class="img-grid ${cls}">${cells}</div>${mediaTimeOverlay(time, false)}`;
+    return `<div class="img-grid ${cls}">${cells}</div>${mediaTimeOverlay(time)}`;
 }
+
+// ══════════════════════════════════════════════
+//  MESSAGE SELECTION (long-press) + REPLY
+// ══════════════════════════════════════════════
+let selectedMessageId = null;
+let selectedMessageData = null;
+let activeReply = null;
+let longPressTimer = null;
+let longPressFired = false;
+
+function attachLongPress(bubbleEl, docId, data) {
+    const start = () => {
+        longPressFired = false;
+        longPressTimer = setTimeout(() => {
+            longPressFired = true;
+            openSelectionBar(docId, data, bubbleEl);
+            if (navigator.vibrate) navigator.vibrate(12);
+        }, 450);
+    };
+    const cancelTimer = () => clearTimeout(longPressTimer);
+    bubbleEl.addEventListener('touchstart', start, { passive: true });
+    bubbleEl.addEventListener('touchend', cancelTimer);
+    bubbleEl.addEventListener('touchmove', cancelTimer);
+    bubbleEl.addEventListener('mousedown', start);
+    bubbleEl.addEventListener('mouseup', cancelTimer);
+    bubbleEl.addEventListener('mouseleave', cancelTimer);
+    bubbleEl.addEventListener('contextmenu', (e) => e.preventDefault());
+    bubbleEl.addEventListener('click', (e) => {
+        if (longPressFired) { e.stopPropagation(); e.preventDefault(); longPressFired = false; }
+    }, true);
+}
+
+function openSelectionBar(docId, data, bubbleEl) {
+    selectedMessageId = docId;
+    selectedMessageData = data;
+    document.querySelectorAll('.message.selected-highlight').forEach(el => el.classList.remove('selected-highlight'));
+    bubbleEl.classList.add('selected-highlight');
+    document.getElementById('chat-header-bar').style.display = 'none';
+    document.getElementById('selectionActionBar').style.display = 'flex';
+    document.getElementById('selectionCount').textContent = '1';
+}
+function cancelSelection() {
+    document.querySelectorAll('.message.selected-highlight').forEach(el => el.classList.remove('selected-highlight'));
+    document.getElementById('chat-header-bar').style.display = 'flex';
+    document.getElementById('selectionActionBar').style.display = 'none';
+    selectedMessageId = null;
+    selectedMessageData = null;
+}
+function selectionSnippet(data) {
+    if (data.type === 'text') return data.text.slice(0, 60);
+    if (data.type === 'image') return '📷 Photo';
+    if (data.type === 'video') return '🎥 Video';
+    if (data.type === 'imageGroup') return `📷 ${data.mediaArr ? data.mediaArr.length : ''} Photos`;
+    if (data.type === 'audio') return '🎤 Voice message';
+    return '';
+}
+function replySelected() {
+    if (!selectedMessageData) return;
+    const isMe = selectedMessageData.senderId === myId;
+    document.getElementById('replyPreviewName').textContent = 'Replying to ' + (isMe ? 'yourself' : chatWith);
+    document.getElementById('replyPreviewText').textContent = selectionSnippet(selectedMessageData);
+    const thumb = document.getElementById('replyPreviewThumb');
+    const thumbUrl = selectedMessageData.mediaUrl || (selectedMessageData.mediaArr && selectedMessageData.mediaArr[0] && selectedMessageData.mediaArr[0].mediaUrl);
+    if (thumbUrl && selectedMessageData.type !== 'video') { thumb.src = thumbUrl; thumb.style.display = 'block'; }
+    else { thumb.style.display = 'none'; }
+    activeReply = { id: selectedMessageId, senderId: selectedMessageData.senderId, snippet: selectionSnippet(selectedMessageData) };
+    document.getElementById('replyPreviewBar').style.display = 'flex';
+    cancelSelection();
+    document.getElementById('msgInput').focus();
+}
+function cancelReply() {
+    activeReply = null;
+    document.getElementById('replyPreviewBar').style.display = 'none';
+}
+async function deleteSelected() {
+    if (!selectedMessageId) return;
+    if (!confirm('Share wannan sakon?')) { cancelSelection(); return; }
+    try {
+        await db.collection('personalChats').doc(chatRoomId).collection('messages').doc(selectedMessageId).delete();
+    } catch (e) {
+        alert('An kasa share sakon: ' + e.message);
+    }
+    cancelSelection();
+}
+function starSelected() {
+    alert('Fasalin "Favourite" ba a kunna shi ba tukuna.');
+    cancelSelection();
+}
+function pinSelected() {
+    alert('Fasalin "Pin" ba a kunna shi ba tukuna.');
+    cancelSelection();
+}
+function forwardSelected() {
+    alert('Fasalin "Forward" ba a kunna shi ba tukuna.');
+    cancelSelection();
+            }
 
 // ── In-app fullscreen viewer (baya buɗe wani external page kamar Backblaze) ──
 function formatViewerTime(sec) {
