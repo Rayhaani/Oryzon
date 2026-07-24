@@ -908,7 +908,19 @@
 
         function viewGroupHighlight(index) {
             groupStoryIndex = index;
-            document.getElementById('storyViewerOverlay').style.display = 'flex';
+
+            const overlay = document.getElementById('storyViewerOverlay');
+            overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:20000; display:flex; flex-direction:column; margin:0; padding:0;';
+
+            const header = overlay.querySelector('.story-header');
+            header.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 14px; flex:0 0 auto; margin:0;';
+
+            const wrap = document.getElementById('storyMediaWrap');
+            wrap.style.cssText = 'flex:1 1 auto; position:relative; overflow:hidden; min-height:0; margin:0; padding:0;';
+
+            const footer = document.getElementById('storyFooter');
+            footer.style.cssText = 'display:flex; align-items:center; gap:12px; padding:12px 14px calc(12px + env(safe-area-inset-bottom)); flex:0 0 auto; margin:0;';
+
             showGroupStoryAt(groupStoryIndex);
             history.pushState({ storyViewer: true }, '');
             window.onpopstate = closeGroupStoryViewer;
@@ -922,7 +934,9 @@
 
             const newSlide = document.createElement('div');
             newSlide.className = 'story-slide';
-            newSlide.innerHTML = `<img src="${item.img}">`;
+            newSlide.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; margin:0; padding:0;';
+            newSlide.innerHTML = `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover; display:block; margin:0; padding:0;">`;
+
             newSlide.style.transform = direction === 'prev' ? 'translateX(-100%)' : 'translateX(100%)';
             newSlide.style.transition = 'none';
             wrap.appendChild(newSlide);
