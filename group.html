@@ -472,6 +472,29 @@
             word-wrap: break-word;
             line-height: 1.2;
             }
+  .story-viewer-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; z-index: 20000; display: none; flex-direction: column;
+        }
+        .story-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; flex-shrink: 0; }
+        .story-header img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #fde08d; }
+        .story-user-info { flex: 1; display: flex; align-items: baseline; gap: 6px; }
+        .story-username { font-size: 13px; font-weight: 700; color: #fff; }
+        .story-time { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .story-close { color: #fff; font-size: 20px; cursor: pointer; padding: 5px; }
+        .story-media-wrap { flex: 1; position: relative; overflow: hidden; touch-action: pan-y; }
+        .story-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .story-slide img, .story-slide video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+        .story-tap-zone { position: absolute; top: 0; height: 100%; width: 35%; z-index: 5; }
+        .story-tap-left { left: 0; }
+        .story-tap-right { right: 0; }
+        .story-footer {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+            flex-shrink: 0;
+        }
+        .story-reply-input { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 10px 16px; color: #fff; font-size: 13px; }
+        .story-footer i { color: #fff; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -623,32 +646,27 @@
                 <span class="stack-count">+12.4K</span>
             </div>
 
-            <button class="invite-btn-fb" onclick="createPost()">
-                <i class="fa-solid fa-pen-to-square"></i> Create Post
-            </button>
-        </div>
-
-        <div class="smart-box-highlights">
-            <div class="highlights-scroll">
-                <div class="highlight-item">
-                    <div class="highlight-ring"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
-                    <p class="highlight-label">Launch</p>
-                </div>
-                <div class="highlight-item">
-                    <div class="highlight-ring"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
-                    <p class="highlight-label">Deals</p>
-                </div>
-                <div class="highlight-item">
-                    <div class="highlight-ring"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
-                    <p class="highlight-label">Events</p>
-                </div>
-                <div class="highlight-item">
-                    <div class="highlight-ring"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
-                    <p class="highlight-label">Tech</p>
+            <div class="smart-box-highlights">
+                <div class="highlights-scroll">
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(0)"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Launch</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(1)"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Deals</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(2)"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Events</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(3)"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Tech</p>
+                    </div>
                 </div>
             </div>
         </div>
-        
         <div id="timeline-area"></div>
     </div>
 
@@ -699,6 +717,26 @@
         </div>
     </div>
 
+    <!-- STORY / HIGHLIGHT VIEWER -->
+    <div class="story-viewer-overlay" id="storyViewerOverlay">
+        <div class="story-header">
+            <img id="storyUserAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80">
+            <div class="story-user-info">
+                <span class="story-username" id="storyUsername">Ƙungiyar Arewa 2026</span>
+                <span class="story-time" id="storyTime"></span>
+            </div>
+            <i class="fa-solid fa-xmark story-close" onclick="closeGroupStoryViewer()"></i>
+        </div>
+        <div class="story-media-wrap" id="storyMediaWrap">
+            <div class="story-tap-zone story-tap-left" onclick="prevGroupStory()"></div>
+            <div class="story-tap-zone story-tap-right" onclick="nextGroupStory()"></div>
+        </div>
+        <div class="story-footer" id="storyFooter">
+            <input type="text" class="story-reply-input" placeholder="Send message">
+            <i class="fa-regular fa-paper-plane"></i>
+        </div>
+    </div>
+    
     <!-- SHARED POST CARD TEMPLATE — single source of truth for generatePostHTML() -->
     <script src="post-card-template.js"></script>
 
@@ -839,6 +877,76 @@
     function createPost() {
             alert('Create Post feature coming soon...');
     }
+
+    const groupHighlights = [
+            { img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80', label: 'Launch' },
+            { img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=900&auto=format&fit=crop&q=80', label: 'Deals' },
+            { img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80', label: 'Events' },
+            { img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80', label: 'Tech' }
+        ];
+        let groupStoryIndex = 0;
+        let groupStoryTimer = null;
+        const GROUP_STORY_DURATION = 5000;
+
+        function viewGroupHighlight(index) {
+            groupStoryIndex = index;
+            document.getElementById('storyViewerOverlay').style.display = 'flex';
+            showGroupStoryAt(groupStoryIndex);
+            history.pushState({ storyViewer: true }, '');
+            window.onpopstate = closeGroupStoryViewer;
+        }
+
+        function showGroupStoryAt(index, direction = 'next') {
+            clearTimeout(groupStoryTimer);
+            const wrap = document.getElementById('storyMediaWrap');
+            const oldSlide = wrap.querySelector('.story-slide');
+            const item = groupHighlights[index];
+
+            const newSlide = document.createElement('div');
+            newSlide.className = 'story-slide';
+            newSlide.innerHTML = `<img src="${item.img}">`;
+            newSlide.style.transform = direction === 'prev' ? 'translateX(-100%)' : 'translateX(100%)';
+            newSlide.style.transition = 'none';
+            wrap.appendChild(newSlide);
+            void newSlide.offsetWidth;
+
+            requestAnimationFrame(() => {
+                newSlide.style.transition = 'transform 0.3s ease-out';
+                newSlide.style.transform = 'translateX(0)';
+                if (oldSlide) {
+                    oldSlide.style.transition = 'transform 0.3s ease-out';
+                    oldSlide.style.transform = direction === 'prev' ? 'translateX(100%)' : 'translateX(-100%)';
+                }
+            });
+            if (oldSlide) setTimeout(() => oldSlide.remove(), 320);
+
+            document.getElementById('storyUsername').textContent = item.label;
+            document.getElementById('storyTime').textContent = 'Now';
+            groupStoryTimer = setTimeout(() => nextGroupStory(), GROUP_STORY_DURATION);
+        }
+
+        function nextGroupStory() {
+            if (groupStoryIndex < groupHighlights.length - 1) {
+                groupStoryIndex++;
+                showGroupStoryAt(groupStoryIndex, 'next');
+            } else {
+                closeGroupStoryViewer();
+            }
+        }
+
+        function prevGroupStory() {
+            if (groupStoryIndex > 0) {
+                groupStoryIndex--;
+                showGroupStoryAt(groupStoryIndex, 'prev');
+            }
+        }
+
+        function closeGroupStoryViewer() {
+            clearTimeout(groupStoryTimer);
+            document.getElementById('storyViewerOverlay').style.display = 'none';
+            document.getElementById('storyMediaWrap').querySelectorAll('.story-slide').forEach(el => el.remove());
+            window.onpopstate = null;
+                }
     </script>
 </body>
 </html>
