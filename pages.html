@@ -1,961 +1,434 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ha">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus - Unified Inbox</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&family=Orbitron:wght=600;700&display=swap" rel="stylesheet">
-   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <title>Nexus - Page View</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-       :root {
-            --obsidian: #050505;
-            --cyan-neon: #00F2FF;
+        :root {
+            --bg-void: #030508;
+            --card-incoming: rgba(15, 20, 31, 0.75);
+            --card-outgoing: rgba(0, 140, 255, 0.12);
+            --neon-cyan: #fde08d;
+            --neon-purple: #fde08d;
+            --neon-green: #10b981;
+            --neon-gold: #f59e0b;
             --glass-border: rgba(255, 255, 255, 0.08);
-            --text-dim: rgba(255, 255, 255, 0.6);
-            --neon-glow: 0 0 12px rgba(0, 242, 255, 0.25);
-            --presence-live: #34C759;
-            --row-divider: rgba(255, 255, 255, 0.04);
-       } 
-
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+            --glass-glow: rgba(253, 224, 141, 0.3);
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-    background-color: #050505 !important;
-    background-image: none !important;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: #ffffff;
-    overflow-x: hidden;
-        }
-        header {
-            padding: 15px 15px 5px;
-            background: transparent;
-            backdrop-filter: blur(15px);
-            position: sticky; top: 0; z-index: 100;
-        }
-
-        .header-top {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px;
-            position: relative;
-        }
-
-        .back-trigger { cursor: pointer; display: flex; align-items: center; }
-        h1 { font-size: 15px; font-weight: 600; color: white; }
-
-        .nexus-hud-controller {
-            display: flex;
-            align-items: center;
-            background: rgba(6, 9, 16, 0.6);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            padding: 4px 10px;
-            border-radius: 14px;
-            box-shadow: inset 0 0 8px rgba(0, 242, 255, 0.05), var(--neon-glow);
-        }
-
-        .hud-btn {
-            cursor: pointer;
-            color: var(--text-dim);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 2px;
-        }
-
-        .hud-btn svg {
-            filter: drop-shadow(0 0 2px rgba(0, 242, 255, 0));
-            transition: 0.3s;
-        }
-
-        .hud-btn:active svg {
-            color: var(--cyan-neon);
-            stroke: var(--cyan-neon);
-            filter: drop-shadow(0 0 5px var(--cyan-neon));
-        }
-
-        .integrated-search-box {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--obsidian);
-            display: flex; align-items: center;
-            gap: 10px; padding: 0 5px;
-            opacity: 0; pointer-events: none;
-            transition: all 0.3s ease;
-            z-index: 110;
-        }
-
-        .integrated-search-box.active {
-            opacity: 1; pointer-events: all;
-        }
-
-        .integrated-search-box input {
-            flex: 1; background: rgba(255,255,255,0.02);
-            border: 1px solid var(--glass-border);
-            padding: 7px 14px; border-radius: 12px;
-            color: white; font-size: 12px; outline: none;
+            background-color: #050505 !important;
+            background-image: none !important;
+            color: white;
             font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            padding-bottom: 30px;
         }
 
-        .integrated-search-box input:focus {
-            border-color: var(--cyan-neon);
-            box-shadow: var(--neon-glow);
+        /* ================= HEADER — simple page-mode header ================= */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 56px;
+            background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            display: flex; align-items: center; padding: 0 12px; gap: 10px;
+            z-index: 9999; box-sizing: border-box;
         }
 
-        .smart-btn-group {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            padding-bottom: 8px;
-            width: 100%;
-        }
-
-        .smart-btn {
-            padding: 5px 0;
-            font-size: 11px;
-            font-weight: 600;
-            border-radius: 15px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.02);
-            color: var(--text-dim);
-            cursor: pointer;
-            transition: 0.3s;
-            white-space: nowrap;
-            text-align: center;
-            width: 100%;
-        }
-
-        .smart-btn.active {
-            background: rgba(0, 242, 255, 0.1);
-            border-color: var(--cyan-neon);
-            color: var(--cyan-neon);
-            box-shadow: 0 0 8px rgba(0, 242, 255, 0.2);
-        }
-
-        .view-container {
-            flex: 1; overflow-y: auto;
-            scrollbar-width: none;
-        }
-        .view-container::-webkit-scrollbar { display: none; }
-
-        .tab-view { display: none; }
-        .tab-view.active { display: block; }
-
-       .chat-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 9px 15px;
-            text-decoration: none; color: inherit;
-            min-height: 60px;
-            transition: background 0.15s ease;
-        }
-
-        .chat-item:active { background: rgba(255, 255, 255, 0.03); }
-
-        .profile-stack {
-            position: relative;
-            width: 52px; height: 52px;
-            flex-shrink: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.08);
-            padding: 2px;
+        .fb-back-btn {
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
             display: flex; align-items: center; justify-content: center;
-            transition: background 0.3s ease;
+            color: #fff; font-size: 15px; cursor: pointer;
         }
-        .profile-stack[data-online="true"] {
-            background: conic-gradient(from 180deg, var(--cyan-neon), transparent 40%, transparent 60%, var(--cyan-neon));
-        }
-
-        .user-img {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--obsidian);
-            position: relative; z-index: 2;
-            display: block;
-        }
-
-        /* Presence dot — yana bayyana kawai lokacin da user yake "online" (data-online="true") */
-        .profile-stack::after {
-            content: '';
-            position: absolute;
-            bottom: 1px; right: 1px;
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            background: var(--presence-live);
-            border: 2px solid var(--obsidian);
-            display: none;
-        }
-        .profile-stack[data-online="true"]::after { display: block; }
-
-        .status-ring { border: 2px solid var(--cyan-neon); padding: 2px; }
-
-        .chat-details { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
-        .chat-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .name {
-            font-size: 14px; font-weight: 700; color: #fff;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        .time {
-            font-size: 9px; color: var(--cyan-neon);
-            background: rgba(0, 242, 255, 0.08);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-family: 'Orbitron', sans-serif;
-            flex-shrink: 0;
-        }
-        .preview-text {
-            font-size: 12px; color: var(--text-dim);
+        .fb-header-title {
+            font-size: 15px; font-weight: 800; color: #fff;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            flex: 1; min-width: 0;
         }
-
-        /* STYLES FOR PAGES SECTION COPIED FROM UPDATES */
-        .section-title-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0px 15px 10px 15px;
-        }
-        .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: rgba(255,255,255,0.9);
-        }
-        .btn-create-page {
-            font-size: 12px;
-            color: var(--cyan-neon);
-            background: rgba(0, 242, 255, 0.1);
-            padding: 6px 12px;
-            border-radius: 14px;
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-        .btn-create-page:hover {
-            background: rgba(0, 242, 255, 0.2);
-            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
-        }
-        .pages-vertical-list {
-            display: flex;
-            flex-direction: column;
-            padding: 0 15px;
-        }
-        .page-list-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            cursor: pointer;
-        }
-        .page-info-block {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .page-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .page-text-meta h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 2px;
-        }
-        .page-text-meta p {
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-        .page-action-view {
-            font-size: 12px;
-            color: #fff;
-            opacity: 0.5;
-        }
-
-        /* ================= CYBER CARPET OVERLAY ================= */
-        .carpet-portal {
-            position: fixed;
-            top: 0; 
-            right: 0; 
-            width: 35%;
-            min-width: 280px; /* Karamin girman da zai sa rubutu bai breaking ba */
-            max-width: 400px; /* Matsayin karshe */
-            max-height: 60vh; 
-            height: auto; 
-            background: rgba(5, 7, 12, 0.96);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-left: 1px solid rgba(0, 242, 255, 0.2);
-            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
-            border-radius: 0 0 0 24px; 
-            z-index: 200;
-            display: flex; flex-direction: column;
-            box-shadow: -10px 15px 40px rgba(0,0,0,0.9), 0 5px 20px rgba(0,242,255,0.05);
-            
-            /* An shigar da gyaran anan don boyewa idan an shigo shafin */
-            transform: scaleY(0);
-            transform-origin: top right;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        } /* An sanya wannan rufewar da ta bace wacce ke haifar da matsala gaba daya */
-
-        .carpet-portal.unrolled {
-            transform: scaleY(1);
-            opacity: 1;
-            pointer-events: all; /* Domin ya zama mai taba-biyu idan ya fito */
-        }
-
-        .portal-top-bar {
-            padding: 6px 12px 4px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .portal-left-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .portal-headline {
-            font-size: 13.5px;
-            font-weight: 600;
-            color: var(--cyan-neon);
-            letter-spacing: 0.5px;
-            text-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
-        }
-
-        .close-portal-trigger {
-            cursor: pointer; color: var(--text-dim); padding: 2px;
-            transition: 0.3s; display: flex; align-items: center;
-        }
-        .close-portal-trigger:hover { color: #fff; }
-
-        .contacts-section-title {
-            padding: 4px 15px 4px;
-            font-size: 10.5px;
-            font-weight: 600;
-            color: var(--text-dim);
-            letter-spacing: 0.5px;
-        }
-
-        .portal-scrollable-body {
-            flex: 1; overflow-y: auto; padding: 2px 2px 10px;
-            scrollbar-width: none;
-        }
-        .portal-scrollable-body::-webkit-scrollbar { display: none; }
-
-        .cyber-contact-node {
-            display: flex; align-items: center; 
-            padding: 6px 15px;
-            border-radius: 10px; margin-bottom: 2px; cursor: pointer;
-            border: 1px solid transparent;
-            height: 50px;
-        }
-
-        .cyber-contact-node:active {
-            background: rgba(0, 242, 255, 0.03);
-        }
-
-        .cyber-contact-node .user-img {
-            width: 34px !important;
-            height: 34px !important;
-        }
-
-        .cyber-checkbox-ring {
-            width: 15px; height: 15px; border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.2); margin-left: auto;
+        .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .header-icon-btn {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            flex-shrink: 0;
+            color: #fff; font-size: 15px;
+            cursor: pointer; flex-shrink: 0;
         }
+        .header-icon-btn:active { background: rgba(253,224,141,0.2); }
 
-
-.cyber-contact-node.selected .cyber-checkbox-ring {
-            border-color: var(--cyan-neon);
-            background: rgba(0, 242, 255, 0.1);
-            box-shadow: 0 0 8px var(--cyan-neon);
-        }
-
-        .cyber-contact-node.selected .cyber-checkbox-ring::after {
-            content: ''; width: 5px; height: 5px; border-radius: 50%;
-            background: var(--cyan-neon);
-        }
-
-        /* FUTURE FEATURISTIC OPTIONS STYLES */
-        .portal-options-container {
+        /* ================= PAGE VIEW — Facebook-Page style ================= */
+        #pageView {
+            padding-top: 56px;
             display: flex;
             flex-direction: column;
-            padding: 10px 15px;
-            gap: 8px;
         }
 
-        .futuristic-option-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 15px;
-            background: #f0f0f0; 
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 14px;
-            color: #333; 
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            white-space: nowrap; /* Hana rubutu ya dawo layi */
-            width: fit-content; /* Zai bi girman rubutu */
-            min-width: 180px;
-        }
-        
-        .futuristic-option-btn:hover {
-            background: #e0e0e0;
-            color: #000;
+        /* ---- Cover photo + overlapping rounded avatar (half up / half down) ---- */
+        .page-header-wrap { position: relative; width: 100%; }
+
+        .group-cover-wrap { position: relative; width: 100%; height: 168px; overflow: hidden; }
+        .group-cover-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .group-cover-fade {
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg, transparent 40%, var(--bg-void) 100%);
         }
 
-        .futuristic-option-btn:active {
-          background: rgba(0, 242, 255, 0.08); 
-            border-color: var(--cyan-neon);
-            box-shadow: inset 0 0 8px rgba(0, 242, 255, 0.1), 0 0 10px rgba(0, 242, 255, 0.1);
+        .page-avatar-frame {
+            position: absolute;
+            left: 16px;
+            bottom: -45px;              /* rabin sama akan cover, rabin kasa a bangaren info */
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            border: 4px solid var(--bg-void);
+            overflow: hidden;
+            background: #111;
+            z-index: 6;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        }
+        .page-avatar-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .group-info-block { padding: 4px 16px 6px 16px; border-bottom: 8px solid rgba(255,255,255,0.03); }
+
+        .page-name-row { padding-left: 106px; min-height: 46px; display: flex; flex-direction: column; justify-content: flex-end; }
+        .group-info-title { font-size: 19px; font-weight: 800; color: #fff; letter-spacing: -0.3px; line-height: 1.2; }
+        .group-meta-row {
+            display: flex; align-items: center; gap: 6px; color: var(--text-sub);
+            font-size: 12.5px; margin-top: 4px;
         }
 
-        .futuristic-option-btn svg {
-            color: #555;
-            transition: 0.3s;
+        .page-bio { font-size: 13px; color: #cbd5e1; line-height: 1.5; margin-top: 12px; }
+
+        .page-buttons-row { display: flex; gap: 10px; margin-top: 14px; }
+        .invite-btn-fb {
+            background: linear-gradient(135deg, #fde08d, #b8860b);
+            color: #1e1e1e; font-weight: 800; font-size: 12.5px;
+            padding: 9px 16px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            cursor: pointer; border: none; flex: 1;
+        }
+        .invite-btn-fb:active { transform: scale(0.97); }
+        .follow-btn-fb {
+            background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+            color: #fff; font-weight: 800; font-size: 12.5px;
+            padding: 9px 16px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            cursor: pointer; flex: 1;
+        }
+        .follow-btn-fb:active { transform: scale(0.97); }
+
+        #timeline-area {
+            padding-top: 14px !important;
+            display: flex; flex-direction: column; gap: 0;
         }
 
-        .futuristic-option-btn:active svg {
-            color: var(--cyan-neon);
+        /* ---- Highlights strip (ported as-is) ---- */
+        .smart-box-highlights {
+            background: transparent !important;
+            border: none !important;
+            padding: 0;
+            margin: 16px 0 0 0;
         }
-        
+        .highlights-scroll {
+            display: flex !important;
+            gap: 10px !important;
+            overflow-x: auto !important;
+            scrollbar-width: none !important;
+        }
+        .highlights-scroll::-webkit-scrollbar { display: none; }
+        .highlight-item {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            min-width: 56px !important;
+            flex-shrink: 0 !important;
+            position: relative;
+        }
+        .highlight-ring {
+            width: 74px !important;
+            height: 80px !important;
+            border-radius: 16px !important;
+            border: 1px solid #fde08d !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+            background: #111;
+        }
+        .highlight-ring img {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 13px !important;
+            object-fit: cover !important;
+        }
+        .highlight-label {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            color: #fff !important;
+            margin: 3px auto 0 auto !important;
+            text-align: center !important;
+            max-width: 74px;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.2;
+        }
 
-        
+        /* ---- Story / highlight viewer (ported as-is) ---- */
+        .story-viewer-overlay { position: fixed; inset: 0; z-index: 20000; background: #000; display: none; }
+        .story-media-wrap { width: 100%; height: 100%; position: relative; }
+        .story-slide { position: absolute; inset: 0; }
+        .story-slide img, .story-slide video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .story-header {
+            position: absolute; top: 0; left: 0; right: 0;
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 14px 10px; z-index: 10;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+        }
+        .story-header img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #fde08d; }
+        .story-user-info { flex: 1; display: flex; align-items: baseline; gap: 6px; }
+        .story-username { font-size: 13px; font-weight: 700; color: #fff; }
+        .story-time { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .story-close { color: #fff; font-size: 20px; cursor: pointer; padding: 5px; }
+        .story-tap-zone { position: absolute; top: 0; height: 100%; width: 35%; z-index: 5; }
+        .story-tap-left { left: 0; }
+        .story-tap-right { right: 0; }
+        .story-footer {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+            z-index: 10;
+            background: linear-gradient(transparent, rgba(0,0,0,0.75));
+        }
+        .story-reply-input { flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 50px; padding: 10px 18px; color: #fff; font-size: 13px; outline: none; }
+        .story-footer i { color: #fff; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
+
+    <!-- ================= HEADER ================= -->
     <header>
-        <div class="header-top">
-            <div class="back-trigger" onclick="history.back()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
-            </div>
-            <h1>Messages</h1>
-            
-            <div class="nexus-hud-controller">
-                <div class="hud-btn" onclick="toggleIntegratedSearch(true)">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2">
-                        <path d="M15 15l5 5"/>
-                        <circle cx="11" cy="11" r="7"/>
-                    </svg>
-                </div>
-                <div class="hud-btn" onclick="openCarpetPortal()" style="border-left: 1px solid rgba(0,242,255,0.15); padding-left: 10px; margin-left: 8px;">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5">
-                        <path d="M12 4v16M4 12h16"/>
-                    </svg>
-                </div>
-            </div>
-
-            <div class="integrated-search-box" id="integratedSearch">
-                <input type="text" id="mainSearchInput" placeholder="Search secure transmission..." oninput="filterActiveChats(this.value)">
-                <div class="hud-btn" onclick="toggleIntegratedSearch(false)" style="color: var(--cyan-neon);">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="smart-btn-group">
-            <div class="smart-btn active" onclick="switchTab(this, 'personal')">Personal</div>
-            <div class="smart-btn" onclick="switchTab(this, 'groups')">Groups</div>
-            <div class="smart-btn" onclick="switchTab(this, 'pages')">Pages</div>
-            <div class="smart-btn" onclick="switchTab(this, 'updates')">Updates</div>
-            <div class="smart-btn" onclick="switchTab(this, 'friends')">Friends</div>
+        <div class="fb-back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></div>
+        <span class="fb-header-title">Maijalalaini Islamic Medicine</span>
+        <div class="header-actions">
+            <div class="header-icon-btn"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="header-icon-btn"><i class="fa-solid fa-ellipsis-vertical"></i></div>
         </div>
     </header>
 
-    <div class="view-container">
-        <div id="personal" class="tab-view active">
-            <div id="chats-list-container">
-                </div>
+    <!-- ================= PAGE VIEW ================= -->
+    <div id="pageView">
+
+        <!-- COVER + OVERLAPPING ROUNDED AVATAR -->
+        <div class="page-header-wrap">
+            <div class="group-cover-wrap">
+                <img class="group-cover-img" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80" alt="Page cover">
+                <div class="group-cover-fade"></div>
+            </div>
+            <div class="page-avatar-frame">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80" alt="Page avatar">
+            </div>
         </div>
 
-        <div id="groups" class="tab-view">
-            <a href="group.html" class="chat-item">
-                <div class="profile-stack"><img src="https://via.placeholder.com/46/00F2FF/000?text=KM" class="user-img" style="border-radius: 12px;"></div>
-                <div class="chat-details">
-                    <div class="chat-header"><span class="name">KanoMart Devs</span><span class="time">1:10 PM</span></div>
-                    <p class="preview-text">Ali: Update logic ɗin yanzu...</p>
-                </div>
-            </a>
-            <a href="group.html" class="chat-item">
-                <div class="profile-stack"><img src="https://via.placeholder.com/46/333/00F2FF?text=SY" class="user-img" style="border-radius: 12px;"></div>
-                <div class="chat-details">
-                    <div class="chat-header"><span class="name">Synergy Core</span><span class="time">Yesterday</span></div>
-                    <p class="preview-text">Bello: The protocol is live!</p>
-                </div>
-            </a>
-        </div>
-
-                <div id="pages" class="tab-view">
-            <div class="pages-vertical-list">
-                
-                <div class="page-list-item" onclick="window.location.href='pages.html?page=sirrin-rike-miji'">
-                    <div class="page-info-block">
-                        <img src="https://via.placeholder.com/50/111?text=SRM" class="page-avatar">
-                        <div class="page-text-meta">
-                            <h3>Sirrin rike miji 🌍</h3>
-                            <p>Kece Kike Bukatar Namiji Mai Gemu...</p>
-                        </div>
-                    </div>
-                    <div class="page-action-view">10m ago</div>
-                </div>
-
-                <div class="page-list-item" onclick="window.location.href='pages.html?page=simon-updates'">
-                    <div class="page-info-block">
-                        <img src="https://via.placeholder.com/50/222?text=SU" class="page-avatar">
-                        <div class="page-text-meta">
-                            <h3>Simon's Updates.</h3>
-                            <p>If you have issue or concern. You can...</p>
-                        </div>
-                    </div>
-                    <div class="page-action-view">Yesterday</div>
-                </div>
-
-                <div class="page-list-item" onclick="window.location.href='pages.html?page=annahjul-hameed'">
-                    <div class="page-info-block">
-                        <img src="https://via.placeholder.com/50/333?text=ATV" class="page-avatar">
-                        <div class="page-text-meta">
-                            <h3>Annahjul-Hameed TV</h3>
-                            <p>Addu'ar Sujuda🇲🇳🇲🇳...</p>
-                        </div>
-                    </div>
-                    <div class="page-action-view">2 days ago</div>
-                </div>
-
-            </div>
-                </div>
-      
-
-        <div id="updates" class="tab-view">
-            <div class="chat-item" onclick="openStoryViewer('my-status')">
-                <div class="profile-stack">
-                    <img src="https://via.placeholder.com/46/222/00F2FF?text=Me" class="user-img status-ring dynamic-ring">
-                    <div style="position: absolute; bottom: 0; right: 0; background: var(--cyan-neon); width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--obsidian); font-size: 10px; color: black; font-weight: bold;">+</div>
-                </div>
-                <div class="chat-details">
-                    <span class="name">My Status</span>
-                    <p class="preview-text">Tap to add neural update</p>
+        <div class="group-info-block">
+            <div class="page-name-row">
+                <div class="group-info-title">Maijalalaini Islamic Medicine</div>
+                <div class="group-meta-row">
+                    <span>182K followers · 9 following · 4K posts</span>
                 </div>
             </div>
 
-            <div style="padding: 10px 15px; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Recent Updates</div>
-
-            <div class="chat-item" onclick="openStoryViewer('ramatu')">
-                <div class="profile-stack">
-                    <img src="https://via.placeholder.com/46/333/00F2FF?text=RA" class="user-img status-ring active-ring">
-                </div>
-                <div class="chat-details">
-                    <div class="chat-header"><span class="name">Ramatu Arahman</span><span class="time">24m ago</span></div>
-                    <p class="preview-text">Shared a video update</p>
-                </div>
+            <div class="page-bio">
+                muna bada magungunan masu inganci akan kowacce cuta Insha Allah 08088886...
             </div>
 
-            <div class="chat-item" onclick="openStoryViewer('ahmad')">
-                <div class="profile-stack">
-                    <img src="https://via.placeholder.com/46/111/00F2FF?text=AT?text=AT" class="user-img status-ring active-ring">
-                </div>
-                <div class="chat-details">
-                    <div class="chat-header"><span class="name">Ahmad Tech Hub</span><span class="time">2h ago</span></div>
-                    <p class="preview-text">Nexus Cloud Miner update live</p>
+            <div class="page-buttons-row">
+                <button class="invite-btn-fb"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                <button class="follow-btn-fb"><i class="fa-solid fa-bell"></i> Following</button>
+            </div>
+
+            <!-- HIGHLIGHTS STRIP (ported as-is from feed section) -->
+            <div class="smart-box-highlights">
+                <div class="highlights-scroll">
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(0)"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Launch</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(1)"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Deals</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(2)"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Events</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(3)"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Tech</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="friends" class="tab-view">
-            <div id="friends-list-container"></div>
+        <!-- TIMELINE / FEED POSTS AREA (ported as-is — filled via generatePostHTML) -->
+        <div id="timeline-area"></div>
+    </div>
+
+    <!-- STORY / HIGHLIGHT VIEWER (ported as-is) -->
+    <div class="story-viewer-overlay" id="storyViewerOverlay">
+        <div class="story-header">
+            <img id="storyUserAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80">
+            <div class="story-user-info">
+                <span class="story-username" id="storyUsername">Maijalalaini Islamic Medicine</span>
+                <span class="story-time" id="storyTime"></span>
+            </div>
+            <i class="fa-solid fa-xmark story-close" onclick="closeGroupStoryViewer()"></i>
+        </div>
+        <div class="story-media-wrap" id="storyMediaWrap">
+            <div class="story-tap-zone story-tap-left" onclick="prevGroupStory()"></div>
+            <div class="story-tap-zone story-tap-right" onclick="nextGroupStory()"></div>
+        </div>
+        <div class="story-footer" id="storyFooter">
+            <input type="text" class="story-reply-input" placeholder="Send message">
+            <i class="fa-regular fa-paper-plane"></i>
         </div>
     </div>
 
-    <div class="carpet-portal" id="carpetPortal">
-        <div class="portal-top-bar">
-            <div class="portal-left-controls">
-                <div id="portalBackBtn" onclick="backToPortalMenu()" style="cursor: pointer; display: none; align-items: center; color: var(--text-dim); margin-right: 4px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                </div>
-                <span class="portal-headline" id="portalMainHeadline"></span>
-            </div>
-
-        </div>
-        
-        <div id="portalMainMenuOptions" class="portal-options-container">
-            <div class="futuristic-option-btn" onclick="triggerOptionAction('status')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                Add Status
-            </div>
-            <div class="futuristic-option-btn" onclick="triggerOptionAction('group')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                Create Group
-            </div>
-            <div class="futuristic-option-btn" onclick="triggerOptionAction('page')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-                Create Page
-            </div>
-        </div>
-
-        <div id="portalContactsSubView" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
-            <div class="contacts-section-title" id="contactsViewSubtitle">Contacts On Oryzon</div>
-            <div class="portal-scrollable-body" id="carpet-contacts-list"></div>
-            <div style="padding: 10px 15px; display: flex; justify-content: flex-end;">
-                <button class="btn-create-page" id="portalSubmitActionButton" onclick="initializeGroupFromOverlay()" style="border-radius: 10px; width: 100%; padding: 10px;">Deploy Cluster</button>
-            </div>
-        </div>
-    </div>
+    <!-- SHARED POST CARD TEMPLATE — single source of truth for generatePostHTML() -->
+    <script src="post-card-template.js"></script>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-            authDomain: "oryzon-50ea4.firebaseapp.com",
-            projectId: "oryzon-50ea4",
-            storageBucket: "oryzon-50ea4.firebasestorage.app",
-            messagingSenderId: "782106742622",
-            appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
-        };
-
-        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-        const db = firebase.firestore();
-        const myId = localStorage.getItem("nexus_user_session");
-        if (!myId) window.location.href = 'login.html';
-
-        // Jiran Firebase Auth ya farfaɗo session kafin a yi query
-        let authReadyResolve;
-        const authReadyPromise = new Promise((resolve) => { authReadyResolve = resolve; });
-        firebase.auth().onAuthStateChanged((user) => { authReadyResolve(user); });
-
-        let selectedNodes = [];
-        let identifiedContacts = new Set(); 
-        let currentPortalMode = "menu"; 
-
-        async function loadChats() {
-            const container = document.getElementById('chats-list-container');
-            container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
-
-            await authReadyPromise;
-            if (!firebase.auth().currentUser) {
-                container.innerHTML = '<p style="text-align:center; padding:30px; color:#ff4444; font-size:13px;">Ba a tabbatar da shiga ba. Sake login.</p>';
-                return;
-            }
-
-            try {
-                const snapshot = await db.collection("personalChats").get();
-        container.innerHTML = '';
-                let hasChats = false;
-                identifiedContacts.clear(); 
-
-                snapshot.forEach(doc => {
-                    const chatId = doc.id;
-                    if (!chatId.includes(myId)) return;
-
-                    const parts = chatId.split('__');
-                    if (parts.length < 2) return; 
-                    const rawUser = parts[0] === myId ? parts[1] : parts[0];
-                    if (!rawUser || rawUser === myId) return;
-                    
-                    identifiedContacts.add(rawUser);
-                        
-                    const initialName = rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
-                    const data = doc.data();
-                    const lastMsg = data.lastMessage || "Tap to open chat";
-                    
-                    let lastTime = "";
-                    if (data.lastMessageTime) {
-                        const dateObj = new Date(data.lastMessageTime);
-                        let hours = dateObj.getHours();
-                        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-                        const ampm = hours >= 12 ? 'PM' : 'AM';
-                        hours = hours % 12; hours = hours ? hours : 12; 
-                        lastTime = `${hours}:${minutes} ${ampm}`;
-                    }
-                    
-                    const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${rawUser}`;
-                    hasChats = true;
-                    
-                    container.insertAdjacentHTML('beforeend', `
-                        <a href="chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item" id="chat-link-${rawUser}">
-                            <div class="profile-stack" id="stack-${rawUser}" data-online="false"><img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img"></div>
-                            <div class="chat-details">
-                                <div class="chat-header">
-                                    <span class="name" id="name-${rawUser}">${initialName}</span>
-                                    <span class="time">${lastTime}</span>
-                                </div>
-                                <p class="preview-text">${lastMsg}</p>
-                            </div>
-                        </a>
-                    `);
-                    db.collection('users').doc(rawUser).get().then(userDoc => {
-                        if (userDoc.exists) {
-                            const userData = userDoc.data();
-                            const fullName = userData.fullName || userData.name || userData.username;
-                            if (fullName) {
-                                const nameSpan = document.getElementById(`name-${rawUser}`);
-                                if (nameSpan) {
-                                    nameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                                }
-                                const overlayNameSpan = document.getElementById(`overlay-name-${rawUser}`);
-                                if (overlayNameSpan) {
-                                    overlayNameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                                }
-                            }
-                            if (userData.userProfilePic) {
-                                const img = document.getElementById(`avatar-${rawUser}`);
-                                if (img) img.src = userData.userProfilePic;
-                                
-                                const overlayImg = document.getElementById(`overlay-avatar-${rawUser}`);
-                                if (overlayImg) overlayImg.src = userData.userProfilePic;
-                            }
-                            const stackEl = document.getElementById(`stack-${rawUser}`);
-                            if (stackEl) stackEl.setAttribute('data-online', userData.isOnline === true ? 'true' : 'false');
-                        }
-                    });
-                    
-                });
-
-                if (!hasChats) {
-                    container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
+        // ============================================================
+        // FEED POSTS — generated directly via window.generatePostHTML()
+        // (ported as-is from group.html feed section)
+        // ============================================================
+        function renderFeedPosts() {
+            const samplePosts = [
+                {
+                    id: 'page-post-1',
+                    username: 'Ali_Developer',
+                    userProfilePic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+                    mediaUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80',
+                    mediaType: 'image',
+                    content: 'Masha Allah, an kammala tsara jadawalin sabon Super Community Platform dinmu na 2026 gaba daya. Godiya ga dukkan mambobin ƙungiyar!',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 42),
+                    likesCount: 318,
+                    commentsCount: 47
+                },
+                {
+                    id: 'page-post-2',
+                    username: 'MmnAfrah',
+                    userProfilePic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
+                    mediaUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80',
+                    mediaType: 'image',
+                    content: `Taron gudanarwa na wannan mako zai gudana ranar Litinin. Duk mai sha'awar shiga Business Deals sector, ku shirya tambayoyinku.`,
+                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
+                    likesCount: 142,
+                    commentsCount: 19
+                },
+                {
+                    id: 'page-post-3',
+                    username: 'Zainab_TrustID',
+                    userProfilePic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80',
+                    mediaUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80',
+                    mediaType: 'image',
+                    content: 'An sabunta TrustID Audit ga duk membobin da suka kammala verification. Duba profile dinku don cikakken bayani.',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26),
+                    likesCount: 89,
+                    commentsCount: 11
                 }
+            ];
 
-                injectRealFirebaseContacts();
+            const container = document.getElementById('timeline-area');
+            container.innerHTML = samplePosts.map(post => window.generatePostHTML(post)).join('');
 
-            } catch(err) {
-                console.error("Chat load error:", err);
-                container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
+            if (typeof window.postCard_observeVideos === 'function') {
+                window.postCard_observeVideos();
             }
         }
 
-        function injectRealFirebaseContacts() {
-            const listBody = document.getElementById('carpet-contacts-list');
-            listBody.innerHTML = '';
+        // ============================================================
+        // HIGHLIGHTS / STORY VIEWER (ported as-is)
+        // ============================================================
+        const groupHighlights = [
+            { img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80', label: 'Launch' },
+            { img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=900&auto=format&fit=crop&q=80', label: 'Deals' },
+            { img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80', label: 'Events' },
+            { img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80', label: 'Tech' }
+        ];
+        let groupStoryIndex = 0;
+        let groupStoryTimer = null;
+        const GROUP_STORY_DURATION = 5000;
 
-            if(identifiedContacts.size === 0) {
-                listBody.innerHTML = '<p style="text-align:center; padding:15px; color:#555; font-size:11px;">No contacts found</p>';
-                return;
-            }
-
-            identifiedContacts.forEach(contactUsername => {
-                const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${contactUsername}`;
-                const initialFormattedName = contactUsername.charAt(0).toUpperCase() + contactUsername.slice(1);
-                
-                listBody.insertAdjacentHTML('beforeend', `
-                    <div class="cyber-contact-node" onclick="toggleNodeSelection(this, '${contactUsername}')">
-                        <div class="profile-stack">
-                            <img src="${defaultAvatar}" id="overlay-avatar-${contactUsername}" class="user-img">
-                        </div>
-                        <div class="chat-details">
-                            <span class="name" id="overlay-name-${contactUsername}" style="font-size:12.5px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;">${initialFormattedName}</span>
-                        </div>
-                        <div class="cyber-checkbox-ring"></div>
-                    </div>
-                `);
-            });
+        function viewGroupHighlight(index) {
+            groupStoryIndex = index;
+            document.getElementById('storyViewerOverlay').style.display = 'block';
+            showGroupStoryAt(groupStoryIndex);
+            history.pushState({ storyViewer: true }, '');
+            window.onpopstate = closeGroupStoryViewer;
         }
 
-        function toggleNodeSelection(element, contact) {
-            if(navigator.vibrate) navigator.vibrate(12);
-            element.classList.toggle('selected');
-            if(element.classList.contains('selected')) {
-                selectedNodes.push(contact);
-            } else {
-                selectedNodes = selectedNodes.filter(id => id !== contact);
-            }
-        }
+        function showGroupStoryAt(index, direction = 'next') {
+            clearTimeout(groupStoryTimer);
+            const wrap = document.getElementById('storyMediaWrap');
+            const oldSlide = wrap.querySelector('.story-slide');
+            const item = groupHighlights[index];
 
-        function openCarpetPortal() {
-            if(navigator.vibrate) navigator.vibrate([15, 10, 15]);
-            backToPortalMenu(); 
-            document.getElementById('carpetPortal').classList.add('unrolled');
-        }
+            const newSlide = document.createElement('div');
+            newSlide.className = 'story-slide';
+            newSlide.innerHTML = `<img src="${item.img}">`;
+            newSlide.style.transform = direction === 'prev' ? 'translateX(-100%)' : 'translateX(100%)';
+            newSlide.style.transition = 'none';
+            wrap.appendChild(newSlide);
+            void newSlide.offsetWidth;
 
-        
-      document.addEventListener('click', function(e) {
-    const portal = document.getElementById('carpetPortal');
-    const plusBtn = e.target.closest('[onclick="openCarpetPortal()"]');
-    if (!portal.contains(e.target) && !plusBtn) {
-        closeCarpetPortal();
-    }
-});
-        
-        
-        function closeCarpetPortal() {
-            document.getElementById('carpetPortal').classList.remove('unrolled');
-        }
-
-        function triggerOptionAction(action) {
-            if(navigator.vibrate) navigator.vibrate(15);
-            
-            if (action === 'status') {
-                closeCarpetPortal();
-                openStoryViewer('my-status');
-                return;
-            }
-
-            currentPortalMode = action;
-            document.getElementById('portalMainMenuOptions').style.display = 'none';
-            document.getElementById('portalContactsSubView').style.display = 'flex';
-            document.getElementById('portalBackBtn').style.display = 'flex';
-
-            const headline = document.getElementById('portalMainHeadline');
-            const submitBtn = document.getElementById('portalSubmitActionButton');
-            
-            if (action === 'group') {
-                headline.textContent = "Create Group";
-                submitBtn.textContent = "Deploy Group Cluster";
-            } else if (action === 'page') {
-                headline.textContent = "Create Page";
-                submitBtn.textContent = "Generate Page Matrix";
-            }
-        }
-
-        function backToPortalMenu() {
-            if(navigator.vibrate) navigator.vibrate(10);
-            currentPortalMode = "menu";
-            selectedNodes = [];
-            document.querySelectorAll('.cyber-contact-node').forEach(node => node.classList.remove('selected'));
-            
-            document.getElementById('portalMainMenuOptions').style.display = 'flex';
-            document.getElementById('portalContactsSubView').style.display = 'none';
-            document.getElementById('portalBackBtn').style.display = 'none';
-            document.getElementById('portalMainHeadline').textContent = "";
-        }
-
-        function initializeGroupFromOverlay() {
-            if(selectedNodes.length === 0) return alert("Select nodes to sync!");
-            if (currentPortalMode === 'group') {
-                alert(`Group Cluster Deployed: ${selectedNodes.join(', ')}`);
-            } else if (currentPortalMode === 'page') {
-                alert(`Page Matrix Synchronized with nodes: ${selectedNodes.join(', ')}`);
-            }
-            closeCarpetPortal();
-        }
-
-        function toggleIntegratedSearch(show) {
-            const box = document.getElementById('integratedSearch');
-            if(show) {
-                box.classList.add('active');
-                document.getElementById('mainSearchInput').focus();
-            } else {
-                box.classList.remove('active');
-                document.getElementById('mainSearchInput').value = '';
-                filterActiveChats('');
-            }
-        }
-
-        function filterActiveChats(query) {
-            const items = document.querySelectorAll('.chat-item');
-            items.forEach(item => {
-                const name = item.querySelector('.name').innerText.toLowerCase();
-                item.style.display = name.includes(query.toLowerCase()) ? 'flex' : 'none';
-            });
-        }
-
-        function switchTab(element, tabId) {
-            if (tabId === 'updates') { window.location.href = 'updates.html'; return; }
-            document.querySelectorAll('.smart-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-        }
-
-        function openStoryViewer(userId) {
-            if(userId === 'my-status') {
-                alert('Nexus Neural Cam triggers now! (Za mu hada nan don daukar hoto a mataki na gaba)');
-            } else {
-                window.location.href = `story-viewer.html?user=${userId}`;
-            }
-        }
-
-        async function loadFriendsList() {
-            const container = document.getElementById('friends-list-container');
-            if (!container) return;
-            container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
-
-            await authReadyPromise;
-            if (!firebase.auth().currentUser) return;
-
-            try {
-                const snapshot = await db.collection('friends')
-        .where('users', 'array-contains', myId)
-                    .get();
-
-                container.innerHTML = '';
-
-                if (snapshot.empty) {
-                    container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No friends yet</p>';
-                    return;
+            requestAnimationFrame(() => {
+                newSlide.style.transition = 'transform 0.3s ease-out';
+                newSlide.style.transform = 'translateX(0)';
+                if (oldSlide) {
+                    oldSlide.style.transition = 'transform 0.3s ease-out';
+                    oldSlide.style.transform = direction === 'prev' ? 'translateX(100%)' : 'translateX(-100%)';
                 }
+            });
+            if (oldSlide) setTimeout(() => oldSlide.remove(), 320);
 
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (!Array.isArray(data.users)) return;
-                    const otherUser = data.users.find(u => u !== myId);
-                    if (!otherUser) return;
-
-                    const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${otherUser}`;
-                    const initialName = otherUser.charAt(0).toUpperCase() + otherUser.slice(1);
-
-                    container.insertAdjacentHTML('beforeend', `
-                        <a href="chat-interior.html?with=${encodeURIComponent(otherUser)}&avatar=${encodeURIComponent(defaultAvatar)}" class="chat-item" id="friend-link-${otherUser}">
-                            <div class="profile-stack"><img src="${defaultAvatar}" id="friend-avatar-${otherUser}" class="user-img"></div>
-                            <div class="chat-details">
-                                <span class="name" id="friend-name-${otherUser}">${initialName}</span>
-                                <p class="preview-text">Active Now</p>
-                            </div>
-                        </a>
-                    `);
-
-                    db.collection('users').doc(otherUser).get().then(userDoc => {
-                        if (userDoc.exists) {
-                            const userData = userDoc.data();
-                            const fullName = userData.fullName || userData.name || userData.username;
-                            if (fullName) {
-                                const nameEl = document.getElementById(`friend-name-${otherUser}`);
-                                if (nameEl) {
-                                    nameEl.textContent = fullName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                                }
-                            }
-                            if (userData.userProfilePic) {
-                                const imgEl = document.getElementById(`friend-avatar-${otherUser}`);
-                                if (imgEl) imgEl.src = userData.userProfilePic;
-                            }
-                        }
-                    });
-                });
-
-            } catch(err) {
-                console.error("Friends load error:", err);
-                container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading friends</p>';
+            document.getElementById('storyUsername').textContent = item.label;
+            document.getElementById('storyTime').textContent = 'Now';
+            groupStoryTimer = setTimeout(() => nextGroupStory(), GROUP_STORY_DURATION);
+        }
+        function nextGroupStory() {
+            if (groupStoryIndex < groupHighlights.length - 1) {
+                groupStoryIndex++;
+                showGroupStoryAt(groupStoryIndex, 'next');
+            } else {
+                closeGroupStoryViewer();
             }
         }
+        function prevGroupStory() {
+            if (groupStoryIndex > 0) {
+                groupStoryIndex--;
+                showGroupStoryAt(groupStoryIndex, 'prev');
+            }
+        }
+        function closeGroupStoryViewer() {
+            clearTimeout(groupStoryTimer);
+            document.getElementById('storyViewerOverlay').style.display = 'none';
+            document.getElementById('storyMediaWrap').querySelectorAll('.story-slide').forEach(el => el.remove());
+            window.onpopstate = null;
+        }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const personalLinks = document.querySelectorAll("#personal .chat-item");
-            personalLinks.forEach(link => {
-                const nameText = link.querySelector(".name").innerText;
-                const avatarSrc = link.querySelector(".user-img").src;
-                link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
-            });
-        });
-
-      authReadyPromise.then((user) => {
-            if (!user) return;
-            db.collection("personalChats").onSnapshot(() => { loadChats(); });
-            db.collection("friends").onSnapshot(() => { loadFriendsList(); });
-        }); 
+        // Render posts on load
+        renderFeedPosts();
     </script>
 </body>
 </html>
