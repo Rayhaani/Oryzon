@@ -429,9 +429,12 @@ function switchNotifTab(index) {
     document.getElementById('tabBtnReplies').classList.toggle('active', index === 2);
     document.getElementById('tabBtnLikes').classList.toggle('active', index === 3);
     document.getElementById('tabBtnInvites').classList.toggle('active', index === 4);
-    document.getElementById('content-notifications').classList.toggle('active', index === 0);
+  document.getElementById('content-notifications').classList.toggle('active', index === 0);
     document.getElementById('content-followback').classList.toggle('active', index === 1);
-    const underline = document.getElementById('tabUnderline');
+    document.getElementById('content-replies').classList.toggle('active', index === 2);
+    document.getElementById('content-likes').classList.toggle('active', index === 3);
+    document.getElementById('content-invites').classList.toggle('active', index === 4);
+    const underline = document.getElementById('tabUnderline');  
     underline.classList.toggle('pos-1', index === 1);
     underline.classList.toggle('pos-2', index === 2);
     underline.classList.toggle('pos-3', index === 3);
@@ -510,6 +513,24 @@ function switchReadFilter(filter) {
     document.getElementById('subtabRead').classList.toggle('active', filter === 'read');
     document.getElementById('subtabSlider').classList.toggle('pos-1', filter === 'read');
     renderNotifList();
+}
+
+/* GYARAN MUHIMMI: wannan function guda ɗaya ce ke rike da Unread/Read
+   toggle na tabs uku na Replies, Likes, da Invites. Kowanne yana da
+   nasa 'tab' string ('replies'/'likes'/'invites') don JS ya san
+   wanne subtab-slider/button/list-container zai sabunta, ba tare da
+   maimaita wannan function sau uku ba. */
+const readFilterStateByTab = { replies: 'unread', likes: 'unread', invites: 'unread' };
+
+function switchReadFilterFor(tab, filter) {
+    readFilterStateByTab[tab] = filter;
+    const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+    document.getElementById(`subtabUnread${cap}`).classList.toggle('active', filter === 'unread');
+    document.getElementById(`subtabRead${cap}`).classList.toggle('active', filter === 'read');
+    document.getElementById(`subtabSlider${cap}`).classList.toggle('pos-1', filter === 'read');
+    // Har yanzu babu bayanan Replies/Likes/Invites daga Firestore, don
+    // haka babu render function da za a kira nan tukun — zai zo lokacin
+    // da muka tattauna inda wadannan notifications za su fito daga.
 }
 
 function updateSubtabCounts() {
