@@ -472,46 +472,53 @@
             word-wrap: break-word;
             line-height: 1.2;
             }
-.story-viewer-overlay {
-            position: fixed !important; top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100vh !important;
-            background: #000 !important; z-index: 20000 !important;
-            display: none; flex-direction: column !important;
-            margin: 0 !important; padding: 0 !important;
+        .story-viewer-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 20000;
+            background: #000;
+            display: none;
         }
-        .story-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; flex: 0 0 auto !important; margin: 0 !important; }
+        .story-media-wrap {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .story-slide {
+            position: absolute;
+            inset: 0;
+        }
+        .story-slide img, .story-slide video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .story-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 14px 10px;
+            z-index: 10;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+        }
         .story-header img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #fde08d; }
         .story-user-info { flex: 1; display: flex; align-items: baseline; gap: 6px; }
         .story-username { font-size: 13px; font-weight: 700; color: #fff; }
         .story-time { font-size: 11px; color: rgba(255,255,255,0.6); }
         .story-close { color: #fff; font-size: 20px; cursor: pointer; padding: 5px; }
-        .story-media-wrap {
-            flex: 1 1 auto !important;
-            position: relative !important;
-            overflow: hidden !important;
-            touch-action: pan-y;
-            margin: 0 !important; padding: 0 !important;
-            min-height: 0 !important;
-        }
-        .story-slide {
-            position: absolute !important; inset: 0 !important;
-            margin: 0 !important; padding: 0 !important;
-        }
-        .story-slide img, .story-slide video {
-            width: 100% !important; height: 100% !important;
-            object-fit: cover !important; display: block !important;
-            background: #000;
-        }
         .story-tap-zone { position: absolute; top: 0; height: 100%; width: 35%; z-index: 5; }
         .story-tap-left { left: 0; }
         .story-tap-right { right: 0; }
         .story-footer {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
             display: flex; align-items: center; gap: 12px;
-            padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
-            flex: 0 0 auto !important;
-            margin: 0 !important;
+            padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+            z-index: 10;
+            background: linear-gradient(transparent, rgba(0,0,0,0.75));
         }
-        .story-reply-input { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 10px 16px; color: #fff; font-size: 13px; }
+        .story-reply-input { flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 50px; padding: 10px 18px; color: #fff; font-size: 13px; outline: none; }
         .story-footer i { color: #fff; font-size: 20px; cursor: pointer; }
     </style>
 </head>
@@ -906,22 +913,9 @@
         let groupStoryTimer = null;
         const GROUP_STORY_DURATION = 5000;
 
-        
         function viewGroupHighlight(index) {
             groupStoryIndex = index;
-
-            const overlay = document.getElementById('storyViewerOverlay');
-            overlay.style.cssText = 'position:fixed !important; top:0 !important; left:0 !important; right:0 !important; bottom:0 !important; width:100vw !important; height:100vh !important; background:#000 !important; z-index:20000 !important; display:flex !important; flex-direction:column !important; margin:0 !important; padding:0 !important;';
-
-            const header = overlay.querySelector('.story-header');
-            header.style.cssText = 'display:flex !important; align-items:center !important; gap:10px !important; padding:10px 14px !important; flex:0 0 auto !important; margin:0 !important; height:auto !important; min-height:0 !important;';
-
-            const wrap = document.getElementById('storyMediaWrap');
-            wrap.style.cssText = 'flex:1 1 auto !important; position:relative !important; overflow:hidden !important; min-height:0 !important; height:auto !important; margin:0 !important; padding:0 !important; width:100% !important;';
-
-            const footer = document.getElementById('storyFooter');
-            footer.style.cssText = 'display:flex !important; align-items:center !important; gap:12px !important; padding:12px 14px calc(12px + env(safe-area-inset-bottom)) !important; flex:0 0 auto !important; margin:0 !important;';
-
+            document.getElementById('storyViewerOverlay').style.display = 'block';
             showGroupStoryAt(groupStoryIndex);
             history.pushState({ storyViewer: true }, '');
             window.onpopstate = closeGroupStoryViewer;
@@ -935,9 +929,7 @@
 
             const newSlide = document.createElement('div');
             newSlide.className = 'story-slide';
-            newSlide.style.cssText = 'position:absolute !important; top:0 !important; left:0 !important; right:0 !important; bottom:0 !important; width:100% !important; height:100% !important; margin:0 !important; padding:0 !important;';
-            newSlide.innerHTML = `<img src="${item.img}" style="width:100% !important; height:100% !important; object-fit:cover !important; display:block !important; margin:0 !important; padding:0 !important; border:none !important;">`;
-
+            newSlide.innerHTML = `<img src="${item.img}">`;
             newSlide.style.transform = direction === 'prev' ? 'translateX(-100%)' : 'translateX(100%)';
             newSlide.style.transition = 'none';
             wrap.appendChild(newSlide);
@@ -957,7 +949,6 @@
             document.getElementById('storyTime').textContent = 'Now';
             groupStoryTimer = setTimeout(() => nextGroupStory(), GROUP_STORY_DURATION);
         }
-
         function nextGroupStory() {
             if (groupStoryIndex < groupHighlights.length - 1) {
                 groupStoryIndex++;
