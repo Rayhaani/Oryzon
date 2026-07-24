@@ -466,6 +466,7 @@
     <span class="section-title">Sabbin Updates</span>
 </div>
 <div class="status-updates-list" id="statusUpdatesListContainer"></div>
+</div>
     
     <div class="premium-blur-overlay" id="globalGlassOverlay" onclick="hidePremiumOverlay()">
         <div class="glass-panel-container" onclick="event.stopPropagation()">
@@ -518,6 +519,7 @@
     <script>
     
 const statusData = [];
+const STATUS_LIFETIME_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // SHIGO DA FIREBASE CORE, FIRESTORE DA STORAGE
 const script1 = document.createElement('script');
@@ -790,9 +792,60 @@ function sortAndRenderStatus() {
             <span class="status-username">${status.username}</span>
         `;
         container.appendChild(card);
+    renderStatusUpdatesList();
     });
                 }
-        
+
+    function renderStatusUpdatesList() {
+    const listContainer = document.getElementById('statusUpdatesListContainer');
+    if (!listContainer) return;
+
+    const now = Date.now();
+    const friendsStatuses = statusData.filter(s => !s.isMe);
+    friendsStatuses.sort((a, b) => a.timestamp - b.timestamp); // oldest a sama
+
+    listContainer.innerHTML = '';
+
+    friendsStatuses.forEach(status => {
+        const elapsed = now - status.timestamp;
+        const progress = Math.min(100, (elapsed / STATUS_LIFETIME_MS) * 100);
+
+        const row = document.createElement('div');
+        row.className = 'update-list-item';
+        row.setAttribute('onclick', `openStatusMatrix('${status.id}')`);
+
+        row.innerHTML = `
+            <div class="update-info-block">
+                <img src="${status.profileImg}" class="update-avatar">
+                <div class="update-text-meta">
+                    <h3>${status.username}</h3>
+                    <p>${status.totalUpdates > 1 ? status.totalUpdates + ' sabbin updates' : 'Danna don ganin status'}</p>
+                </div>
+            </div>
+            <div class="update-timer-ring" style="--progress:${progress}"></div>
+        `;
+        listContainer.appendChild(row);
+    });
+}
+
+function refreshStatusTimers() {
+    const now = Date.now();
+    let changed = false;
+    for (let i = statusData.length - 1; i >= 0; i--) {
+        const s = statusData[i];
+        if (!s.isMe && (now - s.timestamp) >= STATUS_LIFETIME_MS) {
+            statusData.splice(i, 1);
+            changed = true;
+        }
+    }
+    if (changed) {
+        sortAndRenderStatus();
+    } else {
+        renderStatusUpdatesList();
+    }
+}
+
+setInterval(refreshStatusTimers, 60000);
     </script>
 </body>
 </html>
