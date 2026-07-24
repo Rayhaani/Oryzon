@@ -128,17 +128,29 @@
         .action-dock-btn:active { transform: scale(0.9); background: rgba(0, 242, 255, 0.2); }
 
         /* ===== FEED / CHAT MODE SWITCH — segmented "Code | Blame" style ===== */
-.mode-toggle-switch {
+      .mode-toggle-switch {
             position: relative;
             display: flex;
             background: #0d0f14;
             border: 1px solid var(--glass-border);
             border-radius: 10px;
-            padding: 2px;
+            padding: 0;
             width: 100px;
             height: 30px;
             flex-shrink: 0;
-}
+            overflow: hidden;
+        }
+        .mode-toggle-thumb {
+            position: absolute;
+            top: 0; left: 0;
+            width: 50%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 10px;
+            transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+        }
         .mode-toggle-thumb {
             position: absolute;
             top: 3px; left: 3px;
@@ -203,7 +215,7 @@
         .msg-row.incoming { align-self: flex-start; }
         .msg-row.outgoing { align-self: flex-end; flex-direction: row-reverse; }
 
-        .msg-avatar { width: 34px; height: 34px; border-radius: 12px; object-fit: cover; flex-shrink: 0; }
+        .msg-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 
         .msg-card {
             background: var(--card-incoming); border: 1px solid var(--glass-border);
@@ -396,7 +408,7 @@
 
         #timeline-area {
             padding-top: 14px !important;
-            display: flex; flex-direction: column; gap: 14px;
+            display: flex; flex-direction: column; gap: 0;
         }
         .header-icon-btn {
             width: 36px; height: 36px;
@@ -408,6 +420,18 @@
             cursor: pointer; flex-shrink: 0;
         }
         .header-icon-btn:active { background: rgba(0,242,255,0.2); }    
+   
+    .new-post-bubble {
+            width: 34px; height: 34px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0.9; flex-shrink: 0;
+            transition: opacity 0.2s ease;
+        }
+        .new-post-bubble:active { opacity: 0.5; transform: scale(0.92); }
+    @keyframes dotSequence {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.4); opacity: 1; }
+    }
     </style>
 </head>
 <body>
@@ -431,7 +455,14 @@
 
         <!-- FEED MODE HEADER CONTENT (Facebook-group style top bar) -->
         <div class="header-left-feed" id="headerLeftFeed">
-            <div class="fb-back-btn" onclick="switchMode('chat')"><i class="fa-solid fa-chevron-left"></i></div>
+            <div class="new-post-bubble" onclick="createPost()">
+                <svg width="34" height="34" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 4 C11.6 4 4 11.6 4 21 C4 30.4 11.6 38 21 38 L33.5 38 C35.5 38 37 36.5 37 34.5 C37 33 36.3 31.7 35 30.8 C36.9 28.1 38 24.7 38 21 C38 11.6 30.4 4 21 4 Z" fill="#fde08d"/>
+                    <path d="M30.8 30 C32.5 31.5 34.5 33.5 37 38 L31 38 C29.3 38 28 36.7 28 35 C28 33.2 29 31.5 30.8 30 Z" fill="#fde08d"/>
+                    <path d="M21 14V26" stroke="#1E1E1E" stroke-width="3.4" stroke-linecap="round"/>
+                    <path d="M15 20H27" stroke="#1E1E1E" stroke-width="3.4" stroke-linecap="round"/>
+                </svg>
+            </div>
             <span class="fb-header-title">Ƙungiyar Arewa 2026</span>
         </div>
 
@@ -441,7 +472,11 @@
                 <div class="mode-toggle-btn" id="toggleFeedBtn" onclick="switchMode('feed')">Feed</div>
                 <div class="mode-toggle-btn active" id="toggleChatBtn" onclick="switchMode('chat')">Chat</div>
             </div>
-           <div class="header-icon-btn" onclick="toggleEcosystem(true)"><i class="fa-solid fa-ellipsis-vertical"></i></div>       
+          <div class="header-icon-btn" onclick="toggleEcosystem(true)" style="display:flex; align-items:center; gap:3px; background:none; border:none; width:auto; height:auto; padding:0 4px;">
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.3s;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.6s;">•</span>
+          </div>      
         </div>
     </header>
 
@@ -527,7 +562,13 @@
         </div>
 
         <div class="group-info-block">
-            <div class="group-info-title">Ƙungiyar Arewa 2026</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div class="group-info-title">Ƙungiyar Arewa 2026</div>
+                <button class="invite-btn-fb" onclick="alert('Invite link copied!')" style="margin-top:0; flex-shrink:0;">
+                    <i class="fa-solid fa-user-plus"></i> Invite
+                </button>
+            </div>
+
             <div class="group-meta-row">
                 <i class="fa-solid fa-earth-africa"></i>
                 <span>Public group · 12.4K members</span>
@@ -542,11 +583,10 @@
                 <span class="stack-count">+12.4K</span>
             </div>
 
-            <button class="invite-btn-fb" onclick="alert('Invite link copied!')">
-                <i class="fa-solid fa-user-plus"></i> Invite
+            <button class="invite-btn-fb" onclick="createPost()">
+                <i class="fa-solid fa-pen-to-square"></i> Create Post
             </button>
         </div>
-
         <div id="timeline-area"></div>
     </div>
 
@@ -734,6 +774,9 @@
             if(show) modal.classList.add('active');
             else modal.classList.remove('active');
         }
+    function createPost() {
+            alert('Create Post feature coming soon...');
+    }
     </script>
 </body>
 </html>
