@@ -246,19 +246,24 @@
     border-bottom: 1px solid rgba(255,255,255,0.03);
     cursor: pointer;
 }
+.update-list-item:first-child {
+    padding-top: 0;
+}
 .update-info-block {
     display: flex;
     align-items: center;
     gap: 12px;
     overflow: hidden;
 }
-.update-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    object-fit: cover;
+.update-thumbnail {
+    width: 58px;
+    height: 76px;
+    border-radius: 8px;
+    overflow: hidden;
     flex-shrink: 0;
-    border: 1px solid rgba(255,255,255,0.1);
+    background-size: cover;
+    background-position: center;
+    background-color: #111;
 }
 .update-text-meta { overflow: hidden; }
 .update-text-meta h3 {
@@ -786,13 +791,13 @@ function fetchStatusesFromFirebase() {
         statusData.push(
             {
                 id: "ramatu", username: "Ramatu Arahman", isMe: false,
-                profileImg: "https://placehold.co/40x40/333333/FFFFFF",
+                profileImg: "https://placehold.co/40x40/333333/FFFFFF?text=RA",
                 previewImg: "https://placehold.co/150x250/333333/FFFFFF?text=Ramatu+Update",
                 timestamp: Date.now() - 1440000, totalUpdates: 1, viewedCount: 1
             },
             {
                 id: "ahmad", username: "Ahmad Tech Hub", isMe: false,
-                profileImg: "https://placehold.co/40x40/444444/FFFFFF",
+                profileImg: "https://placehold.co/40x40/444444/FFFFFF?text=AT",
                 previewImg: "https://placehold.co/150x250/444444/FFFFFF?text=Ahmad+Update",
                 timestamp: Date.now() - 7200000, totalUpdates: 1, viewedCount: 0
             }
@@ -816,8 +821,8 @@ function renderDefaultBackupStatuses() {
     statusData.length = 0;
     statusData.push(
         { id: "my-status", username: "My Status", isMe: true, profileImg: "https://placehold.co/40x40/111111/FFFFFF?text=Me", previewImg: "https://placehold.co/150x250/111111/FFFFFF?text=No+Update", timestamp: Date.now(), viewedCount: 0, totalUpdates: 0 },
-        { id: "ramatu", username: "Ramatu Arahman", isMe: false, profileImg: "https://placehold.co/40x40/333333/FFFFFF", previewImg: "https://placehold.co/150x250/333333/FFFFFF?text=Ramatu+Update", caption: "Beautiful sunset today 🌅", timestamp: Date.now() - 1440000, totalUpdates: 1, viewedCount: 1 },
-        { id: "ahmad", username: "Ahmad Tech Hub", isMe: false, profileImg: "https://placehold.co/40x40/444444/FFFFFF", previewImg: "https://placehold.co/150x250/444444/FFFFFF?text=Ahmad+Update", timestamp: Date.now() - 7200000, totalUpdates: 1, viewedCount: 0 }
+       { id: "ramatu", username: "Ramatu Arahman", isMe: false, profileImg: "https://placehold.co/40x40/333333/FFFFFF?text=RA", previewImg: "https://placehold.co/150x250/333333/FFFFFF?text=Ramatu+Update", caption: "Beautiful sunset today 🌅", timestamp: Date.now() - 1440000, totalUpdates: 1, viewedCount: 1 },
+        { id: "ahmad", username: "Ahmad Tech Hub", isMe: false, profileImg: "https://placehold.co/40x40/444444/FFFFFF?text=AT", previewImg: "https://placehold.co/150x250/444444/FFFFFF?text=Ahmad+Update", timestamp: Date.now() - 7200000, totalUpdates: 1, viewedCount: 0 } 
     );
     if (typeof sortAndRenderStatus === "function") {
         sortAndRenderStatus();
@@ -899,10 +904,10 @@ function sortAndRenderStatus() {
 
         row.innerHTML = `
             <div class="update-info-block">
-                <img src="${status.profileImg}" class="update-avatar">
+                <div class="update-thumbnail" style="background-image:url('${status.previewImg}')"></div>
                 <div class="update-text-meta">
                     <h3>${status.username}</h3>
-                    <p>${status.totalUpdates > 1 ? status.totalUpdates + ' sabbin updates' : 'Danna don ganin status'}</p>
+                    <p>${status.caption ? status.caption : 'Tap to view status'}</p>
                 </div>
             </div>
             <div class="update-timer-ring" style="--progress:${progress}"></div>
