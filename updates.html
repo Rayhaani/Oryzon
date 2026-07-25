@@ -527,18 +527,45 @@
             background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 60%);
             z-index: 2;
         }
+    .search-bar-container {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px 14px 16px;
+}
+.search-bar-container.active {
+    display: flex;
+}
+.search-input {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 14px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+}
+.search-input::placeholder {
+    color: rgba(255,255,255,0.4);
+}
     </style>
 </head>
 <body>
 
     <div class="nexus-updates-container">
         
-        <div class="updates-header">
+      <div class="updates-header">
             <h1>Updates</h1>
             <div class="header-icons">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleSearchBar()" style="cursor:pointer;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
         </div>
+
+        <div class="search-bar-container" id="searchBarContainer">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search updates..." oninput="filterUpdatesBySearch(this.value)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleSearchBar()" style="cursor:pointer; flex-shrink:0;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>  
 
      <div class="status-horizontal-reel" id="statusReelContainer"></div>
 
@@ -814,6 +841,30 @@ function fetchStatusesFromFirebase() {
     });
 }
 
+let searchQuery = '';
+
+function toggleSearchBar() {
+    const bar = document.getElementById('searchBarContainer');
+    const input = document.getElementById('searchInput');
+    bar.classList.toggle('active');
+    if (bar.classList.contains('active')) {
+        input.focus();
+    } else {
+        input.value = '';
+        searchQuery = '';
+        sortAndRenderStatus();
+    }
+}
+
+function filterUpdatesBySearch(value) {
+    searchQuery = value;
+    sortAndRenderStatus();
+}
+
+function matchesSearch(status) {
+    if (!searchQuery) return true;
+    return status.username.toLowerCase().includes(searchQuery.toLowerCase());
+        }
 function renderDefaultBackupStatuses() {
     statusData.length = 0;
     statusData.push(
@@ -830,7 +881,7 @@ function sortAndRenderStatus() {
     if (statusData.length === 0) return;
 
     const myStatusNode = statusData.find(s => s.isMe);
-    const others = statusData.filter(s => !s.isMe);
+    const others = statusData.filter(s => !s.isMe && matchesSearch(s));
 
     others.sort((a, b) => {
         const aFullyViewed = a.viewedCount >= a.totalUpdates;
@@ -886,7 +937,7 @@ function sortAndRenderStatus() {
     if (!listContainer) return;
 
     const now = Date.now();
-    const friendsStatuses = statusData.filter(s => !s.isMe);
+    const friendsStatuses = statusData.filter(s => !s.isMe && matchesSearch(s));
     friendsStatuses.sort((a, b) => a.timestamp - b.timestamp); // oldest a sama
 
     listContainer.innerHTML = '';
@@ -949,7 +1000,7 @@ function renderStatusUpdatesGrid() {
     if (!gridContainer) return;
 
     const now = Date.now();
-    const friendsStatuses = statusData.filter(s => !s.isMe);
+    const friendsStatuses = statusData.filter(s => !s.isMe && matchesSearch(s));
     friendsStatuses.sort((a, b) => a.timestamp - b.timestamp);
 
     gridContainer.innerHTML = '';
