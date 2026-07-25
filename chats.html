@@ -437,35 +437,56 @@
             color: var(--cyan-neon);
         }
         
-
-        
+        .header-icons {
+    display: flex;
+    gap: 16px;
+}
+.search-bar-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    display: flex; align-items: center;
+    gap: 10px; padding: 0 16px;
+    opacity: 0; pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 20;
+}
+.search-bar-container.active {
+    opacity: 1; pointer-events: all;
+}
+.search-input {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 8px 14px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+}
+.search-input:focus {
+    border-color: var(--cyan-neon);
+}
+.search-input::placeholder {
+    color: rgba(255,255,255,0.4);
+}
     </style>
 </head>
 <body>
     <header>
         <div class="header-top">
-            <h1>Messages</h1>
+            <h1>Chats</h1>
             
-            <div class="nexus-hud-controller">
-                <div class="hud-btn" onclick="toggleIntegratedSearch(true)">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2">
-                        <path d="M15 15l5 5"/>
-                        <circle cx="11" cy="11" r="7"/>
-                    </svg>
-                </div>
-                <div class="hud-btn" onclick="openCarpetPortal()" style="border-left: 1px solid rgba(0,242,255,0.15); padding-left: 10px; margin-left: 8px;">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5">
-                        <path d="M12 4v16M4 12h16"/>
-                    </svg>
-                </div>
+           <div class="header-icons">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleSearchBar()" style="cursor:pointer;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
 
-            <div class="integrated-search-box" id="integratedSearch">
-                <input type="text" id="mainSearchInput" placeholder="Search secure transmission..." oninput="filterActiveChats(this.value)">
-                <div class="hud-btn" onclick="toggleIntegratedSearch(false)" style="color: var(--cyan-neon);">
+            <div class="search-bar-container" id="searchBarContainer">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search chats..." oninput="filterActiveChats(this.value)">
+                <div onclick="toggleSearchBar()" style="cursor:pointer; color: var(--cyan-neon); display:flex; align-items:center;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </div>
-            </div>
+            </div> 
         </div>
 
         <div class="smart-btn-group">
@@ -953,6 +974,17 @@
             db.collection("personalChats").onSnapshot(() => { loadChats(); });
             db.collection("friends").onSnapshot(() => { loadFriendsList(); });
         }); 
+        function toggleSearchBar() {
+    const bar = document.getElementById('searchBarContainer');
+    const input = document.getElementById('searchInput');
+    bar.classList.toggle('active');
+    if (bar.classList.contains('active')) {
+        input.focus();
+    } else {
+        input.value = '';
+        filterActiveChats('');
+    }
+        }
     </script>
 </body>
 </html>
