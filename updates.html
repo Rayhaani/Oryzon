@@ -284,6 +284,91 @@
     border-radius: 50%;
     background: #000;
 }
+.view-toggle-group {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 3px;
+}
+.view-toggle-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    width: 30px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.view-toggle-btn.active {
+    background: rgba(255,255,255,0.1);
+    color: var(--cyan-neon);
+}
+
+/* GRID VIEW */
+.status-updates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 16px 16px 16px;
+}
+.grid-status-card {
+    position: relative;
+    aspect-ratio: 3/4;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+    background-color: #111;
+}
+.grid-status-card::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: 0; width: 100%; height: 55%;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+}
+.grid-card-avatar-ring {
+    position: absolute;
+    top: 10px; left: 10px;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    padding: 2px;
+    z-index: 2;
+    background: conic-gradient(var(--cyan-neon) calc(var(--gprogress) * 1%), rgba(255,255,255,0.15) 0);
+}
+.grid-card-avatar-ring img {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #000;
+}
+.grid-card-count {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+}
+.grid-card-name {
+    position: absolute;
+    left: 10px; bottom: 10px; right: 10px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    z-index: 2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    }
         /* =================================================== */
         /* PREMIUM GLASSMORPHIC OVERLAY SYSTEM                 */
         /* =================================================== */
@@ -455,11 +540,19 @@
 
      <div class="status-horizontal-reel" id="statusReelContainer"></div>
 
-        <div class="section-title-area">
-            <span class="section-title">Recent Updates</span>
-        </div>
-        <div class="status-updates-list" id="statusUpdatesListContainer"></div>
-
+       <div class="section-title-area">
+    <span class="section-title">Expiring Soon</span>
+    <div class="view-toggle-group">
+        <button class="view-toggle-btn active" id="listViewBtn" onclick="setUpdatesView('list')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <button class="view-toggle-btn" id="gridViewBtn" onclick="setUpdatesView('grid')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+    </div>
+</div>
+<div class="status-updates-list" id="statusUpdatesListContainer"></div>
+<div class="status-updates-grid" id="statusUpdatesGridContainer" style="display:none;"></div> 
     </div>
         
     <div class="premium-blur-overlay" id="globalGlassOverlay" onclick="hidePremiumOverlay()">
@@ -822,6 +915,67 @@ function sortAndRenderStatus() {
     });
 }
 
+let currentUpdatesView = 'list';
+
+function setUpdatesView(view) {
+    currentUpdatesView = view;
+    const listContainer = document.getElementById('statusUpdatesListContainer');
+    const gridContainer = document.getElementById('statusUpdatesGridContainer');
+    const listBtn = document.getElementById('listViewBtn');
+    const gridBtn = document.getElementById('gridViewBtn');
+
+    if (view === 'list') {
+        listContainer.style.display = 'flex';
+        gridContainer.style.display = 'none';
+        listBtn.classList.add('active');
+        gridBtn.classList.remove('active');
+    } else {
+        listContainer.style.display = 'none';
+        gridContainer.style.display = 'grid';
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    }
+    renderActiveUpdatesView();
+}
+
+function renderActiveUpdatesView() {
+    if (currentUpdatesView === 'list') {
+        renderStatusUpdatesList();
+    } else {
+        renderStatusUpdatesGrid();
+    }
+}
+
+function renderStatusUpdatesGrid() {
+    const gridContainer = document.getElementById('statusUpdatesGridContainer');
+    if (!gridContainer) return;
+
+    const now = Date.now();
+    const friendsStatuses = statusData.filter(s => !s.isMe);
+    friendsStatuses.sort((a, b) => a.timestamp - b.timestamp);
+
+    gridContainer.innerHTML = '';
+
+    friendsStatuses.forEach(status => {
+        const elapsed = now - status.timestamp;
+        const progress = Math.min(100, (elapsed / STATUS_LIFETIME_MS) * 100);
+
+        const card = document.createElement('div');
+        card.className = 'grid-status-card';
+        card.style.backgroundImage = `url('${status.previewImg}')`;
+        card.setAttribute('onclick', `openStatusMatrix('${status.id}')`);
+
+        card.innerHTML = `
+            <div class="grid-card-avatar-ring" style="--gprogress:${progress}">
+                <img src="${status.profileImg}">
+            </div>
+            ${status.totalUpdates > 1 ? `<div class="grid-card-count">${status.totalUpdates}</div>` : ''}
+            <span class="grid-card-name">${status.username}</span>
+        `;
+        gridContainer.appendChild(card);
+    });
+        }
+        
 function refreshStatusTimers() {
     const now = Date.now();
     let changed = false;
