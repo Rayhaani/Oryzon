@@ -1359,7 +1359,8 @@ body {
     </div>
 
     <div class="footer-icon" onclick="window.location.href='chats.html'">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 11-7.6-12.7 8.38 8.38 0 013.8.9L21 3z"/></svg>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 11-7.6-12.7 8.38 8.38 0 013.8.9L21 3z"/></svg>
+    <span class="notif-badge" id="chatBadgeCount">0</span>
     </div>
 
     <div class="footer-icon" onclick="window.location.href='nexus-feed.html'">
@@ -1622,6 +1623,24 @@ window.addEventListener('DOMContentLoaded', () => {
               }, err => console.error('Notif badge error:', err));
       }
       listenNotifBadgeCount();
+    // ============================================================
+// CHAT/MESSAGE BADGE (real-time) — bin tsarin listenNotifBadgeCount
+// don guje wa composite index, ana ƙidaya unread a JS
+// ============================================================
+function listenChatBadgeCount() {
+    if (!currentUser) return;
+    db.collection('messages')
+        .where('to', '==', currentUser)
+        .onSnapshot(snapshot => {
+            const badge = document.getElementById('chatBadgeCount');
+            if (!badge) return;
+            let count = 0;
+            snapshot.forEach(doc => { if (doc.data().read === false) count++; });
+            badge.textContent = count > 9 ? '9+' : count;
+            badge.classList.toggle('show', count > 0);
+        }, err => console.error('Chat badge error:', err));
+}
+listenChatBadgeCount();
 
       window.addEventListener('DOMContentLoaded', () => {
     NexusAlgorithm.init(currentUser);  // ← Sabon algorithm
