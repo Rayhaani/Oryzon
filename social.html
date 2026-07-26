@@ -1623,25 +1623,26 @@ window.addEventListener('DOMContentLoaded', () => {
               }, err => console.error('Notif badge error:', err));
       }
       listenNotifBadgeCount();
-    // ============================================================
-// CHAT/MESSAGE BADGE (real-time) — bin tsarin listenNotifBadgeCount
-// don guje wa composite index, ana ƙidaya unread a JS
-// ============================================================
+
 function listenChatBadgeCount() {
     if (!currentUser) return;
-    db.collection('messages')
-        .where('to', '==', currentUser)
+    db.collection('personalChats')
         .onSnapshot(snapshot => {
             const badge = document.getElementById('chatBadgeCount');
             if (!badge) return;
-            let count = 0;
-            snapshot.forEach(doc => { if (doc.data().read === false) count++; });
-            badge.textContent = count > 9 ? '9+' : count;
-            badge.classList.toggle('show', count > 0);
+            let total = 0;
+            snapshot.forEach(doc => {
+                const chatId = doc.id;
+                if (!chatId.includes(currentUser)) return;
+                const data = doc.data();
+                const unread = data.unreadCount && data.unreadCount[currentUser];
+                if (typeof unread === 'number') total += unread;
+            });
+            badge.textContent = total > 9 ? '9+' : total;
+            badge.classList.toggle('show', total > 0);
         }, err => console.error('Chat badge error:', err));
 }
 listenChatBadgeCount();
-
       window.addEventListener('DOMContentLoaded', () => {
     NexusAlgorithm.init(currentUser);  // ← Sabon algorithm
     loadFooterProfile();
