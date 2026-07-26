@@ -726,6 +726,39 @@
         let identifiedContacts = new Set(); 
         let currentPortalMode = "menu"; 
 
+        function formatChatTime(ts) {
+    if (!ts) return "";
+    const now = new Date();
+    const msgDate = new Date(ts);
+    const diffMin = (now - msgDate) / 60000;
+
+    if (diffMin < 1) return "Now";
+
+    if (now.toDateString() === msgDate.toDateString()) {
+        let hours = msgDate.getHours();
+        const minutes = msgDate.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12; hours = hours ? hours : 12;
+        return `${hours}:${minutes} ${ampm}`;
+    }
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (yesterday.toDateString() === msgDate.toDateString()) return "Yesterday";
+
+    const dd = msgDate.getDate().toString().padStart(2, '0');
+    const mm = (msgDate.getMonth() + 1).toString().padStart(2, '0');
+    return `${dd}/${mm}/${msgDate.getFullYear()}`;
+}
+
+function refreshAllChatTimes() {
+    document.querySelectorAll('.time[data-ts]').forEach(el => {
+        const ts = parseInt(el.getAttribute('data-ts'), 10);
+        if (ts) el.textContent = formatChatTime(ts);
+    });
+}
+setInterval(refreshAllChatTimes, 30000);
+        
         async function loadChats() {
             const container = document.getElementById('chats-list-container');
             container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
@@ -757,15 +790,7 @@
                     const data = doc.data();
                     const lastMsg = data.lastMessage || "Tap to open chat";
                     
-                    let lastTime = "";
-                    if (data.lastMessageTime) {
-                        const dateObj = new Date(data.lastMessageTime);
-                        let hours = dateObj.getHours();
-                        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-                        const ampm = hours >= 12 ? 'PM' : 'AM';
-                        hours = hours % 12; hours = hours ? hours : 12; 
-                        lastTime = `${hours}:${minutes} ${ampm}`;
-                    }
+                    const lastTime = formatChatTime(data.lastMessageTime);
                     
                     const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${rawUser}`;
                     hasChats = true;
@@ -776,10 +801,12 @@
                             <div class="chat-details">
                                 <div class="chat-header">
                                     <span class="name" id="name-${rawUser}">${initialName}</span>
-                                    <span class="time">${lastTime}</span>
+                                    <span class="time" data-ts="${data.lastMessageTime || ''}">${lastTime}</span>
                                 </div>
-                             <p class="preview-text">${lastMsg}</p>
-                   ${(data.unreadCount && data.unreadCount[myId] > 0) ? `<span class="notif-badge show" style="position:static; display:inline-flex; margin-left:6px;">${data.unreadCount[myId] > 9 ? '9+' : data.unreadCount[myId]}</span>` : ''}
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <p class="preview-text">${lastMsg}</p>
+                                    ${(data.unreadCount && data.unreadCount[myId] > 0) ? `<span class="notif-badge show" style="position:static; display:inline-flex; flex-shrink:0; margin-left:8px;">${data.unreadCount[myId] > 9 ? '9+' : data.unreadCount[myId]}</span>` : ''}
+                                </div>
                             </div>
                         </a>
                     `);
