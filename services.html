@@ -3543,12 +3543,18 @@ body {
     button:not(.emergency-btn):first-child:not(:last-child) {
         background: #ffffff !important;
     }
+
+    #active-orders-list.expanded { max-height: 400px; overflow-y: auto; margin-top: 8px; }
+.active-order-row { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.active-order-row:last-child { margin-bottom: 0; }
+.active-order-left { display:flex; flex-direction:column; gap:2px; }
+.active-order-name { font-size:12px; font-weight:700; color:#ffffff; }
+.active-order-sub { font-size:10px; color:rgba(255,255,255,0.4); }
+.active-order-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-right:6px; }
     </style>
 </head>
 <body>
-
-    <div id="wrapper" style="maxWidth: 430px; margin: 0 auto; min-height: 100vh; background: transparent; position: relative; padding-bottom: 60px; box-shadow: 0 0 30px rgba(0,0,0,0.3);">
-        
+    <div id="wrapper" style="maxWidth: 430px; margin: 0 auto; min-height: 100vh; background: transparent; position: relative; padding-bottom: 60px; box-shadow: 0 0 30px rgba(0,0,0,0.3);">      
         <!-- Header Dynamic View Area -->
         <div class="aurora-header">
            <div style="display: flex; align-items: center; position: relative;">
@@ -3561,7 +3567,6 @@ body {
 </div>
 
 <!-- 🔔 NOTIFICATION BELL -->
-<button onclick="openCustomerOrders()" style="background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:6px 12px;color:#ffffff;font-size:11px;font-weight:800;cursor:pointer;margin-left:8px;flex-shrink:0;">📦 Orders</button>
     <div class="notif-bell-wrapper" style="margin-left:10px;"> 
     <div class="notif-bell-btn" id="notif-bell-btn" onclick="toggleNotifPanel()">
         <span class="bell-icon" style="font-size:16px;">🔔</span>
@@ -3618,6 +3623,17 @@ body {
             </div>
         </div>
 
+        <!-- 🟡 Active Orders Banner (dynamic) -->
+<div id="active-orders-banner" style="display:none;margin:12px 16px 0 16px;">
+    <div id="active-orders-bar" onclick="toggleActiveOrdersList()" style="background:rgba(253,224,141,0.12);border:1px solid rgba(253,224,141,0.35);border-radius:16px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span id="active-orders-dot" style="width:8px;height:8px;border-radius:50%;background:#fbbf24;flex-shrink:0;"></span>
+            <span id="active-orders-summary" style="font-size:12px;font-weight:800;color:#ffffff;">1 Active Order</span>
+        </div>
+        <span id="active-orders-chevron" style="color:#fde08d;font-size:12px;transition:transform 0.2s;">▾</span>
+    </div>
+    <div id="active-orders-list" style="max-height:0;overflow:hidden;transition:max-height 0.25s ease;"></div>
+</div>
         <!-- MAIN MAIN VIEW CANVAS PANEL LAYOUT FRAME -->
         <div id="main-view" class="fade-in">
             <div id="locating-status" style="display: none; padding: 24px 20px 0; text-align: center; color: #1d4ed8; font-weight: 600; font-size: 13px;">
@@ -11691,6 +11707,63 @@ function closeCustomerOrders() {
     document.getElementById('customer-orders-overlay').style.display = 'none';
 }
 
+const ACTIVE_ORDER_STATUS_MAP = {
+    pending:    { label: 'Pending',    color: '#fbbf24' },
+    confirmed:  { label: 'Accepted',   color: '#3b82f6' },
+    in_progress:{ label: 'In Progress',color: '#3b82f6' },
+    ready:      { label: 'Ready',      color: '#22c55e' },
+    completed:  { label: 'Completed',  color: '#22c55e' },
+    cancelled:  { label: 'Cancelled',  color: '#ef4444' }
+};
+let activeOrdersListExpanded = false;
+
+async function refreshActiveOrdersBanner() {
+    const banner = document.getElementById('active-orders-banner');
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser || typeof firebase === 'undefined' || !firebase.database) { banner.style.display = 'none'; return; }
+    try {
+        const snap = await firebase.database().ref(`customers/${sessionUser}/sentRequests`).once('value');
+        const data = snap.val() || {};
+        const activeOrders = Object.entries(data)
+            .map(([id, o]) => ({ id, ...o }))
+            .filter(o => o.status !== 'cancelled' && o.status !== 'completed')
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        if (activeOrders.length === 0) { banner.style.display = 'none'; return; }
+        banner.style.display = 'block';
+        document.getElementById('active-orders-summary').textContent =
+            activeOrders.length === 1 ? '1 Active Order' : `${activeOrders.length} Active Orders`;
+
+        document.getElementById('active-orders-list').innerHTML = activeOrders.map(o => {
+            const meta = ACTIVE_ORDER_STATUS_MAP[o.status] || ACTIVE_ORDER_STATUS_MAP.pending;
+            return `<div class="active-order-row" onclick="openActiveOrderDetail('${o.proId||''}','${o.id}')">
+                <div class="active-order-left">
+                    <span class="active-order-name">${o.itemName || o.jobDescription || 'Service Request'}</span>
+                    <span class="active-order-sub">${o.proName || ''}${o.eta ? ' · ' + o.eta : ''}</span>
+                </div>
+                <div style="display:flex;align-items:center;">
+                    <span class="active-order-status-dot" style="background:${meta.color};"></span>
+                    <span style="font-size:10px;font-weight:800;color:${meta.color};">${meta.label}</span>
+                </div></div>`;
+        }).join('');
+    } catch (err) { console.warn('refreshActiveOrdersBanner error:', err); banner.style.display = 'none'; }
+}
+
+function toggleActiveOrdersList() {
+    activeOrdersListExpanded = !activeOrdersListExpanded;
+    const list = document.getElementById('active-orders-list');
+    const chevron = document.getElementById('active-orders-chevron');
+    list.classList.toggle('expanded', activeOrdersListExpanded);
+    chevron.style.transform = activeOrdersListExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function openActiveOrderDetail(proId, requestId) {
+    if (proId && requestId) showOrderStatusOverlay(proId, requestId);
+    else openCustomerOrders();
+}
+
+document.addEventListener('DOMContentLoaded', () => { refreshActiveOrdersBanner(); });
+    
 // ── ALERT ADMIN ON NEW ORDER ──
 async function alertAdminNewOrder(orderData) {
     try {
