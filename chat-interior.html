@@ -496,6 +496,10 @@ window.addEventListener('pageshow', (e) => {
     setTimeout(() => { cf.scrollTop = cf.scrollHeight; }, 300);
 });
 function listenToNexusMessages() {
+    db.collection('personalChats').doc(chatRoomId).set({
+        [`unreadCount.${myId}`]: 0
+    }, { merge: true }).catch(err => console.error('Reset unread error:', err));
+
     db.collection('personalChats').doc(chatRoomId).collection('messages')
       .orderBy('timestamp', 'asc')
       .onSnapshot((snapshot) => {
@@ -583,7 +587,8 @@ async function sendNeuralMessage() {
     }).then(() => db.collection('personalChats').doc(chatRoomId).set({
         lastMessage: text.substring(0, 60),
         lastMessageTime: Date.now(),
-        members: [myId, chatWith]
+        members: [myId, chatWith],
+        [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
     }, { merge: true })).catch((err) => {
         console.error('Nexus send error:', err);
         alert('Sakon bai tafi ba: ' + err.message);
@@ -632,7 +637,8 @@ async function uploadAndSendMedia(file, kind) {
             senderId: myId, receiverId: chatWith, type: kind, mediaUrl: data.url, timestamp: Date.now()
         });
         await db.collection('personalChats').doc(chatRoomId).set({
-            lastMessage: lastLabel, lastMessageTime: Date.now(), members: [myId, chatWith]
+            lastMessage: lastLabel, lastMessageTime: Date.now(), members: [myId, chatWith],
+            [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
         }, { merge: true });
     } catch (err) {
         console.error('Media upload error:', err);
@@ -1020,7 +1026,8 @@ async function uploadAndSendMediaGroup(files) {
             senderId: myId, receiverId: chatWith, type: 'imageGroup', mediaArr: uploaded, timestamp: Date.now()
         });
         await db.collection('personalChats').doc(chatRoomId).set({
-            lastMessage: `📷 ${uploaded.length} Photos`, lastMessageTime: Date.now(), members: [myId, chatWith]
+            lastMessage: `📷 ${uploaded.length} Photos`, lastMessageTime: Date.now(), members: [myId, chatWith],
+            [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
         }, { merge: true });
     } catch (err) {
         console.error('Group media upload error:', err);
