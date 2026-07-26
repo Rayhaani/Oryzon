@@ -200,19 +200,37 @@
             overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .time {
-            font-size: 9px; color: var(--cyan-neon);
-            background: rgba(0, 242, 255, 0.08);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-family: 'Orbitron', sans-serif;
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.45);
             flex-shrink: 0;
         }
         .preview-text {
             font-size: 12px; color: var(--text-dim);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
+        .chat-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 6px;
+            flex-shrink: 0;
+            min-width: 20px;
+        }
+        .wa-unread-badge {
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 10px;
+            background: #25D366;
+            color: #051a0f;
+            font-size: 11.5px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
         /* STYLES FOR PAGES SECTION COPIED FROM UPDATES */
         .section-title-area {
             display: flex;
@@ -795,18 +813,19 @@ setInterval(refreshAllChatTimes, 30000);
                     const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${rawUser}`;
                     hasChats = true;
                     
+                    const unreadNum = data.unreadCount && data.unreadCount[myId] > 0 ? data.unreadCount[myId] : 0;
+                    const unreadLabel = unreadNum > 99 ? '99+' : unreadNum;
+
                     container.insertAdjacentHTML('beforeend', `
                         <a href="chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item" id="chat-link-${rawUser}">
                             <div class="profile-stack" id="stack-${rawUser}" data-online="false"><img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img"></div>
                             <div class="chat-details">
-                                <div class="chat-header">
-                                    <span class="name" id="name-${rawUser}">${initialName}</span>
-                                    <span class="time" data-ts="${data.lastMessageTime || ''}">${lastTime}</span>
-                                </div>
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <p class="preview-text">${lastMsg}</p>
-                                    ${(data.unreadCount && data.unreadCount[myId] > 0) ? `<span class="notif-badge show" style="position:static; display:inline-flex; flex-shrink:0; margin-left:8px;">${data.unreadCount[myId] > 9 ? '9+' : data.unreadCount[myId]}</span>` : ''}
-                                </div>
+                                <span class="name" id="name-${rawUser}">${initialName}</span>
+                                <p class="preview-text">${lastMsg}</p>
+                            </div>
+                            <div class="chat-meta">
+                                <span class="time" data-ts="${data.lastMessageTime || ''}">${lastTime}</span>
+                                ${unreadNum > 0 ? `<span class="wa-unread-badge">${unreadLabel}</span>` : ''}
                             </div>
                         </a>
                     `);
