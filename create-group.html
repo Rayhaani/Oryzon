@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>New Message - Nexus</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body {
+        background-color: #050505;
+        color: #fff;
+        min-height: 100vh;
+        padding-bottom: 30px;
+    }
+    header { padding: 12px 16px 8px 16px; }
+    .header-top { display: flex; align-items: center; gap: 14px; }
+    .back-trigger { cursor: pointer; display: flex; align-items: center; flex-shrink:0; }
+    .header-top h1 { font-size: 21px; font-weight: 700; flex: 1; }
+    .sort-icon { cursor: pointer; flex-shrink: 0; }
+
+    .search-bar-wrap {
+        margin: 10px 16px 0 16px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+    }
+    .search-bar-wrap input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #fff;
+        font-size: 14px;
+    }
+    .search-bar-wrap input::placeholder { color: rgba(255,255,255,0.4); }
+    .search-bar-wrap svg { flex-shrink: 0; }
+
+    .action-card { margin-top: 6px; }
+    .quick-action-item {
+        display: flex; align-items: center; gap: 14px;
+        padding: 8px 16px;
+        cursor: pointer;
+    }
+    .quick-action-item:active { background: rgba(255,255,255,0.04); }
+    .quick-action-icon {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .quick-action-item h3 { font-size: 15px; font-weight: 500; }
+    .action-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0 16px 0 66px; }
+
+    .contacts-card { margin-top: 8px; }
+    .sorted-label {
+        padding: 10px 16px 6px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #4FA3E3;
+    }
+    .contact-row {
+        display: flex; align-items: center; gap: 12px;
+        padding: 6px 16px;
+        cursor: pointer;
+    }
+    .contact-row:active { background: rgba(255,255,255,0.04); }
+    .contact-avatar {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+    }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+.online-dot {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #3ECF6E;
+    border: 2px solid #050505;
+      }
+    .contact-meta h3 { font-size: 15px; font-weight: 500; }
+    .contact-meta p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+
+    .fab-add-contact {
+        position: fixed;
+        bottom: 24px;
+        right: 20px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #2F8CE0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        z-index: 50;
+    }
+  .ai-suggestion-card {
+    margin: 10px 16px 0 16px;
+    background: rgba(142, 111, 240, 0.08);
+    border: 1px solid rgba(142, 111, 240, 0.25);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.ai-suggestion-avatars { display: flex; flex-shrink: 0; }
+.ai-suggestion-avatars .contact-avatar {
+    width: 32px; height: 32px;
+    font-size: 12px;
+    margin-left: -10px;
+    border: 2px solid #050505;
+}
+.ai-suggestion-avatars .contact-avatar:first-child { margin-left: 0; }
+.ai-suggestion-text { flex: 1; }
+.ai-suggestion-text .label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8E6FF0;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+.ai-suggestion-text p { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+.ai-suggestion-btn {
+    background: #8E6FF0;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+      }
+</style>
+</head>
+<body>
+
+    <header>
+        <div class="header-top">
+            <div class="back-trigger" onclick="window.location.href='chats.html'">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+            </div>
+            <h1>New Message</h1>
+            <div class="sort-icon">
+                <svg width="24" height="20" viewBox="0 0 24 20" fill="none">
+                    <line x1="0" y1="2" x2="18" y2="2" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="0" y1="10" x2="14" y2="10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="0" y1="18" x2="10" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <text x="19" y="19" font-size="13" font-weight="700" fill="white">A</text>
+                </svg>
+            </div>
+        </div>
+
+        <div class="search-bar-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Search Contacts" oninput="filterContacts(this.value)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+        </div>
+    </header>
+
+    <div class="action-card">
+        <div class="quick-action-item" onclick="alert('New Group')">
+            <div class="quick-action-icon" style="background:#2F8CE0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M17 20v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3>New Group</h3>
+        </div>
+        <div class="action-divider"></div>
+        <div class="quick-action-item" onclick="alert('New Page')">
+            <div class="quick-action-icon" style="background:#8E6FF0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M4 3h12l4 4v14H4z"/><path d="M16 3v4h4"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>
+            </div>
+            <h3>New Page</h3>
+        </div>
+        <div class="action-divider"></div>
+        <div class="quick-action-item" onclick="alert('New Channel')">
+            <div class="quick-action-icon" style="background:#3EC95F;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 8a5 5 0 0 1 0 8"/><path d="M18 5a9 9 0 0 1 0 14"/></svg>
+            </div>
+            <h3>New Channel</h3>
+        </div>
+    </div>
+
+<div class="ai-suggestion-card" id="aiSuggestionCard" style="display:none;">
+        <div class="ai-suggestion-avatars" id="aiSuggestionAvatars"></div>
+        <div class="ai-suggestion-text">
+            <div class="label">✨ AI Suggested Group</div>
+            <p id="aiSuggestionNames"></p>
+        </div>
+        <div class="ai-suggestion-btn" onclick="createSuggestedGroup()">Create</div>
+    </div>
+
+    <div class="contacts-card">
+        <div class="sorted-label">Sorted by last seen time</div>
+        <div id="contactsListContainer"></div>
+    </div>
+
+    <div class="fab-add-contact" onclick="alert('Add new contact')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+    </div>
+
+<script>
+    const contactsData = [
+        { id: "c1", name: "Abdul Cairo", status: "last seen recently", color: "#3B6EA5", initials: "AC", online: true, frequent: true },
+        { id: "c2", name: "Adeola", status: "last seen recently", color: "#D65A8C", initials: "A", online: false, frequent: false },
+        { id: "c3", name: "Ahmad (Diddy)", status: "last seen recently", color: "#333333", initials: "A", online: true, frequent: true },
+        { id: "c4", name: "Ahmad Ghazali", status: "last seen recently", color: "#555555", initials: "AG", online: false, frequent: false },
+        { id: "c5", name: "Amina Abubakar", status: "last seen recently", color: "#E0507A", initials: "AA", online: false, frequent: true },
+        { id: "c6", name: "Amina Aliyu", status: "last seen recently", color: "#3D8FE0", initials: "AM", online: true, frequent: false },
+        { id: "c7", name: "Aminu S. Khalid", status: "last seen recently", color: "#2E5D4E", initials: "AK", online: false, frequent: false },
+        { id: "c8", name: "Anti~Acid", status: "last seen recently", color: "#C7893D", initials: "A", online: false, frequent: false },
+        { id: "c9", name: "Bashir", status: "last seen recently", color: "#B8791F", initials: "B", online: false, frequent: false }
+    ];
+
+    function renderContacts(list) {
+        const container = document.getElementById('contactsListContainer');
+        container.innerHTML = '';
+        list.forEach(c => {
+            const row = document.createElement('div');
+            row.className = 'contact-row';
+            row.setAttribute('onclick', `selectContact('${c.id}')`);
+            row.innerHTML = `
+                <div class="avatar-wrap">
+                    <div class="contact-avatar" style="background:${c.color}">${c.initials}</div>
+                    ${c.online ? '<div class="online-dot"></div>' : ''}
+                </div>
+                <div class="contact-meta">
+                    <h3>${c.name}</h3>
+                    <p>${c.status}</p>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+  
+    function selectContact(id) {
+        console.log('Selected', id);
+    }
+
+    function filterContacts(query) {
+        const q = query.toLowerCase();
+        renderContacts(contactsData.filter(c => c.name.toLowerCase().includes(q)));
+    }
+
+    renderContacts(contactsData);
+
+    function renderAiSuggestion() {
+        const frequentContacts = contactsData.filter(c => c.frequent);
+        const card = document.getElementById('aiSuggestionCard');
+        if (frequentContacts.length < 2) {
+            card.style.display = 'none';
+            return;
+        }
+        card.style.display = 'flex';
+        document.getElementById('aiSuggestionAvatars').innerHTML = frequentContacts.slice(0, 3).map(c =>
+            `<div class="contact-avatar" style="background:${c.color}">${c.initials}</div>`
+        ).join('');
+        document.getElementById('aiSuggestionNames').textContent = frequentContacts.slice(0, 3).map(c => c.name.split(' ')[0]).join(', ');
+    }
+
+    function createSuggestedGroup() {
+        alert('Creating group with: ' + contactsData.filter(c => c.frequent).map(c => c.name).join(', '));
+    }
+
+    renderAiSuggestion();
+</script>
+
+</body>
+</html>
