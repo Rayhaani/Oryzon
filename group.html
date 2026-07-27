@@ -756,7 +756,11 @@
             document.getElementById('chat-flow').style.display = isChat ? 'flex' : 'none';
             document.getElementById('dockContainer').style.display = isChat ? 'flex' : 'none';
             document.getElementById('feedView').style.display = isChat ? 'none' : 'flex';
-            updateFeedHeaderState();
+            if (isChat) {
+                document.querySelector('header').style.cssText += 'background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important;';
+            } else {
+                updateFeedHeaderState();
+                }
             document.getElementById('toggleChatBtn').classList.toggle('active', isChat);
             document.getElementById('toggleFeedBtn').classList.toggle('active', !isChat);
             document.getElementById('modeThumb').style.transform = isChat ? 'translateX(100%)' : 'translateX(0%)';
@@ -954,22 +958,32 @@
             }
         })();
         const FEED_HEADER_THRESHOLD = 140;
+        const FEED_HEADER_SOLID_BG = 'linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%)';
 
         function updateFeedHeaderState() {
             const header = document.querySelector('header');
             const feedView = document.getElementById('feedView');
-            if (feedView.style.display === 'none') {
-                header.classList.remove('header-feed-transparent');
-                return;
-            }
-            if (feedView.scrollTop <= FEED_HEADER_THRESHOLD) {
-                header.classList.add('header-feed-transparent');
+            const title = header.querySelector('.fb-header-title');
+
+            if (feedView.style.display === 'none') return;
+
+            const scrollTop = Math.max(feedView.scrollTop, window.scrollY || 0);
+
+            if (scrollTop > FEED_HEADER_THRESHOLD) {
+                header.style.setProperty('background', FEED_HEADER_SOLID_BG, 'important');
+                header.style.setProperty('backdrop-filter', 'blur(14px)', 'important');
+                header.style.setProperty('-webkit-backdrop-filter', 'blur(14px)', 'important');
+                if (title) title.style.setProperty('opacity', '1', 'important');
             } else {
-                header.classList.remove('header-feed-transparent');
+                header.style.setProperty('background', 'transparent', 'important');
+                header.style.setProperty('backdrop-filter', 'none', 'important');
+                header.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+                if (title) title.style.setProperty('opacity', '0', 'important');
             }
         }
 
         document.getElementById('feedView').addEventListener('scroll', updateFeedHeaderState, { passive: true });
+        window.addEventListener('scroll', updateFeedHeaderState, { passive: true });
     </script>
 </body>
 </html>
