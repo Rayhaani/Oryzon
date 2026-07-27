@@ -1644,33 +1644,6 @@ function listenChatBadgeCount() {
         }, err => console.error('Chat badge error:', err));
 }
 listenChatBadgeCount();
-      window.addEventListener('DOMContentLoaded', () => {
-    NexusAlgorithm.init(currentUser);  // ← Sabon algorithm
-    loadFooterProfile();
-          
-          const savedProfile = localStorage.getItem('userProfilePic');
-          const storyAvatar = document.getElementById('story-avatar-preview');
-          if (savedProfile && storyAvatar) { storyAvatar.src = savedProfile; }
-          observeVideos();
-
-          if (currentUser) {
-              db.collection("users").doc(currentUser).get()
-              .then((doc) => {
-                  if (doc.exists) {
-                      const data = doc.data();
-                      if (document.getElementById("userProfileName")) {
-                          document.getElementById("userProfileName").innerText = data.fullName;
-                      }
-                      if (document.getElementById("dropFullName")) {
-                          document.getElementById("dropFullName").innerText = data.fullName || currentUser;
-                      }
-                      if (document.getElementById("dropUsername")) {
-                          document.getElementById("dropUsername").innerText = "@" + (data.username || currentUser);
-                      }
-                  }
-              }).catch((err) => { console.error("Error fetching user data:", err); });
-          }
-      });
 
 
       function loadFooterProfile() {
@@ -1679,14 +1652,15 @@ listenChatBadgeCount();
           if (savedPic && footerImg) { footerImg.src = savedPic; } else { if(footerImg) footerImg.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq"; }
       }
 
-    
-
-      async function renderNexusFeed() {
+      function renderNexusFeed() {
           const feedContainer = document.querySelector('.feed-container');
-          try {
-              const savedSnapshot = await db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get();
-              window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
-          } catch(e) { console.log("Saved posts error:", e); }
+
+          // Saved posts ba ya toshe feed — yana gudana a background daban
+          db.collection("saved_posts").where("userId", "==", "Sadiq_Alhassan").get()
+              .then(savedSnapshot => {
+                  window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
+              })
+              .catch(e => console.log("Saved posts error:", e));
 
           db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
               let allPostsHTML = ''; 
