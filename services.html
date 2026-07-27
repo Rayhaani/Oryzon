@@ -3397,6 +3397,40 @@ body {
         background: transparent;
         border-radius: 0 0 32px 32px;
     }
+    .nxh-hours-banner {
+        position: absolute;
+        top: 58px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        max-width: 70%;
+        z-index: 4;
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        transition: max-height 0.45s ease, opacity 0.35s ease;
+        border-radius: 0 0 14px 14px;
+        background: rgba(20,20,20,0.82);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .nxh-hours-banner.nxh-show {
+        max-height: 50px;
+        opacity: 1;
+    }
+    .nxh-hours-banner-inner {
+        padding: 11px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        color: #ffffff;
+        font-size: 12.5px;
+        font-weight: 700;
+        text-align: center;
+        white-space: nowrap;
+        }
     .nxh-iconbar {
         position: relative;
         z-index: 2;
@@ -3516,9 +3550,8 @@ body {
 .nxh-seg-float {
         position: relative;
         z-index: 5;
-        margin-top: -30px;
+        margin-top: 14px;
         padding: 0 14px;
-        transform: translateY(-26px);
         }
     .nxh-seg-wrap {
     display: flex;
@@ -3765,6 +3798,12 @@ body {
 <div class="nxh-profile-sheet-inner">
    <div class="nxh-hero" id="nxh-hero-banner">
                 <div class="nxh-hero-overlay"></div>
+                <div id="nxh-hours-banner" class="nxh-hours-banner">
+                    <div class="nxh-hours-banner-inner">
+                        <span>📅</span>
+                        <span id="nxh-hours-text">Available Everyday</span>
+                    </div>
+                </div>
                 <div class="nxh-iconbar">
                     <button id="close-profile-sheet-btn" class="nxh-icon-btn">←</button>
                     <div style="display:flex;gap:8px;">
@@ -6727,6 +6766,17 @@ function closeStoryDeck() {
             `<span style="background:#ffffff;color:#be185d;border:1px solid rgba(236,72,153,0.2);padding:4px 10px;border-radius:10px;font-size:11px;font-weight:700;">${day}</span>`).join('');
     } else { scheduleCard.style.display = "none"; }
 
+const hoursBanner = document.getElementById("nxh-hours-banner");
+    const hoursText = document.getElementById("nxh-hours-text");
+    if (hoursBanner && hoursText) {
+        hoursText.innerText = (pro.schedule && pro.schedule.length !== 7)
+            ? `Open: ${pro.schedule.map(d => d.slice(0,3)).join(', ')}`
+            : "Open Everyday";
+        hoursBanner.classList.remove("nxh-show");
+        void hoursBanner.offsetWidth;
+        setTimeout(() => hoursBanner.classList.add("nxh-show"), 350);
+        setTimeout(() => hoursBanner.classList.remove("nxh-show"), 5350);
+        }
 document.getElementById("profile-expert-bio-p").innerText = pro.bio;
     document.getElementById("profile-skills-badges-slot").innerHTML = pro.skills.map(s =>
         `<span style="background:#f1f5f9;color:#111827;border-radius:12px;padding:6px 14px;font-size:12px;font-weight:600;">${s}</span>`).join('');
