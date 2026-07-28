@@ -43,20 +43,34 @@
     .channel-meta p { font-size: 12px; color: rgba(255,255,255,0.45); }
     .menu-icon { cursor: pointer; flex-shrink: 0; }
 
-    .feed { padding: 14px 12px 0 12px; }
+.feed { padding: 14px 12px 0 12px; }
     .post-card { margin-bottom: 16px; }
-    .post-head { display: flex; align-items: center; gap: 10px; padding: 0 4px 8px 4px; }
-    .post-head .channel-avatar { width: 30px; height: 30px; font-size: 12px; }
-    .post-head-text h4 { font-size: 13px; font-weight: 700; display:flex; align-items:center; gap:4px; }
-    .post-head-text span { font-size: 11px; color: rgba(255,255,255,0.4); }
 
-    .post-content { font-size: 14.5px; line-height: 1.5; color: rgba(255,255,255,0.9); padding: 0 4px; }
+    .date-separator { display: flex; justify-content: center; margin: 8px 0 16px 0; }
+    .date-separator span {
+        background: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.6);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 5px 14px;
+        border-radius: 12px;
+    }
+
     .post-image {
-        margin-top: 8px;
         width: 100%;
         border-radius: 14px;
         display: block;
         background: #111;
+        margin-bottom: 8px;
+    }
+    .post-content-wrap { padding: 0 4px 6px 4px; overflow: hidden; }
+    .post-content-text { font-size: 14.5px; line-height: 1.5; color: rgba(255,255,255,0.9); }
+    .post-timestamp {
+        float: right;
+        font-size: 11px;
+        color: rgba(255,255,255,0.35);
+        margin: 4px 0 0 10px;
+        white-space: nowrap;
     }
 
     .post-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px 0 4px; }
@@ -201,29 +215,52 @@
         return Math.floor(hrs / 24) + 'd ago';
     }
 
+    function formatClockTime(ts) {
+        const d = new Date(ts);
+        let h = d.getHours();
+        const m = d.getMinutes().toString().padStart(2, '0');
+        const ampm = h >= 12 ? 'pm' : 'am';
+        h = h % 12; if (h === 0) h = 12;
+        return h + ':' + m + ' ' + ampm;
+    }
+
+    function formatDateLabel(ts) {
+        const d = new Date(ts);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        if (d.toDateString() === today.toDateString()) return 'Today';
+        if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+        return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
+    }
+
     function renderHeader() {
         document.getElementById('headerAvatar').textContent = channelInfo.initials;
         document.getElementById('headerName').innerHTML = channelInfo.name + (channelInfo.verified ? ' <span class="verified-badge"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--cyan-neon)"><path d="M12 2l2.4 2.4 3.4-.5.5 3.4L21 9.6 18.7 12 21 14.4l-2.7 1.7-.5 3.4-3.4-.5L12 22l-2.4-2.4-3.4.5-.5-3.4L3 14.4 5.3 12 3 9.6l2.7-1.7.5-3.4 3.4.5z"/><path d="M9 12l2 2 4-4" stroke="#050505" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '');
         document.getElementById('headerSubCount').textContent = formatCount(channelInfo.subscriberCount) + ' subscribers';
     }
 
-    function renderFeed() {
+   function renderFeed() {
         const container = document.getElementById('feedContainer');
         container.innerHTML = '';
         const sorted = [...postsData].sort((a, b) => b.timestamp - a.timestamp);
+        let lastDateLabel = null;
         sorted.forEach(post => {
+            const dateLabel = formatDateLabel(post.timestamp);
+            if (dateLabel !== lastDateLabel) {
+                const sep = document.createElement('div');
+                sep.className = 'date-separator';
+                sep.innerHTML = `<span>${dateLabel}</span>`;
+                container.appendChild(sep);
+                lastDateLabel = dateLabel;
+            }
             const card = document.createElement('div');
             card.className = 'post-card';
             card.innerHTML = `
-                <div class="post-head">
-                    <div class="channel-avatar">${channelInfo.initials}</div>
-                    <div class="post-head-text">
-                        <h4>${channelInfo.name} ${channelInfo.verified ? '✓' : ''}</h4>
-                        <span>${formatTimeAgo(post.timestamp)}</span>
-                    </div>
-                </div>
-                <div class="post-content">${post.content}</div>
                 ${post.image ? `<img src="${post.image}" class="post-image">` : ''}
+                <div class="post-content-wrap">
+                    <span class="post-content-text">${post.content}</span><span class="post-timestamp">${formatClockTime(post.timestamp)}</span>
+                </div>
                 <div class="post-footer">
                     <div class="post-views">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -240,7 +277,7 @@
             `;
             container.appendChild(card);
         });
-    }
+   } 
 
     function toggleReaction(postId, emoji) {
         const post = postsData.find(p => p.id === postId);
