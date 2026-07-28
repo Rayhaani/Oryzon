@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<title>Nexus — Free Backup Tool</title>
+</head>
+<body style="background:#050505; color:#fff; font-family:monospace; padding:20px;">
+
+<h2>Nexus Database Backup (Free — Spark Plan Friendly)</h2>
+<p>Wannan zai zazzage collections ɗinka daga Firestore ya sauke su a matsayin fayil ɗin <b>.json</b> zuwa na'urarka. Ba ya buƙatar Blaze plan domin karatu (read) kaɗai muke yi.</p>
+
+<div style="margin:15px 0;">
+    <label style="display:block; margin-bottom:8px; font-size:13px;">Zaɓi collections da za a yi backup (danna sunan collection domin kunna/kashe):</label>
+    <div id="collectionChips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+</div>
+
+<button id="startBtn" style="padding:12px 24px; font-size:14px; cursor:pointer; margin-top:10px;">Fara Backup</button>
+<button id="downloadBtn" style="padding:12px 24px; font-size:14px; cursor:pointer; margin-top:10px; display:none;">⬇️ Sauke JSON File</button>
+
+<pre id="log" style="margin-top:20px; white-space:pre-wrap; background:#111; padding:15px; border-radius:8px; max-height:500px; overflow-y:auto;"></pre>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+    // === Daidai firebaseConfig na social.html naka ===
+    const firebaseConfig = {
+        apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+        authDomain: "oryzon-50ea4.firebaseapp.com",
+        projectId: "oryzon-50ea4",
+        storageBucket: "oryzon-50ea4.firebasestorage.app",
+        messagingSenderId: "782106742622",
+        appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const logEl = document.getElementById('log');
+    function log(msg) {
+        logEl.textContent += msg + "\n";
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    // Jerin collections din da ka gani a screenshot dinka
+    const AVAILABLE_COLLECTIONS = [
+        'posts', 'users', 'saved_posts', 'likes', 'follows',
+        'notifications', 'personalChats', 'nexus_contributions',
+        'products', 'statusData', 'vendorChats', 'nexusCalls', 'nexusVideoCalls'
+    ];
+
+    // Muhimman collections da aka riga aka zaba (posts/users sun fi muhimmanci ga migration)
+    const DEFAULT_SELECTED = new Set(['posts', 'users']);
+
+    const chipsContainer = document.getElementById('collectionChips');
+    AVAILABLE_COLLECTIONS.forEach(name => {
+        const chip = document.createElement('span');
+        chip.textContent = name;
+        chip.dataset.selected = DEFAULT_SELECTED.has(name) ? 'true' : 'false';
+        chip.style.cssText = `
+            padding:6px 14px; border-radius:20px; cursor:pointer; font-size:12px;
+            border:1px solid ${DEFAULT_SELECTED.has(name) ? '#ffd700' : 'rgba(255,255,255,0.2)'};
+            background:${DEFAULT_SELECTED.has(name) ? 'rgba(255,215,0,0.15)' : 'transparent'};
+            color:${DEFAULT_SELECTED.has(name) ? '#ffd700' : '#aaa'};
+        `;
+        chip.onclick = () => {
+            const selected = chip.dataset.selected === 'true';
+            chip.dataset.selected = selected ? 'false' : 'true';
+            chip.style.borderColor = !selected ? '#ffd700' : 'rgba(255,255,255,0.2)';
+            chip.style.background = !selected ? 'rgba(255,215,0,0.15)' : 'transparent';
+            chip.style.color = !selected ? '#ffd700' : '#aaa';
+        };
+        chipsContainer.appendChild(chip);
+    });
+
+    let backupData = null;
+
+    document.getElementById('startBtn').onclick = async function () {
+        this.disabled = true;
+        this.innerText = "Ana gudu...";
+        logEl.textContent = "";
+        log("Fara backup...\n");
+
+        const selectedCollections = Array.from(chipsContainer.children)
+            .filter(chip => chip.dataset.selected === 'true')
+            .map(chip => chip.textContent);
+
+        if (selectedCollections.length === 0) {
+            log("⚠️ Ka zaɓi aƙalla collection ɗaya kafin ka fara.");
+            this.disabled = false;
+            this.innerText = "Fara Backup";
+            return;
+        }
+
+        backupData = {
+            exportedAt: new Date().toISOString(),
+            project: firebaseConfig.projectId,
+            collections: {}
+        };
+
+        try {
+            for (const collectionName of selectedCollections) {
+                log(`Ana zazzage "${collectionName}"...`);
+                const snap = await db.collection(collectionName).get();
+                const docs = {};
+                snap.forEach(doc => {
+                    docs[doc.id] = doc.data();
+                });
+                backupData.collections[collectionName] = docs;
+                log(`  ✓ An samu documents guda ${snap.size} daga "${collectionName}"`);
+            }
+
+            log(`\n✅ AN GAMA! Duk collections ${selectedCollections.length} an zazzage su.`);
+            log("Yanzu ka danna 'Sauke JSON File' domin ajiye backup a na'urarka.");
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+        } catch (err) {
+            log("\n❌ KUSKURE: " + err.message);
+            console.error(err);
+        } finally {
+            this.innerText = "An Gama";
+        }
+    };
+
+    document.getElementById('downloadBtn').onclick = function () {
+        if (!backupData) return;
+        const dateStr = new Date().toISOString().split('T')[0];
+        const filename = `nexus-backup-${dateStr}.json`;
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        log(`\n📥 An sauke fayil ɗin: ${filename}`);
+    };
+</script>
+</body>
+</html>
