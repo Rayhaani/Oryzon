@@ -107,27 +107,30 @@
         }
 
         .smart-btn-group {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            padding-bottom: 8px;
-            width: 100%;
-        }
+    display: flex; /* Sauya grid zuwa flex */
+    gap: 8px;
+    padding-bottom: 8px;
+    width: 100%;
+    overflow-x: auto; /* Zai bada damar yin scroll idan sun cika */
+    scrollbar-width: none;
+}
+.smart-btn-group::-webkit-scrollbar { display: none; }
 
-        .smart-btn {
-            padding: 5px 0;
-            font-size: 11px;
-            font-weight: 600;
-            border-radius: 15px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.02);
-            color: var(--text-dim);
-            cursor: pointer;
-            transition: 0.3s;
-            white-space: nowrap;
-            text-align: center;
-            width: 100%;
-        }
+.smart-btn {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 15px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: 0.3s;
+    white-space: nowrap;
+    text-align: center;
+    flex-shrink: 0; /* Tabbatar da cewa maɓallan ba za su matse ba */
+}
+        
 
         .smart-btn.active {
             background: rgba(0, 242, 255, 0.1);
@@ -527,12 +530,14 @@
         </div>
 
         <div class="smart-btn-group">
-            <div class="smart-btn active" onclick="switchTab(this, 'personal')">Personal</div>
-            <div class="smart-btn" onclick="switchTab(this, 'groups')">Groups</div>
-            <div class="smart-btn" onclick="switchTab(this, 'pages')">Pages</div>
-            <div class="smart-btn" onclick="switchTab(this, 'updates')">Updates</div>
-            <div class="smart-btn" onclick="switchTab(this, 'friends')">Friends</div>
+    <div class="smart-btn active" onclick="switchTab(this, 'personal')">Personal</div>
+    <div class="smart-btn" onclick="switchTab(this, 'groups')">Groups</div>
+    <div class="smart-btn" onclick="switchTab(this, 'pages')">Pages</div>
+    <div class="smart-btn" onclick="switchTab(this, 'channels')">Channels</div>
+    <div class="smart-btn" onclick="switchTab(this, 'updates')">Updates</div>
+    <div class="smart-btn" onclick="switchTab(this, 'friends')">Friends</div>
         </div>
+        
     </header>
 
     <div class="view-container">
@@ -995,12 +1000,15 @@ setInterval(refreshAllChatTimes, 30000);
         }
 
         function switchTab(element, tabId) {
-            if (tabId === 'updates') { window.location.href = 'updates.html'; return; }
-            document.querySelectorAll('.smart-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+    // Idan an danna Channels ko Updates, zai kai ka zuwa shafukan su kai tsaye
+    if (tabId === 'channels') { window.location.href = 'channels.html'; return; }
+    if (tabId === 'updates') { window.location.href = 'updates.html'; return; }
+    document.querySelectorAll('.smart-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
+    element.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
         }
+        
 
         function openStoryViewer(userId) {
             if(userId === 'my-status') {
