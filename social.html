@@ -1586,13 +1586,13 @@ body {
       firebase.initializeApp(firebaseConfig);
 dlog('firebase.initializeApp done');
 const db = firebase.firestore();
-db.enablePersistence().catch((err) => {
-    if (err.code === 'failed-precondition') {
-        console.warn('Persistence: wata tab guda tana buɗe — cache zai yi aiki a wurin ta kaɗai.');
-    } else if (err.code === 'unimplemented') {
-        console.warn('Persistence: wannan browser bai goyi bayan cache ba.');
-    }
+db.enablePersistence().then(() => {
+    dlog('Firestore persistence ENABLED');
+}).catch((err) => {
+    dlog('Firestore persistence FAILED: ' + err.code);
 });
+</br>
+</br>
 const storage = firebase.storage();
 // SABON: Jira Auth ya tabbata kafin komai
 firebase.auth().onAuthStateChanged((user) => {
@@ -1688,6 +1688,17 @@ listenChatBadgeCount();
                   window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
               })
               .catch(e => console.log("Saved posts error:", e));
+
+          db.collection("posts").orderBy("timestamp", "desc").get({ source: 'cache' })
+              .then(cacheSnap => {
+                  if (!cacheSnap.empty) {
+                      dlog('cache posts got, count=' + cacheSnap.size);
+                      let cacheHTML = '';
+                      cacheSnap.forEach(doc => { cacheHTML += generatePostHTML({ id: doc.id, ...doc.data() }); });
+                      feedContainer.innerHTML = cacheHTML;
+                      dlog('cache HTML rendered to DOM');
+                  }
+              }).catch(() => { dlog('no cache available yet'); });
 
           db.collection("posts").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
               dlog('posts onSnapshot fired, count=' + snapshot.size);
