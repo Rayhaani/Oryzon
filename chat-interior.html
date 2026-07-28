@@ -94,6 +94,8 @@
 .message-row.row-outgoing { justify-content: flex-end; }
 .message-row.msg-grouped { margin-top: -3px; }
 .message-row.msg-switch { margin-top: -2.7px; }
+.message-row.msg-grouped { margin-top: -3px; }
+.message-row.msg-switch { margin-top: -2.7px; }
 .message-row.selected-highlight { background: rgba(0, 242, 255, 0.16); }
 .reply-quote-preview {
     border-left: 3px solid var(--cyan-neon); background: rgba(255,255,255,0.06);
@@ -505,6 +507,7 @@ function listenToNexusMessages() {
 
     db.collection('personalChats').doc(chatRoomId).collection('messages')
       .orderBy('timestamp', 'asc')
+      let prevIsMe = null;
       .onSnapshot((snapshot) => {
           const chatFlow = document.getElementById('chat-flow');
           const wasNearBottom = isUserNearBottom;
@@ -546,8 +549,10 @@ function listenToNexusMessages() {
               }
               const spacingClass = prevIsMe === null ? '' : (prevIsMe === isMe ? 'msg-grouped' : 'msg-switch');
               prevIsMe = isMe;
-              const row = document.createElement('div');
-              row.className = `message-row ${isMe ? 'row-outgoing' : 'row-incoming'} ${spacingClass}`;
+              const spacingClass = prevIsMe === null ? '' : (prevIsMe === isMe ? 'msg-grouped' : 'msg-switch');
+prevIsMe = isMe;
+const row = document.createElement('div');
+row.className = `message-row ${isMe ? 'row-outgoing' : 'row-incoming'} ${spacingClass}`;              
               row.appendChild(bubble);
               chatFlow.appendChild(row);
               attachLongPress(bubble, doc.id, d);
