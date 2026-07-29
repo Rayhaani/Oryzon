@@ -2293,6 +2293,11 @@ let liveFacingMode = 'user';
 let liveViewerInterval = null;
 let liveViewerCount = 0;
 let currentLiveSessionId = null;
+let liveViewersUnsub = null;
+let liveChatUnsub = null;
+let currentWatchingLiveId = null;
+let watchViewersUnsub = null;
+let watchChatUnsub = null;
 
 function openStorySheet() {
     document.getElementById('storySheetOverlay').classList.add('open');
@@ -2322,6 +2327,7 @@ async function startLiveStudio() {
         });
         currentLiveSessionId = liveDocRef.id;
         notifyFollowersLive();
+        setupHostLiveListeners(currentLiveSessionId);
     } catch (err) {
         console.error('Ba a iya halitta live session ba:', err);
         }
@@ -2336,14 +2342,8 @@ async function startLiveStudio() {
         endLiveStudio();
         return;
     }
-
-    // Dummy viewer count simulation (za a maye gurbinsu da real data daga backend)
-    liveViewerInterval = setInterval(() => {
-        liveViewerCount += Math.floor(Math.random() * 3);
-        document.getElementById('liveViewerCount').textContent = liveViewerCount;
-    }, 4000);
 }
-
+        
 function flipLiveCamera() {
     liveFacingMode = liveFacingMode === 'user' ? 'environment' : 'user';
     if (liveStream) liveStream.getTracks().forEach(t => t.stop());
