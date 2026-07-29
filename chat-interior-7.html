@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus - Neural Message Protocol</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+       :root {
+    --obsidian: #050505;
+    --cyan-neon: #00F2FF;
+    --presence-live: #34C759;
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --user-bubble: linear-gradient(135deg, #b8963a 0%, #a3812c 100%);
+    --vendor-bubble: #262626;
+       } 
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+    background-color: #050505 !important;
+    background-image: none !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #ffffff;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+        }
+        #chat-flow {
+    flex: 1;
+    padding: 70px 15px 64px 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: none;
+    min-height: 0;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 56px, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 0px, black 56px, black 100%);
+       } 
+        .message {
+    max-width: 78%;
+    padding: 4px 12px 2px 12px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.35;
+    position: relative;
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--glass-border);
+    word-wrap: break-word;
+    word-break: break-word;
+        }
+        .incoming { align-self: flex-start; background: var(--vendor-bubble); border-bottom-left-radius: 4px; }
+        .outgoing { align-self: flex-end; background: var(--user-bubble); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.6); border-bottom-right-radius: 4px; }
+        .outgoing .timestamp { color: rgba(255,255,255,0.75); text-shadow: 0 1px 2px rgba(0,0,0,0.55); }
+        .timestamp {
+    font-size: 7.5px;
+    color: rgba(255,255,255,0.4);
+    float: right;
+    clear: both;
+    margin: 4px 0 -4px 8px;
+    font-family: 'Orbitron', sans-serif;
+    position: relative;
+    top: 4px;
+        }
+    /* ===== MEDIA BUBBLES ===== */
+.message.media-bubble {
+    padding: 2px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    backdrop-filter: none;
+}
+.message.media-bubble.outgoing { border-color: rgba(255, 215, 130, 0.3); }
+.media-wrap { position: relative; display: block; width: 255px; height: 340px; border-radius: 9px; overflow: hidden; background: #000; }
+.media-wrap::before {
+    content: ''; position: absolute; inset: 0; z-index: 0;
+    background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+    background-size: 200% 100%;
+    animation: mediaShimmer 1.4s ease-in-out infinite;
+}
+@keyframes mediaShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.pending-overlay {
+    position: absolute; inset: 0; z-index: 3;
+    background: rgba(0,0,0,0.45);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    color: #fff; font-family: 'Orbitron', sans-serif;
+}
+.pending-spinner {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.25); border-top-color: #eab308;
+    animation: pendingSpin 0.8s linear infinite;
+}
+@keyframes pendingSpin { to { transform: rotate(360deg); } }
+.pending-pct { font-size: 11px; color: rgba(255,255,255,0.9); }
+.pending-overlay.failed { background: rgba(20,0,0,0.6); cursor: pointer; }
+.pending-fail-icon { color: #ff3b30; font-size: 22px; }
+.pending-fail-text { font-size: 10.5px; color: rgba(255,255,255,0.85); font-family: 'Inter', sans-serif; text-align: center; padding: 0 10px; }
+.pending-audio-row { display:flex; align-items:center; gap:10px; min-width:150px; padding:4px 2px; }
+.pending-audio-track { flex:1; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; overflow:hidden; }
+.pending-audio-fill { height:100%; background:#eab308; width:0%; transition: width 0.2s; }
+.media-wrap img, .media-wrap video {
+    display: block; width: 100%; height: 100%;
+    border-radius: 9px; object-fit: cover;
+    position: relative; z-index: 1;
+    opacity: 0; transition: opacity 0.25s ease;
+}
+.media-wrap img.media-loaded, .media-wrap video.media-loaded { opacity: 1; }
+.media-time-overlay {
+    position: absolute; right: 6px; bottom: 6px;
+    background: rgba(0,0,0,0.5); color: #fff; font-size: 9.5px;
+    padding: 2px 7px; border-radius: 8px; font-family: 'Orbitron', sans-serif;
+    pointer-events: none; z-index: 2; display: flex; align-items: center; gap: 4px;
+}
+.video-indicator {
+    position: absolute; left: 6px; bottom: 6px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(0,0,0,0.55); color: #fff; font-size: 9px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none; z-index: 2;
+}
+.message-row { display: flex; margin: 0 -15px; padding: 3px 15px; transition: background 0.15s; }
+.message-row.row-incoming { justify-content: flex-start; }
+.message-row.row-outgoing { justify-content: flex-end; }
+.message-row.msg-grouped { margin-top: -10px; }
+.message-row.msg-switch { margin-top: -4px; }
+.message-row.selected-highlight { background: rgba(0, 242, 255, 0.16); }
+.reply-quote-preview {
+    border-left: 3px solid var(--cyan-neon); background: rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 5px 9px; margin-bottom: 4px; font-size: 11px; opacity: 0.85;
+}
+.reply-quote-preview .rq-who { font-weight: 700; display: block; font-size: 10.5px; color: var(--cyan-neon); }
+
+/* ===== FULLSCREEN MEDIA VIEWER (in-app, no external navigation) ===== */
+#mediaViewerOverlay {
+    display: none; position: fixed; inset: 0; background: #000; z-index: 99999;
+    align-items: center; justify-content: center;
+}
+#mediaViewerOverlay.show { display: flex; }
+.mv-close {
+    position: absolute; top: 16px; right: 16px; z-index: 3;
+    color: #fff; font-size: 20px; width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+#mediaViewerContent { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+#mediaViewerContent img, #mediaViewerContent video { max-width: 100%; max-height: 100%; object-fit: contain; }
+.mv-video-controls {
+    position: absolute; left: 16px; right: 16px; bottom: 26px;
+    display: flex; align-items: center; gap: 10px; z-index: 2;
+}
+.mv-time { color: #fff; font-size: 11px; font-family: 'Orbitron', sans-serif; min-width: 32px; text-align: center; }
+.mv-track { flex: 1; height: 20px; display: flex; align-items: center; position: relative; cursor: pointer; touch-action: none; }
+.mv-track-line { width: 100%; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.28); position: relative; }
+.mv-track-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: #fff; border-radius: 2px; }
+.mv-track-dot { position: absolute; top: 50%; left: 0%; width: 11px; height: 11px; border-radius: 50%; background: #fff; transform: translate(-50%,-50%); }
+.mv-speed { color: #fff; font-size: 11px; border: 1px solid rgba(255,255,255,0.45); border-radius: 10px; padding: 3px 8px; cursor: pointer; font-weight: 600; flex-shrink: 0; }
+
+/* ===== IMAGE GRID (WhatsApp-style) ===== */
+.img-grid { display: grid; gap: 3px; border-radius: 9px; overflow: hidden; position: relative; height: 340px; }
+.img-grid.n1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+.img-grid.n2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+.img-grid.n3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.img-grid.n3 .gi:first-child { grid-row: 1 / 3; }
+.img-grid.n4plus { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.img-grid .gi { position: relative; overflow: hidden; background: #111; height: 100%; }
+.img-grid .gi img, .img-grid .gi video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-grid .gi .more-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.55); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700;
+}
+        .input-area {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            padding: 10px 12px 12px 12px;
+            background: transparent;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            z-index: 100;
+        }
+        .neural-search-bar {
+    flex: 1;
+    background: var(--vendor-bubble);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    transition: 0.3s;
+        }
+        .neural-search-bar textarea {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            flex: 1;
+            font-size: 15px;
+            margin: 0 10px;
+            padding: 10px 0;
+            resize: none;
+            max-height: 130px;
+            line-height: 1.2;
+            font-family: 'Inter', sans-serif;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .neural-search-bar textarea::-webkit-scrollbar { display: none; }
+        .icon-btn { color: #aaa; display: flex; align-items: center; cursor: pointer; }
+        .action-trigger {
+            width: 42px; height: 42px;
+            background: var(--cyan-neon);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.2);
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        #sendBtn { display: none; }
+        @keyframes recPulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+        @supports (-webkit-touch-callout: none) {
+            body { height: -webkit-fill-available; }
+            #chat-flow { padding-bottom: 64px; }
+        }
+    </style>
+</head>
+<body>
+<!-- ── HEADER ── -->
+<div id="chat-header-bar" style="
+    position: fixed; top: 0; left: 0; width: 100%; height: 56px;
+    background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    display: flex; align-items: center; padding: 0 12px; gap: 10px;
+    z-index: 9999; box-sizing: border-box;
+">
+    <div id="chat-header-avatar-wrapper" style="
+        width: 38px; height: 38px; border-radius: 50%;
+        background: linear-gradient(135deg, #fde08d, #b8860b);
+        padding: 2px; flex-shrink: 0;
+    ">
+        <img id="chat-header-avatar"
+             src="https://api.dicebear.com/7.x/bottts/svg?seed=User"
+             style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid #050505;">
+    </div>
+
+    <div style="flex: 1; overflow: hidden;">
+        <div id="chat-header-name" style="
+            font-size: 14px; font-weight: 700; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-family: 'Inter', sans-serif;
+        ">Loading...</div>
+        <div id="chat-status-line" style="font-size: 10px; color: var(--presence-live); margin-top: 1px;">● Active now</div>
+    </div>
+
+    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+        <!-- Audio Call Button -->
+        <div id="voiceCallBtn" onclick="handleVoiceCall()" style="
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #fff; font-size: 15px;
+            transition: background 0.2s, box-shadow 0.2s;
+        " onmousedown="this.style.background='rgba(0,242,255,0.2)'" onmouseup="this.style.background='rgba(255,255,255,0.08)'">
+            <i class="fa-solid fa-phone"></i>
+        </div>
+
+        <!-- Video Call (future) -->
+        <div onclick="NexusVideo.startVideoCall(chatWith)" style="
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #fff; font-size: 15px;
+        ">
+            <i class="fa-solid fa-video"></i>
+        </div>
+
+        <!-- Info -->
+        <div onclick="openChatInfo()" style="
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #fff; font-size: 15px;
+        ">
+            <i class="fa-solid fa-circle-info"></i>
+        </div>
+    </div>
+</div>
+
+<!-- ── SELECTION ACTION BAR (long-press on a message) ── -->
+<div id="selectionActionBar" style="
+    display:none; position: fixed; top:0; left:0; width:100%; height:56px;
+    background:#151515; align-items:center; padding:0 14px; gap:22px;
+    z-index:10001; box-sizing:border-box;
+">
+    <i class="fa-solid fa-xmark" onclick="cancelSelection()" style="color:#fff; font-size:18px; cursor:pointer;"></i>
+    <span id="selectionCount" style="color:#fff; font-size:16px; font-weight:700;">1</span>
+    <div style="flex:1;"></div>
+    <i class="fa-solid fa-reply" onclick="replySelected()" style="color:#fff; font-size:17px; cursor:pointer;" title="Reply"></i>
+    <i class="fa-solid fa-face-smile" onclick="toggleReactionPicker()" style="color:#fff; font-size:16px; cursor:pointer;" title="React"></i>
+    <i class="fa-solid fa-star" onclick="starSelected()" style="color:#fff; font-size:16px; cursor:pointer;" title="Favourite"></i>
+    <i class="fa-solid fa-thumbtack" onclick="pinSelected()" style="color:#fff; font-size:16px; cursor:pointer;" title="Pin"></i>
+    <i class="fa-solid fa-trash" onclick="deleteSelected()" style="color:#fff; font-size:16px; cursor:pointer;" title="Delete"></i>
+    <i class="fa-solid fa-share" onclick="forwardSelected()" style="color:#fff; font-size:16px; cursor:pointer;" title="Forward"></i>
+</div>
+<!-- ── CHAT FLOW ── -->
+<div id="chat-flow"></div>
+    
+<!-- ── INPUT AREA ── -->
+<div class="input-area">
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+    <input type="file" id="galleryInput" accept="image/*,video/*" multiple hidden>
+
+    <div id="emojiPanel" style="
+        display: none; position: fixed; bottom: 70px; left: 0; width: 100%;
+        background: #111; border-top: 1px solid rgba(255,255,255,0.1);
+        z-index: 500; height: 280px; overflow: hidden; flex-direction: column;
+    ">
+        <div id="emojiTabs" style="
+            display: flex; overflow-x: auto; padding: 8px 10px; gap: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            scrollbar-width: none; flex-shrink: 0;
+        "></div>
+        <div id="emojiGrid" style="
+            display: flex; flex-wrap: wrap; padding: 8px;
+            overflow-y: auto; flex: 1; align-content: flex-start;
+        "></div>
+    </div>
+
+    <div id="normalInputRow" style="display:flex; align-items:flex-end; gap:8px; flex:1;">
+        <div style="display:flex; flex-direction:column; flex:1; min-width:0;">
+            <div id="replyPreviewBar" style="
+                display:none; background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-bottom:none;
+                border-radius:16px 16px 0 0; padding:8px 12px; align-items:center; gap:10px; box-sizing:border-box;
+            ">
+                <div style="width:3px; align-self:stretch; background:var(--cyan-neon); border-radius:2px; flex-shrink:0;"></div>
+                <div style="flex:1; min-width:0;">
+                    <div id="replyPreviewName" style="font-size:11.5px; font-weight:700;">You</div>
+                    <div id="replyPreviewText" style="font-size:12px; color:rgba(255,255,255,0.7); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+                </div>
+                <div id="replyPreviewThumbWrap" style="width:36px;height:36px;border-radius:6px;overflow:hidden;display:none;flex-shrink:0;"></div>
+                <i class="fa-solid fa-xmark" onclick="cancelReply()" style="color:rgba(255,255,255,0.5); cursor:pointer; padding:4px; flex-shrink:0;"></i>
+            </div>
+            <div class="neural-search-bar" id="neuralSearchBar">
+                <div class="icon-btn" id="emojiToggleBtn" onclick="toggleEmojiPanel()" style="flex-shrink:0;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                        <line x1="9" y1="9" x2="9.01" y2="9" stroke-width="2.5"/>
+                        <line x1="15" y1="9" x2="15.01" y2="9" stroke-width="2.5"/>
+                    </svg>
+                </div>
+                <textarea id="msgInput" placeholder="Neural Message..." rows="1"></textarea>
+                <div class="icon-btn" onclick="document.getElementById('galleryInput').click()" style="flex-shrink:0;" title="Gallery">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                    </svg>
+                </div>
+                <div class="icon-btn" onclick="document.getElementById('cameraInput').click()" style="flex-shrink:0;margin-left:12px;" title="Camera">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                </div>
+                <button id="voiceBtn" class="action-trigger" onclick="toggleVoiceRecording()" style="flex-shrink:0;margin-left:22px;width:34px;height:34px;margin-right:-14px;">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </button>
+                <button id="sendBtn" class="action-trigger" style="flex-shrink:0;margin-left:22px;width:34px;height:34px;margin-right:-14px;">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                </button>
+               </div> 
+            </div>
+        </div>
+
+    <div id="recordingRow" style="display:none; align-items:center; gap:10px; flex:1; min-width:0;">
+        <div onclick="stopRecording(false)" title="Soke" style="width:42px;height:42px;border-radius:50%;background:rgba(255,59,48,0.12);border:1px solid rgba(255,59,48,0.35);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
+        </div>
+        <div style="flex:1; min-width:0; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:22px; padding:0 14px; height:40px; box-sizing:border-box; overflow:hidden;">
+            <div id="recPulseDot" style="width:9px;height:9px;border-radius:50%;background:#ff3b30;animation:recPulse 1.2s ease-in-out infinite; flex-shrink:0;"></div>
+            <div id="recWaveform" style="flex:1; min-width:0; display:flex; align-items:center; gap:2px; height:20px; overflow:hidden;"></div>
+            <span id="recordingTimerLabel" style="font-family:'Orbitron',sans-serif; font-size:12px; color:#fff; flex-shrink:0;">00:00</span>
+        </div>
+        <div id="pauseResumeBtn" onclick="togglePauseRecording()" title="Pause" style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+            <svg id="pauseIcon" width="14" height="14" viewBox="0 0 24 24" fill="#eab308"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            <svg id="resumeIcon" width="14" height="14" viewBox="0 0 24 24" fill="#eab308" style="display:none;"><polygon points="6,4 20,12 6,20"/></svg>
+        </div>
+        <button onclick="stopRecording(true)" class="action-trigger" style="flex-shrink:0;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<!-- ── FULLSCREEN MEDIA VIEWER ── -->
+<div id="mediaViewerOverlay">
+    <div class="mv-close" onclick="closeMediaViewer()"><i class="fa-solid fa-xmark"></i></div>
+    <div id="mediaViewerContent"></div>
+</div>
+
+<!-- ── FIREBASE ── -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+        authDomain: "oryzon-50ea4.firebaseapp.com",
+        projectId: "oryzon-50ea4",
+        storageBucket: "oryzon-50ea4.firebasestorage.app",
+        messagingSenderId: "782106742622",
+        appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+        measurementId: "G-K5085DLL2W"
+    };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+    
+// Jiran Firebase Auth ya "farfaɗo" session kafin a bar sending
+let authReadyResolve;
+const authReadyPromise = new Promise((resolve) => { authReadyResolve = resolve; });
+firebase.auth().onAuthStateChanged((user) => {
+    authReadyResolve(user);
+});
+</script>
+
+<!-- ── CALL ENGINE ── -->
+<script src="call.js"></script>
+<script src="video-call.js"></script>
+
+<script>
+// ══════════════════════════════════════════════
+//  SETUP
+// ══════════════════════════════════════════════
+const urlParams = new URLSearchParams(window.location.search);
+const chatWith = urlParams.get('with') || 'Unknown User';
+const myId = localStorage.getItem('nexus_user_session');
+if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+
+if (!myId) window.location.href = 'login.html';
+
+function getChatRoomId(a, b) { return [a, b].sort().join('__'); }
+const chatRoomId = getChatRoomId(myId, chatWith);
+
+// Load header info
+document.getElementById('chat-header-name').textContent = chatWith;
+document.getElementById('chat-header-avatar').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${chatWith}`;
+
+db.collection('users').doc(chatWith).get().then(doc => {
+    if (doc.exists) {
+        const d = doc.data();
+        document.getElementById('chat-header-name').textContent = d.fullName || d.username || chatWith;
+        if (d.userProfilePic) document.getElementById('chat-header-avatar').src = d.userProfilePic;
+    }
+});
+
+// ── Voice Call Button ──────────────────────────
+function handleVoiceCall() {
+    if (typeof NexusCall !== 'undefined') {
+        NexusCall.startCall(chatWith);
+    } else {
+        alert('Call engine yana loda...');
+    }
+}
+
+function openChatInfo() {
+    window.location.href = `profile.html?user=${chatWith}`;
+}
+
+// ══════════════════════════════════════════════
+//  MESSAGING
+// ══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    msgInput.addEventListener('input', function() {
+        autoExpand(this);
+        toggleButtons();
+        notifyTyping();
+    });
+    msgInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendNeuralMessage();
+        }
+    });
+    sendBtn.addEventListener('click', sendNeuralMessage);
+
+    // Matsar da input bar bisa keyboard — tushen gaskiya guda ɗaya kawai (JS),
+    // ba tare da fafitikar da 'dvh' ba, domin ya yi daidai koda a danna na farko.
+    const inputArea = document.querySelector('.input-area');
+    if (window.visualViewport && inputArea) {
+        const applyKeyboardOffset = () => {
+            if (document.activeElement !== msgInput) {
+                inputArea.style.bottom = '0px';
+                return;
+            }
+            const vv = window.visualViewport;
+            let offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+            // Ƙananan ƙima (misali address-bar ta ɓoye/bayyana) ba keyboard ba ne — mu yi watsi da su.
+            if (offset < 100) offset = 0;
+            inputArea.style.bottom = offset + 'px';
+        };
+        msgInput.addEventListener('focus', () => {
+            applyKeyboardOffset();
+            setTimeout(applyKeyboardOffset, 60);
+            setTimeout(applyKeyboardOffset, 250);
+            setTimeout(applyKeyboardOffset, 500);
+        });
+        msgInput.addEventListener('blur', () => setTimeout(applyKeyboardOffset, 60));
+        window.visualViewport.addEventListener('resize', () => {
+            if (document.activeElement === msgInput) applyKeyboardOffset();
+        });
+    }
+
+    listenToNexusMessages();
+
+    // Start listening for incoming calls
+    if (typeof NexusCall !== 'undefined') {
+        NexusCall.init();
+    }
+    if (typeof NexusVideo !== 'undefined') {
+        NexusVideo.init();
+    }
+});
+
+// Muna bibiyar ko mai amfani YANA a kasan chat din da kansa (ta hanyar scroll na gaskiya),
+// maimakon mu auna scrollHeight bayan kowane render — domin hotuna/bidiyo da basu
+// gama loading ba tukuna suna bada karyar height wanda ke sanya app din ta yi
+// auto-scroll ba dole ba yayin da mutum yake duban tsofaffin hotuna.
+let isUserNearBottom = true;
+document.addEventListener('DOMContentLoaded', () => {
+    const cf = document.getElementById('chat-flow');
+    if (!cf) return;
+    cf.addEventListener('scroll', () => {
+        isUserNearBottom = (cf.scrollHeight - cf.scrollTop - cf.clientHeight) < 80;
+    });
+});
+window.addEventListener('pageshow', (e) => {
+    const cf = document.getElementById('chat-flow');
+    if (!cf) return;
+    isUserNearBottom = true;
+    requestAnimationFrame(() => { cf.scrollTop = cf.scrollHeight; });
+    setTimeout(() => { cf.scrollTop = cf.scrollHeight; }, 300);
+});
+let latestMsgSnapshot = null;
+let pendingMessages = []; // {id, kind, file, url, progress, status: 'uploading'|'failed'}
+
+function listenToNexusMessages() {
+    db.collection('personalChats').doc(chatRoomId).set({
+        [`unreadCount.${myId}`]: 0
+    }, { merge: true }).catch(err => console.error('Reset unread error:', err));
+
+    db.collection('personalChats').doc(chatRoomId).collection('messages')
+      .orderBy('timestamp', 'asc')
+      .onSnapshot((snapshot) => {
+          latestMsgSnapshot = snapshot;
+          renderChatFlow();
+      });
+
+    // ── Typing indicator: bibiyar filin typing.{chatWith} akan doc na dakin chat ──
+    db.collection('personalChats').doc(chatRoomId).onSnapshot((doc) => {
+        const statusEl = document.getElementById('chat-status-line');
+        if (!statusEl) return;
+        const d = doc.data();
+        if (d && d.typing && d.typing[chatWith]) {
+            statusEl.textContent = 'yana rubutu...';
+            statusEl.style.color = 'var(--cyan-neon)';
+        } else {
+            statusEl.textContent = '● Active now';
+            statusEl.style.color = 'var(--presence-live)';
+        }
+    });
+}
+
+// ── Rubuta filin typing.{myId} lokacin da nake buga rubutu ──
+let typingOffTimer = null;
+function setTypingState(isTyping) {
+    db.collection('personalChats').doc(chatRoomId).set({
+        [`typing.${myId}`]: isTyping
+    }, { merge: true }).catch(() => {});
+}
+function notifyTyping() {
+    setTypingState(true);
+    clearTimeout(typingOffTimer);
+    typingOffTimer = setTimeout(() => setTypingState(false), 2500);
+}
+
+function renderChatFlow() {
+    const chatFlow = document.getElementById('chat-flow');
+    const wasNearBottom = isUserNearBottom;
+    chatFlow.innerHTML = '';
+    let prevIsMe = null;
+    let lastIsMe = null;
+    if (latestMsgSnapshot) {
+        latestMsgSnapshot.forEach((doc) => {
+              const d = doc.data();
+              const isMe = d.senderId === myId;
+              lastIsMe = isMe;
+              const time = d.timestamp
+                  ? new Date(d.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : 'Just Now';
+              const bubble = document.createElement('div');
+              bubble.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
+
+              // ── Read receipt: mun karɓi wannan sakon (incoming) — mun gan shi yanzu ──
+              if (!isMe && !d.seenAt && !seenMarkedIds.has(doc.id)) {
+                  seenMarkedIds.add(doc.id);
+                  db.collection('personalChats').doc(chatRoomId).collection('messages').doc(doc.id)
+                    .update({ seenAt: Date.now() }).catch(() => {});
+              }
+              const ticks = isMe ? ticksSuffix(d) : '';
+
+              if (d.type === 'image') {
+    bubble.classList.add('media-bubble');
+    bubble.innerHTML = `<div class="media-wrap" onclick="openImageViewer('${d.mediaUrl}')"><img src="${d.mediaUrl}" onload="this.classList.add('media-loaded')">${mediaTimeOverlay(time, ticks)}</div>`;
+} else if (d.type === 'video') {
+    bubble.classList.add('media-bubble');
+    bubble.innerHTML = `<div class="media-wrap" onclick="openVideoViewer('${d.mediaUrl}')"><video src="${d.mediaUrl}" preload="metadata" muted playsinline style="pointer-events:none;" onloadeddata="this.classList.add('media-loaded')"></video>${videoIndicator()}${mediaTimeOverlay(time, ticks)}</div>`;
+} else if (d.type === 'imageGroup') {
+    bubble.classList.add('media-bubble');
+    bubble.innerHTML = buildImageGrid(d.mediaArr || [], time);
+} else if (d.type === 'audio') {
+                  const audioId = 'audio_' + doc.id;
+                  bubble.innerHTML = `
+                      <div style="display:flex; align-items:center; gap:10px; min-width:150px; padding:2px 0;">
+                          <div onclick="toggleAudioPlay('${audioId}', this)" style="width:30px;height:30px;border-radius:50%;background:var(--cyan-neon);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+                              <svg class="play-icon" width="13" height="13" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+                          </div>
+                          <div style="flex:1; height:3px; background:rgba(255,255,255,0.15); border-radius:2px;"></div>
+                          <span style="font-size:9px; color:rgba(255,255,255,0.5);">🎤</span>
+                      </div>
+                      <audio id="${audioId}" src="${d.mediaUrl}" style="display:none;"></audio>
+                      <span class="timestamp">${time}${ticks}</span>`;
+             } else {
+                const quoteHtml = d.replyTo ? `<div class="reply-quote-preview"><span class="rq-who" style="color:${d.replyTo.senderId === myId ? '#fff' : 'var(--cyan-neon)'};">${d.replyTo.senderId === myId ? 'You' : chatWith}</span>${d.replyTo.snippet}</div>` : '';  
+                  bubble.innerHTML = `${quoteHtml}${d.text}<span class="timestamp">${time}${ticks}</span>`;
+              }
+              const spacingClass = prevIsMe === null ? '' : (prevIsMe === isMe ? 'msg-grouped' : 'msg-switch');
+              prevIsMe = isMe;
+              const row = document.createElement('div');
+              row.className = `message-row ${isMe ? 'row-outgoing' : 'row-incoming'} ${spacingClass}`;              
+              row.appendChild(bubble);
+              const reactionBadge = buildReactionBadge(d, isMe);
+              if (reactionBadge) row.appendChild(reactionBadge);
+              chatFlow.appendChild(row);
+              attachLongPress(bubble, doc.id, d);
+              bubble.querySelectorAll('img, video').forEach(el => {
+                  const evt = el.tagName === 'VIDEO' ? 'loadedmetadata' : 'load';
+                  el.addEventListener(evt, () => {
+                      if (wasNearBottom || isMe) chatFlow.scrollTop = chatFlow.scrollHeight;
+                  });
+              });
+        });
+    }
+
+    // Pending (still uploading / failed) media — always ours, always render last
+    pendingMessages.forEach((pm) => {
+        const spacingClass = lastIsMe === null ? '' : (lastIsMe === true ? 'msg-grouped' : 'msg-switch');
+        lastIsMe = true;
+        const row = buildPendingRow(pm, spacingClass);
+        chatFlow.appendChild(row);
+    });
+
+    const hasNewOutgoing = (latestMsgSnapshot && latestMsgSnapshot.docs.length && latestMsgSnapshot.docs[latestMsgSnapshot.docs.length - 1].data().senderId === myId) || pendingMessages.length > 0;
+    if (wasNearBottom || hasNewOutgoing) {
+        isUserNearBottom = true;
+        requestAnimationFrame(() => { chatFlow.scrollTop = chatFlow.scrollHeight; });
+        setTimeout(() => { chatFlow.scrollTop = chatFlow.scrollHeight; }, 60);
+        setTimeout(() => { chatFlow.scrollTop = chatFlow.scrollHeight; }, 500);
+    }
+}
+
+function buildPendingRow(pm, spacingClass) {
+    const row = document.createElement('div');
+    row.className = `message-row row-outgoing ${spacingClass}`;
+    row.id = 'pending-row-' + pm.id;
+    const bubble = document.createElement('div');
+    bubble.id = 'pending-bubble-' + pm.id;
+
+    if (pm.kind === 'audio') {
+        bubble.className = 'message outgoing';
+        bubble.innerHTML = `
+            <div class="pending-audio-row">
+                <div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎤</div>
+                <div class="pending-audio-track"><div class="pending-audio-fill" id="pending-fill-${pm.id}" style="width:${pm.progress}%;"></div></div>
+                <span id="pending-pct-${pm.id}" style="font-size:9.5px;color:rgba(255,255,255,0.6);">${pm.status === 'failed' ? '!' : pm.progress + '%'}</span>
+            </div>`;
+    } else {
+        bubble.className = 'message outgoing media-bubble';
+        const mediaTag = pm.kind === 'video'
+            ? `<video src="${pm.url}" muted playsinline class="media-loaded"></video>`
+            : `<img src="${pm.url}" class="media-loaded">`;
+        const overlay = pm.status === 'failed'
+            ? `<div class="pending-overlay failed" onclick="retryPendingUpload('${pm.id}')">
+                   <span class="pending-fail-icon">⚠</span>
+                   <span class="pending-fail-text">An kasa tura.<br>Danna don sake gwadawa</span>
+               </div>`
+            : `<div class="pending-overlay">
+                   <div class="pending-spinner"></div>
+                   <span class="pending-pct" id="pending-pct-${pm.id}">${pm.progress}%</span>
+               </div>`;
+        bubble.innerHTML = `<div class="media-wrap">${mediaTag}${overlay}</div>`;
+    }
+    row.appendChild(bubble);
+    return row;
+}
+
+function addPendingMessage(pm) {
+    pendingMessages.push(pm);
+    renderChatFlow();
+}
+function removePendingMessage(id) {
+    pendingMessages = pendingMessages.filter(p => p.id !== id);
+    renderChatFlow();
+}
+function updatePendingProgress(id, pct) {
+    const pm = pendingMessages.find(p => p.id === id);
+    if (pm) pm.progress = pct;
+    // Lokaci-lokaci kawai ake update -- kada mu sake gina dukkan chat, mu dinga canza rubutu/faɗi kai tsaye don sauri
+    const pctEl = document.getElementById('pending-pct-' + id);
+    if (pctEl) pctEl.textContent = pct + '%';
+    const fillEl = document.getElementById('pending-fill-' + id);
+    if (fillEl) fillEl.style.width = pct + '%';
+}
+function markPendingFailed(id) {
+    const pm = pendingMessages.find(p => p.id === id);
+    if (pm) pm.status = 'failed';
+    renderChatFlow();
+}
+
+// Ainihin rubutawa Firestore — ana amfani da ita duka don sakon kai-tsaye da wanda ke fita daga offline queue
+async function sendNeuralMessageDirect(text, replyPayload) {
+    await authReadyPromise;
+    if (!firebase.auth().currentUser) throw new Error('Ba a tabbatar da shiga (session) ba');
+    await db.collection('personalChats').doc(chatRoomId).collection('messages').add({
+        senderId: myId, receiverId: chatWith, text, timestamp: Date.now(), replyTo: replyPayload || null
+    });
+    await db.collection('personalChats').doc(chatRoomId).set({
+        lastMessage: text.substring(0, 60),
+        lastMessageTime: Date.now(),
+        members: [myId, chatWith],
+        [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true });
+}
+
+async function sendNeuralMessage() {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Share input nan take (optimistic) — kada mai amfani ya jira network
+    const replyPayload = activeReply ? { ...activeReply, snippet: document.getElementById('replyPreviewText').textContent } : null;
+    cancelReply();
+    input.value = '';
+    autoExpand(input);
+    toggleButtons();
+    clearTimeout(typingOffTimer);
+    setTypingState(false);
+
+    // Babu Intanet? Ajiye sakon a layi (offline queue), za a tura da zarar an dawo
+    if (!navigator.onLine) {
+        queueOfflineTextMessage(text, replyPayload);
+        return;
+    }
+
+    try {
+        await sendNeuralMessageDirect(text, replyPayload);
+    } catch (err) {
+        console.error('Nexus send error:', err);
+        alert('Sakon bai tafi ba: ' + err.message);
+        // Dawo da rubutun domin kada ya ɓace idan an kasa turawa
+        input.value = text;
+        autoExpand(input);
+        toggleButtons();
+    }
+}
+
+// ══════════════════════════════════════════════
+//  OFFLINE QUEUE — sakonni na rubutu suna jira a localStorage har sai Intanet ya dawo
+// ══════════════════════════════════════════════
+function offlineQueueKey() { return 'nexus_offline_queue_' + chatRoomId; }
+function queueOfflineTextMessage(text, replyPayload) {
+    const queue = JSON.parse(localStorage.getItem(offlineQueueKey()) || '[]');
+    queue.push({ text, replyPayload, ts: Date.now() });
+    localStorage.setItem(offlineQueueKey(), JSON.stringify(queue));
+    renderOfflineBanner();
+}
+async function flushOfflineQueue() {
+    if (!navigator.onLine) return;
+    const key = offlineQueueKey();
+    const queue = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!queue.length) return;
+    localStorage.removeItem(key);
+    for (const item of queue) {
+        try { await sendNeuralMessageDirect(item.text, item.replyPayload); }
+        catch (e) { queueOfflineTextMessage(item.text, item.replyPayload); }
+    }
+    renderOfflineBanner();
+}
+function renderOfflineBanner() {
+    let banner = document.getElementById('offlineBanner');
+    const queueLen = JSON.parse(localStorage.getItem(offlineQueueKey()) || '[]').length;
+    if (!navigator.onLine || queueLen > 0) {
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'offlineBanner';
+            banner.style.cssText = 'position:fixed;top:56px;left:0;width:100%;background:#3a2a00;color:#ffd479;font-size:11px;text-align:center;padding:5px;z-index:9998;font-family:Inter,sans-serif;';
+            document.body.appendChild(banner);
+        }
+        banner.textContent = !navigator.onLine
+            ? '📴 Ba Intanet — sakonni za su tura da zarar an dawo'
+            : `⏳ Ana tura sakonni ${queueLen} da suka jira...`;
+    } else if (banner) {
+        banner.remove();
+    }
+}
+window.addEventListener('offline', renderOfflineBanner);
+window.addEventListener('online', () => {
+    renderOfflineBanner();
+    flushOfflineQueue();
+    pendingMessages.filter(p => p.status === 'failed').forEach(p => retryPendingUpload(p.id));
+});
+document.addEventListener('DOMContentLoaded', () => {
+    renderOfflineBanner();
+    flushOfflineQueue();
+});
+
+function autoExpand(el) {
+    el.style.height = 'inherit';
+    el.style.height = el.scrollHeight + 'px';
+}
+
+function toggleButtons() {
+    const has = document.getElementById('msgInput').value.trim().length > 0;
+    document.getElementById('voiceBtn').style.display = has ? 'none' : 'flex';
+    document.getElementById('sendBtn').style.display = has ? 'flex' : 'none';
+}
+
+// ══════════════════════════════════════════════
+//  MEDIA UPLOAD (Camera / Gallery / Voice)
+// ══════════════════════════════════════════════
+// Matsa girman hoto kafin upload (canvas resize + JPEG quality) — babban dalilin
+// jinkirin 20-second din da aka fara ambata shine girman fayil, ba cold-start kadai ba.
+function compressImageFile(file, maxDim = 1600, quality = 0.75) {
+    return new Promise((resolve) => {
+        if (!file.type || !file.type.startsWith('image/') || file.type === 'image/gif') { resolve(file); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+                    else { width = Math.round(width * maxDim / height); height = maxDim; }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width; canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    if (!blob || blob.size >= file.size) { resolve(file); return; }
+                    resolve(new File([blob], file.name.replace(/\.(png|jpe?g|webp)$/i, '.jpg'), { type: 'image/jpeg' }));
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = () => resolve(file);
+            img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+    });
+}
+function xhrUploadFile(file, roomId, onProgress) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'chatMedia');
+        formData.append('username', roomId);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://oryzon-backend-ed1q.onrender.com/upload');
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && onProgress) {
+                // Mu tsaya a 99% har sai an tabbata an gama, domin server na iya ɗaukar ɗan lokaci
+                // yana processing bayan an gama karɓar bytes ɗin (misali cold-start na Render).
+                onProgress(Math.min(99, Math.round((e.loaded / e.total) * 100)));
+            }
+        };
+        xhr.onload = () => {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                if (xhr.status >= 200 && xhr.status < 300 && data.success) resolve(data.url);
+                else reject(new Error(data.error || 'Upload failed'));
+            } catch (e) {
+                reject(new Error('Amsa mara inganci daga server'));
+            }
+        };
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.send(formData);
+    });
+}
+
+async function uploadAndSendMedia(file, kind, existingPendingId) {
+    await authReadyPromise;
+    if (!firebase.auth().currentUser) {
+        alert('An kasa tabbatar da shiga. Sake login sannan ka gwada.');
+        return;
+    }
+    if (kind === 'image' && !existingPendingId) {
+        file = await compressImageFile(file);
+    }
+
+    let pm;
+    if (existingPendingId) {
+        pm = pendingMessages.find(p => p.id === existingPendingId);
+        if (!pm) return;
+        pm.status = 'uploading';
+        pm.progress = 0;
+        renderChatFlow();
+    } else {
+        const id = 'p' + Date.now() + Math.random().toString(36).slice(2, 7);
+        pm = { id, kind, file, url: (kind === 'image' || kind === 'video') ? URL.createObjectURL(file) : null, progress: 0, status: 'uploading' };
+        addPendingMessage(pm);
+    }
+
+    try {
+        const url = await xhrUploadFile(file, chatRoomId, (pct) => updatePendingProgress(pm.id, pct));
+        updatePendingProgress(pm.id, 100);
+
+        const lastLabel = kind === 'image' ? '📷 Photo' : kind === 'video' ? '🎥 Video' : '🎤 Voice message';
+        await db.collection('personalChats').doc(chatRoomId).collection('messages').add({
+            senderId: myId, receiverId: chatWith, type: kind, mediaUrl: url, timestamp: Date.now()
+        });
+        await db.collection('personalChats').doc(chatRoomId).set({
+            lastMessage: lastLabel, lastMessageTime: Date.now(), members: [myId, chatWith],
+            [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
+        }, { merge: true });
+        if (pm.url) URL.revokeObjectURL(pm.url);
+        removePendingMessage(pm.id);
+    } catch (err) {
+        console.error('Media upload error:', err);
+        markPendingFailed(pm.id);
+    }
+}
+
+function retryPendingUpload(id) {
+    const pm = pendingMessages.find(p => p.id === id);
+    if (!pm) return;
+    uploadAndSendMedia(pm.file, pm.kind, id);
+}
+
+document.getElementById('cameraInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) uploadAndSendMedia(file, 'image');
+    e.target.value = '';
+});
+document.getElementById('galleryInput').addEventListener('change', (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) { e.target.value = ''; return; }
+    if (files.length === 1) {
+        uploadAndSendMedia(files[0], files[0].type.startsWith('video') ? 'video' : 'image');
+    } else {
+        uploadAndSendMediaGroup(files);
+    }
+    e.target.value = '';
+});
+
+// ══════════════════════════════════════════════
+//  VOICE RECORDING
+// ══════════════════════════════════════════════
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let isPaused = false;
+let recordingSeconds = 0;
+let recordingTimerInterval = null;
+let recordingStream = null;
+let waveformBars = [];
+
+function tickRecordingTimer() {
+    recordingSeconds++;
+    const m = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+    const s = String(recordingSeconds % 60).padStart(2, '0');
+    document.getElementById('recordingTimerLabel').textContent = `${m}:${s}`;
+    waveformBars.push(5 + Math.random() * 15);
+    if (waveformBars.length > 45) waveformBars.shift();
+    renderWaveform();
+}
+
+function renderWaveform() {
+    const wrap = document.getElementById('recWaveform');
+    if (!wrap) return;
+    wrap.innerHTML = waveformBars.map(h =>
+        `<div style="width:2.5px;flex-shrink:0;border-radius:2px;background:${isPaused ? 'rgba(255,255,255,0.35)' : '#eab308'};height:${h}px;"></div>`
+    ).join('');
+    wrap.scrollLeft = wrap.scrollWidth;
+}
+
+function setPauseUI(paused) {
+    document.getElementById('pauseIcon').style.display = paused ? 'none' : 'block';
+    document.getElementById('resumeIcon').style.display = paused ? 'block' : 'none';
+    document.getElementById('pauseResumeBtn').title = paused ? 'Resume' : 'Pause';
+    const dot = document.getElementById('recPulseDot');
+    dot.style.animationPlayState = paused ? 'paused' : 'running';
+    dot.style.opacity = paused ? '0.35' : '1';
+}
+
+async function toggleVoiceRecording() {
+    if (isRecording) return;
+    try {
+        recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+        alert('An kasa samun izinin amfani da makirifo.');
+        return;
+    }
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(recordingStream);
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.start();
+    isRecording = true;
+    isPaused = false;
+    recordingSeconds = 0;
+    waveformBars = [];
+    document.getElementById('normalInputRow').style.display = 'none';
+    document.getElementById('recordingRow').style.display = 'flex';
+    document.getElementById('recordingTimerLabel').textContent = '00:00';
+    setPauseUI(false);
+    renderWaveform();
+    recordingTimerInterval = setInterval(tickRecordingTimer, 1000);
+}
+
+function togglePauseRecording() {
+    if (!isRecording || !mediaRecorder) return;
+    if (!isPaused) {
+        mediaRecorder.pause();
+        isPaused = true;
+        clearInterval(recordingTimerInterval);
+        setPauseUI(true);
+    } else {
+        mediaRecorder.resume();
+        isPaused = false;
+        setPauseUI(false);
+        recordingTimerInterval = setInterval(tickRecordingTimer, 1000);
+    }
+}
+
+function stopRecording(shouldSend) {
+    if (!isRecording || !mediaRecorder) return;
+    isRecording = false;
+    isPaused = false;
+    clearInterval(recordingTimerInterval);
+    mediaRecorder.onstop = async () => {
+        recordingStream.getTracks().forEach(t => t.stop());
+        document.getElementById('normalInputRow').style.display = 'flex';
+        document.getElementById('recordingRow').style.display = 'none';
+        if (shouldSend && recordedChunks.length > 0) {
+            const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+            const file = new File([blob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+            await uploadAndSendMedia(file, 'audio');
+        }
+    };
+    mediaRecorder.stop();
+}
+
+function toggleAudioPlay(audioId, btnEl) {
+    const audio = document.getElementById(audioId);
+    const icon = btnEl.querySelector('.play-icon');
+    if (audio.paused) {
+        document.querySelectorAll('#chat-flow audio').forEach(a => { if (a.id !== audioId) a.pause(); });
+        audio.play();
+        icon.innerHTML = '<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>';
+    } else {
+        audio.pause();
+        icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    }
+    audio.onended = () => { icon.innerHTML = '<path d="M8 5v14l11-7z"/>'; };
+ }
+
+    window.addEventListener('resize', () => {
+    const cf = document.getElementById('chat-flow');
+    if (cf && isUserNearBottom) setTimeout(() => { cf.scrollTop = cf.scrollHeight; }, 100);
+});
+
+// ══════════════════════════════════════════════
+//  EMOJI PANEL
+// ══════════════════════════════════════════════
+const emojiCategories = {
+    '😂': ['😂','😭','🥺','😍','🥰','😊','🤣','😅','😩','😤','🙏','💪','👀','🔥','💯','❤️','✅','🎉','😎','🤔','😱','🤦','🤷','💀','😴','🤗','😋','🫡','🥳','😇'],
+    '😀': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','💫','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡'],
+    '👍': ['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃'],
+    '❤️': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','❤️‍🩹','❣️','💕','💞','💓','💗','💖','💘','💝','💟'],
+    '🎉': ['🎉','🎊','🎈','🎁','🎀','🏆','🥇','🥈','🥉','🏅','🎖️','🎪','🤹','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎵','🎶','🎹','🥁','🪘','🎷','🎺','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮'],
+    '🔥': ['🔥','💯','✅','❌','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','⭐','🌟','💫','✨','⚡','🌈','☀️','🌤️','⛅','☁️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️']
+};
+
+let currentCategory = '😂';
+
+function buildEmojiPanel() {
+    const tabs = document.getElementById('emojiTabs');
+    const grid = document.getElementById('emojiGrid');
+    if (!tabs.children.length) {
+        Object.keys(emojiCategories).forEach(cat => {
+            const tab = document.createElement('div');
+            tab.textContent = cat;
+            tab.style.cssText = `font-size:20px;padding:4px 8px;cursor:pointer;border-radius:8px;flex-shrink:0;opacity:${cat===currentCategory?'1':'0.4'};background:${cat===currentCategory?'rgba(255,255,255,0.1)':'transparent'};`;
+            tab.onclick = () => loadEmojiCategory(cat);
+            tabs.appendChild(tab);
+        });
+    }
+    loadEmojiCategory(currentCategory);
+}
+
+function loadEmojiCategory(cat) {
+    currentCategory = cat;
+    const grid = document.getElementById('emojiGrid');
+    const tabs = document.getElementById('emojiTabs');
+    Array.from(tabs.children).forEach((tab, i) => {
+        const c = Object.keys(emojiCategories)[i];
+        tab.style.opacity = c === cat ? '1' : '0.4';
+        tab.style.background = c === cat ? 'rgba(255,255,255,0.1)' : 'transparent';
+    });
+    grid.innerHTML = '';
+    emojiCategories[cat].forEach(emoji => {
+        const span = document.createElement('span');
+        span.textContent = emoji;
+        span.style.cssText = `font-size:26px;padding:6px;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;width:42px;height:42px;transition:background 0.15s;`;
+        span.onmouseenter = () => span.style.background = 'rgba(255,255,255,0.1)';
+        span.onmouseleave = () => span.style.background = 'transparent';
+        span.onclick = () => insertEmoji(emoji);
+        grid.appendChild(span);
+    });
+    grid.scrollTop = 0;
+}
+
+function insertEmoji(emoji) {
+    const input = document.getElementById('msgInput');
+    const pos = input.selectionStart;
+    input.value = input.value.slice(0, pos) + emoji + input.value.slice(pos);
+    input.selectionStart = input.selectionEnd = pos + emoji.length;
+    input.focus();
+    toggleButtons();
+}
+
+function toggleEmojiPanel() {
+    const panel = document.getElementById('emojiPanel');
+    if (panel.style.display === 'none' || !panel.style.display) {
+        panel.style.display = 'flex';
+        buildEmojiPanel();
+        document.getElementById('msgInput').blur();
+    } else {
+        panel.style.display = 'none';
+        document.getElementById('msgInput').focus();
+    }
+}
+
+document.addEventListener('click', (e) => {
+    const panel = document.getElementById('emojiPanel');
+    const btn = document.getElementById('emojiToggleBtn');
+    if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.style.display = 'none';
+    }
+});
+function mediaTimeOverlay(time, ticks) {
+    return `<span class="media-time-overlay">${time}${ticks || ''}</span>`;
+}
+// ── Read-receipt ticks: ✓ = an tura, ✓✓ mai launi = an gani ──
+const seenMarkedIds = new Set();
+function ticksSuffix(d) {
+    if (!d) return '';
+    const seen = !!d.seenAt;
+    return ` <span style="margin-left:3px;color:${seen ? 'var(--cyan-neon)' : 'rgba(255,255,255,0.55)'};">${seen ? '✓✓' : '✓'}</span>`;
+}
+// ── Reactions: bayyana ƙananan emoji-badge kusa da sakon idan akwai reaction ──
+function buildReactionBadge(d, isMe) {
+    if (!d.reactions || !Object.keys(d.reactions).length) return null;
+    const counts = {};
+    Object.values(d.reactions).forEach(e => { counts[e] = (counts[e] || 0) + 1; });
+    const badge = document.createElement('div');
+    badge.style.cssText = `align-self:${isMe ? 'flex-end' : 'flex-start'};background:#1c1c1c;border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:1px 7px;font-size:11px;margin:-8px ${isMe ? '19px 0 0' : '0 0 0 19px'};width:fit-content;`;
+    badge.textContent = Object.entries(counts).map(([e, c]) => c > 1 ? `${e}${c}` : e).join(' ');
+    return badge;
+}
+function toggleReactionPicker() {
+    const existing = document.getElementById('reactionPicker');
+    if (existing) { existing.remove(); return; }
+    const picker = document.createElement('div');
+    picker.id = 'reactionPicker';
+    picker.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#151515;border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:8px 14px;display:flex;gap:12px;z-index:10002;font-size:22px;';
+    ['❤️', '😂', '👍', '😮', '😢', '🙏'].forEach(emoji => {
+        const span = document.createElement('span');
+        span.textContent = emoji;
+        span.style.cursor = 'pointer';
+        span.onclick = () => setReaction(emoji);
+        picker.appendChild(span);
+    });
+    document.body.appendChild(picker);
+}
+function setReaction(emoji) {
+    if (!selectedMessageId) return;
+    db.collection('personalChats').doc(chatRoomId).collection('messages').doc(selectedMessageId)
+      .set({ reactions: { [myId]: emoji } }, { merge: true }).catch(() => {});
+    const picker = document.getElementById('reactionPicker');
+    if (picker) picker.remove();
+    cancelSelection();
+}
+function videoIndicator() {
+    return `<span class="video-indicator"><i class="fa-solid fa-video"></i></span>`;
+}
+function buildImageGrid(mediaArr, time) {
+    const n = mediaArr.length;
+    const cls = n === 1 ? 'n1' : n === 2 ? 'n2' : n === 3 ? 'n3' : 'n4plus';
+    const shown = cls === 'n4plus' ? mediaArr.slice(0, 4) : mediaArr;
+    const extra = n > 4 ? n - 4 : 0;
+    const cells = shown.map((item, i) => {
+        const isLast = extra > 0 && i === 3;
+        const isVideo = item.type === 'video';
+        const el = isVideo
+            ? `<video src="${item.mediaUrl}" preload="metadata" muted playsinline style="pointer-events:none;"></video>`
+            : `<img src="${item.mediaUrl}">`;
+        const badge = isVideo ? videoIndicator() : '';
+        const overlay = isLast ? `<div class="more-overlay">+${extra}</div>` : '';
+        const openFn = isVideo ? `openVideoViewer('${item.mediaUrl}')` : `openImageViewer('${item.mediaUrl}')`;
+        return `<div class="gi" onclick="${openFn}">${el}${badge}${overlay}</div>`;
+    }).join('');
+    return `<div class="img-grid ${cls}">${cells}</div>${mediaTimeOverlay(time)}`;
+}
+
+// ══════════════════════════════════════════════
+//  MESSAGE SELECTION (long-press) + REPLY
+// ══════════════════════════════════════════════
+let selectedMessageId = null;
+let selectedMessageData = null;
+let activeReply = null;
+let longPressTimer = null;
+let longPressFired = false;
+
+function attachLongPress(bubbleEl, docId, data) {
+    const start = () => {
+        longPressFired = false;
+        longPressTimer = setTimeout(() => {
+            longPressFired = true;
+            openSelectionBar(docId, data, bubbleEl.parentElement);
+            if (navigator.vibrate) navigator.vibrate(12);
+        }, 450);
+    };
+    const cancelTimer = () => clearTimeout(longPressTimer);
+    bubbleEl.addEventListener('touchstart', start, { passive: true });
+    bubbleEl.addEventListener('touchend', cancelTimer);
+    bubbleEl.addEventListener('touchmove', cancelTimer);
+    bubbleEl.addEventListener('mousedown', start);
+    bubbleEl.addEventListener('mouseup', cancelTimer);
+    bubbleEl.addEventListener('mouseleave', cancelTimer);
+    bubbleEl.addEventListener('contextmenu', (e) => e.preventDefault());
+    bubbleEl.addEventListener('click', (e) => {
+        if (longPressFired) { e.stopPropagation(); e.preventDefault(); longPressFired = false; }
+    }, true);
+}
+
+function openSelectionBar(docId, data, rowEl) {
+    selectedMessageId = docId;
+    selectedMessageData = data;
+    document.querySelectorAll('.message-row.selected-highlight').forEach(el => el.classList.remove('selected-highlight'));
+    rowEl.classList.add('selected-highlight');
+    document.getElementById('chat-header-bar').style.display = 'none';
+    document.getElementById('selectionActionBar').style.display = 'flex';
+    document.getElementById('selectionCount').textContent = '1';
+}
+function cancelSelection() {
+    document.querySelectorAll('.message-row.selected-highlight').forEach(el => el.classList.remove('selected-highlight'));
+    document.getElementById('chat-header-bar').style.display = 'flex';
+    document.getElementById('selectionActionBar').style.display = 'none';
+    selectedMessageId = null;
+    selectedMessageData = null;
+}
+function formatDuration(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+function replySelected() {
+    if (!selectedMessageData) return;
+    const data = selectedMessageData;
+    const isMe = data.senderId === myId;
+
+    const nameEl = document.getElementById('replyPreviewName');
+    nameEl.textContent = isMe ? 'You' : chatWith;
+    nameEl.style.color = isMe ? '#ffffff' : 'var(--cyan-neon)';
+
+    const textEl = document.getElementById('replyPreviewText');
+    const thumbWrap = document.getElementById('replyPreviewThumbWrap');
+    thumbWrap.innerHTML = '';
+    thumbWrap.style.display = 'none';
+
+    if (data.type === 'text') {
+        textEl.textContent = data.text;
+    } else if (data.type === 'image') {
+        textEl.textContent = data.caption ? data.caption : '🖼 Photo';
+        thumbWrap.innerHTML = `<img src="${data.mediaUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+        thumbWrap.style.display = 'block';
+    } else if (data.type === 'video') {
+        textEl.textContent = data.caption ? data.caption : '🎥 Video';
+        thumbWrap.innerHTML = `<video src="${data.mediaUrl}" muted preload="metadata" playsinline style="width:100%;height:100%;object-fit:cover;pointer-events:none;"></video>`;
+        thumbWrap.style.display = 'block';
+        const vEl = thumbWrap.querySelector('video');
+        vEl.addEventListener('loadedmetadata', () => {
+            if (vEl.duration && isFinite(vEl.duration)) {
+                const label = data.caption ? data.caption : '🎥 Video';
+                textEl.textContent = `${label} (${formatDuration(vEl.duration)})`;
+            }
+        });
+    } else if (data.type === 'imageGroup') {
+        textEl.textContent = `🖼 ${data.mediaArr ? data.mediaArr.length : 0} Photos`;
+    } else if (data.type === 'audio') {
+        textEl.textContent = '🎤 Voice message';
+        const aEl = new Audio(data.mediaUrl);
+        aEl.addEventListener('loadedmetadata', () => {
+            if (aEl.duration && isFinite(aEl.duration)) textEl.textContent = `🎤 Voice message (${formatDuration(aEl.duration)})`;
+        });
+    }
+
+    activeReply = { id: selectedMessageId, senderId: data.senderId };
+    document.getElementById('replyPreviewBar').style.display = 'flex';
+    const bar = document.getElementById('neuralSearchBar');
+    bar.style.borderTopLeftRadius = '0';
+    bar.style.borderTopRightRadius = '0';
+    cancelSelection();
+    document.getElementById('msgInput').focus();
+}
+function cancelReply() {
+    activeReply = null;
+    document.getElementById('replyPreviewBar').style.display = 'none';
+    const bar = document.getElementById('neuralSearchBar');
+    bar.style.borderTopLeftRadius = '';
+    bar.style.borderTopRightRadius = '';
+}
+async function deleteSelected() {
+    if (!selectedMessageId) return;
+    if (!confirm('Share wannan sakon?')) { cancelSelection(); return; }
+    try {
+        await db.collection('personalChats').doc(chatRoomId).collection('messages').doc(selectedMessageId).delete();
+    } catch (e) {
+        alert('An kasa share sakon: ' + e.message);
+    }
+    cancelSelection();
+}
+function starSelected() {
+    alert('Fasalin "Favourite" ba a kunna shi ba tukuna.');
+    cancelSelection();
+}
+function pinSelected() {
+    alert('Fasalin "Pin" ba a kunna shi ba tukuna.');
+    cancelSelection();
+}
+function forwardSelected() {
+    alert('Fasalin "Forward" ba a kunna shi ba tukuna.');
+    cancelSelection();
+}
+// ── In-app fullscreen viewer (baya buɗe wani external page kamar Backblaze) ──
+function formatViewerTime(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+function openImageViewer(url) {
+    const overlay = document.getElementById('mediaViewerOverlay');
+    const content = document.getElementById('mediaViewerContent');
+    content.innerHTML = `<img src="${url}">`;
+    overlay.classList.add('show');
+}
+function openVideoViewer(url) {
+    const overlay = document.getElementById('mediaViewerOverlay');
+    const content = document.getElementById('mediaViewerContent');
+    content.innerHTML = `
+        <video id="viewerVideo" src="${url}" autoplay playsinline></video>
+        <div class="mv-video-controls">
+            <span class="mv-time" id="viewerCurTime">0:00</span>
+            <div class="mv-track" id="viewerTrack" onpointerdown="viewerStartScrub(event)">
+                <div class="mv-track-line">
+                    <div class="mv-track-fill" id="viewerFill"></div>
+                    <div class="mv-track-dot" id="viewerDot"></div>
+                </div>
+            </div>
+            <span class="mv-time" id="viewerDuration">0:00</span>
+            <span class="mv-speed" id="viewerSpeedBadge" onclick="viewerCycleSpeed()">1.0x</span>
+        </div>`;
+    overlay.classList.add('show');
+    const vid = document.getElementById('viewerVideo');
+    vid.addEventListener('loadedmetadata', () => {
+        if (vid.duration && isFinite(vid.duration)) document.getElementById('viewerDuration').textContent = formatViewerTime(vid.duration);
+    });
+    vid.addEventListener('timeupdate', () => {
+        if (!vid.duration || !isFinite(vid.duration)) return;
+        const pct = (vid.currentTime / vid.duration) * 100;
+        document.getElementById('viewerFill').style.width = pct + '%';
+        document.getElementById('viewerDot').style.left = pct + '%';
+        document.getElementById('viewerCurTime').textContent = formatViewerTime(vid.currentTime);
+    });
+}
+const viewerSpeeds = [1, 1.5, 2];
+function viewerCycleSpeed() {
+    const vid = document.getElementById('viewerVideo');
+    if (!vid) return;
+    let idx = viewerSpeeds.indexOf(vid.playbackRate);
+    idx = (idx + 1) % viewerSpeeds.length;
+    vid.playbackRate = viewerSpeeds[idx];
+    document.getElementById('viewerSpeedBadge').textContent = viewerSpeeds[idx].toFixed(1) + 'x';
+}
+function viewerStartScrub(e) {
+    const vid = document.getElementById('viewerVideo');
+    const track = document.getElementById('viewerTrack');
+    if (!vid || !vid.duration || !isFinite(vid.duration)) return;
+    const scrubTo = (clientX) => {
+        const rect = track.getBoundingClientRect();
+        let pct = (clientX - rect.left) / rect.width;
+        pct = Math.max(0, Math.min(1, pct));
+        vid.currentTime = pct * vid.duration;
+    };
+    scrubTo(e.clientX);
+    const move = (ev) => scrubTo(ev.clientX);
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+}
+function closeMediaViewer() {
+    const overlay = document.getElementById('mediaViewerOverlay');
+    document.getElementById('mediaViewerContent').innerHTML = ''; // ya tsayar da bidiyo daga playing a baya
+    overlay.classList.remove('show');
+}
+async function uploadAndSendMediaGroup(files) {
+    await authReadyPromise;
+    if (!firebase.auth().currentUser) {
+        alert('An kasa tabbatar da shiga. Sake login sannan ka gwada.');
+        return;
+    }
+    try {
+        const uploaded = [];
+        for (let file of files) {
+            if (file.type.startsWith('image/')) file = await compressImageFile(file);
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', 'chatMedia');
+            formData.append('username', chatRoomId);
+            const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+            uploaded.push({ type: file.type.startsWith('video') ? 'video' : 'image', mediaUrl: data.url });
+        }
+        await db.collection('personalChats').doc(chatRoomId).collection('messages').add({
+            senderId: myId, receiverId: chatWith, type: 'imageGroup', mediaArr: uploaded, timestamp: Date.now()
+        });
+        await db.collection('personalChats').doc(chatRoomId).set({
+            lastMessage: `📷 ${uploaded.length} Photos`, lastMessageTime: Date.now(), members: [myId, chatWith],
+            [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
+        }, { merge: true });
+    } catch (err) {
+        console.error('Group media upload error:', err);
+        alert('An kasa tura fayiloli: ' + err.message);
+    }
+    }
+</script>
+</body>
+</html>
