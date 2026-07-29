@@ -2240,6 +2240,7 @@ let liveStream = null;
 let liveFacingMode = 'user';
 let liveViewerInterval = null;
 let liveViewerCount = 0;
+let currentLiveSessionId = null;
 
 function openStorySheet() {
     document.getElementById('storySheetOverlay').classList.add('open');
@@ -2259,6 +2260,19 @@ async function startLiveStudio() {
     document.getElementById('liveChatFeed').innerHTML = '';
     liveViewerCount = 0;
     document.getElementById('liveViewerCount').textContent = '0';
+    try {
+        const liveDocRef = await db.collection('nexus_live_sessions').add({
+            host: currentUser,
+            hostAvatar: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + currentUser,
+            status: 'live',
+            startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            endedAt: null
+        });
+        currentLiveSessionId = liveDocRef.id;
+        notifyFollowersLive();
+    } catch (err) {
+        console.error('Ba a iya halitta live session ba:', err);
+        }
 
     try {
         liveStream = await navigator.mediaDevices.getUserMedia({
@@ -2292,9 +2306,41 @@ function endLiveStudio() {
     if (liveStream) liveStream.getTracks().forEach(t => t.stop());
     liveStream = null;
     clearInterval(liveViewerInterval);
+    if (currentLiveSessionId) {
+        db.collection('nexus_live_sessions').doc(currentLiveSessionId).update({
+            status: 'ended',
+            endedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error('Kuskure wajen rufe live session:', err));
+        currentLiveSessionId = null;
+    }
     document.getElementById('liveStudio').classList.remove('open');
     document.getElementById('instaFooter').classList.remove('footer-hidden');
     document.body.style.overflow = '';
+}
+
+async function notifyFollowersLive() {
+    try {
+        const followsSnap = await db.collection('follows').where('following', '==', currentUser).get();
+        const fullName = localStorage.getItem('nexus_profile_cache')
+            ? (JSON.parse(localStorage.getItem('nexus_profile_cache')).fullName || currentUser)
+            : currentUser;
+
+        followsSnap.forEach(doc => {
+            const followerUsername = doc.data().follower;
+            fetch(`${BACKEND_URL}/send-push`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: followerUsername,
+                    title: '🔴 Live yanzu',
+                    body: `${fullName} yana Live yanzu — shiga ka gani!`,
+                    data: { url: '/social.html?live=' + currentLiveSessionId }
+                })
+            }).catch(err => console.warn('Push ya kasa zuwa ' + followerUsername, err));
+        });
+    } catch (err) {
+        console.error('notifyFollowersLive error:', err);
+    }
 }
 
 function sendLiveChat() {
