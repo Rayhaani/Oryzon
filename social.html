@@ -1104,7 +1104,76 @@ body {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        
+
+    /* ===== GO LIVE ACTION SHEET ===== */
+.go-live-sheet-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    z-index: 9000; display: none; align-items: flex-end;
+}
+.go-live-sheet-overlay.open { display: flex; }
+.go-live-sheet {
+    width: 100%; background: #111; border-radius: 20px 20px 0 0;
+    padding: 20px 15px 30px; border-top: 1px solid var(--glass-border);
+}
+.go-live-sheet-option {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 10px; border-radius: 12px; color: #fff; font-size: 15px;
+}
+.go-live-sheet-option:active { background: rgba(255,255,255,0.06); }
+.go-live-sheet-option i { width: 24px; text-align: center; font-size: 18px; }
+.go-live-sheet-option.live-option i { color: #ff0000; }
+
+/* ===== LIVE STUDIO (Go Live screen) ===== */
+.live-studio {
+    position: fixed; inset: 0; background: #000; z-index: 9500;
+    display: none; flex-direction: column;
+}
+.live-studio.open { display: flex; }
+.live-studio video#liveCameraPreview {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: 1; transform: scaleX(-1);
+}
+.live-studio-top {
+    position: relative; z-index: 5; display: flex; justify-content: space-between;
+    align-items: center; padding: 15px; padding-top: 40px;
+}
+.live-badge-active {
+    background: #ff0000; color: #fff; font-size: 11px; font-weight: bold;
+    padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; gap: 5px;
+}
+.live-viewer-count {
+    background: rgba(0,0,0,0.5); color: #fff; font-size: 12px;
+    padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 5px;
+}
+.live-studio-close, .live-camera-flip {
+    background: rgba(0,0,0,0.5); color: #fff; width: 34px; height: 34px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    border: none; font-size: 16px;
+}
+.live-studio-bottom {
+    position: relative; z-index: 5; margin-top: auto; padding: 15px;
+}
+.live-chat-feed {
+    max-height: 180px; overflow-y: auto; margin-bottom: 10px;
+    display: flex; flex-direction: column; gap: 6px;
+}
+.live-chat-msg {
+    background: rgba(0,0,0,0.35); color: #fff; font-size: 13px;
+    padding: 5px 10px; border-radius: 10px; align-self: flex-start; max-width: 85%;
+}
+.live-chat-msg b { color: var(--cyan-neon); margin-right: 5px; }
+.live-controls-row {
+    display: flex; align-items: center; gap: 10px;
+}
+.live-chat-input {
+    flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px; padding: 10px 15px; color: #fff; font-size: 13px;
+}
+.live-reaction-btn, .live-end-btn {
+    background: rgba(255,255,255,0.1); color: #fff; width: 40px; height: 40px;
+    border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center;
+}
+.live-end-btn { background: #ff0000; }
     </style>
 </head>
 <body>
@@ -1256,7 +1325,7 @@ body {
 </div>
     
     <div class="nexus-stories-container">
-    <div class="story-card active-user" id="yourStoryAnchor" onclick="openStory('your_story')">
+    <div class="story-card active-user" id="yourStoryAnchor" onclick="openStorySheet()">
         <div class="story-avatar-wrapper add-story">
             <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg" alt="" class="story-avatar" id="story-avatar-preview">
             <div class="add-story-btn">+</div>
@@ -1363,6 +1432,41 @@ body {
         </svg>
     </div>
 </div>
+</div>
+
+    <!-- ===== GO LIVE ACTION SHEET ===== -->
+<div class="go-live-sheet-overlay" id="storySheetOverlay" onclick="if(event.target===this) closeStorySheet()">
+    <div class="go-live-sheet">
+        <div class="go-live-sheet-option" onclick="closeStorySheet(); openStory('your_story');">
+            <i class="fa-solid fa-image"></i> Add to Story
+        </div>
+        <div class="go-live-sheet-option live-option" onclick="closeStorySheet(); startLiveStudio();">
+            <i class="fa-solid fa-video"></i> Go Live
+        </div>
+    </div>
+</div>
+
+<!-- ===== LIVE STUDIO ===== -->
+<div class="live-studio" id="liveStudio">
+    <video id="liveCameraPreview" autoplay playsinline muted></video>
+
+    <div class="live-studio-top">
+        <button class="live-studio-close" onclick="endLiveStudio()"><i class="fa-solid fa-xmark"></i></button>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div class="live-badge-active"><i class="fa-solid fa-circle" style="font-size:6px;"></i> LIVE</div>
+            <div class="live-viewer-count"><i class="fa-solid fa-eye"></i> <span id="liveViewerCount">0</span></div>
+        </div>
+        <button class="live-camera-flip" onclick="flipLiveCamera()"><i class="fa-solid fa-rotate"></i></button>
+    </div>
+
+    <div class="live-studio-bottom">
+        <div class="live-chat-feed" id="liveChatFeed"></div>
+        <div class="live-controls-row">
+            <input type="text" class="live-chat-input" id="liveChatInput" placeholder="Say something..." onkeydown="if(event.key==='Enter') sendLiveChat()">
+            <button class="live-reaction-btn" onclick="sendLiveReaction()">❤️</button>
+            <button class="live-end-btn" onclick="endLiveStudio()"><i class="fa-solid fa-stop"></i></button>
+        </div>
+    </div>
 </div>
         
     <div class="feed-container">
@@ -2110,7 +2214,77 @@ function closeNeuralMenu() {
     const sheet = document.getElementById('neuralBottomMenu');
     sheet.classList.remove('is-open');
 }
-        
+
+// ===== GO LIVE LOGIC =====
+let liveStream = null;
+let liveFacingMode = 'user';
+let liveViewerInterval = null;
+let liveViewerCount = 0;
+
+function openStorySheet() {
+    document.getElementById('storySheetOverlay').classList.add('open');
+}
+function closeStorySheet() {
+    document.getElementById('storySheetOverlay').classList.remove('open');
+}
+
+async function startLiveStudio() {
+    document.getElementById('liveStudio').classList.add('open');
+    document.getElementById('liveChatFeed').innerHTML = '';
+    liveViewerCount = 0;
+    document.getElementById('liveViewerCount').textContent = '0';
+
+    try {
+        liveStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: liveFacingMode }, audio: true
+        });
+        document.getElementById('liveCameraPreview').srcObject = liveStream;
+    } catch (err) {
+        alert('Ba a samu izinin camera/microphone ba: ' + err.message);
+        endLiveStudio();
+        return;
+    }
+
+    // Dummy viewer count simulation (za a maye gurbinsu da real data daga backend)
+    liveViewerInterval = setInterval(() => {
+        liveViewerCount += Math.floor(Math.random() * 3);
+        document.getElementById('liveViewerCount').textContent = liveViewerCount;
+    }, 4000);
+}
+
+function flipLiveCamera() {
+    liveFacingMode = liveFacingMode === 'user' ? 'environment' : 'user';
+    if (liveStream) liveStream.getTracks().forEach(t => t.stop());
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: liveFacingMode }, audio: true })
+        .then(stream => {
+            liveStream = stream;
+            document.getElementById('liveCameraPreview').srcObject = stream;
+        });
+}
+
+function endLiveStudio() {
+    if (liveStream) liveStream.getTracks().forEach(t => t.stop());
+    liveStream = null;
+    clearInterval(liveViewerInterval);
+    document.getElementById('liveStudio').classList.remove('open');
+}
+
+function sendLiveChat() {
+    const input = document.getElementById('liveChatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    const feed = document.getElementById('liveChatFeed');
+    const el = document.createElement('div');
+    el.className = 'live-chat-msg';
+    el.innerHTML = `<b>You</b>${msg}`;
+    feed.appendChild(el);
+    feed.scrollTop = feed.scrollHeight;
+    input.value = '';
+}
+
+function sendLiveReaction() {
+    if (navigator.vibrate) navigator.vibrate(15);
+}
 </script>
     <script src="nexus-algorithm.js"></script> 
 </body>
