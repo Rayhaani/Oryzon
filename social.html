@@ -1376,7 +1376,7 @@ body {
     </div>
 
     <div id="conveyorBelt" style="display:flex; align-items:center; gap:8px; flex:1; height:95px; will-change:transform; min-width:0;">
-        <div class="story-card is-live" onclick="openStory('live_now')">
+        <div class="story-card is-live" onclick="openWatchLive()">
             <div class="story-avatar-wrapper">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_%E8%8B%B1%E8%AA%9E_logo.svg" alt="" class="story-avatar">
                 <div class="live-badge">LIVE</div>
@@ -2357,7 +2357,11 @@ function flipLiveCamera() {
 function endLiveStudio() {
     if (liveStream) liveStream.getTracks().forEach(t => t.stop());
     liveStream = null;
-    clearInterval(liveViewerInterval);
+    if (liveViewersUnsub) liveViewersUnsub();
+    if (liveChatUnsub) liveChatUnsub();
+    document.getElementById('liveStudio').classList.remove('open');
+    document.getElementById('instaFooter').classList.remove('footer-hidden');
+    document.body.style.overflow = '';
     if (currentLiveSessionId) {
         db.collection('nexus_live_sessions').doc(currentLiveSessionId).update({
             status: 'ended',
@@ -2365,9 +2369,6 @@ function endLiveStudio() {
         }).catch(err => console.error('Kuskure wajen rufe live session:', err));
         currentLiveSessionId = null;
     }
-    document.getElementById('liveStudio').classList.remove('open');
-    document.getElementById('instaFooter').classList.remove('footer-hidden');
-    document.body.style.overflow = '';
 }
 
 async function notifyFollowersLive() {
@@ -2395,16 +2396,112 @@ async function notifyFollowersLive() {
     }
 }
 
+function setupHostLiveListeners(liveId) {
+    const liveRef = db.collection('nexus_live_sessions').doc(liveId);
+
+    liveViewersUnsub = liveRef.collection('viewers').onSnapshot(snap => {
+        document.getElementById('liveViewerCount').textContent = snap.size;
+    });
+
+    liveChatUnsub = liveRef.collection('chat').orderBy('timestamp').onSnapshot(snap => {
+        const feed = document.getElementById('liveChatFeed');
+        feed.innerHTML = '';
+        snap.forEach(doc => {
+            const d = doc.data();
+            const el = document.createElement('div');
+            el.className = 'live-chat-msg';
+            el.innerHTML = `<b>${d.author}</b>${d.text}`;
+            feed.appendChild(el);
+        });
+        feed.scrollTop = feed.scrollHeight;
+    });
+}
+
+// ===== WATCH LIVE (masu kallo) =====
+async function openWatchLive(liveId) {
+    if (!liveId) {
+        const activeSnap = await db.collection('nexus_live_sessions')
+            .where('status', '==', 'live')
+            .orderBy('startedAt', 'desc').limit(1).get();
+        if (activeSnap.empty) { alert('Babu wanda yake Live yanzu.'); return; }
+        liveId = activeSnap.docs[0].id;
+    }
+
+    currentWatchingLiveId = liveId;
+    const liveRef = db.collection('nexus_live_sessions').doc(liveId);
+    const liveDoc = await liveRef.get();
+    if (!liveDoc.exists) { alert('Wannan live ya kare.'); return; }
+    const liveData = liveDoc.data();
+
+    document.getElementById('watchLiveHostAvatar').src = liveData.hostAvatar;
+    document.getElementById('watchLiveHostName').textContent = liveData.host;
+    document.getElementById('watchLiveChatFeed').innerHTML = '';
+    document.getElementById('watchLiveOverlay').classList.add('open');
+    document.getElementById('instaFooter').classList.add('footer-hidden');
+    document.body.style.overflow = 'hidden';
+
+    await liveRef.collection('viewers').doc(currentUser).set({
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    watchViewersUnsub = liveRef.collection('viewers').onSnapshot(snap => {
+        document.getElementById('watchLiveViewerCount').textContent = snap.size;
+    });
+
+    watchChatUnsub = liveRef.collection('chat').orderBy('timestamp').onSnapshot(snap => {
+        const feed = document.getElementById('watchLiveChatFeed');
+        feed.innerHTML = '';
+        snap.forEach(doc => {
+            const d = doc.data();
+            const el = document.createElement('div');
+            el.className = 'live-chat-msg';
+            el.innerHTML = `<b>${d.author}</b>${d.text}`;
+            feed.appendChild(el);
+        });
+        feed.scrollTop = feed.scrollHeight;
+    });
+}
+
+function closeWatchLive() {
+    if (currentWatchingLiveId) {
+        db.collection('nexus_live_sessions').doc(currentWatchingLiveId)
+            .collection('viewers').doc(currentUser).delete().catch(() => {});
+    }
+    if (watchViewersUnsub) watchViewersUnsub();
+    if (watchChatUnsub) watchChatUnsub();
+    currentWatchingLiveId = null;
+    document.getElementById('watchLiveOverlay').classList.remove('open');
+    document.getElementById('instaFooter').classList.remove('footer-hidden');
+    document.body.style.overflow = '';
+}
+
+function sendWatchLiveChat() {
+    const input = document.getElementById('watchLiveChatInput');
+    const msg = input.value.trim();
+    if (!msg || !currentWatchingLiveId) return;
+    db.collection('nexus_live_sessions').doc(currentWatchingLiveId)
+        .collection('chat').add({
+            author: currentUser,
+            text: msg,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    input.value = '';
+}
+
+function sendWatchLiveReaction() {
+    if (navigator.vibrate) navigator.vibrate(15);
+    }
+
 function sendLiveChat() {
     const input = document.getElementById('liveChatInput');
     const msg = input.value.trim();
-    if (!msg) return;
-    const feed = document.getElementById('liveChatFeed');
-    const el = document.createElement('div');
-    el.className = 'live-chat-msg';
-    el.innerHTML = `<b>You</b>${msg}`;
-    feed.appendChild(el);
-    feed.scrollTop = feed.scrollHeight;
+    if (!msg || !currentLiveSessionId) return;
+    db.collection('nexus_live_sessions').doc(currentLiveSessionId)
+        .collection('chat').add({
+            author: currentUser,
+            text: msg,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
     input.value = '';
 }
 
