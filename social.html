@@ -2400,22 +2400,32 @@ async function notifyFollowersLive() {
 function setupHostLiveListeners(liveId) {
     const liveRef = db.collection('nexus_live_sessions').doc(liveId);
 
-    liveViewersUnsub = liveRef.collection('viewers').onSnapshot(snap => {
-        document.getElementById('liveViewerCount').textContent = snap.size;
-    });
+    liveViewersUnsub = liveRef.collection('viewers').onSnapshot(
+        snap => {
+            console.log('[HOST] viewer count update:', snap.size);
+            document.getElementById('liveViewerCount').textContent = snap.size;
+        },
+        err => {
+            console.error('[HOST] viewers listener error:', err);
+            alert('Viewer listener error: ' + err.message);
+        }
+    );
 
-    liveChatUnsub = liveRef.collection('chat').orderBy('timestamp').onSnapshot(snap => {
-        const feed = document.getElementById('liveChatFeed');
-        feed.innerHTML = '';
-        snap.forEach(doc => {
-            const d = doc.data();
-            const el = document.createElement('div');
-            el.className = 'live-chat-msg';
-            el.innerHTML = `<b>${d.author}</b>${d.text}`;
-            feed.appendChild(el);
-        });
-        feed.scrollTop = feed.scrollHeight;
-    });
+    liveChatUnsub = liveRef.collection('chat').orderBy('timestamp').onSnapshot(
+        snap => {
+            const feed = document.getElementById('liveChatFeed');
+            feed.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                const el = document.createElement('div');
+                el.className = 'live-chat-msg';
+                el.innerHTML = `<b>${d.author}</b>${d.text}`;
+                feed.appendChild(el);
+            });
+            feed.scrollTop = feed.scrollHeight;
+        },
+        err => console.error('[HOST] chat listener error:', err)
+    );
 }
 
 // ===== WATCH LIVE (masu kallo) =====
@@ -2444,6 +2454,7 @@ async function openWatchLive(liveId) {
         await liveRef.collection('viewers').doc(currentUser).set({
             joinedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        console.log('[VIEWER] joined live as', currentUser, 'liveId:', liveId);
 
         watchViewersUnsub = liveRef.collection('viewers').onSnapshot(snap => {
             document.getElementById('watchLiveViewerCount').textContent = snap.size;
