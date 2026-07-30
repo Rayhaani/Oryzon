@@ -2419,48 +2419,52 @@ function setupHostLiveListeners(liveId) {
 
 // ===== WATCH LIVE (masu kallo) =====
 async function openWatchLive(liveId) {
-    if (!liveId) {
-        const activeSnap = await db.collection('nexus_live_sessions')
-            .where('status', '==', 'live')
-            .orderBy('startedAt', 'desc').limit(1).get();
-        if (activeSnap.empty) { alert('Babu wanda yake Live yanzu.'); return; }
-        liveId = activeSnap.docs[0].id;
-    }
+    try {
+        if (!liveId) {
+            const activeSnap = await db.collection('nexus_live_sessions')
+                .where('status', '==', 'live').get();
+            if (activeSnap.empty) { alert('Babu wanda yake Live yanzu.'); return; }
+            liveId = activeSnap.docs[0].id;
+        }
 
-    currentWatchingLiveId = liveId;
-    const liveRef = db.collection('nexus_live_sessions').doc(liveId);
-    const liveDoc = await liveRef.get();
-    if (!liveDoc.exists) { alert('Wannan live ya kare.'); return; }
-    const liveData = liveDoc.data();
+        currentWatchingLiveId = liveId;
+        const liveRef = db.collection('nexus_live_sessions').doc(liveId);
+        const liveDoc = await liveRef.get();
+        if (!liveDoc.exists) { alert('Wannan live ya kare.'); return; }
+        const liveData = liveDoc.data();
 
-    document.getElementById('watchLiveHostAvatar').src = liveData.hostAvatar;
-    document.getElementById('watchLiveHostName').textContent = liveData.host;
-    document.getElementById('watchLiveChatFeed').innerHTML = '';
-    document.getElementById('watchLiveOverlay').classList.add('open');
-    document.getElementById('instaFooter').classList.add('footer-hidden');
-    document.body.style.overflow = 'hidden';
+        document.getElementById('watchLiveHostAvatar').src = liveData.hostAvatar;
+        document.getElementById('watchLiveHostName').textContent = liveData.host;
+        document.getElementById('watchLiveChatFeed').innerHTML = '';
+        document.getElementById('watchLiveOverlay').classList.add('open');
+        document.getElementById('instaFooter').classList.add('footer-hidden');
+        document.body.style.overflow = 'hidden';
 
-    await liveRef.collection('viewers').doc(currentUser).set({
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    watchViewersUnsub = liveRef.collection('viewers').onSnapshot(snap => {
-        document.getElementById('watchLiveViewerCount').textContent = snap.size;
-    });
-
-    watchChatUnsub = liveRef.collection('chat').orderBy('timestamp').onSnapshot(snap => {
-        const feed = document.getElementById('watchLiveChatFeed');
-        feed.innerHTML = '';
-        snap.forEach(doc => {
-            const d = doc.data();
-            const el = document.createElement('div');
-            el.className = 'live-chat-msg';
-            el.innerHTML = `<b>${d.author}</b>${d.text}`;
-            feed.appendChild(el);
+        await liveRef.collection('viewers').doc(currentUser).set({
+            joinedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        feed.scrollTop = feed.scrollHeight;
-    });
-}
+
+        watchViewersUnsub = liveRef.collection('viewers').onSnapshot(snap => {
+            document.getElementById('watchLiveViewerCount').textContent = snap.size;
+        });
+
+        watchChatUnsub = liveRef.collection('chat').orderBy('timestamp').onSnapshot(snap => {
+            const feed = document.getElementById('watchLiveChatFeed');
+            feed.innerHTML = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                const el = document.createElement('div');
+                el.className = 'live-chat-msg';
+                el.innerHTML = `<b>${d.author}</b>${d.text}`;
+                feed.appendChild(el);
+            });
+            feed.scrollTop = feed.scrollHeight;
+        });
+    } catch (err) {
+        console.error('openWatchLive error:', err);
+        alert('Error: ' + err.message);
+    }
+            }
 
 function closeWatchLive() {
     if (currentWatchingLiveId) {
