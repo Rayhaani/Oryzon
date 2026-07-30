@@ -2298,6 +2298,8 @@ let liveChatUnsub = null;
 let currentWatchingLiveId = null;
 let watchViewersUnsub = null;
 let watchChatUnsub = null;
+let mediaRecorder = null;
+let recordedChunks = [];
 
 function openStorySheet() {
     document.getElementById('storySheetOverlay').classList.add('open');
@@ -2338,6 +2340,14 @@ async function startLiveStudio() {
             video: { facingMode: liveFacingMode }, audio: true
         });
         document.getElementById('liveCameraPreview').srcObject = liveStream;
+    recordedChunks = [];
+        try {
+            mediaRecorder = new MediaRecorder(liveStream, { mimeType: 'video/webm;codecs=vp8,opus' });
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.start();
+        } catch (recErr) {
+            console.warn('MediaRecorder ba ya samuwa:', recErr);
+        }
     } catch (err) {
         alert('Ba a samu izinin camera/microphone ba: ' + err.message);
         endLiveStudio();
@@ -2356,6 +2366,13 @@ function flipLiveCamera() {
 }
 
 function endLiveStudio() {
+    const liveIdToClose = currentLiveSessionId;
+
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.onstop = () => uploadLiveRecording(liveIdToClose);
+        mediaRecorder.stop();
+    }
+
     if (liveStream) liveStream.getTracks().forEach(t => t.stop());
     liveStream = null;
     if (liveViewersUnsub) liveViewersUnsub();
@@ -2369,6 +2386,31 @@ function endLiveStudio() {
             endedAt: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(err => console.error('Kuskure wajen rufe live session:', err));
         currentLiveSessionId = null;
+    }
+}
+
+async function uploadLiveRecording(liveId) {
+    if (!liveId || recordedChunks.length === 0) return;
+    try {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const formData = new FormData();
+        formData.append('file', blob, `live_${liveId}.webm`);
+        formData.append('type', 'live_recording');
+        formData.append('username', currentUser);
+
+        const response = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (data.success) {
+            await db.collection('nexus_live_sessions').doc(liveId).update({
+                recordingUrl: data.url
+            });
+            console.log('Recording an ajiye:', data.url);
+        } else {
+            console.error('Upload din recording ya kasa:', data.error);
+        }
+    } catch (err) {
+        console.error('uploadLiveRecording error:', err);
     }
 }
 
