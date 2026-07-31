@@ -3397,40 +3397,66 @@ body {
         background: transparent;
         border-radius: 0 0 32px 32px;
     }
-    .nxh-hours-banner {
-        position: fixed;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 220px;
-        max-width: 70%;
-        z-index: 99999;
-        overflow: hidden;
-        max-height: 0;
-        opacity: 0;
-        transition: max-height 0.45s ease, opacity 0.35s ease;
-        border-radius: 0 0 14px 14px;
-        background: rgba(18,16,20,0.9);
-        border: 1px solid rgba(239,68,68,0.35);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 20px rgba(239,68,68,0.2);
-        }
-    .nxh-hours-banner.nxh-show {
-        max-height: 50px;
-        opacity: 1;
-    }
-    .nxh-hours-banner-inner {
-        padding: 11px 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        color: #ffffff;
-        font-size: 12.5px;
-        font-weight: 700;
-        text-align: center;
-        white-space: nowrap;
+.nxh-hours-banner {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 240px;
+    max-width: 75%;
+    z-index: 99999;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+    border-radius: 0 0 18px 18px;
+    background: rgba(18,16,20,0.92);
+    border: 1px solid rgba(239,68,68,0.35);
+    border-top: none;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45), 0 0 24px rgba(239,68,68,0.22);
+}
+.nxh-hours-banner.nxh-show {
+    max-height: 340px;
+    opacity: 1;
+}
+.nxh-hours-banner-inner {
+    padding: 16px 18px 14px;
+}
+.nxh-hours-title {
+    color: #ffffff;
+    font-size: 13.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.nxh-hours-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.nxh-hours-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.85);
+}
+.nxh-hours-row .nxh-open {
+    color: #4ade80;
+    font-weight: 700;
+}
+.nxh-hours-row .nxh-closed {
+    color: rgba(255,255,255,0.35);
+    font-weight: 600;
         }
     .nxh-iconbar {
         position: relative;
@@ -3800,10 +3826,10 @@ body {
    <div class="nxh-hero" id="nxh-hero-banner">
                 <div class="nxh-hero-overlay"></div>
                 <div id="nxh-hours-banner" class="nxh-hours-banner">
-                    <div class="nxh-hours-banner-inner">
-                        <span>📅</span>
-                        <span id="nxh-hours-text">Available Everyday</span>
-                    </div>
+    <div class="nxh-hours-banner-inner">
+        <div class="nxh-hours-title"><span>📅</span> Business Days</div>
+        <ul id="nxh-hours-list" class="nxh-hours-list"></ul>
+    </div>
                 </div>
                 <div class="nxh-iconbar">
                     <button id="close-profile-sheet-btn" class="nxh-icon-btn">←</button>
@@ -6768,15 +6794,18 @@ function closeStoryDeck() {
     } else { scheduleCard.style.display = "none"; }
 
 const hoursBanner = document.getElementById("nxh-hours-banner");
-    const hoursText = document.getElementById("nxh-hours-text");
-    if (hoursBanner && hoursText) {
-        hoursText.innerText = (pro.schedule && pro.schedule.length !== 7)
-            ? `Open: ${pro.schedule.map(d => d.slice(0,3)).join(', ')}`
-            : "Open Everyday";
-        hoursBanner.classList.remove("nxh-show");
-        void hoursBanner.offsetWidth;
-        setTimeout(() => hoursBanner.classList.add("nxh-show"), 350);
-        setTimeout(() => hoursBanner.classList.remove("nxh-show"), 5350);
+const hoursList = document.getElementById("nxh-hours-list");
+if (hoursBanner && hoursList) {
+    const allDays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    const openDays = pro.schedule || [];
+    hoursList.innerHTML = allDays.map(d => {
+        const isOpen = openDays.length === 7 || openDays.some(od => od.toLowerCase().startsWith(d.toLowerCase().slice(0,3)));
+        return `<li class="nxh-hours-row"><span>${d}</span><span class="${isOpen ? 'nxh-open' : 'nxh-closed'}">${isOpen ? 'Open' : 'Closed'}</span></li>`;
+    }).join('');
+    hoursBanner.classList.remove("nxh-show");
+    void hoursBanner.offsetWidth;
+    setTimeout(() => hoursBanner.classList.add("nxh-show"), 350);
+    setTimeout(() => hoursBanner.classList.remove("nxh-show"), 5350);
         }
 document.getElementById("profile-expert-bio-p").innerText = pro.bio;
     document.getElementById("profile-skills-badges-slot").innerHTML = pro.skills.map(s =>
