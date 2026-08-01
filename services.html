@@ -7823,7 +7823,7 @@ async function uploadPortfolioFilesInline(username) {
     return Object.values(portfolioFiles).filter(e=>e.url).map(e=>({ url:e.url, type:e.type.includes("video")?"video":"image" }));
         }
 
-        async function uploadVerificationFilesInline(username) {
+    async function uploadVerificationFilesInline(username) {
     const results = {};
     const idToken = firebase.auth().currentUser ? await firebase.auth().currentUser.getIdToken() : null;
     for (const key of Object.keys(verificationFiles)) {
@@ -7839,11 +7839,18 @@ async function uploadPortfolioFilesInline(username) {
                 body: formData
             });
             const data = await res.json();
-            if (data.success) results[key] = data.key;
-        } catch(err) { console.warn(`Verification ${key} upload kaskure:`, err); }
+            if (data.success) {
+                results[key] = data.key;
+            } else {
+                psShowToast(`❌ ${key}: ${data.error || 'unknown'} (status ${res.status})`);
+            }
+        } catch(err) {
+            console.warn(`Verification ${key} upload kaskure:`, err);
+            psShowToast(`❌ ${key} network error: ${err.message}`);
+        }
     }
     return results;
-        }
+    }
         
 async function submitServiceInline() {
     if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); setTimeout(()=>window.location.href='login.html',1200); return; }
