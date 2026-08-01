@@ -669,11 +669,11 @@ function openViewModal(uid) {
 
         <div class="modal-section-label">🖼️ Work Portfolio (${portfolio.length})</div>
         <div class="gallery-grid">
-            ${portfolio.map(item => item.type === "video"
-                ? `<div class="gallery-item"><video src="${item.url}" muted playsinline controls></video></div>`
-                : `<div class="gallery-item"><img src="${item.url}" loading="lazy" onerror="this.style.opacity=0.2"></div>`
-            ).join("") || `<div style="font-size:11px;color:var(--txt3);">No portfolio items</div>`}
-        </div>
+        ${portfolio.map(item => item.type === "video"
+    ? `<div class="gallery-item" onclick="openMediaLightbox('${item.url}','video')"><video src="${item.url}" muted playsinline></video></div>`
+    : `<div class="gallery-item" onclick="openMediaLightbox('${item.url}','image')"><img src="${item.url}" loading="lazy" onerror="this.style.opacity=0.2"></div>`
+).join("") || `<div style="font-size:11px;color:var(--txt3);">No portfolio items</div>`}  
+          </div>
 
         ${status.key === "rejected" && v.rejectReason ? `
         <div class="modal-section-label">🚫 Rejection Reason</div>
@@ -892,6 +892,16 @@ async function loadVerificationImage(boxId, labelText, key, emoji) {
     liveBox.innerHTML = `<img src="${url}" alt="${labelText}" onerror="this.parentElement.querySelector('img')?.remove();this.outerHTML='<div class=&quot;verif-fallback&quot;>⚠️ Image expired or failed</div>'"><div class="verif-label">${labelText}</div>`;
 }
 
+function openMediaLightbox(url, type) {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;display:flex;align-items:center;justify-content:center;";
+    overlay.onclick = () => overlay.remove();
+    const media = type === "video"
+        ? `<video src="${url}" controls autoplay style="max-width:95vw;max-height:95vh;object-fit:contain;"></video>`
+        : `<img src="${url}" style="max-width:95vw;max-height:95vh;object-fit:contain;">`;
+    overlay.innerHTML = `${media}<div style="position:absolute;top:20px;right:20px;color:#fff;font-size:28px;cursor:pointer;">✕</div>`;
+    document.body.appendChild(overlay);
+}
 // ── APPROVE ──
 async function approveProvider(uid) {
     try {
