@@ -692,7 +692,7 @@ function openViewModal(uid) {
         <div class="modal-action-row">
             <button class="act-btn btn-suspend" style="flex:1;" onclick="closeModal('view-modal');openWarningModal('${p.id}')">⚠️ Send Warning</button>
         </div>
-        ${status.key !== "pending" && (v.idDocKey || v.selfieKey) ? `
+        ${status.key !== "pending" && (v.idKey || v.selfieKey) ? `
         <div class="modal-action-row">
             <button class="act-btn btn-delete" style="flex:1;" onclick="purgeVerificationFiles('${p.id}')">🗑️ Purge ID/Selfie Files (Privacy)</button>
         </div>
@@ -701,7 +701,7 @@ function openViewModal(uid) {
     document.getElementById("view-modal").classList.add("show");
 
     // Resolve signed URLs (requires admin to be logged in)
-    loadVerificationImage("verif-box-id", "ID Document", v.idDocKey, "🪪");
+    loadVerificationImage("verif-box-id", "ID Document", v.idKey, "🪪");
     loadVerificationImage("verif-box-selfie", "Selfie + ID", v.selfieKey, "🤳");
     loadProviderReviews(p.id);
 }
@@ -847,7 +847,7 @@ async function purgeVerificationFiles(uid) {
     const v = p.verification || {};
     try {
         const token = await adminUser.getIdToken();
-        const keys = [v.idDocKey, v.selfieKey].filter(Boolean);
+        const keys = [v.idKey, v.selfieKey].filter(Boolean);
         for (const key of keys) {
             await fetch(`${BACKEND_URL}/verification-delete`, {
                 method: "DELETE",
@@ -857,7 +857,7 @@ async function purgeVerificationFiles(uid) {
             delete signedUrlCache[key];
         }
         await rtdb.ref("providers/" + uid).update({
-            "verification/idDocKey": null,
+            "verification/idKey": null,
             "verification/selfieKey": null,
             "verification/filesPurged": true,
             "verification/purgedAt": firebase.database.ServerValue.TIMESTAMP
