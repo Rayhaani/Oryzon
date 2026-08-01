@@ -7811,7 +7811,7 @@ async function uploadPortfolioFilesInline(username) {
             formData.append("file", entry.file);
             formData.append("type", "portfolio");
             formData.append("username", username || "guest");
-            const res = await fetch(`${BACKEND_URL}/upload`, { method:"POST", body:formData });
+            const res = await fetch(`${BACKEND_URL}/upload`, { method: "POST", body: formData });
             const data = await res.json();
             if (data.success) portfolioFiles[key].url = data.url;
         } catch(err) { console.warn(`Slot ${key} upload kaskure:`, err); }
@@ -7821,26 +7821,30 @@ async function uploadPortfolioFilesInline(username) {
         if (barEl) barEl.style.width = pct + "%";
     }
     return Object.values(portfolioFiles).filter(e=>e.url).map(e=>({ url:e.url, type:e.type.includes("video")?"video":"image" }));
-                }
+        }
 
         async function uploadVerificationFilesInline(username) {
     const results = {};
+    const idToken = firebase.auth().currentUser ? await firebase.auth().currentUser.getIdToken() : null;
     for (const key of Object.keys(verificationFiles)) {
         const entry = verificationFiles[key];
         if (!entry.file) continue;
         try {
             const formData = new FormData();
             formData.append("file", entry.file);
-            formData.append("type", "verification");
-            formData.append("username", username || "guest");
-            const res = await fetch(`${BACKEND_URL}/upload-verification`, { method:"POST", body:formData });
+            formData.append("docType", key);
+            const res = await fetch(`${BACKEND_URL}/upload-verification`, {
+                method: "POST",
+                headers: idToken ? { "Authorization": `Bearer ${idToken}` } : {},
+                body: formData
+            });
             const data = await res.json();
             if (data.success) results[key] = data.key;
         } catch(err) { console.warn(`Verification ${key} upload kaskure:`, err); }
     }
     return results;
-}
-
+        }
+        
 async function submitServiceInline() {
     if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); setTimeout(()=>window.location.href='login.html',1200); return; }
     if (!psInlineState.gpsReady) { psShowToast("⚠️ Ka ɗauki GPS loca kafin ka aika!"); return; }
