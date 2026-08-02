@@ -995,9 +995,10 @@ function showToast(msg) {
 document.addEventListener("DOMContentLoaded", () => {
     let providersStarted = false;
 
+    const ADMIN_UID = "3w81YH5QG6gH61II7jVCKfTRYo72";
     auth.onAuthStateChanged((user) => {
-        adminUser = user;
-        if (user) {
+        if (user && user.uid === ADMIN_UID) {
+            adminUser = user;
             document.getElementById("admin-login-overlay").classList.remove("show");
             if (!providersStarted) {
                 providersStarted = true;
@@ -1005,10 +1006,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 loadReports();
             }
         } else {
+            adminUser = null;
+            if (user) auth.signOut(); // wani account ne dabam (ba admin ba) — fita nan take
             document.getElementById("admin-login-overlay").classList.add("show");
         }
     });
-
     document.getElementById("admin-login-btn").addEventListener("click", async () => {
         const email = document.getElementById("admin-login-email").value.trim();
         const password = document.getElementById("admin-login-password").value;
