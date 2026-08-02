@@ -409,7 +409,7 @@ async function fetchVerificationSignedUrl(key) {
     if (!key) return null;
     const cached = signedUrlCache[key];
     if (cached && cached.expiresAt > Date.now()) return cached.url;
-    if (!adminUser) return null;
+    if (!adminUser) { console.error("verification-url: babu adminUser"); return null; }
 
     try {
         const token = await adminUser.getIdToken();
@@ -419,8 +419,10 @@ async function fetchVerificationSignedUrl(key) {
             body: JSON.stringify({ key })
         });
         const data = await res.json();
-        if (!data.success) return null;
-        // signed URL is valid for 10 min server-side — cache for 8 to be safe
+        if (!data.success) {
+            console.error(`verification-url ya kasa (status ${res.status}):`, data.error, "| key:", key);
+            return null;
+        }
         signedUrlCache[key] = { url: data.url, expiresAt: Date.now() + 8 * 60 * 1000 };
         return data.url;
     } catch (e) {
