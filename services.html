@@ -6270,10 +6270,10 @@ async function loadRealProvidersFromFirebase() {
         const snap = await firebase.database().ref('providers').once('value');
         const data = snap.val();
         if (!data) return;
-        Object.keys(data).forEach(username => {
+        for (const username of Object.keys(data)) {
             const p = data[username];
-            if (!p || p.status !== 'approved') return;
-            if (PROS.some(existing => String(existing.id) === username)) return;
+            if (!p || p.status !== 'approved') continue;
+            if (PROS.some(existing => String(existing.id) === username)) continue;
            const catalog = p.categories || {};
             const flatItems = [];
             Object.keys(catalog).forEach(catKey => {
@@ -6281,6 +6281,7 @@ async function loadRealProvidersFromFirebase() {
                 Object.keys(items).forEach(itemId => flatItems.push({ ...items[itemId], category: catKey }));
             });
             const isFoodCategory = ['chef', 'snacks', 'beverages'].includes(p.category);
+            const photoUrl = await fetchProPhoto(username);
 
             const newPro = {
                 id: username,
@@ -6298,6 +6299,7 @@ async function loadRealProvidersFromFirebase() {
                 address: p.address || (p.location ? `${p.location.lat.toFixed(4)}, ${p.location.lng.toFixed(4)}` : 'Location available on request'),
                 verified: p.status === 'approved',
                 avatar: (p.businessName || p.name || username).slice(0,2).toUpperCase(),
+                photoUrl: photoUrl,
                 color: 'linear-gradient(135deg, #ea580c 0%, #78350f 100%)',
                 jobs: p.jobsDone || 0,
                 price: p.pricing ? formatPrice(p.pricing.base, p.pricing.currency) : formatPrice(0, null),
@@ -6314,8 +6316,8 @@ async function loadRealProvidersFromFirebase() {
                 newPro.services = flatItems;
             }
 
-            PROS.push(newPro); 
-        });
+            PROS.push(newPro);
+        }
     } catch (e) {
         console.warn('Could not load real providers:', e);
     }
