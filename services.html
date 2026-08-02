@@ -6261,6 +6261,18 @@ const PROS = [
 ];    
 async function loadRealProvidersFromFirebase() {
     try {
+        let viewerLat = null, viewerLng = null;
+        if (navigator.geolocation) {
+            try {
+                const pos = await new Promise((resolve, reject) =>
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000 })
+                );
+                viewerLat = pos.coords.latitude;
+                viewerLng = pos.coords.longitude;
+            } catch (gpsErr) {
+                console.warn('Ba a samu location na user ba:', gpsErr);
+            }
+        }
         const snap = await firebase.database().ref('providers').once('value');
         const data = snap.val();
         if (!data) return;
@@ -6285,14 +6297,16 @@ async function loadRealProvidersFromFirebase() {
                 display_cat: p.categoryLabel || p.category || '',
                 rating: p.rating || 0,
                 reviews: p.reviewsCount || 0,
-                distance: p.distance || 0,
+                distance: (p.location && viewerLat !== null && viewerLng !== null)
+                    ? getDistanceKm(viewerLat, viewerLng, p.location.lat, p.location.lng)
+                    : 0,
                 city: p.city || '',
-                address: p.address || 'Location available on request',
+                address: p.address || (p.location ? `${p.location.lat.toFixed(4)}, ${p.location.lng.toFixed(4)}` : 'Location available on request'),
                 verified: p.status === 'approved',
                 avatar: (p.businessName || p.name || username).slice(0,2).toUpperCase(),
                 color: 'linear-gradient(135deg, #ea580c 0%, #78350f 100%)',
                 jobs: p.jobsDone || 0,
-                price: p.pricing ? '₦' + Number(p.pricing.base).toLocaleString() : '₦0',
+                price: p.pricing ? formatPrice(p.pricing.base, p.pricing.currency) : formatPrice(0, null),
                 bio: p.bio || '',
                 skills: p.categoryLabel ? [p.categoryLabel] : [],
                 online: p.online !== undefined ? p.online : true,
@@ -6362,6 +6376,8 @@ const psInlineState = {
     availableDays: [],
     gpsLat: null,
     gpsLng: null,
+    gpsCity: null,
+    gpsAddress: null,
     gpsReady: false,
     idType: null
 };
@@ -7989,6 +8005,8 @@ async function submitServiceInline() {
                 bio: psInlineState.description,
                 schedule: psInlineState.availableDays,
                 location: { lat: psInlineState.gpsLat, lng: psInlineState.gpsLng, updatedAt: Date.now() },
+                city: psInlineState.gpsCity || '',
+                address: psInlineState.gpsAddress || '',
                 portfolio: portfolioUrls,
                 verification: { idType: psInlineState.idType, idKey: verificationKeys.id, selfieKey: verificationKeys.selfie, submittedAt: Date.now() },
                 status: "pending_verification",
@@ -8762,6 +8780,8 @@ async function submitChefService() {
                     lng: psInlineState.gpsLng,
                     updatedAt: Date.now()
                 },
+                city: psInlineState.gpsCity || '',
+                address: psInlineState.gpsAddress || '',
                 verification: {
                     idType: document.getElementById('chef-id-type').value,
                     idKey: verificationKeys.id,
@@ -8832,6 +8852,8 @@ async function submitSnacksService() {
                     lng: psInlineState.gpsLng,
                     updatedAt: Date.now()
                 },
+                city: psInlineState.gpsCity || '',
+                address: psInlineState.gpsAddress || '',
                 verification: {
                     idType: document.getElementById('snacks-id-type').value,
                     idKey: verificationKeys.id || '',
@@ -8901,6 +8923,8 @@ async function submitBeveragesService() {
                     lng: psInlineState.gpsLng,
                     updatedAt: Date.now()
                 },
+                city: psInlineState.gpsCity || '',
+                address: psInlineState.gpsAddress || '',
                 verification: {
                     idType: document.getElementById('beverages-id-type').value,
                     idKey: verificationKeys.id || '',
@@ -10251,6 +10275,20 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+async function reverseGeocodeCoords(lat, lng) {
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`);
+        const data = await res.json();
+        const a = data.address || {};
+        const city = a.city || a.town || a.village || a.county || '';
+        const area = a.suburb || a.neighbourhood || a.road || '';
+        const address = [area, city].filter(Boolean).join(', ') || data.display_name || '';
+        return { city, address };
+    } catch (e) {
+        console.warn('Reverse geocoding ya kasa:', e);
+        return { city: '', address: '' };
+    }
+}
 // ════════════════════════════════════════════════════════════
 //  📍 UNIVERSAL GPS CAPTURE — Yana aiki ga DUK categories
 //  (Plumber, Chef, Snacks, Beverages, Doctor, Engineer, Lab, da sauransu)
@@ -10280,13 +10318,19 @@ function captureGPSUniversal(config, isRetry) {
     if (status) status.textContent = isRetry ? '🔄 Retrying a different way...' : '🔄 Getting location...';
 
     navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        async (pos) => {
             stateTarget.gpsLat = pos.coords.latitude;
             stateTarget.gpsLng = pos.coords.longitude;
+
+            if (status) status.textContent = '🔄 Finding your address...';
+            const place = await reverseGeocodeCoords(stateTarget.gpsLat, stateTarget.gpsLng);
+            stateTarget.gpsCity = place.city;
+            stateTarget.gpsAddress = place.address;
+
             stateTarget.gpsReady = true;
 
             if (status) status.textContent = '✅ Location captured!';
-            if (coords) coords.textContent = `${stateTarget.gpsLat.toFixed(5)}, ${stateTarget.gpsLng.toFixed(5)}`;
+            if (coords) coords.textContent = stateTarget.gpsAddress || `${stateTarget.gpsLat.toFixed(5)}, ${stateTarget.gpsLng.toFixed(5)}`;
             if (btn) { btn.disabled = false; btn.textContent = '✅ Done'; }
             if (card) {
                 card.style.borderColor = 'rgba(16,185,129,0.4)';
