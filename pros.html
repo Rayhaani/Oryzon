@@ -406,10 +406,10 @@ let adminUser = null;
 const signedUrlCache = {}; // key -> { url, expiresAt }
 
 async function fetchVerificationSignedUrl(key) {
-    if (!key) return null;
+    if (!key) return { url: null, error: "babu key" };
     const cached = signedUrlCache[key];
-    if (cached && cached.expiresAt > Date.now()) return cached.url;
-    if (!adminUser) { console.error("verification-url: babu adminUser"); return null; }
+    if (cached && cached.expiresAt > Date.now()) return { url: cached.url, error: null };
+    if (!adminUser) return { url: null, error: "babu adminUser (ba a login ba)" };
 
     try {
         const token = await adminUser.getIdToken();
@@ -420,14 +420,12 @@ async function fetchVerificationSignedUrl(key) {
         });
         const data = await res.json();
         if (!data.success) {
-            console.error(`verification-url ya kasa (status ${res.status}):`, data.error, "| key:", key);
-            return null;
+            return { url: null, error: `status ${res.status}: ${data.error || 'unknown'}` };
         }
         signedUrlCache[key] = { url: data.url, expiresAt: Date.now() + 8 * 60 * 1000 };
-        return data.url;
+        return { url: data.url, error: null };
     } catch (e) {
-        console.error("verification-url fetch failed:", e);
-        return null;
+        return { url: null, error: `network: ${e.message}` };
     }
 }
 
@@ -882,16 +880,15 @@ async function loadVerificationImage(boxId, labelText, key, emoji) {
         return;
     }
 
-    const url = await fetchVerificationSignedUrl(key);
-    // box might no longer be in the DOM if modal was closed/reopened — re-check
+    const result = await fetchVerificationSignedUrl(key);
     const liveBox = document.getElementById(boxId);
     if (!liveBox) return;
 
-    if (!url) {
-        liveBox.innerHTML = `<div class="verif-fallback">⚠️ Could not load image</div><div class="verif-label">${labelText}</div>`;
+    if (!result.url) {
+        liveBox.innerHTML = `<div class="verif-fallback">⚠️ ${result.error || 'Could not load image'}</div><div class="verif-label">${labelText}</div>`;
         return;
     }
-    liveBox.innerHTML = `<img src="${url}" alt="${labelText}" onerror="this.parentElement.querySelector('img')?.remove();this.outerHTML='<div class=&quot;verif-fallback&quot;>⚠️ Image expired or failed</div>'"><div class="verif-label">${labelText}</div>`;
+    liveBox.innerHTML = `<img src="${result.url}" alt="${labelText}" onerror="this.parentElement.querySelector('img')?.remove();this.outerHTML='<div class=&quot;verif-fallback&quot;>⚠️ Image expired or failed</div>'"><div class="verif-label">${labelText}</div>`;
 }
 
 function openMediaLightbox(url, type) {
