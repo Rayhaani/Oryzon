@@ -6742,27 +6742,18 @@ function closeStoryDeck() {
 
     document.getElementById("profile-online-status-pill").style.background = pro.online ? '#16a34a' : '#dc2626';
     document.getElementById("profile-online-status-pill").style.boxShadow = pro.online ? '0 0 8px rgba(22,163,74,0.6)' : '0 0 8px rgba(220,38,38,0.6)';
-    document.getElementById("nxh-avail-dot").style.background = pro.online ? '#16a34a' : '#dc2626';
-    document.getElementById("nxh-avail-text").innerText = pro.online ? 'Available Now' : 'Currently Offline';
     const avatarSphere = document.getElementById("profile-avatar-sphere");
     avatarSphere.style.background = pro.color;
     avatarSphere.innerText = pro.avatar;
     document.getElementById("profile-expert-name").innerText = pro.name;
     document.getElementById("profile-shield-badge").style.display = pro.verified ? "inline" : "none";
-     document.getElementById("meta-jobs-counter").innerText = pro.jobs;
-    document.getElementById("meta-reviews-counter").innerText = pro.reviews;
-    document.getElementById("meta-distance-counter").innerText = `${pro.distance}km`;
     const scheduleCard = document.getElementById("chef-schedule-section-card");
-    if (pro.category === "chef" && pro.schedule) {
+    if (scheduleCard && pro.category === "chef" && pro.schedule) {
         scheduleCard.style.display = "block";
         document.getElementById("chef-days-badges-slot").innerHTML = pro.schedule.map(day =>
             `<span style="background:#ffffff;color:#be185d;border:1px solid rgba(236,72,153,0.2);padding:4px 10px;border-radius:10px;font-size:11px;font-weight:700;">${day}</span>`).join('');
-    } else { scheduleCard.style.display = "none"; }
-
-document.getElementById("profile-expert-bio-p").innerText = pro.bio;
-    document.getElementById("profile-skills-badges-slot").innerHTML = pro.skills.map(s =>
-        `<span style="background:#f1f5f9;color:#111827;border-radius:12px;padding:6px 14px;font-size:12px;font-weight:600;">${s}</span>`).join('');
-    const targetGallery = pro.gallery || [];
+    } else if (scheduleCard) { scheduleCard.style.display = "none"; }
+ const targetGallery = pro.gallery || [];
 
     // ── Gallery tab: real photo/video grid ──
     const nxhGalleryGrid = document.getElementById("nxh-gallery-grid");
@@ -6790,13 +6781,13 @@ document.getElementById("profile-expert-bio-p").innerText = pro.bio;
     const statusCard = document.getElementById("nxh-status-card");
     const cartFab = document.getElementById("nxfm-cart-fab");
     if (isFoodPro) {
-        statusCard.style.display = "none";
+        if (statusCard) statusCard.style.display = "none";
         renderFoodMenuSection(pro);
         document.getElementById('pro-action-bar').style.background = '#050505';
         if (cartFab) cartFab.style.display = isFoodProCategory(pro.category) ? "flex" : "none";
     } else {
         document.getElementById('pro-action-bar').style.background = '#050505';
-        statusCard.style.display = "";
+        if (statusCard) statusCard.style.display = "";
         if (cartFab) cartFab.style.display = "none";
         switchSeg('menu');
         }
