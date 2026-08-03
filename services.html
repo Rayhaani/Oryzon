@@ -6768,8 +6768,8 @@ function closeStoryDeck() {
                 if (isMediaObj) {
                     const isVideo = item.type === 'video' || /\.(mp4|mov|webm)$/i.test(item.url);
                     return isVideo
-                    ? `<div class="nxh-gallery-card nxh-gallery-has-img" style="padding:0;position:relative;overflow:hidden;" onclick="openGalleryLightbox('${item.url}', true)"><video src="${item.url}" autoplay loop muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video><span style="position:absolute;top:8px;right:8px;z-index:2;width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,0.35);"><span style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid #111;margin-left:2px;"></span></span></div>`                        
-    : `<div class="nxh-gallery-card nxh-gallery-has-img" style="background-image:url('${item.url}');" onclick="openGalleryLightbox('${item.url}', false)"></div>`;
+                    ? `<div class="nxh-gallery-card nxh-gallery-has-img" style="padding:0;position:relative;overflow:hidden;" onclick="openGalleryLightbox('${item.url}', true)"><video src="${item.url}" autoplay loop muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video><span style="position:absolute;top:8px;right:8px;z-index:2;width:19px;height:19px;border-radius:5px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,0.35);"><span style="width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:6px solid #111;margin-left:2px;"></span></span></div>`   
+                        : `<div class="nxh-gallery-card nxh-gallery-has-img" style="background-image:url('${item.url}');" onclick="openGalleryLightbox('${item.url}', false)"></div>`;
                 }
                 return `<div class="nxh-gallery-card">📷 ${item}</div>`;
             }).join('');
@@ -14101,11 +14101,11 @@ function switchSeg(tab) {
     <div id="nxh-gallery-lightbox-video-wrap" style="display:none;position:relative;width:100vw;height:100vh;" onclick="event.stopPropagation();toggleLightboxVideoPlay()">
         <video id="nxh-gallery-lightbox-video" autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>
         <div id="nxh-lightbox-video-icons" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);flex-direction:column;align-items:center;gap:22px;z-index:2;">
-            <div onclick="toggleLightboxVideoMute(event)" style="width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
-                <span id="nxh-lightbox-mute-icon" style="font-size:22px;color:#fff;">🔊</span>
+            <div onclick="toggleLightboxVideoMute(event)" style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
+            <span id="nxh-lightbox-mute-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="#fff"/><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M19 6a9 9 0 0 1 0 12" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span>            
             </div>
             <div style="width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
-                <span id="nxh-lightbox-play-icon" style="font-size:22px;color:#fff;">▶</span>
+            <span id="nxh-lightbox-play-icon" style="font-size:44px;color:#fff;line-height:1;margin-left:4px;">▶</span>           
             </div>
         </div>
     </div>
@@ -14121,7 +14121,7 @@ function openGalleryLightbox(url, isVideo) {
     if (isVideo) {
         videoEl.src = url;
         videoEl.muted = false;
-        document.getElementById('nxh-lightbox-mute-icon').textContent = '🔊';
+        document.getElementById('nxh-lightbox-mute-icon').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="#fff"/><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M19 6a9 9 0 0 1 0 12" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
         videoEl.play();
         videoWrap.style.display = 'block';
         iconsEl.style.display = 'none';
@@ -14150,7 +14150,9 @@ function toggleLightboxVideoMute(event) {
     const videoEl = document.getElementById('nxh-gallery-lightbox-video');
     const muteIcon = document.getElementById('nxh-lightbox-mute-icon');
     videoEl.muted = !videoEl.muted;
-    muteIcon.textContent = videoEl.muted ? '🔇' : '🔊';
+    muteIcon.innerHTML = videoEl.muted
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="#fff"/><path d="M16 9l6 6M22 9l-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="#fff"/><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M19 6a9 9 0 0 1 0 12" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
 }
 function closeGalleryLightbox() {
     const overlay = document.getElementById('nxh-gallery-lightbox');
