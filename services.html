@@ -3778,7 +3778,6 @@ body {
                         <button id="share-profile-btn" onclick="shareProviderProfile()" class="nxh-icon-btn" style="background:transparent !important;border:1px solid rgba(255,255,255,0.18) !important;backdrop-filter:none !important;box-shadow:none !important;">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                         </button>
-                        <button id="edit-profile-btn" onclick="toggleEditMode()" class="nxh-icon-btn" style="display:none;width:auto;padding:0 14px;font-size:12px;font-weight:800;">✏️ Edit</button>
                     </div>
                 </div>
            <div class="nxh-avatar-wrap">
@@ -6851,9 +6850,10 @@ function nxfmRenderItems(items, cats, activeTab) {
     const emptyLabel = serviceMode ? 'No services listed yet' : 'No menu items yet';
     if (!items.length) {
         const isOwn = !!window._nxfmIsOwnProfile;
+        const glassCardOpen = `<div class="nxfm-empty-state" style="background:rgba(245,245,247,0.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);padding:28px 20px;">`;
         slot.innerHTML = isOwn
-            ? `<div class="nxfm-empty-state"><div style="font-size:32px;">${emptyIcon}</div><div style="font-weight:800;margin-top:8px;">Ba ka ƙara ${serviceMode ? 'ayyukanka' : 'kayanka'} ba tukuna</div><div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;">Danna Edit don ƙarawa domin customers su ga abunda kake bayarwa.</div><button onclick="document.getElementById('edit-profile-btn').click()" style="margin-top:16px;background:#1d4ed8;color:#fff;border:none;border-radius:12px;padding:10px 20px;font-weight:800;font-size:13px;cursor:pointer;">✏️ Edit Profile</button></div>`
-            : `<div class="nxfm-empty-state"><div style="font-size:32px;">${emptyIcon}</div><div style="font-weight:800;margin-top:8px;">Wannan mai bayarwa bai jera ${serviceMode ? 'ayyukansa' : 'kayansa'} ba tukuna</div><div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;">Yi amfani da Secure Chat ko Hire Expert don tuntuɓarsa kai tsaye.</div><div style="display:flex;gap:10px;margin-top:16px;"><button onclick="openSecureChat()" style="background:#262626;color:#fff;border:none;border-radius:12px;padding:10px 16px;font-weight:700;font-size:12px;cursor:pointer;">Secure Chat 📩</button><button onclick="openHireSheet()" style="background:#fde08d;color:#111;border:none;border-radius:12px;padding:10px 16px;font-weight:800;font-size:12px;cursor:pointer;">Hire Expert 📞</button></div></div>`;
+            ? `${glassCardOpen}<div style="font-size:32px;">${emptyIcon}</div><div style="font-weight:800;margin-top:8px;">You haven't added your ${serviceMode ? 'services' : 'menu items'} yet</div><div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:6px;">Tap Edit Profile to add them so customers can see what you offer.</div><button onclick="toggleEditMode()" style="margin-top:16px;background:#1d4ed8;color:#fff;border:none;border-radius:12px;padding:10px 20px;font-weight:800;font-size:13px;cursor:pointer;">✏️ Edit Profile</button></div>`
+            : `${glassCardOpen}<div style="font-size:32px;">${emptyIcon}</div><div style="font-weight:800;margin-top:8px;">This provider hasn't listed their ${serviceMode ? 'services' : 'menu'} yet</div><div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:6px;">Use Secure Chat or Hire Expert to reach them directly.</div><div style="display:flex;gap:10px;margin-top:16px;"><button onclick="openSecureChat()" style="background:#262626;color:#fff;border:none;border-radius:12px;padding:10px 16px;font-weight:700;font-size:12px;cursor:pointer;">Secure Chat 📩</button><button onclick="openHireSheet()" style="background:#fde08d;color:#111;border:none;border-radius:12px;padding:10px 16px;font-weight:800;font-size:12px;cursor:pointer;">Hire Expert 📞</button></div></div>`;
         return;
         }
 
@@ -9812,8 +9812,7 @@ function toggleEditMode() {
 
     if (isEditMode) {
         // Buɗe edit mode
-        editBtn.textContent = '✕ Cancel';
-        editBtn.style.color = '#dc2626';
+        if (editBtn) { editBtn.textContent = '✕ Cancel'; editBtn.style.color = '#dc2626'; }
         editSection.style.display = 'block';
         bioP.style.display = 'none';
         bioEdit.style.display = 'block';
@@ -9849,8 +9848,7 @@ function toggleEditMode() {
         }
     } else {
         // Rufe edit mode
-        editBtn.textContent = '✏️ Edit';
-        editBtn.style.color = '#1d4ed8';
+        if (editBtn) { editBtn.textContent = '✏️ Edit'; editBtn.style.color = '#1d4ed8'; }
         editSection.style.display = 'none';
         bioP.style.display = 'block';
         bioEdit.style.display = 'none';
