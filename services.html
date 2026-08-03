@@ -1007,12 +1007,9 @@ body {
             padding: 0px 0 70px;
             position: relative;
             z-index: 2;
-            min-height: 0;
-   }
-        .nxh-profile-sheet-inner {
-            padding-bottom: 100px;
+            min-height: 100vh;
         }
-        #nxh-gallery-section {
+    #nxh-gallery-section {
     background: transparent;
     margin: 0 -20px 0;
     padding: 0px 0 70px;
@@ -3814,7 +3811,8 @@ body {
   </div>
             <div style="padding: 0 20px;"> 
                 <!-- Edit Fields Row — hidden by default -->
-<div id="edit-fields-section" style="display:none;margin-bottom:24px;background:rgba(245, 245, 247, 0.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.12);border-radius:24px;padding:18px 18px 28px;box-shadow:0 8px 24px rgba(0, 0, 0, 0.3);box-sizing:border-box;">
+<div id="edit-fields-section" style="display:none;position:fixed;inset:0;z-index:10010;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+<div id="edit-fields-box" style="width:100%;max-width:600px;max-height:80vh;background:rgba(245, 245, 247, 0.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.12);border-radius:24px;padding:18px 18px 28px;box-shadow:0 8px 24px rgba(0, 0, 0, 0.3);box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;">
     
     <!-- Price -->
     <div style="margin-bottom:14px;">
@@ -3849,18 +3847,23 @@ body {
         <div class="hire-field-label">Services <span style="color:rgba(255,255,255,0.4);font-weight:600;text-transform:none;">(max 5)</span></div>
         <div id="edit-services-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
         <div id="edit-service-form" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px;">
+
+            <label class="ps-port-slot" id="edit-svc-photo-slot" style="width:72px;margin-bottom:8px;">
+                <input type="file" accept="image/*" onchange="handleEditServicePhoto(this)" hidden>
+                <div class="ps-port-inner"><span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Photo *</span></div>
+            </label>
             <input id="edit-service-name" type="text" placeholder="Service name e.g. Solar Panel Installation" maxlength="60" class="hire-input" style="margin-bottom:6px;">
-            <input id="edit-service-desc" type="text" placeholder="Short description (optional)" maxlength="80" class="hire-input" style="margin-bottom:6px;">
-            <div style="display:flex;gap:6px;">
-                <input id="edit-service-price" type="number" placeholder="Price (₦)" class="hire-input" style="flex:1;">
+            <input id="edit-service-desc" type="text" placeholder="Short description" maxlength="80" class="hire-input" style="margin-bottom:6px;">
+            <input id="edit-service-price" type="number" placeholder="Price ($)" class="hire-input" style="flex:1;">
                 <button onclick="addServiceToEditList()" type="button" style="padding:8px 14px;background:#1d4ed8;border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">➕ Add</button>
             </div>
         </div>
     </div>
 
-    <!-- Save Button -->
+<!-- Save Button -->
     <button onclick="saveProfileEdits()" class="hire-btn-primary">💾 Save Changes</button>
 </div>
+            </div>
     
 
                 <!-- Custom Chef Schedule Conditional Section --> 
@@ -9772,14 +9775,17 @@ function renderServicesEditList() {
     if (pendingServicesEdit.length === 0) {
         list.innerHTML = `<div style="text-align:center;padding:10px;color:#94a3b8;font-size:11px;">No services added yet</div>`;
     } else {
-        list.innerHTML = pendingServicesEdit.map((s, i) => `
+       list.innerHTML = pendingServicesEdit.map((s, i) => `
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;">
-                <div style="min-width:0;">
-                    <div style="font-size:12px;font-weight:800;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</div>
-                    <div style="font-size:11px;color:#64748b;">₦${Number(s.price).toLocaleString()}${s.desc ? ' · ' + s.desc : ''}</div>
+                <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                    ${s.photo ? `<img src="${s.photo}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;">` : ''}
+                    <div style="min-width:0;">
+                        <div style="font-size:12px;font-weight:800;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</div>
+                        <div style="font-size:11px;color:#64748b;">$${Number(s.price).toLocaleString()}${s.desc ? ' · ' + s.desc : ''}</div>
+                    </div>
                 </div>
                 <button onclick="removeServiceFromEditList(${i})" type="button" style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#dc2626;font-size:12px;cursor:pointer;">✕</button>
-            </div>`).join('');
+            </div>`).join(''); 
     }
     const form = document.getElementById('edit-service-form');
     if (form) form.style.display = pendingServicesEdit.length >= 5 ? 'none' : 'block';
@@ -9791,21 +9797,47 @@ function addServiceToEditList() {
     const price = parseInt(document.getElementById('edit-service-price').value);
 
     if (!name) { showGlobalToast('⚠️ Enter a service name!'); return; }
+    if (!desc) { showGlobalToast('⚠️ Enter a short description!'); return; }
     if (!price || price <= 0) { showGlobalToast('⚠️ Enter a valid price!'); return; }
+    if (!editServicePendingPhoto) { showGlobalToast('⚠️ Upload a photo for this service!'); return; }
     if (pendingServicesEdit.length >= 5) { showGlobalToast('⚠️ Maximum 5 services!'); return; }
 
-    pendingServicesEdit.push({ name, desc, price });
+    pendingServicesEdit.push({ name, desc, price, photo: editServicePendingPhoto });
     document.getElementById('edit-service-name').value = '';
     document.getElementById('edit-service-desc').value = '';
     document.getElementById('edit-service-price').value = '';
+    resetEditServicePhotoSlot();
     renderServicesEditList();
-}
+    }
 
 function removeServiceFromEditList(idx) {
     pendingServicesEdit.splice(idx, 1);
     renderServicesEditList();
 }
+let editServicePendingPhoto = null;
 
+function handleEditServicePhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 8*1024*1024) { showGlobalToast('⚠️ Image too large! Max 8MB'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        editServicePendingPhoto = e.target.result;
+        const slot = document.getElementById('edit-svc-photo-slot');
+        if (!slot) return;
+        slot.classList.add('filled');
+        slot.querySelector('.ps-port-inner').innerHTML = `<img src="${e.target.result}" class="ps-port-preview" alt="Service">`;
+    };
+    reader.readAsDataURL(file);
+}
+
+function resetEditServicePhotoSlot() {
+    editServicePendingPhoto = null;
+    const slot = document.getElementById('edit-svc-photo-slot');
+    if (!slot) return;
+    slot.classList.remove('filled');
+    slot.querySelector('.ps-port-inner').innerHTML = `<span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Photo *</span>`;
+    }
 function toggleEditMode() {
     isEditMode = !isEditMode;
     const editBtn = document.getElementById('edit-profile-btn');
@@ -9817,9 +9849,10 @@ function toggleEditMode() {
         // Buɗe edit mode
         editBtn.textContent = '✕ Cancel';
         editBtn.style.color = '#dc2626';
-        editSection.style.display = 'block';
+        editSection.style.display = 'flex';
         bioP.style.display = 'none';
         bioEdit.style.display = 'block';
+        resetEditServicePhotoSlot();
 
         // Load current values daga Firebase
         if (typeof firebase !== 'undefined' && firebase.database) {
@@ -9846,7 +9879,7 @@ function toggleEditMode() {
 
                 // Services (stored under categories.Services.items — same structure the rest of the platform uses)
                 const svcItems = (data.categories && data.categories.Services && data.categories.Services.items) || {};
-                pendingServicesEdit = Object.values(svcItems).map(it => ({ name: it.name, desc: it.desc || '', price: it.price }));
+                pendingServicesEdit = Object.values(svcItems).map(it => ({ name: it.name, desc: it.desc || '', price: it.price, photo: it.photo || null }));
                 renderServicesEditList();
             });
         }
@@ -9857,6 +9890,7 @@ function toggleEditMode() {
         editSection.style.display = 'none';
         bioP.style.display = 'block';
         bioEdit.style.display = 'none';
+        resetEditServicePhotoSlot();
     }
 }
 
@@ -9897,8 +9931,8 @@ async function saveProfileEdits() {
             Object.keys(existingData).forEach(key => { removals[key] = null; });
             if (Object.keys(removals).length) await servicesCatRef.update(removals);
             for (const s of pendingServicesEdit) {
-                await servicesCatRef.push({ name: s.name, desc: s.desc || '', price: s.price, category: 'Services' });
-            }
+           await servicesCatRef.push({ name: s.name, desc: s.desc || '', price: s.price, photo: s.photo || null, category: 'Services' });     
+    }
         }
 
         // Update UI nan take
