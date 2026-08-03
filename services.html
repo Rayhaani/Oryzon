@@ -6782,7 +6782,7 @@ function closeStoryDeck() {
         }
         }
 // ── Any pro with menu items or services gets the tabbed layout instead of the empty generic block ──
-    const isFoodPro = (pro.category === "chef" || pro.category === "snacks" || pro.category === "beverages" || (pro.services && pro.services.length > 0));
+    const isFoodPro = true; // Duk pro (chef, carpenter, engineer, da sauransu) yanzu suna amfani da tsarin grid iri daya
     profileMenuIsFood = isFoodPro;
     const genericWrap = document.getElementById("nxh-generic-info-wrap");
     const foodSection = document.getElementById("nxfm-food-menu-section");
@@ -6850,9 +6850,12 @@ function nxfmRenderItems(items, cats, activeTab) {
     const emptyIcon = serviceMode ? '🧰' : '🍽️';
     const emptyLabel = serviceMode ? 'No services listed yet' : 'No menu items yet';
     if (!items.length) {
-        slot.innerHTML = `<div class="nxfm-empty-state">${emptyIcon}<div style="font-weight:800;margin-top:8px;">${emptyLabel}</div></div>`;
+        const isOwn = !!window._nxfmIsOwnProfile;
+        slot.innerHTML = isOwn
+            ? `<div class="nxfm-empty-state"><div style="font-size:32px;">${emptyIcon}</div><div style="font-weight:800;margin-top:8px;">Ba ka ƙara ${serviceMode ? 'ayyukanka' : 'kayanka'} ba tukuna</div><div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;">Danna Edit don ƙarawa domin customers su ga abunda kake bayarwa.</div><button onclick="document.getElementById('edit-profile-btn').click()" style="margin-top:16px;background:#1d4ed8;color:#fff;border:none;border-radius:12px;padding:10px 20px;font-weight:800;font-size:13px;cursor:pointer;">✏️ Edit Profile</button></div>`
+            : `<div class="nxfm-empty-state"><div style="font-size:32px;">${emptyIcon}</div><div style="font-weight:800;margin-top:8px;">Wannan mai bayarwa bai jera ${serviceMode ? 'ayyukansa' : 'kayansa'} ba tukuna</div><div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;">Yi amfani da Secure Chat ko Hire Expert don tuntuɓarsa kai tsaye.</div><div style="display:flex;gap:10px;margin-top:16px;"><button onclick="openSecureChat()" style="background:#262626;color:#fff;border:none;border-radius:12px;padding:10px 16px;font-weight:700;font-size:12px;cursor:pointer;">Secure Chat 📩</button><button onclick="openHireSheet()" style="background:#fde08d;color:#111;border:none;border-radius:12px;padding:10px 16px;font-weight:800;font-size:12px;cursor:pointer;">Hire Expert 📞</button></div></div>`;
         return;
-    }
+        }
 
     const groups = cats.length > 0 ? cats : ["Menu"];
     let html = "";
@@ -9728,6 +9731,11 @@ let currentEditProId = null;
 const _baseOpenProfile = window.openProfileSheet;
 window.openProfileSheet = function(proId) {
     currentEditProId = proId;
+
+    // Saita ownership KAFIN render, domin empty-state ya san wanda ke kallo
+    const _sessionUserCheck = localStorage.getItem('nexus_user_session');
+    window._nxfmIsOwnProfile = !!(_sessionUserCheck && String(proId) === String(_sessionUserCheck));
+
     _baseOpenProfile(proId);
     
     // Check: shin wannan user ne owner?
