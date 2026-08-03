@@ -4545,6 +4545,12 @@ body {
 </div>
         </div>
 
+        <!-- Service Description (short, yana bayyana a grid card) -->
+        <div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Service Description <span style="color:rgba(255,255,255,0.2);font-size:10px;" id="ps-service-desc-char-num">0</span>/80</div>
+            <textarea id="ps-service-description" maxlength="80" placeholder="e.g. Fast installation of ceiling fans" oninput="document.getElementById('ps-service-desc-char-num').textContent=this.value.length" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;resize:none;height:52px;line-height:1.5;font-family:inherit;"></textarea>
+        </div>
+
         <!-- Description -->
         <div>
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Bio <span style="color:rgba(255,255,255,0.2);font-size:10px;" id="ps-char-num-inline">0</span>/130</div>
@@ -7693,11 +7699,13 @@ function psGoBack() {
 
 function psGoToStep3() {
     const price = document.getElementById("ps-price").value;
+    const serviceDesc = document.getElementById("ps-service-description").value.trim();
     const desc = document.getElementById("ps-description").value.trim();
     const days = Array.from(document.querySelectorAll("#ps-inline-step-2 .ps-day-chip-inline input:checked")).map(el => el.value);
     const idType = document.getElementById("ps-id-type").value;
 
     if (!price || parseInt(price) <= 0) { psShowToast("⚠️ Saka farashi mai inganci!"); return; }
+    if (serviceDesc.length < 10) { psShowToast("⚠️ Service description too short — minimum 10 characters!"); return; }
     if (desc.length < 20) { psShowToast("⚠️ Bio is too short — minimum 20 characters!"); return; }
     if (days.length === 0) { psShowToast("⚠️ Select at least one day!"); return; }
     if (Object.keys(portfolioFiles).length < 4) { psShowToast(`⚠️ Upload at least 4 photos! (${Object.keys(portfolioFiles).length}/4)`); return; }
@@ -7706,6 +7714,7 @@ function psGoToStep3() {
     if (!verificationFiles.selfie) { psShowToast("⚠️ Upload your selfie and ID!"); return; }
 
    psInlineState.price = parseInt(price);
+psInlineState.serviceDescription = serviceDesc;
 psInlineState.priceUnit = document.getElementById("ps-price-unit").value;
 const selectedCurrency = document.getElementById("ps-price-currency").dataset.currency;
 if (!selectedCurrency) { psShowToast("⚠️ Select your currency!"); return; }
