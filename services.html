@@ -6768,7 +6768,7 @@ function closeStoryDeck() {
                 if (isMediaObj) {
                     const isVideo = item.type === 'video' || /\.(mp4|mov|webm)$/i.test(item.url);
                     return isVideo
-                        ? `<div class="nxh-gallery-card nxh-gallery-has-img" style="padding:0;position:relative;" onclick="openGalleryLightbox('${item.url}', true)">${item.thumbnail ? `<div style="position:absolute;inset:0;background-image:url('${item.thumbnail}');background-size:cover;background-position:center;"></div>` : `<video src="${item.url}#t=0.1" preload="metadata" muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>`}<span style="position:relative;z-index:1;background:rgba(0,0,0,0.5);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">▶</span></div>`          
+                       ? `<div class="nxh-gallery-card nxh-gallery-has-img" style="padding:0;position:relative;overflow:hidden;" onclick="openGalleryLightbox('${item.url}', true)"><video src="${item.url}" autoplay loop muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video><span style="position:absolute;top:8px;right:8px;z-index:2;font-size:15px;pointer-events:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6));">🎬</span></div>` 
                         : `<div class="nxh-gallery-card nxh-gallery-has-img" style="background-image:url('${item.url}');" onclick="openGalleryLightbox('${item.url}', false)"></div>`;
                 }
                 return `<div class="nxh-gallery-card">📷 ${item}</div>`;
@@ -14096,31 +14096,70 @@ function switchSeg(tab) {
 </script>
 <!-- ══ GALLERY LIGHTBOX OVERLAY ══ -->
 <div id="nxh-gallery-lightbox" onclick="closeGalleryLightbox()" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(5,5,8,0.96);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:0px;">
-    <button onclick="closeGalleryLightbox()" style="position:absolute;top:20px;right:20px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:16px;cursor:pointer;">✕</button>
+    <button onclick="closeGalleryLightbox()" style="position:absolute;top:20px;right:20px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:16px;cursor:pointer;z-index:3;">✕</button>
    <img id="nxh-gallery-lightbox-img" style="width:100vw;height:100vh;border-radius:0;display:none;object-fit:contain;"> 
-    <video id="nxh-gallery-lightbox-video" controls autoplay style="width:100vw;height:100vh;border-radius:0;display:none;object-fit:contain;"></video>
+    <div id="nxh-gallery-lightbox-video-wrap" style="display:none;position:relative;width:100vw;height:100vh;" onclick="event.stopPropagation();toggleLightboxVideoPlay()">
+        <video id="nxh-gallery-lightbox-video" autoplay playsinline style="width:100%;height:100%;object-fit:contain;"></video>
+        <div id="nxh-lightbox-video-icons" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);flex-direction:column;align-items:center;gap:22px;z-index:2;">
+            <div onclick="toggleLightboxVideoMute(event)" style="width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
+                <span id="nxh-lightbox-mute-icon" style="font-size:22px;color:#fff;">🔊</span>
+            </div>
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
+                <span id="nxh-lightbox-play-icon" style="font-size:22px;color:#fff;">▶</span>
+            </div>
+        </div>
+    </div>
 </div>
 <script>
 function openGalleryLightbox(url, isVideo) {
     event.stopPropagation();
     const overlay = document.getElementById('nxh-gallery-lightbox');
     const imgEl = document.getElementById('nxh-gallery-lightbox-img');
+    const videoWrap = document.getElementById('nxh-gallery-lightbox-video-wrap');
     const videoEl = document.getElementById('nxh-gallery-lightbox-video');
+    const iconsEl = document.getElementById('nxh-lightbox-video-icons');
     if (isVideo) {
-        videoEl.src = url; videoEl.style.display = 'block';
+        videoEl.src = url;
+        videoEl.muted = false;
+        document.getElementById('nxh-lightbox-mute-icon').textContent = '🔊';
+        videoEl.play();
+        videoWrap.style.display = 'block';
+        iconsEl.style.display = 'none';
         imgEl.style.display = 'none'; imgEl.src = '';
     } else {
         imgEl.src = url; imgEl.style.display = 'block';
-        videoEl.style.display = 'none'; videoEl.pause(); videoEl.src = '';
+        videoWrap.style.display = 'none'; videoEl.pause(); videoEl.src = '';
     }
     overlay.style.display = 'flex';
 }
+function toggleLightboxVideoPlay() {
+    const videoEl = document.getElementById('nxh-gallery-lightbox-video');
+    const iconsEl = document.getElementById('nxh-lightbox-video-icons');
+    const playIcon = document.getElementById('nxh-lightbox-play-icon');
+    if (videoEl.paused) {
+        videoEl.play();
+        iconsEl.style.display = 'none';
+    } else {
+        videoEl.pause();
+        playIcon.textContent = '▶';
+        iconsEl.style.display = 'flex';
+    }
+}
+function toggleLightboxVideoMute(event) {
+    event.stopPropagation();
+    const videoEl = document.getElementById('nxh-gallery-lightbox-video');
+    const muteIcon = document.getElementById('nxh-lightbox-mute-icon');
+    videoEl.muted = !videoEl.muted;
+    muteIcon.textContent = videoEl.muted ? '🔇' : '🔊';
+}
 function closeGalleryLightbox() {
     const overlay = document.getElementById('nxh-gallery-lightbox');
+    const videoWrap = document.getElementById('nxh-gallery-lightbox-video-wrap');
     const videoEl = document.getElementById('nxh-gallery-lightbox-video');
     videoEl.pause(); videoEl.src = '';
+    videoWrap.style.display = 'none';
     overlay.style.display = 'none';
-}
+    }
 </script>
 <!-- ══ VIEW ALL STORIES OVERLAY ══ -->
 <div id="all-stories-overlay" style="display:none;position:fixed;inset:0;z-index:8500;background-color:#050505 !important;background-image:none !important;color:#ffffff;overflow-y:auto;-webkit-overflow-scrolling:touch;">
