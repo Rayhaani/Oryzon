@@ -6874,7 +6874,7 @@ function nxfmRenderItems(items, cats, activeTab) {
                         <div class="nxfm-grid-name">${item.name}</div>
                         <div class="nxfm-grid-desc">${item.desc || ''}</div>
                         <div class="nxfm-grid-bottom-row">
-                            <div class="nxfm-grid-price">From ₦${Math.min(...item.tiers.map(t=>t.price)).toLocaleString()}</div>
+                            <div class="nxfm-grid-price">From ${formatPrice(Math.min(...item.tiers.map(t=>t.price)), item.currency)}</div>
                             <div class="nxfm-tiers-badge">${item.tiers.length} Options</div>
                         </div>
                     </div>
@@ -6887,7 +6887,7 @@ function nxfmRenderItems(items, cats, activeTab) {
                         <div class="nxfm-grid-name">${item.name}</div>
                         <div class="nxfm-grid-desc">${item.desc || ''}</div>
                         <div class="nxfm-grid-bottom-row">
-                            <div class="nxfm-grid-price">${typeof item.price === 'number' ? '₦' + item.price.toLocaleString() : item.price}</div>
+                            <div class="nxfm-grid-price">${typeof item.price === 'number' ? formatPrice(item.price, item.currency) : item.price}</div>
                             ${serviceMode
                                 ? `<button class="nxfm-grid-add-btn" onclick="event.stopPropagation();nxfmRequestServiceQuote('${(item.name||'').replace(/'/g, "\\'")}','${item.price}','${(item.desc||'').replace(/'/g,"\\'")}')" title="Request Quote">📞</button>`
                                 : `<button class="nxfm-grid-add-btn" onclick="event.stopPropagation();nxfmGridQuickAdd('${(item.name||'').replace(/'/g, "\\'")}','${item.price}','${item.image||''}','${(item.icon||'🍽️').replace(/'/g,"\\'")}','${(item.desc||'').replace(/'/g,"\\'")}')">+</button>`}
@@ -7955,6 +7955,7 @@ async function submitServiceInline() {
         // Firebase write — if firebase is available
         if (typeof firebase !== "undefined" && firebase.database) {
             const db = firebase.database();
+            const firstServiceItemId = "svc_" + Date.now();
             const basePayload = {
                 category: psInlineState.selectedCategory,
                 subcategory: psInlineState.selectedSubcategory,
@@ -7969,7 +7970,22 @@ async function submitServiceInline() {
                 verification: { idType: psInlineState.idType, idKey: verificationKeys.id, selfieKey: verificationKeys.selfie, submittedAt: Date.now() },
                 status: "pending_verification",
                 createdAt: Date.now(),
-                username: username
+                username: username,
+                categories: {
+                    Services: {
+                        items: {
+                            [firstServiceItemId]: {
+                                name: psInlineState.selectedSubcategory || psInlineState.selectedCategoryLabel || "Service",
+                                desc: psInlineState.serviceDescription || "",
+                                price: psInlineState.price,
+                                currency: psInlineState.currency,
+                                unit: psInlineState.priceUnit,
+                                image: (portfolioUrls[0] && portfolioUrls[0].url) || "",
+                                createdAt: Date.now()
+                            }
+                        }
+                    }
+                }
             };
 
             // Extra fields specific to Doctor
