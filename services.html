@@ -3811,9 +3811,8 @@ body {
   </div>
             <div style="padding: 0 20px;"> 
                 <!-- Edit Fields Row — hidden by default -->
-<div id="edit-fields-section" style="display:none;position:fixed;inset:0;z-index:10010;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
-<div id="edit-fields-box" style="width:100%;max-width:600px;max-height:80vh;background:rgba(245, 245, 247, 0.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.12);border-radius:24px;padding:18px 18px 28px;box-shadow:0 8px 24px rgba(0, 0, 0, 0.3);box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;">
-    
+<div id="edit-fields-section" onclick="closeEditFieldsOnBg(event)" style="display:none;position:fixed;inset:0;z-index:10010;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+<div id="edit-fields-box" onclick="event.stopPropagation()" style="width:100%;max-width:600px;max-height:80vh;background:rgba(245, 245, 247, 0.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255, 255, 255, 0.12);border-radius:24px;padding:18px 18px 28px;box-shadow:0 8px 24px rgba(0, 0, 0, 0.3);box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;">    
     <!-- Price -->
     <div style="margin-bottom:14px;">
         <div class="hire-field-label">Price ($)</div>
@@ -9752,7 +9751,7 @@ window.openProfileSheet = function(proId) {
     // Edit ya bayyana KAWAI idan wanda ke kallo shine mai wannan profile ɗin
     if (sessionUser && editBtn) {
         if (String(proId) === String(sessionUser)) {
-            editBtn.style.display = 'block';
+            editBtn.style.display = 'none';
             currentEditProId = sessionUser;
         } else {
             editBtn.style.display = 'none';
@@ -9838,6 +9837,13 @@ function resetEditServicePhotoSlot() {
     slot.classList.remove('filled');
     slot.querySelector('.ps-port-inner').innerHTML = `<span>📷</span><span style="font-size:9px;color:rgba(255,255,255,0.3);">Photo *</span>`;
     }
+
+function closeEditFieldsOnBg(event) {
+    if (event.target.id === 'edit-fields-section' && isEditMode) {
+        toggleEditMode();
+    }
+}
+
 function toggleEditMode() {
     isEditMode = !isEditMode;
     const editBtn = document.getElementById('edit-profile-btn');
