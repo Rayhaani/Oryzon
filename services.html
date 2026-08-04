@@ -5635,7 +5635,16 @@ body {
         <input type="text" id="dtp-custom-input" class="dtp-custom-input" placeholder="e.g. Before 6:00 PM today">
     </div>
      </div>
-        
+
+    <div style="margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:6px;">📅 Preferred Booking Date & Time (Optional)</div>
+        <div style="display:flex;gap:8px;">
+            <input id="po-booking-date" type="date" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;box-sizing:border-box;">
+            <input id="po-booking-time" type="time" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:5px;">Leave blank if you need this as soon as possible</div>
+    </div>
+
         <div style="margin-bottom:12px;">
     <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:8px;">Fulfillment Method</div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
@@ -11044,7 +11053,8 @@ async function nxfmCartPlaceOrder() {
     document.getElementById('po-qty-row').style.display = 'none';
     document.getElementById('po-address').value = '';
     document.getElementById('po-phone').value = '';
-
+    document.getElementById('po-booking-date').value = '';
+    document.getElementById('po-booking-time').value = '';
     closeNxfmCartPage();
     document.getElementById('place-order-overlay').style.display = 'flex';
     updateOrderTotal();
@@ -11938,6 +11948,8 @@ function confirmOrderYes() {
     document.getElementById('po-qty').value = 1;
     document.getElementById('po-address').value = '';
     document.getElementById('po-phone').value = '';
+    document.getElementById('po-booking-date').value = '';
+    document.getElementById('po-booking-time').value = '';
 
     window._activePlaceOrderPro = activePro;
 
@@ -11955,6 +11967,8 @@ function openPlaceOrderOverlay() {
     document.getElementById('po-qty').value = 1;
     document.getElementById('po-address').value = '';
     document.getElementById('po-phone').value = '';
+    document.getElementById('po-booking-date').value = '';
+    document.getElementById('po-booking-time').value = '';
 
     const pro = currentChefMenuPro;
     document.getElementById('po-vendor-bank').textContent = pro?.bankDetails?.bankName || 'Bank info not set';
@@ -12000,7 +12014,9 @@ async function submitOrderRequestOnly() {
     const address = document.getElementById('po-address').value.trim();
     const phone = document.getElementById('po-phone').value.trim();
     const method = document.getElementById('po-method-delivery').dataset.active === 'true' ? 'delivery' : 'pickup';
-
+    const bookingDate = document.getElementById('po-booking-date').value;
+    const bookingTime = document.getElementById('po-booking-time').value;
+    const scheduledFor = bookingDate ? `${bookingDate}T${bookingTime || '00:00'}` : null;
     if (method === 'delivery' && (!address || address.length < 5)) { showGlobalToast('⚠️ Enter delivery address!'); return; }
     if (!phone || phone.length < 7) { showGlobalToast('⚠️ Enter phone number!'); return; }
     if (method === 'delivery' && !validateDeliveryTimePreference()) return;
@@ -12025,6 +12041,7 @@ async function submitOrderRequestOnly() {
             address: method === 'delivery' ? address : null,
             phone,
             deliveryTimePreference: { ...deliveryTimePreference },
+            scheduledFor,
             customerUsername: sessionUser,
             proName: pro?.name || '—',
             proId: String(pro?.id || ''),
@@ -12040,6 +12057,7 @@ async function submitOrderRequestOnly() {
             address: method === 'delivery' ? address : null,
             phone,
             deliveryTimePreference: { ...deliveryTimePreference },
+            scheduledFor,
             customerUsername: sessionUser,
             proName: pro?.name || '—',
             proId: String(pro?.id || ''),
