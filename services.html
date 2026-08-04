@@ -4373,11 +4373,12 @@ body {
 
         <!-- Consultation Fee -->
         <div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Consultation Fee ($) *</div>
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Consultation Fee *</div>
             <div style="display:flex;gap:8px;">
+                <button type="button" id="doctor-fee-currency" onclick="openCurrencyPicker('doctor-fee-currency')" style="width:62px;flex-shrink:0;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:11px;padding:10px 2px;cursor:pointer;text-align:center;">🌍<span style="font-size:8px;opacity:0.5;">▾</span></button>
                 <input id="doctor-fee" type="number" placeholder="e.g. 5000" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;">
-                <select id="doctor-fee-unit" style="width:120px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 8px;outline:none;">
-                    <option value="per visit">Per Visit</option>
+                <select id="doctor-fee-unit" style="width:120px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 8px;outline:none;">  
+            <option value="per visit">Per Visit</option>
                     <option value="per hour">Per Hour</option>
                     <option value="negotiable">Negotiable</option>
                 </select>
@@ -4469,11 +4470,12 @@ body {
 
         <!-- Service Fee -->
         <div>
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Service Fee ($) *</div>
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Service Fee *</div>
             <div style="display:flex;gap:8px;">
+                <button type="button" id="vet-fee-currency" onclick="openCurrencyPicker('vet-fee-currency')" style="width:62px;flex-shrink:0;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:11px;padding:10px 2px;cursor:pointer;text-align:center;">🌍<span style="font-size:8px;opacity:0.5;">▾</span></button>
                 <input id="vet-fee" type="number" placeholder="e.g. 3000" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:13px;padding:10px 12px;outline:none;">
-                <select id="vet-fee-unit" style="width:130px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 8px;outline:none;">
-                    <option value="per visit">Per Visit</option>
+                <select id="vet-fee-unit" style="width:130px;background:rgba(20,25,45,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#ffffff;font-size:12px;padding:10px 8px;outline:none;">  
+            <option value="per visit">Per Visit</option>
                     <option value="per farm call">Per Farm Call</option>
                     <option value="per animal">Per Animal</option>
                     <option value="negotiable">Negotiable</option>
@@ -5521,7 +5523,7 @@ body {
         <div style="padding:14px 20px 22px;background:rgba(255,255,255,0.05);border-top:1px solid rgba(255,255,255,0.12);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                 <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);">Total</span>
-                <span id="nxfm-cart-total" style="font-size:19px;font-weight:800;color:#fde08d;">₦0</span>
+                <span id="nxfm-cart-total" style="font-size:19px;font-weight:800;color:#fde08d;">0</span>
             </div>
             <button id="nxfm-cart-place-order-btn" onclick="nxfmCartPlaceOrder()" style="width:100%;background:#fde08d;color:#111827;border:none;border-radius:14px;padding:14px 0;font-weight:800;font-size:15px;cursor:pointer;">Place Order</button>
         </div>
@@ -7050,9 +7052,9 @@ function renderSnacksMenuOverlayItems(pro) {
 
     if (!snacksMenuEditMode) {
         slot.innerHTML = products.map((item, idx) => `
-            <div class="menu-item-card" style="animation-delay:${idx * 0.1}s"
-                onclick="openSnacksOrderConfirm('${(item.name||'').replace(/'/g,"\\'")}','${item.price}','${item.unit||''}')">
-                <div class="menu-item-emoji">${item.icon || '🧁'}</div>
+         <div class="menu-item-card" style="animation-delay:${idx * 0.1}s"
+                onclick="openSnacksOrderConfirm('${(item.name||'').replace(/'/g,"\\'")}','${item.price}','${item.unit||''}','${item.currency||''}')">   
+        <div class="menu-item-emoji">${item.icon || '🧁'}</div>
                 <div class="menu-item-info">
                     <div class="menu-item-name">${item.name}</div>
                     <div class="menu-item-desc">${item.unit || item.desc || ''}</div>
@@ -7167,15 +7169,15 @@ async function saveSnacksMenuChanges() {
 }
 
 // ── SNACKS ORDER CONFIRM ──
-let snacksOrderDraft = { itemName: null, itemPrice: null, itemUnit: null };
+let snacksOrderDraft = { itemName: null, itemPrice: null, itemUnit: null, currency: null };
 
-function openSnacksOrderConfirm(itemName, itemPrice, itemUnit) {
+function openSnacksOrderConfirm(itemName, itemPrice, itemUnit, currency) {
     snacksOrderDraft.itemName = itemName;
     snacksOrderDraft.itemPrice = itemPrice;
     snacksOrderDraft.itemUnit = itemUnit;
+    snacksOrderDraft.currency = currency || '';
     document.getElementById('order-confirm-item-name').textContent = itemName;
     document.getElementById('order-confirm-overlay').style.display = 'flex';
-
     // Override confirmOrderYes temporarily
     window._snacksOrderActive = true;
 }
@@ -7314,9 +7316,9 @@ function renderBeveragesMenuOverlayItems(pro) {
 
     if (!beveragesMenuEditMode) {
         slot.innerHTML = products.map((item, idx) => `
-            <div class="menu-item-card" style="animation-delay:${idx * 0.1}s"
-                onclick="openBeveragesOrderConfirm('${(item.name||'').replace(/'/g,"\\'")}','${item.price}','${item.unit||''}')">
-                <div class="menu-item-emoji">${item.icon || '🥤'}</div>
+        <div class="menu-item-card" style="animation-delay:${idx * 0.1}s"
+                onclick="openBeveragesOrderConfirm('${(item.name||'').replace(/'/g,"\\'")}','${item.price}','${item.unit||''}','${item.currency||''}')">    
+        <div class="menu-item-emoji">${item.icon || '🥤'}</div>
                 <div class="menu-item-info">
                     <div class="menu-item-name">${item.name}</div>
                     <div class="menu-item-desc">${item.unit || item.desc || ''}</div>
@@ -7434,16 +7436,17 @@ async function saveBeveragesMenuChanges() {
 }
 
 // ── BEVERAGES ORDER CONFIRM ──
-let beveragesOrderDraft = { itemName: null, itemPrice: null, itemUnit: null };
+let beveragesOrderDraft = { itemName: null, itemPrice: null, itemUnit: null, currency: null };
 
-function openBeveragesOrderConfirm(itemName, itemPrice, itemUnit) {
+function openBeveragesOrderConfirm(itemName, itemPrice, itemUnit, currency) {
     beveragesOrderDraft.itemName = itemName;
     beveragesOrderDraft.itemPrice = itemPrice;
     beveragesOrderDraft.itemUnit = itemUnit;
+    beveragesOrderDraft.currency = currency || '';
     document.getElementById('order-confirm-item-name').textContent = itemName;
     document.getElementById('order-confirm-overlay').style.display = 'flex';
     window._beveragesOrderActive = true;
-}
+        }
 
 // ── BEVERAGES NOTIFY ME ──
 async function toggleBeveragesNotifyMe() {
@@ -7756,12 +7759,14 @@ function psDoctorGoToStep3() {
     const experience = document.getElementById("doctor-experience").value;
     const fee = document.getElementById("doctor-fee").value;
     const feeUnit = document.getElementById("doctor-fee-unit").value;
+    const currency = document.getElementById("doctor-fee-currency").dataset.currency;
     const bio = document.getElementById("doctor-bio").value.trim();
     const days = Array.from(document.querySelectorAll("#doctor-days-grid input:checked")).map(el => el.value);
     const idType = document.getElementById("doctor-id-type").value;
 
     if (!specialization) { psShowToast("⚠️ Select a specialization!"); return; }
     if (!licenseNumber) { psShowToast("⚠️ Saka license number!"); return; }
+    if (!currency) { psShowToast("⚠️ Select a currency!"); return; }
     if (!fee || parseInt(fee) <= 0) { psShowToast("⚠️ Saka consultation fee mai inganci!"); return; }
     if (bio.length < 20) { psShowToast("⚠️ Bio is too short — minimum 20 characters!"); return; }
     if (days.length === 0) { psShowToast("⚠️ Select at least one day!"); return; }
@@ -7772,6 +7777,7 @@ function psDoctorGoToStep3() {
     // Save into psInlineState for submission
     psInlineState.price = parseInt(fee);
     psInlineState.priceUnit = feeUnit;
+    psInlineState.currency = currency;
     psInlineState.description = bio;
     psInlineState.availableDays = days;
     psInlineState.idType = idType;
@@ -7781,11 +7787,11 @@ function psDoctorGoToStep3() {
     psInlineState.doctorExperience = experience;
 
     document.getElementById("ps-sum-category").textContent = `${psInlineState.selectedCategoryLabel} → ${specialization}`;
-    document.getElementById("ps-sum-price").textContent = `₦${psInlineState.price.toLocaleString()} ${feeUnit}`;
+    document.getElementById("ps-sum-price").textContent = `${formatPrice(psInlineState.price, currency)} ${feeUnit}`;
     document.getElementById("ps-sum-days").textContent = days.join(", ");
 
     psShowStep(3);
-}
+        }
 
 // ── VETERINARY: VALIDATE + GO TO GPS STEP ──
 function psVetGoToStep3() {
@@ -7794,6 +7800,7 @@ function psVetGoToStep3() {
     const serviceType = document.getElementById("vet-service-type").value;
     const fee = document.getElementById("vet-fee").value;
     const feeUnit = document.getElementById("vet-fee-unit").value;
+    const currency = document.getElementById("vet-fee-currency").dataset.currency;
     const bio = document.getElementById("vet-bio").value.trim();
     const days = Array.from(document.querySelectorAll("#vet-days-grid input:checked")).map(el => el.value);
     const idType = document.getElementById("vet-id-type").value;
@@ -7801,6 +7808,7 @@ function psVetGoToStep3() {
     if (animalTypes.length === 0) { psShowToast("⚠️ Select at least one animal type!"); return; }
     if (!licenseNumber) { psShowToast("⚠️ Saka license number!"); return; }
     if (!serviceType) { psShowToast("⚠️ Select a service type!"); return; }
+    if (!currency) { psShowToast("⚠️ Select a currency!"); return; }
     if (!fee || parseInt(fee) <= 0) { psShowToast("⚠️ Saka service fee mai inganci!"); return; }
     if (bio.length < 20) { psShowToast("⚠️ Bio is too short — minimum 20 characters!"); return; }
     if (days.length === 0) { psShowToast("⚠️ Select at least one day!"); return; }
@@ -7810,6 +7818,7 @@ function psVetGoToStep3() {
 
     psInlineState.price = parseInt(fee);
     psInlineState.priceUnit = feeUnit;
+    psInlineState.currency = currency;
     psInlineState.description = bio;
     psInlineState.availableDays = days;
     psInlineState.idType = idType;
@@ -7818,7 +7827,7 @@ function psVetGoToStep3() {
     psInlineState.vetServiceType = serviceType;
 
     document.getElementById("ps-sum-category").textContent = `${psInlineState.selectedCategoryLabel} → ${animalTypes.join(', ')}`;
-    document.getElementById("ps-sum-price").textContent = `₦${psInlineState.price.toLocaleString()} ${feeUnit}`;
+    document.getElementById("ps-sum-price").textContent = `${formatPrice(psInlineState.price, currency)} ${feeUnit}`;
     document.getElementById("ps-sum-days").textContent = days.join(", ");
 
     psShowStep(3);
@@ -10582,7 +10591,7 @@ function renderEmergencyResults() {
                     ${pro.display_cat ? `<span style="font-size:11px;color:rgba(255,255,255,0.5);"> · ${pro.display_cat}</span>` : ""}
                 </div>
                 <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;">
-                    ₦${Number(pro.pricing?.base||0).toLocaleString()} ${pro.pricing?.unit||"per job"}
+                   ${formatPrice(Number(pro.pricing?.base||0), pro.pricing?.currency)} ${pro.pricing?.unit||"per job"} 
                 </div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
@@ -11775,25 +11784,31 @@ function confirmOrderYes() {
     let activePro = null;
     let activeItemName = null;
     let activeItemPrice = null;
+    let activeItemCurrency = '';
 
     if (window._snacksOrderActive) {
         activePro = currentSnacksMenuPro;
         activeItemName = snacksOrderDraft.itemName;
         activeItemPrice = snacksOrderDraft.itemPrice;
+        activeItemCurrency = snacksOrderDraft.currency || '';
         window._snacksOrderActive = false;
     } else if (window._beveragesOrderActive) {
         activePro = currentBeveragesMenuPro;
         activeItemName = beveragesOrderDraft.itemName;
         activeItemPrice = beveragesOrderDraft.itemPrice;
+        activeItemCurrency = beveragesOrderDraft.currency || '';
         window._beveragesOrderActive = false;
     } else {
         activePro = currentChefMenuPro;
         activeItemName = orderDraft.itemName;
         activeItemPrice = orderDraft.itemPrice;
+        activeItemCurrency = orderDraft.currency || '';
     }
 
     document.getElementById('po-item-name').textContent = activeItemName || orderDraft.itemName;
-    document.getElementById('po-item-price').textContent = activeItemPrice || orderDraft.itemPrice;
+    window._activePlaceOrderCurrency = activeItemCurrency;
+    const activePriceNum = parseInt(String(activeItemPrice || orderDraft.itemPrice).replace(/[^\d]/g,'')) || 0;
+    document.getElementById('po-item-price').textContent = formatPrice(activePriceNum, activeItemCurrency);
     document.getElementById('po-qty').value = 1;
     document.getElementById('po-address').value = '';
     document.getElementById('po-phone').value = '';
@@ -11808,7 +11823,9 @@ function confirmOrderYes() {
 
 function openPlaceOrderOverlay() {
     document.getElementById('po-item-name').textContent = orderDraft.itemName;
-    document.getElementById('po-item-price').textContent = orderDraft.itemPrice;
+    window._activePlaceOrderCurrency = orderDraft.currency || '';
+    const draftPriceNum = parseInt(String(orderDraft.itemPrice).replace(/[^\d]/g,'')) || 0;
+    document.getElementById('po-item-price').textContent = formatPrice(draftPriceNum, orderDraft.currency);
     document.getElementById('po-qty').value = 1;
     document.getElementById('po-address').value = '';
     document.getElementById('po-phone').value = '';
@@ -11837,14 +11854,14 @@ function closePlaceOrderOverlay() {
 function updateOrderTotal() {
     if (window._activeCartOrder) {
         const total = window._activeCartOrder.items.reduce((sum, i) => sum + (parseInt(String(i.price).replace(/[^\d]/g,'')) || 0) * i.qty, 0);
-        document.getElementById('po-total-display').textContent = total > 0 ? `₦${total.toLocaleString()}` : '—';
+        document.getElementById('po-total-display').textContent = total > 0 ? formatPrice(total, window._activeCartOrder.items[0]?.currency) : '—';
         return;
     }
     const qty = parseInt(document.getElementById('po-qty').value) || 1;
     const priceText = document.getElementById('po-item-price').textContent || '';
     const priceNum = parseInt(priceText.replace(/[^\d]/g, '')) || 0;
     const total = qty * priceNum;
-    document.getElementById('po-total-display').textContent = total > 0 ? `₦${total.toLocaleString()}` : '—';
+    document.getElementById('po-total-display').textContent = total > 0 ? formatPrice(total, window._activePlaceOrderCurrency) : '—';
 }
     
 async function submitOrderRequestOnly() {
@@ -12793,7 +12810,7 @@ function normalizeFirebaseProvider(username, data) {
         avatar: initials,
         color: getProColor(data.categoryLabel || data.category),
         jobs: data.jobsCompleted || 0,
-        price: data.pricing ? `₦${Number(data.pricing.base || 0).toLocaleString()}` : '₦0',
+        price: data.pricing ? formatPrice(Number(data.pricing.base || 0), data.pricing.currency) : '0',
         bio: data.bio || 'No bio provided yet.',
         skills: data.skills || data.cuisines || [],
         online: data.online === true,
@@ -13863,8 +13880,7 @@ function openPaymentWindowOverlay(proId, requestId, requestData) {
 
     document.getElementById('pw-item-name').textContent = `${requestData.quantity}x ${requestData.itemName}`;
     const unitPrice = parseInt(String(requestData.itemPrice).replace(/[^\d]/g, '')) || 0;
-    document.getElementById('pw-item-total').textContent = `₦${(unitPrice * requestData.quantity).toLocaleString()}`;
-
+    document.getElementById('pw-item-total').textContent = formatPrice(unitPrice * requestData.quantity, requestData.currency);
     // Fetch vendor bank details
     if (typeof firebase !== 'undefined' && firebase.database) {
         firebase.database().ref(`providers/${proId}/bankDetails`).once('value').then(snap => {
