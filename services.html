@@ -4005,7 +4005,7 @@ body {
             </div>
 
             <div style="margin:14px 0 16px;">
-                <div class="hire-field-label">Suggested Budget (₦)</div>
+               <div class="hire-field-label">Suggested Budget</div> 
                 <div style="display:flex;gap:8px;">
                     <input type="number" id="hire-budget" class="hire-input" style="flex:1;">
                     <select id="hire-budget-unit" class="hire-select" style="width:120px;">
@@ -10663,12 +10663,13 @@ function getHireProData(proId) {
     return null;
 }
 
-function openHireSheet(presetName, presetPrice, presetDesc) {
+function openHireSheet(presetName, presetPrice, presetDesc, presetCurrency) {
     if (!currentProfileProId) return;
     hireState.proId = currentProfileProId;
     hireState.step = 1;
 
     const pro = getHireProData(currentProfileProId);
+    hireState.currency = presetCurrency || pro?.pricing?.currency || '';
     const avatar = document.getElementById('hire-mini-avatar');
     if (pro) {
         avatar.style.background = pro.color;
@@ -10710,9 +10711,9 @@ function openHireSheet(presetName, presetPrice, presetDesc) {
 }
 
 // Request Quote — used for service pros (electrician, plumber, etc.) instead of Add to Cart
-function nxfmRequestServiceQuote(name, price, desc) {
-    openHireSheet(name, price, desc);
-}
+function nxfmRequestServiceQuote(name, price, desc, currency) {
+    openHireSheet(name, price, desc, currency);
+    }
 
 function closeHireSheet() {
     const box = document.getElementById('hire-sheet-box');
@@ -10789,8 +10790,7 @@ function hireGoToStep2() {
     document.getElementById('hire-sum-job').textContent = jobDesc.length > 40 ? jobDesc.slice(0,40)+'…' : jobDesc;
     const niceDate = new Date(dateVal + "T00:00:00").toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric', weekday:'short' });
     document.getElementById('hire-sum-date').textContent = niceDate;
-    document.getElementById('hire-sum-budget').textContent = budgetUnit === 'negotiable' ? 'Negotiable' : `₦${hireState.budget.toLocaleString()} ${budgetUnit}`;
-
+   document.getElementById('hire-sum-budget').textContent = budgetUnit === 'negotiable' ? 'Negotiable' : `${formatPrice(hireState.budget, hireState.currency)} ${budgetUnit}`; 
     hireShowStep(2);
 }
 
@@ -10802,7 +10802,7 @@ async function writeHireRequestToFirebase() {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
     const pro = getHireProData(hireState.proId);
 
-    const payload = {
+   const payload = {
         requestId,
         proId: String(hireState.proId),
         proName: pro ? pro.name : 'Provider',
@@ -10811,9 +10811,10 @@ async function writeHireRequestToFirebase() {
         dateNeeded: hireState.dateVal,
         budget: hireState.budget,
         budgetUnit: hireState.budgetUnit,
+        currency: hireState.currency || '',
         status: 'pending',
         createdAt: Date.now()
-    };
+    }; 
 
     const db = firebase.database();
     await db.ref(`providers/${hireState.proId}/requests/${requestId}`).set(payload);
@@ -11032,8 +11033,8 @@ function openItemDetail(name, price, image, icon, desc, currency) {
 
 function itemDetailRequestQuote() {
     document.getElementById('item-detail-overlay').style.display = 'none';
-    nxfmRequestServiceQuote(itemDetailData.name, itemDetailData.price, itemDetailData.desc);
-}
+    nxfmRequestServiceQuote(itemDetailData.name, itemDetailData.price, itemDetailData.desc, itemDetailData.currency);
+    }
 
 function closeItemDetail() {
     document.getElementById('item-detail-overlay').style.display = 'none';
