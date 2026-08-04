@@ -5320,7 +5320,15 @@ body {
         </div>
         <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--np-cyan,#06b6d4),var(--np-blue,#1d4ed8));display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;">👋</div>
     </div>
-
+<div class="mb-glass-card" style="margin-top:16px;border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <div id="mb-health-ring" style="width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--np-green,#10b981) 0deg,rgba(255,255,255,0.1) 0deg);transition:background 0.4s ease;">
+            <div style="width:44px;height:44px;border-radius:50%;background:#0a0a0a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#ffffff;" id="mb-health-score">0%</div>
+        </div>
+        <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;color:#ffffff;">Profile Health</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:2px;" id="mb-health-tip">Complete your setup to boost visibility</div>
+        </div>
+</div>
     <div id="mb-publish-banner" class="mb-glass-card" style="display:none;margin-top:18px;border-radius:16px;padding:16px;align-items:center;justify-content:space-between;gap:12px;border-left:3px solid var(--np-amber,#f59e0b);">
         <div>
             <div style="font-weight:800;font-size:14px;color:#ffffff;">Your menu is unpublished <span style="color:var(--np-red,#ef4444);">●</span></div>
@@ -11427,6 +11435,14 @@ async function mbRenderOverview(data) {
         { label: 'Publish your menu', done: isPublished },
         { label: 'Upgrade to Premium', done: false, onClick: 'mbOpenUpgradeModal()' },
     ];
+    const healthDone = checklist.filter(s => s.done).length;
+    const healthPct = Math.round((healthDone / checklist.length) * 100);
+    const healthColor = healthPct >= 80 ? 'var(--np-green,#10b981)' : healthPct >= 40 ? 'var(--np-amber,#f59e0b)' : 'var(--np-red,#ef4444)';
+    const healthTip = healthPct >= 80 ? 'Great! Your profile is fully optimized' : healthPct >= 40 ? 'Almost there — finish the steps below' : 'Complete your setup to boost visibility';
+    document.getElementById('mb-health-ring').style.background = `conic-gradient(${healthColor} ${healthPct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+    document.getElementById('mb-health-score').textContent = healthPct + '%';
+    document.getElementById('mb-health-score').style.color = healthColor;
+    document.getElementById('mb-health-tip').textContent = healthTip;
     document.getElementById('mb-setup-checklist').innerHTML = checklist.map(step => `
         <div class="mb-glass-card mb-check-card" onclick="${step.onClick || ''}" style="${step.onClick ? 'cursor:pointer;' : ''}${step.done ? '' : 'border-left:3px solid var(--np-cyan,#06b6d4);'}">
             <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${step.done ? 'var(--np-green,#10b981)' : 'rgba(255,255,255,0.35)'};background:${step.done ? 'var(--np-green,#10b981)' : 'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:12px;">${step.done ? '✓' : ''}</div>
