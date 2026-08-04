@@ -11075,7 +11075,7 @@ function openTiersSheet(itemName) {
         <div style="background:#ffffff;border:1px solid #f1e4d8;border-radius:16px;padding:14px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                 <div style="font-size:15px;font-weight:800;color:#78350f;">${tier.name}</div>
-                <div style="font-size:16px;font-weight:800;color:#ea580c;">₦${tier.price.toLocaleString()}</div>
+               <div style="font-size:16px;font-weight:800;color:#ea580c;">${formatPrice(tier.price, tiersSheetData.currency)}</div> 
             </div>
             <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">⏱️ ${tier.delivery || ''}</div>
             <ul style="margin:0 0 12px;padding-left:18px;font-size:12.5px;color:#374151;">
@@ -11101,6 +11101,7 @@ async function tiersSheetSelect(tierIndex) {
             image: item.image || '',
             icon: item.icon || '🛠️',
             desc: item.desc || '',
+            currency: item.currency,
             qty: 1
         });
         closeTiersSheet();
@@ -11116,7 +11117,7 @@ function mbRenderMenuItem(item, idx) {
         <div style="flex:1;min-width:0;">
             <div style="font-weight:800;font-size:14px;color:#78350f;">${item.name}</div>
             <div style="font-size:12px;color:#64748b;margin:2px 0 6px;">${item.desc || ''}</div>
-            <div style="font-weight:800;font-size:14px;color:#ea580c;">${item.pricingType === 'tiered' ? 'From ₦' + Math.min(...item.tiers.map(t=>t.price)).toLocaleString() : '₦' + item.price.toLocaleString()}</div>
+            <div style="font-weight:800;font-size:14px;color:#ea580c;">${item.pricingType === 'tiered' ? 'From ' + formatPrice(Math.min(...item.tiers.map(t=>t.price)), item.currency) : formatPrice(item.price, item.currency)}</div>        
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;">
             <button onclick="mbOpenItemMenu(${idx})" style="width:30px;height:30px;border-radius:8px;background:#f1f5f9;border:none;cursor:pointer;">⋮</button>
@@ -11267,7 +11268,7 @@ function mbAddTierRow(prefill) {
     row.style = 'display:flex;gap:6px;margin-bottom:8px;';
     row.innerHTML = `
         <input class="mb-tier-name" placeholder="Tier name" value="${prefill?.name || ''}" style="flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 10px;font-size:12px;outline:none;">
-        <input class="mb-tier-price" type="number" placeholder="₦" value="${prefill?.price || ''}" style="width:80px;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 10px;font-size:12px;outline:none;">
+        <input class="mb-tier-price" type="number" placeholder="Price" value="${prefill?.price || ''}" style="width:80px;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 10px;font-size:12px;outline:none;">        
         <input class="mb-tier-delivery" placeholder="Delivery" value="${prefill?.delivery || ''}" style="width:90px;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 10px;font-size:12px;outline:none;">
         <button onclick="document.getElementById('mb-tier-row-${id}').remove()" style="background:#fee2e2;color:#dc2626;border:none;border-radius:10px;width:32px;cursor:pointer;">✕</button>`;
     wrap.appendChild(row);
@@ -11697,10 +11698,10 @@ async function mbGenerateAndUploadFlyer(username, data) {
 
     const gridItems = allItems.slice(0, 6);
     document.getElementById('mb-flyer-grid').innerHTML = gridItems.map(item => {
-        const priceLabel = item.pricingType === 'tiered'
-            ? 'From ₦' + Math.min(...item.tiers.map(t => t.price)).toLocaleString()
-            : '₦' + Number(item.price || 0).toLocaleString();
-        return `
+    const priceLabel = item.pricingType === 'tiered'
+            ? 'From ' + formatPrice(Math.min(...item.tiers.map(t => t.price)), item.currency)
+            : formatPrice(Number(item.price || 0), item.currency);   
+    return `
         <div style="background:#fff7ed;border-radius:20px;padding:20px;text-align:center;">
             <div style="font-size:56px;margin-bottom:10px;">${item.icon || '🍽️'}</div>
             <div style="font-size:18px;font-weight:800;color:#78350f;margin-bottom:4px;">${item.name}</div>
