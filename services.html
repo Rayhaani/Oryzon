@@ -3747,7 +3747,7 @@ body {
     <div id="story-canvas-video-layer" style="position:absolute;inset:0;z-index:0;display:none;"></div>
     <div style="font-size: 96px; margin-bottom: 16px; position:relative; z-index:1;" id="story-canvas-main-emoji">🥣</div> 
             <h2 style="font-weight: 800; font-size: 28px; color: #ffffff;" id="story-canvas-main-title">Danwake</h2>
-                <div style="color: #34d399; font-weight: 800; font-size: 24px; margin-top: 6px;" id="story-canvas-main-price">₦1,500</div>
+                <div style="color: #34d399; font-weight: 800; font-size: 24px; margin-top: 6px;" id="story-canvas-main-price">0</div>
                 <div style="background: rgba(255,255,255,0.06); padding: 8px 18px; border-radius: 14px; font-size: 12px; color: #cbd5e1; margin-top: 14px; border: 1px solid rgba(255,255,255,0.1);">
                     🔥 Freshly Steaming & Available In Perimeter
                 </div>
@@ -5327,7 +5327,7 @@ body {
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
         <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <div style="font-size:20px;font-weight:800;color:#1e293b;" id="mb-stat-sales">₦0</div>
+          <div style="font-size:20px;font-weight:800;color:#1e293b;" id="mb-stat-sales">0</div>  
             <div style="font-size:12px;color:#64748b;margin-top:2px;">Sales Today</div>
         </div>
         <div style="background:#ffffff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
@@ -5373,7 +5373,7 @@ body {
 
     <div style="background:#ffffff;border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.04);margin-bottom:12px;">
         <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Total Sales</div>
-        <div style="font-size:26px;font-weight:800;color:#1e293b;margin-top:4px;" id="mb-sales-total">₦0</div>
+       <div style="font-size:26px;font-weight:800;color:#1e293b;margin-top:4px;" id="mb-sales-total">0</div> 
         <div style="font-size:12px;color:#64748b;margin-top:2px;" id="mb-sales-total-sub">0 completed orders</div>
     </div>
 
@@ -6676,6 +6676,7 @@ function updateStoryOverlayUi() {
     if (state.isLiveStoryMode) {
         const { username, uploads } = state.liveStoryData;
         const activeUpload = uploads[state.activeStorySlide];
+        state.activeStoryCurrency = activeUpload.dishCurrency || '';
 
         const indicatorContainer = document.getElementById("story-progress-indicators-bar");
         indicatorContainer.innerHTML = uploads.map((u, idx) => `
@@ -6686,8 +6687,7 @@ function updateStoryOverlayUi() {
         document.getElementById("story-header-meta").innerText = "Live Now · Available In Perimeter";
         document.getElementById("story-canvas-main-emoji").style.display = "none";
         document.getElementById("story-canvas-main-title").innerText = activeUpload.dishName || "";
-        document.getElementById("story-canvas-main-price").innerText = activeUpload.dishPrice ? `₦${Number(activeUpload.dishPrice).toLocaleString()}` : "";
-        
+        document.getElementById("story-canvas-main-price").innerText = activeUpload.dishPrice ? formatPrice(Number(activeUpload.dishPrice), activeUpload.dishCurrency) : "";        
         // Share tsohon video/image kafin sabo
         videoLayer.innerHTML = "";
         videoLayer.style.display = "none";
@@ -6708,8 +6708,9 @@ function updateStoryOverlayUi() {
     videoLayer.innerHTML = "";
     videoLayer.style.display = "none";
 
+   state.activeStoryCurrency = '';
     const currentProData = PRO_STORIES[state.activeProStoryIndex];
-    const activeStory = currentProData.stories[state.activeStorySlide];
+    const activeStory = currentProData.stories[state.activeStorySlide]; 
     const pro = PROS.find(p => p.id === currentProData.proId);
     const indicatorContainer = document.getElementById("story-progress-indicators-bar");
     indicatorContainer.innerHTML = currentProData.stories.map((s,idx) => `
@@ -8985,6 +8986,7 @@ function addDailyUploadBlock() {
         blockId,
         dishName: '',
         dishPrice: null,
+        dishCurrency: null,
         photos: {}
     });
 
@@ -9016,7 +9018,7 @@ function renderDailyUploadBlocks() {
                     <option value="">— Select Dish from Menu —</option>
                     ${menu.map(item => {
                         const usedElsewhere = dailyUploadBlocks.some(b => b.blockId !== block.blockId && b.dishName === item.name);
-                        return `<option value="${item.name.replace(/"/g,'&quot;')}|${item.price}" ${block.dishName === item.name ? 'selected' : ''} ${usedElsewhere ? 'disabled' : ''}>${item.name}${usedElsewhere ? ' (Already selected)' : ''} (₦${Number(item.price).toLocaleString()})</option>`;
+                        return `<option value="${item.name.replace(/"/g,'&quot;')}|${item.price}|${item.currency||''}" ${block.dishName === item.name ? 'selected' : ''} ${usedElsewhere ? 'disabled' : ''}>${item.name}${usedElsewhere ? ' (Already selected)' : ''} (${formatPrice(item.price, item.currency)})</option>`;
                     }).join('')}
                 </select>
                 <button onclick="removeDailyUploadBlock(${block.blockId})" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#ef4444;font-size:11px;padding:8px 10px;cursor:pointer;flex-shrink:0;">✕</button>
@@ -9049,8 +9051,8 @@ function renderDailyUploadBlocks() {
 function setDailyUploadBlockDish(blockId, value) {
     const block = dailyUploadBlocks.find(b => b.blockId === blockId);
     if (!block) return;
-    if (!value) { block.dishName = ''; block.dishPrice = null; renderDailyUploadBlocks(); return; }
-    const [name, price] = value.split('|');
+    if (!value) { block.dishName = ''; block.dishPrice = null; block.dishCurrency = null; renderDailyUploadBlocks(); return; }
+    const [name, price, currency] = value.split('|');
     const alreadyUsed = dailyUploadBlocks.some(b => b.blockId !== blockId && b.dishName === name);
     if (alreadyUsed) {
         showGlobalToast(`⚠️ You already selected "${name}" in another block! Each dish can only be used once per day.`);
@@ -9059,6 +9061,7 @@ function setDailyUploadBlockDish(blockId, value) {
     }
     block.dishName = name;
     block.dishPrice = parseInt(price);
+    block.dishCurrency = currency || '';
     renderDailyUploadBlocks();
         }
 
@@ -9211,12 +9214,13 @@ document.getElementById("story-action-order-btn").addEventListener("click", (e) 
     state.isStoryPaused = true;
     if (state.storyIntervalId) clearInterval(state.storyIntervalId);
     
-    const itemName = document.getElementById("story-canvas-main-title").innerText;
+   const itemName = document.getElementById("story-canvas-main-title").innerText;
     const itemPrice = document.getElementById("story-canvas-main-price").innerText;
     
     orderDraft.itemName = itemName;
     orderDraft.itemPrice = itemPrice;
-    orderDraft.fromStory = true; // flag
+    orderDraft.currency = state.activeStoryCurrency || '';
+    orderDraft.fromStory = true; // flag 
     
     // Set vendor info daga current story pro
     const currentProData = state.isLiveStoryMode ? null : PRO_STORIES[state.activeProStoryIndex];
@@ -11340,8 +11344,8 @@ async function mbRenderOverview(data) {
     const isPublished = data.published === true;
     document.getElementById('mb-publish-banner').style.display = isPublished ? 'none' : 'flex';
 
-    const todayKey = new Date().toISOString().slice(0,10);
-    let salesToday = 0, ordersToday = 0, pendingCount = 0;
+   const todayKey = new Date().toISOString().slice(0,10);
+    let salesToday = 0, ordersToday = 0, pendingCount = 0, salesTodayCurrency = '';
     try {
         const ordersSnap = await firebase.database().ref('providers/' + username + '/orders').once('value');
         ordersSnap.forEach(child => {
@@ -11350,13 +11354,13 @@ async function mbRenderOverview(data) {
             const lineTotal = (Number(o.itemPrice) || 0) * (Number(o.quantity) || 1);
             if (orderDate === todayKey) {
                 ordersToday++;
-                if (o.status === 'completed') salesToday += lineTotal;
+                if (o.status === 'completed') { salesToday += lineTotal; if (!salesTodayCurrency) salesTodayCurrency = o.currency || ''; }
             }
             if (o.status === 'pending') pendingCount++;
         });
     } catch (err) { console.warn('Orders stats unavailable:', err.message); }
 
-    document.getElementById('mb-stat-sales').textContent = '₦' + salesToday.toLocaleString();
+    document.getElementById('mb-stat-sales').textContent = formatPrice(salesToday, salesTodayCurrency); 
     document.getElementById('mb-stat-orders').textContent = ordersToday;
     document.getElementById('mb-stat-pending').textContent = pendingCount;
     document.getElementById('mb-stat-visitors').textContent = data.visitorsToday || 0;
@@ -11459,7 +11463,7 @@ function mbRenderOrders() {
             <div style="font-size:12px;color:#64748b;margin-bottom:2px;">📍 ${o.fulfillmentMethod === 'pickup' ? 'Self Pickup' : (o.address || '—')}</div>
             <div style="font-size:12px;color:#64748b;margin-bottom:10px;">📞 ${o.phone || '—'}</div>
             <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f1f5f9;padding-top:10px;">
-                <div style="font-weight:800;font-size:14px;color:#ea580c;">₦${lineTotal.toLocaleString()}</div>
+               <div style="font-weight:800;font-size:14px;color:#ea580c;">${formatPrice(lineTotal, o.currency)}</div> 
                 <div style="font-size:11px;color:#94a3b8;">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : ''}</div>
             </div>
             ${actions ? `<div style="display:flex;gap:8px;margin-top:10px;">${actions}</div>` : ''}
@@ -11501,11 +11505,12 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
         const inProgress = orders.filter(o => o.status === 'pending' || o.status === 'confirmed');
         const cancelled = orders.filter(o => o.status === 'cancelled');
 
+        
         const lineTotal = o => (Number(o.itemPrice) || 0) * (Number(o.quantity) || 1);
         const totalSales = completed.reduce((sum, o) => sum + lineTotal(o), 0);
+        const totalSalesCurrency = completed.find(o => o.currency)?.currency || '';
 
-        document.getElementById('mb-sales-total').textContent = '₦' + totalSales.toLocaleString();
-        document.getElementById('mb-sales-total-sub').textContent = `${completed.length} completed order${completed.length === 1 ? '' : 's'}`;
+        document.getElementById('mb-sales-total').textContent = formatPrice(totalSales, totalSalesCurrency);                                                            document.getElementById('mb-sales-total-sub').textContent = `${completed.length} completed order${completed.length === 1 ? '' : 's'}`;
         document.getElementById('mb-sales-total-orders').textContent = orders.length;
         document.getElementById('mb-sales-completed').textContent = completed.length;
         document.getElementById('mb-sales-progress').textContent = inProgress.length;
@@ -11515,9 +11520,10 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
         const itemStats = {};
         completed.forEach(o => {
             const key = o.itemName || 'Unknown';
-            if (!itemStats[key]) itemStats[key] = { qty: 0, revenue: 0 };
+            if (!itemStats[key]) itemStats[key] = { qty: 0, revenue: 0, currency: '' };
             itemStats[key].qty += Number(o.quantity) || 1;
             itemStats[key].revenue += lineTotal(o);
+            if (!itemStats[key].currency) itemStats[key].currency = o.currency || '';
         });
         const topItems = Object.entries(itemStats).sort((a,b) => b[1].qty - a[1].qty).slice(0, 5);
 
@@ -11542,7 +11548,7 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
                         <div style="font-weight:700;font-size:13px;color:#1e293b;">${name}</div>
                         <div style="font-size:11px;color:#64748b;">${stat.qty} sold</div>
                     </div>
-                    <div style="font-weight:800;font-size:13px;color:#ea580c;flex-shrink:0;">₦${stat.revenue.toLocaleString()}</div>
+                   <div style="font-weight:800;font-size:13px;color:#ea580c;flex-shrink:0;">${formatPrice(stat.revenue, stat.currency)}</div>                 
                 </div>`).join('');
 
         // Recent transactions (completed, most recent first)
@@ -11567,7 +11573,7 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
                         <div style="font-weight:700;font-size:13px;color:#1e293b;">${o.itemName || '—'}</div>
                         <div style="font-size:11px;color:#64748b;margin-top:2px;">@${o.customerUsername || 'customer'} · ${o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : ''}</div>
                     </div>
-                    <div style="font-weight:800;font-size:13px;color:#16a34a;">+₦${lineTotal(o).toLocaleString()}</div>
+                    <div style="font-weight:800;font-size:13px;color:#16a34a;">+${formatPrice(lineTotal(o), o.currency)}</div>
                 </div>`).join('');
 
     } catch (err) {
@@ -11869,6 +11875,7 @@ async function submitOrderRequestOnly() {
             items: window._activeCartOrder.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
             itemName: window._activeCartOrder.items.map(i => `${i.qty}× ${i.name}`).join(', '),
             itemPrice: window._activeCartOrder.items.reduce((sum, i) => sum + (Number(i.price) || 0) * i.qty, 0),
+            currency: window._activeCartOrder.items[0]?.currency || '',
             quantity: window._activeCartOrder.items.reduce((sum, i) => sum + i.qty, 0),
             fulfillmentMethod: method,
             address: method === 'delivery' ? address : null,
@@ -11883,6 +11890,7 @@ async function submitOrderRequestOnly() {
             requestId,
             itemName: orderDraft.itemName,
             itemPrice: orderDraft.itemPrice,
+            currency: orderDraft.currency || '',
             quantity: qty,
             fulfillmentMethod: method,
             address: method === 'delivery' ? address : null,
@@ -12723,7 +12731,8 @@ async function submitDailyUploads() {
                             url: data.url,
                             type: photo.type && photo.type.includes('video') ? 'video' : 'image',
                             dishName: block.dishName,
-                            dishPrice: block.dishPrice
+                            dishPrice: block.dishPrice,
+                            dishCurrency: block.dishCurrency
                         });
                     }
                 } catch (e) { console.warn(`Block ${block.blockId} slot ${slotIdx} upload failed:`, e); }
