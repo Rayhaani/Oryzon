@@ -11515,6 +11515,33 @@ async function mbDeleteItem(idx) {
     }
 }
 
+// ── RENDER 7-DAY TREND CHART (Orders vs Bookings) ──
+function mbRenderTrendChart(ordersByDay, bookingsByDay, dayLabels) {
+    const svg = document.getElementById('mb-trend-svg');
+    const labelsWrap = document.getElementById('mb-trend-labels');
+    if (!svg || !labelsWrap) return;
+    const W = 300, padX = 15, topY = 14, baseY = 92;
+    const maxVal = Math.max(1, ...ordersByDay, ...bookingsByDay);
+    const stepX = (W - padX * 2) / (ordersByDay.length - 1);
+    const pointsFor = (arr) => arr.map((v, i) => {
+        const x = padX + i * stepX;
+        const y = baseY - (v / maxVal) * (baseY - topY);
+        return { x: x.toFixed(1), y: y.toFixed(1) };
+    });
+    const ordersPts = pointsFor(ordersByDay);
+    const bookingsPts = pointsFor(bookingsByDay);
+    const toLine = (pts) => pts.map(p => `${p.x},${p.y}`).join(' ');
+    const toDots = (pts, color) => pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2.8" fill="${color}" />`).join('');
+    svg.innerHTML = `
+        <line x1="${padX}" y1="${baseY}" x2="${W - padX}" y2="${baseY}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <polyline points="${toLine(ordersPts)}" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="${toLine(bookingsPts)}" fill="none" stroke="#f472b6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4,3"/>
+        ${toDots(ordersPts, '#38bdf8')}
+        ${toDots(bookingsPts, '#f472b6')}
+    `;
+    labelsWrap.innerHTML = dayLabels.map(d => `<span>${d}</span>`).join('');
+}
+
 async function mbRenderOverview(data) {
     const username = localStorage.getItem("nexus_user_session");
     const businessName = data.businessName || data.categoryLabel || username;
@@ -11526,7 +11553,11 @@ async function mbRenderOverview(data) {
     document.getElementById('mb-publish-banner').style.display = isPublished ? 'none' : 'flex';
 
    const todayKey = new Date().toISOString().slice(0,10);
-    let salesToday = 0, ordersToday = 0, pendingCount = 0, salesTodayCurrency = '', completedCount = 0, cancelledCount = 0, totalOrdersCount = 0;
+    const last7Keys = [...Array(7)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toISOString().slice(0,10); });
+    const last7Labels = last7Keys.map(k => new Date(k + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short' }));
+    const ordersByDay = last7Keys.map(() => 0);
+    const bookingsByDay = last7Keys.map(() => 0);
+    let salesToday = 0, ordersToday = 0, pendingCount = 0, salesTodayCurrency = '', completedCount = 0, cancelledCount = 0, totalOrdersCount = 0;   
     try {
         const ordersSnap = await firebase.database().ref('providers/' + username + '/orders').once('value');
         ordersSnap.forEach(child => {
@@ -11537,6 +11568,8 @@ async function mbRenderOverview(data) {
                 ordersToday++;
                 if (o.status === 'completed') { salesToday += lineTotal; if (!salesTodayCurrency) salesTodayCurrency = o.currency || ''; }
             }
+            const orderDayIdx = last7Keys.indexOf(orderDate);
+            if (orderDayIdx !== -1) ordersByDay[orderDayIdx]++;
           if (o.status === 'pending') pendingCount++;
             if (o.status === 'completed') completedCount++;
             if (o.status === 'cancelled') cancelledCount++;
@@ -11561,9 +11594,14 @@ async function mbRenderOverview(data) {
     try {
         const reqSnap = await firebase.database().ref('providers/' + username + '/requests').once('value');
         const reqData = reqSnap.val() || {};
-        const bookingsToday = Object.values(reqData).filter(r => new Date(r.createdAt || 0).toISOString().slice(0,10) === todayKey).length;
+       const bookingsToday = Object.values(reqData).filter(r => new Date(r.createdAt || 0).toISOString().slice(0,10) === todayKey).length;
         document.getElementById('mb-stat-bookings-today').textContent = bookingsToday;
         document.getElementById('mb-stat-total-bookings').textContent = Object.keys(reqData).length;
+        Object.values(reqData).forEach(r => {
+            const reqDate = new Date(r.createdAt || 0).toISOString().slice(0,10);
+            const reqDayIdx = last7Keys.indexOf(reqDate);
+            if (reqDayIdx !== -1) bookingsByDay[reqDayIdx]++;
+        });
         const upcoming = Object.values(reqData).filter(r => r.status !== 'declined' && r.status !== 'cancelled' && r.status !== 'completed');
         const banner = document.getElementById('mb-bookings-banner');
         if (upcoming.length > 0) {
@@ -11577,6 +11615,7 @@ async function mbRenderOverview(data) {
         }
     } catch (err) { console.warn('Bookings banner unavailable:', err.message); }
 
+    mbRenderTrendChart(ordersByDay, bookingsByDay, last7Labels); 
     try {
         const viewsSnap = await firebase.database().ref(`providers/${username}/analytics/views/${todayKey}`).once('value');
         document.getElementById('mb-stat-visitors').textContent = viewsSnap.val() || 0;
