@@ -11520,27 +11520,33 @@ function mbRenderTrendChart(ordersByDay, bookingsByDay, dayLabels) {
     const svg = document.getElementById('mb-trend-svg');
     const labelsWrap = document.getElementById('mb-trend-labels');
     if (!svg || !labelsWrap) return;
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
     const W = 300, padX = 15, topY = 14, baseY = 92;
     const maxVal = Math.max(1, ...ordersByDay, ...bookingsByDay);
     const stepX = (W - padX * 2) / (ordersByDay.length - 1);
     const pointsFor = (arr) => arr.map((v, i) => {
         const x = padX + i * stepX;
         const y = baseY - (v / maxVal) * (baseY - topY);
-        return { x: x.toFixed(1), y: y.toFixed(1) };
+        return { x, y };
     });
-    const ordersPts = pointsFor(ordersByDay);
-    const bookingsPts = pointsFor(bookingsByDay);
-    const toLine = (pts) => pts.map(p => `${p.x},${p.y}`).join(' ');
-    const toDots = (pts, color) => pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2.8" fill="${color}" />`).join('');
-    svg.innerHTML = `
-        <line x1="${padX}" y1="${baseY}" x2="${W - padX}" y2="${baseY}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
-        <polyline points="${toLine(ordersPts)}" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-        <polyline points="${toLine(bookingsPts)}" fill="none" stroke="#f472b6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4,3"/>
-        ${toDots(ordersPts, '#38bdf8')}
-        ${toDots(bookingsPts, '#f472b6')}
-    `;
+    const makeEl = (tag, attrs) => {
+        const el = document.createElementNS(SVG_NS, tag);
+        Object.keys(attrs).forEach(k => el.setAttribute(k, attrs[k]));
+        return el;
+    };
+    const baseline = makeEl('line', { x1: padX, y1: baseY, x2: W - padX, y2: baseY, stroke: 'rgba(255,255,255,0.12)', 'stroke-width': 1 });
+    svg.appendChild(baseline);
+    const addSeries = (pts, color, dashed) => {
+        const lineAttrs = { points: pts.map(p => `${p.x},${p.y}`).join(' '), fill: 'none', stroke: color, 'stroke-width': 2.2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+        if (dashed) lineAttrs['stroke-dasharray'] = '4,3';
+        svg.appendChild(makeEl('polyline', lineAttrs));
+        pts.forEach(p => svg.appendChild(makeEl('circle', { cx: p.x, cy: p.y, r: 2.8, fill: color })));
+    };
+    addSeries(pointsFor(ordersByDay), '#38bdf8', false);
+    addSeries(pointsFor(bookingsByDay), '#f472b6', true);
     labelsWrap.innerHTML = dayLabels.map(d => `<span>${d}</span>`).join('');
-}
+    }
 
 async function mbRenderOverview(data) {
     const username = localStorage.getItem("nexus_user_session");
