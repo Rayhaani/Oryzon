@@ -5297,6 +5297,7 @@ body {
             <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('orders')" id="mb-tab-orders">Orders</button>
         <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('sales')" id="mb-tab-sales">Sales</button>
         <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('bookings')" id="mb-tab-bookings">Bookings</button>
+        <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('customers')" id="mb-tab-customers">Customers</button>
     </div>
 
     <div style="flex:1;overflow-y:auto;">
@@ -5432,6 +5433,11 @@ body {
         <div id="mb-panel-bookings" style="display:none;padding:16px;">
     <div id="mb-bookings-list" style="display:flex;flex-direction:column;gap:12px;"></div>
         </div>
+    </div>
+        <div id="mb-panel-customers" style="display:none;padding:16px;">
+    <div id="mb-customers-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+        <div id="mb-panel-sales" style="display:none;padding:16px;">
         <div id="mb-panel-sales" style="display:none;padding:16px;">
         <div id="mb-panel-sales" style="display:none;padding:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -11282,13 +11288,14 @@ function closeMyBusinessDashboard() {
 }
 
 function mbSwitchTab(tabName) {
-    ['overview','menu','orders','sales','bookings'].forEach(t => {
+['overview','menu','orders','sales','bookings','customers'].forEach(t => {
         document.getElementById('mb-tab-' + t).classList.toggle('active', t === tabName);
         document.getElementById('mb-panel-' + t).style.display = (t === tabName) ? 'block' : 'none';
     });
     if (tabName === 'orders') mbLoadOrders();
     if (tabName === 'sales') mbLoadSales();
     if (tabName === 'bookings') mbRenderBookingsTab();
+    if (tabName === 'customers') mbRenderCustomersTab();  
     }
 let mbBookingsAll = [];
 
@@ -11354,6 +11361,83 @@ function mbRenderBookingsList() {
         </div>`;
     }).join('');
     }
+
+let mbCustomersAll = [];
+
+async function mbRenderCustomersTab() {
+    const username = localStorage.getItem("nexus_user_session");
+    const list = document.getElementById('mb-customers-list');
+    list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Loading customers...</div>`;
+    try {
+        const [ordersSnap, requestsSnap, currencySnap] = await Promise.all([
+            firebase.database().ref('providers/' + username + '/orders').once('value'),
+            firebase.database().ref('providers/' + username + '/requests').once('value'),
+            firebase.database().ref('providers/' + username + '/currency').once('value')
+        ]);
+        const ordersData = ordersSnap.val() || {};
+        const requestsData = requestsSnap.val() || {};
+        const proCurrency = currencySnap.val() || '';
+        const customerMap = {};
+
+        Object.values(ordersData).forEach(o => {
+            const cust = o.customerUsername;
+            if (!cust) return;
+            if (!customerMap[cust]) customerMap[cust] = { username: cust, orders: 0, bookings: 0, totalSpent: 0, lastActive: 0 };
+            customerMap[cust].orders++;
+            customerMap[cust].totalSpent += (Number(o.itemPrice) || 0) * (Number(o.quantity) || 1);
+            customerMap[cust].lastActive = Math.max(customerMap[cust].lastActive, o.createdAt || 0);
+        });
+
+        Object.values(requestsData).forEach(r => {
+            const cust = r.customerUsername;
+            if (!cust) return;
+            if (!customerMap[cust]) customerMap[cust] = { username: cust, orders: 0, bookings: 0, totalSpent: 0, lastActive: 0 };
+            customerMap[cust].bookings++;
+            customerMap[cust].lastActive = Math.max(customerMap[cust].lastActive, r.createdAt || 0);
+        });
+
+        mbCustomersAll = Object.values(customerMap)
+            .map(c => ({ ...c, currency: proCurrency }))
+            .sort((a, b) => b.lastActive - a.lastActive);
+        mbRenderCustomersList();
+    } catch (err) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Failed to load customers</div>`;
+    }
+}
+
+function mbRenderCustomersList() {
+    const list = document.getElementById('mb-customers-list');
+    if (mbCustomersAll.length === 0) {
+        list.innerHTML = `
+        <div style="text-align:center;padding:50px 20px;color:#94a3b8;">
+            <div style="font-size:36px;margin-bottom:10px;">👥</div>
+            <div style="font-weight:800;font-size:14px;color:#334155;margin-bottom:4px;">No customers yet</div>
+            <div style="font-size:12px;">Everyone who orders or books you will show up here.</div>
+        </div>`;
+        return;
+    }
+    list.innerHTML = mbCustomersAll.map(c => {
+        const isRepeat = (c.orders + c.bookings) > 1;
+        const lastActiveLabel = c.lastActive ? new Date(c.lastActive).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—';
+        const spentLabel = c.totalSpent > 0 ? formatPrice(c.totalSpent, c.currency) : '—';
+        return `
+        <div style="background:#ffffff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;">
+            <div style="width:42px;height:42px;border-radius:50%;background:#eef2ff;color:#4f46e5;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;">${(c.username || '?').charAt(0).toUpperCase()}</div>
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <div style="font-size:13.5px;font-weight:800;color:#1e293b;">${c.username}</div>
+                    ${isRepeat ? `<span style="font-size:9.5px;font-weight:800;color:#16a34a;background:rgba(22,163,74,0.1);padding:2px 6px;border-radius:6px;">REPEAT</span>` : ''}
+                </div>
+                <div style="font-size:11.5px;color:#64748b;margin-top:2px;">${c.orders} order${c.orders===1?'':'s'} · ${c.bookings} booking${c.bookings===1?'':'s'} · Last: ${lastActiveLabel}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+                <div style="font-size:12.5px;font-weight:800;color:#1e293b;">${spentLabel}</div>
+                <div style="font-size:9.5px;color:#94a3b8;">spent</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
 function mbRenderCategoryPills(categoryKeys) {
     const wrap = document.getElementById('mb-category-pills');
     wrap.innerHTML = `<button onclick="mbFilterCategory(null)" class="mb-pill ${mbCurrentCategory===null?'active':''}" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid ${mbCurrentCategory===null?'#ea580c':'#e2e8f0'};background:${mbCurrentCategory===null?'#fff7ed':'#ffffff'};color:${mbCurrentCategory===null?'#ea580c':'#334155'};font-weight:700;font-size:12px;cursor:pointer;">All</button>` +
