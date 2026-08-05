@@ -6849,7 +6849,8 @@ function closeStoryDeck() {
  function openProfileSheet(proId) {
     const pro = PROS.find(p => String(p.id) === String(proId));
     if (!pro) return;
-
+    mbTrackProfileView(proId);
+     
     // Hero banner: real portfolio photo idan yana akwai, in ba haka ba, gradient default
     const heroBanner = document.getElementById("nxh-hero-banner");
     const firstGalleryUrl = (pro.gallery && pro.gallery[0] && typeof pro.gallery[0] === 'object' && pro.gallery[0].url)
@@ -11564,6 +11565,11 @@ async function mbRenderOverview(data) {
         }
     } catch (err) { console.warn('Bookings banner unavailable:', err.message); }
 
+    try {
+        const viewsSnap = await firebase.database().ref(`providers/${username}/analytics/views/${todayKey}`).once('value');
+        document.getElementById('mb-stat-visitors').textContent = viewsSnap.val() || 0;
+    } catch (err) { console.warn('Visitors stat unavailable:', err.message); }
+
     document.getElementById('mb-stat-orders').textContent = ordersToday;
     document.getElementById('mb-stat-pending-orders').textContent = pendingCount;
     document.getElementById('mb-badge-rating').textContent = avgRating ? `${avgRating}` : '—';
@@ -13941,6 +13947,20 @@ async function confirmRejectOrderRequest() {
 // ════════════════════════════════════════════════════════════
 //  📉 VENDOR RELIABILITY TRACKER
 // ════════════════════════════════════════════════════════════
+// ── TRACK PROFILE VIEW (Visitors Today) ──
+function mbTrackProfileView(proId) {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        const viewerUsername = localStorage.getItem('nexus_user_session');
+        if (viewerUsername && String(viewerUsername) === String(proId)) return; // kada mu ƙidaya kai da kansa
+        const todayKey = new Date().toISOString().slice(0,10);
+        const viewRef = firebase.database().ref(`providers/${proId}/analytics/views/${todayKey}`);
+        viewRef.transaction(current => (current || 0) + 1);
+    } catch (err) {
+        console.warn('mbTrackProfileView error:', err);
+    }
+}
+
 async function trackVendorRejection(proId, reason) {
     try {
         if (typeof firebase === 'undefined' || !firebase.database) return;
