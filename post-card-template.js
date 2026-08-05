@@ -1400,7 +1400,7 @@ window.toggleSave = async function(btn, postId) {
 
             .nexcm-panel {
                 flex: 1; min-height: 0;
-                background: rgba(10,12,22,0.97);
+                background-color: #050505 !important;
                 backdrop-filter: blur(25px);
                 -webkit-backdrop-filter: blur(25px);
                 border-top: 1px solid rgba(253,224,141,0.15);
@@ -1412,7 +1412,6 @@ window.toggleSave = async function(btn, postId) {
                 max-height: 100%;
             }
             .nexcm-overlay.nexcm-open .nexcm-panel { transform: translateY(0); }
-            .nexcm-overlay:not(.nexcm-immersive) .nexcm-panel { flex: 0 0 88%; margin-top: auto; }
 
             .nexcm-node-header {
                 display: flex; align-items: center; justify-content: center;
@@ -1435,6 +1434,12 @@ window.toggleSave = async function(btn, postId) {
                 border: 1px solid rgba(255,255,255,0.04);
             }
             .nexcm-comment-card.positive { background: rgba(80,250,123,0.15); border-right: 3px solid #50fa7b; }
+            .nexcm-matrix-feed > .nexcm-comment-card {
+                background: transparent !important;
+                border: none !important;
+                border-radius: 0 !important;
+                padding-left: 0; padding-right: 0;
+            }
 
             .nexcm-core-layout { display: flex; gap: 12px; position: relative; }
             .nexcm-avatar-frame { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
