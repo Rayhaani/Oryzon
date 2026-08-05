@@ -5338,6 +5338,14 @@ body {
         <button onclick="mbPublish()" style="flex-shrink:0;background:#ffffff;color:#0f172a;border:none;border-radius:12px;padding:10px 16px;font-size:12px;font-weight:800;cursor:pointer;">Publish</button>
     </div>
 
+    <div id="mb-bookings-banner" class="mb-glass-card" style="display:none;margin-top:18px;border-radius:16px;padding:16px;align-items:center;justify-content:space-between;gap:12px;border-left:3px solid var(--np-blue,#3b82f6);cursor:pointer;" onclick="mbSwitchTab('bookings')">
+        <div>
+            <div style="font-weight:800;font-size:14px;color:#ffffff;">📅 <span id="mb-bookings-count">0</span> upcoming booking<span id="mb-bookings-plural">s</span></div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:3px;" id="mb-bookings-urgent-tip">Tap to review job requests</div>
+        </div>
+        <div style="flex-shrink:0;color:rgba(255,255,255,0.5);font-size:18px;">→</div>
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;">
         <div class="mb-glass-card mb-stat-card">
             <div class="mb-stat-icon" style="background:rgba(16,185,129,0.16);color:var(--np-green,#10b981);">💰</div>
@@ -11518,6 +11526,23 @@ async function mbRenderOverview(data) {
     const completionRate = (completedCount + cancelledCount) > 0
         ? Math.round((completedCount / (completedCount + cancelledCount)) * 100)
         : 100;
+: 100;
+
+    try {
+        const reqSnap = await firebase.database().ref('providers/' + username + '/requests').once('value');
+        const reqData = reqSnap.val() || {};
+        const upcoming = Object.values(reqData).filter(r => r.status !== 'declined' && r.status !== 'cancelled' && r.status !== 'completed');
+        const banner = document.getElementById('mb-bookings-banner');
+        if (upcoming.length > 0) {
+            banner.style.display = 'flex';
+            document.getElementById('mb-bookings-count').textContent = upcoming.length;
+            document.getElementById('mb-bookings-plural').textContent = upcoming.length === 1 ? '' : 's';
+            const hasUrgent = upcoming.some(r => mbBookingUrgency(r.dateNeeded).label === 'Today' || mbBookingUrgency(r.dateNeeded).label === 'Overdue');
+            document.getElementById('mb-bookings-urgent-tip').textContent = hasUrgent ? '⚠️ Some need your attention today' : 'Tap to review job requests';
+        } else {
+            banner.style.display = 'none';
+        }
+    } catch (err) { console.warn('Bookings banner unavailable:', err.message); }
 
     document.getElementById('mb-stat-sales').textContent = formatPrice(salesToday, salesTodayCurrency); 
     document.getElementById('mb-stat-orders').textContent = ordersToday;
