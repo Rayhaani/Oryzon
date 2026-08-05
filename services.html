@@ -5298,6 +5298,7 @@ body {
         <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('sales')" id="mb-tab-sales">Sales</button>
         <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('bookings')" id="mb-tab-bookings">Bookings</button>
         <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('customers')" id="mb-tab-customers">Customers</button>
+        <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('insights')" id="mb-tab-insights">Insights</button>
     </div>
 
     <div style="flex:1;overflow-y:auto;">
@@ -5436,6 +5437,24 @@ body {
     </div>
         <div id="mb-panel-customers" style="display:none;padding:16px;">
     <div id="mb-customers-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+        <div id="mb-panel-insights" style="display:none;padding:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;">
+        <div style="background:#ffffff;border-radius:14px;padding:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#1e293b;" id="mb-insights-views-today">0</div>
+            <div style="font-size:10px;color:#64748b;margin-top:2px;">Views Today</div>
+        </div>
+        <div style="background:#ffffff;border-radius:14px;padding:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#1e293b;" id="mb-insights-total-views">0</div>
+            <div style="font-size:10px;color:#64748b;margin-top:2px;">Total Views</div>
+        </div>
+        <div style="background:#ffffff;border-radius:14px;padding:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#1e293b;" id="mb-insights-conversion">0%</div>
+            <div style="font-size:10px;color:#64748b;margin-top:2px;">Conversion</div>
+        </div>
+    </div>
+    <div style="font-size:12px;font-weight:800;color:#334155;margin-bottom:10px;">Views — Last 7 Days</div>
+    <div id="mb-insights-chart" style="display:flex;gap:8px;align-items:flex-end;background:#ffffff;border-radius:14px;padding:14px 10px;min-height:110px;"></div>
         </div>
         <div id="mb-panel-sales" style="display:none;padding:16px;">
         <div id="mb-panel-sales" style="display:none;padding:16px;">
@@ -11288,15 +11307,16 @@ function closeMyBusinessDashboard() {
 }
 
 function mbSwitchTab(tabName) {
-['overview','menu','orders','sales','bookings','customers'].forEach(t => {
+['overview','menu','orders','sales','bookings','customers','insights'].forEach(t => {
         document.getElementById('mb-tab-' + t).classList.toggle('active', t === tabName);
         document.getElementById('mb-panel-' + t).style.display = (t === tabName) ? 'block' : 'none';
     });
     if (tabName === 'orders') mbLoadOrders();
     if (tabName === 'sales') mbLoadSales();
     if (tabName === 'bookings') mbRenderBookingsTab();
-    if (tabName === 'customers') mbRenderCustomersTab();  
-    }
+    if (tabName === 'customers') mbRenderCustomersTab();
+    if (tabName === 'insights') mbRenderInsightsTab();
+        }
 let mbBookingsAll = [];
 
 async function mbRenderBookingsTab() {
@@ -11436,6 +11456,48 @@ function mbRenderCustomersList() {
             </div>
         </div>`;
     }).join('');
+}
+async function mbRenderInsightsTab() {
+    const username = localStorage.getItem("nexus_user_session");
+    try {
+        const [viewsSnap, ordersSnap, requestsSnap] = await Promise.all([
+            firebase.database().ref('providers/' + username + '/analytics/views').once('value'),
+            firebase.database().ref('providers/' + username + '/orders').once('value'),
+            firebase.database().ref('providers/' + username + '/requests').once('value')
+        ]);
+        const viewsData = viewsSnap.val() || {};
+        const ordersData = ordersSnap.val() || {};
+        const requestsData = requestsSnap.val() || {};
+
+        const todayKey = new Date().toISOString().slice(0,10);
+        const viewsToday = viewsData[todayKey] || 0;
+        const totalViews = Object.values(viewsData).reduce((a, b) => a + b, 0);
+
+        const last7 = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().slice(0,10);
+            last7.push({ count: viewsData[key] || 0, label: d.toLocaleDateString('en-GB', { weekday: 'short' }) });
+        }
+        const maxViews = Math.max(1, ...last7.map(d => d.count));
+
+        const totalEngagements = Object.keys(ordersData).length + Object.keys(requestsData).length;
+        const conversionRate = totalViews > 0 ? Math.round((totalEngagements / totalViews) * 100) : 0;
+
+        document.getElementById('mb-insights-views-today').textContent = viewsToday;
+        document.getElementById('mb-insights-total-views').textContent = totalViews;
+        document.getElementById('mb-insights-conversion').textContent = conversionRate + '%';
+
+        document.getElementById('mb-insights-chart').innerHTML = last7.map(d => `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+                <div style="font-size:10px;font-weight:800;color:#334155;">${d.count}</div>
+                <div style="width:100%;max-width:28px;height:${Math.max(6, (d.count / maxViews) * 80)}px;background:linear-gradient(180deg,#3b82f6,#2563eb);border-radius:6px 6px 2px 2px;"></div>
+                <div style="font-size:9.5px;color:#94a3b8;">${d.label}</div>
+            </div>`).join('');
+    } catch (err) {
+        console.warn('Insights unavailable:', err.message);
+    }
 }
 
 function mbRenderCategoryPills(categoryKeys) {
