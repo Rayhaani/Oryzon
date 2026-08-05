@@ -5289,6 +5289,7 @@ body {
         <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('menu')" id="mb-tab-menu">Menu</button>       
             <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('orders')" id="mb-tab-orders">Orders</button>
         <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('sales')" id="mb-tab-sales">Sales</button>
+        <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('bookings')" id="mb-tab-bookings">Bookings</button>
     </div>
 
     <div style="flex:1;overflow-y:auto;">
@@ -5389,6 +5390,11 @@ body {
     </div>
     <div id="mb-orders-list" style="display:flex;flex-direction:column;gap:12px;"></div>
         </div>
+        </div>
+        <div id="mb-panel-bookings" style="display:none;padding:16px;">
+    <div id="mb-bookings-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        <div id="mb-panel-sales" style="display:none;padding:16px;">
         <div id="mb-panel-sales" style="display:none;padding:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <div>
@@ -11237,14 +11243,78 @@ function closeMyBusinessDashboard() {
 }
 
 function mbSwitchTab(tabName) {
-    ['overview','menu','orders','sales'].forEach(t => {
+    ['overview','menu','orders','sales','bookings'].forEach(t => {
         document.getElementById('mb-tab-' + t).classList.toggle('active', t === tabName);
         document.getElementById('mb-panel-' + t).style.display = (t === tabName) ? 'block' : 'none';
     });
     if (tabName === 'orders') mbLoadOrders();
     if (tabName === 'sales') mbLoadSales();
+    if (tabName === 'bookings') mbRenderBookingsTab();
     }
+let mbBookingsAll = [];
 
+async function mbRenderBookingsTab() {
+    const username = localStorage.getItem("nexus_user_session");
+    const list = document.getElementById('mb-bookings-list');
+    list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Loading bookings...</div>`;
+    try {
+        const snap = await firebase.database().ref('providers/' + username + '/requests').once('value');
+        const data = snap.val() || {};
+        mbBookingsAll = Object.entries(data)
+            .map(([id, r]) => ({ id, ...r }))
+            .filter(r => r.status !== 'declined' && r.status !== 'cancelled')
+            .sort((a, b) => (a.dateNeeded || '9999-99-99').localeCompare(b.dateNeeded || '9999-99-99'));
+        mbRenderBookingsList();
+    } catch (err) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Failed to load bookings</div>`;
+    }
+}
+
+function mbBookingUrgency(dateStr) {
+    if (!dateStr) return { label: 'No date', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
+    const today = new Date(); today.setHours(0,0,0,0);
+    const target = new Date(dateStr + 'T00:00:00');
+    const diffDays = Math.round((target - today) / 86400000);
+    if (diffDays < 0) return { label: 'Overdue', color: '#dc2626', bg: 'rgba(220,38,38,0.1)' };
+    if (diffDays === 0) return { label: 'Today', color: '#ea580c', bg: 'rgba(234,88,12,0.1)' };
+    if (diffDays === 1) return { label: 'Tomorrow', color: '#d97706', bg: 'rgba(217,119,6,0.1)' };
+    if (diffDays <= 7) return { label: 'This Week', color: '#2563eb', bg: 'rgba(37,99,235,0.1)' };
+    return { label: 'Upcoming', color: '#16a34a', bg: 'rgba(22,163,74,0.1)' };
+}
+
+function mbRenderBookingsList() {
+    const list = document.getElementById('mb-bookings-list');
+    if (mbBookingsAll.length === 0) {
+        list.innerHTML = `
+        <div style="text-align:center;padding:50px 20px;color:#94a3b8;">
+            <div style="font-size:36px;margin-bottom:10px;">📅</div>
+            <div style="font-weight:800;font-size:14px;color:#334155;margin-bottom:4px;">No bookings yet</div>
+            <div style="font-size:12px;">Job requests from customers will appear here so you never miss one.</div>
+        </div>`;
+        return;
+    }
+    list.innerHTML = mbBookingsAll.map(b => {
+        const urgency = mbBookingUrgency(b.dateNeeded);
+        const dateLabel = b.dateNeeded
+            ? new Date(b.dateNeeded + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+            : 'No date specified';
+        const budgetLabel = b.budgetUnit === 'negotiable' || !b.budget
+            ? 'Negotiable'
+            : `${formatPrice(b.budget, b.currency)} ${b.budgetUnit || ''}`;
+        return `
+        <div style="background:#ffffff;border:1.5px solid ${urgency.color}22;border-left:4px solid ${urgency.color};border-radius:14px;padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+                <div style="font-size:11px;font-weight:800;color:${urgency.color};background:${urgency.bg};padding:3px 9px;border-radius:8px;">${urgency.label.toUpperCase()}</div>
+                <div style="font-size:11px;color:#94a3b8;font-weight:700;">${dateLabel}</div>
+            </div>
+            <div style="font-size:13.5px;color:#334155;font-weight:600;line-height:1.4;margin-bottom:8px;">${(b.jobDescription || '').replace(/</g,'&lt;')}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-size:12px;color:#64748b;">👤 ${b.customerUsername || 'Customer'}</div>
+                <div style="font-size:12.5px;font-weight:800;color:#1e293b;">${budgetLabel}</div>
+            </div>
+        </div>`;
+    }).join('');
+    }
 function mbRenderCategoryPills(categoryKeys) {
     const wrap = document.getElementById('mb-category-pills');
     wrap.innerHTML = `<button onclick="mbFilterCategory(null)" class="mb-pill ${mbCurrentCategory===null?'active':''}" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid ${mbCurrentCategory===null?'#ea580c':'#e2e8f0'};background:${mbCurrentCategory===null?'#fff7ed':'#ffffff'};color:${mbCurrentCategory===null?'#ea580c':'#334155'};font-weight:700;font-size:12px;cursor:pointer;">All</button>` +
