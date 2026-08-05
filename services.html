@@ -5358,7 +5358,7 @@ body {
             <div class="mb-stat-icon" style="background:rgba(6,182,212,0.16);color:var(--np-cyan,#06b6d4);">🧾</div>
             <div>
                 <div style="font-size:20px;font-weight:800;color:#ffffff;line-height:1.1;" id="mb-stat-orders">0</div>
-                <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:3px;" id="mb-stat-orders-label">Bookings Today</div>
+                <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:3px;" id="mb-stat-orders-label">Orders Today</div>
             </div>
         </div>
         <div class="mb-glass-card mb-stat-card">
@@ -11488,7 +11488,6 @@ async function mbRenderOverview(data) {
     const username = localStorage.getItem("nexus_user_session");
     const businessName = data.businessName || data.categoryLabel || username;
     const isFoodCategory = ['chef', 'snacks', 'beverages'].includes(data.category);
-    document.getElementById('mb-stat-orders-label').textContent = isFoodCategory ? 'Orders Today' : 'Bookings Today';
     document.getElementById('mb-greeting').textContent = `Good morning, ${businessName}`;
     document.getElementById('mb-greeting-sub').textContent = `Here's how ${businessName} is doing today`;
 
@@ -11496,7 +11495,7 @@ async function mbRenderOverview(data) {
     document.getElementById('mb-publish-banner').style.display = isPublished ? 'none' : 'flex';
 
    const todayKey = new Date().toISOString().slice(0,10);
-    let salesToday = 0, ordersToday = 0, pendingCount = 0, salesTodayCurrency = '', completedCount = 0, cancelledCount = 0;
+    let salesToday = 0, ordersToday = 0, pendingCount = 0, salesTodayCurrency = '', completedCount = 0, cancelledCount = 0, totalOrdersCount = 0;
     try {
         const ordersSnap = await firebase.database().ref('providers/' + username + '/orders').once('value');
         ordersSnap.forEach(child => {
@@ -11510,6 +11509,7 @@ async function mbRenderOverview(data) {
           if (o.status === 'pending') pendingCount++;
             if (o.status === 'completed') completedCount++;
             if (o.status === 'cancelled') cancelledCount++;
+            totalOrdersCount++;
         });
     } catch (err) { console.warn('Orders stats unavailable:', err.message); }
     let avgRating = null, reviewCount = 0;
@@ -11530,6 +11530,7 @@ async function mbRenderOverview(data) {
     try {
         const reqSnap = await firebase.database().ref('providers/' + username + '/requests').once('value');
         const reqData = reqSnap.val() || {};
+        document.getElementById('mb-stat-total-bookings').textContent = Object.keys(reqData).length;
         const upcoming = Object.values(reqData).filter(r => r.status !== 'declined' && r.status !== 'cancelled' && r.status !== 'completed');
         const banner = document.getElementById('mb-bookings-banner');
         if (upcoming.length > 0) {
@@ -11547,6 +11548,8 @@ async function mbRenderOverview(data) {
     document.getElementById('mb-stat-orders').textContent = ordersToday;
     document.getElementById('mb-stat-rating').textContent = avgRating ? `${avgRating} ★` : '—';
     document.getElementById('mb-stat-completion').textContent = completionRate + '%';
+    document.getElementById('mb-stat-completion').textContent = completionRate + '%';
+    document.getElementById('mb-stat-total-orders').textContent = totalOrdersCount;
     const categories = data.categories || {};
     const totalItems = Object.values(categories).reduce((sum, c) => sum + Object.keys(c.items || {}).length, 0);
     const checklist = [
