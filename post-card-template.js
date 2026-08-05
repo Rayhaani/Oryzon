@@ -1429,9 +1429,9 @@ window.toggleSave = async function(btn, postId) {
             .nexcm-matrix-feed::-webkit-scrollbar { display: none; }
 
             .nexcm-comment-card {
-                position: relative; padding: 12px 14px 10px; border-radius: 16px;
-                margin-bottom: 12px; background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.04);
+            position: relative; padding: 8px 12px 6px; border-radius: 16px;
+            margin-bottom: 8px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.04);
             }
             .nexcm-comment-card.positive { background: rgba(80,250,123,0.15); border-right: 3px solid #50fa7b; }
             .nexcm-matrix-feed > .nexcm-comment-card {
@@ -1439,6 +1439,8 @@ window.toggleSave = async function(btn, postId) {
                 border: none !important;
                 border-radius: 0 !important;
                 padding-left: 0; padding-right: 0;
+                padding-top: 4px; padding-bottom: 4px;
+                margin-bottom: 4px;
             }
 
             .nexcm-core-layout { display: flex; gap: 12px; position: relative; }
@@ -1695,6 +1697,11 @@ window.toggleSave = async function(btn, postId) {
                         mainComments.push(data);
                     }
                 });
+               mainComments.sort((a, b) => {
+                    const ta = a.timestamp && a.timestamp.toMillis ? a.timestamp.toMillis() : Infinity;
+                    const tb = b.timestamp && b.timestamp.toMillis ? b.timestamp.toMillis() : Infinity;
+                    return tb - ta;
+                });
 
                 // Sabuntawa lambar comments a kan post-card (idan yana nan a DOM)
                 const countEl = document.getElementById(`comment-count-${postId}`);
@@ -1785,7 +1792,7 @@ window.toggleSave = async function(btn, postId) {
                     nexcmCheckReplyCount(comment.id);
                 });
 
-                feedContainer.scrollTop = feedContainer.scrollHeight;
+                feedContainer.scrollTop = 0;
             }, () => {
                 feedContainer.innerHTML = '<p style="text-align:center;color:#555;padding:20px;font-size:12px;">Could not load comments.</p>';
             });
