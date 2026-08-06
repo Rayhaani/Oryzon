@@ -1752,10 +1752,14 @@ window.toggleSave = async function(btn, postId) {
 
                     feedContainer.insertAdjacentHTML('beforeend', commentHTML);
 
-                    const replyContainer = document.getElementById(comment.id);
+                     const replyContainer = document.getElementById(comment.id);
                     if (repliesMap[comment.id]) {
-                        repliesMap[comment.id].forEach((reply) => {
-                            let replyHTML = `
+                        repliesMap[comment.id].sort((a, b) => {
+                            const ta = a.timestamp && a.timestamp.toMillis ? a.timestamp.toMillis() : Infinity;
+                            const tb = b.timestamp && b.timestamp.toMillis ? b.timestamp.toMillis() : Infinity;
+                            return tb - ta;
+                        });
+                        repliesMap[comment.id].forEach((reply) => {                           let replyHTML = `
                                 <div class="nexcm-comment-card">
                                     <div class="nexcm-core-layout">
                                         <div class="nexcm-avatar-frame" style="width:26px;height:26px;">
