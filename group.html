@@ -218,7 +218,8 @@
         }
         .role-ceo { color: var(--neon-purple); }
         .role-pro { color: var(--neon-green); }
-
+        .role-mod { color: var(--neon-green); }
+        .role-member { color: var(--text-sub); }
         .msg-body { padding: 0; font-size: 13.5px; line-height: 1.45; color: #e2e8f0; overflow: hidden; }
 
         .msg-time-inline {
@@ -519,6 +520,21 @@
         .preload-feed #toggleChatBtn { color: var(--text-sub) !important; }
         .preload-feed #toggleFeedBtn { color: #030508 !important; }
         .preload-feed #modeThumb { transform: translateX(0%) !important; }
+
+        /* MEMBER MANAGEMENT & MODERATION */
+        .member-tabs { display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
+        .member-tab { font-size: 12px; font-weight: 700; color: var(--text-sub); padding: 8px 4px; cursor: pointer; position: relative; }
+        .member-tab.active { color: #fff; }
+        .member-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--neon-cyan); }
+        .pending-count-badge { background: #ef4444; color: #fff; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+        .member-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .member-row img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .member-row-info { flex: 1; min-width: 0; }
+        .member-row-name { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .member-row-role { font-size: 10.5px; color: var(--text-sub); margin-top: 1px; }
+        .member-action-btn { font-size: 10.5px; font-weight: 700; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.04); color: #fff; cursor: pointer; flex-shrink: 0; }
+        .member-action-btn.danger { color: #ef4444; border-color: rgba(239,68,68,0.3); }
+        .member-action-btn.approve { background: linear-gradient(135deg, var(--neon-cyan), #b8860b); color: #000; border: none; }
     </style>
 </head>
 <body>
@@ -713,10 +729,29 @@
                     <i class="fa-solid fa-square-poll-vertical"></i>
                     <span>Create Poll</span>
                 </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); toggleMembersModal(true);">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Manage Members</span>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- MEMBER MANAGEMENT & MODERATION DRAWER -->
+    <div class="ecosystem-drawer" id="membersModal" onclick="toggleMembersModal(false)">
+        <div class="drawer-card" onclick="event.stopPropagation()" style="max-height:78vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; color:#fff; font-weight:800; font-size:14px; margin-bottom:10px;">
+                <span>Membobi & Mulki</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleMembersModal(false)"></i>
+            </div>
+            <div class="member-tabs">
+                <div class="member-tab active" id="tabAll" onclick="switchMemberTab('all')">Duk Membobi (12.4K)</div>
+                <div class="member-tab" id="tabPending" onclick="switchMemberTab('pending')">Neman Shiga <span class="pending-count-badge" id="pendingCountBadge">3</span></div>
+            </div>
+            <div id="memberListPanel"></div>
+            <div id="pendingListPanel" style="display:none;"></div>
+        </div>
+    </div>
     <!-- STORY / HIGHLIGHT VIEWER -->
     <div class="story-viewer-overlay" id="storyViewerOverlay">
         <div class="story-header">
@@ -878,6 +913,108 @@
             if(show) modal.classList.add('active');
             else modal.classList.remove('active');
         }
+
+        // ============================================================
+        // MEMBER MANAGEMENT & MODERATION
+        // ============================================================
+        const groupMembers = [
+            { id: 'm1', name: 'Ali_Developer', role: 'Admin', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm2', name: 'MmnAfrah Networker', role: 'Moderator', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm3', name: 'Zainab_TrustID', role: 'Member', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80' }
+        ];
+
+        const pendingRequests = [
+            { id: 'p1', name: 'Ibrahim_Kano', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80' },
+            { id: 'p2', name: 'Amina_Trader', pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80' },
+            { id: 'p3', name: 'Sadiq_Investor', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80' }
+        ];
+
+        function toggleMembersModal(show) {
+            const modal = document.getElementById('membersModal');
+            if (show) {
+                modal.classList.add('active');
+                renderMemberList();
+                renderPendingList();
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        function switchMemberTab(tab) {
+            const isAll = tab === 'all';
+            document.getElementById('tabAll').classList.toggle('active', isAll);
+            document.getElementById('tabPending').classList.toggle('active', !isAll);
+            document.getElementById('memberListPanel').style.display = isAll ? 'block' : 'none';
+            document.getElementById('pendingListPanel').style.display = isAll ? 'none' : 'block';
+        }
+
+        function renderMemberList() {
+            const roleClassMap = { Admin: 'role-ceo', Moderator: 'role-mod', Member: 'role-member' };
+            document.getElementById('memberListPanel').innerHTML = groupMembers.map(m => `
+                <div class="member-row">
+                    <img src="${m.pic}" alt="${m.name}">
+                    <div class="member-row-info">
+                        <div class="member-row-name">${m.name}</div>
+                        <div class="member-row-role role-tag ${roleClassMap[m.role]}">${m.role}</div>
+                    </div>
+                    ${m.role !== 'Admin' ? `
+                        <button class="member-action-btn" onclick="promoteMember('${m.id}')">${m.role === 'Moderator' ? 'Cire Mod' : 'Mai da Mod'}</button>
+                        <button class="member-action-btn danger" onclick="removeMember('${m.id}')">Cire</button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderPendingList() {
+            const panel = document.getElementById('pendingListPanel');
+            if (pendingRequests.length === 0) {
+                panel.innerHTML = `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:20px 0;">Babu wanda ke jiran amincewa a yanzu.</p>`;
+                return;
+            }
+            panel.innerHTML = pendingRequests.map(p => `
+                <div class="member-row">
+                    <img src="${p.pic}" alt="${p.name}">
+                    <div class="member-row-info">
+                        <div class="member-row-name">${p.name}</div>
+                        <div class="member-row-role">Yana neman shiga ƙungiyar</div>
+                    </div>
+                    <button class="member-action-btn approve" onclick="approveRequest('${p.id}')">Amince</button>
+                    <button class="member-action-btn danger" onclick="rejectRequest('${p.id}')">Ki</button>
+                </div>
+            `).join('');
+        }
+
+        function promoteMember(id) {
+            const m = groupMembers.find(x => x.id === id);
+            if (!m) return;
+            m.role = m.role === 'Moderator' ? 'Member' : 'Moderator';
+            renderMemberList();
+        }
+
+        function removeMember(id) {
+            const idx = groupMembers.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            groupMembers.splice(idx, 1);
+            renderMemberList();
+        }
+
+        function approveRequest(id) {
+            const idx = pendingRequests.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const [approved] = pendingRequests.splice(idx, 1);
+            groupMembers.push({ id: approved.id, name: approved.name, role: 'Member', pic: approved.pic });
+            document.getElementById('pendingCountBadge').textContent = pendingRequests.length;
+            renderPendingList();
+        }
+
+        function rejectRequest(id) {
+            const idx = pendingRequests.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            pendingRequests.splice(idx, 1);
+            document.getElementById('pendingCountBadge').textContent = pendingRequests.length;
+            renderPendingList();
+        }
+
     function createPost() {
             alert('Create Post feature coming soon...');
     }
