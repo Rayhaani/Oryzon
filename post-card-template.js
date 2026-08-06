@@ -1469,7 +1469,7 @@ window.toggleSave = async function(btn, postId) {
             .nexcm-replies-header { display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; }
             .nexcm-overlay-feed-body { flex-grow: 1; overflow-y: auto; scrollbar-width: none; padding-bottom: 20px; }
             .nexcm-overlay-replies-holder { position: relative; margin-top: 10px; }
-            .nexcm-overlay-feed-body .nexcm-overlay-replies-holder .nexcm-comment-card { margin-left: 35px; width: calc(100% - 35px); display: block !important; margin-bottom: 12px; }
+            .nexcm-overlay-feed-body .nexcm-overlay-replies-holder .nexcm-comment-card { margin-left: 35px; width: calc(100% - 35px); display: block !important; margin-bottom: 8px; }
             .nexcm-overlay-feed-body .nexcm-nested-replies, .nexcm-overlay-feed-body .nexcm-view-more-btn { display: none !important; }
 
             .nexcm-input-harness {
@@ -1732,7 +1732,7 @@ window.toggleSave = async function(btn, postId) {
                                         </div>
                                         <span class="nexcm-timestamp" style="position:static;font-size:10px;">${nexcmFormatTimestamp(comment.timestamp)}</span>
                                     </div>
-                                    <div class="nexcm-text-wrap" style="padding-bottom:0;">
+                                    <div class="nexcm-text-wrap">
                                         <p class="nexcm-text-payload">${nexcmFormatMentions(comment.text)}</p>
                                     </div>
                                     <div class="nexcm-capsule-bar">
@@ -2070,7 +2070,7 @@ window.toggleSave = async function(btn, postId) {
 
     function nexcmFormatMentions(text) {
         if (!text) return '';
-        return text.replace(/@([a-zA-Z0-9_\u0600-\u06FF]+(\s+[a-zA-Z0-9_\u0600-\u06FF]+)?)/g, function (match) {
+        return text.replace(/@([a-zA-Z0-9_\u0600-\u06FF]+)/g, function (match) {
             return `<span class="nexcm-mention-tag">${match}</span>`;
         });
     }
