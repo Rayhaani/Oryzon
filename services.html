@@ -14150,22 +14150,15 @@ async function confirmRejectOrderRequest() {
 function mbTrackProfileView(proId) {
     (async () => {
     try {
-        if (typeof firebase === 'undefined' || !firebase.database) { if (typeof showGlobalToast === 'function') showGlobalToast('⚠️ DEBUG: firebase not ready'); return; }
+        if (typeof firebase === 'undefined' || !firebase.database) return;
         const viewerUsername = localStorage.getItem('nexus_user_session');
         if (viewerUsername && String(viewerUsername) === String(proId)) return; // kada mu ƙidaya kai da kansa
         if (typeof guaranteeAuth === 'function') await guaranteeAuth();
         const todayKey = new Date().toISOString().slice(0,10);
         const viewRef = firebase.database().ref(`providers/${proId}/analytics/views/${todayKey}`);
-        if (typeof showGlobalToast === 'function') showGlobalToast('🔍 DEBUG: tracking view for ' + proId);
-        viewRef.transaction(current => (current || 0) + 1, (error, committed, snapshot) => {
-            if (error) {
-                if (typeof showGlobalToast === 'function') showGlobalToast('❌ DEBUG FAILED: ' + error.message);
-            } else if (committed) {
-                if (typeof showGlobalToast === 'function') showGlobalToast('✅ DEBUG OK: count=' + snapshot.val());
-            }
-        });
+        viewRef.transaction(current => (current || 0) + 1);
     } catch (err) {
-        if (typeof showGlobalToast === 'function') showGlobalToast('❌ DEBUG CATCH: ' + err.message);
+        console.warn('mbTrackProfileView error:', err);
     }
     })();
     }
