@@ -5318,7 +5318,7 @@ body {
         .mb-stat-card{border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform 0.15s var(--np-anim-spring,ease);}
         .mb-stat-card:active{transform:scale(0.96);}
         .mb-stat-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-        .mb-quick-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;border-radius:16px;border:none;cursor:pointer;color:#ffffff;font-size:11px;font-weight:700;transition:transform 0.15s ease;}
+        .mb-quick-btn{flex:1 1 calc(50% - 5px);min-width:calc(50% - 5px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;border-radius:16px;border:none;cursor:pointer;color:#ffffff;font-size:11px;font-weight:700;transition:transform 0.15s ease;}
         .mb-quick-btn:active{transform:scale(0.95);}
         .mb-check-card{border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
         .mb-aurora-bar{height:3px;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#10b981,#f59e0b,#ef4444);margin-bottom:16px;}
@@ -5414,10 +5414,11 @@ body {
     </div>
 
     <div class="mb-heading-brand" style="font-size:13px;font-weight:800;color:#ffffff;margin-top:22px;margin-bottom:10px;">Quick Actions</div>
-        <div style="display:flex;gap:10px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="mb-glass-card mb-quick-btn" onclick="mbOpenAddItem()"><span style="font-size:18px;">➕</span>Add Item</button>
         <button class="mb-glass-card mb-quick-btn" onclick="mbSwitchTab('orders')"><span style="font-size:18px;">📦</span>Orders</button>
         <button class="mb-glass-card mb-quick-btn" onclick="mbSwitchTab('sales')"><span style="font-size:18px;">📊</span>Sales</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbShareMenuLink()"><span style="font-size:18px;">🔗</span>Menu Link</button>
     </div>
 
     <div class="mb-heading-brand" style="font-size:15px;font-weight:800;color:#ffffff;margin-top:24px;margin-bottom:10px;">Complete Your Setup</div>
@@ -11525,6 +11526,22 @@ function mbRenderMenuList() {
 let mbEditingIndex = null;
 let mbPricingType = 'flat';
 let mbTierCount = 0;
+
+function mbShareMenuLink() {
+    const username = localStorage.getItem("nexus_user_session");
+    if (!username) { showGlobalToast('⚠️ Please login again.'); return; }
+    const shareUrl = `https://oryzon-backend-ed1q.onrender.com/share/${username}`;
+    const shareTitle = 'Check out my profile on Nexus';
+    if (navigator.share) {
+        navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            showGlobalToast('🔗 Link copied! Share it with your customers.');
+        }).catch(() => {
+            showGlobalToast('⚠️ Failed to copy link.');
+        });
+    }
+}
 
 function mbOpenAddItem() {
     mbEditingIndex = null;
