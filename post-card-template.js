@@ -1458,6 +1458,7 @@ window.toggleSave = async function(btn, postId) {
             .nexcm-action-trigger { background: transparent; border: none; color: rgba(255,255,255,0.6); font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
             .nexcm-action-trigger.liked i { color: #ff4757; }
             .nexcm-nested-replies { margin-top: 10px; padding-left: 14px; border-left: 1px dashed rgba(253,224,141,0.2); display: none; }
+            .nexcm-nested-replies:empty { margin-top: 0; }
             .nexcm-nested-replies.show { display: block; }
             .nexcm-view-more-btn { font-size: 11px; color: #00f2fe; background: transparent; border: none; cursor: pointer; margin-top: 8px; display: none; font-weight: 500; }
 
@@ -1772,7 +1773,7 @@ window.toggleSave = async function(btn, postId) {
                                                     ${reply.author === currentUser ? '<span class="nexcm-author-tag" style="font-size:7.5px;">Author</span>' : ''}
                                                 </div>
                                             </div>
-                                            <div class="nexcm-text-wrap" style="padding-bottom:0;">
+                                            <div class="nexcm-text-wrap">
                                                 <p class="nexcm-text-payload" style="font-size:11.5px;">${nexcmFormatMentions(reply.text)}</p>
                                             </div>
                                             <div class="nexcm-capsule-bar">
