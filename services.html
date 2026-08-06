@@ -14148,10 +14148,12 @@ async function confirmRejectOrderRequest() {
 // ════════════════════════════════════════════════════════════
 // ── TRACK PROFILE VIEW (Visitors Today) ──
 function mbTrackProfileView(proId) {
+    (async () => {
     try {
         if (typeof firebase === 'undefined' || !firebase.database) { if (typeof showGlobalToast === 'function') showGlobalToast('⚠️ DEBUG: firebase not ready'); return; }
         const viewerUsername = localStorage.getItem('nexus_user_session');
         if (viewerUsername && String(viewerUsername) === String(proId)) return; // kada mu ƙidaya kai da kansa
+        if (typeof guaranteeAuth === 'function') await guaranteeAuth();
         const todayKey = new Date().toISOString().slice(0,10);
         const viewRef = firebase.database().ref(`providers/${proId}/analytics/views/${todayKey}`);
         if (typeof showGlobalToast === 'function') showGlobalToast('🔍 DEBUG: tracking view for ' + proId);
@@ -14165,6 +14167,7 @@ function mbTrackProfileView(proId) {
     } catch (err) {
         if (typeof showGlobalToast === 'function') showGlobalToast('❌ DEBUG CATCH: ' + err.message);
     }
+    })();
     }
 async function trackVendorRejection(proId, reason) {
     try {
