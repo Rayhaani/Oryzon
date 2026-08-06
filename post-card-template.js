@@ -179,8 +179,8 @@
       
 
         /* ===== INTERACTION BAR ===== */
-.post-interaction-bar, .interaction-bar {
-    display: flex !important;
+    .post-interaction-bar, .interaction-bar {
+    display: none !important;
     justify-content: space-between !important;
     align-items: center !important;
     padding: 6px 8px !important;
