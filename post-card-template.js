@@ -71,6 +71,15 @@
             border-bottom: 1px solid rgba(245, 245, 247, 0.22) !important;          
             margin-bottom: 0 !important;
         }
+        .post-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--premium-gold), transparent);
+            animation: post-card-slide-glow 3s infinite;
+            z-index: 5;
+        }
 
         /* ===== AVATAR ===== */
         .post-avatar {
