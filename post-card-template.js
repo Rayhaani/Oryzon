@@ -68,7 +68,8 @@
              background: var(--bg) !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;          
-            border-bottom: 1px solid var(--premium-gold) !important;          
+             border-bottom: 2px solid var(--premium-gold) !important;
+            box-shadow: var(--gold-glow) !important;      
             margin-bottom: 0 !important;
         }
         
