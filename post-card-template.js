@@ -1430,7 +1430,7 @@ window.toggleSave = async function(btn, postId) {
 
             .nexcm-comment-card {
            position: relative; padding: 6px 12px 4px; border-radius: 16px;
-            margin-bottom: 6px; background: rgba(255,255,255,0.05); 
+           margin-bottom: 9px; background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.04);
             }
             .nexcm-comment-card.positive { background: rgba(80,250,123,0.15); border-right: 3px solid #50fa7b; }
@@ -1440,7 +1440,7 @@ window.toggleSave = async function(btn, postId) {
                 border-radius: 0 !important;
                 padding-left: 0; padding-right: 0;
                 padding-top: 3px; padding-bottom: 3px;
-                margin-bottom: 3px;
+                margin-bottom: 5px;
             }
 
             .nexcm-core-layout { display: flex; gap: 12px; position: relative; }
