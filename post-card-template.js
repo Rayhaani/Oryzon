@@ -1429,8 +1429,8 @@ window.toggleSave = async function(btn, postId) {
             .nexcm-matrix-feed::-webkit-scrollbar { display: none; }
 
             .nexcm-comment-card {
-            position: relative; padding: 8px 12px 6px; border-radius: 16px;
-            margin-bottom: 8px; background: rgba(255,255,255,0.05);
+           position: relative; padding: 6px 12px 4px; border-radius: 16px;
+            margin-bottom: 6px; background: rgba(255,255,255,0.05); 
             border: 1px solid rgba(255,255,255,0.04);
             }
             .nexcm-comment-card.positive { background: rgba(80,250,123,0.15); border-right: 3px solid #50fa7b; }
@@ -1439,8 +1439,8 @@ window.toggleSave = async function(btn, postId) {
                 border: none !important;
                 border-radius: 0 !important;
                 padding-left: 0; padding-right: 0;
-                padding-top: 4px; padding-bottom: 4px;
-                margin-bottom: 4px;
+                padding-top: 3px; padding-bottom: 3px;
+                margin-bottom: 3px;
             }
 
             .nexcm-core-layout { display: flex; gap: 12px; position: relative; }
@@ -1451,10 +1451,10 @@ window.toggleSave = async function(btn, postId) {
             .nexcm-identity-badge { display: flex; align-items: center; gap: 6px; }
             .nexcm-user-name { font-size: 12px; font-weight: 600; color: #fff; font-family: 'Montserrat', sans-serif; }
             .nexcm-author-tag { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 500; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); padding: 1px 6px; border-radius: 10px; }
-            .nexcm-text-wrap { position: relative; display: block; padding-bottom: 10px; }
+            .nexcm-text-wrap { position: relative; display: block; padding-bottom: 6px; }
             .nexcm-text-payload { font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,0.9); text-align: justify; display: inline-block; width: 100%; word-break: break-word; }
             .nexcm-timestamp { font-size: 9px; color: rgba(255,255,255,0.6); position: absolute; bottom: -2px; right: 0; line-height: 1; }
-            .nexcm-capsule-bar { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+            .nexcm-capsule-bar { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
             .nexcm-action-trigger { background: transparent; border: none; color: rgba(255,255,255,0.6); font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
             .nexcm-action-trigger.liked i { color: #ff4757; }
             .nexcm-nested-replies { margin-top: 10px; padding-left: 14px; border-left: 1px dashed rgba(253,224,141,0.2); display: none; }
