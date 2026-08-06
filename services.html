@@ -5324,6 +5324,12 @@ body {
         .mb-aurora-bar{height:3px;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#10b981,#f59e0b,#ef4444);margin-bottom:16px;}
         .mb-aurora-text{font-family:'Poppins',var(--np-font);background:linear-gradient(90deg,#3b82f6,#10b981,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
         .mb-heading-brand{font-family:'Poppins',var(--np-font);}
+        .mb-announce-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;scrollbar-width:none;-ms-overflow-style:none;}
+        .mb-announce-track::-webkit-scrollbar{display:none;}
+        .mb-announce-slide{flex:0 0 100%;scroll-snap-align:start;border-radius:16px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,0.25);}
+        .mb-announce-dots{display:flex;justify-content:center;gap:6px;margin-top:10px;}
+        .mb-announce-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.25);transition:all 0.25s ease;}
+        .mb-announce-dot.active{width:18px;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#10b981);}
     </style>
 
 <div class="mb-aurora-bar"></div>
@@ -5423,6 +5429,10 @@ body {
 
     <div class="mb-heading-brand" style="font-size:15px;font-weight:800;color:#ffffff;margin-top:24px;margin-bottom:10px;">Complete Your Setup</div>
     <div id="mb-setup-checklist" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+    <div class="mb-heading-brand" style="font-size:15px;font-weight:800;color:#ffffff;margin-top:24px;margin-bottom:10px;">Announcements</div>
+    <div id="mb-announce-track" class="mb-announce-track"></div>
+    <div id="mb-announce-dots" class="mb-announce-dots"></div>
         </div>
      
         <div id="mb-panel-orders" style="display:none;padding:16px;">
@@ -11711,10 +11721,45 @@ function mbRenderTrendChart(ordersByDay, bookingsByDay, dayLabels) {
     labelsWrap.innerHTML = dayLabels.map(d => `<span>${d}</span>`).join('');
     }
 
+const MB_ANNOUNCEMENTS = [
+    { tag: 'NEW', gradient: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', icon: '📅', title: 'Bookings & Insights are here', body: 'Track every job request and see how many people view your profile — all in one place.' },
+    { tag: 'NEW', gradient: 'linear-gradient(135deg,#10b981,#059669)', icon: '👥', title: 'Meet your Customers tab', body: 'See everyone who has ordered or booked you, and spot your repeat customers instantly.' },
+    { tag: 'TIP', gradient: 'linear-gradient(135deg,#f59e0b,#d97706)', icon: '✨', title: 'Boost your Profile Health', body: 'Complete your setup checklist to get more visibility and bookings from customers.' }
+];
+
+function mbRenderAnnouncements() {
+    const track = document.getElementById('mb-announce-track');
+    const dots = document.getElementById('mb-announce-dots');
+    if (!track || !dots) return;
+    track.innerHTML = MB_ANNOUNCEMENTS.map(a => `
+        <div class="mb-announce-slide">
+            <div style="background:${a.gradient};padding:26px 18px 18px;display:flex;align-items:center;justify-content:center;">
+                <div style="font-size:38px;">${a.icon}</div>
+            </div>
+            <div style="background:#ffffff;padding:14px 16px 16px;">
+                <span style="font-size:9.5px;font-weight:800;color:#ea580c;background:rgba(234,88,12,0.12);padding:3px 8px;border-radius:6px;">${a.tag}</span>
+                <div class="mb-heading-brand" style="font-size:14px;font-weight:800;color:#1e293b;margin-top:8px;">${a.title}</div>
+                <div style="font-size:12px;color:#64748b;margin-top:4px;line-height:1.4;">${a.body}</div>
+            </div>
+        </div>`).join('');
+    dots.innerHTML = MB_ANNOUNCEMENTS.map((_, i) => `<div class="mb-announce-dot${i === 0 ? ' active' : ''}"></div>`).join('');
+    let ticking = false;
+    track.onscroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            const idx = Math.round(track.scrollLeft / track.clientWidth);
+            [...dots.children].forEach((d, i) => d.classList.toggle('active', i === idx));
+            ticking = false;
+        });
+    };
+}
+
 async function mbRenderOverview(data) {
     const username = localStorage.getItem("nexus_user_session");
+    mbRenderAnnouncements();
     const businessName = data.businessName || data.categoryLabel || username;
-    const isFoodCategory = ['chef', 'snacks', 'beverages'].includes(data.category);
+    const isFoodCategory = ['chef', 'snacks', 'beverages'].includes(data.category);  
     document.getElementById('mb-greeting').textContent = `Good morning, ${businessName}`;
     document.getElementById('mb-greeting-sub').textContent = `Here's how ${businessName} is doing today`;
 
