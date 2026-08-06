@@ -1447,14 +1447,14 @@ window.toggleSave = async function(btn, postId) {
             .nexcm-avatar-frame { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
             .nexcm-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1.5px solid #00f2fe; padding: 1px; }
             .nexcm-body-cluster { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
-            .nexcm-meta-layer { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+            .nexcm-meta-layer { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
             .nexcm-identity-badge { display: flex; align-items: center; gap: 6px; }
             .nexcm-user-name { font-size: 12px; font-weight: 600; color: #fff; font-family: 'Montserrat', sans-serif; }
             .nexcm-author-tag { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 500; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); padding: 1px 6px; border-radius: 10px; }
-            .nexcm-text-wrap { position: relative; display: block; padding-bottom: 6px; }
+            .nexcm-text-wrap { position: relative; display: block; padding-bottom: 3px; }
             .nexcm-text-payload { font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,0.9); text-align: justify; display: inline-block; width: 100%; word-break: break-word; }
             .nexcm-timestamp { font-size: 9px; color: rgba(255,255,255,0.6); position: absolute; bottom: -2px; right: 0; line-height: 1; }
-            .nexcm-capsule-bar { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+            .nexcm-capsule-bar { display: flex; align-items: center; gap: 12px; margin-top: 2px; }
             .nexcm-action-trigger { background: transparent; border: none; color: rgba(255,255,255,0.6); font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
             .nexcm-action-trigger.liked i { color: #ff4757; }
             .nexcm-nested-replies { margin-top: 10px; padding-left: 14px; border-left: 1px dashed rgba(253,224,141,0.2); display: none; }
