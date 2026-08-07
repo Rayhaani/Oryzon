@@ -5305,11 +5305,23 @@ body {
 
         <!-- MENU TAB -->
         <div id="mb-panel-menu" style="padding:16px;">
-            <div id="mb-category-pills" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                <div id="mb-category-pills" style="display:flex;gap:8px;overflow-x:auto;flex:1;"></div>
+                <button onclick="mbOpenCategoryManager()" style="flex-shrink:0;width:34px;height:34px;border-radius:10px;border:1.5px solid #e2e8f0;background:#ffffff;color:#334155;font-size:15px;cursor:pointer;">⚙️</button>
+            </div>
             <div id="mb-menu-list" style="display:flex;flex-direction:column;gap:12px;"></div>
             <button onclick="mbOpenAddItem()" style="width:100%;margin-top:14px;border:2px dashed #ea580c;background:#fff7ed;color:#ea580c;border-radius:16px;padding:16px;font-weight:800;font-size:14px;cursor:pointer;">+ Add Item</button>
             <button onclick="mbOpenAddCategory()" style="width:100%;margin-top:14px;border:1.5px dashed #cbd5e1;background:#ffffff;color:#334155;border-radius:16px;padding:22px 16px;font-weight:700;font-size:14px;cursor:pointer;">+ Add Category</button>
         </div>
+     <div id="mb-category-manager-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10600;align-items:flex-end;justify-content:center;">
+            <div style="background:#ffffff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:75vh;overflow-y:auto;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                    <div class="mb-heading-brand" style="font-size:16px;font-weight:800;color:#1e293b;">Manage Categories</div>
+                    <button onclick="mbCloseCategoryManager()" style="width:30px;height:30px;border-radius:50%;border:none;background:#f1f5f9;color:#334155;font-size:14px;cursor:pointer;">✕</button>
+                </div>
+                <div id="mb-category-manager-list"></div>
+            </div>
+     </div>
 
         <div id="mb-panel-overview" style="display:none;padding:16px;">
     <style>
@@ -12271,7 +12283,90 @@ async function mbGenerateAndUploadFlyer(username, data) {
 
     return uploadData.url;
 }
-    
+
+async function mbRefreshCategoriesData() {
+    const username = localStorage.getItem("nexus_user_session");
+    const snap = await firebase.database().ref('providers/' + username + '/categories').once('value');
+    const categories = snap.val() || {};
+    mbAllItems = [];
+    Object.keys(categories).forEach(catKey => {
+        const catItems = categories[catKey].items || {};
+        Object.keys(catItems).forEach(itemKey => {
+            mbAllItems.push({ id: itemKey, category: catKey, ...catItems[itemKey] });
+        });
+    });
+    mbRenderCategoryPills(Object.keys(categories));
+    mbRenderMenuList();
+}
+
+function mbOpenCategoryManager() {
+    document.getElementById('mb-category-manager-overlay').style.display = 'flex';
+    mbRenderCategoryManagerList();
+}
+
+function mbCloseCategoryManager() {
+    document.getElementById('mb-category-manager-overlay').style.display = 'none';
+}
+
+function mbRenderCategoryManagerList() {
+    const list = document.getElementById('mb-category-manager-list');
+    const categories = [...new Set(mbAllItems.map(i => i.category))];
+    if (categories.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">No categories yet. Add an item to create one.</div>`;
+        return;
+    }
+    list.innerHTML = categories.map(cat => {
+        const count = mbAllItems.filter(i => i.category === cat).length;
+        return `
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+            <div>
+                <div style="font-size:13.5px;font-weight:700;color:#1e293b;">${cat}</div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${count} item${count === 1 ? '' : 's'}</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button onclick="mbRenameCategoryAction('${cat}')" style="width:32px;height:32px;border-radius:9px;border:none;background:#e0e7ff;color:#4f46e5;font-size:14px;cursor:pointer;">✏️</button>
+                <button onclick="mbDeleteCategoryAction('${cat}')" style="width:32px;height:32px;border-radius:9px;border:none;background:#fee2e2;color:#dc2626;font-size:14px;cursor:pointer;">🗑️</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function mbRenameCategoryAction(oldName) {
+    const newName = prompt('Rename category:', oldName);
+    if (!newName || !newName.trim() || newName.trim() === oldName) return;
+    const trimmed = newName.trim();
+    const username = localStorage.getItem("nexus_user_session");
+    try {
+        const oldRef = firebase.database().ref('providers/' + username + '/categories/' + oldName + '/items');
+        const snap = await oldRef.once('value');
+        const items = snap.val() || {};
+        const newRef = firebase.database().ref('providers/' + username + '/categories/' + trimmed + '/items');
+        for (const [itemId, itemData] of Object.entries(items)) {
+            await newRef.child(itemId).set(itemData);
+        }
+        await firebase.database().ref('providers/' + username + '/categories/' + oldName).remove();
+        showGlobalToast('✅ Category renamed');
+        await mbRefreshCategoriesData();
+        mbRenderCategoryManagerList();
+    } catch (err) {
+        showGlobalToast('❌ Rename failed: ' + err.message);
+    }
+}
+
+async function mbDeleteCategoryAction(name) {
+    const count = mbAllItems.filter(i => i.category === name).length;
+    if (!confirm(`Delete "${name}" and all ${count} item(s) inside it? This cannot be undone.`)) return;
+    const username = localStorage.getItem("nexus_user_session");
+    try {
+        await firebase.database().ref('providers/' + username + '/categories/' + name).remove();
+        showGlobalToast('✅ Category deleted');
+        await mbRefreshCategoriesData();
+        mbRenderCategoryManagerList();
+    } catch (err) {
+        showGlobalToast('❌ Delete failed: ' + err.message);
+    }
+}
+
 function mbOpenAddCategory() {
     const name = prompt('New category name:');
     if (!name || !name.trim()) return;
