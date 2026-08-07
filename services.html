@@ -11329,6 +11329,7 @@ async function openMyBusinessDashboard() {
         if (!data) { showGlobalToast('❌ Business profile not found.'); return; }
 
         document.getElementById('mb-business-name').textContent = data.businessName || data.categoryLabel || 'My Business';
+        if (data.color) document.getElementById('mb-header-publish-btn').style.borderColor = data.color;
         mbAllItems = [];
         const categories = data.categories || {};
         Object.keys(categories).forEach(catKey => {
@@ -12386,17 +12387,22 @@ async function mbDeleteCategoryAction(name) {
         showGlobalToast('❌ Delete failed: ' + err.message);
     }
 }
-const MB_THEME_COLORS = ['#1d4ed8', '#7c3aed', '#db2777', '#dc2626', '#ea580c', '#d97706', '#16a34a', '#059669', '#0891b2', '#334155'];
-
+const MB_THEME_COLORS = ['#64748b', '#1e3a8a', '#0ea5e9', '#166534', '#65780a', '#f59e0b', '#ea580c', '#a855f7', '#312e81', '#be185d', '#eab308', '#b91c1c', '#92400e', '#0d9488', '#1d4ed8', '#22c55e'];
 async function mbOpenCustomizeModal() {
     const username = localStorage.getItem("nexus_user_session");
     const snap = await firebase.database().ref('providers/' + username).once('value');
     const data = snap.val() || {};
     const currentColor = data.color || MB_THEME_COLORS[0];
 
+    const isCustom = !MB_THEME_COLORS.includes(currentColor);
     document.getElementById('mb-customize-swatches').innerHTML = MB_THEME_COLORS.map(c => `
         <button onclick="mbSelectThemeColor('${c}')" style="width:38px;height:38px;border-radius:50%;background:${c};border:${c === currentColor ? '3px solid #0f172a' : '3px solid transparent'};box-shadow:0 0 0 1.5px ${c === currentColor ? c : 'transparent'};cursor:pointer;"></button>
-    `).join('');
+    `).join('') + `
+        <button onclick="document.getElementById('mb-native-color-input').click()" style="width:38px;height:38px;border-radius:50%;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);border:${isCustom ? '3px solid #0f172a' : '3px solid transparent'};box-shadow:0 0 0 1.5px ${isCustom ? currentColor : 'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <span style="background:#ffffff;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#334155;font-weight:900;">+</span>
+        </button>
+        <input type="color" id="mb-native-color-input" value="${isCustom ? currentColor : '#1d4ed8'}" oninput="mbSelectThemeColor(this.value)" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;">
+    `;
 
     const preview = document.getElementById('mb-customize-cover-preview');
     if (data.coverImageUrl) {
