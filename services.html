@@ -5322,6 +5322,24 @@ body {
                 <div id="mb-category-manager-list"></div>
             </div>
      </div>
+        <div id="mb-customize-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10600;align-items:flex-end;justify-content:center;">
+            <div style="background:#ffffff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                    <div class="mb-heading-brand" style="font-size:16px;font-weight:800;color:#1e293b;">Customize Profile</div>
+                    <button onclick="mbCloseCustomizeModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:#f1f5f9;color:#334155;font-size:14px;cursor:pointer;">✕</button>
+                </div>
+
+                <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Accent Color</div>
+                <div id="mb-customize-swatches" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;"></div>
+
+                <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Cover Photo</div>
+                <div id="mb-customize-cover-preview" style="width:100%;height:110px;border-radius:14px;background:#f1f5f9;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;margin-bottom:10px;">No cover photo set</div>
+                <label style="display:block;width:100%;text-align:center;border:1.5px dashed #cbd5e1;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#334155;cursor:pointer;">
+                    📷 Upload Cover Photo
+                    <input type="file" accept="image/*" onchange="mbUploadCoverPhoto(event)" style="display:none;">
+                </label>
+            </div>
+        </div>
 
         <div id="mb-panel-overview" style="display:none;padding:16px;">
     <style>
@@ -6916,8 +6934,8 @@ function closeStoryDeck() {
     const heroBanner = document.getElementById("nxh-hero-banner");
     const firstGalleryUrl = (pro.gallery && pro.gallery[0] && typeof pro.gallery[0] === 'object' && pro.gallery[0].url)
         ? pro.gallery[0].url : null;
-    if (heroBanner) heroBanner.style.backgroundImage = firstGalleryUrl ? `url('${firstGalleryUrl}')` : '';
-
+    const heroImageUrl = pro.coverImageUrl || firstGalleryUrl;
+    if (heroBanner) heroBanner.style.backgroundImage = heroImageUrl ? `url('${heroImageUrl}')` : '';
     document.getElementById("profile-online-status-pill").style.background = pro.online ? '#16a34a' : '#dc2626';
     document.getElementById("profile-online-status-pill").style.boxShadow = pro.online ? '0 0 8px rgba(22,163,74,0.6)' : '0 0 8px rgba(220,38,38,0.6)';
     const avatarSphere = document.getElementById("profile-avatar-sphere");
@@ -12365,6 +12383,64 @@ async function mbDeleteCategoryAction(name) {
         mbRenderCategoryManagerList();
     } catch (err) {
         showGlobalToast('❌ Delete failed: ' + err.message);
+    }
+}
+const MB_THEME_COLORS = ['#1d4ed8', '#7c3aed', '#db2777', '#dc2626', '#ea580c', '#d97706', '#16a34a', '#059669', '#0891b2', '#334155'];
+
+async function mbOpenCustomizeModal() {
+    const username = localStorage.getItem("nexus_user_session");
+    const snap = await firebase.database().ref('providers/' + username).once('value');
+    const data = snap.val() || {};
+    const currentColor = data.color || MB_THEME_COLORS[0];
+
+    document.getElementById('mb-customize-swatches').innerHTML = MB_THEME_COLORS.map(c => `
+        <button onclick="mbSelectThemeColor('${c}')" style="width:38px;height:38px;border-radius:50%;background:${c};border:${c === currentColor ? '3px solid #0f172a' : '3px solid transparent'};box-shadow:0 0 0 1.5px ${c === currentColor ? c : 'transparent'};cursor:pointer;"></button>
+    `).join('');
+
+    const preview = document.getElementById('mb-customize-cover-preview');
+    if (data.coverImageUrl) {
+        preview.style.backgroundImage = `url('${data.coverImageUrl}')`;
+        preview.textContent = '';
+    } else {
+        preview.style.backgroundImage = '';
+        preview.textContent = 'No cover photo set';
+    }
+
+    document.getElementById('mb-customize-overlay').style.display = 'flex';
+}
+
+function mbCloseCustomizeModal() {
+    document.getElementById('mb-customize-overlay').style.display = 'none';
+}
+
+async function mbSelectThemeColor(hex) {
+    const username = localStorage.getItem("nexus_user_session");
+    try {
+        await firebase.database().ref('providers/' + username + '/color').set(hex);
+        showGlobalToast('✅ Accent color updated');
+        mbOpenCustomizeModal();
+    } catch (err) {
+        showGlobalToast('❌ Failed: ' + err.message);
+    }
+}
+
+async function mbUploadCoverPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const username = localStorage.getItem("nexus_user_session");
+    showGlobalToast('⏳ Uploading cover photo...');
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'cover_photos');
+        formData.append('username', username);
+        const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        await firebase.database().ref('providers/' + username + '/coverImageUrl').set(data.url);
+        showGlobalToast('✅ Cover photo updated');
+        mbOpenCustomizeModal();
+    } catch (err) {
+        showGlobalToast('❌ Upload failed: ' + err.message);
     }
 }
 
