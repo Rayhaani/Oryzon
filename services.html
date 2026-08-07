@@ -6444,14 +6444,15 @@ async function loadRealProvidersFromFirebase() {
                 verified: p.status === 'approved',
                 avatar: (p.businessName || p.name || username).slice(0,2).toUpperCase(),
                 photoUrl: photoUrl,
-                color: 'linear-gradient(135deg, #ea580c 0%, #78350f 100%)',
+                color: p.color || 'linear-gradient(135deg, #ea580c 0%, #78350f 100%)',
                 jobs: p.jobsDone || 0,
                 price: p.pricing ? formatPrice(p.pricing.base, p.pricing.currency) : formatPrice(0, null),
                 bio: p.bio || '',
                 skills: p.categoryLabel ? [p.categoryLabel] : [],
                 online: p.online !== undefined ? p.online : true,
                 gallery: (p.portfolio || []).map(url => typeof url === 'string' ? { url } : url),
-                menuImageUrl: p.menuImageUrl || null
+                menuImageUrl: p.menuImageUrl || null,
+                coverImageUrl: p.coverImageUrl || null
             };
 
             if (isFoodCategory) {
@@ -11329,7 +11330,8 @@ async function openMyBusinessDashboard() {
         if (!data) { showGlobalToast('❌ Business profile not found.'); return; }
 
         document.getElementById('mb-business-name').textContent = data.businessName || data.categoryLabel || 'My Business';
-        if (data.color) document.getElementById('mb-header-publish-btn').style.borderColor = data.color;
+        const headerPublishBtn = document.getElementById('mb-header-publish-btn');
+        if (data.color && headerPublishBtn) headerPublishBtn.style.borderColor = data.color;
         mbAllItems = [];
         const categories = data.categories || {};
         Object.keys(categories).forEach(catKey => {
