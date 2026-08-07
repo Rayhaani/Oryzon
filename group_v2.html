@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus - Next-Gen Super Community Protocol</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-void: #030508;
+            --card-incoming: rgba(15, 20, 31, 0.75);
+            --card-outgoing: rgba(0, 140, 255, 0.12);
+            --neon-cyan: #fde08d;
+            --neon-purple: #fde08d;
+            --neon-green: #10b981;
+            --neon-gold: #f59e0b;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-glow: rgba(253, 224, 141, 0.3);
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        
+        body {
+            background-color: #050505 !important; 
+            background-image: none !important;    
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            padding-bottom: 60px;
+}
+/* ================= HEADER — exact port of chat-interior header ================= */
+  header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 56px;
+            background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            display: flex; align-items: center; padding: 0 12px; gap: 10px;
+            z-index: 9999; box-sizing: border-box;
+            transition: background 0.25s ease, backdrop-filter 0.25s ease;
+        }
+        header.header-feed-transparent {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+        header.header-feed-transparent .fb-header-title { opacity: 0; }      
+
+        .header-left-dock {
+            display: flex; align-items: center; gap: 8px;
+            flex: 1 1 0%; min-width: 0;
+        }
+
+/* EXTREME LEFT AVATAR — exact port of chat-interior avatar wrapper */
+        .avatar-frame {
+            position: relative; width: 38px; height: 38px; flex-shrink: 0;
+            cursor: pointer;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fde08d, #b8860b);
+            padding: 2px;
+        }
+
+        .group-avatar {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            border: 2px solid #050505;
+        }
+
+        .pulse-ring { display: none; }
+
+    .header-details { display: flex; flex-direction: column; flex: 1 1 0%; min-width: 0; overflow: hidden; }
+
+        .group-title-row { display: flex; align-items: center; width: 100%; min-width: 0; }
+        .group-title {
+            font-size: 14px; font-weight: 700; color: #fff;
+            font-family: 'Inter', sans-serif;
+            display: block; width: 100%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .group-subtitle {
+            font-size: 10px; color: var(--neon-green); margin-top: 1px;
+        }     
+
+        .trust-protocol-badge {
+            font-size: 9px; font-weight: 800; background: rgba(253, 224, 141, 0.12);
+            color: var(--neon-cyan); padding: 2px 6px; border-radius: 6px;
+            border: 1px solid rgba(253, 224, 141, 0.3); display: flex; align-items: center; gap: 3px;
+        }
+
+        /* SECTOR QUICK NAV PILLS IN HEADER */
+        .sector-nav {
+            display: flex; gap: 6px; margin-top: 4px; overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .sector-nav::-webkit-scrollbar { display: none; }
+        
+        .sector-pill {
+            font-size: 10px; font-weight: 600; color: var(--text-sub);
+            background: rgba(255, 255, 255, 0.04); padding: 2px 8px;
+            border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap; cursor: pointer;
+        }
+        .sector-pill.active {
+            color: #fff; background: rgba(253, 224, 141, 0.25);
+            border-color: var(--neon-purple); box-shadow: 0 0 8px rgba(253, 224, 141, 0.3);
+        }
+
+        /* ===== FEED-MODE HEADER (Facebook-group style top bar) ===== */
+        .header-left-feed {
+            display: none; align-items: center; gap: 10px; flex: 1; min-width: 0;
+        }
+        .fb-back-btn {
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 15px; cursor: pointer;
+        }
+        .fb-header-title {
+            font-size: 15px; font-weight: 800; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 100%;
+            opacity: 1;
+            transition: opacity 0.25s ease;
+        }
+        .fb-header-title {
+            font-size: 15px; font-weight: 800; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+        .action-dock-btn {
+            width: 40px; height: 40px; border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; cursor: pointer; transition: all 0.2s ease;
+        }
+        .action-dock-btn:active { transform: scale(0.9); background: rgba(253, 224, 141, 0.2); }
+
+        /* ===== FEED / CHAT MODE SWITCH — segmented "Code | Blame" style ===== */
+      .mode-toggle-switch {
+            position: relative;
+            display: flex;
+            background: #0d0f14;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 0;
+            width: 100px;
+            height: 30px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .mode-toggle-thumb {
+            position: absolute;
+            top: 0; left: 0;
+            width: 50%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 10px;
+            transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+        }
+        
+        .mode-toggle-btn {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 800;
+            color: var(--text-sub);
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.25s ease;
+        }
+        .mode-toggle-btn.active { color: #030508; }
+
+        /* ================= CHAT FLOW AREA ================= */
+       #chat-flow {
+            flex: 1; padding: 72px 10px 140px 10px; overflow-y: auto; 
+            display: flex; flex-direction: column; gap: 20px; scrollbar-width: none;
+        }
+        #chat-flow::-webkit-scrollbar { display: none; }
+
+        .msg-row { display: flex; gap: 7px; max-width: 88%; align-items: flex-end; }
+        .msg-row.incoming { align-self: flex-start; }
+        .msg-row.outgoing { align-self: flex-end; flex-direction: row-reverse; }
+
+        .msg-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+
+        .msg-card {
+            background: var(--card-incoming);
+            border-radius: 14px 14px 14px 4px;
+            padding: 6px 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .msg-row.outgoing .msg-card {
+            background: var(--card-outgoing);
+            border-radius: 14px 14px 4px 14px;
+        }
+
+        .msg-header {
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 8px;
+            padding: 0 0 2px 0;
+        }
+        .sender-name { font-size: 12.5px; font-weight: 700; color: #fff; }
+
+        .role-tag {
+            font-size: 9.5px; font-weight: 700; letter-spacing: 0.3px;
+            background: none; border: none; padding: 0; border-radius: 0;
+        }
+        .role-ceo { color: var(--neon-purple); }
+        .role-pro { color: var(--neon-green); }
+        .role-mod { color: var(--neon-green); }
+        .role-member { color: var(--text-sub); }
+        .msg-body { padding: 0; font-size: 13.5px; line-height: 1.45; color: #e2e8f0; overflow: hidden; }
+
+        .msg-time-inline {
+            float: right;
+            font-size: 10px;
+            color: rgba(255,255,255,0.45);
+            margin: 4px 0 -2px 8px;
+            line-height: 1;
+        }
+        /* AUTO-TRANSLATE CHIP */
+        .translate-chip {
+            font-size: 10px; color: var(--neon-cyan); background: rgba(253, 224, 141, 0.08);
+            padding: 3px 8px; border-radius: 8px; display: inline-flex; align-items: center;
+            gap: 4px; cursor: pointer; margin-top: 6px; border: 1px solid rgba(253, 224, 141, 0.15);
+        }
+
+        /* VOICE NOTE WAVEFORM PLAYER WITH SPEED TOGGLE */
+        .voice-card {
+            display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.25);
+            padding: 8px 12px; border-radius: 12px; margin-top: 6px; border: 1px solid var(--glass-border);
+        }
+        .play-btn {
+            width: 32px; height: 32px; border-radius: 50%; background: var(--neon-cyan);
+            border: none; color: #000; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .waveform { flex: 1; height: 20px; display: flex; align-items: center; gap: 2px; }
+        .waveform bar { width: 3px; background: var(--neon-purple); border-radius: 2px; }
+        .speed-btn {
+            font-size: 9px; font-weight: 800; background: rgba(255,255,255,0.1);
+            color: #fff; padding: 2px 6px; border-radius: 6px; cursor: pointer;
+        }
+
+        /* ================= FLOATING NEURAL COMMAND DOCK ================= */
+        .dock-container {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 10px 14px 20px 14px;
+            background: linear-gradient(to top, rgba(3, 5, 8, 0.98), transparent);
+            z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+
+        .neural-dock {
+            width: 100%; max-width: 650px; background: rgba(15, 20, 31, 0.9);
+            border: 1.5px solid var(--glass-glow); backdrop-filter: blur(25px);
+            border-radius: 30px; padding: 6px 12px 6px 16px;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .dock-add-btn {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; cursor: pointer; flex-shrink: 0; transition: all 0.2s;
+        }
+        .dock-add-btn:hover { color: var(--neon-cyan); border-color: var(--neon-cyan); }
+
+        .neural-dock textarea {
+            background: transparent; border: none; outline: none;
+            color: #fff; flex: 1; font-size: 14.5px; resize: none; max-height: 120px;
+            font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1.4;
+        }
+
+        .dock-actions { display: flex; align-items: center; gap: 8px; }
+
+        .dock-trigger-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; cursor: pointer; transition: all 0.2s;
+        }
+
+        .send-trigger {
+            background: linear-gradient(135deg, var(--neon-cyan), #b8860b);
+            color: #000; font-weight: 800; border: none; display: none;
+            box-shadow: 0 0 15px rgba(253, 224, 141, 0.4);
+        }
+
+        /* SUPER-APP ECOSYSTEM MINI-TOOLS MODAL */
+        .ecosystem-drawer {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(12px); z-index: 2500;
+            display: flex; align-items: flex-end; justify-content: center;
+            opacity: 0; pointer-events: none; transition: all 0.3s ease;
+        }
+        .ecosystem-drawer.active { opacity: 1; pointer-events: auto; }
+
+        .drawer-card {
+            width: 100%; max-width: 500px; background: #080b11;
+            border-radius: 28px 28px 0 0; border: 1px solid var(--glass-border);
+            padding: 20px; display: flex; flex-direction: column; gap: 16px;
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .ecosystem-drawer.active .drawer-card { transform: translateY(0); }
+
+        .drawer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+        .app-tool-item {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 16px;
+            border: 1px solid var(--glass-border); cursor: pointer;
+        }
+        .app-tool-item i { font-size: 20px; color: var(--neon-cyan); }
+        .app-tool-item span { font-size: 10px; font-weight: 600; color: #fff; }
+
+        /* ================= FEED VIEW — Facebook-group style ================= */
+        #feedView {
+            display: none;
+            flex: 1;
+            padding: 0 0 30px 0;
+            overflow-y: auto;
+            flex-direction: column;
+            scrollbar-width: none;
+        }
+        #feedView::-webkit-scrollbar { display: none; }
+
+        .group-cover-wrap { position: relative; width: 100%; height: 168px; overflow: hidden; }
+        .group-cover-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .group-cover-fade {
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg, transparent 40%, var(--bg-void) 100%);
+        }
+
+        .group-info-block { padding: 4px 16px 6px 16px; border-bottom: 8px solid rgba(255,255,255,0.03); }
+        .group-info-title { font-size: 21px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+        .group-meta-row {
+            display: flex; align-items: center; gap: 6px; color: var(--text-sub);
+            font-size: 12.5px; margin-top: 6px;
+        }
+
+        .group-avatar-stack { display: flex; align-items: center; margin-top: 14px; }
+        .group-avatar-stack img {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 2px solid var(--bg-void); object-fit: cover;
+            margin-left: -10px;
+        }
+        .group-avatar-stack img:first-child { margin-left: 0; }
+        .group-avatar-stack .stack-count {
+            margin-left: 6px; font-size: 12px; color: var(--text-sub); font-weight: 600;
+        }
+
+        .invite-btn-fb {
+            background: linear-gradient(135deg, #fde08d, #b8860b);
+            color: #1e1e1e; font-weight: 800; font-size: 12px;
+            padding: 8px 16px; border-radius: 10px;
+            display: flex; align-items: center; gap: 7px;
+            margin-top: 16px; cursor: pointer; border: none;
+            width: fit-content;
+            box-shadow: none;
+        }
+        .invite-btn-fb:active { transform: scale(0.96); }
+
+        #timeline-area {
+            padding-top: 14px !important;
+            display: flex; flex-direction: column; gap: 0;
+        }
+        .header-icon-btn {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 15px;
+            cursor: pointer; flex-shrink: 0;
+        }
+         .header-icon-btn:active { background: rgba(253,224,141,0.2); } 
+   
+    .new-post-bubble {
+            width: 34px; height: 34px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0.9; flex-shrink: 0;
+            transition: opacity 0.2s ease;
+        }
+        .new-post-bubble:active { opacity: 0.5; transform: scale(0.92); }
+    @keyframes dotSequence {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.4); opacity: 1; }
+    }
+    .smart-box-highlights {
+            background: transparent !important;
+            border: none !important;
+            padding: 0;
+            margin: 14px 0 0 0;
+    } 
+        .highlights-scroll {
+            display: flex !important;
+            gap: 10px !important;
+            overflow-x: auto !important;
+            scrollbar-width: none !important;
+        }
+        .highlight-item {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            min-width: 56px !important;
+            flex-shrink: 0 !important;
+            position: relative;
+        }
+        .highlight-ring {
+            width: 74px !important;
+            height: 80px !important;
+            border-radius: 16px !important;
+            border: 1px solid #fde08d !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+            background: #111;
+        }
+        .highlight-ring img {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 13px !important;
+            object-fit: cover !important;
+        }
+        .highlight-label {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            color: #fff !important;
+            margin: 3px auto 0 auto !important;
+            text-align: center !important;
+            max-width: 74px;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.2;
+            }
+        .story-viewer-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 20000;
+            background: #000;
+            display: none;
+        }
+        .story-media-wrap {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .story-slide {
+            position: absolute;
+            inset: 0;
+        }
+        .story-slide img, .story-slide video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .story-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 14px 10px;
+            z-index: 10;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+        }
+        .story-header img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #fde08d; }
+        .story-user-info { flex: 1; display: flex; align-items: baseline; gap: 6px; }
+        .story-username { font-size: 13px; font-weight: 700; color: #fff; }
+        .story-time { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .story-close { color: #fff; font-size: 20px; cursor: pointer; padding: 5px; }
+        .story-tap-zone { position: absolute; top: 0; height: 100%; width: 35%; z-index: 5; }
+        .story-tap-left { left: 0; }
+        .story-tap-right { right: 0; }
+        .story-footer {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+            z-index: 10;
+            background: linear-gradient(transparent, rgba(0,0,0,0.75));
+        }
+        .story-reply-input { flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 50px; padding: 10px 18px; color: #fff; font-size: 13px; outline: none; }
+        .story-footer i { color: #fff; font-size: 20px; cursor: pointer; }
+        .preload-feed #headerLeftChat,
+        .preload-feed #chat-flow,
+        .preload-feed #dockContainer { display: none !important; }
+        .preload-feed #headerLeftFeed { display: flex !important; }
+        .preload-feed #feedView { display: flex !important; }
+
+        .preload-feed #toggleChatBtn { color: var(--text-sub) !important; }
+        .preload-feed #toggleFeedBtn { color: #030508 !important; }
+        .preload-feed #modeThumb { transform: translateX(0%) !important; }
+
+        /* MEMBER MANAGEMENT & MODERATION */
+        .member-tabs { display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
+        .member-tab { font-size: 12px; font-weight: 700; color: var(--text-sub); padding: 8px 4px; cursor: pointer; position: relative; }
+        .member-tab.active { color: #fff; }
+        .member-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--neon-cyan); }
+        .pending-count-badge { background: #ef4444; color: #fff; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+        .member-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .member-row img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .member-row-info { flex: 1; min-width: 0; }
+        .member-row-name { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .member-row-role { font-size: 10.5px; color: var(--text-sub); margin-top: 1px; }
+        .member-action-btn { font-size: 10.5px; font-weight: 700; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.04); color: #fff; cursor: pointer; flex-shrink: 0; }
+        .member-action-btn.danger { color: #ef4444; border-color: rgba(239,68,68,0.3); }
+        .member-action-btn.approve { background: linear-gradient(135deg, var(--neon-cyan), #b8860b); color: #000; border: none; }
+
+        /* ================================================================
+           WORLD-CLASS UPGRADE — toasts, modals, reactions, chat+feed tools
+           ================================================================ */
+
+        /* ---- TOAST / SNACKBAR (replaces alert()) ---- */
+        #toastStack { position: fixed; top: 64px; left: 0; right: 0; z-index: 30000; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+        .nx-toast {
+            background: rgba(18, 20, 26, 0.96); border: 1px solid var(--glass-border);
+            color: #fff; font-size: 12.5px; font-weight: 600; padding: 10px 16px;
+            border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 8px; max-width: 86%;
+            transform: translateY(-14px); opacity: 0; transition: all 0.25s ease;
+        }
+        .nx-toast.show { transform: translateY(0); opacity: 1; }
+        .nx-toast i { color: var(--neon-cyan); }
+
+        /* ---- DAY DIVIDER / UNREAD DIVIDER ---- */
+        .day-divider { display: flex; align-items: center; justify-content: center; margin: 4px 0; align-self: center; }
+        .day-divider span { background: rgba(255,255,255,0.06); color: var(--text-sub); font-size: 10.5px; font-weight: 700; padding: 4px 12px; border-radius: 10px; }
+        .unread-divider { display: flex; align-items: center; gap: 8px; align-self: stretch; margin: 6px 0; }
+        .unread-divider::before, .unread-divider::after { content: ''; flex: 1; height: 1px; background: rgba(239,68,68,0.35); }
+        .unread-divider span { color: #ef4444; font-size: 10.5px; font-weight: 800; white-space: nowrap; }
+
+        /* ---- TYPING INDICATOR ---- */
+        .typing-row { display: flex; align-items: center; gap: 7px; align-self: flex-start; padding-left: 35px; }
+        .typing-bubble { background: var(--card-incoming); border-radius: 14px 14px 14px 4px; padding: 9px 12px; display: flex; gap: 4px; }
+        .typing-bubble .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-sub); animation: typingBounce 1.2s infinite ease-in-out; }
+        .typing-bubble .dot:nth-child(2) { animation-delay: 0.15s; }
+        .typing-bubble .dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+        /* ---- MESSAGE STATUS TICKS ---- */
+        .msg-ticks { display: inline-flex; margin-left: 4px; font-size: 12px; color: rgba(255,255,255,0.45); }
+        .msg-ticks.read { color: var(--neon-cyan); }
+
+        /* ---- REPLY / QUOTE PREVIEW INSIDE MESSAGE ---- */
+        .msg-reply-quote {
+            display: flex; flex-direction: column; gap: 1px; background: rgba(255,255,255,0.06);
+            border-left: 3px solid var(--neon-cyan); border-radius: 6px; padding: 4px 8px; margin-bottom: 5px; cursor: pointer;
+        }
+        .msg-reply-quote .rq-name { font-size: 11px; font-weight: 700; color: var(--neon-cyan); }
+        .msg-reply-quote .rq-text { font-size: 11px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+        .msg-forwarded-tag { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text-sub); font-style: italic; margin-bottom: 4px; }
+
+        /* ---- MESSAGE REACTIONS ---- */
+        .msg-reactions { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
+        .msg-reaction-pill {
+            background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); border-radius: 10px;
+            padding: 1px 6px; font-size: 11px; display: flex; align-items: center; gap: 3px; cursor: pointer;
+        }
+        .msg-reaction-pill.mine { border-color: var(--neon-cyan); background: rgba(253,224,141,0.15); }
+        .msg-star-flag { position: absolute; top: -6px; right: -4px; font-size: 10px; color: var(--neon-gold); }
+
+        /* ---- MESSAGE ACTION TRAY (long-press) ---- */
+        .msg-card { cursor: pointer; }
+        .msg-action-tray {
+            position: fixed; z-index: 26000; background: #12141a; border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 6px; display: none; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            min-width: 190px;
+        }
+        .msg-action-tray.active { display: block; }
+        .tray-emoji-row { display: flex; gap: 6px; padding: 6px 4px 8px; border-bottom: 1px solid var(--glass-border); margin-bottom: 4px; }
+        .tray-emoji-row span { font-size: 20px; cursor: pointer; transition: transform 0.15s; }
+        .tray-emoji-row span:active { transform: scale(1.3); }
+        .tray-action { display: flex; align-items: center; gap: 10px; padding: 9px 10px; font-size: 12.5px; font-weight: 600; color: #fff; cursor: pointer; border-radius: 8px; }
+        .tray-action:active { background: rgba(255,255,255,0.06); }
+        .tray-action.danger { color: #ef4444; }
+        .msg-action-backdrop { position: fixed; inset: 0; z-index: 25999; display: none; }
+        .msg-action-backdrop.active { display: block; }
+
+        /* ---- REPLY-COMPOSER BAR (above dock, chat mode) ---- */
+        .reply-composer-bar {
+            width: 100%; max-width: 650px; background: rgba(15,20,31,0.92); border: 1px solid var(--glass-border);
+            border-top: 3px solid var(--neon-cyan); border-radius: 14px 14px 0 0; padding: 8px 12px;
+            display: none; align-items: center; gap: 10px; margin-bottom: -8px;
+        }
+        .reply-composer-bar.active { display: flex; }
+        .reply-composer-bar .rc-body { flex: 1; min-width: 0; }
+        .reply-composer-bar .rc-name { font-size: 11.5px; font-weight: 700; color: var(--neon-cyan); }
+        .reply-composer-bar .rc-text { font-size: 11.5px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .reply-composer-bar i.rc-close { color: var(--text-sub); cursor: pointer; font-size: 15px; }
+
+        /* ---- PINNED MESSAGE BAR ---- */
+        .pinned-bar {
+            position: fixed; top: 56px; left: 0; right: 0; z-index: 800;
+            background: rgba(10,12,16,0.92); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 7px 14px; display: none; align-items: center; gap: 10px; cursor: pointer;
+        }
+        .pinned-bar.active { display: flex; }
+        .pinned-bar i.fa-thumbtack { color: var(--neon-cyan); font-size: 13px; }
+        .pinned-bar .pb-text { flex: 1; min-width: 0; font-size: 12px; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pinned-bar .pb-close { color: var(--text-sub); font-size: 13px; }
+
+        /* ---- CHAT SEARCH OVERLAY ---- */
+        .chat-search-overlay {
+            position: fixed; inset: 0; z-index: 22000; background: var(--bg-void); display: none; flex-direction: column;
+        }
+        .chat-search-overlay.active { display: flex; }
+        .chat-search-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--glass-border); }
+        .chat-search-head input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 20px; padding: 9px 14px; color: #fff; font-size: 13px; outline: none; }
+        .chat-search-head i { color: #fff; font-size: 16px; cursor: pointer; }
+        .chat-search-results { flex: 1; overflow-y: auto; padding: 10px 14px; }
+        .search-result-row { padding: 10px 4px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .search-result-row .sr-name { font-size: 12px; font-weight: 700; color: var(--neon-cyan); }
+        .search-result-row .sr-text { font-size: 12.5px; color: #e2e8f0; margin-top: 2px; }
+        .search-result-row mark { background: rgba(253,224,141,0.35); color: #fff; border-radius: 3px; }
+
+        /* ---- ATTACH / TOOLS ROW (replaces hardcoded AI phrase chips) ---- */
+        .quick-tools-row { display: flex; gap: 10px; overflow-x: auto; width: 100%; max-width: 650px; scrollbar-width: none; padding: 0 2px; }
+        .quick-tools-row::-webkit-scrollbar { display: none; }
+        .qtool {
+            display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+            font-size: 11px; font-weight: 700; color: #fff;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+            padding: 6px 12px; border-radius: 16px; cursor: pointer; white-space: nowrap;
+        }
+        .qtool i { color: var(--neon-cyan); font-size: 11px; }
+        .qtool:active { background: rgba(253,224,141,0.18); transform: scale(0.96); }
+        .qtool.suggest { color: var(--neon-cyan); border-color: rgba(253,224,141,0.25); }
+
+        /* ---- VOICE RECORDING UI ---- */
+        .record-bar {
+            display: none; align-items: center; gap: 10px; flex: 1;
+            color: #fff; font-size: 13px; font-weight: 600;
+        }
+        .record-bar.active { display: flex; }
+        .record-dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; animation: recPulse 1s infinite; flex-shrink: 0; }
+        @keyframes recPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .record-time { font-variant-numeric: tabular-nums; }
+        .record-hint { flex: 1; text-align: center; color: var(--text-sub); font-size: 11px; }
+        .record-cancel { color: #ef4444; font-size: 13px; cursor: pointer; }
+
+        /* ---- EMOJI PICKER ---- */
+        .emoji-picker-sheet {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 2600; background: #080b11;
+            border-radius: 22px 22px 0 0; border: 1px solid var(--glass-border);
+            padding: 14px; display: none; max-height: 46vh; overflow-y: auto;
+        }
+        .emoji-picker-sheet.active { display: block; }
+        .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 8px; }
+        .emoji-grid span { font-size: 21px; text-align: center; cursor: pointer; padding: 4px 0; border-radius: 8px; }
+        .emoji-grid span:active { background: rgba(255,255,255,0.08); }
+
+        /* ---- GENERIC BOTTOM SHEET MODAL (create post / comments / share / poll) ---- */
+        .nx-sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 21000; display: none; align-items: flex-end; justify-content: center; }
+        .nx-sheet-backdrop.active { display: flex; }
+        .nx-sheet {
+            width: 100%; max-width: 560px; background: #0a0c11; border: 1px solid var(--glass-border);
+            border-radius: 24px 24px 0 0; max-height: 88vh; display: flex; flex-direction: column;
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .nx-sheet-backdrop.active .nx-sheet { transform: translateY(0); }
+        .nx-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 10px; border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
+        .nx-sheet-head span { font-size: 14.5px; font-weight: 800; color: #fff; }
+        .nx-sheet-head i { color: var(--text-sub); font-size: 16px; cursor: pointer; }
+        .nx-sheet-body { padding: 16px 18px; overflow-y: auto; flex: 1; }
+
+        /* CREATE POST composer */
+        .composer-user-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .composer-user-row img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+        .composer-user-row .cu-name { font-size: 13px; font-weight: 700; color: #fff; }
+        .composer-audience { font-size: 10.5px; color: var(--neon-cyan); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+        #composerText {
+            width: 100%; min-height: 110px; background: transparent; border: none; outline: none;
+            color: #fff; font-size: 15px; font-family: 'Plus Jakarta Sans', sans-serif; resize: vertical;
+        }
+        .composer-type-row { display: flex; gap: 8px; overflow-x: auto; margin: 10px 0; }
+        .composer-type-pill { font-size: 11px; font-weight: 700; color: var(--text-sub); background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 14px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .composer-type-pill.active { color: #030508; background: linear-gradient(135deg, var(--neon-cyan), #b8860b); border-color: transparent; }
+        .composer-extra-fields { display: none; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .composer-extra-fields.active { display: flex; }
+        .composer-extra-fields input { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px; padding: 9px 12px; color: #fff; font-size: 12.5px; outline: none; }
+        .composer-addon-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); margin: 6px 0 14px; }
+        .composer-addon-row i { font-size: 17px; color: var(--neon-cyan); cursor: pointer; }
+        .composer-post-btn {
+            width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 800; font-size: 13.5px;
+            background: linear-gradient(135deg, var(--neon-cyan), #b8860b); color: #1e1e1e; cursor: pointer;
+        }
+        .composer-post-btn:disabled { opacity: 0.4; }
+
+        /* COMMENTS SHEET */
+        .comment-row { display: flex; gap: 8px; margin-bottom: 14px; }
+        .comment-row img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .comment-bubble { background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px 12px; }
+        .comment-bubble .cb-name { font-size: 11.5px; font-weight: 700; color: #fff; }
+        .comment-bubble .cb-text { font-size: 12.5px; color: #e2e8f0; margin-top: 2px; }
+        .comment-meta { display: flex; gap: 12px; margin-top: 4px; font-size: 10.5px; color: var(--text-sub); font-weight: 700; }
+        .comment-input-row { display: flex; align-items: center; gap: 8px; padding: 10px 18px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--glass-border); flex-shrink: 0; }
+        .comment-input-row input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 20px; padding: 9px 14px; color: #fff; font-size: 12.5px; outline: none; }
+        .comment-send { color: var(--neon-cyan); font-size: 18px; cursor: pointer; }
+
+        /* SHARE SHEET */
+        .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+        .share-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+        .share-opt .so-icon { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 19px; color: var(--neon-cyan); }
+        .share-opt span { font-size: 10px; color: var(--text-sub); font-weight: 600; text-align: center; }
+
+        /* REACTION PICKER (feed post) */
+        .reaction-picker { position: fixed; z-index: 26000; background: #12141a; border: 1px solid var(--glass-border); border-radius: 30px; padding: 8px 10px; display: none; gap: 8px; box-shadow: 0 12px 30px rgba(0,0,0,0.6); }
+        .reaction-picker.active { display: flex; }
+        .reaction-picker span { font-size: 24px; cursor: pointer; transition: transform 0.15s ease; }
+        .reaction-picker span:active { transform: scale(1.4) translateY(-4px); }
+
+        /* ---- FEED POST FRAME (self-contained renderer) ---- */
+        .nx-post { border-bottom: 8px solid rgba(255,255,255,0.03); padding: 14px 16px 6px; }
+        .nx-post-head { display: flex; align-items: center; gap: 10px; }
+        .nx-post-head img.pp { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .nx-post-head-info { flex: 1; min-width: 0; }
+        .nx-post-name { font-size: 13.5px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 5px; }
+        .nx-post-meta { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 4px; margin-top: 1px; }
+        .nx-post-more { color: var(--text-sub); font-size: 16px; cursor: pointer; padding: 6px; }
+        .nx-post-pin-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: var(--neon-cyan); margin-bottom: 4px; }
+        .nx-post-text { font-size: 13.5px; line-height: 1.5; color: #f1f5f9; margin: 8px 0; white-space: pre-wrap; }
+        .nx-post-text .see-more-link { color: var(--neon-cyan); font-weight: 700; cursor: pointer; }
+        .nx-post-media { border-radius: 14px; overflow: hidden; margin: 6px 0; position: relative; }
+        .nx-post-media img, .nx-post-media video { width: 100%; display: block; max-height: 420px; object-fit: cover; background: #000; }
+        .nx-carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; border-radius: 14px; }
+        .nx-carousel::-webkit-scrollbar { display: none; }
+        .nx-carousel img { scroll-snap-align: start; width: 100%; flex-shrink: 0; max-height: 420px; object-fit: cover; }
+        .nx-carousel-dots { display: flex; justify-content: center; gap: 4px; margin-top: 6px; }
+        .nx-carousel-dots span { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.25); }
+        .video-mute-btn { position: absolute; bottom: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; }
+        .nx-post-stats { display: flex; align-items: center; justify-content: space-between; padding: 8px 2px; font-size: 11.5px; color: var(--text-sub); }
+        .nx-post-stats .reactor-icons { display: flex; align-items: center; }
+        .nx-post-stats .reactor-icons span { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; background: #222; margin-left: -4px; border: 1.5px solid var(--bg-void); }
+        .nx-post-actions { display: flex; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .nx-post-actions .npa-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 0; font-size: 12px; font-weight: 700; color: var(--text-sub); cursor: pointer; user-select: none; }
+        .nx-post-actions .npa-btn.liked { color: var(--neon-cyan); }
+        .nx-post-actions .npa-btn.saved { color: var(--neon-gold); }
+        .nx-post-actions .npa-btn i { font-size: 14px; }
+
+        /* POLL POST */
+        .poll-wrap { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+        .poll-option { position: relative; border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 12px; cursor: pointer; overflow: hidden; }
+        .poll-option .poll-fill { position: absolute; inset: 0; background: rgba(253,224,141,0.14); width: 0%; transition: width 0.5s ease; z-index: 0; }
+        .poll-option .poll-label-row { position: relative; z-index: 1; display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: #fff; }
+        .poll-option.voted .poll-label-row { font-weight: 800; }
+        .poll-total { font-size: 10.5px; color: var(--text-sub); margin-top: 2px; }
+
+        /* DEAL / MARKETPLACE POST */
+        .deal-card { display: flex; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 10px; margin: 8px 0; }
+        .deal-card .dc-price { font-size: 15px; font-weight: 800; color: var(--neon-green); }
+        .deal-card .dc-label { font-size: 10px; color: var(--text-sub); }
+        .deal-escrow-btn { margin-left: auto; background: var(--neon-green); color: #04140d; font-size: 11px; font-weight: 800; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; flex-shrink: 0; }
+
+        /* ---- NEXUS PULSE / AI DIGEST BANNER (world-first signature feature) ---- */
+        .nexus-pulse-banner {
+            margin: 12px 16px 0; padding: 12px 14px; border-radius: 16px;
+            background: linear-gradient(120deg, rgba(253,224,141,0.12), rgba(184,134,11,0.06));
+            border: 1px solid rgba(253,224,141,0.25); display: flex; gap: 10px; align-items: flex-start;
+            cursor: pointer;
+        }
+        .nexus-pulse-banner i.pulse-icon { color: var(--neon-cyan); font-size: 16px; margin-top: 2px; }
+        .nexus-pulse-banner .np-title { font-size: 11.5px; font-weight: 800; color: var(--neon-cyan); display: flex; align-items: center; gap: 5px; }
+        .nexus-pulse-banner .np-text { font-size: 12px; color: #e2e8f0; margin-top: 3px; line-height: 1.4; }
+        .trust-badge-inline { font-size: 8.5px; font-weight: 800; color: var(--neon-green); background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); padding: 1px 5px; border-radius: 6px; margin-left: 4px; }
+
+        /* ---- SEARCH ICON + NOTIFICATION BELL IN HEADER ---- */
+        .notif-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; border: 1.5px solid #050505; }
+
+        /* ---- ONLINE / LAST SEEN ---- */
+        .presence-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--neon-green); border: 1.5px solid var(--bg-void); position: absolute; bottom: 0; right: 0; }
+    </style>
+</head>
+<body>
+<script>
+        if (localStorage.getItem('nexus_group_mode') === 'feed') {
+            document.documentElement.classList.add('preload-feed');
+        }
+</script>
+    <!-- ================= HEADER (mode-aware) ================= -->
+    <header>
+        <!-- CHAT MODE HEADER CONTENT -->
+        <div class="header-left-dock" id="headerLeftChat">
+            <div class="avatar-frame" onclick="toggleEcosystem(true)">
+                <img class="group-avatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="Group">
+                <div class="pulse-ring"></div>
+            </div>
+
+            <div class="header-details">
+                <div class="group-title-row">
+                    <span class="group-title">Ƙungiyar Arewa 2026</span>
+                </div>
+                <div class="group-subtitle">● 12.4K members</div>
+            </div>
+        </div>
+
+       <!-- FEED MODE HEADER CONTENT (Facebook-group style top bar) -->
+        <div class="header-left-feed" id="headerLeftFeed">
+            <div class="new-post-bubble" onclick="openComposer()">
+                <svg width="34" height="34" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 4 C11.6 4 4 11.6 4 21 C4 30.4 11.6 38 21 38 L33.5 38 C35.5 38 37 36.5 37 34.5 C37 33 36.3 31.7 35 30.8 C36.9 28.1 38 24.7 38 21 C38 11.6 30.4 4 21 4 Z" fill="#fde08d"/>
+                    <path d="M30.8 30 C32.5 31.5 34.5 33.5 37 38 L31 38 C29.3 38 28 36.7 28 35 C28 33.2 29 31.5 30.8 30 Z" fill="#fde08d"/>
+                    <path d="M21 14V26" stroke="#1E1E1E" stroke-width="3.4" stroke-linecap="round"/>
+                    <path d="M15 20H27" stroke="#1E1E1E" stroke-width="3.4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <span class="fb-header-title">Ƙungiyar Arewa 2026</span>
+        </div> 
+           <div class="header-actions">
+            <div class="action-dock-btn" id="chatSearchBtn" onclick="openChatSearch()" title="Bincike">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:14px;"></i>
+            </div>
+            <div class="action-dock-btn" style="position:relative;" onclick="showToast('Babu sabon sanarwa a yanzu', 'fa-bell')" title="Sanarwa">
+                <i class="fa-solid fa-bell" style="font-size:14px;"></i>
+                <span class="notif-dot"></span>
+            </div>
+            <div class="mode-toggle-switch" id="modeSwitcher">
+                <div class="mode-toggle-thumb" id="modeThumb"></div>
+                <div class="mode-toggle-btn" id="toggleFeedBtn" onclick="switchMode('feed')">Feed</div>
+                <div class="mode-toggle-btn active" id="toggleChatBtn" onclick="switchMode('chat')">Chat</div>
+            </div>
+          <div class="header-icon-btn" onclick="toggleEcosystem(true)" style="display:flex; align-items:center; gap:3px; background:none; border:none; width:auto; height:auto; padding:0 4px;">
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.3s;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.6s;">•</span>
+          </div>      
+        </div>
+    </header>
+    <!-- PINNED MESSAGE BAR (chat mode) -->
+    <div class="pinned-bar" id="pinnedBar" onclick="scrollToPinned()">
+        <i class="fa-solid fa-thumbtack"></i>
+        <span class="pb-text" id="pinnedBarText"></span>
+        <i class="fa-solid fa-xmark pb-close" onclick="event.stopPropagation(); unpinMessage()"></i>
+    </div>
+    <div id="toastStack"></div>
+  <!-- ================= CHAT MODE — MAIN CHAT FLOW AREA ================= -->
+    <div id="chat-flow"></div>
+
+    <!-- MESSAGE LONG-PRESS ACTION TRAY -->
+    <div class="msg-action-backdrop" id="msgActionBackdrop" onclick="closeMsgTray()"></div>
+    <div class="msg-action-tray" id="msgActionTray">
+        <div class="tray-emoji-row" id="trayEmojiRow"></div>
+        <div class="tray-action" onclick="trayReply()"><i class="fa-solid fa-reply"></i> Amsa (Reply)</div>
+        <div class="tray-action" onclick="trayForward()"><i class="fa-solid fa-share"></i> Turawa (Forward)</div>
+        <div class="tray-action" onclick="trayCopy()"><i class="fa-solid fa-copy"></i> Kwafi</div>
+        <div class="tray-action" onclick="trayStar()"><i class="fa-solid fa-star"></i> <span id="trayStarLabel">Yi Tauraro</span></div>
+        <div class="tray-action" onclick="trayPin()"><i class="fa-solid fa-thumbtack"></i> <span id="trayPinLabel">Danna (Pin)</span></div>
+        <div class="tray-action danger" onclick="trayDelete()"><i class="fa-solid fa-trash"></i> Share</div>
+    </div>
+
+    <!-- CHAT SEARCH OVERLAY -->
+    <div class="chat-search-overlay" id="chatSearchOverlay">
+        <div class="chat-search-head">
+            <i class="fa-solid fa-arrow-left" onclick="closeChatSearch()"></i>
+            <input type="text" id="chatSearchInput" placeholder="Bincika a saƙonni..." oninput="runChatSearch(this.value)" autofocus>
+        </div>
+        <div class="chat-search-results" id="chatSearchResults"></div>
+    </div>
+    <!-- ================= FEED MODE — FACEBOOK-GROUP STYLE VIEW ================= -->
+    <div id="feedView">
+        <div class="group-cover-wrap">
+            <img class="group-cover-img" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80" alt="Group cover">
+            <div class="group-cover-fade"></div>
+        </div>
+
+        <div class="group-info-block">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div class="group-info-title">Ƙungiyar Arewa 2026</div>
+                <button class="invite-btn-fb" onclick="copyGroupLink()" style="margin-top:0; flex-shrink:0;">
+                    <i class="fa-solid fa-user-plus"></i> Invite
+                </button>
+            </div>
+
+            <div class="group-meta-row">
+                <i class="fa-solid fa-earth-africa"></i>
+                <span>Public group · 12.4K members</span>
+            </div>
+
+            <div class="group-avatar-stack">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&auto=format&fit=crop&q=80" alt="">
+                <span class="stack-count">+12.4K</span>
+            </div>
+
+            <div class="smart-box-highlights">
+                <div class="highlights-scroll">
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(0)"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Launch</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(1)"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Deals</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(2)"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Events</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(3)"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Tech</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="nexus-pulse-banner" id="nexusPulseBanner" onclick="openPulseDigest()">
+            <i class="fa-solid fa-satellite-dish pulse-icon"></i>
+            <div>
+                <div class="np-title"><i class="fa-solid fa-bolt"></i> Nexus Pulse — Live AI Digest</div>
+                <div class="np-text" id="nexusPulseText">Ana nazarin ayyukan yau...</div>
+            </div>
+        </div>
+
+        <div class="group-info-block" style="border-bottom:1px solid rgba(255,255,255,0.05); padding:12px 16px;">
+            <div class="composer-user-row" style="margin-bottom:0; cursor:pointer;" onclick="openComposer()">
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="You">
+                <div style="flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:20px; padding:9px 14px; color:var(--text-sub); font-size:12.5px;">Me kake tunani, membobin ƙungiya?</div>
+                <i class="fa-solid fa-image" style="color:var(--neon-green); font-size:17px;" onclick="event.stopPropagation(); openComposer('image')"></i>
+            </div>
+        </div>
+
+        <div id="timeline-area"></div>
+    </div>
+
+    <!-- CREATE POST COMPOSER SHEET -->
+    <div class="nx-sheet-backdrop" id="composerSheet">
+        <div class="nx-sheet" onclick="event.stopPropagation()" style="max-height:92vh;">
+            <div class="nx-sheet-head"><span>Ƙirƙiri Sako</span><i class="fa-solid fa-xmark" onclick="closeSheet('composerSheet')"></i></div>
+            <div class="nx-sheet-body">
+                <div class="composer-user-row">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="You">
+                    <div>
+                        <div class="cu-name">Kai (You)</div>
+                        <div class="composer-audience"><i class="fa-solid fa-earth-africa"></i> Ƙungiyar Arewa 2026 · Kowa</div>
+                    </div>
+                </div>
+                <textarea id="composerText" placeholder="Me kake tunani...?" oninput="validateComposer()"></textarea>
+                <div class="composer-type-row">
+                    <div class="composer-type-pill active" data-type="text" onclick="setComposerType('text', this)"><i class="fa-solid fa-align-left"></i> Rubutu</div>
+                    <div class="composer-type-pill" data-type="image" onclick="setComposerType('image', this)"><i class="fa-solid fa-image"></i> Hoto</div>
+                    <div class="composer-type-pill" data-type="poll" onclick="setComposerType('poll', this)"><i class="fa-solid fa-square-poll-vertical"></i> Zaɓe (Poll)</div>
+                    <div class="composer-type-pill" data-type="deal" onclick="setComposerType('deal', this)"><i class="fa-solid fa-tags"></i> Deal Post</div>
+                    <div class="composer-type-pill" data-type="event" onclick="setComposerType('event', this)"><i class="fa-solid fa-calendar-days"></i> Event</div>
+                </div>
+                <div class="composer-extra-fields" id="composerImageField"><input type="text" id="composerImageUrl" placeholder="Manna URL ɗin hoto (image URL)..."></div>
+                <div class="composer-extra-fields" id="composerPollField">
+                    <input type="text" id="pollOpt1" placeholder="Zaɓi na 1">
+                    <input type="text" id="pollOpt2" placeholder="Zaɓi na 2">
+                    <input type="text" id="pollOpt3" placeholder="Zaɓi na 3 (optional)">
+                </div>
+                <div class="composer-extra-fields" id="composerDealField">
+                    <input type="text" id="dealTitle" placeholder="Sunan kaya/aiki (product/service)">
+                    <input type="text" id="dealPrice" placeholder="Farashi (misali ₦25,000)">
+                </div>
+                <div class="composer-extra-fields" id="composerEventField">
+                    <input type="text" id="eventTitle" placeholder="Sunan taro/event">
+                    <input type="text" id="eventDate" placeholder="Rana da lokaci">
+                </div>
+                <div class="composer-addon-row">
+                    <i class="fa-solid fa-image" title="Hoto" onclick="setComposerType('image', document.querySelector('[data-type=image]'))"></i>
+                    <i class="fa-solid fa-user-tag" title="Ambaci wani (Tag)" onclick="showToast('Zaɓi mutum don ambatawa', 'fa-user-tag')"></i>
+                    <i class="fa-solid fa-location-dot" title="Wuri" onclick="showToast('An saka wurin ku', 'fa-location-dot')"></i>
+                    <i class="fa-solid fa-face-smile" title="Feeling" onclick="showToast('Zaɓi yadda kake ji', 'fa-face-smile')"></i>
+                </div>
+                <button class="composer-post-btn" id="composerPostBtn" onclick="submitComposer()" disabled>Tura Sako (Post)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMMENTS SHEET -->
+    <div class="nx-sheet-backdrop" id="commentsSheet" onclick="closeSheet('commentsSheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span>Comments (<span id="commentsCountLabel">0</span>)</span><i class="fa-solid fa-xmark" onclick="closeSheet('commentsSheet')"></i></div>
+            <div class="nx-sheet-body" id="commentsListBody"></div>
+            <div class="comment-input-row">
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
+                <input type="text" id="commentInput" placeholder="Rubuta comment...">
+                <i class="fa-solid fa-paper-plane comment-send" onclick="submitComment()"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHARE SHEET -->
+    <div class="nx-sheet-backdrop" id="shareSheet" onclick="closeSheet('shareSheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span>Raba (Share)</span><i class="fa-solid fa-xmark" onclick="closeSheet('shareSheet')"></i></div>
+            <div class="nx-sheet-body">
+                <div class="share-grid">
+                    <div class="share-opt" onclick="shareAction('chat')"><div class="so-icon"><i class="fa-solid fa-comment"></i></div><span>Chat na Group</span></div>
+                    <div class="share-opt" onclick="shareAction('feed')"><div class="so-icon"><i class="fa-solid fa-repeat"></i></div><span>Sake Rabawa</span></div>
+                    <div class="share-opt" onclick="shareAction('story')"><div class="so-icon"><i class="fa-solid fa-circle-play"></i></div><span>Kara Story</span></div>
+                    <div class="share-opt" onclick="shareAction('copy')"><div class="so-icon"><i class="fa-solid fa-link"></i></div><span>Kwafi Link</span></div>
+                    <div class="share-opt" onclick="shareAction('whatsapp')"><div class="so-icon"><i class="fa-brands fa-whatsapp"></i></div><span>WhatsApp</span></div>
+                    <div class="share-opt" onclick="shareAction('external')"><div class="so-icon"><i class="fa-solid fa-arrow-up-from-bracket"></i></div><span>Sauran</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REACTION PICKER (long-press like button) -->
+    <div class="reaction-picker" id="reactionPicker"></div>
+
+    <!-- NEXUS PULSE FULL DIGEST SHEET -->
+    <div class="nx-sheet-backdrop" id="pulseSheet" onclick="closeSheet('pulseSheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span><i class="fa-solid fa-satellite-dish" style="color:var(--neon-cyan);"></i> Nexus Pulse — Cikakken Bayani</span><i class="fa-solid fa-xmark" onclick="closeSheet('pulseSheet')"></i></div>
+            <div class="nx-sheet-body" id="pulseFullBody"></div>
+        </div>
+    </div>
+
+    <!-- ================= FLOATING NEURAL COMMAND DOCK — chat mode only (World-Class redesign) ================= -->
+    <div class="dock-container" id="dockContainer">
+        <div class="reply-composer-bar" id="replyComposerBar">
+            <i class="fa-solid fa-reply" style="color:var(--neon-cyan);"></i>
+            <div class="rc-body">
+                <div class="rc-name" id="rcName"></div>
+                <div class="rc-text" id="rcText"></div>
+            </div>
+            <i class="fa-solid fa-xmark rc-close" onclick="cancelReply()"></i>
+        </div>
+
+        <div class="quick-tools-row" id="quickToolsRow">
+            <div class="qtool" onclick="triggerAttach('image')"><i class="fa-solid fa-image"></i> Hoto</div>
+            <div class="qtool" onclick="triggerAttach('camera')"><i class="fa-solid fa-camera"></i> Kamara</div>
+            <div class="qtool" onclick="triggerAttach('document')"><i class="fa-solid fa-file"></i> Fayil</div>
+            <div class="qtool" onclick="triggerAttach('poll')"><i class="fa-solid fa-square-poll-vertical"></i> Zaɓe</div>
+            <div class="qtool" onclick="triggerAttach('location')"><i class="fa-solid fa-location-dot"></i> Wuri</div>
+            <div class="qtool" onclick="triggerAttach('contact')"><i class="fa-solid fa-address-card"></i> Lambar Waya</div>
+            <div class="qtool suggest" id="smartSuggestChip" style="display:none;" onclick="useSmartSuggestion()"><i class="fa-solid fa-wand-magic-sparkles"></i> <span id="smartSuggestText"></span></div>
+        </div>
+
+        <div class="neural-dock">
+            <div class="dock-add-btn" onclick="toggleEcosystem(true)"><i class="fa-solid fa-plus"></i></div>
+            <div class="dock-add-btn" onclick="openEmojiPicker()" style="font-size:15px;">🙂</div>
+            <textarea id="dockInput" rows="1" placeholder="Rubuta saƙo ko '/ commands'..." oninput="handleDockInput(this)"></textarea>
+
+            <div class="record-bar" id="recordBar">
+                <div class="record-dot"></div>
+                <span class="record-time" id="recordTime">00:00</span>
+                <span class="record-hint">Zamewa hagu don sokewa ⟵</span>
+                <span class="record-cancel" onclick="cancelVoiceRecording()">Soke</span>
+            </div>
+
+            <div class="dock-actions">
+                <div class="dock-trigger-btn" id="micTrigger" onmousedown="startVoiceRecording()" onmouseup="stopVoiceRecording(true)" ontouchstart="startVoiceRecording()" ontouchend="stopVoiceRecording(true)"><i class="fa-solid fa-microphone"></i></div>
+                <button class="dock-trigger-btn send-trigger" id="sendTrigger" onclick="sendDockMessage()"><i class="fa-solid fa-arrow-up"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EMOJI PICKER SHEET -->
+    <div class="nx-sheet-backdrop" id="emojiBackdrop" onclick="closeSheet('emojiBackdrop')">
+        <div class="emoji-picker-sheet active" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head" style="padding:0 0 8px;"><span>Emoji</span><i class="fa-solid fa-xmark" onclick="closeSheet('emojiBackdrop')"></i></div>
+            <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
+    </div>
+
+    <!-- SUPER-APP ECOSYSTEM MINI-TOOLS MODAL -->
+    <div class="ecosystem-drawer" id="ecosystemModal" onclick="toggleEcosystem(false)">
+        <div class="drawer-card" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; color:#fff; font-weight:800; font-size:14px; margin-bottom:10px;">
+                <span>Nexus Super-App Mini Tools</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleEcosystem(false)"></i>
+            </div>
+            <div class="drawer-grid">
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('An buɗe Market Directory', 'fa-store');">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Market Directory</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('Escrow Pay yana kariyar kuɗin ku har sai an gama ciniki', 'fa-vault');">
+                    <i class="fa-solid fa-vault"></i>
+                    <span>Escrow Pay</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('TrustID Audit: An tabbatar da wannan ƙungiya ✔', 'fa-certificate');">
+                    <i class="fa-solid fa-certificate"></i>
+                    <span>TrustID Audit</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); triggerAttach('poll');">
+                    <i class="fa-solid fa-square-poll-vertical"></i>
+                    <span>Create Poll</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); toggleMembersModal(true);">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Manage Members</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openChatSearch();">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Bincike Group</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openPulseDigest();">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                    <span>Nexus Pulse</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('An kwafi link zuwa Group', 'fa-link'); copyGroupLink();">
+                    <i class="fa-solid fa-link"></i>
+                    <span>Group Link</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEMBER MANAGEMENT & MODERATION DRAWER -->
+    <div class="ecosystem-drawer" id="membersModal" onclick="toggleMembersModal(false)">
+        <div class="drawer-card" onclick="event.stopPropagation()" style="max-height:78vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; color:#fff; font-weight:800; font-size:14px; margin-bottom:10px;">
+                <span>Membobi & Mulki</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleMembersModal(false)"></i>
+            </div>
+            <div class="member-tabs">
+                <div class="member-tab active" id="tabAll" onclick="switchMemberTab('all')">Duk Membobi (12.4K)</div>
+                <div class="member-tab" id="tabPending" onclick="switchMemberTab('pending')">Neman Shiga <span class="pending-count-badge" id="pendingCountBadge">3</span></div>
+            </div>
+            <div id="memberListPanel"></div>
+            <div id="pendingListPanel" style="display:none;"></div>
+        </div>
+    </div>
+    <!-- STORY / HIGHLIGHT VIEWER -->
+    <div class="story-viewer-overlay" id="storyViewerOverlay">
+        <div class="story-header">
+            <img id="storyUserAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80">
+            <div class="story-user-info">
+                <span class="story-username" id="storyUsername">Ƙungiyar Arewa 2026</span>
+                <span class="story-time" id="storyTime"></span>
+            </div>
+            <i class="fa-solid fa-xmark story-close" onclick="closeGroupStoryViewer()"></i>
+        </div>
+        <div class="story-media-wrap" id="storyMediaWrap">
+            <div class="story-tap-zone story-tap-left" onclick="prevGroupStory()"></div>
+            <div class="story-tap-zone story-tap-right" onclick="nextGroupStory()"></div>
+        </div>
+        <div class="story-footer" id="storyFooter">
+            <input type="text" class="story-reply-input" placeholder="Send message">
+            <i class="fa-regular fa-paper-plane"></i>
+        </div>
+    </div>
+    
+    <!-- SHARED POST CARD TEMPLATE — used as an override if present; otherwise the
+         built-in nxGeneratePostHTML() below renders the feed so nothing is ever blank -->
+    <script src="post-card-template.js" onerror="this.dataset.failed='1'"></script>
+
+    <script>
+        // ============================================================
+        // 0. UTILITIES — toast system, time formatting, helpers
+        // ============================================================
+        function showToast(msg, icon = 'fa-circle-check') {
+            const stack = document.getElementById('toastStack');
+            const t = document.createElement('div');
+            t.className = 'nx-toast';
+            t.innerHTML = `<i class="fa-solid ${icon}"></i><span>${msg}</span>`;
+            stack.appendChild(t);
+            requestAnimationFrame(() => t.classList.add('show'));
+            setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2600);
+        }
+
+        function copyGroupLink() {
+            const link = 'https://rayhaani.github.io/Oryzon/group/arewa-2026';
+            if (navigator.clipboard) navigator.clipboard.writeText(link).catch(() => {});
+            showToast('An kwafi invite link zuwa clipboard', 'fa-link');
+        }
+
+        function fmtClockTime(d) {
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        function fmtRelative(d) {
+            const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (diff < 60) return 'Yanzun nan';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+            return Math.floor(diff / 86400) + 'd';
+        }
+        function fmtDayLabel(d) {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const y = new Date(today); y.setDate(y.getDate() - 1);
+            const dd = new Date(d); dd.setHours(0,0,0,0);
+            if (dd.getTime() === today.getTime()) return 'Yau';
+            if (dd.getTime() === y.getTime()) return 'Jiya';
+            return d.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        function escapeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+        function closeSheet(id) { document.getElementById(id).classList.remove('active'); }
+        function openSheetEl(id) { document.getElementById(id).classList.add('active'); }
+
+        // ============================================================
+        // 1. MODE SWITCHING — Feed (Facebook groups) <-> Chat (WhatsApp group)
+        // ============================================================
+        let feedRendered = false;
+
+        function switchMode(mode) {
+            localStorage.setItem('nexus_group_mode', mode);
+            const isChat = mode === 'chat';
+
+            document.getElementById('headerLeftChat').style.display = isChat ? 'flex' : 'none';
+            document.getElementById('headerLeftFeed').style.display = isChat ? 'none' : 'flex';
+
+            document.getElementById('chat-flow').style.display = isChat ? 'flex' : 'none';
+            document.getElementById('dockContainer').style.display = isChat ? 'flex' : 'none';
+            document.getElementById('feedView').style.display = isChat ? 'none' : 'flex';
+            document.getElementById('pinnedBar').classList.toggle('active', isChat && !!pinnedMessageId);
+            if (isChat) {
+                document.querySelector('header').style.cssText += 'background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important;';
+            } else {
+                updateFeedHeaderState();
+                }
+            document.getElementById('toggleChatBtn').classList.toggle('active', isChat);
+            document.getElementById('toggleFeedBtn').classList.toggle('active', !isChat);
+            document.getElementById('modeThumb').style.transform = isChat ? 'translateX(100%)' : 'translateX(0%)';
+
+            if (!isChat && !feedRendered) {
+                renderFeedPosts();
+                renderNexusPulse();
+                feedRendered = true;
+            }
+        }
+
+        // ============================================================
+        // 2. CHAT ENGINE — single source of truth for every bubble.
+        //    Fixes the "different timestamp style" bug: every message,
+        //    hardcoded or sent live, is rendered by the SAME function
+        //    using the SAME .msg-time-inline markup — never two formats again.
+        // ============================================================
+        let chatMessages = [
+            { id: 'c1', from: 'them', name: 'Ali_Developer', role: 'Chairman / CEO', roleClass: 'role-ceo', verified: true,
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80',
+              text: 'Masha Allah, an kammala tsara jadawalin sabon Super Community Platform dinmu na 2026 gaba daya.',
+              time: new Date(Date.now() - 1000 * 60 * 60 * 6), reactions: { '👍': 4, '🔥': 2 }, starred: false },
+            { id: 'c2', from: 'them', name: 'MmnAfrah Networker', role: 'P.R.O', roleClass: 'role-pro', verified: true,
+              avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop&q=80',
+              text: 'Saurari saƙon muryar shugaban gudanarwa a nan:', voice: { duration: '0:42' },
+              time: new Date(Date.now() - 1000 * 60 * 60 * 4), reactions: {}, starred: false },
+            { id: 'c3', from: 'me', text: 'Wannan sabon tsarin header da typing bar sun zama abin kallo a duniya! WhatsApp basu da irin wannan zane.',
+              time: new Date(Date.now() - 1000 * 60 * 60 * 2), reactions: {}, starred: false, status: 'read' }
+        ];
+        let replyTarget = null;
+        let pinnedMessageId = null;
+        let activeTrayMsgId = null;
+        const EMOJI_SET = ['👍','❤️','😂','😮','😢','🙏','🔥','🎉','👏','💯','🤝','⭐','😍','😎','🚀','✅','🤔','😢','🙌','💰'];
+
+        function renderChatFlow() {
+            const flow = document.getElementById('chat-flow');
+            let html = '';
+            let lastDay = null;
+            chatMessages.forEach(m => {
+                const dayLbl = fmtDayLabel(m.time);
+                if (dayLbl !== lastDay) {
+                    html += `<div class="day-divider"><span>${dayLbl}</span></div>`;
+                    lastDay = dayLbl;
+                }
+                html += renderChatMessage(m);
+            });
+            flow.innerHTML = html;
+            if (typingIndicatorActive) flow.insertAdjacentHTML('beforeend', typingRowHTML());
+            flow.scrollTop = flow.scrollHeight;
+            renderPinnedBar();
+        }
+
+        function renderChatMessage(m) {
+            const isOut = m.from === 'me';
+            const reactionsHtml = Object.keys(m.reactions || {}).length
+                ? `<div class="msg-reactions">${Object.entries(m.reactions).map(([e,c]) => `<span class="msg-reaction-pill">${e} ${c}</span>`).join('')}</div>` : '';
+            const replyHtml = m.replyTo ? (() => {
+                const rt = chatMessages.find(x => x.id === m.replyTo);
+                if (!rt) return '';
+                return `<div class="msg-reply-quote"><span class="rq-name">${rt.from === 'me' ? 'Kai' : rt.name}</span><span class="rq-text">${escapeHtml(rt.text || (rt.voice ? '🎤 Voice message' : ''))}</span></div>`;
+            })() : '';
+            const fwdHtml = m.forwarded ? `<div class="msg-forwarded-tag"><i class="fa-solid fa-share"></i> An Turo (Forwarded)</div>` : '';
+            const voiceHtml = m.voice ? `
+                <div class="voice-card">
+                    <button class="play-btn" onclick="showToast('Ana kunna saƙon murya...', 'fa-play')"><i class="fa-solid fa-play"></i></button>
+                    <div class="waveform">${[8,16,12,20,10,14,6,18,9].map(h => `<bar style="height:${h}px"></bar>`).join('')}</div>
+                    <span class="speed-btn" onclick="this.textContent = this.textContent==='1x' ? '1.5x' : this.textContent==='1.5x' ? '2x' : '1x'">1x</span>
+                </div>` : '';
+            const imgHtml = m.image ? `<img src="${m.image}" style="width:100%; max-width:230px; border-radius:10px; margin-top:4px; display:block; cursor:pointer;" onclick="showToast('Buɗe cikakken hoto...', 'fa-image')">` : '';
+            const starFlag = m.starred ? `<i class="fa-solid fa-star msg-star-flag"></i>` : '';
+            const ticks = isOut ? `<span class="msg-ticks ${m.status === 'read' ? 'read' : ''}"><i class="fa-solid fa-check-double"></i></span>` : '';
+
+            const headerHtml = !isOut ? `
+                <div class="msg-header">
+                    <span class="sender-name">${m.name} ${m.verified ? `<i class="fa-solid fa-circle-check" style="color:var(--neon-cyan); font-size:11px;"></i>` : ''}</span>
+                    <span class="role-tag ${m.roleClass}">${m.role}</span>
+                </div>` : '';
+
+            return `
+            <div class="msg-row ${isOut ? 'outgoing' : 'incoming'}" data-id="${m.id}" style="position:relative;" onmousedown="pressStart('${m.id}')" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchstart="pressStart('${m.id}')" ontouchend="pressEnd()">
+                ${!isOut ? `<img class="msg-avatar" src="${m.avatar}" alt="${m.name}">` : ''}
+                <div class="msg-card">
+                    ${starFlag}
+                    ${headerHtml}
+                    <div class="msg-body">
+                        ${fwdHtml}${replyHtml}${escapeHtml(m.text || '')}${voiceHtml}${imgHtml}
+                        <span class="msg-time-inline">${fmtClockTime(m.time)}${ticks}</span>
+                    </div>
+                    ${reactionsHtml}
+                </div>
+            </div>`;
+        }
+
+        // long-press detection (works for mouse + touch)
+        let pressTimer = null;
+        function pressStart(id) {
+            pressTimer = setTimeout(() => openMsgTray(id), 420);
+        }
+        function pressEnd() { clearTimeout(pressTimer); }
+
+        function openMsgTray(id) {
+            activeTrayMsgId = id;
+            const m = chatMessages.find(x => x.id === id);
+            if (!m) return;
+            document.getElementById('trayEmojiRow').innerHTML = ['👍','❤️','😂','😮','😢','🙏'].map(e => `<span onclick="reactToMessage('${id}','${e}')">${e}</span>`).join('');
+            document.getElementById('trayStarLabel').textContent = m.starred ? 'Cire Tauraro' : 'Yi Tauraro';
+            document.getElementById('trayPinLabel').textContent = (pinnedMessageId === id) ? 'Cire Pin' : 'Danna (Pin)';
+            const tray = document.getElementById('msgActionTray');
+            const row = document.querySelector(`.msg-row[data-id="${id}"]`);
+            const rect = row.getBoundingClientRect();
+            tray.style.top = Math.min(rect.top, window.innerHeight - 340) + 'px';
+            tray.style.left = (m.from === 'me' ? Math.max(rect.right - 210, 10) : rect.left) + 'px';
+            tray.classList.add('active');
+            document.getElementById('msgActionBackdrop').classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(15);
+        }
+        function closeMsgTray() {
+            document.getElementById('msgActionTray').classList.remove('active');
+            document.getElementById('msgActionBackdrop').classList.remove('active');
+        }
+        function reactToMessage(id, emoji) {
+            const m = chatMessages.find(x => x.id === id);
+            if (!m) return;
+            m.reactions = m.reactions || {};
+            m.reactions[emoji] = (m.reactions[emoji] || 0) + 1;
+            closeMsgTray();
+            renderChatFlow();
+        }
+        function trayReply() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            if (!m) return;
+            replyTarget = m;
+            document.getElementById('rcName').textContent = m.from === 'me' ? 'Kai' : m.name;
+            document.getElementById('rcText').textContent = m.text || (m.voice ? '🎤 Voice message' : 'Media');
+            document.getElementById('replyComposerBar').classList.add('active');
+            document.getElementById('dockInput').focus();
+            closeMsgTray();
+        }
+        function cancelReply() { replyTarget = null; document.getElementById('replyComposerBar').classList.remove('active'); }
+        function trayForward() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            const fwd = { ...m, id: 'c' + Date.now(), from: 'me', time: new Date(), forwarded: true, replyTo: null, reactions: {}, status: 'sent' };
+            chatMessages.push(fwd);
+            renderChatFlow();
+            showToast('An turo saƙon (forwarded)', 'fa-share');
+        }
+        function trayCopy() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            if (navigator.clipboard && m.text) navigator.clipboard.writeText(m.text).catch(() => {});
+            showToast('An kwafi saƙon', 'fa-copy');
+        }
+        function trayStar() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            m.starred = !m.starred;
+            renderChatFlow();
+            showToast(m.starred ? 'An yi wa saƙon tauraro' : 'An cire tauraro', 'fa-star');
+        }
+        function trayPin() {
+            const id = activeTrayMsgId;
+            closeMsgTray();
+            pinnedMessageId = (pinnedMessageId === id) ? null : id;
+            renderChatFlow();
+            showToast(pinnedMessageId ? 'An danna saƙon (pinned)' : 'An cire pin', 'fa-thumbtack');
+        }
+        function trayDelete() {
+            const id = activeTrayMsgId;
+            closeMsgTray();
+            chatMessages = chatMessages.filter(x => x.id !== id);
+            if (pinnedMessageId === id) pinnedMessageId = null;
+            renderChatFlow();
+            showToast('An share saƙon', 'fa-trash');
+        }
+        function renderPinnedBar() {
+            const bar = document.getElementById('pinnedBar');
+            if (!pinnedMessageId) { bar.classList.remove('active'); return; }
+            const m = chatMessages.find(x => x.id === pinnedMessageId);
+            if (!m) { bar.classList.remove('active'); return; }
+            document.getElementById('pinnedBarText').textContent = m.text || (m.voice ? '🎤 Voice message' : 'Media');
+            const isChatMode = document.getElementById('chat-flow').style.display !== 'none';
+            bar.classList.toggle('active', isChatMode);
+        }
+        function scrollToPinned() {
+            if (!pinnedMessageId) return;
+            const row = document.querySelector(`.msg-row[data-id="${pinnedMessageId}"]`);
+            if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function unpinMessage() { pinnedMessageId = null; renderPinnedBar(); }
+
+        // ---- typing indicator ----
+        let typingIndicatorActive = false;
+        function typingRowHTML() {
+            return `<div class="typing-row" id="typingRow"><div class="typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+        }
+        function simulateIncomingTyping() {
+            typingIndicatorActive = true;
+            const flow = document.getElementById('chat-flow');
+            flow.insertAdjacentHTML('beforeend', typingRowHTML());
+            flow.scrollTop = flow.scrollHeight;
+        }
+        function stopIncomingTyping() {
+            typingIndicatorActive = false;
+            const row = document.getElementById('typingRow');
+            if (row) row.remove();
+        }
+
+        // ---- chat search ----
+        function openChatSearch() {
+            document.getElementById('chatSearchOverlay').classList.add('active');
+            document.getElementById('chatSearchInput').value = '';
+            document.getElementById('chatSearchResults').innerHTML = '';
+            setTimeout(() => document.getElementById('chatSearchInput').focus(), 150);
+        }
+        function closeChatSearch() { document.getElementById('chatSearchOverlay').classList.remove('active'); }
+        function runChatSearch(q) {
+            const box = document.getElementById('chatSearchResults');
+            if (!q.trim()) { box.innerHTML = ''; return; }
+            const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+            const hits = chatMessages.filter(m => m.text && m.text.toLowerCase().includes(q.toLowerCase()));
+            box.innerHTML = hits.length ? hits.map(m => `
+                <div class="search-result-row" onclick="closeChatSearch(); jumpToMessage('${m.id}')">
+                    <div class="sr-name">${m.from === 'me' ? 'Kai' : m.name}</div>
+                    <div class="sr-text">${escapeHtml(m.text).replace(re, '<mark>$1</mark>')}</div>
+                </div>`).join('') : `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:20px;">Babu sakamako</p>`;
+        }
+        function jumpToMessage(id) {
+            switchMode('chat');
+            setTimeout(() => {
+                const row = document.querySelector(`.msg-row[data-id="${id}"]`);
+                if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); row.style.background = 'rgba(253,224,141,0.12)'; setTimeout(() => row.style.background = '', 1200); }
+            }, 80);
+        }
+
+        // ============================================================
+        // 3. TYPING BAR (Neural Dock) — world-class redesign
+        // ============================================================
+        function handleDockInput(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+
+            const sendTrigger = document.getElementById('sendTrigger');
+            const micTrigger = document.getElementById('micTrigger');
+            const suggestChip = document.getElementById('smartSuggestChip');
+
+            if (el.value.trim().length > 0) {
+                sendTrigger.style.display = 'flex';
+                micTrigger.style.display = 'none';
+                const s = smartSuggestFor(el.value);
+                if (s) { document.getElementById('smartSuggestText').textContent = s; suggestChip.style.display = 'flex'; }
+                else suggestChip.style.display = 'none';
+            } else {
+                sendTrigger.style.display = 'none';
+                micTrigger.style.display = 'flex';
+                suggestChip.style.display = 'none';
+            }
+        }
+
+        // Contextual smart-reply generator (on-device heuristic — no hardcoded canned buttons)
+        function smartSuggestFor(draft) {
+            const t = draft.trim().toLowerCase();
+            if (t.endsWith('?')) return 'Za a amsa maka nan take...';
+            if (t.length > 2 && t.length < 40) return 'Ƙara dalla-dalla ✍️';
+            return null;
+        }
+        function useSmartSuggestion() {
+            const input = document.getElementById('dockInput');
+            input.value += ' ';
+            handleDockInput(input);
+            input.focus();
+        }
+
+        function triggerAttach(kind) {
+            const dock = document.getElementById('quickToolsRow');
+            switch (kind) {
+                case 'image':
+                case 'camera': {
+                    const url = prompt('Manna URL ɗin hoto (ko soke don kammala):');
+                    if (url) pushOutgoingMessage({ image: url, text: '' });
+                    break;
+                }
+                case 'document':
+                    pushOutgoingMessage({ text: '📄 Document.pdf — 1.2MB' });
+                    showToast('An aika fayil', 'fa-file');
+                    break;
+                case 'poll':
+                    openComposer('poll'); switchMode('feed');
+                    showToast('Ƙirƙiri zaɓe (poll) — zai fito a Feed sannan a raba a Chat', 'fa-square-poll-vertical');
+                    break;
+                case 'location':
+                    pushOutgoingMessage({ text: '📍 An raba wurin ku na yanzu (Live Location)' });
+                    break;
+                case 'contact':
+                    pushOutgoingMessage({ text: '👤 Contact Card: Ali_Developer' });
+                    break;
+            }
+        }
+        function pushOutgoingMessage(extra) {
+            const m = { id: 'c' + Date.now(), from: 'me', time: new Date(), reactions: {}, starred: false, status: 'sent', ...extra };
+            if (replyTarget) { m.replyTo = replyTarget.id; cancelReply(); }
+            chatMessages.push(m);
+            renderChatFlow();
+            setTimeout(() => { m.status = 'read'; renderChatFlow(); }, 1400);
+        }
+
+        // SEND MESSAGE — now goes through the SAME renderer as hardcoded messages
+        function sendDockMessage() {
+            const input = document.getElementById('dockInput');
+            const text = input.value.trim();
+            if (!text) return;
+            pushOutgoingMessage({ text });
+            input.value = '';
+            handleDockInput(input);
+            document.getElementById('smartSuggestChip').style.display = 'none';
+        }
+
+        // ---- emoji picker ----
+        function openEmojiPicker() {
+            document.getElementById('emojiGrid').innerHTML = EMOJI_SET.map(e => `<span onclick="insertEmoji('${e}')">${e}</span>`).join('');
+            openSheetEl('emojiBackdrop');
+        }
+        function insertEmoji(e) {
+            const input = document.getElementById('dockInput');
+            input.value += e;
+            handleDockInput(input);
+        }
+
+        // ---- voice recording UI ----
+        let recTimer = null, recSeconds = 0;
+        function startVoiceRecording() {
+            recSeconds = 0;
+            document.getElementById('recordBar').classList.add('active');
+            document.getElementById('dockInput').style.display = 'none';
+            recTimer = setInterval(() => {
+                recSeconds++;
+                const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+                const s = String(recSeconds % 60).padStart(2, '0');
+                document.getElementById('recordTime').textContent = `${m}:${s}`;
+            }, 1000);
+        }
+        function stopVoiceRecording(send) {
+            if (!document.getElementById('recordBar').classList.contains('active')) return;
+            clearInterval(recTimer);
+            document.getElementById('recordBar').classList.remove('active');
+            document.getElementById('dockInput').style.display = 'block';
+            if (send && recSeconds > 0) {
+                pushOutgoingMessage({ text: '', voice: { duration: document.getElementById('recordTime').textContent } });
+                showToast('An aika saƙon murya', 'fa-microphone');
+            }
+        }
+        function cancelVoiceRecording() { stopVoiceRecording(false); }
+
+        // ============================================================
+        // 4. TOGGLE ECOSYSTEM MODAL
+        function toggleEcosystem(show) {
+            const modal = document.getElementById('ecosystemModal');
+            if(show) modal.classList.add('active');
+            else modal.classList.remove('active');
+        }
+
+        // ============================================================
+        // MEMBER MANAGEMENT & MODERATION
+        // ============================================================
+        const groupMembers = [
+            { id: 'm1', name: 'Ali_Developer', role: 'Admin', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm2', name: 'MmnAfrah Networker', role: 'Moderator', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm3', name: 'Zainab_TrustID', role: 'Member', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80' }
+        ];
+
+        const pendingRequests = [
+            { id: 'p1', name: 'Ibrahim_Kano', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80' },
+            { id: 'p2', name: 'Amina_Trader', pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80' },
+            { id: 'p3', name: 'Sadiq_Investor', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80' }
+        ];
+
+        function toggleMembersModal(show) {
+            const modal = document.getElementById('membersModal');
+            if (show) {
+                modal.classList.add('active');
+                renderMemberList();
+                renderPendingList();
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        function switchMemberTab(tab) {
+            const isAll = tab === 'all';
+            document.getElementById('tabAll').classList.toggle('active', isAll);
+            document.getElementById('tabPending').classList.toggle('active', !isAll);
+            document.getElementById('memberListPanel').style.display = isAll ? 'block' : 'none';
+            document.getElementById('pendingListPanel').style.display = isAll ? 'none' : 'block';
+        }
+
+        function renderMemberList() {
+            const roleClassMap = { Admin: 'role-ceo', Moderator: 'role-mod', Member: 'role-member' };
+            document.getElementById('memberListPanel').innerHTML = groupMembers.map(m => `
+                <div class="member-row">
+                    <img src="${m.pic}" alt="${m.name}">
+                    <div class="member-row-info">
+                        <div class="member-row-name">${m.name}</div>
+                        <div class="member-row-role role-tag ${roleClassMap[m.role]}">${m.role}</div>
+                    </div>
+                    ${m.role !== 'Admin' ? `
+                        <button class="member-action-btn" onclick="promoteMember('${m.id}')">${m.role === 'Moderator' ? 'Cire Mod' : 'Mai da Mod'}</button>
+                        <button class="member-action-btn danger" onclick="removeMember('${m.id}')">Cire</button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderPendingList() {
+            const panel = document.getElementById('pendingListPanel');
+            if (pendingRequests.length === 0) {
+                panel.innerHTML = `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:20px 0;">Babu wanda ke jiran amincewa a yanzu.</p>`;
+                return;
+            }
+            panel.innerHTML = pendingRequests.map(p => `
+                <div class="member-row">
+                    <img src="${p.pic}" alt="${p.name}">
+                    <div class="member-row-info">
+                        <div class="member-row-name">${p.name}</div>
+                        <div class="member-row-role">Yana neman shiga ƙungiyar</div>
+                    </div>
+                    <button class="member-action-btn approve" onclick="approveRequest('${p.id}')">Amince</button>
+                    <button class="member-action-btn danger" onclick="rejectRequest('${p.id}')">Ki</button>
+                </div>
+            `).join('');
+        }
+
+        function promoteMember(id) {
+            const m = groupMembers.find(x => x.id === id);
+            if (!m) return;
+            m.role = m.role === 'Moderator' ? 'Member' : 'Moderator';
+            renderMemberList();
+        }
+
+        function removeMember(id) {
+            const idx = groupMembers.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            groupMembers.splice(idx, 1);
+            renderMemberList();
+        }
+
+        function approveRequest(id) {
+            const idx = pendingRequests.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const [approved] = pendingRequests.splice(idx, 1);
+            groupMembers.push({ id: approved.id, name: approved.name, role: 'Member', pic: approved.pic });
+            document.getElementById('pendingCountBadge').textContent = pendingRequests.length;
+            renderPendingList();
+        }
+
+        function rejectRequest(id) {
+            const idx = pendingRequests.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            pendingRequests.splice(idx, 1);
+            document.getElementById('pendingCountBadge').textContent = pendingRequests.length;
+            renderPendingList();
+        }
+
+    // ============================================================
+    // 5. FEED ENGINE — self-contained, world-class Facebook-group parity.
+    //    Renders locally even if post-card-template.js is unavailable,
+    //    so the feed is never blank or a placeholder.
+    // ============================================================
+    let feedPosts = [
+        { id: 'p1', type: 'image', pinned: true, username: 'Ali_Developer', role: 'Chairman / CEO', verified: true,
+          userProfilePic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+          media: ['https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80'],
+          content: "Masha Allah, an kammala tsara jadawalin sabon Super Community Platform dinmu na 2026 gaba daya. Godiya ga dukkan mambobin ƙungiyar da suka bada gudunmawa wajen kai wannan mataki. Wannan shine farkon babban tafiya zuwa duniya.",
+          timestamp: new Date(Date.now() - 1000 * 60 * 42), reactions: { '👍': 210, '❤️': 108 }, myReaction: null, commentsCount: 2, saved: false,
+          comments: [
+              { name: 'Zainab_TrustID', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', text: 'Masha Allah, Allah Ya ƙara albarka!', time: new Date(Date.now() - 1000*60*30) },
+              { name: 'Ibrahim_Kano', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', text: 'Alhamdulillah, muna jira wannan tun tuni.', time: new Date(Date.now() - 1000*60*20) }
+          ] },
+        { id: 'p2', type: 'poll', username: 'MmnAfrah', role: 'P.R.O', verified: true,
+          userProfilePic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
+          content: "Taron gudanarwa na wannan mako zai gudana ranar Litinin. Wanne lokaci ya fi dacewa da ku?",
+          poll: { options: [{ label: 'Safe (9AM)', votes: 62 }, { label: 'Yamma (4PM)', votes: 91 }, { label: 'Dare (8PM)', votes: 33 }], myVote: null },
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), reactions: { '👍': 44 }, myReaction: null, commentsCount: 1, saved: false,
+          comments: [{ name: 'Sadiq_Investor', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80', text: 'Yamma ya fi sauƙi gareni.', time: new Date(Date.now() - 1000*60*40) }] },
+        { id: 'p3', type: 'deal', username: 'Zainab_TrustID', role: 'Vendor · Verified', verified: true,
+          userProfilePic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80',
+          media: ['https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80'],
+          content: 'An sabunta TrustID Audit ga duk membobin da suka kammala verification. Sabon iPhone 15 Pro yana samuwa yanzu — Escrow-protected, kuɗinku ba za su fita ba sai kun tabbatar da karɓar kayan.',
+          deal: { title: 'iPhone 15 Pro — Sealed', price: '₦1,250,000' },
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26), reactions: { '👍': 89, '🔥': 15 }, myReaction: null, commentsCount: 0, saved: false, comments: [] },
+        { id: 'p4', type: 'carousel', username: 'Ibrahim_Kano', role: 'Member', verified: false,
+          userProfilePic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+          media: ['https://images.unsplash.com/photo-1580489944761-15a19d654956?w=900&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80'],
+          content: 'Hotunan taron ƙaddamarwa na makon jiya. Godiya ga kowa da ya halarta!',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 50), reactions: { '❤️': 56 }, myReaction: null, commentsCount: 0, saved: false, comments: [] }
+    ];
+    let composerType = 'text';
+    const reactionEmojis = ['👍','❤️','😆','😮','😢','😡'];
+
+    function renderFeedPosts() {
+        const container = document.getElementById('timeline-area');
+        const sorted = [...feedPosts].sort((a, b) => (b.pinned === true) - (a.pinned === true) || b.timestamp - a.timestamp);
+        container.innerHTML = sorted.map(post => (typeof window.generatePostHTML === 'function' && !document.querySelector('script[src="post-card-template.js"]').dataset.failed)
+            ? window.generatePostHTML(post)
+            : nxGeneratePostHTML(post)).join('');
+        if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
+    }
+
+    function nxGeneratePostHTML(post) {
+        const mediaHtml = renderPostMedia(post);
+        const totalReactions = Object.values(post.reactions).reduce((a,b) => a+b, 0);
+        const topEmojis = Object.entries(post.reactions).sort((a,b) => b[1]-a[1]).slice(0,3).map(e => e[0]);
+        const longText = post.content.length > 180;
+        return `
+        <div class="nx-post" data-post-id="${post.id}">
+            ${post.pinned ? `<div class="nx-post-pin-tag"><i class="fa-solid fa-thumbtack"></i> An Danna (Pinned Post)</div>` : ''}
+            <div class="nx-post-head">
+                <img class="pp" src="${post.userProfilePic}">
+                <div class="nx-post-head-info">
+                    <div class="nx-post-name">${post.username} ${post.verified ? `<i class="fa-solid fa-circle-check" style="color:var(--neon-cyan); font-size:11px;"></i>` : ''}${post.role === 'Chairman / CEO' ? '<span class="trust-badge-inline">CEO</span>' : ''}</div>
+                    <div class="nx-post-meta"><span>${fmtRelative(post.timestamp)}</span> · <i class="fa-solid fa-earth-africa" style="font-size:9px;"></i></div>
+                </div>
+                <i class="fa-solid fa-ellipsis nx-post-more" onclick="openPostOptions('${post.id}')"></i>
+            </div>
+            <div class="nx-post-text" id="text-${post.id}">${longText ? escapeHtml(post.content).slice(0,180) + `... <span class="see-more-link" onclick="expandPostText('${post.id}')">Gani ƙarin</span>` : escapeHtml(post.content)}</div>
+            ${mediaHtml}
+            ${post.type === 'poll' ? renderPoll(post) : ''}
+            ${post.type === 'deal' ? renderDeal(post) : ''}
+            <div class="nx-post-stats">
+                <div style="display:flex; align-items:center; gap:4px;">
+                    ${topEmojis.length ? `<span class="reactor-icons">${topEmojis.map(e => `<span>${e}</span>`).join('')}</span> ${totalReactions}` : ''}
+                </div>
+                <div onclick="openComments('${post.id}')" style="cursor:pointer;">${post.commentsCount} comments</div>
+            </div>
+            <div class="nx-post-actions">
+                <div class="npa-btn ${post.myReaction ? 'liked' : ''}" id="likeBtn-${post.id}"
+                     onclick="quickReact('${post.id}')"
+                     onmousedown="startReactionHold('${post.id}', this)" onmouseup="endReactionHold()" onmouseleave="endReactionHold()"
+                     ontouchstart="startReactionHold('${post.id}', this)" ontouchend="endReactionHold()">
+                    <span>${post.myReaction || '👍'}</span> ${post.myReaction ? 'Ka Yi Reaction' : 'Like'}
+                </div>
+                <div class="npa-btn" onclick="openComments('${post.id}')"><i class="fa-regular fa-comment"></i> Comment</div>
+                <div class="npa-btn" onclick="openShare('${post.id}')"><i class="fa-solid fa-share"></i> Share</div>
+                <div class="npa-btn ${post.saved ? 'saved' : ''}" onclick="toggleSavePost('${post.id}')"><i class="fa-${post.saved ? 'solid' : 'regular'} fa-bookmark"></i></div>
+            </div>
+        </div>`;
+    }
+
+    function renderPostMedia(post) {
+        if (post.type === 'video' && post.media && post.media.length) {
+            return `<div class="nx-post-media"><video src="${post.media[0]}" muted loop autoplay playsinline></video><div class="video-mute-btn" onclick="toggleVideoMute(this)"><i class="fa-solid fa-volume-xmark"></i></div></div>`;
+        }
+        if (post.media && post.media.length > 1) {
+            return `<div class="nx-post-media"><div class="nx-carousel">${post.media.map(m => `<img src="${m}">`).join('')}</div><div class="nx-carousel-dots">${post.media.map(() => `<span></span>`).join('')}</div></div>`;
+        }
+        if (post.media && post.media.length === 1) {
+            return `<div class="nx-post-media"><img src="${post.media[0]}"></div>`;
+        }
+        return '';
+    }
+
+    function renderPoll(post) {
+        const total = post.poll.options.reduce((a,o) => a+o.votes, 0) || 1;
+        return `<div class="poll-wrap">
+            ${post.poll.options.map((o,i) => {
+                const pct = Math.round(o.votes/total*100);
+                const voted = post.poll.myVote === i;
+                return `<div class="poll-option ${voted?'voted':''}" onclick="votePoll('${post.id}', ${i})">
+                    <div class="poll-fill" style="width:${post.poll.myVote !== null ? pct : 0}%"></div>
+                    <div class="poll-label-row"><span>${voted ? '✓ ' : ''}${o.label}</span><span>${post.poll.myVote !== null ? pct+'%' : ''}</span></div>
+                </div>`;
+            }).join('')}
+            <div class="poll-total">${total} vote${total===1?'':'s'}</div>
+        </div>`;
+    }
+
+    function renderDeal(post) {
+        return `<div class="deal-card">
+            <div>
+                <div class="dc-price">${post.deal.price}</div>
+                <div class="dc-label">${post.deal.title} · Escrow Protected</div>
+            </div>
+            <button class="deal-escrow-btn" onclick="showToast('An fara ciniki mai kariyar Escrow. Kuɗi ba za su fita ba har sai kun tabbatar.', 'fa-vault')">Saya (Escrow)</button>
+        </div>`;
+    }
+
+    function expandPostText(id) {
+        const post = feedPosts.find(p => p.id === id);
+        document.getElementById('text-' + id).textContent = post.content;
+    }
+
+    function openPostOptions(id) {
+        const post = feedPosts.find(p => p.id === id);
+        if (!post) return;
+        showToast('Zaɓuɓɓuka: Save · Hide · Report · Turn off notifications', 'fa-ellipsis');
+    }
+
+    // ---- reactions ----
+    function quickReact(id) {
+        const post = feedPosts.find(p => p.id === id);
+        if (!post) return;
+        if (post.myReaction) {
+            post.reactions[post.myReaction] = Math.max(0, (post.reactions[post.myReaction] || 1) - 1);
+            post.myReaction = null;
+        } else {
+            post.myReaction = '👍';
+            post.reactions['👍'] = (post.reactions['👍'] || 0) + 1;
+        }
+        renderFeedPosts();
+    }
+    let reactionHoldTimer = null;
+    function startReactionHold(id, el) {
+        reactionHoldTimer = setTimeout(() => {
+            const rect = el.getBoundingClientRect();
+            const picker = document.getElementById('reactionPicker');
+            picker.innerHTML = reactionEmojis.map(e => `<span onclick="setReaction('${id}','${e}')">${e}</span>`).join('');
+            picker.style.left = Math.max(10, rect.left) + 'px';
+            picker.style.top = (rect.top - 56) + 'px';
+            picker.classList.add('active');
+            document.addEventListener('click', closeReactionPickerOnce, { once: true, capture: true });
+        }, 380);
+    }
+    function endReactionHold() { clearTimeout(reactionHoldTimer); }
+    function closeReactionPickerOnce() { document.getElementById('reactionPicker').classList.remove('active'); }
+    function setReaction(id, emoji) {
+        const post = feedPosts.find(p => p.id === id);
+        if (!post) return;
+        if (post.myReaction) post.reactions[post.myReaction] = Math.max(0, (post.reactions[post.myReaction]||1) - 1);
+        post.myReaction = emoji;
+        post.reactions[emoji] = (post.reactions[emoji] || 0) + 1;
+        document.getElementById('reactionPicker').classList.remove('active');
+        renderFeedPosts();
+    }
+
+    function votePoll(id, idx) {
+        const post = feedPosts.find(p => p.id === id);
+        if (!post || post.poll.myVote !== null) return;
+        post.poll.options[idx].votes++;
+        post.poll.myVote = idx;
+        renderFeedPosts();
+    }
+
+    function toggleSavePost(id) {
+        const post = feedPosts.find(p => p.id === id);
+        if (!post) return;
+        post.saved = !post.saved;
+        renderFeedPosts();
+        showToast(post.saved ? 'An ajiye post (saved)' : 'An cire daga saved', 'fa-bookmark');
+    }
+    function toggleVideoMute(btn) {
+        const vid = btn.previousElementSibling;
+        vid.muted = !vid.muted;
+        btn.innerHTML = `<i class="fa-solid fa-volume-${vid.muted ? 'xmark' : 'high'}"></i>`;
+    }
+
+    // ---- comments sheet ----
+    let activeCommentsPostId = null;
+    function openComments(id) {
+        activeCommentsPostId = id;
+        const post = feedPosts.find(p => p.id === id);
+        if (!post) return;
+        document.getElementById('commentsCountLabel').textContent = post.commentsCount;
+        document.getElementById('commentsListBody').innerHTML = post.comments.length ? post.comments.map(c => `
+            <div class="comment-row">
+                <img src="${c.pic}">
+                <div>
+                    <div class="comment-bubble"><div class="cb-name">${c.name}</div><div class="cb-text">${escapeHtml(c.text)}</div></div>
+                    <div class="comment-meta"><span>${fmtRelative(c.time)}</span><span>Like</span><span>Reply</span></div>
+                </div>
+            </div>`).join('') : `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:20px 0;">Babu comment tukuna. Ka fara zance!</p>`;
+        openSheetEl('commentsSheet');
+    }
+    function submitComment() {
+        const input = document.getElementById('commentInput');
+        const text = input.value.trim();
+        if (!text || !activeCommentsPostId) return;
+        const post = feedPosts.find(p => p.id === activeCommentsPostId);
+        post.comments.push({ name: 'Kai (You)', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80', text, time: new Date() });
+        post.commentsCount++;
+        input.value = '';
+        openComments(activeCommentsPostId);
+        renderFeedPosts();
+    }
+
+    // ---- share sheet ----
+    let activeSharePostId = null;
+    function openShare(id) { activeSharePostId = id; openSheetEl('shareSheet'); }
+    function shareAction(kind) {
+        closeSheet('shareSheet');
+        if (kind === 'copy') { copyGroupLink(); return; }
+        if (kind === 'chat') {
+            const post = feedPosts.find(p => p.id === activeSharePostId);
+            switchMode('chat');
+            pushOutgoingMessage({ text: `🔗 Ya raba post: "${(post.content||'').slice(0,60)}${post.content.length>60?'...':''}"` });
+            return;
+        }
+        if (kind === 'feed') {
+            const post = feedPosts.find(p => p.id === activeSharePostId);
+            if (post) { post.reactions = {}; post.myReaction = null; feedPosts.unshift({ ...post, id: 'p' + Date.now(), pinned: false, timestamp: new Date(), commentsCount: 0, comments: [] }); renderFeedPosts(); }
+            showToast('An sake rabawa (reposted) a Feed', 'fa-repeat');
+            return;
+        }
+        showToast('An shirya don rabawa', 'fa-share');
+    }
+
+    // ---- composer ----
+    function openComposer(type) {
+        openSheetEl('composerSheet');
+        if (type) setComposerType(type, document.querySelector(`.composer-type-pill[data-type="${type}"]`));
+        setTimeout(() => document.getElementById('composerText').focus(), 150);
+    }
+    function setComposerType(type, el) {
+        composerType = type;
+        document.querySelectorAll('.composer-type-pill').forEach(p => p.classList.remove('active'));
+        if (el) el.classList.add('active');
+        ['Image','Poll','Deal','Event'].forEach(f => document.getElementById('composer'+f+'Field').classList.remove('active'));
+        if (type === 'image') document.getElementById('composerImageField').classList.add('active');
+        if (type === 'poll') document.getElementById('composerPollField').classList.add('active');
+        if (type === 'deal') document.getElementById('composerDealField').classList.add('active');
+        if (type === 'event') document.getElementById('composerEventField').classList.add('active');
+        validateComposer();
+    }
+    function validateComposer() {
+        const text = document.getElementById('composerText').value.trim();
+        document.getElementById('composerPostBtn').disabled = text.length === 0;
+    }
+    function submitComposer() {
+        const text = document.getElementById('composerText').value.trim();
+        if (!text) return;
+        const base = {
+            id: 'p' + Date.now(), type: composerType === 'text' ? 'text' : composerType,
+            username: 'Kai (You)', role: 'Member', verified: false,
+            userProfilePic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80',
+            content: text, timestamp: new Date(), reactions: {}, myReaction: null, commentsCount: 0, comments: [], saved: false
+        };
+        if (composerType === 'image') {
+            const url = document.getElementById('composerImageUrl').value.trim();
+            if (url) base.media = [url];
+        } else if (composerType === 'poll') {
+            const opts = [document.getElementById('pollOpt1').value, document.getElementById('pollOpt2').value, document.getElementById('pollOpt3').value].filter(Boolean);
+            base.poll = { options: opts.length ? opts.map(l => ({ label: l, votes: 0 })) : [{label:'Ee', votes:0},{label:'A\'a', votes:0}], myVote: null };
+        } else if (composerType === 'deal') {
+            base.deal = { title: document.getElementById('dealTitle').value || 'Sabon Kaya', price: document.getElementById('dealPrice').value || '—' };
+        } else if (composerType === 'event') {
+            base.content = `📅 ${document.getElementById('eventTitle').value || 'Sabon Event'} — ${document.getElementById('eventDate').value || ''}\n\n${text}`;
+        }
+        feedPosts.unshift(base);
+        closeSheet('composerSheet');
+        document.getElementById('composerText').value = '';
+        setComposerType('text', document.querySelector('.composer-type-pill[data-type="text"]'));
+        renderFeedPosts();
+        showToast('An buga sakon ku a Feed!', 'fa-circle-check');
+    }
+
+    // ============================================================
+    // 6. NEXUS PULSE — signature AI-style live digest (Nexus-exclusive)
+    //    On-device heuristic summary of group activity; built to be
+    //    swapped for the real Groq-backed AI proxy without changing markup.
+    // ============================================================
+    function renderNexusPulse() {
+        const totalReactions = feedPosts.reduce((a,p) => a + Object.values(p.reactions).reduce((x,y)=>x+y,0), 0);
+        const totalComments = feedPosts.reduce((a,p) => a + p.commentsCount, 0);
+        const hottest = [...feedPosts].sort((a,b) => Object.values(b.reactions).reduce((x,y)=>x+y,0) - Object.values(a.reactions).reduce((x,y)=>x+y,0))[0];
+        const text = `${feedPosts.length} sabbin posts, ${totalReactions} reactions da ${totalComments} comments a cikin sa'o'i 24. Zafin tattaunawa: "${(hottest.content||'').slice(0,44)}${hottest.content.length>44?'...':''}" — na ${hottest.username}.`;
+        document.getElementById('nexusPulseText').textContent = text;
+        window._nexusPulseFull = { text, totalReactions, totalComments, hottest };
+    }
+    function openPulseDigest() {
+        const d = window._nexusPulseFull;
+        if (!d) return;
+        document.getElementById('pulseFullBody').innerHTML = `
+            <p style="font-size:13px; color:#e2e8f0; line-height:1.6;">${d.text}</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0;">
+                <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:12px; text-align:center;"><div style="font-size:20px; font-weight:800; color:var(--neon-cyan);">${d.totalReactions}</div><div style="font-size:10.5px; color:var(--text-sub);">Reactions (24h)</div></div>
+                <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:12px; text-align:center;"><div style="font-size:20px; font-weight:800; color:var(--neon-cyan);">${d.totalComments}</div><div style="font-size:10.5px; color:var(--text-sub);">Comments (24h)</div></div>
+            </div>
+            <p style="font-size:11px; color:var(--text-sub);"><i class="fa-solid fa-shield-halved"></i> An samar da wannan taƙaitawa ta hanyar Nexus AI Engine — babu wani platform da ke da irin wannan fasalin a yau.</p>
+        `;
+        openSheetEl('pulseSheet');
+    }
+
+    const groupHighlights = [
+            { img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80', label: 'Launch' },
+            { img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=900&auto=format&fit=crop&q=80', label: 'Deals' },
+            { img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80', label: 'Events' },
+            { img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80', label: 'Tech' }
+        ];
+        let groupStoryIndex = 0;
+        let groupStoryTimer = null;
+        const GROUP_STORY_DURATION = 5000;
+
+        function viewGroupHighlight(index) {
+            groupStoryIndex = index;
+            document.getElementById('storyViewerOverlay').style.display = 'block';
+            showGroupStoryAt(groupStoryIndex);
+            history.pushState({ storyViewer: true }, '');
+            window.onpopstate = closeGroupStoryViewer;
+        }
+
+        function showGroupStoryAt(index, direction = 'next') {
+            clearTimeout(groupStoryTimer);
+            const wrap = document.getElementById('storyMediaWrap');
+            const oldSlide = wrap.querySelector('.story-slide');
+            const item = groupHighlights[index];
+
+            const newSlide = document.createElement('div');
+            newSlide.className = 'story-slide';
+            newSlide.innerHTML = `<img src="${item.img}">`;
+            newSlide.style.transform = direction === 'prev' ? 'translateX(-100%)' : 'translateX(100%)';
+            newSlide.style.transition = 'none';
+            wrap.appendChild(newSlide);
+            void newSlide.offsetWidth;
+
+            requestAnimationFrame(() => {
+                newSlide.style.transition = 'transform 0.3s ease-out';
+                newSlide.style.transform = 'translateX(0)';
+                if (oldSlide) {
+                    oldSlide.style.transition = 'transform 0.3s ease-out';
+                    oldSlide.style.transform = direction === 'prev' ? 'translateX(100%)' : 'translateX(-100%)';
+                }
+            });
+            if (oldSlide) setTimeout(() => oldSlide.remove(), 320);
+
+            document.getElementById('storyUsername').textContent = item.label;
+            document.getElementById('storyTime').textContent = 'Now';
+            groupStoryTimer = setTimeout(() => nextGroupStory(), GROUP_STORY_DURATION);
+        }
+        function nextGroupStory() {
+            if (groupStoryIndex < groupHighlights.length - 1) {
+                groupStoryIndex++;
+                showGroupStoryAt(groupStoryIndex, 'next');
+            } else {
+                closeGroupStoryViewer();
+            }
+        }
+
+        function prevGroupStory() {
+            if (groupStoryIndex > 0) {
+                groupStoryIndex--;
+                showGroupStoryAt(groupStoryIndex, 'prev');
+            }
+        }
+
+        function closeGroupStoryViewer() {
+            clearTimeout(groupStoryTimer);
+            document.getElementById('storyViewerOverlay').style.display = 'none';
+            document.getElementById('storyMediaWrap').querySelectorAll('.story-slide').forEach(el => el.remove());
+            window.onpopstate = null;
+                }
+
+        // click-outside-to-close for sheets that don't stopPropagation already
+        document.getElementById('composerSheet').addEventListener('click', () => closeSheet('composerSheet'));
+
+        // initial paint: chat is the default view, render it through the unified renderer
+        renderChatFlow();
+
+        // one realistic "is typing…" demo cycle so the indicator is visibly wired up
+        setTimeout(() => {
+            if (document.getElementById('chat-flow').style.display !== 'none') {
+                simulateIncomingTyping();
+                setTimeout(() => {
+                    stopIncomingTyping();
+                    chatMessages.push({ id: 'c' + Date.now(), from: 'them', name: 'Zainab_TrustID', role: 'Member', roleClass: 'role-member', verified: false,
+                        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&auto=format&fit=crop&q=80',
+                        text: 'Nagode, wannan sabuntawar tayi kyau ainun! 🔥', time: new Date(), reactions: {}, starred: false });
+                    renderChatFlow();
+                }, 2600);
+            }
+        }, 4000);
+
+        (function initSavedMode() {
+            const savedMode = localStorage.getItem('nexus_group_mode');
+            if (savedMode === 'feed') {
+                switchMode('feed');
+            } else {
+                renderNexusPulse();
+            }
+        })();
+        const FEED_HEADER_THRESHOLD = 140;
+        const FEED_HEADER_SOLID_BG = 'linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%)';
+
+        function updateFeedHeaderState() {
+            const header = document.querySelector('header');
+            const feedView = document.getElementById('feedView');
+            const title = header.querySelector('.fb-header-title');
+
+            if (feedView.style.display === 'none') return;
+
+            const scrollTop = Math.max(feedView.scrollTop, window.scrollY || 0);
+
+            if (scrollTop > FEED_HEADER_THRESHOLD) {
+                header.style.setProperty('background', FEED_HEADER_SOLID_BG, 'important');
+                header.style.setProperty('backdrop-filter', 'blur(14px)', 'important');
+                header.style.setProperty('-webkit-backdrop-filter', 'blur(14px)', 'important');
+                if (title) title.style.setProperty('opacity', '1', 'important');
+            } else {
+                header.style.setProperty('background', 'transparent', 'important');
+                header.style.setProperty('backdrop-filter', 'none', 'important');
+                header.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+                if (title) title.style.setProperty('opacity', '0', 'important');
+            }
+        }
+
+        document.getElementById('feedView').addEventListener('scroll', updateFeedHeaderState, { passive: true });
+        window.addEventListener('scroll', updateFeedHeaderState, { passive: true });
+    </script>
+</body>
+</html>
