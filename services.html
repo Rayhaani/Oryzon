@@ -5348,7 +5348,7 @@ body {
         .mb-stat-card{border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform 0.15s var(--np-anim-spring,ease);}
         .mb-stat-card:active{transform:scale(0.96);}
         .mb-stat-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-        .mb-quick-btn{flex:1 1 calc(50% - 5px);min-width:calc(50% - 5px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;border-radius:16px;border:none;cursor:pointer;color:#ffffff;font-size:11px;font-weight:700;transition:transform 0.15s ease;}
+        .mb-quick-btn{flex:1 1 calc(33.333% - 7px);min-width:calc(33.333% - 7px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 6px;border-radius:16px;border:none;cursor:pointer;color:#ffffff;font-size:10.5px;font-weight:700;transition:transform 0.15s ease;}      
         .mb-quick-btn:active{transform:scale(0.95);}
         .mb-check-card{border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
         .mb-aurora-bar{height:3px;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#10b981,#f59e0b,#ef4444);margin-bottom:16px;}
@@ -12417,6 +12417,7 @@ function mbCloseCustomizeModal() {
 async function mbSelectThemeColor(hex) {
     const username = localStorage.getItem("nexus_user_session");
     try {
+        if (typeof guaranteeAuth === 'function') await guaranteeAuth();
         await firebase.database().ref('providers/' + username + '/color').set(hex);
         showGlobalToast('✅ Accent color updated');
         mbOpenCustomizeModal();
@@ -12431,6 +12432,7 @@ async function mbUploadCoverPhoto(event) {
     const username = localStorage.getItem("nexus_user_session");
     showGlobalToast('⏳ Uploading cover photo...');
     try {
+        if (typeof guaranteeAuth === 'function') await guaranteeAuth();
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', 'cover_photos');
@@ -12443,7 +12445,7 @@ async function mbUploadCoverPhoto(event) {
     } catch (err) {
         showGlobalToast('❌ Upload failed: ' + err.message);
     }
-}
+    }
 
 function mbOpenAddCategory() {
     const name = prompt('New category name:');
