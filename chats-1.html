@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus - Unified Inbox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&family=Orbitron:wght=600;700&display=swap" rel="stylesheet">
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+       :root {
+            --obsidian: #050505;
+            --cyan-neon: #00F2FF;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-dim: rgba(255, 255, 255, 0.6);
+            --neon-glow: 0 0 12px rgba(0, 242, 255, 0.25);
+            --presence-live: #34C759;
+            --row-divider: rgba(255, 255, 255, 0.04);
+       } 
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+    background-color: #050505 !important;
+    background-image: none !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #ffffff;
+    overflow-x: hidden;
+        }
+        header {
+            padding: 0 15px;
+            background: transparent;
+            backdrop-filter: blur(15px);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .header-top {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 0;
+            position: relative;
+        }
+
+        .back-trigger { cursor: pointer; display: flex; align-items: center; }
+        h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; color: white; }
+
+        .nexus-hud-controller {
+            display: flex;
+            align-items: center;
+            background: rgba(6, 9, 16, 0.6);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 14px;
+            box-shadow: inset 0 0 8px rgba(0, 242, 255, 0.05), var(--neon-glow);
+        }
+
+        .hud-btn {
+            cursor: pointer;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2px;
+        }
+
+        .hud-btn svg {
+            filter: drop-shadow(0 0 2px rgba(0, 242, 255, 0));
+            transition: 0.3s;
+        }
+
+        .hud-btn:active svg {
+            color: var(--cyan-neon);
+            stroke: var(--cyan-neon);
+            filter: drop-shadow(0 0 5px var(--cyan-neon));
+        }
+
+        .integrated-search-box {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--obsidian);
+            display: flex; align-items: center;
+            gap: 10px; padding: 0 5px;
+            opacity: 0; pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 110;
+        }
+
+        .integrated-search-box.active {
+            opacity: 1; pointer-events: all;
+        }
+
+        .integrated-search-box input {
+            flex: 1; background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            padding: 7px 14px; border-radius: 12px;
+            color: white; font-size: 12px; outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .integrated-search-box input:focus {
+            border-color: var(--cyan-neon);
+            box-shadow: var(--neon-glow);
+        }
+
+        .smart-btn-group {
+    display: flex; /* Sauya grid zuwa flex */
+    gap: 8px;
+    padding-bottom: 8px;
+    width: 100%;
+    overflow-x: auto; /* Zai bada damar yin scroll idan sun cika */
+    scrollbar-width: none;
+}
+.smart-btn-group::-webkit-scrollbar { display: none; }
+
+.smart-btn {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 15px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: 0.3s;
+    white-space: nowrap;
+    text-align: center;
+    flex-shrink: 0; /* Tabbatar da cewa maɓallan ba za su matse ba */
+}
+        
+
+        .smart-btn.active {
+            background: rgba(0, 242, 255, 0.1);
+            border-color: var(--cyan-neon);
+            color: var(--cyan-neon);
+            box-shadow: 0 0 8px rgba(0, 242, 255, 0.2);
+        }
+
+        .view-container {
+            flex: 1; overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .view-container::-webkit-scrollbar { display: none; }
+
+        .tab-view { display: none; }
+        .tab-view.active { display: block; }
+
+       .chat-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 9px 15px;
+            text-decoration: none; color: inherit;
+            min-height: 60px;
+            transition: background 0.15s ease;
+        }
+
+        .chat-item:active { background: rgba(255, 255, 255, 0.03); }
+
+        .profile-stack {
+            position: relative;
+            width: 52px; height: 52px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.3s ease;
+        }
+        .profile-stack[data-online="true"] {
+            background: conic-gradient(from 180deg, var(--cyan-neon), transparent 40%, transparent 60%, var(--cyan-neon));
+        }
+
+        .user-img {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--obsidian);
+            position: relative; z-index: 2;
+            display: block;
+        }
+
+        /* Presence dot — yana bayyana kawai lokacin da user yake "online" (data-online="true") */
+        .profile-stack::after {
+            content: '';
+            position: absolute;
+            bottom: 1px; right: 1px;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--presence-live);
+            border: 2px solid var(--obsidian);
+            display: none;
+        }
+        .profile-stack[data-online="true"]::after { display: block; }
+
+        .status-ring { border: 2px solid var(--cyan-neon); padding: 2px; }
+
+        .chat-details { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+        .chat-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .name {
+            font-size: 14px; font-weight: 700; color: #fff;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .time {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.45);
+            flex-shrink: 0;
+        }
+        .preview-text {
+            font-size: 12px; color: var(--text-dim);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .chat-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 6px;
+            flex-shrink: 0;
+            min-width: 20px;
+        }
+        .wa-unread-badge {
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 10px;
+            background: #25D366;
+            color: #051a0f;
+            font-size: 11.5px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        /* STYLES FOR PAGES SECTION COPIED FROM UPDATES */
+        .section-title-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0px 15px 10px 15px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+        .btn-create-page {
+            font-size: 12px;
+            color: var(--cyan-neon);
+            background: rgba(0, 242, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-create-page:hover {
+            background: rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+        .pages-vertical-list {
+            display: flex;
+            flex-direction: column;
+            padding: 0 15px;
+        }
+        .page-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer;
+        }
+        .page-info-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .page-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .page-text-meta h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        .page-text-meta p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        .page-action-view {
+            font-size: 12px;
+            color: #fff;
+            opacity: 0.5;
+        }
+
+        /* ================= CYBER CARPET OVERLAY ================= */
+        .carpet-portal {
+            position: fixed;
+            top: 0; 
+            right: 0; 
+            width: 35%;
+            min-width: 280px; /* Karamin girman da zai sa rubutu bai breaking ba */
+            max-width: 400px; /* Matsayin karshe */
+            max-height: 60vh; 
+            height: auto; 
+            background: rgba(5, 7, 12, 0.96);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-left: 1px solid rgba(0, 242, 255, 0.2);
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+            border-radius: 0 0 0 24px; 
+            z-index: 200;
+            display: flex; flex-direction: column;
+            box-shadow: -10px 15px 40px rgba(0,0,0,0.9), 0 5px 20px rgba(0,242,255,0.05);
+            
+            /* An shigar da gyaran anan don boyewa idan an shigo shafin */
+            transform: scaleY(0);
+            transform-origin: top right;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        } /* An sanya wannan rufewar da ta bace wacce ke haifar da matsala gaba daya */
+
+        .carpet-portal.unrolled {
+            transform: scaleY(1);
+            opacity: 1;
+            pointer-events: all; /* Domin ya zama mai taba-biyu idan ya fito */
+        }
+
+        .portal-top-bar {
+            padding: 6px 12px 4px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .portal-left-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .portal-headline {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--cyan-neon);
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
+        }
+
+        .close-portal-trigger {
+            cursor: pointer; color: var(--text-dim); padding: 2px;
+            transition: 0.3s; display: flex; align-items: center;
+        }
+        .close-portal-trigger:hover { color: #fff; }
+
+        .contacts-section-title {
+            padding: 4px 15px 4px;
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+        }
+
+        .portal-scrollable-body {
+            flex: 1; overflow-y: auto; padding: 2px 2px 10px;
+            scrollbar-width: none;
+        }
+        .portal-scrollable-body::-webkit-scrollbar { display: none; }
+
+        .cyber-contact-node {
+            display: flex; align-items: center; 
+            padding: 6px 15px;
+            border-radius: 10px; margin-bottom: 2px; cursor: pointer;
+            border: 1px solid transparent;
+            height: 50px;
+        }
+
+        .cyber-contact-node:active {
+            background: rgba(0, 242, 255, 0.03);
+        }
+
+        .cyber-contact-node .user-img {
+            width: 34px !important;
+            height: 34px !important;
+        }
+
+        .cyber-checkbox-ring {
+            width: 15px; height: 15px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.2); margin-left: auto;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+
+
+.cyber-contact-node.selected .cyber-checkbox-ring {
+            border-color: var(--cyan-neon);
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 8px var(--cyan-neon);
+        }
+
+        .cyber-contact-node.selected .cyber-checkbox-ring::after {
+            content: ''; width: 5px; height: 5px; border-radius: 50%;
+            background: var(--cyan-neon);
+        }
+
+        /* FUTURE FEATURISTIC OPTIONS STYLES */
+        .portal-options-container {
+            display: flex;
+            flex-direction: column;
+            padding: 10px 15px;
+            gap: 8px;
+        }
+
+        .futuristic-option-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            background: #f0f0f0; 
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            color: #333; 
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap; /* Hana rubutu ya dawo layi */
+            width: fit-content; /* Zai bi girman rubutu */
+            min-width: 180px;
+        }
+        
+        .futuristic-option-btn:hover {
+            background: #e0e0e0;
+            color: #000;
+        }
+
+        .futuristic-option-btn:active {
+          background: rgba(0, 242, 255, 0.08); 
+            border-color: var(--cyan-neon);
+            box-shadow: inset 0 0 8px rgba(0, 242, 255, 0.1), 0 0 10px rgba(0, 242, 255, 0.1);
+        }
+
+        .futuristic-option-btn svg {
+            color: #555;
+            transition: 0.3s;
+        }
+
+        .futuristic-option-btn:active svg {
+            color: var(--cyan-neon);
+        }
+        
+        .header-icons {
+    display: flex;
+    gap: 16px;
+}
+.search-bar-container {
+    position: absolute;
+    top: 0; left: -15px; width: calc(100% + 30px); height: 100%;
+    background: #000;
+    display: flex; align-items: center;
+    gap: 10px; padding: 0 16px;
+    opacity: 0; pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 20;
+}
+.search-bar-container.active {
+    opacity: 1; pointer-events: all;
+}
+.search-input {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 8px 14px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+}
+.search-input:focus {
+    border-color: var(--cyan-neon);
+}
+.search-input::placeholder {
+    color: rgba(255,255,255,0.4);
+}
+
+.fab-new-chat {
+    position: fixed;
+    bottom: 40px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+    z-index: 50;
+}
+.fab-new-chat:active {
+    opacity: 0.5;
+    transform: scale(0.92);
+            }
+
+/* ================= FRIENDS TAB — REAL DATA UI ================= */
+.friends-toolbar {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--obsidian);
+    padding: 10px 15px 8px;
+    display: flex; flex-direction: column; gap: 10px;
+    border-bottom: 1px solid var(--row-divider);
+}
+.friends-toolbar-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.friends-count-label { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.2px; }
+.friends-count-label span { color: var(--cyan-neon); }
+.friends-toolbar-icons { display: flex; align-items: center; gap: 14px; }
+.friends-icon-btn {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim); cursor: pointer; transition: 0.25s;
+}
+.friends-icon-btn.active-view { color: var(--cyan-neon); filter: drop-shadow(0 0 4px rgba(0,242,255,0.5)); }
+.friends-search-wrap { display: none; }
+.friends-search-wrap.active { display: block; }
+.friends-search-input {
+    width: 100%; background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border); border-radius: 12px;
+    padding: 8px 14px; color: #fff; font-size: 13px; outline: none;
+    font-family: 'Inter', sans-serif;
+}
+.friends-search-input:focus { border-color: var(--cyan-neon); box-shadow: var(--neon-glow); }
+.friends-sort-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.friends-sort-row::-webkit-scrollbar { display: none; }
+.friend-sort-chip {
+    flex-shrink: 0; padding: 5px 12px; font-size: 10.5px; font-weight: 600;
+    border-radius: 12px; border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.02); color: var(--text-dim);
+    cursor: pointer; white-space: nowrap; transition: 0.25s;
+}
+.friend-sort-chip.active {
+    background: rgba(0, 242, 255, 0.1); border-color: var(--cyan-neon);
+    color: var(--cyan-neon); box-shadow: 0 0 6px rgba(0, 242, 255, 0.2);
+}
+
+.friends-section-label {
+    padding: 14px 15px 6px; font-size: 11px; font-weight: 700;
+    color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 6px;
+}
+
+/* Suggestions strip (People You May Know) */
+.suggestion-strip { display: flex; gap: 12px; overflow-x: auto; padding: 4px 15px 14px; scrollbar-width: none; }
+.suggestion-strip::-webkit-scrollbar { display: none; }
+.suggestion-card {
+    flex-shrink: 0; width: 108px; background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border); border-radius: 14px;
+    padding: 12px 8px; text-align: center; cursor: pointer; transition: 0.25s;
+}
+.suggestion-card:active { background: rgba(255,255,255,0.05); }
+.suggestion-card img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; margin-bottom: 8px; }
+.suggestion-card .sug-name { font-size: 11.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.suggestion-card .sug-mutual { font-size: 10px; color: var(--text-dim); margin: 3px 0 8px; }
+.suggestion-follow-btn {
+    font-size: 10.5px; font-weight: 700; color: var(--obsidian);
+    background: var(--cyan-neon); border-radius: 10px; padding: 5px 0;
+    width: 100%; cursor: pointer; border: none;
+}
+.suggestion-follow-btn.done { background: rgba(255,255,255,0.08); color: var(--text-dim); }
+
+/* Warmth ring — reflects how recently the friendship has been active */
+.profile-stack[data-warmth="hot"] { animation: pulseGlow 2.2s ease-in-out infinite; }
+.profile-stack[data-warmth="warm"] { box-shadow: 0 0 6px rgba(0,242,255,0.35); }
+.profile-stack[data-warmth="cold"] { opacity: 0.55; }
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 4px rgba(0,242,255,0.25); }
+    50% { box-shadow: 0 0 14px rgba(0,242,255,0.55); }
+}
+
+.streak-flame {
+    position: absolute; top: -2px; left: -2px; z-index: 3;
+    font-size: 12px; background: var(--obsidian); border-radius: 50%;
+    width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 4px rgba(0,0,0,0.6);
+}
+.pin-star {
+    position: absolute; top: -2px; right: -2px; z-index: 3;
+    font-size: 11px; background: var(--obsidian); border-radius: 50%;
+    width: 17px; height: 17px; display: flex; align-items: center; justify-content: center;
+    color: #FFD54A;
+}
+.friend-meta-line { display: flex; align-items: center; gap: 6px; }
+.mutual-text { font-size: 11px; color: var(--text-dim); }
+.reconnect-chip {
+    font-size: 10.5px; font-weight: 700; color: var(--cyan-neon);
+    background: rgba(0,242,255,0.08); border: 1px solid rgba(0,242,255,0.25);
+    border-radius: 10px; padding: 3px 9px; cursor: pointer; white-space: nowrap;
+}
+.friend-side-time { font-size: 10.5px; color: var(--text-dim); text-align: right; }
+.friend-row-flex { display: flex; align-items: center; width: 100%; }
+
+/* Bottom action sheet for a friend (long-press / kebab menu) */
+.friend-action-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+}
+.friend-action-backdrop.open { opacity: 1; pointer-events: all; }
+.friend-action-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 301;
+    background: rgba(8, 10, 16, 0.98);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0,242,255,0.2);
+    border-radius: 20px 20px 0 0;
+    padding: 10px 10px calc(18px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.friend-action-backdrop.open .friend-action-sheet { transform: translateY(0); }
+.friend-action-sheet-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 4px auto 12px; }
+.friend-action-sheet-title { font-size: 13px; font-weight: 700; color: #fff; padding: 0 10px 10px; }
+.friend-action-item {
+    display: flex; align-items: center; gap: 14px; padding: 13px 12px;
+    font-size: 14px; color: #fff; cursor: pointer; border-radius: 12px; transition: 0.2s;
+}
+.friend-action-item:active { background: rgba(255,255,255,0.05); }
+.friend-action-item.danger { color: #ff5c5c; }
+.friend-action-item svg { flex-shrink: 0; color: var(--text-dim); }
+.friend-action-item.danger svg { color: #ff5c5c; }
+
+/* Network / Constellation view */
+.network-view-container { display: none; padding: 10px 0 40px; }
+.network-view-container.active { display: block; }
+.network-hint { text-align: center; font-size: 11px; color: var(--text-dim); padding: 0 30px 10px; }
+.network-svg-wrap { width: 100%; overflow: hidden; }
+.network-node-label {
+    font-size: 8.5px; fill: rgba(255,255,255,0.75); text-anchor: middle; font-family: 'Inter', sans-serif;
+}
+.network-node-circle { cursor: pointer; }
+.network-center-circle { filter: drop-shadow(0 0 8px rgba(0,242,255,0.6)); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <h1>Chats</h1>
+            
+           <div class="header-icons">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleSearchBar()" style="cursor:pointer;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+
+            <div class="search-bar-container" id="searchBarContainer">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search chats..." oninput="filterActiveChats(this.value)">
+                <div onclick="toggleSearchBar()" style="cursor:pointer; color: var(--cyan-neon); display:flex; align-items:center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </div>
+            </div> 
+        </div>
+
+        <div class="smart-btn-group">
+    <div class="smart-btn active" onclick="switchTab(this, 'personal')">Personal</div>
+    <div class="smart-btn" onclick="switchTab(this, 'groups')">Groups</div>
+    <div class="smart-btn" onclick="switchTab(this, 'pages')">Pages</div>
+    <div class="smart-btn" onclick="switchTab(this, 'channels')">Channels</div>
+    <div class="smart-btn" onclick="switchTab(this, 'updates')">Updates</div>
+    <div class="smart-btn" onclick="switchTab(this, 'friends')">Friends</div>
+        </div>
+        
+    </header>
+
+    <div class="view-container">
+        <div id="personal" class="tab-view active">
+            <div id="chats-list-container">
+                </div>
+        </div>
+
+        <div id="groups" class="tab-view">
+            <a href="group.html" class="chat-item">
+                <div class="profile-stack"><img src="https://via.placeholder.com/46/00F2FF/000?text=KM" class="user-img" style="border-radius: 12px;"></div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">KanoMart Devs</span><span class="time">1:10 PM</span></div>
+                    <p class="preview-text">Ali: Update logic ɗin yanzu...</p>
+                </div>
+            </a>
+            <a href="group.html" class="chat-item">
+                <div class="profile-stack"><img src="https://via.placeholder.com/46/333/00F2FF?text=SY" class="user-img" style="border-radius: 12px;"></div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">Synergy Core</span><span class="time">Yesterday</span></div>
+                    <p class="preview-text">Bello: The protocol is live!</p>
+                </div>
+            </a>
+        </div>
+
+                <div id="pages" class="tab-view">
+            <div class="pages-vertical-list">
+                
+                <div class="page-list-item" onclick="window.location.href='pages.html?page=sirrin-rike-miji'">
+                    <div class="page-info-block">
+                        <img src="https://via.placeholder.com/50/111?text=SRM" class="page-avatar">
+                        <div class="page-text-meta">
+                            <h3>Sirrin rike miji 🌍</h3>
+                            <p>Kece Kike Bukatar Namiji Mai Gemu...</p>
+                        </div>
+                    </div>
+                    <div class="page-action-view">10m ago</div>
+                </div>
+
+                <div class="page-list-item" onclick="window.location.href='pages.html?page=simon-updates'">
+                    <div class="page-info-block">
+                        <img src="https://via.placeholder.com/50/222?text=SU" class="page-avatar">
+                        <div class="page-text-meta">
+                            <h3>Simon's Updates.</h3>
+                            <p>If you have issue or concern. You can...</p>
+                        </div>
+                    </div>
+                    <div class="page-action-view">Yesterday</div>
+                </div>
+
+                <div class="page-list-item" onclick="window.location.href='pages.html?page=annahjul-hameed'">
+                    <div class="page-info-block">
+                        <img src="https://via.placeholder.com/50/333?text=ATV" class="page-avatar">
+                        <div class="page-text-meta">
+                            <h3>Annahjul-Hameed TV</h3>
+                            <p>Addu'ar Sujuda🇲🇳🇲🇳...</p>
+                        </div>
+                    </div>
+                    <div class="page-action-view">2 days ago</div>
+                </div>
+
+            </div>
+                </div>
+
+        <!-- TAB VIEW NA PAGES -->
+<div id="pages" class="tab-view">
+    <div class="pages-vertical-list">
+        
+        <div class="page-list-item" onclick="window.location.href='pages.html?page=sirrin-rike-miji'">
+            <div class="page-info-block">
+                <img src="https://via.placeholder.com/50/111?text=SRM" class="page-avatar">
+                <div class="page-text-meta">
+                    <h3>Sirrin rike miji 🌍</h3>
+                    <p>Kece Kike Bukatar Namiji Mai Gemu...</p>
+                </div>
+            </div>
+            <div class="page-action-view">10m ago</div>
+        </div>
+
+        <div class="page-list-item" onclick="window.location.href='pages.html?page=simon-updates'">
+            <div class="page-info-block">
+                <img src="https://via.placeholder.com/50/222?text=SU" class="page-avatar">
+                <div class="page-text-meta">
+                    <h3>Simon's Updates.</h3>
+                    <p>If you have issue or concern. You can...</p>
+                </div>
+            </div>
+            <div class="page-action-view">Yesterday</div>
+        </div>
+
+        <div class="page-list-item" onclick="window.location.href='pages.html?page=annahjul-hameed'">
+            <div class="page-info-block">
+                <img src="https://via.placeholder.com/50/333?text=ATV" class="page-avatar">
+                <div class="page-text-meta">
+                    <h3>Annahjul-Hameed TV</h3>
+                    <p>Addu'ar Sujuda🇲🇳🇲🇳...</p>
+                </div>
+            </div>
+            <div class="page-action-view">2 days ago</div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= SABON TAB VIEW NA CHANNELS ================= -->
+<div id="channels" class="tab-view">
+    <div class="pages-vertical-list">
+        
+        <!-- Channels Item 1 (Danna kanta zai buɗe channels.html) -->
+        <div class="page-list-item" onclick="window.location.href='channels.html?channel=tech-pulse'">
+            <div class="page-info-block">
+                <img src="https://via.placeholder.com/50/00F2FF/000?text=TP" class="page-avatar">
+                <div class="page-text-meta">
+                    <h3>Tech Pulse Hub ⚡</h3>
+                    <p>New updates released for Nexus Ecosystem...</p>
+                </div>
+            </div>
+            <div class="page-action-view">5m ago</div>
+        </div>
+
+        <!-- Channels Item 2 -->
+        <div class="page-list-item" onclick="window.location.href='channels.html?channel=kano-market-news'">
+            <div class="page-info-block">
+                <img src="https://via.placeholder.com/50/333/00F2FF?text=KM" class="page-avatar">
+                <div class="page-text-meta">
+                    <h3>Kano Market Broadcast</h3>
+                    <p>Daily updates on B2B prices and vendors...</p>
+                </div>
+            </div>
+            <div class="page-action-view">1h ago</div>
+        </div>
+
+        <!-- Channels Item 3 -->
+        <div class="page-list-item" onclick="window.location.href='channels.html?channel=urban-vision'">
+            <div class="page-info-block">
+                <img src="https://via.placeholder.com/50/222/FFF?text=UV" class="page-avatar">
+                <div class="page-text-meta">
+                    <h3>Urban Vision 2050</h3>
+                    <p>Check out the latest futuristic release...</p>
+                </div>
+            </div>
+            <div class="page-action-view">Yesterday</div>
+        </div>
+
+    </div>
+</div>
+        
+
+        <div id="updates" class="tab-view">
+            <div class="chat-item" onclick="openStoryViewer('my-status')">
+                <div class="profile-stack">
+                    <img src="https://via.placeholder.com/46/222/00F2FF?text=Me" class="user-img status-ring dynamic-ring">
+                    <div style="position: absolute; bottom: 0; right: 0; background: var(--cyan-neon); width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--obsidian); font-size: 10px; color: black; font-weight: bold;">+</div>
+                </div>
+                <div class="chat-details">
+                    <span class="name">My Status</span>
+                    <p class="preview-text">Tap to add neural update</p>
+                </div>
+            </div>
+
+            <div style="padding: 10px 15px; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Recent Updates</div>
+
+            <div class="chat-item" onclick="openStoryViewer('ramatu')">
+                <div class="profile-stack">
+                    <img src="https://via.placeholder.com/46/333/00F2FF?text=RA" class="user-img status-ring active-ring">
+                </div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">Ramatu Arahman</span><span class="time">24m ago</span></div>
+                    <p class="preview-text">Shared a video update</p>
+                </div>
+            </div>
+
+            <div class="chat-item" onclick="openStoryViewer('ahmad')">
+                <div class="profile-stack">
+                    <img src="https://via.placeholder.com/46/111/00F2FF?text=AT?text=AT" class="user-img status-ring active-ring">
+                </div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">Ahmad Tech Hub</span><span class="time">2h ago</span></div>
+                    <p class="preview-text">Nexus Cloud Miner update live</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="friends" class="tab-view">
+            <div class="friends-toolbar">
+                <div class="friends-toolbar-top">
+                    <div class="friends-count-label" id="friendsCountLabel">Friends</div>
+                    <div class="friends-toolbar-icons">
+                        <div class="friends-icon-btn" id="friendsSearchToggle" onclick="toggleFriendsSearch()" title="Search">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        <div class="friends-icon-btn" id="networkViewToggle" onclick="toggleNetworkView()" title="Constellation View">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2.4"></circle><circle cx="19" cy="6" r="2.4"></circle><circle cx="12" cy="18" r="2.6"></circle><line x1="7" y1="7.2" x2="10" y2="16"></line><line x1="17" y1="7.2" x2="14" y2="16"></line><line x1="7.4" y1="6" x2="16.6" y2="6"></line></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="friends-search-wrap" id="friendsSearchWrap">
+                    <input type="text" class="friends-search-input" id="friendsSearchInput" placeholder="Search friends..." oninput="filterFriendsList(this.value)">
+                </div>
+                <div class="friends-sort-row" id="friendsSortRow">
+                    <div class="friend-sort-chip active" data-sort="recent" onclick="setFriendSortMode('recent')">Recently Active</div>
+                    <div class="friend-sort-chip" data-sort="online" onclick="setFriendSortMode('online')">Online First</div>
+                    <div class="friend-sort-chip" data-sort="az" onclick="setFriendSortMode('az')">A–Z</div>
+                </div>
+            </div>
+
+            <div id="friendsListView">
+                <div id="suggestionsSection" style="display:none;">
+                    <div class="friends-section-label">✨ People You May Know</div>
+                    <div class="suggestion-strip" id="suggestionStrip"></div>
+                </div>
+
+                <div id="closeFriendsSection" style="display:none;">
+                    <div class="friends-section-label">⭐ Close Friends</div>
+                    <div id="close-friends-container"></div>
+                </div>
+
+                <div id="allFriendsSection">
+                    <div class="friends-section-label" id="allFriendsLabel">All Friends</div>
+                    <div id="friends-list-container"></div>
+                </div>
+            </div>
+
+            <div class="network-view-container" id="networkViewContainer">
+                <div class="network-hint">Tap a node to open the chat. Brighter lines mean you talk more often.</div>
+                <div class="network-svg-wrap" id="networkSvgWrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="friend-action-backdrop" id="friendActionBackdrop" onclick="if(event.target===this) closeFriendActions()">
+        <div class="friend-action-sheet">
+            <div class="friend-action-sheet-handle"></div>
+            <div class="friend-action-sheet-title" id="friendActionTitle">Friend</div>
+            <div class="friend-action-item" id="friendActionMessage">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Message</span>
+            </div>
+            <div class="friend-action-item" id="friendActionProfile">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg>
+                <span>View Profile</span>
+            </div>
+            <div class="friend-action-item" id="friendActionPin">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"></polygon></svg>
+                <span id="friendActionPinLabel">Add to Close Friends</span>
+            </div>
+            <div class="friend-action-item danger" id="friendActionRemove">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"></circle><path d="M2 21c0-4.4 3.1-8 7-8s7 3.6 7 8"></path><line x1="17" y1="10" x2="23" y2="10"></line></svg>
+                <span>Remove Friend</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="carpet-portal" id="carpetPortal">
+        <div class="portal-top-bar">
+            <div class="portal-left-controls">
+                <div id="portalBackBtn" onclick="backToPortalMenu()" style="cursor: pointer; display: none; align-items: center; color: var(--text-dim); margin-right: 4px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </div>
+                <span class="portal-headline" id="portalMainHeadline"></span>
+            </div>
+
+        </div>
+        
+        <div id="portalMainMenuOptions" class="portal-options-container">
+            <div class="futuristic-option-btn" onclick="triggerOptionAction('status')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                Add Status
+            </div>
+            <div class="futuristic-option-btn" onclick="triggerOptionAction('group')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Create Group
+            </div>
+            <div class="futuristic-option-btn" onclick="triggerOptionAction('page')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                Create Page
+            </div>
+        </div>
+
+        <div id="portalContactsSubView" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
+            <div class="contacts-section-title" id="contactsViewSubtitle">Contacts On Oryzon</div>
+            <div class="portal-scrollable-body" id="carpet-contacts-list"></div>
+            <div style="padding: 10px 15px; display: flex; justify-content: flex-end;">
+                <button class="btn-create-page" id="portalSubmitActionButton" onclick="initializeGroupFromOverlay()" style="border-radius: 10px; width: 100%; padding: 10px;">Deploy Cluster</button>
+            </div>
+        </div>
+    </div>
+
+<div class="fab-new-chat" onclick="window.location.href='create-group.html'">
+        <svg width="52" height="52" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" style="transform: scaleX(-1);">
+
+            <!-- Bubble -->
+            <path
+                d="
+                    M21 4
+                    C11.6 4 4 11.6 4 21
+                    C4 30.4 11.6 38 21 38
+                    L33.5 38
+                    C35.5 38 37 36.5 37 34.5
+                    C37 33 36.3 31.7 35 30.8
+                    C36.9 28.1 38 24.7 38 21
+                    C38 11.6 30.4 4 21 4
+                    Z"
+                fill="#D4D0C8"
+            />
+
+            <!-- Tail -->
+            <path
+                d="
+                    M30.8 30
+                    C32.5 31.5 34.5 33.5 37 38
+                    L31 38
+                    C29.3 38 28 36.7 28 35
+                    C28 33.2 29 31.5 30.8 30
+                    Z"
+                fill="#D4D0C8"
+            />
+
+            <!-- Plus -->
+            <path
+                d="M21 14V26"
+                stroke="#1E1E1E"
+                stroke-width="3.4"
+                stroke-linecap="round"
+            />
+
+            <path
+                d="M15 20H27"
+                stroke="#1E1E1E"
+                stroke-width="3.4"
+                stroke-linecap="round"
+            />
+
+        </svg>
+</div>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+            authDomain: "oryzon-50ea4.firebaseapp.com",
+            projectId: "oryzon-50ea4",
+            storageBucket: "oryzon-50ea4.firebasestorage.app",
+            messagingSenderId: "782106742622",
+            appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+        };
+
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.firestore();
+        const myId = localStorage.getItem("nexus_user_session");
+        if (!myId) window.location.href = 'login.html';
+
+        // Jiran Firebase Auth ya farfaɗo session kafin a yi query
+        let authReadyResolve;
+        const authReadyPromise = new Promise((resolve) => { authReadyResolve = resolve; });
+        firebase.auth().onAuthStateChanged((user) => { authReadyResolve(user); });
+
+        let selectedNodes = [];
+        let identifiedContacts = new Set(); 
+        let currentPortalMode = "menu"; 
+
+        function formatChatTime(ts) {
+    if (!ts) return "";
+    const now = new Date();
+    const msgDate = new Date(ts);
+    const diffMin = (now - msgDate) / 60000;
+
+    if (diffMin < 1) return "Now";
+
+    if (now.toDateString() === msgDate.toDateString()) {
+        let hours = msgDate.getHours();
+        const minutes = msgDate.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12; hours = hours ? hours : 12;
+        return `${hours}:${minutes} ${ampm}`;
+    }
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (yesterday.toDateString() === msgDate.toDateString()) return "Yesterday";
+
+    const dd = msgDate.getDate().toString().padStart(2, '0');
+    const mm = (msgDate.getMonth() + 1).toString().padStart(2, '0');
+    return `${dd}/${mm}/${msgDate.getFullYear()}`;
+}
+
+function refreshAllChatTimes() {
+    document.querySelectorAll('.time[data-ts]').forEach(el => {
+        const ts = parseInt(el.getAttribute('data-ts'), 10);
+        if (ts) el.textContent = formatChatTime(ts);
+    });
+}
+setInterval(refreshAllChatTimes, 30000);
+        
+        async function loadChats() {
+            const container = document.getElementById('chats-list-container');
+            container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
+
+            await authReadyPromise;
+            if (!firebase.auth().currentUser) {
+                container.innerHTML = '<p style="text-align:center; padding:30px; color:#ff4444; font-size:13px;">Ba a tabbatar da shiga ba. Sake login.</p>';
+                return;
+            }
+
+            try {
+                const snapshot = await db.collection("personalChats").get();
+        container.innerHTML = '';
+                let hasChats = false;
+                identifiedContacts.clear(); 
+
+                snapshot.forEach(doc => {
+                    const chatId = doc.id;
+                    if (!chatId.includes(myId)) return;
+
+                    const parts = chatId.split('__');
+                    if (parts.length < 2) return; 
+                    const rawUser = parts[0] === myId ? parts[1] : parts[0];
+                    if (!rawUser || rawUser === myId) return;
+                    
+                    identifiedContacts.add(rawUser);
+                        
+                    const initialName = rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
+                    const data = doc.data();
+                    const lastMsg = data.lastMessage || "Tap to open chat";
+                    
+                    const lastTime = formatChatTime(data.lastMessageTime);
+                    
+                    const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${rawUser}`;
+                    hasChats = true;
+                    
+                    const unreadNum = data.unreadCount && data.unreadCount[myId] > 0 ? data.unreadCount[myId] : 0;
+                    const unreadLabel = unreadNum > 99 ? '99+' : unreadNum;
+
+                    container.insertAdjacentHTML('beforeend', `
+                        <a href="chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}" class="chat-item" id="chat-link-${rawUser}">
+                            <div class="profile-stack" id="stack-${rawUser}" data-online="false"><img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img"></div>
+                            <div class="chat-details">
+                                <span class="name" id="name-${rawUser}">${initialName}</span>
+                                <p class="preview-text">${lastMsg}</p>
+                            </div>
+                            <div class="chat-meta">
+                                <span class="time" data-ts="${data.lastMessageTime || ''}">${lastTime}</span>
+                                ${unreadNum > 0 ? `<span class="wa-unread-badge">${unreadLabel}</span>` : ''}
+                            </div>
+                        </a>
+                    `);
+                    db.collection('users').doc(rawUser).get().then(userDoc => {
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            const fullName = userData.fullName || userData.name || userData.username;
+                            if (fullName) {
+                                const nameSpan = document.getElementById(`name-${rawUser}`);
+                                if (nameSpan) {
+                                    nameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                                }
+                                const overlayNameSpan = document.getElementById(`overlay-name-${rawUser}`);
+                                if (overlayNameSpan) {
+                                    overlayNameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                                }
+                            }
+                            if (userData.userProfilePic) {
+                                const img = document.getElementById(`avatar-${rawUser}`);
+                                if (img) img.src = userData.userProfilePic;
+                                
+                                const overlayImg = document.getElementById(`overlay-avatar-${rawUser}`);
+                                if (overlayImg) overlayImg.src = userData.userProfilePic;
+                            }
+                            const stackEl = document.getElementById(`stack-${rawUser}`);
+                            if (stackEl) stackEl.setAttribute('data-online', userData.isOnline === true ? 'true' : 'false');
+                        }
+                    });
+                    
+                });
+
+                if (!hasChats) {
+                    container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
+                }
+
+                injectRealFirebaseContacts();
+
+            } catch(err) {
+                console.error("Chat load error:", err);
+                container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
+            }
+        }
+
+        function injectRealFirebaseContacts() {
+            const listBody = document.getElementById('carpet-contacts-list');
+            listBody.innerHTML = '';
+
+            if(identifiedContacts.size === 0) {
+                listBody.innerHTML = '<p style="text-align:center; padding:15px; color:#555; font-size:11px;">No contacts found</p>';
+                return;
+            }
+
+            identifiedContacts.forEach(contactUsername => {
+                const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${contactUsername}`;
+                const initialFormattedName = contactUsername.charAt(0).toUpperCase() + contactUsername.slice(1);
+                
+                listBody.insertAdjacentHTML('beforeend', `
+                    <div class="cyber-contact-node" onclick="toggleNodeSelection(this, '${contactUsername}')">
+                        <div class="profile-stack">
+                            <img src="${defaultAvatar}" id="overlay-avatar-${contactUsername}" class="user-img">
+                        </div>
+                        <div class="chat-details">
+                            <span class="name" id="overlay-name-${contactUsername}" style="font-size:12.5px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;">${initialFormattedName}</span>
+                        </div>
+                        <div class="cyber-checkbox-ring"></div>
+                    </div>
+                `);
+            });
+        }
+
+        function toggleNodeSelection(element, contact) {
+            if(navigator.vibrate) navigator.vibrate(12);
+            element.classList.toggle('selected');
+            if(element.classList.contains('selected')) {
+                selectedNodes.push(contact);
+            } else {
+                selectedNodes = selectedNodes.filter(id => id !== contact);
+            }
+        }
+
+        function openCarpetPortal() {
+            if(navigator.vibrate) navigator.vibrate([15, 10, 15]);
+            backToPortalMenu(); 
+            document.getElementById('carpetPortal').classList.add('unrolled');
+        }
+
+        
+      document.addEventListener('click', function(e) {
+    const portal = document.getElementById('carpetPortal');
+    const plusBtn = e.target.closest('[onclick="openCarpetPortal()"]');
+    if (!portal.contains(e.target) && !plusBtn) {
+        closeCarpetPortal();
+    }
+});
+        
+        
+        function closeCarpetPortal() {
+            document.getElementById('carpetPortal').classList.remove('unrolled');
+        }
+
+        function triggerOptionAction(action) {
+            if(navigator.vibrate) navigator.vibrate(15);
+            
+            if (action === 'status') {
+                closeCarpetPortal();
+                openStoryViewer('my-status');
+                return;
+            }
+
+            currentPortalMode = action;
+            document.getElementById('portalMainMenuOptions').style.display = 'none';
+            document.getElementById('portalContactsSubView').style.display = 'flex';
+            document.getElementById('portalBackBtn').style.display = 'flex';
+
+            const headline = document.getElementById('portalMainHeadline');
+            const submitBtn = document.getElementById('portalSubmitActionButton');
+            
+            if (action === 'group') {
+                headline.textContent = "Create Group";
+                submitBtn.textContent = "Deploy Group Cluster";
+            } else if (action === 'page') {
+                headline.textContent = "Create Page";
+                submitBtn.textContent = "Generate Page Matrix";
+            }
+        }
+
+        function backToPortalMenu() {
+            if(navigator.vibrate) navigator.vibrate(10);
+            currentPortalMode = "menu";
+            selectedNodes = [];
+            document.querySelectorAll('.cyber-contact-node').forEach(node => node.classList.remove('selected'));
+            
+            document.getElementById('portalMainMenuOptions').style.display = 'flex';
+            document.getElementById('portalContactsSubView').style.display = 'none';
+            document.getElementById('portalBackBtn').style.display = 'none';
+            document.getElementById('portalMainHeadline').textContent = "";
+        }
+
+        function initializeGroupFromOverlay() {
+            if(selectedNodes.length === 0) return alert("Select nodes to sync!");
+            if (currentPortalMode === 'group') {
+                alert(`Group Cluster Deployed: ${selectedNodes.join(', ')}`);
+            } else if (currentPortalMode === 'page') {
+                alert(`Page Matrix Synchronized with nodes: ${selectedNodes.join(', ')}`);
+            }
+            closeCarpetPortal();
+        }
+
+        function toggleIntegratedSearch(show) {
+            const box = document.getElementById('integratedSearch');
+            if(show) {
+                box.classList.add('active');
+                document.getElementById('mainSearchInput').focus();
+            } else {
+                box.classList.remove('active');
+                document.getElementById('mainSearchInput').value = '';
+                filterActiveChats('');
+            }
+        }
+
+        function filterActiveChats(query) {
+            const items = document.querySelectorAll('.chat-item');
+            items.forEach(item => {
+                const name = item.querySelector('.name').innerText.toLowerCase();
+                item.style.display = name.includes(query.toLowerCase()) ? 'flex' : 'none';
+            });
+        }
+
+        function switchTab(element, tabId) {
+    // Shafi na Updates ne kaɗai zai kasance yana tura mutum wani shafin
+    if (tabId === 'updates') { window.location.href = 'updates.html'; return; }
+    document.querySelectorAll('.smart-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
+    element.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+        }
+        
+        function openStoryViewer(userId) {
+            if(userId === 'my-status') {
+                alert('Nexus Neural Cam triggers now! (Za mu hada nan don daukar hoto a mataki na gaba)');
+            } else {
+                window.location.href = `story-viewer.html?user=${userId}`;
+            }
+        }
+
+        // ============================================================
+        // FRIENDS TAB — 100% real-data engine (no hardcoded/fake rows)
+        // ============================================================
+        let friendsDataCache = [];      // last computed, sorted friend objects
+        let friendSortMode = 'recent';  // 'recent' | 'online' | 'az'
+        let myCloseFriends = [];        // cached from users/{myId}.closeFriends
+        let activeActionUser = null;    // friend currently open in the action sheet
+
+        function capName(str) {
+            return (str || '').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+
+        function tsToMillis(ts) {
+            if (!ts) return 0;
+            if (typeof ts === 'number') return ts;
+            if (ts.toMillis) return ts.toMillis();
+            if (ts.seconds) return ts.seconds * 1000;
+            const d = new Date(ts);
+            return isNaN(d.getTime()) ? 0 : d.getTime();
+        }
+
+        function friendWarmthTier(lastMillis) {
+            if (!lastMillis) return 'none';
+            const days = (Date.now() - lastMillis) / 86400000;
+            if (days < 1) return 'hot';
+            if (days < 7) return 'warm';
+            if (days < 30) return 'cool';
+            return 'cold';
+        }
+
+        // A chat between two people can be stored under either id order —
+        // try both so real interaction history is never missed.
+        async function getInteractionData(otherUser) {
+            try {
+                const [a, b] = await Promise.all([
+                    db.collection('personalChats').doc(`${myId}__${otherUser}`).get(),
+                    db.collection('personalChats').doc(`${otherUser}__${myId}`).get()
+                ]);
+                const doc = a.exists ? a : (b.exists ? b : null);
+                if (!doc) return { lastMessageTime: 0 };
+                return { lastMessageTime: tsToMillis(doc.data().lastMessageTime) };
+            } catch (e) {
+                return { lastMessageTime: 0 };
+            }
+        }
+
+        async function getMutualFriendsCount(otherUser, myFriendIdSet) {
+            try {
+                const snap = await db.collection('friends')
+                    .where('users', 'array-contains', otherUser)
+                    .get();
+                let count = 0;
+                snap.forEach(doc => {
+                    const arr = doc.data().users || [];
+                    const partner = arr.find(u => u !== otherUser);
+                    if (partner && partner !== myId && myFriendIdSet.has(partner)) count++;
+                });
+                return count;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        async function loadFriendsList() {
+            const container = document.getElementById('friends-list-container');
+            const closeContainer = document.getElementById('close-friends-container');
+            const closeSection = document.getElementById('closeFriendsSection');
+            const countLabel = document.getElementById('friendsCountLabel');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
+
+            await authReadyPromise;
+            if (!firebase.auth().currentUser) return;
+
+            try {
+                const [snapshot, myUserDoc] = await Promise.all([
+                    db.collection('friends').where('users', 'array-contains', myId).get(),
+                    db.collection('users').doc(myId).get()
+                ]);
+
+                myCloseFriends = (myUserDoc.exists && Array.isArray(myUserDoc.data().closeFriends)) ? myUserDoc.data().closeFriends : [];
+
+                if (snapshot.empty) {
+                    countLabel.textContent = '0 Friends';
+                    container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No friends yet — when you and someone follow each other, they\'ll show up here automatically.</p>';
+                    closeSection.style.display = 'none';
+                    document.getElementById('suggestionsSection').style.display = 'none';
+                    friendsDataCache = [];
+                    renderNetworkGraph([]);
+                    return;
+                }
+
+                const rawFriends = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (!Array.isArray(data.users)) return;
+                    const otherUser = data.users.find(u => u !== myId);
+                    if (!otherUser) return;
+                    rawFriends.push({ friendDocId: doc.id, otherUser });
+                });
+
+                const myFriendIdSet = new Set(rawFriends.map(f => f.otherUser));
+
+                const enriched = await Promise.all(rawFriends.map(async f => {
+                    const [userDoc, interaction, mutualCount, streakDoc] = await Promise.all([
+                        db.collection('users').doc(f.otherUser).get(),
+                        getInteractionData(f.otherUser),
+                        getMutualFriendsCount(f.otherUser, myFriendIdSet),
+                        db.collection('users').doc(myId).collection('friendStreaks').doc(f.otherUser).get()
+                    ]);
+                    const userData = userDoc.exists ? userDoc.data() : {};
+                    const fullName = capName(userData.fullName || userData.name || userData.username || f.otherUser);
+                    const avatarUrl = userData.userProfilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${f.otherUser}`;
+                    const isOnline = userData.isOnline === true;
+                    const lastMillis = interaction.lastMessageTime;
+                    const streakData = streakDoc.exists ? streakDoc.data() : {};
+                    return {
+                        ...f,
+                        fullName, avatarUrl, isOnline,
+                        lastMillis,
+                        warmth: friendWarmthTier(lastMillis),
+                        mutualCount,
+                        isPinned: myCloseFriends.includes(f.otherUser),
+                        streakCount: streakData.streakCount || 0
+                    };
+                }));
+
+                friendsDataCache = enriched;
+                countLabel.innerHTML = `<span>${enriched.length}</span> Friend${enriched.length !== 1 ? 's' : ''}`;
+                renderFriendsSections();
+                renderNetworkGraph(enriched);
+                loadSuggestedFriends(myFriendIdSet);
+
+            } catch (err) {
+                console.error("Friends load error:", err);
+                container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading friends</p>';
+            }
+        }
+
+        function sortFriends(list) {
+            const arr = [...list];
+            if (friendSortMode === 'online') {
+                arr.sort((a, b) => (b.isOnline - a.isOnline) || (b.lastMillis - a.lastMillis));
+            } else if (friendSortMode === 'az') {
+                arr.sort((a, b) => a.fullName.localeCompare(b.fullName));
+            } else {
+                arr.sort((a, b) => b.lastMillis - a.lastMillis);
+            }
+            return arr;
+        }
+
+        function friendRowHtml(f) {
+            const lastLabel = f.isOnline ? 'Active now' : (f.lastMillis ? `Active ${formatChatTime(f.lastMillis)}` : 'Offline');
+            const daysSince = f.lastMillis ? (Date.now() - f.lastMillis) / 86400000 : Infinity;
+            const showReconnect = daysSince > 30;
+            const streakBadge = f.streakCount >= 2 ? `<div class="streak-flame">🔥</div>` : '';
+            const pinBadge = f.isPinned ? `<div class="pin-star">⭐</div>` : '';
+            const mutualLine = f.mutualCount > 0 ? `${f.mutualCount} mutual friend${f.mutualCount !== 1 ? 's' : ''}` : lastLabel;
+            return `
+                <div class="friend-row-flex" data-friend-user="${f.otherUser}" data-friend-name="${f.fullName.toLowerCase()}">
+                    <a href="chat-interior.html?with=${encodeURIComponent(f.otherUser)}&avatar=${encodeURIComponent(f.avatarUrl)}" class="chat-item" style="flex:1;" onclick="bumpFriendshipStreak('${f.otherUser}')">
+                        <div class="profile-stack" data-online="${f.isOnline}" data-warmth="${f.warmth}" style="position:relative;">
+                            ${streakBadge}${pinBadge}
+                            <img src="${f.avatarUrl}" class="user-img">
+                        </div>
+                        <div class="chat-details">
+                            <span class="name">${f.fullName}</span>
+                            <div class="friend-meta-line">
+                                <p class="preview-text" style="margin:0;">${mutualLine}</p>
+                                ${showReconnect ? `<span class="reconnect-chip" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='chat-interior.html?with=${encodeURIComponent(f.otherUser)}&avatar=${encodeURIComponent(f.avatarUrl)}'">👋 Say hi</span>` : ''}
+                            </div>
+                        </div>
+                    </a>
+                    <div class="friends-icon-btn" style="padding:0 12px;" onclick="openFriendActions('${f.otherUser}')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+                    </div>
+                </div>`;
+        }
+
+        function renderFriendsSections() {
+            const container = document.getElementById('friends-list-container');
+            const closeContainer = document.getElementById('close-friends-container');
+            const closeSection = document.getElementById('closeFriendsSection');
+            const allLabel = document.getElementById('allFriendsLabel');
+
+            const sorted = sortFriends(friendsDataCache);
+            const pinned = sorted.filter(f => f.isPinned);
+            const rest = sorted.filter(f => !f.isPinned);
+
+            if (pinned.length) {
+                closeSection.style.display = 'block';
+                closeContainer.innerHTML = pinned.map(friendRowHtml).join('');
+            } else {
+                closeSection.style.display = 'none';
+            }
+
+            allLabel.textContent = pinned.length ? 'All Friends' : 'Friends';
+            container.innerHTML = rest.map(friendRowHtml).join('') ||
+                (pinned.length ? '' : '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No friends yet</p>');
+        }
+
+        function setFriendSortMode(mode) {
+            friendSortMode = mode;
+            document.querySelectorAll('#friendsSortRow .friend-sort-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.sort === mode);
+            });
+            renderFriendsSections();
+        }
+
+        function toggleFriendsSearch() {
+            const wrap = document.getElementById('friendsSearchWrap');
+            const input = document.getElementById('friendsSearchInput');
+            wrap.classList.toggle('active');
+            if (wrap.classList.contains('active')) { input.focus(); }
+            else { input.value = ''; filterFriendsList(''); }
+        }
+
+        function filterFriendsList(query) {
+            const q = query.trim().toLowerCase();
+            document.querySelectorAll('#friendsListView .friend-row-flex').forEach(row => {
+                const name = row.getAttribute('data-friend-name') || '';
+                row.style.display = name.includes(q) ? 'flex' : 'none';
+            });
+        }
+
+        // Friendship Streak — increments on real chat opens (one bump per calendar day).
+        // Stored under users/{myId}/friendStreaks/{otherUser} — a subcollection of MY OWN
+        // user doc, which the Firestore rules already allow any signed-in user to write to
+        // (match /users/{username}/{subcollection}/{docId} { allow write: if request.auth != null; }).
+        // This avoids needing an "update" rule on the top-level /friends collection, which
+        // the current rules do not grant.
+        function bumpFriendshipStreak(otherUser) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const ref = db.collection('users').doc(myId).collection('friendStreaks').doc(otherUser);
+            ref.get().then(doc => {
+                const data = doc.exists ? doc.data() : {};
+                if (data.streakLastDate === todayStr) return; // already counted today
+                const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+                const newCount = data.streakLastDate === yesterday ? (data.streakCount || 0) + 1 : 1;
+                ref.set({ streakCount: newCount, streakLastDate: todayStr }, { merge: true });
+            }).catch(() => {});
+        }
+
+        // --- Friend action sheet: Message / View Profile / Pin / Remove ---
+        function openFriendActions(otherUser) {
+            const f = friendsDataCache.find(x => x.otherUser === otherUser);
+            if (!f) return;
+            activeActionUser = f;
+            document.getElementById('friendActionTitle').textContent = f.fullName;
+            document.getElementById('friendActionPinLabel').textContent = f.isPinned ? 'Remove from Close Friends' : 'Add to Close Friends';
+            document.getElementById('friendActionMessage').onclick = () => {
+                window.location.href = `chat-interior.html?with=${encodeURIComponent(f.otherUser)}&avatar=${encodeURIComponent(f.avatarUrl)}`;
+            };
+            document.getElementById('friendActionProfile').onclick = () => {
+                window.location.href = `profile.html?user=${encodeURIComponent(f.otherUser)}`;
+            };
+            document.getElementById('friendActionPin').onclick = () => togglePinCloseFriend(f.otherUser);
+            document.getElementById('friendActionRemove').onclick = () => removeFriendConfirm(f.otherUser, f.friendDocId);
+            document.getElementById('friendActionBackdrop').classList.add('open');
+        }
+
+        function closeFriendActions() {
+            document.getElementById('friendActionBackdrop').classList.remove('open');
+        }
+
+        async function togglePinCloseFriend(otherUser) {
+            closeFriendActions();
+            const shouldPin = !myCloseFriends.includes(otherUser);
+            try {
+                await db.collection('users').doc(myId).set({
+                    closeFriends: shouldPin
+                        ? firebase.firestore.FieldValue.arrayUnion(otherUser)
+                        : firebase.firestore.FieldValue.arrayRemove(otherUser)
+                }, { merge: true });
+                if (shouldPin) myCloseFriends.push(otherUser);
+                else myCloseFriends = myCloseFriends.filter(u => u !== otherUser);
+                friendsDataCache = friendsDataCache.map(f => f.otherUser === otherUser ? { ...f, isPinned: shouldPin } : f);
+                renderFriendsSections();
+            } catch (e) { console.error('Pin error:', e); }
+        }
+
+        async function removeFriendConfirm(otherUser, friendDocId) {
+            closeFriendActions();
+            if (!confirm(`Remove ${capName(otherUser)} from your friends? This will unfollow them.`)) return;
+            try {
+                await db.collection('friends').doc(friendDocId).delete();
+
+                await db.collection('users').doc(myId).update({ friendCount: firebase.firestore.FieldValue.increment(-1) }).catch(() => {});
+                await db.collection('users').doc(otherUser).update({ friendCount: firebase.firestore.FieldValue.increment(-1) }).catch(() => {});
+
+                // Security rules only allow a user to delete their OWN outgoing follow doc
+                // (follows/{docId} where follower == me). We cannot and should not try to
+                // delete the other person's follow of us — only they can do that themselves.
+                const mine = await db.collection('follows').where('follower', '==', myId).get();
+                const myFollowDoc = mine.docs.find(d => d.data().following === otherUser);
+
+                if (myFollowDoc) {
+                    await myFollowDoc.ref.delete();
+                    await db.collection('users').doc(otherUser).update({ followerCount: firebase.firestore.FieldValue.increment(-1) }).catch(() => {});
+                    await db.collection('users').doc(myId).update({ followingCount: firebase.firestore.FieldValue.increment(-1) }).catch(() => {});
+                }
+
+                loadFriendsList();
+            } catch (e) {
+                console.error('Remove friend error:', e);
+                alert('Something went wrong removing this friend.');
+            }
+        }
+
+        // --- People You May Know: real mutual-network suggestions ---
+        async function loadSuggestedFriends(myFriendIdSet) {
+            const section = document.getElementById('suggestionsSection');
+            const strip = document.getElementById('suggestionStrip');
+            if (myFriendIdSet.size === 0) { section.style.display = 'none'; return; }
+
+            try {
+                const sampleFriends = [...myFriendIdSet].slice(0, 6);
+                const snaps = await Promise.all(sampleFriends.map(fid =>
+                    db.collection('friends').where('users', 'array-contains', fid).get()
+                ));
+
+                const tally = new Map();
+                snaps.forEach(snap => {
+                    snap.forEach(doc => {
+                        const arr = doc.data().users || [];
+                        arr.forEach(u => {
+                            if (u !== myId && !myFriendIdSet.has(u)) {
+                                tally.set(u, (tally.get(u) || 0) + 1);
+                            }
+                        });
+                    });
+                });
+
+                const ranked = [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+                if (!ranked.length) { section.style.display = 'none'; return; }
+
+                const profiles = await Promise.all(ranked.map(([uid]) => db.collection('users').doc(uid).get()));
+                const myFollowsSnap = await db.collection('follows').where('follower', '==', myId).get();
+                const alreadyFollowing = new Set(myFollowsSnap.docs.map(d => d.data().following));
+
+                section.style.display = 'block';
+                strip.innerHTML = ranked.map(([uid, mutual], i) => {
+                    const userData = profiles[i].exists ? profiles[i].data() : {};
+                    const fullName = capName(userData.fullName || userData.name || userData.username || uid);
+                    const avatarUrl = userData.userProfilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`;
+                    const isFollowing = alreadyFollowing.has(uid);
+                    return `
+                        <div class="suggestion-card">
+                            <img src="${avatarUrl}" onclick="window.location.href='profile.html?user=${encodeURIComponent(uid)}'">
+                            <span class="sug-name">${fullName}</span>
+                            <div class="sug-mutual">${mutual} mutual friend${mutual !== 1 ? 's' : ''}</div>
+                            <button class="suggestion-follow-btn ${isFollowing ? 'done' : ''}" id="sugbtn-${uid}" onclick="followSuggestedUser('${uid}', this)">${isFollowing ? 'Requested' : 'Follow'}</button>
+                        </div>`;
+                }).join('');
+            } catch (e) {
+                console.error('Suggestions error:', e);
+                section.style.display = 'none';
+            }
+        }
+
+        async function followSuggestedUser(otherUser, btnEl) {
+            if (btnEl.classList.contains('done')) return;
+            btnEl.disabled = true;
+            btnEl.textContent = '...';
+            try {
+                await db.collection('follows').add({
+                    follower: myId, following: otherUser,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await db.collection('users').doc(otherUser).update({ followerCount: firebase.firestore.FieldValue.increment(1) }).catch(() => {});
+                await db.collection('users').doc(myId).set({ followingCount: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+
+                const theirFollowsSnap = await db.collection('follows').where('follower', '==', otherUser).get();
+                const isMutual = theirFollowsSnap.docs.some(d => d.data().following === myId);
+
+                if (isMutual) {
+                    await db.collection('users').doc(otherUser).update({ friendCount: firebase.firestore.FieldValue.increment(1) }).catch(() => {});
+                    await db.collection('users').doc(myId).update({ friendCount: firebase.firestore.FieldValue.increment(1) }).catch(() => {});
+                    await db.collection('friends').add({ users: [myId, otherUser], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    await db.collection('notifications').add({
+                        to: otherUser, from: myId, type: 'new_friend',
+                        message: `${myId} followed you back — you're friends now!`,
+                        read: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    await db.collection('notifications').add({
+                        to: otherUser, from: myId, type: 'new_follower',
+                        message: `${myId} started following you`,
+                        read: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                btnEl.textContent = 'Requested';
+                btnEl.classList.add('done');
+                btnEl.disabled = false;
+            } catch (e) {
+                console.error('Follow error:', e);
+                btnEl.textContent = 'Follow';
+                btnEl.disabled = false;
+            }
+        }
+
+        // --- Constellation / Network View — a live map of your friendships ---
+        function toggleNetworkView() {
+            const listView = document.getElementById('friendsListView');
+            const netView = document.getElementById('networkViewContainer');
+            const toggleBtn = document.getElementById('networkViewToggle');
+            const isActive = netView.classList.toggle('active');
+            listView.style.display = isActive ? 'none' : 'block';
+            toggleBtn.classList.toggle('active-view', isActive);
+            document.getElementById('friendsSortRow').style.display = isActive ? 'none' : 'flex';
+        }
+
+        function renderNetworkGraph(list) {
+            const wrap = document.getElementById('networkSvgWrap');
+            if (!wrap) return;
+            if (!list.length) { wrap.innerHTML = '<p style="text-align:center; color:#555; font-size:13px; padding:30px;">No friends to map yet</p>'; return; }
+
+            const size = 320, cx = size / 2, cy = size / 2, radius = size * 0.38;
+            const warmthColor = { hot: '#00F2FF', warm: '#4FD2E0', cool: '#7A8B99', cold: '#3A4249', none: '#2A2E35' };
+            const n = list.length;
+
+            let linksSvg = '', nodesSvg = '';
+            list.forEach((f, i) => {
+                const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+                const x = cx + radius * Math.cos(angle);
+                const y = cy + radius * Math.sin(angle);
+                const color = warmthColor[f.warmth] || warmthColor.none;
+                const nodeR = 14 + Math.min(f.mutualCount, 6);
+
+                linksSvg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${color}" stroke-width="${f.warmth === 'hot' ? 2 : 1}" opacity="${f.warmth === 'cold' || f.warmth === 'none' ? 0.25 : 0.6}"/>`;
+                nodesSvg += `
+                    <g class="network-node-circle" onclick="window.location.href='chat-interior.html?with=${encodeURIComponent(f.otherUser)}&avatar=${encodeURIComponent(f.avatarUrl)}'">
+                        <circle cx="${x}" cy="${y}" r="${nodeR}" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="1.5"/>
+                        <text x="${x}" y="${y + nodeR + 11}" class="network-node-label">${f.fullName.split(' ')[0]}</text>
+                    </g>`;
+            });
+
+            wrap.innerHTML = `
+                <svg viewBox="0 0 ${size} ${size}" width="100%" style="max-width:340px; display:block; margin:0 auto;">
+                    ${linksSvg}
+                    <circle class="network-center-circle" cx="${cx}" cy="${cy}" r="16" fill="#00F2FF" fill-opacity="0.3" stroke="#00F2FF" stroke-width="2"/>
+                    <text x="${cx}" y="${cy + 28}" class="network-node-label" style="fill:#00F2FF; font-weight:700;">You</text>
+                    ${nodesSvg}
+                </svg>`;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const personalLinks = document.querySelectorAll("#personal .chat-item");
+            personalLinks.forEach(link => {
+                const nameText = link.querySelector(".name").innerText;
+                const avatarSrc = link.querySelector(".user-img").src;
+                link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
+            });
+        });
+
+      authReadyPromise.then((user) => {
+            if (!user) return;
+            db.collection("personalChats").onSnapshot(() => { loadChats(); });
+            db.collection("friends").onSnapshot(() => { loadFriendsList(); });
+        }); 
+        function toggleSearchBar() {
+    const bar = document.getElementById('searchBarContainer');
+    const input = document.getElementById('searchInput');
+    bar.classList.toggle('active');
+    if (bar.classList.contains('active')) {
+        input.focus();
+    } else {
+        input.value = '';
+        filterActiveChats('');
+    }
+        }
+    </script>
+</body>
+</html>
