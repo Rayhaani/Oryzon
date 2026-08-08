@@ -162,10 +162,19 @@
         display: inline-block; background: linear-gradient(135deg, var(--gold), var(--magenta-neon));
         color: #050505; font-weight: 800; font-size: 12.5px; padding: 8px 18px; border-radius: 20px; cursor: pointer;
     }
-
-    /* Video post */
+     /* Video post */
     .post-video { width: 100%; border-radius: 14px; display: block; background: #111; margin-bottom: 8px; }
 
+    /* Media + caption grouped as one bubble, like WhatsApp/Telegram */
+    .post-media-group { border-radius: 14px; overflow: hidden; margin-bottom: 8px; background: #111; }
+    .post-media-group .post-image,
+    .post-media-group .post-video {
+        margin-bottom: 0; border-radius: 0;
+    }
+    .post-media-group .post-content-wrap {
+        padding: 8px 12px 10px 12px;
+        background: rgba(255,255,255,0.05);
+    }
     /* Data saver placeholder (HOT FEATURE 10) */
     .media-placeholder {
         width: 100%; border-radius: 14px; background: #111; margin-bottom: 8px;
@@ -381,8 +390,8 @@
         isSubscribedPaid: false,
         tiers: [
             { id: 'free', name: 'Free', price: 0, desc: 'Regular posts, polls and reactions.' },
-            { id: 'plus', name: 'Nexus Plus', price: 1500, desc: 'Early access, exclusive drops, no ads. ₦1,500/month' },
-            { id: 'vip', name: 'Nexus VIP', price: 5000, desc: 'Everything in Plus, plus 1-on-1 vendor priority support. ₦5,000/month' }
+            { id: 'plus', name: 'Nexus Plus', price: 5, desc: 'Early access, exclusive drops, no ads. $5/month' },
+            { id: 'vip', name: 'Nexus VIP', price: 15, desc: 'Everything in Plus, plus 1-on-1 vendor priority support. $15/month' }
         ]
     };
 
@@ -455,7 +464,7 @@
             poll: {
                 question: 'Which drop should we launch first next month?',
                 options: [
-                    { text: 'Ankara collection', votes: 58 },
+                { text: 'Fashion collection', votes: 58 },
                     { text: 'Tech accessories', votes: 34 },
                     { text: 'Home & kitchen', votes: 21 }
                 ],
@@ -499,7 +508,7 @@
         {
             id: 'p6',
             type: 'delivery',
-            content: 'Delivered! Order #NX2291 confirmed at customer\'s doorstep in Kano.',
+            content: 'Delivered! Order #NX2291 confirmed at customer\'s doorstep.',
             image: 'https://placehold.co/600x360/111111/1EE676?text=Delivered',
             views: 305,
             timestamp: Date.now() - 21600000,
@@ -578,7 +587,7 @@
         if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
         return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
     }
-    function formatNaira(n) { return '₦' + n.toLocaleString(); }
+    function formatPrice(n) { return '$' + n.toLocaleString(); }
     function showToast(msg) {
         const t = document.getElementById('toast');
         t.textContent = msg;
@@ -658,10 +667,16 @@
                 ${post.pinned ? `<div class="pin-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 2l1.5 5.5L19 9l-4.5 3L16 18l-4-3.2L8 18l1.5-6L5 9l5.5-1.5z"/></svg> Pinned message</div>` : ''}
                 ${duoTagHTML}
                 ${deliveryBadgeHTML}
-                ${mediaHTML}
+                ${mediaHTML ? `
+                <div class="post-media-group">
+                    ${mediaHTML}
+                    <div class="post-content-wrap">
+                        <span class="post-content-text">${post.content}${post.edited ? '<span class="edited-tag">(edited)</span>' : ''}</span><span class="post-timestamp">${formatClockTime(post.timestamp)}</span>
+                    </div>
+                </div>` : `
                 <div class="post-content-wrap">
                     <span class="post-content-text">${post.content}${post.edited ? '<span class="edited-tag">(edited)</span>' : ''}</span><span class="post-timestamp">${formatClockTime(post.timestamp)}</span>
-                </div>
+                </div>`}
                 ${bodyBlockHTML}
                 <div class="post-footer">
                     <div class="post-views">
@@ -713,7 +728,7 @@
                 <div class="groupbuy-track"><div class="groupbuy-fill" style="width:${pct}%"></div></div>
                 <div class="groupbuy-info">
                     <span>${gb.joined}/${gb.target} joined</span>
-                    <span><s style="opacity:.5">${formatNaira(gb.originalPrice)}</s> ${formatNaira(gb.dropPrice)}</span>
+                    <span><s style="opacity:.5">${formatPrice(gb.originalPrice)}</s> ${formatPrice(gb.dropPrice)}</span>
                 </div>
                 <div class="groupbuy-btn" onclick="joinGroupBuy('${post.id}')">${gb.joinedByMe ? '✓ You joined this deal' : 'Join this group-buy'}</div>
             </div>`;
@@ -724,7 +739,7 @@
         return `
             <div class="escrow-block">
                 <div class="escrow-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green-ok)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Trust-Pay Escrow · ${es.item}</div>
-                <div class="escrow-price">${formatNaira(es.price)}</div>
+                <div class="escrow-price">${formatPrice(es.price)}</div>
                 <div class="escrow-btn" onclick="payEscrow('${post.id}')">${es.paid ? '✓ Funds held in escrow' : 'Pay into escrow'}</div>
                 <div class="escrow-note">Seller is paid only after you confirm delivery</div>
             </div>`;
@@ -825,11 +840,11 @@
             const lower = q.toLowerCase();
             if (lower.includes('group') || lower.includes('buy')) {
                 const gb = postsData.find(p => p.groupbuy);
-                if (gb) answer = `The active group-buy is at ${gb.groupbuy.joined}/${gb.groupbuy.target} joined — price drops to ${formatNaira(gb.groupbuy.dropPrice)} once the target is hit.`;
+                if (gb) answer = `The active group-buy is at ${gb.groupbuy.joined}/${gb.groupbuy.target} joined — price drops to ${formatPrice(gb.groupbuy.dropPrice)} once the target is hit.`;
             } else if (lower.includes('escrow') || lower.includes('trust')) {
                 answer = "Trust-Pay Escrow holds your payment safely and only releases it to the seller after you confirm the item was delivered.";
             } else if (lower.includes('subscri') || lower.includes('plus') || lower.includes('vip')) {
-                answer = `Nexus Plus is ${formatNaira(channelInfo.tiers[1].price)}/month for early access and exclusive posts, VIP is ${formatNaira(channelInfo.tiers[2].price)}/month.`;
+            answer = `Nexus Plus is ${formatPrice(channelInfo.tiers[1].price)}/month for early access and exclusive posts, VIP is ${formatPrice(channelInfo.tiers[2].price)}/month.`;    
             } else if (lower.includes('pin')) {
                 const pinned = postsData.find(p => p.pinned);
                 answer = pinned ? `The pinned message right now is: "${pinned.content}"` : 'Nothing is pinned right now.';
@@ -947,8 +962,8 @@
             <div class="modal-title">Subscription tiers</div>
             <div class="modal-sub">Support this channel and unlock exclusive posts.</div>
             ${channelInfo.tiers.map(t => `
-                <div class="tier-card ${selectedTierId === t.id ? 'selected' : ''}" onclick="selectTier('${t.id}')">
-                    <div class="tier-name"><span>${t.name}</span><span class="tier-price">${t.price === 0 ? 'Free' : '₦' + t.price.toLocaleString() + '/mo'}</span></div>
+                <div class="tier-card ${selectedTierId === t.id ? 'selected' : ''}" onclick="selectTier('${t.id}')">                
+                    <div class="tier-name"><span>${t.name}</span><span class="tier-price">${t.price === 0 ? 'Free' : '$' + t.price.toLocaleString() + '/mo'}</span></div>
                     <div class="tier-desc">${t.desc}</div>
                 </div>
             `).join('')}
@@ -1113,8 +1128,8 @@
             <div class="modal-title">Start a Group-Buy</div>
             <textarea class="composer-textarea" id="gbTextInput" placeholder="Describe the deal..."></textarea>
             <div class="poll-option-input"><input type="number" id="gbTarget" placeholder="Target buyers e.g. 100"></div>
-            <div class="poll-option-input"><input type="number" id="gbOriginal" placeholder="Original price ₦"></div>
-            <div class="poll-option-input"><input type="number" id="gbDrop" placeholder="Group price ₦"></div>
+            <div class="poll-option-input"><input type="number" id="gbOriginal" placeholder="Original price ($)"></div>
+            <div class="poll-option-input"><input type="number" id="gbDrop" placeholder="Group price ($)"></div>          
             <div class="modal-btn primary" onclick="createGroupBuy()">Publish group-buy</div>
         `);
         openModal();
@@ -1138,7 +1153,7 @@
             <div class="modal-title">Create Trust-Pay listing</div>
             <textarea class="composer-textarea" id="esTextInput" placeholder="Describe the item..."></textarea>
             <div class="poll-option-input"><input type="text" id="esItem" placeholder="Item name"></div>
-            <div class="poll-option-input"><input type="number" id="esPrice" placeholder="Price ₦"></div>
+            <div class="poll-option-input"><input type="number" id="esPrice" placeholder="Price ($)"></div>
             <div class="modal-btn primary" onclick="createEscrowPost()">Publish listing</div>
         `);
         openModal();
