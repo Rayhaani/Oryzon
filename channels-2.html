@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Channel - Nexus</title>
+<style>
+    :root {
+        --cyan-neon: #00F2FF;
+        --magenta-neon: #FF0055;
+        --gold: #FFB800;
+        --green-ok: #1EE676;
+        --red-danger: #FF4D4D;
+        --panel-bg: #0d0d0d;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body {
+        background-color: #050505;
+        color: #fff;
+        min-height: 100vh;
+        padding-bottom: 90px;
+    }
+    header {
+        position: sticky; top: 0; z-index: 50;
+        background: rgba(5,5,5,0.92);
+        backdrop-filter: blur(10px);
+        padding: 12px 16px;
+        display: flex; align-items: center; gap: 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .back-trigger { cursor: pointer; display: flex; align-items: center; flex-shrink:0; }
+    .channel-avatar {
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--cyan-neon), var(--magenta-neon));
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 15px; color: #050505;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .channel-meta { flex: 1; overflow: hidden; cursor: pointer; }
+    .channel-meta h1 {
+        font-size: 16px; font-weight: 700;
+        display: flex; align-items: center; gap: 5px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .verified-badge { flex-shrink: 0; }
+    .channel-meta p { font-size: 12px; color: rgba(255,255,255,0.45); }
+    .menu-icon { cursor: pointer; flex-shrink: 0; }
+
+.feed { padding: 14px 12px 0 12px; }
+    .post-card { margin-bottom: 16px; }
+
+    .date-separator { display: flex; justify-content: center; margin: 8px 0 16px 0; }
+    .date-separator span {
+        background: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.6);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 5px 14px;
+        border-radius: 12px;
+    }
+
+    .post-image {
+        width: 100%;
+        border-radius: 14px;
+        display: block;
+        background: #111;
+        margin-bottom: 8px;
+    }
+    .post-content-wrap { padding: 0 4px 6px 4px; overflow: hidden; }
+    .post-content-text { font-size: 14.5px; line-height: 1.5; color: rgba(255,255,255,0.9); }
+    .post-timestamp {
+        float: right;
+        font-size: 11px;
+        color: rgba(255,255,255,0.35);
+        margin: 4px 0 0 10px;
+        white-space: nowrap;
+    }
+
+    .post-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px 0 4px; }
+    .post-views { font-size: 12px; color: rgba(255,255,255,0.35); display: flex; align-items: center; gap: 4px; }
+    .reactions-bar { display: flex; gap: 6px; }
+    .reaction-pill {
+        display: flex; align-items: center; gap: 4px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 12.5px;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+    .reaction-pill.active { border-color: var(--cyan-neon); background: rgba(0,242,255,0.1); }
+
+    .composer-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: rgba(5,5,5,0.95);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding: 10px 12px;
+        display: flex; align-items: center; gap: 10px;
+        z-index: 50;
+    }
+    .composer-input {
+        flex: 1;
+        background: rgba(255,255,255,0.06);
+        border: none;
+        border-radius: 22px;
+        padding: 11px 16px;
+        color: #fff;
+        font-size: 14px;
+        outline: none;
+    }
+    .composer-input::placeholder { color: rgba(255,255,255,0.4); }
+    .composer-send {
+        width: 42px; height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--cyan-neon), var(--magenta-neon));
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .subscribe-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: rgba(5,5,5,0.95);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding: 12px 16px;
+        text-align: center;
+        font-weight: 700;
+        color: var(--cyan-neon);
+        cursor: pointer;
+        z-index: 50;
+    }
+
+    /* ===== EXTENSION LAYER — added on top of the existing hardcoded layout above ===== */
+
+    .header-icon-btn {
+        cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+        width: 20px; height: 20px; opacity: 0.9;
+    }
+
+    /* Mood Pulse strip (HOT FEATURE 7) */
+    .mood-pulse-wrap {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 14px; font-size: 11px; color: rgba(255,255,255,0.5);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .mood-pulse-track { flex: 1; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.07); overflow: hidden; position: relative; }
+    .mood-pulse-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--magenta-neon), var(--gold), var(--green-ok)); transition: width .5s ease; }
+    .mood-pulse-label { flex-shrink: 0; font-weight: 700; }
+
+    /* Pinned tag */
+    .pin-tag {
+        display: flex; align-items: center; gap: 5px;
+        font-size: 11px; font-weight: 700; color: var(--gold);
+        margin-bottom: 6px; padding: 0 4px;
+    }
+
+    /* Premium / paid lock badge (standard feature: paid channel subscriptions) */
+    .paid-lock-overlay {
+        position: relative; border-radius: 14px; overflow: hidden; margin-bottom: 8px;
+        background: #111; padding: 34px 16px; text-align: center;
+        border: 1px dashed rgba(255,184,0,0.4);
+    }
+    .paid-lock-overlay svg { margin-bottom: 8px; }
+    .paid-lock-overlay p { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 10px; }
+    .paid-unlock-btn {
+        display: inline-block; background: linear-gradient(135deg, var(--gold), var(--magenta-neon));
+        color: #050505; font-weight: 800; font-size: 12.5px; padding: 8px 18px; border-radius: 20px; cursor: pointer;
+    }
+
+    /* Video post */
+    .post-video { width: 100%; border-radius: 14px; display: block; background: #111; margin-bottom: 8px; }
+
+    /* Data saver placeholder (HOT FEATURE 10) */
+    .media-placeholder {
+        width: 100%; border-radius: 14px; background: #111; margin-bottom: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 30px 0; gap: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.06);
+    }
+    .media-placeholder span { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+    /* Poll block */
+    .poll-block { background: rgba(255,255,255,0.04); border-radius: 14px; padding: 12px; margin-bottom: 8px; }
+    .poll-question { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+    .poll-option { position: relative; margin-bottom: 8px; cursor: pointer; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.05); }
+    .poll-bar-fill { position: absolute; top: 0; left: 0; bottom: 0; background: rgba(0,242,255,0.18); transition: width .4s ease; }
+    .poll-option-row { position: relative; display: flex; justify-content: space-between; padding: 9px 12px; font-size: 13px; z-index: 1; }
+    .poll-option.voted-for { outline: 1px solid var(--cyan-neon); }
+    .poll-meta { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+    /* Group-buy block (HOT FEATURE 2) */
+    .groupbuy-block { background: rgba(255,184,0,0.06); border: 1px solid rgba(255,184,0,0.25); border-radius: 14px; padding: 12px; margin-bottom: 8px; }
+    .groupbuy-title { font-size: 13px; font-weight: 800; color: var(--gold); margin-bottom: 6px; display:flex; align-items:center; gap:6px; }
+    .groupbuy-track { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 6px; }
+    .groupbuy-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--green-ok)); transition: width .4s ease; }
+    .groupbuy-info { display: flex; justify-content: space-between; font-size: 11.5px; color: rgba(255,255,255,0.55); margin-bottom: 8px; }
+    .groupbuy-btn { width: 100%; background: var(--gold); color: #050505; font-weight: 800; font-size: 12.5px; padding: 9px; border-radius: 10px; text-align: center; cursor: pointer; }
+
+    /* Escrow / Trust Pay (HOT FEATURE 3) */
+    .escrow-block { background: rgba(30,230,118,0.06); border: 1px solid rgba(30,230,118,0.25); border-radius: 14px; padding: 12px; margin-bottom: 8px; }
+    .escrow-title { font-size: 12.5px; font-weight: 800; color: var(--green-ok); display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .escrow-price { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .escrow-btn { width: 100%; background: var(--green-ok); color: #050505; font-weight: 800; font-size: 12.5px; padding: 9px; border-radius: 10px; text-align: center; cursor: pointer; }
+    .escrow-note { font-size: 10.5px; color: rgba(255,255,255,0.4); margin-top: 6px; text-align: center; }
+
+    /* Delivery proof (HOT FEATURE 6) */
+    .delivery-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(30,230,118,0.12); color: var(--green-ok); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; margin-bottom: 8px; }
+
+    /* Duo broadcast badge (HOT FEATURE 8) */
+    .duo-badge { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: rgba(255,255,255,0.55); margin-bottom: 6px; padding: 0 4px; }
+    .duo-badge b { color: var(--cyan-neon); }
+
+    /* Crowd-unlock (HOT FEATURE 9) */
+    .unlock-block { background: rgba(255,0,85,0.06); border: 1px solid rgba(255,0,85,0.25); border-radius: 14px; padding: 12px; margin-bottom: 8px; text-align: center; }
+    .unlock-title { font-size: 12.5px; font-weight: 800; color: var(--magenta-neon); margin-bottom: 6px; }
+    .unlock-track { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 8px; }
+    .unlock-fill { height: 100%; background: linear-gradient(90deg, var(--magenta-neon), var(--cyan-neon)); transition: width .4s ease; }
+    .unlock-btn { display: inline-block; background: linear-gradient(135deg, var(--magenta-neon), var(--cyan-neon)); color: #fff; font-weight: 800; font-size: 12px; padding: 8px 16px; border-radius: 20px; cursor: pointer; }
+
+    /* Reaction heatmap timeline (HOT FEATURE 4) */
+    .heatmap-strip { display: flex; align-items: flex-end; gap: 2px; height: 22px; margin: 8px 4px 0 4px; }
+    .heatmap-bar { flex: 1; background: linear-gradient(180deg, var(--cyan-neon), rgba(0,242,255,0.15)); border-radius: 2px 2px 0 0; min-height: 2px; }
+
+    /* Extended footer row (tip / save / share) */
+    .post-actions-row { display: flex; align-items: center; gap: 14px; padding: 8px 4px 0 4px; }
+    .post-action-btn { display: flex; align-items: center; gap: 4px; font-size: 12px; color: rgba(255,255,255,0.45); cursor: pointer; }
+    .post-action-btn.active-save { color: var(--gold); }
+    .post-action-btn.active-tip { color: var(--gold); }
+
+    .edited-tag { font-size: 10.5px; color: rgba(255,255,255,0.3); margin-left: 6px; }
+
+    /* AI Assistant FAB + panel (HOT FEATURE 1) */
+    .ai-fab {
+        position: fixed; right: 14px; bottom: 96px; z-index: 60;
+        width: 50px; height: 50px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--cyan-neon), var(--magenta-neon));
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 4px 18px rgba(0,242,255,0.35); cursor: pointer;
+    }
+    .ai-panel {
+        position: fixed; right: 12px; bottom: 156px; z-index: 61;
+        width: min(320px, 86vw); max-height: 60vh;
+        background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px; display: none; flex-direction: column; overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+    .ai-panel.open { display: flex; }
+    .ai-panel-head { padding: 10px 14px; font-size: 13px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .ai-panel-body { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+    .ai-msg { font-size: 12.5px; line-height: 1.4; padding: 8px 10px; border-radius: 10px; max-width: 88%; }
+    .ai-msg.bot { background: rgba(0,242,255,0.08); align-self: flex-start; }
+    .ai-msg.user { background: rgba(255,255,255,0.08); align-self: flex-end; }
+    .ai-panel-input-row { display: flex; gap: 6px; padding: 8px; border-top: 1px solid rgba(255,255,255,0.06); }
+    .ai-panel-input-row input { flex: 1; background: rgba(255,255,255,0.06); border: none; border-radius: 16px; padding: 8px 12px; color: #fff; font-size: 12.5px; outline: none; }
+    .ai-panel-input-row button { background: var(--cyan-neon); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; flex-shrink: 0; }
+
+    /* Generic modal system, reused by About / Analytics / Subscribe / Search / Poll composer / Schedule / Tip */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 70;
+        display: none; align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+        width: 100%; max-width: 480px; max-height: 84vh; overflow-y: auto;
+        background: var(--panel-bg); border-radius: 20px 20px 0 0;
+        padding: 18px 18px 26px 18px; animation: slideUp .25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+    .modal-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 0 auto 14px auto; }
+    .modal-title { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+    .modal-sub { font-size: 12.5px; color: rgba(255,255,255,0.45); margin-bottom: 16px; }
+    .modal-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-row:last-child { border-bottom: none; }
+    .modal-row-label { font-size: 13.5px; }
+    .modal-row-label small { display: block; font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+    .toggle-switch { width: 42px; height: 24px; border-radius: 14px; background: rgba(255,255,255,0.12); position: relative; cursor: pointer; flex-shrink: 0; }
+    .toggle-switch.on { background: var(--cyan-neon); }
+    .toggle-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left .2s ease; }
+    .toggle-switch.on .toggle-knob { left: 20px; }
+
+    .modal-btn {
+        width: 100%; text-align: center; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 13.5px;
+        cursor: pointer; margin-top: 10px;
+    }
+    .modal-btn.primary { background: linear-gradient(135deg, var(--cyan-neon), var(--magenta-neon)); color: #050505; }
+    .modal-btn.ghost { background: rgba(255,255,255,0.06); color: #fff; }
+    .modal-btn.danger { background: rgba(255,77,77,0.12); color: var(--red-danger); }
+
+    .tier-card { border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+    .tier-card.selected { border-color: var(--gold); background: rgba(255,184,0,0.06); }
+    .tier-name { font-size: 14px; font-weight: 800; display: flex; justify-content: space-between; }
+    .tier-price { color: var(--gold); }
+    .tier-desc { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+    .search-input-box { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; }
+    .search-input-box input { flex: 1; background: none; border: none; color: #fff; font-size: 14px; outline: none; }
+    .search-result-item { padding: 10px 4px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; color: rgba(255,255,255,0.8); cursor: pointer; }
+
+    .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .analytics-tile { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; }
+    .analytics-tile .num { font-size: 20px; font-weight: 800; }
+    .analytics-tile .lbl { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+    .mini-bars { display: flex; align-items: flex-end; gap: 4px; height: 60px; margin-bottom: 8px; }
+    .mini-bars div { flex: 1; background: linear-gradient(180deg, var(--cyan-neon), var(--magenta-neon)); border-radius: 2px; }
+
+    .poll-option-input { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .poll-option-input input { flex: 1; background: rgba(255,255,255,0.06); border: none; border-radius: 10px; padding: 9px 12px; color: #fff; font-size: 13px; outline: none; }
+    .composer-textarea { width: 100%; background: rgba(255,255,255,0.06); border: none; border-radius: 12px; padding: 10px 12px; color: #fff; font-size: 13.5px; outline: none; margin-bottom: 10px; min-height: 70px; resize: vertical; }
+
+    .attach-menu { position: fixed; bottom: 66px; left: 0; right: 0; z-index: 49; display: none; padding: 10px 12px; }
+    .attach-menu.open { display: flex; gap: 10px; overflow-x: auto; background: rgba(5,5,5,0.97); border-top: 1px solid rgba(255,255,255,0.06); }
+    .attach-option { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 62px; cursor: pointer; }
+    .attach-icon-circle { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; }
+    .attach-option span { font-size: 10px; color: rgba(255,255,255,0.6); text-align: center; }
+    .composer-attach-btn { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+
+    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 12.5px; padding: 10px 18px; border-radius: 20px; z-index: 90; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+    .datasaver-strip { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; font-size: 11.5px; color: rgba(255,255,255,0.45); }
+</style>
+</head>
+<body>
+
+    <header>
+        <div class="back-trigger" onclick="window.location.href='chats.html'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+        </div>
+        <div class="channel-avatar" id="headerAvatar" onclick="openAboutModal()">N</div>
+        <div class="channel-meta" onclick="openAboutModal()">
+            <h1 id="headerName">Channel<span class="verified-badge" id="verifiedBadge"></span></h1>
+            <p id="headerSubCount">0 subscribers</p>
+        </div>
+        <div class="header-icon-btn" id="searchIconBtn" onclick="openSearchModal()" title="Search">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        </div>
+        <div class="menu-icon" onclick="openMenuModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </div>
+    </header>
+
+    <!-- HOT FEATURE 7: Community Mood Pulse — live sentiment gauge for the whole channel -->
+    <div class="mood-pulse-wrap">
+        <span>Mood Pulse</span>
+        <div class="mood-pulse-track"><div class="mood-pulse-fill" id="moodPulseFill" style="width:50%"></div></div>
+        <span class="mood-pulse-label" id="moodPulseLabel">🙂 Warm</span>
+    </div>
+
+    <!-- HOT FEATURE 10: Data-Saver Mode strip -->
+    <div class="datasaver-strip">
+        <span id="dataSaverStatusText">Data Saver: Off — media loads automatically</span>
+        <div class="toggle-switch" id="dataSaverToggle" onclick="toggleDataSaver()"><div class="toggle-knob"></div></div>
+    </div>
+
+    <div class="feed" id="feedContainer"></div>
+
+    <div id="bottomBar"></div>
+
+    <!-- composer attachment menu (standard: image/video/poll + hot: group-buy/escrow/delivery/unlock/duo) -->
+    <div class="attach-menu" id="attachMenu"></div>
+
+    <!-- HOT FEATURE 1: AI Channel Assistant -->
+    <div class="ai-fab" id="aiFab" onclick="toggleAIPanel()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2.2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+    <div class="ai-panel" id="aiPanel">
+        <div class="ai-panel-head">
+            <span>✨ Channel AI Assistant</span>
+            <span style="cursor:pointer;opacity:.6" onclick="toggleAIPanel()">✕</span>
+        </div>
+        <div class="ai-panel-body" id="aiPanelBody"></div>
+        <div class="ai-panel-input-row">
+            <input type="text" id="aiInput" placeholder="Ask about this channel or a post...">
+            <button onclick="sendAIQuestion()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2.6"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- generic modal shell, content injected per-modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-sheet" id="modalSheet"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+<script>
+    /* ============================================================
+       NEXUS CHANNEL — client-side demo state.
+       No backend is wired in this file (none was present in the
+       original either). Every action below updates local state
+       instantly so the page is fully usable today. Swap the
+       marked //--FIRESTORE HOOK-- spots for real Firebase calls
+       when you're ready to connect it to the rest of Nexus.
+       ============================================================ */
+
+    const REACTION_EMOJIS = ['❤️', '🔥', '😂', '👍'];
+    let isAdmin = true; // admin ne mai kirkiro channel, ko subscriber ne kawai
+
+    let channelInfo = {
+        id: 'demo_channel',
+        name: 'Nexus Tech Digest',
+        initials: 'NT',
+        subscriberCount: 12400,
+        verified: true,
+        description: 'Official updates, drops and behind-the-scenes from the Nexus team.',
+        link: 'nexus.app/c/nexustechdigest',
+        category: 'Technology',
+        muted: false,
+        dataSaver: false,
+        isSubscribedPaid: false,
+        tiers: [
+            { id: 'free', name: 'Free', price: 0, desc: 'Regular posts, polls and reactions.' },
+            { id: 'plus', name: 'Nexus Plus', price: 1500, desc: 'Early access, exclusive drops, no ads. ₦1,500/month' },
+            { id: 'vip', name: 'Nexus VIP', price: 5000, desc: 'Everything in Plus, plus 1-on-1 vendor priority support. ₦5,000/month' }
+        ]
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('new') === '1') {
+        const stored = sessionStorage.getItem('newChannelData');
+        if (stored) {
+            const data = JSON.parse(stored);
+            channelInfo = Object.assign(channelInfo, {
+                id: data.id,
+                name: data.name,
+                initials: data.name.slice(0, 2).toUpperCase(),
+                subscriberCount: data.subscriberCount,
+                verified: false
+            });
+            isAdmin = true;
+        }
+    }
+
+    let savedPostIds = new Set(JSON.parse(localStorage.getItem('nexus_saved_' + channelInfo.id) || '[]'));
+    let bookmarkedForLater = [];
+
+    let postsData = [
+        {
+            id: 'p1',
+            type: 'text',
+            content: 'Welcome to the channel! We\'ll be sharing updates, tips, and behind-the-scenes here.',
+            image: null,
+            views: 1840,
+            timestamp: Date.now() - 3600000,
+            reactions: { '❤️': 42, '🔥': 18, '😂': 2, '👍': 30 },
+            myReaction: null,
+            pinned: true,
+            paid: false,
+            edited: false,
+            tips: 12,
+            heatmap: [2,3,5,8,14,20,17,9,6,3],
+            saved: false
+        },
+        {
+            id: 'p2',
+            type: 'image',
+            content: 'New feature just dropped — check out the update page for details.',
+            image: 'https://placehold.co/600x360/111111/00F2FF?text=Update',
+            views: 963,
+            timestamp: Date.now() - 7200000,
+            reactions: { '❤️': 15, '🔥': 9, '😂': 0, '👍': 12 },
+            myReaction: '🔥',
+            pinned: false,
+            paid: false,
+            edited: false,
+            tips: 4,
+            heatmap: [1,2,4,6,5,3,2,1,1,0],
+            saved: false
+        },
+        {
+            id: 'p3',
+            type: 'poll',
+            content: 'Which drop should we launch first next month?',
+            views: 720,
+            timestamp: Date.now() - 10800000,
+            reactions: { '❤️': 6, '🔥': 4, '😂': 0, '👍': 3 },
+            myReaction: null,
+            pinned: false,
+            paid: false,
+            edited: false,
+            tips: 0,
+            heatmap: [1,1,2,3,4,3,2,1,0,0],
+            saved: false,
+            poll: {
+                question: 'Which drop should we launch first next month?',
+                options: [
+                    { text: 'Ankara collection', votes: 58 },
+                    { text: 'Tech accessories', votes: 34 },
+                    { text: 'Home & kitchen', votes: 21 }
+                ],
+                hideNames: true,
+                endsAt: Date.now() + 86400000,
+                votedIndex: null
+            }
+        },
+        {
+            id: 'p4',
+            type: 'groupbuy',
+            content: 'Group-Buy: Wireless earbuds — price drops for everyone as more people join!',
+            views: 540,
+            timestamp: Date.now() - 14400000,
+            reactions: { '❤️': 9, '🔥': 11, '😂': 0, '👍': 5 },
+            myReaction: null,
+            pinned: false,
+            paid: false,
+            edited: false,
+            tips: 0,
+            heatmap: [2,4,6,9,7,5,3,2,1,0],
+            saved: false,
+            groupbuy: { target: 100, joined: 63, originalPrice: 12000, dropPrice: 8500, joinedByMe: false }
+        },
+        {
+            id: 'p5',
+            type: 'escrow',
+            content: 'Verified vendor listing — pay safely, funds only release to the seller after you confirm delivery.',
+            views: 410,
+            timestamp: Date.now() - 18000000,
+            reactions: { '❤️': 5, '🔥': 2, '😂': 0, '👍': 4 },
+            myReaction: null,
+            pinned: false,
+            paid: false,
+            edited: false,
+            tips: 0,
+            heatmap: [1,1,2,2,3,2,1,1,0,0],
+            saved: false,
+            escrow: { item: 'Original Samsung Fast Charger', price: 8500, paid: false }
+        },
+        {
+            id: 'p6',
+            type: 'delivery',
+            content: 'Delivered! Order #NX2291 confirmed at customer\'s doorstep in Kano.',
+            image: 'https://placehold.co/600x360/111111/1EE676?text=Delivered',
+            views: 305,
+            timestamp: Date.now() - 21600000,
+            reactions: { '❤️': 20, '🔥': 3, '😂': 0, '👍': 14 },
+            myReaction: null,
+            pinned: false,
+            paid: false,
+            edited: false,
+            tips: 2,
+            heatmap: [1,2,2,3,2,1,1,0,0,0],
+            saved: false
+        },
+        {
+            id: 'p7',
+            type: 'unlock',
+            content: 'Behind-the-scenes video of our new warehouse — help unlock it for everyone!',
+            views: 190,
+            timestamp: Date.now() - 25200000,
+            reactions: { '❤️': 3, '🔥': 2, '😂': 0, '👍': 2 },
+            myReaction: null,
+            pinned: false,
+            paid: false,
+            edited: false,
+            tips: 0,
+            heatmap: [1,1,1,2,1,1,0,0,0,0],
+            saved: false,
+            unlock: { needed: 200, current: 148, unlocked: false }
+        },
+        {
+            id: 'p8',
+            type: 'image',
+            content: 'A closer look at next week\'s exclusive drop — Nexus Plus members already got early access yesterday.',
+            image: 'https://placehold.co/600x360/111111/FFB800?text=Exclusive',
+            views: 88,
+            timestamp: Date.now() - 28800000,
+            reactions: { '❤️': 2, '🔥': 1, '😂': 0, '👍': 1 },
+            myReaction: null,
+            pinned: false,
+            paid: true,
+            edited: false,
+            tips: 0,
+            heatmap: [1,1,0,1,0,0,0,0,0,0],
+            saved: false
+        }
+    ];
+
+    let duoPartner = { active: true, name: 'Naija Fashion Hub' }; // HOT FEATURE 8, applied to one demo post below
+
+    /* ---------- formatting helpers ---------- */
+    function formatCount(n) {
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        return n.toString();
+    }
+    function formatTimeAgo(ts) {
+        const mins = Math.floor((Date.now() - ts) / 60000);
+        if (mins < 60) return mins + 'm ago';
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + 'h ago';
+        return Math.floor(hrs / 24) + 'd ago';
+    }
+    function formatClockTime(ts) {
+        const d = new Date(ts);
+        let h = d.getHours();
+        const m = d.getMinutes().toString().padStart(2, '0');
+        const ampm = h >= 12 ? 'pm' : 'am';
+        h = h % 12; if (h === 0) h = 12;
+        return h + ':' + m + ' ' + ampm;
+    }
+    function formatDateLabel(ts) {
+        const d = new Date(ts);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        if (d.toDateString() === today.toDateString()) return 'Today';
+        if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+        return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
+    }
+    function formatNaira(n) { return '₦' + n.toLocaleString(); }
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(window._toastTimer);
+        window._toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    /* ---------- header ---------- */
+    function renderHeader() {
+        document.getElementById('headerAvatar').textContent = channelInfo.initials;
+        document.getElementById('headerName').innerHTML = channelInfo.name + (channelInfo.verified ? ' <span class="verified-badge"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--cyan-neon)"><path d="M12 2l2.4 2.4 3.4-.5.5 3.4L21 9.6 18.7 12 21 14.4l-2.7 1.7-.5 3.4-3.4-.5L12 22l-2.4-2.4-3.4.5-.5-3.4L3 14.4 5.3 12 3 9.6l2.7-1.7.5-3.4 3.4.5z"/><path d="M9 12l2 2 4-4" stroke="#050505" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '');
+        document.getElementById('headerSubCount').textContent = formatCount(channelInfo.subscriberCount) + ' subscribers' + (channelInfo.muted ? ' · Muted' : '');
+    }
+
+    /* ---------- HOT FEATURE 7: mood pulse ---------- */
+    function computeMoodScore() {
+        let pos = 0, tot = 0;
+        postsData.forEach(p => {
+            Object.entries(p.reactions).forEach(([e, c]) => {
+                tot += c;
+                if (e === '❤️' || e === '🔥' || e === '👍') pos += c;
+            });
+        });
+        if (tot === 0) return 50;
+        return Math.round((pos / tot) * 100);
+    }
+    function renderMoodPulse() {
+        const score = computeMoodScore();
+        document.getElementById('moodPulseFill').style.width = score + '%';
+        let label = '😐 Neutral';
+        if (score >= 80) label = '🔥 On Fire';
+        else if (score >= 60) label = '🙂 Warm';
+        else if (score < 40) label = '😴 Quiet';
+        document.getElementById('moodPulseLabel').textContent = label;
+    }
+
+    /* ---------- HOT FEATURE 10: data saver ---------- */
+    function toggleDataSaver() {
+        channelInfo.dataSaver = !channelInfo.dataSaver;
+        document.getElementById('dataSaverToggle').classList.toggle('on', channelInfo.dataSaver);
+        document.getElementById('dataSaverStatusText').textContent = channelInfo.dataSaver
+            ? 'Data Saver: On — tap any image or video to load it'
+            : 'Data Saver: Off — media loads automatically';
+        renderFeed();
+        showToast(channelInfo.dataSaver ? 'Data Saver turned on' : 'Data Saver turned off');
+    }
+    function loadFullMedia(postId) {
+        const el = document.getElementById('placeholder_' + postId);
+        const post = postsData.find(p => p.id === postId);
+        if (!el || !post) return;
+        if (post.type === 'image') {
+            el.outerHTML = `<img src="${post.image}" class="post-image">`;
+        } else if (post.type === 'video') {
+            el.outerHTML = `<video src="${post.video}" class="post-video" controls poster="${post.poster || ''}"></video>`;
+        }
+    }
+
+    /* ---------- reaction heatmap timeline (HOT FEATURE 4) ---------- */
+    function renderHeatmap(heatmapArr) {
+        const max = Math.max(...heatmapArr, 1);
+        return `<div class="heatmap-strip">${heatmapArr.map(v => `<div class="heatmap-bar" style="height:${Math.max(6, (v / max) * 22)}px"></div>`).join('')}</div>`;
+    }
+
+    /* ---------- feed rendering ---------- */
+    function renderFeed() {
+        const container = document.getElementById('feedContainer');
+        container.innerHTML = '';
+        const sorted = [...postsData].sort((a, b) => (b.pinned - a.pinned) || (b.timestamp - a.timestamp));
+        let lastDateLabel = null;
+        sorted.forEach(post => {
+            const dateLabel = formatDateLabel(post.timestamp);
+            if (dateLabel !== lastDateLabel && !post.pinned) {
+                const sep = document.createElement('div');
+                sep.className = 'date-separator';
+                sep.innerHTML = `<span>${dateLabel}</span>`;
+                container.appendChild(sep);
+                lastDateLabel = dateLabel;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'post-card';
+
+            let mediaHTML = '';
+            if (post.type === 'image' && post.image) {
+                mediaHTML = channelInfo.dataSaver
+                    ? `<div class="media-placeholder" id="placeholder_${post.id}" onclick="loadFullMedia('${post.id}')">
+                         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                         <span>Tap to load image · Data Saver is on</span>
+                       </div>`
+                    : `<img src="${post.image}" class="post-image">`;
+            } else if (post.type === 'video' && post.video) {
+                mediaHTML = channelInfo.dataSaver
+                    ? `<div class="media-placeholder" id="placeholder_${post.id}" onclick="loadFullMedia('${post.id}')">
+                         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                         <span>Tap to load video · Data Saver is on</span>
+                       </div>`
+                    : `<video src="${post.video}" class="post-video" controls poster="${post.poster || ''}"></video>`;
+            } else if (post.type === 'delivery' && post.image) {
+                mediaHTML = channelInfo.dataSaver
+                    ? `<div class="media-placeholder" id="placeholder_${post.id}" onclick="loadFullMedia('${post.id}')"><span>Tap to load photo</span></div>`
+                    : `<img src="${post.image}" class="post-image">`;
+            }
+
+            let bodyBlockHTML = '';
+            if (post.paid && !channelInfo.isSubscribedPaid) {
+                bodyBlockHTML = `
+                    <div class="paid-lock-overlay">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                        <p>This post is for Nexus Plus subscribers only.</p>
+                        <div class="paid-unlock-btn" onclick="openSubscribeModal()">Unlock with Nexus Plus</div>
+                    </div>`;
+            } else {
+                if (post.type === 'poll') bodyBlockHTML = renderPollBlock(post);
+                if (post.type === 'groupbuy') bodyBlockHTML = renderGroupBuyBlock(post);
+                if (post.type === 'escrow') bodyBlockHTML = renderEscrowBlock(post);
+                if (post.type === 'unlock') bodyBlockHTML = renderUnlockBlock(post);
+            }
+
+            const duoTagHTML = (post.id === 'p2' && duoPartner.active)
+                ? `<div class="duo-badge">
+                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                     Co-broadcast with <b>${duoPartner.name}</b>
+                   </div>`
+                : '';
+
+            const deliveryBadgeHTML = post.type === 'delivery'
+                ? `<div class="delivery-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green-ok)" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Verified Delivery Proof</div>`
+                : '';
+
+            card.innerHTML = `
+                ${post.pinned ? `<div class="pin-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 2l1.5 5.5L19 9l-4.5 3L16 18l-4-3.2L8 18l1.5-6L5 9l5.5-1.5z"/></svg> Pinned message</div>` : ''}
+                ${duoTagHTML}
+                ${deliveryBadgeHTML}
+                ${mediaHTML}
+                <div class="post-content-wrap">
+                    <span class="post-content-text">${post.content}${post.edited ? '<span class="edited-tag">(edited)</span>' : ''}</span><span class="post-timestamp">${formatClockTime(post.timestamp)}</span>
+                </div>
+                ${bodyBlockHTML}
+                ${renderHeatmap(post.heatmap)}
+                <div class="post-footer">
+                    <div class="post-views">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        ${formatCount(post.views)}
+                    </div>
+                    <div class="reactions-bar">
+                        ${REACTION_EMOJIS.map(e => `
+                            <div class="reaction-pill ${post.myReaction === e ? 'active' : ''}" onclick="toggleReaction('${post.id}', '${e}')">
+                                ${e} ${post.reactions[e] > 0 ? post.reactions[e] : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="post-actions-row">
+                    <div class="post-action-btn ${post.saved ? 'active-save' : ''}" onclick="toggleSavePost('${post.id}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="${post.saved ? 'var(--gold)' : 'none'}" stroke="${post.saved ? 'var(--gold)' : 'currentColor'}" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        ${post.saved ? 'Saved' : 'Save'}
+                    </div>
+                    <div class="post-action-btn" onclick="sharePost('${post.id}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+                        Share
+                    </div>
+                    <div class="post-action-btn active-tip" onclick="openTipModal('${post.id}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5a2.5 2.5 0 0 1 2.5-2 2 2 0 0 1 0 4 2 2 0 0 1 0 4 2.5 2.5 0 0 1-2.5-2"/></svg>
+                        Tip ${post.tips > 0 ? '· ' + post.tips : ''}
+                    </div>
+                    ${isAdmin ? `<div class="post-action-btn" onclick="openEditModal('${post.id}')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                        Edit
+                    </div>
+                    <div class="post-action-btn" onclick="togglePin('${post.id}')">
+                        ${post.pinned ? 'Unpin' : 'Pin'}
+                    </div>` : ''}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        renderMoodPulse();
+    }
+
+    function renderPollBlock(post) {
+        const poll = post.poll;
+        const totalVotes = poll.options.reduce((s, o) => s + o.votes, 0);
+        const timeLeft = poll.endsAt - Date.now();
+        const hoursLeft = Math.max(0, Math.floor(timeLeft / 3600000));
+        return `
+            <div class="poll-block">
+                <div class="poll-question">📊 ${poll.question}</div>
+                ${poll.options.map((o, i) => {
+                    const pct = totalVotes ? Math.round((o.votes / totalVotes) * 100) : 0;
+                    return `
+                        <div class="poll-option ${poll.votedIndex === i ? 'voted-for' : ''}" onclick="voteOnPoll('${post.id}', ${i})">
+                            <div class="poll-bar-fill" style="width:${poll.votedIndex !== null ? pct : 0}%"></div>
+                            <div class="poll-option-row">
+                                <span>${o.text}</span>
+                                <span>${poll.votedIndex !== null ? pct + '%' : ''}</span>
+                            </div>
+                        </div>`;
+                }).join('')}
+                <div class="poll-meta">${formatCount(totalVotes)} votes · ${poll.hideNames ? 'Anonymous' : 'Public'} · ${hoursLeft > 0 ? hoursLeft + 'h left' : 'Ended'}</div>
+            </div>`;
+    }
+
+    function renderGroupBuyBlock(post) {
+        const gb = post.groupbuy;
+        const pct = Math.min(100, Math.round((gb.joined / gb.target) * 100));
+        return `
+            <div class="groupbuy-block">
+                <div class="groupbuy-title">🛒 Group-Buy Deal</div>
+                <div class="groupbuy-track"><div class="groupbuy-fill" style="width:${pct}%"></div></div>
+                <div class="groupbuy-info">
+                    <span>${gb.joined}/${gb.target} joined</span>
+                    <span><s style="opacity:.5">${formatNaira(gb.originalPrice)}</s> ${formatNaira(gb.dropPrice)}</span>
+                </div>
+                <div class="groupbuy-btn" onclick="joinGroupBuy('${post.id}')">${gb.joinedByMe ? '✓ You joined this deal' : 'Join this group-buy'}</div>
+            </div>`;
+    }
+
+    function renderEscrowBlock(post) {
+        const es = post.escrow;
+        return `
+            <div class="escrow-block">
+                <div class="escrow-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green-ok)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Trust-Pay Escrow · ${es.item}</div>
+                <div class="escrow-price">${formatNaira(es.price)}</div>
+                <div class="escrow-btn" onclick="payEscrow('${post.id}')">${es.paid ? '✓ Funds held in escrow' : 'Pay into escrow'}</div>
+                <div class="escrow-note">Seller is paid only after you confirm delivery</div>
+            </div>`;
+    }
+
+    function renderUnlockBlock(post) {
+        const u = post.unlock;
+        const pct = Math.min(100, Math.round((u.current / u.needed) * 100));
+        if (u.unlocked) {
+            return `<div class="unlock-block"><div class="unlock-title">🔓 Unlocked by the community!</div></div>`;
+        }
+        return `
+            <div class="unlock-block">
+                <div class="unlock-title">🔒 Crowd-Unlock — ${u.current}/${u.needed} reactions needed</div>
+                <div class="unlock-track"><div class="unlock-fill" style="width:${pct}%"></div></div>
+                <div class="unlock-btn" onclick="boostUnlock('${post.id}')">React to help unlock</div>
+            </div>`;
+    }
+
+    /* ---------- reactions ---------- */
+    function toggleReaction(postId, emoji) {
+        const post = postsData.find(p => p.id === postId);
+        if (!post) return;
+        if (post.myReaction === emoji) {
+            post.reactions[emoji]--;
+            post.myReaction = null;
+        } else {
+            if (post.myReaction) post.reactions[post.myReaction]--;
+            post.reactions[emoji]++;
+            post.myReaction = emoji;
+        }
+        post.heatmap[post.heatmap.length - 1]++;
+        renderFeed();
+    }
+
+    /* ---------- save / share (standard features) ---------- */
+    function toggleSavePost(postId) {
+        const post = postsData.find(p => p.id === postId);
+        if (!post) return;
+        post.saved = !post.saved;
+        showToast(post.saved ? 'Saved to your bookmarks' : 'Removed from bookmarks');
+        renderFeed();
+    }
+    function sharePost(postId) {
+        const link = `https://${channelInfo.link}/post/${postId}`;
+        if (navigator.clipboard) navigator.clipboard.writeText(link);
+        showToast('Post link copied');
+    }
+
+    /* ---------- HOT FEATURE 5: Naira tip jar ---------- */
+    let activeTipPostId = null;
+    function openTipModal(postId) {
+        activeTipPostId = postId;
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Send a tip</div>
+            <div class="modal-sub">100% goes straight to the channel's wallet — instant payout, no waiting.</div>
+            <div style="display:flex;gap:8px;margin-bottom:14px;">
+                ${[100,200,500,1000].map(v => `<div class="modal-btn ghost" style="flex:1;margin-top:0;" onclick="sendTip(${v})">₦${v}</div>`).join('')}
+            </div>
+            <div class="modal-btn primary" onclick="closeModal()">Done</div>
+        `);
+        openModal();
+    }
+    function sendTip(amount) {
+        const post = postsData.find(p => p.id === activeTipPostId);
+        if (post) post.tips += 1;
+        showToast(`₦${amount} tip sent — thank you!`);
+        closeModal();
+        renderFeed();
+    }
+
+    /* ---------- HOT FEATURE 2: group-buy ---------- */
+    function joinGroupBuy(postId) {
+        const post = postsData.find(p => p.id === postId);
+        if (!post || post.groupbuy.joinedByMe) return;
+        post.groupbuy.joined++;
+        post.groupbuy.joinedByMe = true;
+        showToast('You joined the group-buy — price locks in when the target is reached');
+        renderFeed();
+    }
+
+    /* ---------- HOT FEATURE 3: escrow ---------- */
+    function payEscrow(postId) {
+        const post = postsData.find(p => p.id === postId);
+        if (!post || post.escrow.paid) return;
+        post.escrow.paid = true;
+        showToast('Payment held in escrow — funds release after delivery is confirmed');
+        renderFeed();
+    }
+
+    /* ---------- HOT FEATURE 9: crowd-unlock ---------- */
+    function boostUnlock(postId) {
+        const post = postsData.find(p => p.id === postId);
+        if (!post || post.unlock.unlocked) return;
+        post.unlock.current += 6;
+        if (post.unlock.current >= post.unlock.needed) {
+            post.unlock.current = post.unlock.needed;
+            post.unlock.unlocked = true;
+            showToast('Post unlocked by the community! 🔓');
+        } else {
+            showToast('Thanks — pushing this closer to unlocked');
+        }
+        renderFeed();
+    }
+
+    /* ---------- polls ---------- */
+    function voteOnPoll(postId, optionIndex) {
+        const post = postsData.find(p => p.id === postId);
+        if (!post || post.poll.votedIndex !== null) return;
+        post.poll.options[optionIndex].votes++;
+        post.poll.votedIndex = optionIndex;
+        renderFeed();
+    }
+
+    /* ---------- pin / edit ---------- */
+    function togglePin(postId) {
+        const post = postsData.find(p => p.id === postId);
+        if (!post) return;
+        postsData.forEach(p => { if (p.id !== postId) p.pinned = false; });
+        post.pinned = !post.pinned;
+        renderFeed();
+    }
+    let activeEditPostId = null;
+    function openEditModal(postId) {
+        const post = postsData.find(p => p.id === postId);
+        if (!post) return;
+        activeEditPostId = postId;
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Edit message</div>
+            <div class="modal-sub">Edits are marked with an "(edited)" tag, same as other channel platforms.</div>
+            <textarea class="composer-textarea" id="editTextarea">${post.content}</textarea>
+            <div class="modal-btn primary" onclick="saveEditedPost()">Save changes</div>
+            <div class="modal-btn danger" onclick="deletePost('${postId}')">Delete message</div>
+        `);
+        openModal();
+    }
+    function saveEditedPost() {
+        const post = postsData.find(p => p.id === activeEditPostId);
+        const text = document.getElementById('editTextarea').value.trim();
+        if (!post || !text) return;
+        post.content = text;
+        post.edited = true;
+        closeModal();
+        renderFeed();
+        showToast('Message updated');
+    }
+    function deletePost(postId) {
+        postsData = postsData.filter(p => p.id !== postId);
+        closeModal();
+        renderFeed();
+        showToast('Message deleted');
+    }
+
+    /* ---------- HOT FEATURE 1: AI channel assistant ---------- */
+    function toggleAIPanel() {
+        document.getElementById('aiPanel').classList.toggle('open');
+        const body = document.getElementById('aiPanelBody');
+        if (!body.dataset.greeted) {
+            body.innerHTML = `<div class="ai-msg bot">Hi! I know everything posted in this channel — ask me about a post, a deal, or how the group-buy and escrow features work.</div>`;
+            body.dataset.greeted = '1';
+        }
+    }
+    function sendAIQuestion() {
+        const input = document.getElementById('aiInput');
+        const q = input.value.trim();
+        if (!q) return;
+        const body = document.getElementById('aiPanelBody');
+        body.innerHTML += `<div class="ai-msg user">${q}</div>`;
+        input.value = '';
+        body.scrollTop = body.scrollHeight;
+        // --GEMINI HOOK-- replace this local answer with a real call to your
+        // existing Gemini vendor-chatbot endpoint, passing postsData as context.
+        setTimeout(() => {
+            let answer = "I can see this channel's posts, polls, group-buys and escrow listings — try asking about a specific one, e.g. 'what's the group-buy price?'";
+            const lower = q.toLowerCase();
+            if (lower.includes('group') || lower.includes('buy')) {
+                const gb = postsData.find(p => p.groupbuy);
+                if (gb) answer = `The active group-buy is at ${gb.groupbuy.joined}/${gb.groupbuy.target} joined — price drops to ${formatNaira(gb.groupbuy.dropPrice)} once the target is hit.`;
+            } else if (lower.includes('escrow') || lower.includes('trust')) {
+                answer = "Trust-Pay Escrow holds your payment safely and only releases it to the seller after you confirm the item was delivered.";
+            } else if (lower.includes('subscri') || lower.includes('plus') || lower.includes('vip')) {
+                answer = `Nexus Plus is ${formatNaira(channelInfo.tiers[1].price)}/month for early access and exclusive posts, VIP is ${formatNaira(channelInfo.tiers[2].price)}/month.`;
+            } else if (lower.includes('pin')) {
+                const pinned = postsData.find(p => p.pinned);
+                answer = pinned ? `The pinned message right now is: "${pinned.content}"` : 'Nothing is pinned right now.';
+            }
+            body.innerHTML += `<div class="ai-msg bot">${answer}</div>`;
+            body.scrollTop = body.scrollHeight;
+        }, 500);
+    }
+
+    /* ---------- HOT FEATURE 8: duo broadcast ---------- */
+    function openDuoModal() {
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Duo Broadcast</div>
+            <div class="modal-sub">Co-post one message into your channel and a partner channel at the same time.</div>
+            <div class="modal-row">
+                <div class="modal-row-label">Duo Broadcast<small>Requires the partner channel to accept your invite</small></div>
+                <div class="toggle-switch ${duoPartner.active ? 'on' : ''}" onclick="toggleDuo()"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="modal-row"><div class="modal-row-label">Partner channel<small>${duoPartner.name}</small></div></div>
+            <div class="modal-btn primary" onclick="closeModal()">Done</div>
+        `);
+        openModal();
+    }
+    function toggleDuo() {
+        duoPartner.active = !duoPartner.active;
+        openDuoModal();
+        renderFeed();
+    }
+
+    /* ---------- About modal (standard) ---------- */
+    function openAboutModal() {
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">${channelInfo.name}</div>
+            <div class="modal-sub">${channelInfo.category} · ${formatCount(channelInfo.subscriberCount)} subscribers</div>
+            <div class="modal-row"><div class="modal-row-label">${channelInfo.description}</div></div>
+            <div class="modal-row"><div class="modal-row-label">Invite link<small>${channelInfo.link}</small></div><div class="modal-btn ghost" style="margin:0;width:auto;padding:8px 14px;" onclick="copyInviteLink()">Copy</div></div>
+            <div class="modal-btn ghost" onclick="openSubscribeModal()">View subscription tiers</div>
+            ${isAdmin ? `<div class="modal-btn ghost" onclick="openAnalyticsModal()">Channel analytics</div>` : ''}
+            ${isAdmin ? `<div class="modal-btn ghost" onclick="openDuoModal()">Duo Broadcast settings</div>` : ''}
+        `);
+        openModal();
+    }
+    function copyInviteLink() {
+        if (navigator.clipboard) navigator.clipboard.writeText('https://' + channelInfo.link);
+        showToast('Invite link copied');
+    }
+
+    /* ---------- menu modal: mute / search / report / saved (standard) ---------- */
+    function openMenuModal() {
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Channel options</div>
+            <div class="modal-row">
+                <div class="modal-row-label">Mute notifications<small>Stop alerts for new posts</small></div>
+                <div class="toggle-switch ${channelInfo.muted ? 'on' : ''}" onclick="toggleMute()"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="modal-row" style="cursor:pointer" onclick="openSavedModal()"><div class="modal-row-label">Saved messages<small>${postsData.filter(p=>p.saved).length} saved</small></div></div>
+            <div class="modal-row" style="cursor:pointer" onclick="openAboutModal()"><div class="modal-row-label">About this channel</div></div>
+            ${!isAdmin ? `<div class="modal-btn danger" onclick="reportChannel()">Report channel</div>` : ''}
+            ${!isAdmin ? `<div class="modal-btn ghost" onclick="closeModal()">Leave channel</div>` : ''}
+        `);
+        openModal();
+    }
+    function toggleMute() {
+        channelInfo.muted = !channelInfo.muted;
+        renderHeader();
+        openMenuModal();
+        showToast(channelInfo.muted ? 'Channel muted' : 'Channel unmuted');
+    }
+    function reportChannel() {
+        closeModal();
+        showToast('Report submitted — our team will review it');
+    }
+    function openSavedModal() {
+        const saved = postsData.filter(p => p.saved);
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Saved messages</div>
+            ${saved.length ? saved.map(p => `<div class="search-result-item">${p.content}</div>`).join('') : '<div class="modal-sub">Nothing saved yet — tap Save on any post.</div>'}
+        `);
+        openModal();
+    }
+
+    /* ---------- search (standard) ---------- */
+    function openSearchModal() {
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Search this channel</div>
+            <div class="search-input-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="searchInput" placeholder="Search messages..." oninput="performSearch()">
+            </div>
+            <div id="searchResults"></div>
+        `);
+        openModal();
+        setTimeout(() => document.getElementById('searchInput').focus(), 200);
+    }
+    function performSearch() {
+        const q = document.getElementById('searchInput').value.trim().toLowerCase();
+        const results = document.getElementById('searchResults');
+        if (!q) { results.innerHTML = ''; return; }
+        const matches = postsData.filter(p => p.content.toLowerCase().includes(q));
+        results.innerHTML = matches.length
+            ? matches.map(p => `<div class="search-result-item">${p.content}</div>`).join('')
+            : '<div class="modal-sub">No messages found.</div>';
+    }
+
+    /* ---------- subscription tiers (standard: paid channels) ---------- */
+    let selectedTierId = channelInfo.isSubscribedPaid ? 'plus' : 'free';
+    function openSubscribeModal() {
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Subscription tiers</div>
+            <div class="modal-sub">Support this channel and unlock exclusive posts.</div>
+            ${channelInfo.tiers.map(t => `
+                <div class="tier-card ${selectedTierId === t.id ? 'selected' : ''}" onclick="selectTier('${t.id}')">
+                    <div class="tier-name"><span>${t.name}</span><span class="tier-price">${t.price === 0 ? 'Free' : '₦' + t.price.toLocaleString() + '/mo'}</span></div>
+                    <div class="tier-desc">${t.desc}</div>
+                </div>
+            `).join('')}
+            <div class="modal-btn primary" onclick="confirmSubscription()">Confirm</div>
+        `);
+        openModal();
+    }
+    function selectTier(tierId) {
+        selectedTierId = tierId;
+        openSubscribeModal();
+    }
+    function confirmSubscription() {
+        channelInfo.isSubscribedPaid = (selectedTierId !== 'free');
+        closeModal();
+        renderFeed();
+        showToast(channelInfo.isSubscribedPaid ? 'Subscribed — exclusive posts unlocked' : 'You are on the Free tier');
+    }
+
+    /* ---------- analytics (standard, admin only) ---------- */
+    function openAnalyticsModal() {
+        const totalViews = postsData.reduce((s, p) => s + p.views, 0);
+        const totalReactions = postsData.reduce((s, p) => s + Object.values(p.reactions).reduce((a,b)=>a+b,0), 0);
+        const totalTips = postsData.reduce((s, p) => s + p.tips, 0);
+        const bars = [40,55,35,70,60,85,50];
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Channel analytics</div>
+            <div class="analytics-grid">
+                <div class="analytics-tile"><div class="num">${formatCount(channelInfo.subscriberCount)}</div><div class="lbl">Subscribers</div></div>
+                <div class="analytics-tile"><div class="num">${formatCount(totalViews)}</div><div class="lbl">Total views</div></div>
+                <div class="analytics-tile"><div class="num">${formatCount(totalReactions)}</div><div class="lbl">Reactions</div></div>
+                <div class="analytics-tile"><div class="num">${totalTips}</div><div class="lbl">Tips received</div></div>
+            </div>
+            <div class="modal-sub" style="margin-bottom:6px;">Views this week</div>
+            <div class="mini-bars">${bars.map(b => `<div style="height:${b}%"></div>`).join('')}</div>
+            <div class="modal-btn ghost" onclick="closeModal()">Close</div>
+        `);
+        openModal();
+    }
+
+    /* ---------- generic modal helpers ---------- */
+    function renderModal(html) { document.getElementById('modalSheet').innerHTML = html; }
+    function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+    function closeModalOnBackdrop(e) { if (e.target.id === 'modalOverlay') closeModal(); }
+
+    /* ---------- composer + attach menu (standard: image/video/poll/schedule + hot variants) ---------- */
+    function renderBottomBar() {
+        const bar = document.getElementById('bottomBar');
+        if (isAdmin) {
+            bar.innerHTML = `
+                <div class="composer-bar">
+                    <div class="composer-attach-btn" onclick="toggleAttachMenu()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+                    </div>
+                    <input type="text" class="composer-input" id="composerInput" placeholder="Broadcast a message...">
+                    <div class="composer-send" onclick="publishPost()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2.4"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+                    </div>
+                </div>
+            `;
+        } else {
+            bar.innerHTML = `<div class="subscribe-bar" onclick="subscribeToChannel()">Subscribe</div>`;
+        }
+        renderAttachMenu();
+    }
+    function subscribeToChannel() {
+        channelInfo.subscriberCount++;
+        renderHeader();
+        showToast('Subscribed to ' + channelInfo.name);
+    }
+
+    function renderAttachMenu() {
+        const menu = document.getElementById('attachMenu');
+        const options = [
+            { icon: '🖼️', label: 'Image', fn: 'attachImage' },
+            { icon: '🎬', label: 'Video', fn: 'attachVideo' },
+            { icon: '📊', label: 'Poll', fn: 'openPollComposer' },
+            { icon: '🛒', label: 'Group-Buy', fn: 'openGroupBuyComposer' },
+            { icon: '🛡️', label: 'Escrow', fn: 'openEscrowComposer' },
+            { icon: '📦', label: 'Delivery Proof', fn: 'openDeliveryComposer' },
+            { icon: '🔓', label: 'Crowd-Unlock', fn: 'openUnlockComposer' },
+            { icon: '⏰', label: 'Schedule', fn: 'openScheduleComposer' },
+            { icon: '⭐', label: 'Mark Paid', fn: 'togglePaidComposeFlag' }
+        ];
+        menu.innerHTML = options.map(o => `
+            <div class="attach-option" onclick="${o.fn}()">
+                <div class="attach-icon-circle" style="font-size:18px;">${o.icon}</div>
+                <span>${o.label}</span>
+            </div>
+        `).join('');
+    }
+    function toggleAttachMenu() { document.getElementById('attachMenu').classList.toggle('open'); }
+
+    function attachImage() {
+        toggleAttachMenu();
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Attach image</div>
+            <div class="modal-sub">Paste an image URL (in production this opens your device gallery).</div>
+            <textarea class="composer-textarea" id="mediaUrlInput" placeholder="https://..."></textarea>
+            <div class="modal-btn primary" onclick="publishPost('image')">Attach & post</div>
+        `);
+        openModal();
+    }
+    function attachVideo() {
+        toggleAttachMenu();
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Attach video</div>
+            <div class="modal-sub">Paste a video URL (in production this opens your device gallery).</div>
+            <textarea class="composer-textarea" id="mediaUrlInput" placeholder="https://..."></textarea>
+            <div class="modal-btn primary" onclick="publishPost('video')">Attach & post</div>
+        `);
+        openModal();
+    }
+
+    let pollOptionCount = 2;
+    function openPollComposer() {
+        toggleAttachMenu();
+        pollOptionCount = 2;
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Create a poll</div>
+            <input type="text" id="pollQuestionInput" placeholder="Ask a question..." class="composer-textarea" style="min-height:auto;">
+            <div id="pollOptionsWrap">
+                <div class="poll-option-input"><input type="text" class="pollOptEl" placeholder="Option 1"></div>
+                <div class="poll-option-input"><input type="text" class="pollOptEl" placeholder="Option 2"></div>
+            </div>
+            <div class="modal-btn ghost" onclick="addPollOption()">+ Add option</div>
+            <div class="modal-row">
+                <div class="modal-row-label">Hide voter names<small>Anonymous voting</small></div>
+                <div class="toggle-switch on" id="pollHideToggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="modal-btn primary" onclick="createPoll()">Publish poll</div>
+        `);
+        openModal();
+    }
+    function addPollOption() {
+        pollOptionCount++;
+        document.getElementById('pollOptionsWrap').insertAdjacentHTML('beforeend', `<div class="poll-option-input"><input type="text" class="pollOptEl" placeholder="Option ${pollOptionCount}"></div>`);
+    }
+    function createPoll() {
+        const question = document.getElementById('pollQuestionInput').value.trim();
+        const opts = Array.from(document.querySelectorAll('.pollOptEl')).map(i => i.value.trim()).filter(Boolean);
+        if (!question || opts.length < 2) { showToast('Add a question and at least 2 options'); return; }
+        const hideNames = document.getElementById('pollHideToggle').classList.contains('on');
+        postsData.unshift(newPostBase({
+            type: 'poll',
+            content: question,
+            poll: { question, options: opts.map(t => ({ text: t, votes: 0 })), hideNames, endsAt: Date.now() + 86400000, votedIndex: null }
+        }));
+        closeModal();
+        renderFeed();
+        showToast('Poll published');
+    }
+
+    function openGroupBuyComposer() {
+        toggleAttachMenu();
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Start a Group-Buy</div>
+            <textarea class="composer-textarea" id="gbTextInput" placeholder="Describe the deal..."></textarea>
+            <div class="poll-option-input"><input type="number" id="gbTarget" placeholder="Target buyers e.g. 100"></div>
+            <div class="poll-option-input"><input type="number" id="gbOriginal" placeholder="Original price ₦"></div>
+            <div class="poll-option-input"><input type="number" id="gbDrop" placeholder="Group price ₦"></div>
+            <div class="modal-btn primary" onclick="createGroupBuy()">Publish group-buy</div>
+        `);
+        openModal();
+    }
+    function createGroupBuy() {
+        const content = document.getElementById('gbTextInput').value.trim();
+        const target = parseInt(document.getElementById('gbTarget').value) || 50;
+        const original = parseInt(document.getElementById('gbOriginal').value) || 0;
+        const drop = parseInt(document.getElementById('gbDrop').value) || 0;
+        if (!content) { showToast('Describe the deal first'); return; }
+        postsData.unshift(newPostBase({ type: 'groupbuy', content, groupbuy: { target, joined: 1, originalPrice: original, dropPrice: drop, joinedByMe: false } }));
+        closeModal();
+        renderFeed();
+        showToast('Group-buy published');
+    }
+
+    function openEscrowComposer() {
+        toggleAttachMenu();
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Create Trust-Pay listing</div>
+            <textarea class="composer-textarea" id="esTextInput" placeholder="Describe the item..."></textarea>
+            <div class="poll-option-input"><input type="text" id="esItem" placeholder="Item name"></div>
+            <div class="poll-option-input"><input type="number" id="esPrice" placeholder="Price ₦"></div>
+            <div class="modal-btn primary" onclick="createEscrowPost()">Publish listing</div>
+        `);
+        openModal();
+    }
+    function createEscrowPost() {
+        const content = document.getElementById('esTextInput').value.trim();
+        const item = document.getElementById('esItem').value.trim() || 'Item';
+        const price = parseInt(document.getElementById('esPrice').value) || 0;
+        if (!content) { showToast('Describe the item first'); return; }
+        postsData.unshift(newPostBase({ type: 'escrow', content, escrow: { item, price, paid: false } }));
+        closeModal();
+        renderFeed();
+        showToast('Trust-Pay listing published');
+    }
+
+    function openDeliveryComposer() {
+        toggleAttachMenu();
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Post delivery proof</div>
+            <textarea class="composer-textarea" id="dpTextInput" placeholder="e.g. Delivered! Order #123 confirmed..."></textarea>
+            <textarea class="composer-textarea" id="dpImageInput" placeholder="Photo URL (optional)" style="min-height:40px;"></textarea>
+            <div class="modal-btn primary" onclick="createDeliveryPost()">Publish proof</div>
+        `);
+        openModal();
+    }
+    function createDeliveryPost() {
+        const content = document.getElementById('dpTextInput').value.trim();
+        const image = document.getElementById('dpImageInput').value.trim() || null;
+        if (!content) { showToast('Add a short description'); return; }
+        postsData.unshift(newPostBase({ type: 'delivery', content, image }));
+        closeModal();
+        renderFeed();
+        showToast('Delivery proof published');
+    }
+
+    function openUnlockComposer() {
+        toggleAttachMenu();
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Create Crowd-Unlock post</div>
+            <textarea class="composer-textarea" id="ulTextInput" placeholder="What are subscribers unlocking?"></textarea>
+            <div class="poll-option-input"><input type="number" id="ulNeeded" placeholder="Reactions needed e.g. 200"></div>
+            <div class="modal-btn primary" onclick="createUnlockPost()">Publish</div>
+        `);
+        openModal();
+    }
+    function createUnlockPost() {
+        const content = document.getElementById('ulTextInput').value.trim();
+        const needed = parseInt(document.getElementById('ulNeeded').value) || 200;
+        if (!content) { showToast('Describe what will be unlocked'); return; }
+        postsData.unshift(newPostBase({ type: 'unlock', content, unlock: { needed, current: 0, unlocked: false } }));
+        closeModal();
+        renderFeed();
+        showToast('Crowd-unlock post published');
+    }
+
+    let scheduledForTs = null;
+    function openScheduleComposer() {
+        toggleAttachMenu();
+        renderModal(`
+            <div class="modal-handle"></div>
+            <div class="modal-title">Schedule this broadcast</div>
+            <div class="modal-sub">Write your message in the composer bar, then pick a time — it publishes automatically.</div>
+            <input type="datetime-local" id="scheduleInput" class="composer-textarea" style="min-height:auto;">
+            <div class="modal-btn primary" onclick="confirmSchedule()">Confirm time</div>
+        `);
+        openModal();
+    }
+    function confirmSchedule() {
+        const val = document.getElementById('scheduleInput').value;
+        if (!val) { showToast('Pick a date and time'); return; }
+        scheduledForTs = new Date(val).getTime();
+        closeModal();
+        showToast('Next message will publish at the scheduled time');
+    }
+
+    let paidComposeFlag = false;
+    function togglePaidComposeFlag() {
+        paidComposeFlag = !paidComposeFlag;
+        toggleAttachMenu();
+        showToast(paidComposeFlag ? 'Next message will be marked Nexus Plus only' : 'Next message will be public');
+    }
+
+    function newPostBase(overrides) {
+        return Object.assign({
+            id: 'p' + Date.now() + Math.floor(Math.random()*999),
+            type: 'text',
+            content: '',
+            image: null,
+            views: 0,
+            timestamp: scheduledForTs && scheduledForTs > Date.now() ? scheduledForTs : Date.now(),
+            reactions: { '❤️': 0, '🔥': 0, '😂': 0, '👍': 0 },
+            myReaction: null,
+            pinned: false,
+            paid: paidComposeFlag,
+            edited: false,
+            tips: 0,
+            heatmap: [0,0,0,0,0,0,0,0,0,1],
+            saved: false
+        }, overrides);
+    }
+
+    function publishPost(mediaType) {
+        const input = document.getElementById('composerInput');
+        const text = input.value.trim();
+        const mediaUrlEl = document.getElementById('mediaUrlInput');
+        const mediaUrl = mediaUrlEl ? mediaUrlEl.value.trim() : '';
+        if (!text && !mediaUrl) return;
+
+        const post = newPostBase({
+            content: text || (mediaType === 'video' ? 'New video' : 'New photo'),
+            type: mediaType === 'video' ? 'video' : (mediaType === 'image' ? 'image' : 'text')
+        });
+        if (mediaType === 'image') post.image = mediaUrl || 'https://placehold.co/600x360/111111/00F2FF?text=New+Post';
+        if (mediaType === 'video') post.video = mediaUrl || '';
+
+        postsData.push(post);
+        input.value = '';
+        paidComposeFlag = false;
+        scheduledForTs = null;
+        if (document.getElementById('modalOverlay').classList.contains('open')) closeModal();
+        renderFeed();
+        showToast('Broadcast sent to ' + formatCount(channelInfo.subscriberCount) + ' subscribers');
+    }
+
+    renderHeader();
+    renderFeed();
+    renderBottomBar();
+</script>
+
+</body>
+</html>
