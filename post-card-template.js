@@ -55,22 +55,28 @@
             100% { transform: translateX(100%); }
         }
        
-       /* ===== PINNED TAG (NEW) — badge a kusurwar dama, baya tura wani abu ===== */
+       /* ===== PINNED TAG (NEW) — karamin pin-icon kadai, a top-right corner ===== */
         .post-pinned-tag {
             position: absolute !important;
             top: 8px !important;
-            right: 12px !important;
-            z-index: 7 !important;
+            right: 8px !important;
+            z-index: 11 !important;
+            width: 18px !important;
+            height: 18px !important;
+            border-radius: 50% !important;
+            background: var(--premium-gold) !important;
             display: flex !important;
             align-items: center !important;
-            gap: 5px !important;
-            font-size: 10px !important;
-            font-weight: 800 !important;
+            justify-content: center !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.45) !important;
+            padding: 0 !important;
+            font-size: 0 !important;
+            gap: 0 !important;
+        }
+        .post-pinned-tag i {
             color: #1e1e1e !important;
-            background: var(--premium-gold) !important;
-            padding: 3px 9px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.35) !important;
+            font-size: 9px !important;
+            transform: rotate(35deg) !important;
         }
         .post-pinned-tag i {
             color: #1e1e1e !important;
