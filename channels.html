@@ -216,12 +216,6 @@
     .heatmap-strip { display: flex; align-items: flex-end; gap: 2px; height: 22px; margin: 8px 4px 0 4px; }
     .heatmap-bar { flex: 1; background: linear-gradient(180deg, var(--cyan-neon), rgba(0,242,255,0.15)); border-radius: 2px 2px 0 0; min-height: 2px; }
 
-    /* Extended footer row (tip / save / share) */
-    .post-actions-row { display: flex; align-items: center; gap: 14px; padding: 8px 4px 0 4px; }
-    .post-action-btn { display: flex; align-items: center; gap: 4px; font-size: 12px; color: rgba(255,255,255,0.45); cursor: pointer; }
-    .post-action-btn.active-save { color: var(--gold); }
-    .post-action-btn.active-tip { color: var(--gold); }
-
     .edited-tag { font-size: 10.5px; color: rgba(255,255,255,0.3); margin-left: 6px; }
 
     /* AI Assistant FAB + panel (HOT FEATURE 1) */
@@ -312,8 +306,6 @@
 
     .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 12.5px; padding: 10px 18px; border-radius: 20px; z-index: 90; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
-
-    .datasaver-strip { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; font-size: 11.5px; color: rgba(255,255,255,0.45); }
 </style>
 </head>
 <body>
@@ -334,11 +326,6 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
         </div>
     </header>
-    <!-- HOT FEATURE 10: Data-Saver Mode strip -->
-    <div class="datasaver-strip">
-        <span id="dataSaverStatusText">Data Saver: Off — media loads automatically</span>
-        <div class="toggle-switch" id="dataSaverToggle" onclick="toggleDataSaver()"><div class="toggle-knob"></div></div>
-    </div>
 
     <div class="feed" id="feedContainer"></div>
 
@@ -395,7 +382,6 @@
         link: 'nexus.app/c/nexustechdigest',
         category: 'Technology',
         muted: false,
-        dataSaver: false,
         isSubscribedPaid: false,
         tiers: [
             { id: 'free', name: 'Free', price: 0, desc: 'Regular posts, polls and reactions.' },
@@ -611,27 +597,7 @@
         document.getElementById('headerName').innerHTML = channelInfo.name + (channelInfo.verified ? ' <span class="verified-badge"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--cyan-neon)"><path d="M12 2l2.4 2.4 3.4-.5.5 3.4L21 9.6 18.7 12 21 14.4l-2.7 1.7-.5 3.4-3.4-.5L12 22l-2.4-2.4-3.4.5-.5-3.4L3 14.4 5.3 12 3 9.6l2.7-1.7.5-3.4 3.4.5z"/><path d="M9 12l2 2 4-4" stroke="#050505" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '');
         document.getElementById('headerSubCount').textContent = formatCount(channelInfo.subscriberCount) + ' subscribers' + (channelInfo.muted ? ' · Muted' : '');
     }
-    /* ---------- HOT FEATURE 10: data saver ---------- */
-    function toggleDataSaver() {
-        channelInfo.dataSaver = !channelInfo.dataSaver;
-        document.getElementById('dataSaverToggle').classList.toggle('on', channelInfo.dataSaver);
-        document.getElementById('dataSaverStatusText').textContent = channelInfo.dataSaver
-            ? 'Data Saver: On — tap any image or video to load it'
-            : 'Data Saver: Off — media loads automatically';
-        renderFeed();
-        showToast(channelInfo.dataSaver ? 'Data Saver turned on' : 'Data Saver turned off');
-    }
-    function loadFullMedia(postId) {
-        const el = document.getElementById('placeholder_' + postId);
-        const post = postsData.find(p => p.id === postId);
-        if (!el || !post) return;
-        if (post.type === 'image') {
-            el.outerHTML = `<img src="${post.image}" class="post-image">`;
-        } else if (post.type === 'video') {
-            el.outerHTML = `<video src="${post.video}" class="post-video" controls poster="${post.poster || ''}"></video>`;
-        }
-    }
-
+    
     /* ---------- reaction heatmap timeline (HOT FEATURE 4) ---------- */
     function renderHeatmap(heatmapArr) {
         const max = Math.max(...heatmapArr, 1);
@@ -659,23 +625,11 @@
 
             let mediaHTML = '';
             if (post.type === 'image' && post.image) {
-                mediaHTML = channelInfo.dataSaver
-                    ? `<div class="media-placeholder" id="placeholder_${post.id}" onclick="loadFullMedia('${post.id}')">
-                         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                         <span>Tap to load image · Data Saver is on</span>
-                       </div>`
-                    : `<img src="${post.image}" class="post-image">`;
+                mediaHTML = `<img src="${post.image}" class="post-image">`;
             } else if (post.type === 'video' && post.video) {
-                mediaHTML = channelInfo.dataSaver
-                    ? `<div class="media-placeholder" id="placeholder_${post.id}" onclick="loadFullMedia('${post.id}')">
-                         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                         <span>Tap to load video · Data Saver is on</span>
-                       </div>`
-                    : `<video src="${post.video}" class="post-video" controls poster="${post.poster || ''}"></video>`;
+                mediaHTML = `<video src="${post.video}" class="post-video" controls poster="${post.poster || ''}"></video>`;
             } else if (post.type === 'delivery' && post.image) {
-                mediaHTML = channelInfo.dataSaver
-                    ? `<div class="media-placeholder" id="placeholder_${post.id}" onclick="loadFullMedia('${post.id}')"><span>Tap to load photo</span></div>`
-                    : `<img src="${post.image}" class="post-image">`;
+                mediaHTML = `<img src="${post.image}" class="post-image">`;
             }
 
             let bodyBlockHTML = '';
@@ -726,27 +680,6 @@
                             </div>
                         `).join('')}
                     </div>
-                </div>
-                <div class="post-actions-row">
-                    <div class="post-action-btn ${post.saved ? 'active-save' : ''}" onclick="toggleSavePost('${post.id}')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="${post.saved ? 'var(--gold)' : 'none'}" stroke="${post.saved ? 'var(--gold)' : 'currentColor'}" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                        ${post.saved ? 'Saved' : 'Save'}
-                    </div>
-                    <div class="post-action-btn" onclick="sharePost('${post.id}')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
-                        Share
-                    </div>
-                    <div class="post-action-btn active-tip" onclick="openTipModal('${post.id}')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5a2.5 2.5 0 0 1 2.5-2 2 2 0 0 1 0 4 2 2 0 0 1 0 4 2.5 2.5 0 0 1-2.5-2"/></svg>
-                        Tip ${post.tips > 0 ? '· ' + post.tips : ''}
-                    </div>
-                    ${isAdmin ? `<div class="post-action-btn" onclick="openEditModal('${post.id}')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
-                        Edit
-                    </div>
-                    <div class="post-action-btn" onclick="togglePin('${post.id}')">
-                        ${post.pinned ? 'Unpin' : 'Pin'}
-                    </div>` : ''}
                 </div>
             `;
             container.appendChild(card);
@@ -831,44 +764,6 @@
         post.heatmap[post.heatmap.length - 1]++;
         renderFeed();
     }
-
-    /* ---------- save / share (standard features) ---------- */
-    function toggleSavePost(postId) {
-        const post = postsData.find(p => p.id === postId);
-        if (!post) return;
-        post.saved = !post.saved;
-        showToast(post.saved ? 'Saved to your bookmarks' : 'Removed from bookmarks');
-        renderFeed();
-    }
-    function sharePost(postId) {
-        const link = `https://${channelInfo.link}/post/${postId}`;
-        if (navigator.clipboard) navigator.clipboard.writeText(link);
-        showToast('Post link copied');
-    }
-
-    /* ---------- HOT FEATURE 5: Naira tip jar ---------- */
-    let activeTipPostId = null;
-    function openTipModal(postId) {
-        activeTipPostId = postId;
-        renderModal(`
-            <div class="modal-handle"></div>
-            <div class="modal-title">Send a tip</div>
-            <div class="modal-sub">100% goes straight to the channel's wallet — instant payout, no waiting.</div>
-            <div style="display:flex;gap:8px;margin-bottom:14px;">
-                ${[100,200,500,1000].map(v => `<div class="modal-btn ghost" style="flex:1;margin-top:0;" onclick="sendTip(${v})">₦${v}</div>`).join('')}
-            </div>
-            <div class="modal-btn primary" onclick="closeModal()">Done</div>
-        `);
-        openModal();
-    }
-    function sendTip(amount) {
-        const post = postsData.find(p => p.id === activeTipPostId);
-        if (post) post.tips += 1;
-        showToast(`₦${amount} tip sent — thank you!`);
-        closeModal();
-        renderFeed();
-    }
-
     /* ---------- HOT FEATURE 2: group-buy ---------- */
     function joinGroupBuy(postId) {
         const post = postsData.find(p => p.id === postId);
@@ -911,47 +806,6 @@
         post.poll.votedIndex = optionIndex;
         renderFeed();
     }
-
-    /* ---------- pin / edit ---------- */
-    function togglePin(postId) {
-        const post = postsData.find(p => p.id === postId);
-        if (!post) return;
-        postsData.forEach(p => { if (p.id !== postId) p.pinned = false; });
-        post.pinned = !post.pinned;
-        renderFeed();
-    }
-    let activeEditPostId = null;
-    function openEditModal(postId) {
-        const post = postsData.find(p => p.id === postId);
-        if (!post) return;
-        activeEditPostId = postId;
-        renderModal(`
-            <div class="modal-handle"></div>
-            <div class="modal-title">Edit message</div>
-            <div class="modal-sub">Edits are marked with an "(edited)" tag, same as other channel platforms.</div>
-            <textarea class="composer-textarea" id="editTextarea">${post.content}</textarea>
-            <div class="modal-btn primary" onclick="saveEditedPost()">Save changes</div>
-            <div class="modal-btn danger" onclick="deletePost('${postId}')">Delete message</div>
-        `);
-        openModal();
-    }
-    function saveEditedPost() {
-        const post = postsData.find(p => p.id === activeEditPostId);
-        const text = document.getElementById('editTextarea').value.trim();
-        if (!post || !text) return;
-        post.content = text;
-        post.edited = true;
-        closeModal();
-        renderFeed();
-        showToast('Message updated');
-    }
-    function deletePost(postId) {
-        postsData = postsData.filter(p => p.id !== postId);
-        closeModal();
-        renderFeed();
-        showToast('Message deleted');
-    }
-
     /* ---------- HOT FEATURE 1: AI channel assistant ---------- */
     function toggleAIPanel() {
         document.getElementById('aiPanel').classList.toggle('open');
