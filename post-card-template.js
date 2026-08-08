@@ -55,22 +55,22 @@
             100% { transform: translateX(100%); }
         }
        
-       /* ===== PINNED TAG (NEW) — manne a jikin top-right corner, babu sarari ===== */
+       /* ===== PINNED TAG (NEW) — badge a kusurwar dama, baya tura wani abu ===== */
         .post-pinned-tag {
             position: absolute !important;
-            top: 0 !important;
-            right: 0 !important;
-            z-index: 11 !important;
-            width: 26px !important;
-            height: 26px !important;
-            border-radius: 0 var(--post-radius) 0 10px !important;
-            background: var(--premium-gold) !important;
+            top: 8px !important;
+            right: 12px !important;
+            z-index: 7 !important;
             display: flex !important;
             align-items: center !important;
-            justify-content: center !important;
-            padding: 0 !important;
-            font-size: 0 !important;
-            gap: 0 !important;
+            gap: 5px !important;
+            font-size: 10px !important;
+            font-weight: 800 !important;
+            color: #1e1e1e !important;
+            background: var(--premium-gold) !important;
+            padding: 3px 9px !important;
+            border-radius: 20px !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.35) !important;
         }
         .post-pinned-tag i {
             color: #1e1e1e !important;
