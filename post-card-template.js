@@ -55,11 +55,11 @@
             100% { transform: translateX(100%); }
         }
        
-       /* ===== PINNED TAG (NEW) — karamin pin-icon kadai, a top-right corner ===== */
+       /* ===== PINNED TAG (NEW) — karamin pin-icon kadai, a top-right corner ===== */  
         .post-pinned-tag {
             position: absolute !important;
-            top: 8px !important;
-            right: 8px !important;
+            top: 0px !important;
+            right: 0px !important;
             z-index: 11 !important;
             width: 18px !important;
             height: 18px !important;
@@ -239,9 +239,6 @@
         .post-mute-toggle i {
             font-size: 13px !important;
         }
-
-      
-      
 
         /* ===== INTERACTION BAR ===== */
 .post-interaction-bar, .interaction-bar {
@@ -851,8 +848,18 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
     // --- Like count ---
     const likes = post.likesCount || post.likes || 0;
     const comments = post.commentsCount || post.comments || 0;
-
-    // --- Pinned tag (NEW) ---
+  
+   // --- Is the current viewer the person who made this post? (NEW) ---
+    const currentViewer = (typeof localStorage !== 'undefined') ? localStorage.getItem('nexus_user_session') : null;
+    const isOwnPost = !!(currentViewer && post.username && currentViewer === post.username);
+    const giftButtonHTML = isOwnPost
+        ? ''
+        : `<div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
+                    <span class="gift-emoji">🎁</span>
+                    <span style="font-size: 10px;">Gift</span>
+                </div>`;
+   
+   // --- Pinned tag (NEW) ---
     const pinnedTagHTML = post.pinned
         ? `<div class="post-pinned-tag"><i class="fa-solid fa-thumbtack"></i> Pinned post</div>`
         : '';
@@ -878,14 +885,14 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                      alt="${post.username}">
             </a>
 
-                       <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 0 0 2px !important;">
+                       <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 0 0 2px !important;">
                 <div>
                     <!-- Username an kara masa girma da 2px (Ya koma 18px) -->
-                    <div style="display:flex; align-items:center; gap:5px; line-height:1.2;">
-                        <span class="post-username" style="font-size:15px !important; font-weight:800; color:#fff; display:block;">${post.username || 'unknown'}</span>
+                    <div style="display:flex; align-items:center; gap:5px; line-height:1.2; min-width:0;">
+                       <span class="post-username" style="font-size:12.5px !important; font-weight:800; color:#fff; display:inline-block; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.username || 'unknown'}</span> 
 
                        
-                       <span class="post-verified-badge" style="margin-left: 5px; display: inline-flex; align-items: center; vertical-align: middle;">
+                       <span class="post-verified-badge" style="margin-left: 5px; display: inline-flex; align-items: center; vertical-align: middle; flex-shrink: 0;">
     <!-- Asalin SVG verified badge mai tudu 11 da checkmark daidai da na hoton 1000995375.jpg -->
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
         <!-- Wannan shi ne asalin shape mai tudu 11 na Instagram/Twitter mai launin blue (#1d9bf0) -->
@@ -926,14 +933,9 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
          style="cursor: pointer;">
         <span style="font-size: 10px; font-weight: 600; color: #ffffff;">Follow</span>
     </div>
-    
-
-                
-                <div class="gift-btn-nexus" onclick="openGiftPanel('${post.username}')">
-                    <span class="gift-emoji">🎁</span>
-                    <span style="font-size: 10px;">Gift</span>
-                </div>
-            </div>
+        
+               ${giftButtonHTML}
+            </div> 
             
             <div onclick="event.stopPropagation(); openNeuralMenu();"
                  style="font-size: 18px; cursor: pointer; padding: 0 4px; display: flex; align-items: center; gap: 3px;">
