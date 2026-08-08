@@ -55,24 +55,29 @@
             100% { transform: translateX(100%); }
         }
        
-        /* ===== PINNED TAG (NEW) — karamin pin-icon kadai, sama da avatar ===== */
+       /* ===== PINNED TAG (NEW) — manne a jikin top-right corner, babu sarari ===== */
         .post-pinned-tag {
             position: absolute !important;
-            top: 2px !important;
-            left: 28px !important;
+            top: 0 !important;
+            right: 0 !important;
             z-index: 11 !important;
-            width: 18px !important;
-            height: 18px !important;
-            border-radius: 50% !important;
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 0 var(--post-radius) 0 10px !important;
             background: var(--premium-gold) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.45) !important;
             padding: 0 !important;
             font-size: 0 !important;
             gap: 0 !important;
         }
+        .post-pinned-tag i {
+            color: #1e1e1e !important;
+            font-size: 11px !important;
+            transform: rotate(35deg) !important;
+            margin: 0 0 3px 3px !important;
+        } 
         .post-pinned-tag i {
             color: #1e1e1e !important;
             font-size: 9px !important;
