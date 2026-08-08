@@ -143,16 +143,6 @@
         width: 20px; height: 20px; opacity: 0.9;
     }
 
-    /* Mood Pulse strip (HOT FEATURE 7) */
-    .mood-pulse-wrap {
-        display: flex; align-items: center; gap: 8px;
-        padding: 8px 14px; font-size: 11px; color: rgba(255,255,255,0.5);
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-    .mood-pulse-track { flex: 1; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.07); overflow: hidden; position: relative; }
-    .mood-pulse-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--magenta-neon), var(--gold), var(--green-ok)); transition: width .5s ease; }
-    .mood-pulse-label { flex-shrink: 0; font-weight: 700; }
-
     /* Pinned tag */
     .pin-tag {
         display: flex; align-items: center; gap: 5px;
@@ -344,14 +334,6 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
         </div>
     </header>
-
-    <!-- HOT FEATURE 7: Community Mood Pulse — live sentiment gauge for the whole channel -->
-    <div class="mood-pulse-wrap">
-        <span>Mood Pulse</span>
-        <div class="mood-pulse-track"><div class="mood-pulse-fill" id="moodPulseFill" style="width:50%"></div></div>
-        <span class="mood-pulse-label" id="moodPulseLabel">🙂 Warm</span>
-    </div>
-
     <!-- HOT FEATURE 10: Data-Saver Mode strip -->
     <div class="datasaver-strip">
         <span id="dataSaverStatusText">Data Saver: Off — media loads automatically</span>
@@ -629,29 +611,6 @@
         document.getElementById('headerName').innerHTML = channelInfo.name + (channelInfo.verified ? ' <span class="verified-badge"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--cyan-neon)"><path d="M12 2l2.4 2.4 3.4-.5.5 3.4L21 9.6 18.7 12 21 14.4l-2.7 1.7-.5 3.4-3.4-.5L12 22l-2.4-2.4-3.4.5-.5-3.4L3 14.4 5.3 12 3 9.6l2.7-1.7.5-3.4 3.4.5z"/><path d="M9 12l2 2 4-4" stroke="#050505" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '');
         document.getElementById('headerSubCount').textContent = formatCount(channelInfo.subscriberCount) + ' subscribers' + (channelInfo.muted ? ' · Muted' : '');
     }
-
-    /* ---------- HOT FEATURE 7: mood pulse ---------- */
-    function computeMoodScore() {
-        let pos = 0, tot = 0;
-        postsData.forEach(p => {
-            Object.entries(p.reactions).forEach(([e, c]) => {
-                tot += c;
-                if (e === '❤️' || e === '🔥' || e === '👍') pos += c;
-            });
-        });
-        if (tot === 0) return 50;
-        return Math.round((pos / tot) * 100);
-    }
-    function renderMoodPulse() {
-        const score = computeMoodScore();
-        document.getElementById('moodPulseFill').style.width = score + '%';
-        let label = '😐 Neutral';
-        if (score >= 80) label = '🔥 On Fire';
-        else if (score >= 60) label = '🙂 Warm';
-        else if (score < 40) label = '😴 Quiet';
-        document.getElementById('moodPulseLabel').textContent = label;
-    }
-
     /* ---------- HOT FEATURE 10: data saver ---------- */
     function toggleDataSaver() {
         channelInfo.dataSaver = !channelInfo.dataSaver;
@@ -792,7 +751,6 @@
             `;
             container.appendChild(card);
         });
-        renderMoodPulse();
     }
 
     function renderPollBlock(post) {
