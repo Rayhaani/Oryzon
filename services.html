@@ -5470,6 +5470,7 @@ body {
         </div>
      
         <div id="mb-panel-orders" style="display:none;padding:16px;">
+    <input type="text" id="mb-orders-search" oninput="mbRenderOrders()" placeholder="🔍 Search by item or customer..." style="width:100%;background:#ffffff;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:12px;box-sizing:border-box;">
     <div id="mb-order-pills" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;">
         <button onclick="mbFilterOrders('all')" class="mb-order-pill" data-status="all" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #ea580c;background:#fff7ed;color:#ea580c;font-weight:700;font-size:12px;cursor:pointer;">All</button>
         <button onclick="mbFilterOrders('pending')" class="mb-order-pill" data-status="pending" style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid #e2e8f0;background:#ffffff;color:#334155;font-weight:700;font-size:12px;cursor:pointer;">Pending</button>
@@ -5558,6 +5559,12 @@ body {
             <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Cancelled</div>
             <div style="font-size:20px;font-weight:800;color:#dc2626;margin-top:4px;" id="mb-sales-cancelled">0</div>
         </div>
+    </div>
+
+   <div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:24px;margin-bottom:10px;">Revenue Trend (Last 14 Days)</div>
+    <div id="mb-sales-chart-wrap" style="position:relative;">
+        <div id="mb-sales-chart" style="display:flex;gap:6px;align-items:flex-end;background:#ffffff;border-radius:16px;padding:16px 10px;min-height:130px;box-shadow:0 2px 8px rgba(0,0,0,0.04);"></div>
+        <div id="mb-sales-chart-lock" style="display:none;"></div>
     </div>
 
    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:24px;margin-bottom:10px;">Top Selling Items</div>
@@ -11373,7 +11380,7 @@ function closeMyBusinessDashboard() {
 }
 
 function mbSwitchTab(tabName) {
-['overview','menu','orders','sales','bookings','customers','insights'].forEach(t => {
+['overview','menu','orders','sales','bookings','customers','insights','reviews','gallery'].forEach(t => {
         document.getElementById('mb-tab-' + t).classList.toggle('active', t === tabName);
         document.getElementById('mb-panel-' + t).style.display = (t === tabName) ? 'block' : 'none';
     });
@@ -11382,7 +11389,9 @@ function mbSwitchTab(tabName) {
     if (tabName === 'bookings') mbRenderBookingsTab();
     if (tabName === 'customers') mbRenderCustomersTab();
     if (tabName === 'insights') mbRenderInsightsTab();
-        }
+    if (tabName === 'reviews') mbRenderReviewsTab();
+    if (tabName === 'gallery') mbRenderGalleryTab();
+    }
 let mbBookingsAll = [];
 
 async function mbRenderBookingsTab() {
@@ -11563,6 +11572,152 @@ async function mbRenderInsightsTab() {
             </div>`).join('');
     } catch (err) {
         console.warn('Insights unavailable:', err.message);
+    }
+}
+let mbReviewsAll = [];
+
+async function mbRenderReviewsTab() {
+    const username = localStorage.getItem("nexus_user_session");
+    const list = document.getElementById('mb-reviews-list');
+    list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Loading reviews...</div>`;
+    try {
+        const snap = await firebase.database().ref('reviews/' + username).once('value');
+        const data = snap.val() || {};
+        mbReviewsAll = Object.entries(data).map(([id, r]) => ({ id, ...r })).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+
+        const avgEl = document.getElementById('mb-reviews-avg');
+        const starsEl = document.getElementById('mb-reviews-avg-stars');
+        const countEl = document.getElementById('mb-reviews-count');
+        const breakdownEl = document.getElementById('mb-reviews-breakdown');
+
+        if (mbReviewsAll.length === 0) {
+            avgEl.textContent = '—';
+            starsEl.textContent = '☆☆☆☆☆';
+            countEl.textContent = '0 reviews';
+            breakdownEl.innerHTML = '';
+            list.innerHTML = `
+            <div style="text-align:center;padding:50px 20px;color:#94a3b8;">
+                <div style="font-size:36px;margin-bottom:10px;">⭐</div>
+                <div style="font-weight:800;font-size:14px;color:#334155;margin-bottom:4px;">No reviews yet</div>
+                <div style="font-size:12px;">Customer reviews will appear here after their first order or booking.</div>
+            </div>`;
+            return;
+        }
+
+        const total = mbReviewsAll.length;
+        const avg = mbReviewsAll.reduce((sum, r) => sum + (Number(r.rating)||0), 0) / total;
+        avgEl.textContent = avg.toFixed(1);
+        const fullStars = Math.round(avg);
+        starsEl.textContent = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+        countEl.textContent = `${total} review${total === 1 ? '' : 's'}`;
+
+        const counts = [5,4,3,2,1].map(star => mbReviewsAll.filter(r => Math.round(Number(r.rating)) === star).length);
+        breakdownEl.innerHTML = [5,4,3,2,1].map((star, i) => {
+            const pct = total > 0 ? Math.round((counts[i] / total) * 100) : 0;
+            return `
+            <div style="display:flex;align-items:center;gap:6px;">
+                <div style="font-size:10.5px;color:#64748b;width:10px;">${star}</div>
+                <div style="flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;">
+                    <div style="width:${pct}%;height:100%;background:#f59e0b;"></div>
+                </div>
+                <div style="font-size:10px;color:#94a3b8;width:22px;text-align:right;">${counts[i]}</div>
+            </div>`;
+        }).join('');
+
+        list.innerHTML = mbReviewsAll.map(r => {
+            const stars = '★'.repeat(Math.round(Number(r.rating)||0)) + '☆'.repeat(5 - Math.round(Number(r.rating)||0));
+            return `
+            <div style="background:#ffffff;border-radius:16px;padding:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="width:34px;height:34px;border-radius:50%;background:${r.reviewerColor || '#6366f1'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px;flex-shrink:0;">${r.reviewerInitials || '?'}</div>
+                        <div>
+                            <div style="font-size:13px;font-weight:800;color:#1e293b;">${r.customerName || 'Customer'}</div>
+                            <div style="color:#f59e0b;font-size:11px;">${stars}</div>
+                        </div>
+                    </div>
+                    <div style="font-size:10.5px;color:#94a3b8;flex-shrink:0;">${r.date || ''}</div>
+                </div>
+                <div style="font-size:12.5px;color:#334155;line-height:1.5;">${(r.comment || '').replace(/</g,'&lt;')}</div>
+                ${r.verifiedOrder ? `<div style="font-size:10px;color:#16a34a;font-weight:700;margin-top:8px;">✓ ${r.verifiedOrder}</div>` : ''}
+            </div>`;
+        }).join('');
+    } catch (err) {
+        list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Failed to load reviews</div>`;
+    }
+}
+async function mbRenderGalleryTab() {
+    const username = localStorage.getItem("nexus_user_session");
+    const grid = document.getElementById('mb-gallery-grid');
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Loading gallery...</div>`;
+    try {
+        const snap = await firebase.database().ref('providers/' + username + '/portfolio').once('value');
+        const data = snap.val() || [];
+        const photos = Array.isArray(data) ? data : Object.values(data);
+
+        if (photos.length === 0) {
+            grid.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:50px 20px;color:#94a3b8;">
+                <div style="font-size:36px;margin-bottom:10px;">🖼️</div>
+                <div style="font-weight:800;font-size:14px;color:#334155;margin-bottom:4px;">No photos yet</div>
+                <div style="font-size:12px;">Upload photos to show customers your work.</div>
+            </div>`;
+            return;
+        }
+
+        grid.innerHTML = photos.map((p, i) => {
+            const url = typeof p === 'string' ? p : (p && p.url) || '';
+            return `
+            <div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:#f1f5f9;">
+                <img src="${url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+                <button onclick="mbDeleteGalleryPhoto(${i})" style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;border:none;font-size:12px;cursor:pointer;">✕</button>
+            </div>`;
+        }).join('');
+    } catch (err) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Failed to load gallery</div>`;
+    }
+}
+
+async function mbUploadGalleryPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const username = localStorage.getItem("nexus_user_session");
+    showGlobalToast('⏳ Uploading photo...');
+    try {
+        if (typeof guaranteeAuth === 'function') await guaranteeAuth();
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'portfolio');
+        formData.append('username', username);
+        const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', { method: 'POST', body: formData });
+        const uploadData = await res.json();
+
+        const snap = await firebase.database().ref('providers/' + username + '/portfolio').once('value');
+        const existing = snap.val() || [];
+        const photos = Array.isArray(existing) ? existing : Object.values(existing);
+        photos.push(uploadData.url);
+        await firebase.database().ref('providers/' + username + '/portfolio').set(photos);
+
+        showGlobalToast('✅ Photo added to gallery');
+        mbRenderGalleryTab();
+    } catch (err) {
+        showGlobalToast('❌ Upload failed: ' + err.message);
+    }
+}
+
+async function mbDeleteGalleryPhoto(index) {
+    if (!confirm('Remove this photo from your gallery?')) return;
+    const username = localStorage.getItem("nexus_user_session");
+    try {
+        const snap = await firebase.database().ref('providers/' + username + '/portfolio').once('value');
+        const existing = snap.val() || [];
+        const photos = Array.isArray(existing) ? existing : Object.values(existing);
+        photos.splice(index, 1);
+        await firebase.database().ref('providers/' + username + '/portfolio').set(photos);
+        showGlobalToast('✅ Photo removed');
+        mbRenderGalleryTab();
+    } catch (err) {
+        showGlobalToast('❌ Failed to remove photo: ' + err.message);
     }
 }
 
@@ -11931,21 +12086,25 @@ async function mbPublish() {
     } catch (err) { showGlobalToast('❌ Publish failed: ' + err.message); }
     }
 
-let mbOrdersAll = [], mbOrdersFilter = 'all';
+let mbOrdersAll = [], mbOrdersFilter = 'all', mbProCurrency = '';
 
 async function mbLoadOrders() {
     const username = localStorage.getItem("nexus_user_session");
     const list = document.getElementById('mb-orders-list');
     list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Loading orders...</div>`;
     try {
-        const snap = await firebase.database().ref('providers/' + username + '/orders').once('value');
-        const data = snap.val() || {};
+        const [ordersSnap, currencySnap] = await Promise.all([
+            firebase.database().ref('providers/' + username + '/orders').once('value'),
+            firebase.database().ref('providers/' + username + '/currency').once('value')
+        ]);
+        const data = ordersSnap.val() || {};
+        mbProCurrency = currencySnap.val() || '';
         mbOrdersAll = Object.entries(data).map(([id, o]) => ({ id, ...o })).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
         mbRenderOrders();
     } catch (err) {
         list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:12px;">Failed to load orders</div>`;
     }
-}
+    }
 
 function mbFilterOrders(status) {
     mbOrdersFilter = status;
@@ -11960,8 +12119,11 @@ function mbFilterOrders(status) {
 
 function mbRenderOrders() {
     const list = document.getElementById('mb-orders-list');
-    const orders = mbOrdersFilter === 'all' ? mbOrdersAll : mbOrdersAll.filter(o => (o.status||'pending') === mbOrdersFilter);
-
+   const searchTerm = (document.getElementById('mb-orders-search')?.value || '').trim().toLowerCase();
+    let orders = mbOrdersFilter === 'all' ? mbOrdersAll : mbOrdersAll.filter(o => (o.status||'pending') === mbOrdersFilter);
+    if (searchTerm) {
+        orders = orders.filter(o => (o.itemName||'').toLowerCase().includes(searchTerm) || (o.customerUsername||'').toLowerCase().includes(searchTerm));
+    } 
     if (orders.length === 0) {
         list.innerHTML = `
         <div style="text-align:center;padding:50px 20px;color:#94a3b8;">
@@ -12002,7 +12164,7 @@ function mbRenderOrders() {
             <div style="font-size:12px;color:#64748b;margin-bottom:2px;">📍 ${o.fulfillmentMethod === 'pickup' ? 'Self Pickup' : (o.address || '—')}</div>
             <div style="font-size:12px;color:#64748b;margin-bottom:10px;">📞 ${o.phone || '—'}</div>
             <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f1f5f9;padding-top:10px;">
-               <div style="font-weight:800;font-size:14px;color:#ea580c;">${formatPrice(lineTotal, o.currency)}</div> 
+               <div style="font-weight:800;font-size:14px;color:#ea580c;">${formatPrice(lineTotal, mbProCurrency)}</div>
                 <div style="font-size:11px;color:#94a3b8;">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : ''}</div>
             </div>
             ${actions ? `<div style="display:flex;gap:8px;margin-top:10px;">${actions}</div>` : ''}
@@ -12020,11 +12182,15 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
         showGlobalToast('❌ Failed to update order: ' + err.message);
     }
 }
-        async function mbLoadSales() {
+       async function mbLoadSales() {
     const username = localStorage.getItem("nexus_user_session");
     const rangeDays = Number(document.getElementById('mb-sales-range').value);
-    const planSnap = await firebase.database().ref('providers/' + username + '/plan').once('value');
+    const [planSnap, currencySnap] = await Promise.all([
+        firebase.database().ref('providers/' + username + '/plan').once('value'),
+        firebase.database().ref('providers/' + username + '/currency').once('value')
+    ]);
     const currentPlan = planSnap.val() || 'free';
+    const proCurrency = currencySnap.val() || '';
     const isPaid = currentPlan === 'pro' || currentPlan === 'max';
     const badge = document.getElementById('mb-plan-badge');
     if (badge) {
@@ -12047,13 +12213,45 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
         
         const lineTotal = o => (Number(o.itemPrice) || 0) * (Number(o.quantity) || 1);
         const totalSales = completed.reduce((sum, o) => sum + lineTotal(o), 0);
-        const totalSalesCurrency = completed.find(o => o.currency)?.currency || '';
+        const totalSalesCurrency = proCurrency;
 
-        document.getElementById('mb-sales-total').textContent = formatPrice(totalSales, totalSalesCurrency);                                                            document.getElementById('mb-sales-total-sub').textContent = `${completed.length} completed order${completed.length === 1 ? '' : 's'}`;
+        document.getElementById('mb-sales-total').textContent = formatPrice(totalSales, totalSalesCurrency);                                                            document.getElementById('mb-sales-total-sub').textContent = `${completed.length} completed order${completed.length === 1 ? '' : 's'}`;        
         document.getElementById('mb-sales-total-orders').textContent = orders.length;
         document.getElementById('mb-sales-completed').textContent = completed.length;
         document.getElementById('mb-sales-progress').textContent = inProgress.length;
         document.getElementById('mb-sales-cancelled').textContent = cancelled.length;
+
+        // Revenue trend chart — last 14 days
+        const chartDays = [];
+        for (let i = 13; i >= 0; i--) {
+            const d = new Date();
+            d.setHours(0,0,0,0);
+            d.setDate(d.getDate() - i);
+            const dayStart = d.getTime();
+            const dayEnd = dayStart + 86400000;
+            const dayRevenue = allOrders
+                .filter(o => o.status === 'completed' && (o.createdAt||0) >= dayStart && (o.createdAt||0) < dayEnd)
+                .reduce((sum, o) => sum + lineTotal(o), 0);
+            chartDays.push({ label: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), revenue: dayRevenue });
+        }
+        const maxRevenue = Math.max(1, ...chartDays.map(d => d.revenue));
+        const chartEl = document.getElementById('mb-sales-chart');
+        const chartLockEl = document.getElementById('mb-sales-chart-lock');
+        if (!isPaid) {
+            chartEl.style.filter = 'blur(4px)';
+            chartEl.style.pointerEvents = 'none';
+            chartLockEl.style.display = 'flex';
+            chartLockEl.innerHTML = mbLockOverlayHTML();
+        } else {
+            chartEl.style.filter = 'none';
+            chartEl.style.pointerEvents = 'auto';
+            chartLockEl.style.display = 'none';
+        }
+        chartEl.innerHTML = chartDays.map(d => `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:100%;max-width:16px;height:${Math.max(4, (d.revenue / maxRevenue) * 90)}px;background:linear-gradient(180deg,#3b82f6,#1d4ed8);border-radius:4px 4px 1px 1px;"></div>
+                <div style="font-size:8px;color:#94a3b8;writing-mode:vertical-rl;transform:rotate(180deg);height:32px;">${d.label}</div>
+            </div>`).join('');
 
         // Top selling items (by qty, among completed orders)
         const itemStats = {};
@@ -12062,7 +12260,7 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
             if (!itemStats[key]) itemStats[key] = { qty: 0, revenue: 0, currency: '' };
             itemStats[key].qty += Number(o.quantity) || 1;
             itemStats[key].revenue += lineTotal(o);
-            if (!itemStats[key].currency) itemStats[key].currency = o.currency || '';
+            if (!itemStats[key].currency) itemStats[key].currency = proCurrency; 
         });
         const topItems = Object.entries(itemStats).sort((a,b) => b[1].qty - a[1].qty).slice(0, 5);
 
