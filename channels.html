@@ -90,37 +90,40 @@
         border: 1px solid transparent;
     }
     .reaction-pill.active { border-color: var(--cyan-neon); background: rgba(0,242,255,0.1); }
-
-    .composer-bar {
+.composer-bar {
         position: fixed;
         bottom: 0; left: 0; right: 0;
         background: rgba(5,5,5,0.95);
         backdrop-filter: blur(10px);
         border-top: 1px solid rgba(255,255,255,0.06);
         padding: 10px 12px;
-        display: flex; align-items: center; gap: 10px;
         z-index: 50;
+    }
+    .composer-pill {
+        display: flex; align-items: center; gap: 4px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 26px;
+        padding: 4px 5px;
     }
     .composer-input {
         flex: 1;
-        background: rgba(255,255,255,0.06);
+        background: transparent;
         border: none;
-        border-radius: 22px;
-        padding: 11px 16px;
+        padding: 9px 6px;
         color: #fff;
         font-size: 14px;
         outline: none;
+        min-width: 0;
     }
     .composer-input::placeholder { color: rgba(255,255,255,0.4); }
     .composer-send {
-        width: 42px; height: 42px;
+        width: 38px; height: 38px;
         border-radius: 50%;
         background: linear-gradient(135deg, var(--cyan-neon), var(--magenta-neon));
         display: flex; align-items: center; justify-content: center;
         cursor: pointer;
         flex-shrink: 0;
     }
-
     .subscribe-bar {
         position: fixed;
         bottom: 0; left: 0; right: 0;
@@ -306,7 +309,7 @@
     .attach-option { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 62px; cursor: pointer; }
     .attach-icon-circle { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; }
     .attach-option span { font-size: 10px; color: rgba(255,255,255,0.6); text-align: center; }
-    .composer-attach-btn { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .composer-attach-btn { width: 36px; height: 36px; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
 
     .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 12.5px; padding: 10px 18px; border-radius: 20px; z-index: 90; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
@@ -612,7 +615,7 @@
     function renderFeed() {
         const container = document.getElementById('feedContainer');
         container.innerHTML = '';
-        const sorted = [...postsData].sort((a, b) => (b.pinned - a.pinned) || (b.timestamp - a.timestamp));
+        const sorted = [...postsData].sort((a, b) => (b.pinned - a.pinned) || (a.timestamp - b.timestamp));
         let lastDateLabel = null;
         sorted.forEach(post => {
             const dateLabel = formatDateLabel(post.timestamp);
@@ -1015,12 +1018,14 @@
         if (isAdmin) {
             bar.innerHTML = `
                 <div class="composer-bar">
-                    <div class="composer-attach-btn" onclick="toggleAttachMenu()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-                    </div>
-                    <input type="text" class="composer-input" id="composerInput" placeholder="Broadcast a message...">
-                    <div class="composer-send" onclick="publishPost()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2.4"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+                    <div class="composer-pill">
+                        <div class="composer-attach-btn" onclick="toggleAttachMenu()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+                        </div>
+                        <input type="text" class="composer-input" id="composerInput" placeholder="Broadcast a message...">
+                        <div class="composer-send" onclick="publishPost()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2.4"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1282,6 +1287,19 @@
     renderHeader();
     renderFeed();
     renderBottomBar();
+
+    /* keep the fixed bottom bar aligned with the visible area when the
+       on-screen keyboard opens/closes on mobile (Android Chrome bug fix) */
+    if (window.visualViewport) {
+        function repositionForKeyboard() {
+            const offset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+            document.querySelectorAll('.composer-bar, .subscribe-bar, .attach-menu').forEach(el => {
+                el.style.bottom = Math.max(0, offset) + 'px';
+            });
+        }
+        window.visualViewport.addEventListener('resize', repositionForKeyboard);
+        window.visualViewport.addEventListener('scroll', repositionForKeyboard);
+    }
 </script>
 
 </body>
