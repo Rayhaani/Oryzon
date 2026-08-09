@@ -5289,7 +5289,7 @@ body {
                 </div>
             </div>
         </div>
-        <button onclick="mbPublish()" style="background:#ffffff;color:#0f172a;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;">Publish</button>
+        <button id="mb-header-publish-btn" onclick="mbPublish()" style="background:#ffffff;color:#0f172a;border:2px solid transparent;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;">Publish</button>
 </div>      
         <div class="nxfm-tabs-row" style="background:#ffffff;border-bottom:1px solid #eef2f7;">
         <button class="nxfm-tab active" style="flex:1;" onclick="mbSwitchTab('overview')" id="mb-tab-overview">Overview</button>
@@ -5342,7 +5342,91 @@ body {
                 </label>
             </div>
         </div>
+        <div id="mb-business-settings-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10700;align-items:flex-end;justify-content:center;">
+            <div style="background:#f8fafc;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:90vh;display:flex;flex-direction:column;">
+                <div style="background:#ffffff;padding:18px 20px;border-radius:20px 20px 0 0;border-bottom:1px solid #eef2f7;display:flex;align-items:center;justify-content:space-between;">
+                    <div>
+                        <div class="mb-heading-brand" style="font-size:17px;font-weight:800;color:#1e293b;">Business Settings</div>
+                        <div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">Visible to customers on your profile</div>
+                    </div>
+                    <button onclick="mbCloseBusinessSettings()" style="width:32px;height:32px;border-radius:50%;border:none;background:#f1f5f9;color:#334155;font-size:15px;cursor:pointer;">✕</button>
+                </div>
+                <div style="height:3px;background:linear-gradient(90deg,#3b82f6,#10b981,#f59e0b,#ef4444);"></div>
 
+                <div style="overflow-y:auto;padding:18px;flex:1;">
+
+                    <div style="background:#ffffff;border-radius:16px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <span style="font-size:18px;">📞</span>
+                            <div class="mb-heading-brand" style="font-size:14px;font-weight:800;color:#1e293b;">Contact Details</div>
+                        </div>
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">Phone Number</label>
+                        <input id="bs-phone" type="tel" placeholder="+234 800 000 0000" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">Email Address</label>
+                        <input id="bs-email" type="email" placeholder="you@business.com" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">Website</label>
+                        <input id="bs-website" type="url" placeholder="https://yourbusiness.com" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;">
+                    </div>
+
+                    <div style="background:#ffffff;border-radius:16px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <span style="font-size:18px;">📍</span>
+                            <div class="mb-heading-brand" style="font-size:14px;font-weight:800;color:#1e293b;">Location & Currency</div>
+                        </div>
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">Country</label>
+                        <input id="bs-country" type="text" placeholder="Nigeria" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <div style="display:flex;gap:10px;margin-bottom:14px;">
+                            <div style="flex:1;">
+                                <label style="font-size:11px;font-weight:700;color:#64748b;">State</label>
+                                <input id="bs-state" type="text" placeholder="Kano" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;">
+                            </div>
+                            <div style="flex:1;">
+                                <label style="font-size:11px;font-weight:700;color:#64748b;">City</label>
+                                <input id="bs-city" type="text" placeholder="Kano City" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;">
+                            </div>
+                        </div>
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">Currency</label>
+                        <button type="button" id="bs-currency" onclick="openCurrencyPicker('bs-currency')" data-currency="" style="width:100%;text-align:left;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13.5px;padding:11px 12px;cursor:pointer;font-family:inherit;margin:6px 0 14px;">🌍 Select Currency <span style="float:right;opacity:0.5;">▾</span></button>
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">Store Address</label>
+                        <textarea id="bs-address" placeholder="123 Main Street, Downtown" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;min-height:60px;font-family:inherit;resize:vertical;"></textarea>
+                    </div>
+
+                    <div style="background:#ffffff;border-radius:16px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <span style="font-size:18px;">🕐</span>
+                            <div class="mb-heading-brand" style="font-size:14px;font-weight:800;color:#1e293b;">Operating Hours</div>
+                        </div>
+                        <div id="bs-hours-list"></div>
+                    </div>
+
+                    <div style="background:#ffffff;border-radius:16px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <span style="font-size:18px;">🔗</span>
+                            <div class="mb-heading-brand" style="font-size:14px;font-weight:800;color:#1e293b;">Social Media</div>
+                        </div>
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">WhatsApp Number</label>
+                        <input id="bs-whatsapp" type="tel" placeholder="+234 800 000 0000" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">Instagram Link</label>
+                        <input id="bs-instagram" type="url" placeholder="https://instagram.com/yourbusiness" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">Facebook Link</label>
+                        <input id="bs-facebook" type="url" placeholder="https://facebook.com/yourbusiness" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">Twitter / X Link</label>
+                        <input id="bs-twitter" type="url" placeholder="https://x.com/yourbusiness" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">YouTube Link</label>
+                        <input id="bs-youtube" type="url" placeholder="https://youtube.com/@yourbusiness" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">LinkedIn Link</label>
+                        <input id="bs-linkedin" type="url" placeholder="https://linkedin.com/company/yourbusiness" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;">TikTok Link</label>
+                        <input id="bs-tiktok" type="url" placeholder="https://tiktok.com/@yourbusiness" style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;">
+                    </div>
+
+                </div>
+
+                <div style="background:#ffffff;padding:14px 18px;border-top:1px solid #eef2f7;">
+                    <button id="bs-save-btn" onclick="mbSaveBusinessSettings()" style="width:100%;background:linear-gradient(90deg,#3b82f6,#10b981);color:#ffffff;border:none;border-radius:14px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;">Save All Changes</button>
+                </div>
+            </div>
+        </div>
         <div id="mb-panel-overview" style="display:none;padding:16px;">
     <style>
         /* mb-glass-card = daidai background/blur/border na header ɗin My Business */
