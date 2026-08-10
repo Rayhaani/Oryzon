@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Nexus — Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-void: #030508;
+            --card-incoming: rgba(15, 20, 31, 0.75);
+            --card-outgoing: rgba(0, 140, 255, 0.12);
+            --neon-cyan: #fde08d;
+            --neon-purple: #fde08d;
+            --neon-green: #10b981;
+            --neon-gold: #f59e0b;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-glow: rgba(253, 224, 141, 0.3);
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
+            --danger: #ef4444;
+            --pro-purple: #a78bfa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: #050505 !important;
+            background-image: none !important;
+            color: white;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            padding-bottom: 40px;
+        }
+
+        a { color: inherit; text-decoration: none; }
+        button { font-family: inherit; }
+
+        /* ================= HEADER ================= */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 56px;
+            background: transparent;
+            backdrop-filter: none;
+            border-bottom: 1px solid transparent;
+            display: flex; align-items: center; padding: 0 12px; gap: 10px;
+            z-index: 9999; box-sizing: border-box;
+            transition: background 0.25s ease, backdrop-filter 0.25s ease, border-color 0.25s ease;
+        }
+        header.header-scrolled {
+            background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .fb-back-btn {
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 15px; cursor: pointer;
+        }
+        .fb-header-title {
+            font-size: 15px; font-weight: 800; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            flex: 1; min-width: 0;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            display: flex; align-items: center; gap: 5px;
+        }
+        header.header-scrolled .fb-header-title { opacity: 1; }
+
+        .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .header-icon-btn {
+            width: 36px; height: 36px;
+            background: rgba(0,0,0,0.35); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 15px;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .header-icon-btn:active { background: rgba(253,224,141,0.2); }
+        @keyframes dotSequence {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.4); opacity: 1; }
+        }
+
+        .verified-badge { color: #4fb0ff; font-size: 13px; }
+        .trust-badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            background: rgba(253,224,141,0.12); border: 1px solid rgba(253,224,141,0.4);
+            color: var(--neon-cyan); font-size: 10px; font-weight: 800;
+            padding: 2px 7px; border-radius: 20px; letter-spacing: 0.2px;
+        }
+        .pro-tag {
+            font-size: 8.5px; font-weight: 900; letter-spacing: 0.5px;
+            background: linear-gradient(135deg, var(--pro-purple), #6d28d9);
+            color: #fff; padding: 1.5px 6px; border-radius: 6px; margin-left: 6px;
+            text-transform: uppercase; vertical-align: middle;
+        }
+
+        /* ================= PAGE VIEW ================= */
+        #pageView { padding-top: 0; display: flex; flex-direction: column; }
+
+        .page-header-wrap { position: relative; width: 100%; }
+
+        .group-cover-wrap { position: relative; width: 100%; height: 168px; overflow: hidden; }
+        .group-cover-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .group-cover-fade { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, var(--bg-void) 100%); }
+
+        .live-pill {
+            position: absolute; top: 12px; left: 12px; z-index: 5;
+            display: flex; align-items: center; gap: 5px;
+            background: var(--danger); color: #fff; font-size: 10.5px; font-weight: 800;
+            padding: 4px 9px 4px 7px; border-radius: 20px; letter-spacing: 0.3px;
+        }
+        .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: dotSequence 1s infinite; }
+
+        .cover-edit-btn {
+            position: absolute; bottom: 10px; right: 12px; z-index: 5;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            font-size: 11px; font-weight: 700; padding: 6px 11px;
+            border-radius: 20px; display: flex; align-items: center; gap: 6px; cursor: pointer;
+        }
+
+        .page-avatar-frame {
+            position: absolute; left: 16px; bottom: -45px;
+            width: 90px; height: 90px; border-radius: 50%;
+            border: 4px solid var(--bg-void); overflow: hidden;
+            background: #111; z-index: 6; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        }
+        .page-avatar-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .avatar-online-ring { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--neon-green); z-index: 7; pointer-events: none; }
+
+        .group-info-block { padding: 4px 16px 6px 16px; border-bottom: 8px solid rgba(255,255,255,0.03); }
+
+        .page-name-row { padding-left: 106px; min-height: 46px; display: flex; flex-direction: column; justify-content: flex-end; }
+        .group-info-title { font-size: 19px; font-weight: 800; color: #fff; letter-spacing: -0.3px; line-height: 1.2; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .group-meta-row { display: flex; align-items: center; gap: 6px; color: var(--text-sub); font-size: 12.5px; margin-top: 4px; flex-wrap: wrap; }
+
+        .rating-row { display: flex; align-items: center; gap: 6px; margin-top: 9px; font-size: 12.5px; color: var(--text-sub); }
+        .rating-stars { color: #fbbf24; font-size: 12px; letter-spacing: 1px; }
+        .rating-row strong { color: #fff; font-weight: 800; }
+        .rating-row .rlink { color: var(--neon-cyan); font-weight: 700; }
+
+        .page-bio { font-size: 13px; color: #cbd5e1; line-height: 1.5; margin-top: 12px; }
+
+        .page-contact-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .page-contact-list .crow { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: var(--text-sub); }
+        .page-contact-list .crow i { width: 15px; text-align: center; color: var(--neon-cyan); font-size: 12px; }
+        .page-contact-list .crow a { color: #93c5fd; font-weight: 600; }
+        .page-contact-list .crow .open-tag { color: var(--neon-green); font-weight: 700; }
+
+        .page-category-row { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #fff; margin-top: 14px; }
+        .page-category-row i { width: 20px; height: 20px; background: #1a1a1a; color: #fff; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+
+        .page-followed-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--text-sub); line-height: 1.4; }
+        .page-followed-row strong { color: #fff; font-weight: 700; }
+        .followed-avatars { display: flex; flex-shrink: 0; }
+        .followed-avatars img { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--bg-void); object-fit: cover; margin-left: -8px; }
+        .followed-avatars img:first-child { margin-left: 0; }
+
+        /* ---- Proof-of-Impact strip (NEW FEATURE #6) ---- */
+        .impact-strip { display: flex; gap: 8px; overflow-x: auto; margin-top: 14px; scrollbar-width: none; }
+        .impact-strip::-webkit-scrollbar { display: none; }
+        .impact-chip {
+            flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, rgba(16,185,129,0.14), rgba(16,185,129,0.04));
+            border: 1px solid rgba(16,185,129,0.35); color: #6ee7b7;
+            font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 20px; white-space: nowrap;
+        }
+        .impact-chip i { font-size: 11px; }
+        .impact-chip .num { color: #fff; font-weight: 900; }
+
+        /* ---- Community Pulse meter (NEW FEATURE #4) ---- */
+        .pulse-box {
+            margin-top: 14px; padding: 12px 14px; border-radius: 14px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+        }
+        .pulse-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .pulse-head .ptitle { font-size: 12px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 6px; }
+        .pulse-head .plive { font-size: 9.5px; color: var(--neon-green); font-weight: 800; display: flex; align-items: center; gap: 4px; }
+        .pulse-live-dot { width: 6px; height: 6px; background: var(--neon-green); border-radius: 50%; animation: dotSequence 1.2s infinite; }
+        .pulse-bar-track { height: 8px; border-radius: 20px; background: rgba(255,255,255,0.06); overflow: hidden; display: flex; }
+        .pulse-seg { height: 100%; transition: width 0.6s ease; }
+        .pulse-legend { display: flex; justify-content: space-between; margin-top: 7px; font-size: 10px; color: var(--text-sub); }
+
+        .page-buttons-row { display: flex; gap: 10px; margin-top: 14px; }
+        .invite-btn-fb {
+            background: linear-gradient(135deg, #fde08d, #b8860b);
+            color: #1e1e1e; font-weight: 800; font-size: 12px;
+            padding: 6px 14px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            cursor: pointer; border: none; flex: 1.4; position: relative;
+        }
+        .invite-btn-fb:active { transform: scale(0.97); }
+        .follow-btn-fb {
+            background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+            color: #fff; font-weight: 800; font-size: 12px;
+            padding: 6px 10px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            cursor: pointer; flex: 1; position: relative;
+        }
+        .follow-btn-fb.is-following { background: rgba(253,224,141,0.1); border-color: rgba(253,224,141,0.35); color: var(--neon-cyan); }
+        .follow-btn-fb:active, .invite-btn-fb:active { transform: scale(0.97); }
+        .icon-square-btn {
+            width: 32px; height: 32px; flex-shrink: 0; border-radius: 9px;
+            background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+            color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px;
+        }
+        .icon-square-btn:active { transform: scale(0.93); }
+
+        /* ---- CTA carousel (paid custom call-to-action buttons) ---- */
+        .cta-carousel { display: flex; gap: 8px; overflow-x: auto; margin-top: 10px; scrollbar-width: none; }
+        .cta-carousel::-webkit-scrollbar { display: none; }
+        .cta-chip {
+            flex-shrink: 0; display: flex; align-items: center; gap: 5px;
+            background: rgba(79,176,255,0.1); border: 1px solid rgba(79,176,255,0.3);
+            color: #93c5fd; font-size: 11px; font-weight: 700; padding: 5px 11px; border-radius: 18px; cursor: pointer; white-space: nowrap;
+        }
+        .cta-chip:active { transform: scale(0.95); }
+
+        /* ---- Notification dropdown ---- */
+        .notif-dropdown {
+            position: absolute; top: 46px; right: 0; z-index: 40; min-width: 190px;
+            background: #12141c; border: 1px solid var(--glass-border); border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 6px; display: none; flex-direction: column;
+        }
+        .notif-dropdown.open { display: flex; }
+        .notif-dropdown .nd-item { padding: 10px 12px; font-size: 12.5px; font-weight: 600; color: #e2e8f0; border-radius: 8px; display: flex; align-items: center; gap: 9px; cursor: pointer; }
+        .notif-dropdown .nd-item:active { background: rgba(255,255,255,0.06); }
+        .notif-dropdown .nd-item.active-opt { color: var(--neon-cyan); }
+        .notif-dropdown .nd-item i { width: 15px; text-align: center; }
+
+        /* ================= TABS ================= */
+        .page-tabs { display: flex; overflow-x: auto; gap: 4px; padding: 12px 12px 0 12px; border-bottom: 1px solid rgba(255,255,255,0.06); scrollbar-width: none; }
+        .page-tabs::-webkit-scrollbar { display: none; }
+        .ptab {
+            flex-shrink: 0; padding: 9px 14px 12px 14px; font-size: 13px; font-weight: 700;
+            color: var(--text-sub); position: relative; cursor: pointer; white-space: nowrap;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .ptab.active { color: #fff; }
+        .ptab.active::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 3px; background: linear-gradient(135deg, #fde08d, #b8860b); }
+        .ptab .badge-dot { background: var(--danger); color: #fff; font-size: 8.5px; font-weight: 800; padding: 1px 5px; border-radius: 10px; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        #timeline-area { padding-top: 14px !important; display: flex; flex-direction: column; gap: 0; }
+
+        /* ---- Highlights strip ---- */
+        .smart-box-highlights { background: transparent !important; border: none !important; padding: 0; margin: 16px 0 0 0; }
+        .highlights-scroll { display: flex !important; gap: 10px !important; overflow-x: auto !important; scrollbar-width: none !important; padding: 0 0 4px 0; }
+        .highlights-scroll::-webkit-scrollbar { display: none; }
+        .highlight-item { display: flex !important; flex-direction: column !important; align-items: center !important; text-align: center !important; min-width: 56px !important; flex-shrink: 0 !important; position: relative; }
+        .highlight-ring { width: 74px !important; height: 80px !important; border-radius: 16px !important; border: 1px solid #fde08d !important; display: flex !important; align-items: center !important; justify-content: center !important; overflow: hidden !important; background: #111; position: relative; }
+        .highlight-ring img { width: 100% !important; height: 100% !important; border-radius: 13px !important; object-fit: cover !important; }
+        .highlight-ring.thread-ring { border: 1px solid transparent !important; background: linear-gradient(#111,#111) padding-box, linear-gradient(135deg, #fde08d, #ec4899, #6366f1) border-box; border-width: 2px !important; }
+        .thread-tag { position: absolute; bottom: 3px; left: 3px; right: 3px; background: rgba(0,0,0,0.6); color: #fde08d; font-size: 7px; font-weight: 800; text-align: center; border-radius: 5px; padding: 1px 0; letter-spacing: 0.3px; }
+        .highlight-add { width: 74px; height: 80px; border-radius: 16px; border: 1.5px dashed rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; color: var(--text-sub); font-size: 18px; cursor: pointer; }
+        .highlight-label { font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 9px !important; font-weight: 700 !important; color: #fff !important; margin: 3px auto 0 auto !important; text-align: center !important; max-width: 74px; white-space: normal; word-wrap: break-word; line-height: 1.2; }
+
+        /* ================= TIME-CAPSULE POST (NEW FEATURE #3) =================
+           NOTE: this card intentionally does NOT use the .post-card / .post-head
+           class names — those belong exclusively to the real posts rendered by
+           post-card-template.js's window.generatePostHTML(). Reusing them here
+           previously leaked extra padding onto every real post card. This block
+           has its own fully separate, self-contained classes instead. */
+        .capsule-post-card {
+            border: 1px solid var(--post-border, #fde08d);
+            border-radius: 20px;
+            background: #050505;
+            box-shadow: 0 0 15px rgba(253,224,141,0.3);
+            overflow: hidden;
+            margin: 0 10px 14px 10px;
+        }
+        .capsule-post-head {
+            display: flex; align-items: center; gap: 10px;
+            padding: 15px 15px 10px 15px;
+            background: linear-gradient(180deg, rgba(253,224,141,0.12) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(253,224,141,0.2);
+        }
+        .capsule-post-head img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid var(--neon-cyan); flex-shrink: 0; }
+        .capsule-post-head-info { flex: 1; min-width: 0; }
+        .capsule-post-head-info .cpname { font-size: 15px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 5px; }
+        .capsule-post-head-info .cpmeta { font-size: 10px; color: var(--text-sub); margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+
+        .capsule-lock {
+            margin: 10px 14px 14px 14px; border-radius: 14px; overflow: hidden; position: relative;
+            background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(236,72,153,0.1));
+            border: 1px solid rgba(167,139,250,0.35); padding: 22px 16px; text-align: center;
+        }
+        .capsule-lock i.big { font-size: 26px; color: var(--pro-purple); margin-bottom: 8px; }
+        .capsule-lock .ctitle { font-size: 13.5px; font-weight: 800; color: #fff; }
+        .capsule-lock .csub { font-size: 11.5px; color: var(--text-sub); margin-top: 4px; }
+        .capsule-countdown { margin-top: 10px; display: inline-flex; gap: 6px; }
+        .capsule-countdown span { background: rgba(0,0,0,0.35); padding: 5px 8px; border-radius: 8px; font-size: 12px; font-weight: 800; color: #fde08d; font-family: 'Orbitron', sans-serif; }
+
+        .post-actions-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .post-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 4px; font-size: 12.5px; font-weight: 700; color: var(--text-sub); cursor: pointer; border-radius: 8px; position: relative; }
+        .post-action-btn.liked { color: #fde08d; }
+        .post-action-btn:active { background: rgba(255,255,255,0.05); }
+
+        .reaction-picker {
+            position: absolute; bottom: 100%; left: 0; margin-bottom: 8px;
+            background: #14151d; border: 1px solid var(--glass-border); border-radius: 30px;
+            display: none; align-items: center; gap: 4px; padding: 6px 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 30;
+        }
+        .reaction-picker.open { display: flex; }
+        .reaction-picker span { font-size: 21px; cursor: pointer; transition: transform 0.15s ease; display: inline-block; }
+        .reaction-picker span:active { transform: scale(1.4); }
+
+        /* ================= ABOUT TAB ================= */
+        .about-section { padding: 16px; }
+        .about-block { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+        .about-block h4 { font-size: 12px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+        .about-block .arow { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #e2e8f0; padding: 7px 0; }
+        .about-block .arow i { width: 17px; color: var(--neon-cyan); text-align: center; }
+        .impact-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+        .impact-detail-card { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px; padding: 10px; text-align: center; }
+        .impact-detail-card .num { font-size: 18px; font-weight: 900; color: #6ee7b7; font-family: 'Orbitron', sans-serif; }
+        .impact-detail-card .lbl { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
+
+        /* ================= REVIEWS TAB ================= */
+        .reviews-section { padding: 16px; }
+        .review-summary-box { display: flex; align-items: center; gap: 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+        .review-big-num { font-size: 40px; font-weight: 900; font-family: 'Orbitron', sans-serif; color: #fbbf24; line-height: 1; }
+        .review-bars { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .review-bar-row { display: flex; align-items: center; gap: 8px; font-size: 10.5px; color: var(--text-sub); }
+        .review-bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
+        .review-bar-fill { height: 100%; background: #fbbf24; border-radius: 10px; }
+        .review-item { border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 0; }
+        .review-item .rhead { display: flex; align-items: center; gap: 9px; }
+        .review-item img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+        .review-item .rname { font-size: 12.5px; font-weight: 700; color: #fff; }
+        .review-item .rtext { font-size: 12.5px; color: #cbd5e1; margin-top: 6px; line-height: 1.5; }
+        .review-item .rstars { color: #fbbf24; font-size: 10.5px; margin-top: 2px; }
+
+        /* ================= PHOTOS / VIDEOS GRID ================= */
+        .media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 2px; }
+        .media-grid .gitem { aspect-ratio: 1/1; overflow: hidden; position: relative; background: #111; }
+        .media-grid .gitem img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .media-grid .gitem .playicon { position: absolute; top: 6px; right: 6px; color: #fff; font-size: 12px; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+
+        /* ================= SHOP TAB ================= */
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }
+        .product-card { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; overflow: hidden; }
+        .product-card img { width: 100%; height: 110px; object-fit: cover; display: block; }
+        .product-card .pinfo { padding: 9px 10px 11px; }
+        .product-card .ptitle { font-size: 12px; font-weight: 700; color: #fff; line-height: 1.3; }
+        .product-card .pprice { font-size: 13px; font-weight: 900; color: var(--neon-cyan); margin-top: 4px; }
+        .product-card .pbuy { margin-top: 8px; width: 100%; background: rgba(253,224,141,0.12); border: 1px solid rgba(253,224,141,0.35); color: var(--neon-cyan); font-size: 11px; font-weight: 800; padding: 7px 0; border-radius: 8px; cursor: pointer; }
+
+        /* ================= EVENTS TAB ================= */
+        .events-list { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .event-card { display: flex; gap: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px; }
+        .event-date-box { flex-shrink: 0; width: 52px; height: 56px; background: rgba(253,224,141,0.1); border: 1px solid rgba(253,224,141,0.3); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .event-date-box .mon { font-size: 9px; font-weight: 800; color: var(--neon-cyan); text-transform: uppercase; }
+        .event-date-box .day { font-size: 18px; font-weight: 900; color: #fff; font-family: 'Orbitron', sans-serif; }
+        .event-info .etitle { font-size: 13px; font-weight: 800; color: #fff; }
+        .event-info .emeta { font-size: 11px; color: var(--text-sub); margin-top: 3px; }
+        .event-going-btn { margin-top: 8px; font-size: 10.5px; font-weight: 800; color: var(--neon-green); background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 5px 11px; border-radius: 8px; display: inline-block; }
+
+        /* ================= COMMUNITY TAB ================= */
+        .community-section { padding: 14px; }
+        .member-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .member-row img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+        .member-row .mname { font-size: 12.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 5px; }
+        .member-row .mrole { font-size: 10.5px; color: var(--text-sub); }
+
+        /* ================= 3-DOT MENU SHEET ================= */
+        .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 30000; display: none; backdrop-filter: blur(3px); }
+        .sheet-backdrop.open { display: block; }
+        .menu-sheet {
+            position: fixed; left: 0; right: 0; bottom: -100%; z-index: 30001;
+            background: #0c0d13; border-top: 1px solid var(--glass-border);
+            border-radius: 22px 22px 0 0; max-height: 82vh; overflow-y: auto;
+            transition: bottom 0.32s cubic-bezier(.2,.9,.3,1);
+            padding-bottom: env(safe-area-inset-bottom, 16px);
+        }
+        .menu-sheet.open { bottom: 0; }
+        .sheet-handle { width: 38px; height: 4px; background: rgba(255,255,255,0.25); border-radius: 4px; margin: 10px auto 4px; }
+        .sheet-page-head { display: flex; align-items: center; gap: 10px; padding: 12px 18px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .sheet-page-head img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
+        .sheet-page-head .spname { font-size: 14px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 5px; }
+        .sheet-page-head .spmeta { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+
+        .menu-group { padding: 10px 8px; border-bottom: 8px solid rgba(255,255,255,0.03); }
+        .menu-group-label { font-size: 10.5px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.6px; padding: 8px 12px 4px; }
+        .menu-item { display: flex; align-items: center; gap: 14px; padding: 12px 12px; border-radius: 12px; cursor: pointer; }
+        .menu-item:active { background: rgba(255,255,255,0.05); }
+        .menu-item .mico { width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff; flex-shrink: 0; }
+        .menu-item .mtext { flex: 1; }
+        .menu-item .mtitle { font-size: 13.5px; font-weight: 700; color: #fff; display: flex; align-items: center; }
+        .menu-item .msub { font-size: 11px; color: var(--text-sub); margin-top: 1px; }
+        .menu-item.danger .mtitle { color: var(--danger); }
+        .menu-item.danger .mico { color: var(--danger); background: rgba(239,68,68,0.1); }
+        .menu-item .mchev { color: var(--text-sub); font-size: 12px; }
+
+        /* ================= GENERIC MODAL ================= */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 40000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-backdrop.open { display: flex; }
+        .modal-box { background: #101119; border: 1px solid var(--glass-border); border-radius: 18px; width: 100%; max-width: 380px; max-height: 80vh; overflow-y: auto; padding: 20px; position: relative; }
+        .modal-close { position: absolute; top: 14px; right: 14px; color: var(--text-sub); font-size: 16px; cursor: pointer; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.05); }
+        .modal-title { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 4px; padding-right: 30px; }
+        .modal-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 16px; }
+
+        .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 6px; }
+        .share-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text-sub); cursor: pointer; }
+        .share-opt .sicon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px; color: #fff; }
+        .copy-link-row { margin-top: 16px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 12px; }
+        .copy-link-row span { flex: 1; font-size: 11.5px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .copy-link-row button { background: var(--neon-cyan); color: #1e1e1e; border: none; font-weight: 800; font-size: 11px; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+
+        .qr-box { width: 100%; aspect-ratio: 1/1; background: #fff; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-top: 8px; }
+        .qr-box i { font-size: 90px; color: #111; }
+
+        .insight-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 16px; }
+        .insight-mini-card { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; }
+        .insight-mini-card .inum { font-size: 19px; font-weight: 900; color: #fff; font-family: 'Orbitron', sans-serif; }
+        .insight-mini-card .ilbl { font-size: 10.5px; color: var(--text-sub); margin-top: 3px; }
+        .insight-mini-card .idelta { font-size: 10px; color: var(--neon-green); font-weight: 700; margin-top: 4px; }
+        .mini-chart { display: flex; align-items: flex-end; gap: 4px; height: 60px; margin-top: 4px; }
+        .mini-chart .bar { flex: 1; background: linear-gradient(180deg, #fde08d, #b8860b); border-radius: 3px 3px 0 0; }
+
+        .form-field { margin-bottom: 12px; }
+        .form-field label { font-size: 11.5px; font-weight: 700; color: var(--text-sub); display: block; margin-bottom: 6px; }
+        .form-field textarea, .form-field select, .form-field input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 12.5px; font-family: inherit; }
+        .modal-primary-btn { width: 100%; background: linear-gradient(135deg, #fde08d, #b8860b); color: #1e1e1e; font-weight: 800; font-size: 13px; padding: 12px; border-radius: 12px; border: none; margin-top: 6px; cursor: pointer; }
+        .radio-option { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; border: 1px solid var(--glass-border); margin-bottom: 8px; cursor: pointer; }
+        .radio-option input { width: auto; }
+        .radio-option .rtitle { font-size: 12.5px; font-weight: 700; color: #fff; }
+        .radio-option .rsub { font-size: 10.5px; color: var(--text-sub); }
+
+        /* ---- AI Page Twin (NEW FEATURE #7) ---- */
+        .ai-twin-fab {
+            position: fixed; bottom: 22px; right: 16px; z-index: 500;
+            width: 54px; height: 54px; border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #a78bfa);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 24px rgba(99,102,241,0.5); cursor: pointer; color: #fff; font-size: 21px;
+        }
+        .ai-twin-fab .ping { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid rgba(167,139,250,0.5); animation: pingAnim 2s infinite; }
+        @keyframes pingAnim { 0% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        .ai-chat-box { display: flex; flex-direction: column; height: 60vh; }
+        .ai-chat-head { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
+        .ai-chat-head img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+        .ai-chat-head .aname { font-size: 13.5px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 6px; }
+        .ai-chat-head .asub { font-size: 10.5px; color: var(--neon-green); }
+        .ai-chat-body { flex: 1; overflow-y: auto; padding: 12px 2px; display: flex; flex-direction: column; gap: 10px; }
+        .ai-msg { max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: 12.5px; line-height: 1.45; }
+        .ai-msg.bot { background: rgba(255,255,255,0.06); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .ai-msg.user { background: rgba(253,224,141,0.14); color: #fde08d; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai-chat-input-row { display: flex; gap: 8px; padding-top: 10px; }
+        .ai-chat-input-row input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 24px; padding: 10px 15px; color: #fff; font-size: 12.5px; }
+        .ai-chat-input-row button { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a78bfa); border: none; color: #fff; cursor: pointer; }
+
+        /* ---- Toast ---- */
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: #16171f; border: 1px solid var(--glass-border); color: #fff; font-size: 12.5px; font-weight: 600; padding: 11px 18px; border-radius: 12px; z-index: 60000; opacity: 0; transition: all 0.25s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 8px; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ---- Story / highlight viewer ---- */
+        .story-viewer-overlay { position: fixed; inset: 0; z-index: 20000; background: #000; display: none; }
+        .story-media-wrap { width: 100%; height: 100%; position: relative; }
+        .story-slide { position: absolute; inset: 0; }
+        .story-slide img, .story-slide video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .story-header { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 10px; padding: 14px 14px 10px; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent); }
+        .story-header img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #fde08d; }
+        .story-user-info { flex: 1; display: flex; align-items: baseline; gap: 6px; }
+        .story-username { font-size: 13px; font-weight: 700; color: #fff; }
+        .story-time { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .story-close { color: #fff; font-size: 20px; cursor: pointer; padding: 5px; }
+        .story-tap-zone { position: absolute; top: 0; height: 100%; width: 35%; z-index: 5; }
+        .story-tap-left { left: 0; } .story-tap-right { right: 0; }
+        .story-footer { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; gap: 12px; padding: 16px 14px calc(16px + env(safe-area-inset-bottom)); z-index: 10; background: linear-gradient(transparent, rgba(0,0,0,0.75)); }
+        .story-reply-input { flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 50px; padding: 10px 18px; color: #fff; font-size: 13px; outline: none; }
+        .story-footer i { color: #fff; font-size: 20px; cursor: pointer; }
+
+        ::-webkit-scrollbar { width: 0; height: 0; }
+    </style>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="fb-back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></div>
+        <span class="fb-header-title">Maijalalaini Islamic Medicine <i class="fa-solid fa-circle-check verified-badge"></i></span>
+        <div class="header-actions">
+            <div class="header-icon-btn" onclick="openModal('searchModal')"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="header-icon-btn" onclick="openMenuSheet()" style="display:flex; align-items:center; gap:3px; background:none; border:none; width:auto; height:auto; padding:0 4px;">
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.3s;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.6s;">•</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= PAGE VIEW ================= -->
+    <div id="pageView">
+
+        <!-- COVER + AVATAR -->
+        <div class="page-header-wrap">
+            <div class="group-cover-wrap">
+                <img class="group-cover-img" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80" alt="Page cover">
+                <div class="group-cover-fade"></div>
+                <div class="live-pill"><span class="live-dot"></span> LIVE</div>
+                <div class="cover-edit-btn"><i class="fa-solid fa-camera"></i> Edit cover</div>
+            </div>
+            <div class="page-avatar-frame">
+                <div class="avatar-online-ring"></div>
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80" alt="Page avatar">
+            </div>
+        </div>
+
+        <div class="group-info-block">
+            <div class="page-name-row">
+                <div class="group-info-title">
+                    Maijalalaini Islamic Medicine
+                    <i class="fa-solid fa-circle-check verified-badge"></i>
+                    <span class="trust-badge"><i class="fa-solid fa-shield-halved"></i> TrustScore 97</span>
+                </div>
+                <div class="group-meta-row"><span>182K followers · 9 following · 4K posts</span></div>
+            </div>
+
+            <div class="rating-row">
+                <span class="rating-stars">★★★★★</span>
+                <strong>4.9</strong>
+                <span class="rlink" onclick="switchTab('reviews')">2,340 reviews</span>
+            </div>
+
+            <div class="page-bio">
+                We provide trusted, quality-tested natural remedies for a wide range of conditions, In Sha Allah. Same-day delivery available nationwide.
+            </div>
+
+            <div class="page-contact-list">
+                <div class="crow"><i class="fa-solid fa-phone"></i> <a href="tel:+2348088886000">+234 808 888 6000</a></div>
+                <div class="crow"><i class="fa-solid fa-globe"></i> <a href="#">www.maijalalainimedicine.com</a></div>
+                <div class="crow"><i class="fa-solid fa-location-dot"></i> Kano, Nigeria</div>
+                <div class="crow"><i class="fa-solid fa-clock"></i> <span class="open-tag">Open now</span> · Closes 9:00 PM</div>
+            </div>
+
+            <div class="page-category-row"><i class="fa-solid fa-notes-medical"></i><span>Medical &amp; Health</span></div>
+
+            <div class="page-followed-row">
+                <div class="followed-avatars">
+                    <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80" alt="">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="">
+                </div>
+                <span>Followed by <strong>Fatima Shuaibu Yusuf</strong> and <strong>Shehu Hashimu</strong></span>
+            </div>
+
+            <!-- Proof-of-Impact strip — NEW FEATURE #6 -->
+            <div class="impact-strip">
+                <div class="impact-chip"><i class="fa-solid fa-hand-holding-medical"></i> <span class="num">12,400+</span> patients helped</div>
+                <div class="impact-chip"><i class="fa-solid fa-award"></i> <span class="num">98%</span> verified satisfaction</div>
+                <div class="impact-chip"><i class="fa-solid fa-truck-fast"></i> <span class="num">36k</span> orders delivered</div>
+            </div>
+
+            <div class="page-buttons-row">
+                <button class="invite-btn-fb" onclick="openModal('ctaModal')"><i class="fa-solid fa-bag-shopping"></i> Shop now</button>
+                <button class="follow-btn-fb is-following" id="followBtn" onclick="toggleFollow()"><i class="fa-solid fa-bell"></i> <span id="followLabel">Following</span></button>
+                <div class="icon-square-btn" onclick="openModal('messageModal')"><i class="fa-regular fa-comment-dots"></i></div>
+                <div class="icon-square-btn" onclick="toggleNotifDropdown()" style="position:relative;">
+                    <i class="fa-solid fa-ellipsis"></i>
+                    <div class="notif-dropdown" id="notifDropdown">
+                        <div class="nd-item active-opt" onclick="setNotifPref(this,'All')"><i class="fa-solid fa-check"></i> All notifications</div>
+                        <div class="nd-item" onclick="setNotifPref(this,'Highlights')"><i class="fa-solid fa-star"></i> Highlights only</div>
+                        <div class="nd-item" onclick="setNotifPref(this,'Off')"><i class="fa-solid fa-bell-slash"></i> Turn off</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extra CTA carousel (custom paid Call-To-Action buttons) -->
+            <div class="cta-carousel">
+                <div class="cta-chip" onclick="showToast('📅 Booking calendar opened')"><i class="fa-regular fa-calendar-check"></i> Book appointment</div>
+                <div class="cta-chip" onclick="showToast('📞 Calling page…')"><i class="fa-solid fa-phone"></i> Call now</div>
+                <div class="cta-chip" onclick="showToast('📝 Opening quote form…')"><i class="fa-solid fa-file-pen"></i> Get a quote</div>
+                <div class="cta-chip" onclick="showToast('🎟 Opening sign-up form…')"><i class="fa-regular fa-square-plus"></i> Sign up</div>
+            </div>
+
+            <!-- HIGHLIGHTS STRIP -->
+            <div class="smart-box-highlights">
+                <div class="highlights-scroll">
+                    <div class="highlight-item">
+                        <div class="highlight-add" onclick="showToast('Add to your story')"><i class="fa-solid fa-plus"></i></div>
+                        <p class="highlight-label">Add</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(0)"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Launch</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(1)"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Deals</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(2)"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Events</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring thread-ring" onclick="viewGroupHighlight(3)">
+                            <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80" loading="lazy">
+                            <div class="thread-tag">THREAD</div>
+                        </div>
+                        <p class="highlight-label">Recovery Stories</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TABS ================= -->
+        <div class="page-tabs" id="pageTabs">
+            <div class="ptab active" data-tab="posts" onclick="switchTab('posts')">Posts</div>
+            <div class="ptab" data-tab="reels" onclick="switchTab('reels')">Reels</div>
+            <div class="ptab" data-tab="photos" onclick="switchTab('photos')">Photos</div>
+            <div class="ptab" data-tab="shop" onclick="switchTab('shop')">Shop <span class="pro-tag">Pro</span></div>
+            <div class="ptab" data-tab="events" onclick="switchTab('events')">Events</div>
+            <div class="ptab" data-tab="reviews" onclick="switchTab('reviews')">Reviews</div>
+            <div class="ptab" data-tab="community" onclick="switchTab('community')">Community</div>
+            <div class="ptab" data-tab="about" onclick="switchTab('about')">About</div>
+        </div>
+
+        <!-- ===== POSTS TAB ===== -->
+        <div class="tab-panel active" id="tab-posts">
+            <div id="timeline-area"></div>
+        </div>
+
+        <!-- ===== REELS TAB ===== -->
+        <div class="tab-panel" id="tab-reels">
+            <div class="media-grid" id="reelsGrid"></div>
+        </div>
+
+        <!-- ===== PHOTOS TAB ===== -->
+        <div class="tab-panel" id="tab-photos">
+            <div class="media-grid" id="photosGrid"></div>
+        </div>
+
+        <!-- ===== SHOP TAB ===== -->
+        <div class="tab-panel" id="tab-shop">
+            <div class="shop-grid" id="shopGrid"></div>
+        </div>
+
+        <!-- ===== EVENTS TAB ===== -->
+        <div class="tab-panel" id="tab-events">
+            <div class="events-list" id="eventsList"></div>
+        </div>
+
+        <!-- ===== REVIEWS TAB ===== -->
+        <div class="tab-panel" id="tab-reviews">
+            <div class="reviews-section">
+                <div class="review-summary-box">
+                    <div><div class="review-big-num">4.9</div><div class="rating-stars" style="margin-top:4px;">★★★★★</div></div>
+                    <div class="review-bars">
+                        <div class="review-bar-row"><span>5★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:88%;"></div></div><span>88%</span></div>
+                        <div class="review-bar-row"><span>4★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:8%;"></div></div><span>8%</span></div>
+                        <div class="review-bar-row"><span>3★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:2%;"></div></div><span>2%</span></div>
+                        <div class="review-bar-row"><span>2★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:1%;"></div></div><span>1%</span></div>
+                        <div class="review-bar-row"><span>1★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:1%;"></div></div><span>1%</span></div>
+                    </div>
+                </div>
+                <div id="reviewsList"></div>
+            </div>
+        </div>
+
+        <!-- ===== COMMUNITY TAB ===== -->
+        <div class="tab-panel" id="tab-community">
+            <div class="community-section">
+                <div class="about-block" style="margin-bottom:14px;">
+                    <h4>Top contributors this month</h4>
+                    <div id="communityList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ABOUT TAB ===== -->
+        <div class="tab-panel" id="tab-about">
+            <div class="about-section">
+                <div class="about-block">
+                    <h4>Page transparency</h4>
+                    <div class="arow"><i class="fa-solid fa-calendar"></i> Page created April 12, 2019</div>
+                    <div class="arow"><i class="fa-solid fa-user-shield"></i> 4 admins · primary location: Kano, Nigeria</div>
+                    <div class="arow"><i class="fa-solid fa-pen"></i> No name changes in the last 90 days</div>
+                </div>
+                <div class="about-block">
+                    <h4>Contact &amp; basic info</h4>
+                    <div class="arow"><i class="fa-solid fa-phone"></i> +234 808 888 6000</div>
+                    <div class="arow"><i class="fa-solid fa-envelope"></i> support@maijalalainimedicine.com</div>
+                    <div class="arow"><i class="fa-solid fa-globe"></i> www.maijalalainimedicine.com</div>
+                    <div class="arow"><i class="fa-solid fa-location-dot"></i> No. 12 Zoo Road, Kano, Nigeria</div>
+                </div>
+                <div class="about-block">
+                    <h4>Verified impact record</h4>
+                    <div class="impact-detail-grid">
+                        <div class="impact-detail-card"><div class="num">12.4K</div><div class="lbl">Patients helped</div></div>
+                        <div class="impact-detail-card"><div class="num">98%</div><div class="lbl">Satisfaction</div></div>
+                        <div class="impact-detail-card"><div class="num">36K</div><div class="lbl">Orders delivered</div></div>
+                        <div class="impact-detail-card"><div class="num">6 yrs</div><div class="lbl">On Nexus</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= AI PAGE TWIN — NEW FEATURE #7 ================= -->
+    <div class="ai-twin-fab" onclick="openModal('aiTwinModal')">
+        <div class="ping"></div>
+        <i class="fa-solid fa-robot"></i>
+    </div>
+
+    <!-- ================= 3-DOT WORLD-CLASS MENU SHEET ================= -->
+    <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeMenuSheet()"></div>
+    <div class="menu-sheet" id="menuSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-page-head">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80">
+            <div>
+                <div class="spname">Maijalalaini Islamic Medicine <i class="fa-solid fa-circle-check verified-badge"></i></div>
+                <div class="spmeta">182K followers · TrustScore 97</div>
+            </div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-group-label">Page tools</div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('shareModal')"><div class="mico"><i class="fa-solid fa-share"></i></div><div class="mtext"><div class="mtitle">Share page</div><div class="msub">Send via chat, socials, or copy link</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('qrModal')"><div class="mico"><i class="fa-solid fa-qrcode"></i></div><div class="mtext"><div class="mtitle">Page QR code</div><div class="msub">Let people scan to follow instantly</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); toggleSave()"><div class="mico"><i class="fa-regular fa-bookmark" id="saveIcon"></i></div><div class="mtext"><div class="mtitle" id="saveLabel">Save page</div><div class="msub">Add to your saved list</div></div></div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-group-label">Grow &amp; monetize</div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('boostModal')"><div class="mico"><i class="fa-solid fa-rocket"></i></div><div class="mtext"><div class="mtitle">Boost this page <span class="pro-tag">Paid</span></div><div class="msub">Reach more people with an ad</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('insightsModal')"><div class="mico"><i class="fa-solid fa-chart-line"></i></div><div class="mtext"><div class="mtitle">Insights &amp; analytics <span class="pro-tag">Pro</span></div><div class="msub">Followers, reach, engagement</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('monetizeModal')"><div class="mico"><i class="fa-solid fa-sack-dollar"></i></div><div class="mtext"><div class="mtitle">Monetization studio <span class="pro-tag">Pro</span></div><div class="msub">Subscriptions, tips &amp; gifts, ads</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('adsManagerModal')"><div class="mico"><i class="fa-solid fa-bullhorn"></i></div><div class="mtext"><div class="mtitle">Ads manager <span class="pro-tag">Paid</span></div><div class="msub">Create and manage ad campaigns</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-group-label">Manage page</div>
+            <div class="menu-item" onclick="closeMenuSheet(); showToast('✏️ Opening page editor…')"><div class="mico"><i class="fa-solid fa-pen-to-square"></i></div><div class="mtext"><div class="mtitle">Edit page info</div><div class="msub">Name, category, bio, contact details</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); showToast('👥 Opening page roles…')"><div class="mico"><i class="fa-solid fa-user-group"></i></div><div class="mtext"><div class="mtitle">Page roles</div><div class="msub">Manage admins &amp; editors</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); showToast('🗓 Opening scheduled posts…')"><div class="mico"><i class="fa-regular fa-clock"></i></div><div class="mtext"><div class="mtitle">Scheduled &amp; time-capsule posts</div><div class="msub">2 posts scheduled</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-group-label">Preferences</div>
+            <div class="menu-item" onclick="closeMenuSheet(); toggleNotifDropdown()"><div class="mico"><i class="fa-solid fa-bell"></i></div><div class="mtext"><div class="mtitle">Notification preferences</div><div class="msub" id="notifSubLabel">All notifications</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('languageModal')"><div class="mico"><i class="fa-solid fa-language"></i></div><div class="mtext"><div class="mtitle">Language &amp; live translation</div><div class="msub">English (auto-detect on)</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="toggleTheme()"><div class="mico"><i class="fa-solid fa-circle-half-stroke"></i></div><div class="mtext"><div class="mtitle">Display &amp; accessibility</div><div class="msub">Theme, text size, captions</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+        </div>
+
+        <div class="menu-group" style="border-bottom:none;">
+            <div class="menu-group-label">Safety</div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('transparencyModal')"><div class="mico"><i class="fa-solid fa-circle-info"></i></div><div class="mtext"><div class="mtitle">Page transparency</div><div class="msub">See who manages this page</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item danger" onclick="closeMenuSheet(); openModal('reportModal')"><div class="mico"><i class="fa-solid fa-flag"></i></div><div class="mtext"><div class="mtitle">Report page</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item danger" onclick="closeMenuSheet(); confirmBlock()"><div class="mico"><i class="fa-solid fa-ban"></i></div><div class="mtext"><div class="mtitle">Block page</div></div></div>
+        </div>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Share modal -->
+    <div class="modal-backdrop" id="shareModal-bg" onclick="closeModalOnBg(event,'shareModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('shareModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Share this page</div>
+            <div class="modal-sub">Share Maijalalaini Islamic Medicine with your network</div>
+            <div class="share-grid">
+                <div class="share-opt" onclick="showToast('Shared to WhatsApp')"><div class="sicon" style="background:#25D366;"><i class="fa-brands fa-whatsapp"></i></div>WhatsApp</div>
+                <div class="share-opt" onclick="showToast('Shared to Messenger')"><div class="sicon" style="background:#4f46e5;"><i class="fa-brands fa-facebook-messenger"></i></div>Messenger</div>
+                <div class="share-opt" onclick="showToast('Shared to X')"><div class="sicon" style="background:#111;border:1px solid #333;"><i class="fa-brands fa-x-twitter"></i></div>X</div>
+                <div class="share-opt" onclick="showToast('Shared via Telegram')"><div class="sicon" style="background:#229ED9;"><i class="fa-brands fa-telegram"></i></div>Telegram</div>
+                <div class="share-opt" onclick="showToast('Shared to your story')"><div class="sicon" style="background:linear-gradient(135deg,#f59e0b,#ec4899);"><i class="fa-solid fa-circle-plus"></i></div>Your story</div>
+                <div class="share-opt" onclick="showToast('Sent to Nexus friend')"><div class="sicon" style="background:#334155;"><i class="fa-solid fa-paper-plane"></i></div>Nexus DM</div>
+                <div class="share-opt" onclick="showToast('Email opened')"><div class="sicon" style="background:#334155;"><i class="fa-solid fa-envelope"></i></div>Email</div>
+                <div class="share-opt" onclick="showToast('Embed code copied')"><div class="sicon" style="background:#334155;"><i class="fa-solid fa-code"></i></div>Embed</div>
+            </div>
+            <div class="copy-link-row"><span>nexus.app/maijalalaini-medicine</span><button onclick="showToast('🔗 Link copied')">Copy</button></div>
+        </div>
+    </div>
+
+    <!-- QR modal -->
+    <div class="modal-backdrop" id="qrModal-bg" onclick="closeModalOnBg(event,'qrModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('qrModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Page QR code</div>
+            <div class="modal-sub">Scan with any camera to open this page instantly</div>
+            <div class="qr-box"><i class="fa-solid fa-qrcode"></i></div>
+            <button class="modal-primary-btn" onclick="showToast('⬇️ QR code saved to gallery')">Download QR code</button>
+        </div>
+    </div>
+
+    <!-- CTA / Shop now modal -->
+    <div class="modal-backdrop" id="ctaModal-bg" onclick="closeModalOnBg(event,'ctaModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('ctaModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Shop Maijalalaini Islamic Medicine</div>
+            <div class="modal-sub">Browse products directly — checkout without leaving the app</div>
+            <div class="shop-grid" style="padding:0;" id="ctaShopGrid"></div>
+        </div>
+    </div>
+
+    <!-- Message modal -->
+    <div class="modal-backdrop" id="messageModal-bg" onclick="closeModalOnBg(event,'messageModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('messageModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Message the page</div>
+            <div class="modal-sub">Usually replies within a few minutes</div>
+            <div class="form-field"><textarea rows="4" placeholder="Type your message…"></textarea></div>
+            <button class="modal-primary-btn" onclick="closeModal('messageModal'); showToast('✅ Message sent')">Send message</button>
+        </div>
+    </div>
+
+    <!-- Boost modal (paid) -->
+    <div class="modal-backdrop" id="boostModal-bg" onclick="closeModalOnBg(event,'boostModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('boostModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Boost this page <span class="pro-tag">Paid</span></div>
+            <div class="modal-sub">Reach thousands of new potential followers nearby</div>
+            <div class="radio-option"><input type="radio" name="boost" checked><div><div class="rtitle">Reach — ₦8,500</div><div class="rsub">~45,000–60,000 people · 5 days</div></div></div>
+            <div class="radio-option"><input type="radio" name="boost"><div><div class="rtitle">Followers — ₦15,000</div><div class="rsub">Est. 800–1,200 new followers · 7 days</div></div></div>
+            <div class="radio-option"><input type="radio" name="boost"><div><div class="rtitle">Engagement — ₦12,000</div><div class="rsub">More likes, comments &amp; shares · 5 days</div></div></div>
+            <button class="modal-primary-btn" onclick="closeModal('boostModal'); showToast('🚀 Boost campaign submitted')">Continue to payment</button>
+        </div>
+    </div>
+
+    <!-- Insights modal (paid analytics) -->
+    <div class="modal-backdrop" id="insightsModal-bg" onclick="closeModalOnBg(event,'insightsModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('insightsModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Insights &amp; analytics <span class="pro-tag">Pro</span></div>
+            <div class="modal-sub">Last 30 days performance</div>
+            <div class="insight-mini-grid">
+                <div class="insight-mini-card"><div class="inum">182,430</div><div class="ilbl">Total followers</div><div class="idelta">▲ 4.2% this month</div></div>
+                <div class="insight-mini-card"><div class="inum">96.2K</div><div class="ilbl">Post reach</div><div class="idelta">▲ 11.8% this month</div></div>
+                <div class="insight-mini-card"><div class="inum">18,904</div><div class="ilbl">Engagements</div><div class="idelta">▲ 6.1% this month</div></div>
+                <div class="insight-mini-card"><div class="inum">97</div><div class="ilbl">TrustScore</div><div class="idelta">▲ 2 pts this month</div></div>
+            </div>
+            <div class="about-block" style="margin:0;">
+                <h4>Reach — last 7 days</h4>
+                <div class="mini-chart" id="miniChart"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monetization studio modal -->
+    <div class="modal-backdrop" id="monetizeModal-bg" onclick="closeModalOnBg(event,'monetizeModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('monetizeModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Monetization studio <span class="pro-tag">Pro</span></div>
+            <div class="modal-sub">Turn your community into sustainable income</div>
+            <div class="about-block"><h4>Fan subscriptions</h4><div class="arow"><i class="fa-solid fa-star"></i> ₦2,000/mo — exclusive posts &amp; early access</div></div>
+            <div class="about-block"><h4>Tips &amp; gifts</h4><div class="arow"><i class="fa-solid fa-gift"></i> Enable one-tap tipping on live streams</div></div>
+            <div class="about-block"><h4>In-stream ads</h4><div class="arow"><i class="fa-solid fa-tv"></i> Earn from ads shown on your videos</div></div>
+            <button class="modal-primary-btn" onclick="closeModal('monetizeModal'); showToast('💰 Monetization studio opened')">Open studio</button>
+        </div>
+    </div>
+
+    <!-- Ads manager modal -->
+    <div class="modal-backdrop" id="adsManagerModal-bg" onclick="closeModalOnBg(event,'adsManagerModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('adsManagerModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Ads manager <span class="pro-tag">Paid</span></div>
+            <div class="modal-sub">Create a new campaign for this page</div>
+            <div class="form-field"><label>Campaign goal</label><select><option>Page followers</option><option>Website visits</option><option>Message conversations</option><option>Product sales</option></select></div>
+            <div class="form-field"><label>Daily budget</label><input type="text" placeholder="₦5,000"></div>
+            <button class="modal-primary-btn" onclick="closeModal('adsManagerModal'); showToast('📣 Campaign draft created')">Create campaign</button>
+        </div>
+    </div>
+
+    <!-- Language modal -->
+    <div class="modal-backdrop" id="languageModal-bg" onclick="closeModalOnBg(event,'languageModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('languageModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Language &amp; live translation</div>
+            <div class="modal-sub">Every post is auto-translated to your language in real time</div>
+            <div class="radio-option"><input type="radio" name="lang" checked><div class="rtitle">English</div></div>
+            <div class="radio-option"><input type="radio" name="lang"><div class="rtitle">Hausa</div></div>
+            <div class="radio-option"><input type="radio" name="lang"><div class="rtitle">French</div></div>
+            <div class="radio-option"><input type="radio" name="lang"><div class="rtitle">Arabic</div></div>
+            <button class="modal-primary-btn" onclick="closeModal('languageModal'); showToast('🌐 Language updated')">Save</button>
+        </div>
+    </div>
+
+    <!-- Transparency modal -->
+    <div class="modal-backdrop" id="transparencyModal-bg" onclick="closeModalOnBg(event,'transparencyModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('transparencyModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Page transparency</div>
+            <div class="modal-sub">Information Nexus shows to keep this page accountable</div>
+            <div class="about-block"><h4>Created</h4><div class="arow"><i class="fa-solid fa-calendar"></i> April 12, 2019</div></div>
+            <div class="about-block"><h4>Admin location</h4><div class="arow"><i class="fa-solid fa-location-dot"></i> Kano, Nigeria (4 admins)</div></div>
+            <div class="about-block"><h4>Ad activity</h4><div class="arow"><i class="fa-solid fa-bullhorn"></i> 2 active ads running</div></div>
+        </div>
+    </div>
+
+    <!-- Report modal -->
+    <div class="modal-backdrop" id="reportModal-bg" onclick="closeModalOnBg(event,'reportModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('reportModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Report this page</div>
+            <div class="modal-sub">Your report is anonymous, except if you're reporting an intellectual property infringement</div>
+            <div class="radio-option"><input type="radio" name="report"><div class="rtitle">Misleading or false information</div></div>
+            <div class="radio-option"><input type="radio" name="report"><div class="rtitle">Scam or fraud</div></div>
+            <div class="radio-option"><input type="radio" name="report"><div class="rtitle">Hate speech or harassment</div></div>
+            <div class="radio-option"><input type="radio" name="report"><div class="rtitle">Something else</div></div>
+            <button class="modal-primary-btn" onclick="closeModal('reportModal'); showToast('🚩 Report submitted')">Submit report</button>
+        </div>
+    </div>
+
+    <!-- Search modal -->
+    <div class="modal-backdrop" id="searchModal-bg" onclick="closeModalOnBg(event,'searchModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('searchModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Search this page</div>
+            <div class="form-field"><input type="text" placeholder="Search posts, photos, products…" autofocus></div>
+        </div>
+    </div>
+
+    <!-- AI Page Twin chat modal — NEW FEATURE #7 -->
+    <div class="modal-backdrop" id="aiTwinModal-bg" onclick="closeModalOnBg(event,'aiTwinModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('aiTwinModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="ai-chat-box">
+                <div class="ai-chat-head">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80">
+                    <div><div class="aname">Page AI Twin <i class="fa-solid fa-robot" style="color:#a78bfa;font-size:11px;"></i></div><div class="asub">● Trained on this page · Always labeled AI</div></div>
+                </div>
+                <div class="ai-chat-body" id="aiChatBody">
+                    <div class="ai-msg bot">Hello! I'm this page's AI Twin — trained on their catalog and FAQs so I can answer instantly, 24/7. A human admin will follow up for anything I can't handle. How can I help?</div>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput" placeholder="Ask about products, hours, orders…" onkeydown="if(event.key==='Enter') sendAiMsg()">
+                    <button onclick="sendAiMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STORY / HIGHLIGHT VIEWER -->
+    <div class="story-viewer-overlay" id="storyViewerOverlay">
+        <div class="story-header">
+            <img id="storyUserAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80">
+            <div class="story-user-info">
+                <span class="story-username" id="storyUsername">Maijalalaini Islamic Medicine</span>
+                <span class="story-time" id="storyTime"></span>
+            </div>
+            <i class="fa-solid fa-xmark story-close" onclick="closeGroupStoryViewer()"></i>
+        </div>
+        <div class="story-media-wrap" id="storyMediaWrap">
+            <div class="story-tap-zone story-tap-left" onclick="prevGroupStory()"></div>
+            <div class="story-tap-zone story-tap-right" onclick="nextGroupStory()"></div>
+        </div>
+        <div class="story-footer" id="storyFooter">
+            <input type="text" class="story-reply-input" placeholder="Send message">
+            <i class="fa-regular fa-paper-plane"></i>
+        </div>
+    </div>
+
+    <div class="toast" id="toastBox"></div>
+
+    <!-- SHARED POST CARD TEMPLATE — single source of truth for generatePostHTML() -->
+    <script src="post-card-template.js"></script>
+
+    <script>
+        // Fallback for the per-post "⋯" menu that post-card-template.js expects
+        // (openNeuralMenu is normally supplied by the main feed page; pages.html
+        // provides a lightweight version so post menus still work here).
+        if (typeof window.openNeuralMenu !== 'function') {
+            window.openNeuralMenu = function () { showToast('Post options'); };
+        }
+
+        // ============================================================
+        // FEED POSTS — rendered via the shared window.generatePostHTML()
+        // from post-card-template.js
+        // ============================================================
+        function renderFeedPosts() {
+            const samplePosts = [
+                {
+                    id: 'page-post-0', pinned: true, isAdmin: true, translatable: true,
+                    username: 'Maijalalaini Islamic Medicine',
+                    userProfilePic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+                    mediaUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80',
+                    mediaType: 'image',
+                    content: 'Welcome to our official page! Browse our full 2026 product catalog in the Shop tab, or message us any time — our AI Twin replies instantly, day or night.',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 10),
+                    likesCount: 512, commentsCount: 63
+                },
+                {
+                    id: 'page-post-1', boosted: true, isAdmin: true, translatable: true,
+                    username: 'Ali_Developer',
+                    userProfilePic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+                    mediaUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80',
+                    mediaType: 'image',
+                    content: 'Alhamdulillah — our full 2026 platform roadmap is now complete. Thank you to every member of the community for your support!',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 42),
+                    likesCount: 318, commentsCount: 47
+                },
+                {
+                    id: 'page-post-2', translatable: true,
+                    username: 'MmnAfrah',
+                    userProfilePic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
+                    mediaUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80',
+                    mediaType: 'image',
+                    content: `This week's community call is on Monday. Anyone interested in the Business Deals sector should come ready with questions.`,
+                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
+                    likesCount: 142, commentsCount: 19
+                },
+                {
+                    id: 'page-post-3', translatable: true,
+                    username: 'Zainab_TrustID',
+                    userProfilePic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80',
+                    mediaUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80',
+                    mediaType: 'image',
+                    content: 'TrustID audits have been refreshed for all verified members. Check your profile for your latest score and full audit history.',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26),
+                    likesCount: 89, commentsCount: 11
+                }
+            ];
+
+            const container = document.getElementById('timeline-area');
+            container.innerHTML = samplePosts.map(post => window.generatePostHTML(post)).join('') + renderTimeCapsulePost();
+
+            if (typeof window.postCard_observeVideos === 'function') {
+                window.postCard_observeVideos();
+            }
+        }
+
+        // Time-Capsule post — NEW FEATURE #3
+        // Uses its own capsule-post-* classes (see CSS) so it never shares
+        // selectors with the real post cards from post-card-template.js.
+        function renderTimeCapsulePost() {
+            return `
+            <div class="capsule-post-card">
+                <div class="capsule-post-head">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80">
+                    <div class="capsule-post-head-info">
+                        <div class="cpname">Maijalalaini Islamic Medicine <i class="fa-solid fa-circle-check verified-badge" style="font-size:11px;"></i></div>
+                        <div class="cpmeta"><span>Scheduled</span> · <i class="fa-solid fa-lock"></i> Time Capsule</div>
+                    </div>
+                </div>
+                <div class="capsule-lock">
+                    <i class="fa-solid fa-box-archive big"></i>
+                    <div class="ctitle">A message unlocks for followers soon</div>
+                    <div class="csub">Time-Capsule Post — set to reveal on our 7th anniversary</div>
+                    <div class="capsule-countdown" id="capsuleCountdown"></div>
+                </div>
+            </div>`;
+        }
+        function startCapsuleCountdown() {
+            const target = Date.now() + 1000 * (3600*11 + 60*24 + 9);
+            function tick() {
+                const el = document.getElementById('capsuleCountdown');
+                if (!el) return;
+                let diff = Math.max(0, target - Date.now());
+                const h = String(Math.floor(diff/3600000)).padStart(2,'0');
+                const m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+                const s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+                el.innerHTML = `<span>${h}</span><span>${m}</span><span>${s}</span>`;
+            }
+            tick(); setInterval(tick, 1000);
+        }
+
+        // ============================================================
+        // TABS: Reels / Photos / Shop / Events / Reviews / Community
+        // ============================================================
+        const galleryImgs = [
+            'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80'
+        ];
+
+        function renderGrids() {
+            document.getElementById('photosGrid').innerHTML = galleryImgs.map(u => `<div class="gitem"><img src="${u}" loading="lazy"></div>`).join('');
+            document.getElementById('reelsGrid').innerHTML = galleryImgs.map(u => `<div class="gitem"><img src="${u}" loading="lazy"><i class="fa-solid fa-play playicon"></i></div>`).join('');
+
+            const products = [
+                { name: 'Herbal Immunity Boost 250ml', price: '₦4,500', img: galleryImgs[0] },
+                { name: 'Joint Relief Balm', price: '₦3,200', img: galleryImgs[1] },
+                { name: 'Digestive Care Tea Pack', price: '₦2,800', img: galleryImgs[2] },
+                { name: 'Skin Radiance Oil', price: '₦5,000', img: galleryImgs[3] }
+            ];
+            const shopHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${p.img}" loading="lazy">
+                    <div class="pinfo">
+                        <div class="ptitle">${p.name}</div>
+                        <div class="pprice">${p.price}</div>
+                        <button class="pbuy" onclick="showToast('🛒 Added to cart')">Add to cart</button>
+                    </div>
+                </div>`).join('');
+            document.getElementById('shopGrid').innerHTML = shopHTML;
+            document.getElementById('ctaShopGrid').innerHTML = shopHTML;
+
+            const events = [
+                { mon: 'AUG', day: '14', title: 'Free Community Health Check', meta: 'Kano Central Clinic · 10:00 AM' },
+                { mon: 'AUG', day: '22', title: 'Live Q&A: Natural Remedies', meta: 'Online · Nexus Live · 6:00 PM' },
+                { mon: 'SEP', day: '03', title: '7th Anniversary Celebration', meta: 'Zoo Road HQ · All day' }
+            ];
+            document.getElementById('eventsList').innerHTML = events.map(e => `
+                <div class="event-card">
+                    <div class="event-date-box"><div class="mon">${e.mon}</div><div class="day">${e.day}</div></div>
+                    <div class="event-info">
+                        <div class="etitle">${e.title}</div>
+                        <div class="emeta">${e.meta}</div>
+                        <div class="event-going-btn" onclick="showToast('✅ You are going')"><i class="fa-solid fa-check"></i> Going</div>
+                    </div>
+                </div>`).join('');
+
+            const reviews = [
+                { name: 'Hauwa Bello', img: galleryImgs[0], stars: 5, text: 'Fast delivery and the product actually works. Very trustworthy page, highly recommend.' },
+                { name: 'Ibrahim Sani', img: galleryImgs[4], stars: 5, text: 'Their AI assistant answered my question at midnight and the order arrived the next day.' },
+                { name: 'Amina Yusuf', img: galleryImgs[5], stars: 4, text: 'Great quality overall. Would love more delivery slots in the evening.' }
+            ];
+            document.getElementById('reviewsList').innerHTML = reviews.map(r => `
+                <div class="review-item">
+                    <div class="rhead"><img src="${r.img}"><div><div class="rname">${r.name}</div><div class="rstars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div></div></div>
+                    <div class="rtext">${r.text}</div>
+                </div>`).join('');
+
+            const contributors = [
+                { name: 'Fatima Shuaibu Yusuf', role: 'Top commenter this month', img: galleryImgs[2] },
+                { name: 'Shehu Hashimu', role: 'Most shared posts', img: galleryImgs[3] },
+                { name: 'Zainab_TrustID', role: 'TrustScore Ambassador', img: galleryImgs[1] }
+            ];
+            document.getElementById('communityList').innerHTML = contributors.map(c => `
+                <div class="member-row"><img src="${c.img}"><div><div class="mname">${c.name} <i class="fa-solid fa-circle-check verified-badge" style="font-size:10px;"></i></div><div class="mrole">${c.role}</div></div></div>`).join('');
+
+            document.getElementById('miniChart').innerHTML = [40,55,35,70,50,85,65].map(h => `<div class="bar" style="height:${h}%;"></div>`).join('');
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.ptab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+            document.getElementById('pageTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ============================================================
+        // FOLLOW / NOTIFICATIONS
+        // ============================================================
+        function toggleFollow() {
+            const btn = document.getElementById('followBtn');
+            const label = document.getElementById('followLabel');
+            const following = btn.classList.toggle('is-following');
+            label.textContent = following ? 'Following' : 'Follow';
+            showToast(following ? '🔔 You are now following this page' : 'Unfollowed');
+        }
+        function toggleNotifDropdown() {
+            document.getElementById('notifDropdown').classList.toggle('open');
+        }
+        function setNotifPref(el, label) {
+            document.querySelectorAll('#notifDropdown .nd-item').forEach(i => i.classList.remove('active-opt'));
+            el.classList.add('active-opt');
+            document.getElementById('notifDropdown').classList.remove('open');
+            document.getElementById('notifSubLabel').textContent = label === 'All' ? 'All notifications' : label;
+            showToast('🔔 Notifications set to: ' + label);
+        }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.icon-square-btn')) document.getElementById('notifDropdown')?.classList.remove('open');
+        });
+
+        // ============================================================
+        // 3-DOT MENU SHEET
+        // ============================================================
+        function openMenuSheet() {
+            document.getElementById('sheetBackdrop').classList.add('open');
+            document.getElementById('menuSheet').classList.add('open');
+        }
+        function closeMenuSheet() {
+            document.getElementById('sheetBackdrop').classList.remove('open');
+            document.getElementById('menuSheet').classList.remove('open');
+        }
+
+        // ============================================================
+        // GENERIC MODALS
+        // ============================================================
+        function openModal(id) { document.getElementById(id + '-bg').classList.add('open'); }
+        function closeModal(id) { document.getElementById(id + '-bg').classList.remove('open'); }
+        function closeModalOnBg(e, id) { if (e.target.id === id + '-bg') closeModal(id); }
+
+        function toggleSave() {
+            const icon = document.getElementById('saveIcon');
+            const label = document.getElementById('saveLabel');
+            const saved = icon.classList.toggle('fa-solid');
+            icon.classList.toggle('fa-regular', !saved);
+            label.textContent = saved ? 'Saved' : 'Save page';
+            showToast(saved ? '🔖 Page saved' : 'Removed from saved');
+        }
+        function confirmBlock() {
+            if (confirm('Block this page? You will no longer see their posts or messages.')) showToast('⛔ Page blocked');
+        }
+        function toggleTheme() { showToast('🎨 Accessibility & display settings opened'); }
+
+        // ============================================================
+        // AI PAGE TWIN CHAT — NEW FEATURE #7
+        // ============================================================
+        const aiReplies = [
+            "Great question! Our team typically confirms orders within 30 minutes during business hours.",
+            "Yes, that product is in stock right now — I can add it to your cart if you'd like.",
+            "We deliver nationwide, usually within 24–48 hours depending on your location.",
+            "I've noted that for our human team — they'll follow up here shortly if needed.",
+            "You can check live pricing and stock any time in the Shop tab above."
+        ];
+        function sendAiMsg() {
+            const input = document.getElementById('aiChatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            const body = document.getElementById('aiChatBody');
+            body.insertAdjacentHTML('beforeend', `<div class="ai-msg user">${text}</div>`);
+            input.value = '';
+            body.scrollTop = body.scrollHeight;
+            setTimeout(() => {
+                const reply = aiReplies[Math.floor(Math.random() * aiReplies.length)];
+                body.insertAdjacentHTML('beforeend', `<div class="ai-msg bot">${reply}</div>`);
+                body.scrollTop = body.scrollHeight;
+            }, 700);
+        }
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        let toastTimer = null;
+        function showToast(msg) {
+            const box = document.getElementById('toastBox');
+            box.textContent = msg;
+            box.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => box.classList.remove('show'), 2200);
+        }
+
+        // ============================================================
+        // HIGHLIGHTS / STORY VIEWER
+        // ============================================================
+        const groupHighlights = [
+            { img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80', label: 'Launch' },
+            { img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=900&auto=format&fit=crop&q=80', label: 'Deals' },
+            { img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80', label: 'Events' },
+            { img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80', label: 'Recovery Stories — collaborative thread' }
+        ];
+        let groupStoryIndex = 0;
+        let groupStoryTimer = null;
+        const GROUP_STORY_DURATION = 5000;
+
+        function viewGroupHighlight(index) {
+            groupStoryIndex = index;
+            document.getElementById('storyViewerOverlay').style.display = 'block';
+            showGroupStoryAt(groupStoryIndex);
+            history.pushState({ storyViewer: true }, '');
+            window.onpopstate = closeGroupStoryViewer;
+        }
+        function showGroupStoryAt(index, direction = 'next') {
+            clearTimeout(groupStoryTimer);
+            const wrap = document.getElementById('storyMediaWrap');
+            const oldSlide = wrap.querySelector('.story-slide');
+            const item = groupHighlights[index];
+
+            const newSlide = document.createElement('div');
+            newSlide.className = 'story-slide';
+            newSlide.innerHTML = `<img src="${item.img}">`;
+            newSlide.style.transform = direction === 'prev' ? 'translateX(-100%)' : 'translateX(100%)';
+            newSlide.style.transition = 'none';
+            wrap.appendChild(newSlide);
+            void newSlide.offsetWidth;
+
+            requestAnimationFrame(() => {
+                newSlide.style.transition = 'transform 0.3s ease-out';
+                newSlide.style.transform = 'translateX(0)';
+                if (oldSlide) {
+                    oldSlide.style.transition = 'transform 0.3s ease-out';
+                    oldSlide.style.transform = direction === 'prev' ? 'translateX(100%)' : 'translateX(-100%)';
+                }
+            });
+            if (oldSlide) setTimeout(() => oldSlide.remove(), 320);
+
+            document.getElementById('storyUsername').textContent = item.label;
+            document.getElementById('storyTime').textContent = 'Now';
+            groupStoryTimer = setTimeout(() => nextGroupStory(), GROUP_STORY_DURATION);
+        }
+        function nextGroupStory() {
+            if (groupStoryIndex < groupHighlights.length - 1) { groupStoryIndex++; showGroupStoryAt(groupStoryIndex, 'next'); }
+            else closeGroupStoryViewer();
+        }
+        function prevGroupStory() {
+            if (groupStoryIndex > 0) { groupStoryIndex--; showGroupStoryAt(groupStoryIndex, 'prev'); }
+        }
+        function closeGroupStoryViewer() {
+            clearTimeout(groupStoryTimer);
+            document.getElementById('storyViewerOverlay').style.display = 'none';
+            document.getElementById('storyMediaWrap').querySelectorAll('.story-slide').forEach(el => el.remove());
+            window.onpopstate = null;
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        renderFeedPosts();
+        renderGrids();
+        startCapsuleCountdown();
+
+        (function initScrollHeader() {
+            const header = document.querySelector('header');
+            const REVEAL_THRESHOLD = 140;
+            function onScroll() {
+                if (window.scrollY > REVEAL_THRESHOLD) header.classList.add('header-scrolled');
+                else header.classList.remove('header-scrolled');
+            }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        })();
+    </script>
+</body>
+</html>
