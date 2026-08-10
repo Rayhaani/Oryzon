@@ -5543,6 +5543,7 @@ body {
         <button class="mb-glass-card mb-quick-btn" onclick="mbShareMenuLink()"><span style="font-size:18px;">🔗</span>Menu Link</button>
         <button class="mb-glass-card mb-quick-btn" onclick="mbOpenUpgradeModal()"><span style="font-size:18px;">💳</span>Billing</button>
         <button class="mb-glass-card mb-quick-btn" onclick="mbOpenCustomizeModal()"><span style="font-size:18px;">🎨</span>Customize</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbOpenBusinessSettings()"><span style="font-size:18px;">🏢</span>Business</button>
     </div>
 
     <div class="mb-heading-brand" style="font-size:15px;font-weight:800;color:#ffffff;margin-top:24px;margin-bottom:10px;">Complete Your Setup</div>
@@ -12756,7 +12757,123 @@ async function mbUploadCoverPhoto(event) {
         showGlobalToast('❌ Upload failed: ' + err.message);
     }
     }
+const MB_DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+const MB_DAY_LABELS = {monday:'Monday',tuesday:'Tuesday',wednesday:'Wednesday',thursday:'Thursday',friday:'Friday',saturday:'Saturday',sunday:'Sunday'};
 
+function mbTimeOptions(selected) {
+    let opts = '';
+    for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 30) {
+            const val = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+            const label = new Date(2000,0,1,h,m).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            opts += '<option value="' + val + '" ' + (val === selected ? 'selected' : '') + '>' + label + '</option>';
+        }
+    }
+    return opts;
+}
+
+function mbRenderOperatingHoursRows(hoursData) {
+    const list = document.getElementById('bs-hours-list');
+    list.innerHTML = MB_DAYS.map(function(day) {
+        const d = hoursData[day] || { enabled: true, open: '08:00', close: '18:00' };
+        return '<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f1f5f9;">' +
+            '<input type="checkbox" id="bs-hours-enabled-' + day + '" ' + (d.enabled ? 'checked' : '') + ' style="width:18px;height:18px;flex-shrink:0;">' +
+            '<div style="width:78px;font-size:12.5px;font-weight:700;color:#334155;flex-shrink:0;">' + MB_DAY_LABELS[day] + '</div>' +
+            '<select id="bs-hours-open-' + day + '" style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 6px;font-size:12px;">' + mbTimeOptions(d.open) + '</select>' +
+            '<span style="font-size:11px;color:#94a3b8;">to</span>' +
+            '<select id="bs-hours-close-' + day + '" style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 6px;font-size:12px;">' + mbTimeOptions(d.close) + '</select>' +
+            '</div>';
+    }).join('');
+}
+
+async function mbOpenBusinessSettings() {
+    const username = localStorage.getItem("nexus_user_session");
+    if (!username) { showGlobalToast('⚠️ Please login again.'); return; }
+    document.getElementById('my-business-overlay').style.display = 'none';
+    document.getElementById('mb-business-settings-overlay').style.display = 'flex';
+
+    const snap = await firebase.database().ref('providers/' + username).once('value');
+    const data = snap.val() || {};
+
+    document.getElementById('bs-phone').value = data.phone || '';
+    document.getElementById('bs-email').value = data.email || '';
+    document.getElementById('bs-website').value = data.website || '';
+    document.getElementById('bs-country').value = data.country || '';
+    document.getElementById('bs-state').value = data.state || '';
+    document.getElementById('bs-city').value = data.city || '';
+    document.getElementById('bs-address').value = data.address || '';
+
+    const currBtn = document.getElementById('bs-currency');
+    currBtn.dataset.currency = data.currency || '';
+    currBtn.innerHTML = data.currency
+        ? (getCurrencySymbol(data.currency) + ' ' + data.currency + ' <span style="float:right;opacity:0.5;">▾</span>')
+        : '🌍 Select Currency <span style="float:right;opacity:0.5;">▾</span>';
+
+    mbRenderOperatingHoursRows(data.operatingHours || {});
+
+    const socials = data.socials || {};
+    document.getElementById('bs-whatsapp').value = socials.whatsapp || '';
+    document.getElementById('bs-instagram').value = socials.instagram || '';
+    document.getElementById('bs-facebook').value = socials.facebook || '';
+    document.getElementById('bs-twitter').value = socials.twitter || '';
+    document.getElementById('bs-youtube').value = socials.youtube || '';
+    document.getElementById('bs-linkedin').value = socials.linkedin || '';
+    document.getElementById('bs-tiktok').value = socials.tiktok || '';
+}
+
+function mbCloseBusinessSettings() {
+    document.getElementById('mb-business-settings-overlay').style.display = 'none';
+    document.getElementById('my-business-overlay').style.display = 'flex';
+}
+
+async function mbSaveBusinessSettings() {
+    const username = localStorage.getItem("nexus_user_session");
+    const btn = document.getElementById('bs-save-btn');
+    btn.textContent = '⏳ Saving...';
+    btn.disabled = true;
+
+    const operatingHours = {};
+    MB_DAYS.forEach(function(day) {
+        operatingHours[day] = {
+            enabled: document.getElementById('bs-hours-enabled-' + day).checked,
+            open: document.getElementById('bs-hours-open-' + day).value,
+            close: document.getElementById('bs-hours-close-' + day).value
+        };
+    });
+
+    const payload = {
+        phone: document.getElementById('bs-phone').value.trim(),
+        email: document.getElementById('bs-email').value.trim(),
+        website: document.getElementById('bs-website').value.trim(),
+        country: document.getElementById('bs-country').value.trim(),
+        state: document.getElementById('bs-state').value.trim(),
+        city: document.getElementById('bs-city').value.trim(),
+        address: document.getElementById('bs-address').value.trim(),
+        currency: document.getElementById('bs-currency').dataset.currency || '',
+        operatingHours: operatingHours,
+        socials: {
+            whatsapp: document.getElementById('bs-whatsapp').value.trim(),
+            instagram: document.getElementById('bs-instagram').value.trim(),
+            facebook: document.getElementById('bs-facebook').value.trim(),
+            twitter: document.getElementById('bs-twitter').value.trim(),
+            youtube: document.getElementById('bs-youtube').value.trim(),
+            linkedin: document.getElementById('bs-linkedin').value.trim(),
+            tiktok: document.getElementById('bs-tiktok').value.trim()
+        }
+    };
+
+    try {
+        if (typeof guaranteeAuth === 'function') await guaranteeAuth();
+        await firebase.database().ref('providers/' + username).update(payload);
+        showGlobalToast('✅ Business settings saved');
+        mbCloseBusinessSettings();
+    } catch (err) {
+        showGlobalToast('❌ Save failed: ' + err.message);
+    } finally {
+        btn.textContent = 'Save All Changes';
+        btn.disabled = false;
+    }
+    }
 function mbOpenAddCategory() {
     const name = prompt('New category name:');
     if (!name || !name.trim()) return;
