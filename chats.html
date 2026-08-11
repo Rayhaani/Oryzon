@@ -1601,7 +1601,7 @@
 <body>
     <header>
         <div class="header-top">
-            <h1>Chats</h1>
+            <h1 id="mainHeaderTitle">Chats</h1>
             
            <div class="header-icons">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleSearchBar()" style="cursor:pointer;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1818,23 +1818,15 @@
 
     <div id="updatesOverlay">
     <div class="nexus-updates-container">
-        
-      <div class="updates-header">
-            <h1>Updates</h1>
-            <div class="header-icons">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleStatusSearchBar()" style="cursor:pointer;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </div>
 
             <div class="search-bar-container" id="statusSearchBarContainer">
                 <input type="text" id="statusSearchInput" class="search-input" placeholder="Search updates..." oninput="filterUpdatesBySearch(this.value)">
-                <div onclick="toggleStatusSearchBar()" style="cursor:pointer; color: var(--cyan-neon); display:flex; align-items:center;">
+                <div onclick="toggleSearchBar()" style="cursor:pointer; color: var(--cyan-neon); display:flex; align-items:center;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </div>
             </div>
-      </div>
 
      <div class="status-horizontal-reel" id="statusReelContainer"></div>
-
        <div class="section-title-area">
     <span class="section-title">Expiring Soon</span>
     <div class="view-toggle-group">
@@ -2338,7 +2330,7 @@ setInterval(refreshAllChatTimes, 30000);
             });
         }
 
-        function switchTab(element, tabId) {
+       function switchTab(element, tabId) {
     document.querySelectorAll('.smart-btn').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
 
@@ -2347,12 +2339,13 @@ setInterval(refreshAllChatTimes, 30000);
     if (tabId === 'updates') {
         document.querySelector('.view-container').style.display = 'none';
         document.getElementById('updatesOverlay').classList.add('active');
+        document.getElementById('mainHeaderTitle').textContent = 'Updates';
         if (window.refreshNexusStatusReel) window.refreshNexusStatusReel();
         return;
     }
     document.querySelector('.view-container').style.display = '';
     document.getElementById('updatesOverlay').classList.remove('active');
-
+    document.getElementById('mainHeaderTitle').textContent = 'Chats'; 
     document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
 
@@ -2827,17 +2820,22 @@ setInterval(refreshAllChatTimes, 30000);
             db.collection("personalChats").onSnapshot(() => { loadChats(); });
             db.collection("friends").onSnapshot(() => { loadFriendsList(); });
         }); 
-        function toggleSearchBar() {
-    const bar = document.getElementById('searchBarContainer');
-    const input = document.getElementById('searchInput');
+       function toggleSearchBar() {
+    // Idan Updates overlay yake aiki, wannan icon din ya zama
+    // na search din Updates ne kawai — ba na Personal chats ba.
+    const onUpdates = document.getElementById('updatesOverlay').classList.contains('active');
+    const barId = onUpdates ? 'statusSearchBarContainer' : 'searchBarContainer';
+    const inputId = onUpdates ? 'statusSearchInput' : 'searchInput';
+    const bar = document.getElementById(barId);
+    const input = document.getElementById(inputId);
     bar.classList.toggle('active');
     if (bar.classList.contains('active')) {
         input.focus();
     } else {
         input.value = '';
-        filterActiveChats('');
+        if (onUpdates) { filterUpdatesBySearch(''); } else { filterActiveChats(''); }
     }
-        }
+       } 
     </script>
 
     <!-- MODULE: Updates overlay logic -->
