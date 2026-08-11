@@ -1023,6 +1023,7 @@
         <div class="invite-tabs-row" id="inviteTabsRow">
             <div class="invite-tab active" data-tab="friends" onclick="switchInviteTab('friends')">Friends</div>
             <div class="invite-tab" data-tab="suggested" onclick="switchInviteTab('suggested')">Suggested Friends</div>
+            <div class="invite-tab" data-tab="followers" onclick="switchInviteTab('followers')">Followers</div>
             <div class="invite-tab" data-tab="groups" onclick="switchInviteTab('groups')">Groups</div>
             <i class="fa-solid fa-magnifying-glass invite-search-icon" onclick="openInviteSearch()"></i>
         </div>
@@ -1368,6 +1369,11 @@
             { id: 's2', name: 'Abubakar Sadeeq', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80', invited: false },
             { id: 's3', name: 'Amina Yusuf', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80', invited: false }
         ];
+        const inviteFollowers = [
+            { id: 'fl1', name: 'Halima Bello', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'fl2', name: 'Tijjani Yusuf', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'fl3', name: 'Rukayya Ahmad', pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80', invited: false }
+        ];
         const inviteGroups = [
             { id: 'g1', name: 'Kano Traders Circle', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80', invited: false },
             { id: 'g2', name: 'Abuja Business Network', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', invited: false },
@@ -1384,7 +1390,7 @@
         function switchInviteTab(tab) {
             currentInviteTab = tab;
             document.querySelectorAll('.invite-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-            const list = tab === 'friends' ? inviteFriends : tab === 'suggested' ? inviteSuggested : inviteGroups;
+            const list = tab === 'friends' ? inviteFriends : tab === 'suggested' ? inviteSuggested : tab === 'followers' ? inviteFollowers : inviteGroups;
             renderInviteList(list);
         }
         function openInviteSearch() {
@@ -1400,7 +1406,7 @@
             switchInviteTab(currentInviteTab);
         }
         function runInviteSearch(q) {
-            const all = [...inviteFriends, ...inviteSuggested, ...inviteGroups];
+            const all = [...inviteFriends, ...inviteSuggested, ...inviteFollowers, ...inviteGroups];
             const filtered = q.trim() ? all.filter(f => f.name.toLowerCase().includes(q.toLowerCase())) : all;
             renderInviteList(filtered);
         }
@@ -1413,7 +1419,7 @@
                 </div>`).join('') : `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:40px 0;">No results found</p>`;
         }
         function sendInvite(id, btn) {
-            const f = [...inviteFriends, ...inviteSuggested, ...inviteGroups].find(x => x.id === id);
+            const f = [...inviteFriends, ...inviteSuggested, ...inviteFollowers, ...inviteGroups].find(x => x.id === id);
             if (f) f.invited = true;
             btn.textContent = 'Invited';
             btn.classList.add('invited');
