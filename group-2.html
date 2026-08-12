@@ -1,0 +1,2565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus - Next-Gen Super Community Protocol</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-void: #030508;
+            --card-incoming: rgba(15, 20, 31, 0.75);
+            --card-outgoing: rgba(0, 140, 255, 0.12);
+            --neon-cyan: #fde08d;
+            --neon-purple: #fde08d;
+            --neon-green: #10b981;
+            --neon-gold: #f59e0b;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-glow: rgba(253, 224, 141, 0.3);
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: #050505 !important;
+            background-image: none !important;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            padding-bottom: 60px;
+        }
+        /* ================= HEADER ================= */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 56px;
+            background: linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.85) 65%, rgba(5,5,5,0.35) 100%);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            display: flex; align-items: center; padding: 0 12px; gap: 10px;
+            z-index: 9999; box-sizing: border-box;
+            transition: background 0.25s ease, backdrop-filter 0.25s ease;
+        }
+        header.header-feed-transparent {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+        header.header-feed-transparent .fb-header-title { opacity: 0; }
+
+        .header-left-dock {
+            display: flex; align-items: center; gap: 8px;
+            flex: 1 1 0%; min-width: 0; cursor: pointer;
+        }
+
+        .avatar-frame {
+            position: relative; width: 38px; height: 38px; flex-shrink: 0;
+            cursor: pointer;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fde08d, #b8860b);
+            padding: 2px;
+        }
+
+        .group-avatar {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            border: 2px solid #050505;
+        }
+
+        .pulse-ring { display: none; }
+
+        .header-details { display: flex; flex-direction: column; flex: 1 1 0%; min-width: 0; overflow: hidden; }
+
+        .group-title-row { display: flex; align-items: center; width: 100%; min-width: 0; }
+        .group-title {
+            font-size: 14px; font-weight: 700; color: #fff;
+            font-family: 'Inter', sans-serif;
+            display: block; width: 100%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .group-subtitle {
+            font-size: 10px; color: var(--neon-green); margin-top: 1px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .trust-protocol-badge {
+            font-size: 9px; font-weight: 800; background: rgba(253, 224, 141, 0.12);
+            color: var(--neon-cyan); padding: 2px 6px; border-radius: 6px;
+            border: 1px solid rgba(253, 224, 141, 0.3); display: flex; align-items: center; gap: 3px;
+        }
+
+        .sector-nav {
+            display: flex; gap: 6px; margin-top: 4px; overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .sector-nav::-webkit-scrollbar { display: none; }
+
+        .sector-pill {
+            font-size: 10px; font-weight: 600; color: var(--text-sub);
+            background: rgba(255, 255, 255, 0.04); padding: 2px 8px;
+            border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap; cursor: pointer;
+        }
+        .sector-pill.active {
+            color: #fff; background: rgba(253, 224, 141, 0.25);
+            border-color: var(--neon-purple); box-shadow: 0 0 8px rgba(253, 224, 141, 0.3);
+        }
+
+        /* ===== FEED-MODE HEADER ===== */
+        .header-left-feed {
+            display: none; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer;
+        }
+        .fb-back-btn {
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 15px; cursor: pointer;
+        }
+        .fb-header-title {
+            font-size: 15px; font-weight: 800; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 100%;
+            opacity: 1;
+            transition: opacity 0.25s ease;
+        }
+
+        .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+        .action-dock-btn {
+            width: 40px; height: 40px; border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; cursor: pointer; transition: all 0.2s ease;
+        }
+        .action-dock-btn:active { transform: scale(0.9); background: rgba(253, 224, 141, 0.2); }
+
+        /* ===== FEED / CHAT MODE SWITCH ===== */
+        .mode-toggle-switch {
+            position: relative;
+            display: flex;
+            background: #0d0f14;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 0;
+            width: 100px;
+            height: 30px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .mode-toggle-thumb {
+            position: absolute;
+            top: 0; left: 0;
+            width: 50%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 10px;
+            transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+        }
+
+        .mode-toggle-btn {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 800;
+            color: var(--text-sub);
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.25s ease;
+        }
+        .mode-toggle-btn.active { color: #030508; }
+
+        /* ================= CHAT FLOW AREA — tightened spacing ================= */
+        #chat-flow {
+            flex: 1; padding: 68px 10px 128px 10px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 7px; scrollbar-width: none;
+        }
+        #chat-flow::-webkit-scrollbar { display: none; }
+
+        .msg-row { display: flex; gap: 7px; max-width: 88%; align-items: flex-end; }
+        .msg-row.incoming { align-self: flex-start; }
+        .msg-row.outgoing { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-row.grouped-follow { margin-top: -3px; }
+        .msg-row.grouped-follow .msg-avatar { visibility: hidden; }
+
+        .msg-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+
+        .msg-card {
+            background: var(--card-incoming);
+            border-radius: 13px 13px 13px 4px;
+            padding: 5px 9px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            position: relative;
+            cursor: pointer;
+        }
+        .msg-row.outgoing .msg-card {
+            background: var(--card-outgoing);
+            border-radius: 13px 13px 4px 13px;
+        }
+
+        .msg-header {
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 8px;
+            padding: 0 0 1px 0;
+        }
+        .sender-name { font-size: 12px; font-weight: 700; color: #fff; }
+
+        .role-tag {
+            font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+            background: none; border: none; padding: 0; border-radius: 0;
+        }
+        .role-ceo { color: var(--neon-purple); }
+        .role-pro { color: var(--neon-green); }
+        .role-mod { color: var(--neon-green); }
+        .role-member { color: var(--text-sub); }
+        .msg-body { padding: 0; font-size: 13.5px; line-height: 1.4; color: #e2e8f0; overflow: hidden; }
+
+        .msg-time-inline {
+            float: right;
+            font-size: 9.5px;
+            color: rgba(255,255,255,0.45);
+            margin: 3px 0 -2px 8px;
+            line-height: 1;
+        }
+        .translate-chip {
+            font-size: 10px; color: var(--neon-cyan); background: rgba(253, 224, 141, 0.08);
+            padding: 3px 8px; border-radius: 8px; display: inline-flex; align-items: center;
+            gap: 4px; cursor: pointer; margin-top: 6px; border: 1px solid rgba(253, 224, 141, 0.15);
+        }
+
+        .voice-card {
+            display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.25);
+            padding: 7px 11px; border-radius: 12px; margin-top: 5px; border: 1px solid var(--glass-border);
+        }
+        .play-btn {
+            width: 30px; height: 30px; border-radius: 50%; background: var(--neon-cyan);
+            border: none; color: #000; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .waveform { flex: 1; height: 20px; display: flex; align-items: center; gap: 2px; }
+        .waveform bar { width: 3px; background: var(--neon-purple); border-radius: 2px; }
+        .speed-btn {
+            font-size: 9px; font-weight: 800; background: rgba(255,255,255,0.1);
+            color: #fff; padding: 2px 6px; border-radius: 6px; cursor: pointer;
+        }
+
+        /* ================= FLOATING COMMAND DOCK — slim world-class redesign ================= */
+        .dock-container {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 6px 10px 14px 10px;
+            background: linear-gradient(to top, rgba(3, 5, 8, 0.98), transparent);
+            z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        }
+
+        .quick-tools-row {
+            display: flex; gap: 8px; overflow-x: auto; width: 100%; max-width: 650px; scrollbar-width: none; padding: 0 2px;
+        }
+        .quick-tools-row::-webkit-scrollbar { display: none; }
+        .qtool {
+            display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+            font-size: 10.5px; font-weight: 700; color: #fff;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+            padding: 5px 10px; border-radius: 14px; cursor: pointer; white-space: nowrap;
+        }
+        .qtool i { color: var(--neon-cyan); font-size: 10.5px; }
+        .qtool:active { background: rgba(253,224,141,0.18); transform: scale(0.96); }
+        .qtool.suggest { color: var(--neon-cyan); border-color: rgba(253,224,141,0.25); }
+
+        .neural-dock {
+            width: 100%; max-width: 650px; background: rgba(15, 20, 31, 0.92);
+            border: 1px solid var(--glass-border); backdrop-filter: blur(22px);
+            border-radius: 24px; padding: 4px 6px 4px 12px;
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+            min-height: 44px;
+        }
+
+        .dock-add-btn {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; cursor: pointer; flex-shrink: 0; transition: all 0.2s; font-size: 13px;
+        }
+        .dock-add-btn:hover { color: var(--neon-cyan); border-color: var(--neon-cyan); }
+
+        .neural-dock textarea {
+            background: transparent; border: none; outline: none;
+            color: #fff; flex: 1; font-size: 14px; resize: none; max-height: 90px; min-height: 20px;
+            font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1.35; padding: 8px 0;
+        }
+
+        .dock-actions { display: flex; align-items: center; gap: 5px; }
+
+        .dock-trigger-btn {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; cursor: pointer; transition: all 0.2s; font-size: 13px;
+        }
+
+        .send-trigger {
+            background: linear-gradient(135deg, var(--neon-cyan), #b8860b);
+            color: #000; font-weight: 800; border: none; display: none;
+            box-shadow: 0 0 12px rgba(253, 224, 141, 0.4);
+        }
+
+        /* SUPER-APP ECOSYSTEM MINI-TOOLS MODAL */
+        .ecosystem-drawer {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(12px); z-index: 2500;
+            display: flex; align-items: flex-end; justify-content: center;
+            opacity: 0; pointer-events: none; transition: all 0.3s ease;
+        }
+        .ecosystem-drawer.active { opacity: 1; pointer-events: auto; }
+
+        .drawer-card {
+            width: 100%; max-width: 500px; background: #080b11;
+            border-radius: 28px 28px 0 0; border: 1px solid var(--glass-border);
+            padding: 20px; display: flex; flex-direction: column; gap: 16px;
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 85vh; overflow-y: auto;
+        }
+        .ecosystem-drawer.active .drawer-card { transform: translateY(0); }
+
+        .drawer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+        .app-tool-item {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 16px;
+            border: 1px solid var(--glass-border); cursor: pointer; position: relative;
+        }
+        .app-tool-item i { font-size: 20px; color: var(--neon-cyan); }
+        .app-tool-item span { font-size: 9.5px; font-weight: 600; color: #fff; text-align: center; }
+        .app-tool-item .hot-tag { position: absolute; top: -6px; right: -4px; background: #ef4444; color: #fff; font-size: 7.5px; font-weight: 800; padding: 1px 4px; border-radius: 5px; }
+
+        /* ================= FEED VIEW — Facebook-group style ================= */
+        #feedView {
+            display: none;
+            flex: 1;
+            padding: 0 0 30px 0;
+            overflow-y: auto;
+            flex-direction: column;
+            scrollbar-width: none;
+        }
+        #feedView::-webkit-scrollbar { display: none; }
+
+        .group-cover-wrap { position: relative; width: 100%; height: 168px; overflow: hidden; }
+        .group-cover-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .group-cover-fade {
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg, transparent 40%, var(--bg-void) 100%);
+        }
+
+        .group-info-block { padding: 4px 16px 6px 16px; border-bottom: 8px solid rgba(255,255,255,0.03); }
+        .group-info-title { font-size: 21px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+        .group-meta-row {
+            display: flex; align-items: center; gap: 6px; color: var(--text-sub);
+            font-size: 12.5px; margin-top: 6px;
+        }
+
+        .group-avatar-stack { display: flex; align-items: center; margin-top: 14px; }
+        .group-avatar-stack img {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 2px solid var(--bg-void); object-fit: cover;
+            margin-left: -10px;
+        }
+        .group-avatar-stack img:first-child { margin-left: 0; }
+        .group-avatar-stack .stack-count {
+            margin-left: 6px; font-size: 12px; color: var(--text-sub); font-weight: 600;
+        }
+
+        .invite-btn-fb {
+            background: linear-gradient(135deg, #fde08d, #b8860b);
+            color: #1e1e1e; font-weight: 800; font-size: 12px;
+            padding: 8px 16px; border-radius: 10px;
+            display: flex; align-items: center; gap: 7px;
+            margin-top: 16px; cursor: pointer; border: none;
+            width: fit-content;
+            box-shadow: none;
+        }
+        .invite-btn-fb:active { transform: scale(0.96); }
+
+        #timeline-area {
+            padding-top: 14px !important;
+            display: flex; flex-direction: column; gap: 0;
+        }
+        .header-icon-btn {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 15px;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .header-icon-btn:active { background: rgba(253,224,141,0.2); }
+
+        .new-post-bubble {
+            width: 34px; height: 34px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0.9; flex-shrink: 0;
+            transition: opacity 0.2s ease;
+        }
+        .new-post-bubble:active { opacity: 0.5; transform: scale(0.92); }
+        @keyframes dotSequence {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.4); opacity: 1; }
+        }
+        .smart-box-highlights {
+            background: transparent !important;
+            border: none !important;
+            padding: 0;
+            margin: 14px 0 0 0;
+        }
+        .highlights-scroll {
+            display: flex !important;
+            gap: 10px !important;
+            overflow-x: auto !important;
+            scrollbar-width: none !important;
+        }
+        .highlight-item {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            min-width: 56px !important;
+            flex-shrink: 0 !important;
+            position: relative;
+        }
+        .highlight-ring {
+            width: 74px !important;
+            height: 80px !important;
+            border-radius: 16px !important;
+            border: 1px solid #fde08d !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+            background: #111;
+        }
+        .highlight-ring img {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 13px !important;
+            object-fit: cover !important;
+        }
+        .highlight-label {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            color: #fff !important;
+            margin: 3px auto 0 auto !important;
+            text-align: center !important;
+            max-width: 74px;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.2;
+        }
+        .story-viewer-overlay { position: fixed; inset: 0; z-index: 20000; background: #000; display: none; }
+        .story-media-wrap { width: 100%; height: 100%; position: relative; }
+        .story-slide { position: absolute; inset: 0; }
+        .story-slide img, .story-slide video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .story-header {
+            position: absolute; top: 0; left: 0; right: 0;
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 14px 10px; z-index: 10;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+        }
+        .story-header img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #fde08d; }
+        .story-user-info { flex: 1; display: flex; align-items: baseline; gap: 6px; }
+        .story-username { font-size: 13px; font-weight: 700; color: #fff; }
+        .story-time { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .story-close { color: #fff; font-size: 20px; cursor: pointer; padding: 5px; }
+        .story-tap-zone { position: absolute; top: 0; height: 100%; width: 35%; z-index: 5; }
+        .story-tap-left { left: 0; }
+        .story-tap-right { right: 0; }
+        .story-footer {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+            z-index: 10; background: linear-gradient(transparent, rgba(0,0,0,0.75));
+        }
+        .story-reply-input { flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 50px; padding: 10px 18px; color: #fff; font-size: 13px; outline: none; }
+        .story-footer i { color: #fff; font-size: 20px; cursor: pointer; }
+        .preload-feed #headerLeftChat,
+        .preload-feed #chat-flow,
+        .preload-feed #dockContainer { display: none !important; }
+        .preload-feed #headerLeftFeed { display: flex !important; }
+        .preload-feed #feedView { display: flex !important; }
+        .preload-feed #toggleChatBtn { color: var(--text-sub) !important; }
+        .preload-feed #toggleFeedBtn { color: #030508 !important; }
+        .preload-feed #modeThumb { transform: translateX(0%) !important; }
+
+        /* MEMBER MANAGEMENT & MODERATION */
+        .member-tabs { display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
+        .member-tab { font-size: 12px; font-weight: 700; color: var(--text-sub); padding: 8px 4px; cursor: pointer; position: relative; }
+        .member-tab.active { color: #fff; }
+        .member-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--neon-cyan); }
+        .pending-count-badge { background: #ef4444; color: #fff; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+        .member-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .member-row img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .member-row-info { flex: 1; min-width: 0; }
+        .member-row-name { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .member-row-role { font-size: 10.5px; color: var(--text-sub); margin-top: 1px; }
+        .member-action-btn { font-size: 10.5px; font-weight: 700; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.04); color: #fff; cursor: pointer; flex-shrink: 0; }
+        .member-action-btn.danger { color: #ef4444; border-color: rgba(239,68,68,0.3); }
+        .member-action-btn.approve { background: linear-gradient(135deg, var(--neon-cyan), #b8860b); color: #000; border: none; }
+
+        /* ---- TELEGRAM-STYLE HEADER DROPDOWN MENU ("...") ---- */
+        .dots-menu-backdrop { position: fixed; inset: 0; z-index: 9400; display: none; }
+        .dots-menu-backdrop.active { display: block; }
+        .dots-dropdown-menu {
+            position: fixed; top: 54px; right: 8px; z-index: 9500;
+            min-width: 224px; background: rgba(32, 38, 48, 0.97);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+            padding: 6px 0; box-shadow: 0 14px 34px rgba(0,0,0,0.55);
+            display: none; flex-direction: column;
+            transform-origin: top right;
+            animation: dotsMenuPop 0.16s ease;
+        }
+        .dots-dropdown-menu.active { display: flex; }
+        @keyframes dotsMenuPop { from { opacity: 0; transform: scale(0.92) translateY(-6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .dots-menu-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 12px 16px; font-size: 13.5px; font-weight: 500;
+            color: #fff; cursor: pointer; white-space: nowrap;
+        }
+        .dots-menu-item i { width: 18px; text-align: center; font-size: 15px; color: #fff; flex-shrink: 0; }
+        .dots-menu-item:active { background: rgba(255,255,255,0.08); }
+        .dots-menu-item.danger { color: #ff6b6b; }
+        .dots-menu-item.danger i { color: #ff6b6b; }
+        .dots-menu-item .dmi-chevron { margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.4); }
+        .dots-menu-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0; }
+
+        /* ================================================================
+           WORLD-CLASS UPGRADE
+           ================================================================ */
+        #toastStack { position: fixed; top: 64px; left: 0; right: 0; z-index: 30000; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+        .nx-toast {
+            background: rgba(18, 20, 26, 0.96); border: 1px solid var(--glass-border);
+            color: #fff; font-size: 12.5px; font-weight: 600; padding: 10px 16px;
+            border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 8px; max-width: 86%;
+            transform: translateY(-14px); opacity: 0; transition: all 0.25s ease;
+        }
+        .nx-toast.show { transform: translateY(0); opacity: 1; }
+        .nx-toast i { color: var(--neon-cyan); }
+
+        .day-divider { display: flex; align-items: center; justify-content: center; margin: 2px 0; align-self: center; }
+        .day-divider span { background: rgba(255,255,255,0.06); color: var(--text-sub); font-size: 10.5px; font-weight: 700; padding: 4px 12px; border-radius: 10px; }
+
+        .typing-row { display: flex; align-items: center; gap: 7px; align-self: flex-start; padding-left: 33px; }
+        .typing-bubble { background: var(--card-incoming); border-radius: 13px 13px 13px 4px; padding: 8px 11px; display: flex; gap: 4px; }
+        .typing-bubble .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-sub); animation: typingBounce 1.2s infinite ease-in-out; }
+        .typing-bubble .dot:nth-child(2) { animation-delay: 0.15s; }
+        .typing-bubble .dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+        .msg-ticks { display: inline-flex; margin-left: 4px; font-size: 12px; color: rgba(255,255,255,0.45); }
+        .msg-ticks.read { color: var(--neon-cyan); }
+
+        .msg-reply-quote {
+            display: flex; flex-direction: column; gap: 1px; background: rgba(255,255,255,0.06);
+            border-left: 3px solid var(--neon-cyan); border-radius: 6px; padding: 4px 8px; margin-bottom: 5px; cursor: pointer;
+        }
+        .msg-reply-quote .rq-name { font-size: 11px; font-weight: 700; color: var(--neon-cyan); }
+        .msg-reply-quote .rq-text { font-size: 11px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+        .msg-forwarded-tag { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text-sub); font-style: italic; margin-bottom: 4px; }
+
+        .msg-reactions { display: flex; gap: 3px; margin-top: 3px; flex-wrap: wrap; }
+        .msg-reaction-pill {
+            background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); border-radius: 10px;
+            padding: 1px 6px; font-size: 11px; display: flex; align-items: center; gap: 3px; cursor: pointer;
+        }
+        .msg-reaction-pill.mine { border-color: var(--neon-cyan); background: rgba(253,224,141,0.15); }
+        .msg-star-flag { position: absolute; top: -6px; right: -4px; font-size: 10px; color: var(--neon-gold); }
+        .msg-safety-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; color: var(--neon-green); background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 2px 6px; border-radius: 7px; margin-top: 4px; }
+        .msg-safety-badge.warn { color: #ef4444; background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
+
+        .msg-action-tray {
+            position: fixed; z-index: 26000; background: #12141a; border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 6px; display: none; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            min-width: 195px;
+        }
+        .msg-action-tray.active { display: block; }
+        .tray-emoji-row { display: flex; gap: 6px; padding: 6px 4px 8px; border-bottom: 1px solid var(--glass-border); margin-bottom: 4px; }
+        .tray-emoji-row span { font-size: 20px; cursor: pointer; transition: transform 0.15s; }
+        .tray-emoji-row span:active { transform: scale(1.3); }
+        .tray-action { display: flex; align-items: center; gap: 10px; padding: 9px 10px; font-size: 12.5px; font-weight: 600; color: #fff; cursor: pointer; border-radius: 8px; }
+        .tray-action:active { background: rgba(255,255,255,0.06); }
+        .tray-action.danger { color: #ef4444; }
+        .msg-action-backdrop { position: fixed; inset: 0; z-index: 25999; display: none; }
+        .msg-action-backdrop.active { display: block; }
+
+        .reply-composer-bar {
+            width: 100%; max-width: 650px; background: rgba(15,20,31,0.92); border: 1px solid var(--glass-border);
+            border-top: 3px solid var(--neon-cyan); border-radius: 14px 14px 0 0; padding: 7px 12px;
+            display: none; align-items: center; gap: 10px; margin-bottom: -6px;
+        }
+        .reply-composer-bar.active { display: flex; }
+        .reply-composer-bar .rc-body { flex: 1; min-width: 0; }
+        .reply-composer-bar .rc-name { font-size: 11.5px; font-weight: 700; color: var(--neon-cyan); }
+        .reply-composer-bar .rc-text { font-size: 11.5px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .reply-composer-bar i.rc-close { color: var(--text-sub); cursor: pointer; font-size: 15px; }
+
+        .pinned-bar {
+            position: fixed; top: 56px; left: 0; right: 0; z-index: 800;
+            background: rgba(10,12,16,0.92); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 7px 14px; display: none; align-items: center; gap: 10px; cursor: pointer;
+        }
+        .pinned-bar.active { display: flex; }
+        .pinned-bar i.fa-thumbtack { color: var(--neon-cyan); font-size: 13px; }
+        .pinned-bar .pb-text { flex: 1; min-width: 0; font-size: 12px; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pinned-bar .pb-close { color: var(--text-sub); font-size: 13px; }
+
+        .chat-search-overlay { position: fixed; inset: 0; z-index: 22000; background: var(--bg-void); display: none; flex-direction: column; }
+        .chat-search-overlay.active { display: flex; }
+        .chat-search-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--glass-border); }
+        .chat-search-head input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 20px; padding: 9px 14px; color: #fff; font-size: 13px; outline: none; }
+        .chat-search-head i { color: #fff; font-size: 16px; cursor: pointer; }
+        .chat-search-results { flex: 1; overflow-y: auto; padding: 10px 14px; }
+        .search-result-row { padding: 10px 4px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .search-result-row .sr-name { font-size: 12px; font-weight: 700; color: var(--neon-cyan); }
+        .search-result-row .sr-text { font-size: 12.5px; color: #e2e8f0; margin-top: 2px; }
+        .search-result-row mark { background: rgba(253,224,141,0.35); color: #fff; border-radius: 3px; }
+
+        .record-bar { display: none; align-items: center; gap: 10px; flex: 1; color: #fff; font-size: 13px; font-weight: 600; }
+        .record-bar.active { display: flex; }
+        .record-dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; animation: recPulse 1s infinite; flex-shrink: 0; }
+        @keyframes recPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .record-time { font-variant-numeric: tabular-nums; }
+        .record-hint { flex: 1; text-align: center; color: var(--text-sub); font-size: 11px; }
+        .record-cancel { color: #ef4444; font-size: 13px; cursor: pointer; }
+
+        /* ---- COMPREHENSIVE EMOJI PICKER W/ CATEGORY TABS ---- */
+        .emoji-picker-sheet {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 2600; background: #080b11;
+            border-radius: 22px 22px 0 0; border: 1px solid var(--glass-border);
+            padding: 12px 14px 14px; display: none; height: 52vh; display: none; flex-direction: column;
+        }
+        .emoji-picker-sheet.active { display: flex; }
+        .emoji-cat-tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 8px 0; border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
+        .emoji-cat-tabs::-webkit-scrollbar { display: none; }
+        .emoji-cat-tab { flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; color: var(--text-sub); background: rgba(255,255,255,0.03); }
+        .emoji-cat-tab.active { background: rgba(253,224,141,0.18); color: #fff; }
+        .emoji-cat-label { font-size: 10.5px; font-weight: 700; color: var(--text-sub); margin: 8px 2px 2px; }
+        .emoji-grid-scroll { flex: 1; overflow-y: auto; }
+        .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+        .emoji-grid span { font-size: 21px; text-align: center; cursor: pointer; padding: 4px 0; border-radius: 8px; }
+        .emoji-grid span:active { background: rgba(255,255,255,0.08); }
+
+        .nx-sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 21000; display: none; align-items: flex-end; justify-content: center; }
+        .nx-sheet-backdrop.active { display: flex; }
+        .nx-sheet {
+            width: 100%; max-width: 560px; background: #0a0c11; border: 1px solid var(--glass-border);
+            border-radius: 24px 24px 0 0; max-height: 88vh; display: flex; flex-direction: column;
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .nx-sheet-backdrop.active .nx-sheet { transform: translateY(0); }
+        .nx-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 10px; border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
+        .nx-sheet-head span { font-size: 14.5px; font-weight: 800; color: #fff; }
+        .nx-sheet-head i { color: var(--text-sub); font-size: 16px; cursor: pointer; }
+        .nx-sheet-body { padding: 16px 18px; overflow-y: auto; flex: 1; }
+
+        .composer-user-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .composer-user-row img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+        .composer-user-row .cu-name { font-size: 13px; font-weight: 700; color: #fff; }
+        .composer-audience { font-size: 10.5px; color: var(--neon-cyan); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+        #composerText {
+            width: 100%; min-height: 110px; background: transparent; border: none; outline: none;
+            color: #fff; font-size: 15px; font-family: 'Plus Jakarta Sans', sans-serif; resize: vertical;
+        }
+        .composer-type-row { display: flex; gap: 8px; overflow-x: auto; margin: 10px 0; scrollbar-width: none; }
+        .composer-type-pill { font-size: 11px; font-weight: 700; color: var(--text-sub); background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 14px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .composer-type-pill.active { color: #030508; background: linear-gradient(135deg, var(--neon-cyan), #b8860b); border-color: transparent; }
+        .composer-extra-fields { display: none; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .composer-extra-fields.active { display: flex; }
+        .composer-extra-fields input { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px; padding: 9px 12px; color: #fff; font-size: 12.5px; outline: none; }
+        .composer-addon-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); margin: 6px 0 14px; }
+        .composer-addon-row i { font-size: 17px; color: var(--neon-cyan); cursor: pointer; }
+        .composer-post-btn {
+            width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 800; font-size: 13.5px;
+            background: linear-gradient(135deg, var(--neon-cyan), #b8860b); color: #1e1e1e; cursor: pointer;
+        }
+        .composer-post-btn:disabled { opacity: 0.4; }
+
+        .comment-row { display: flex; gap: 8px; margin-bottom: 14px; }
+        .comment-row img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .comment-bubble { background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px 12px; }
+        .comment-bubble .cb-name { font-size: 11.5px; font-weight: 700; color: #fff; }
+        .comment-bubble .cb-text { font-size: 12.5px; color: #e2e8f0; margin-top: 2px; }
+        .comment-meta { display: flex; gap: 12px; margin-top: 4px; font-size: 10.5px; color: var(--text-sub); font-weight: 700; }
+        .comment-input-row { display: flex; align-items: center; gap: 8px; padding: 10px 18px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--glass-border); flex-shrink: 0; }
+        .comment-input-row input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 20px; padding: 9px 14px; color: #fff; font-size: 12.5px; outline: none; }
+        .comment-send { color: var(--neon-cyan); font-size: 18px; cursor: pointer; }
+
+        .share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+        .share-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+        .share-opt .so-icon { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 19px; color: var(--neon-cyan); }
+        .share-opt span { font-size: 10px; color: var(--text-sub); font-weight: 600; text-align: center; }
+
+        .reaction-picker { position: fixed; z-index: 26000; background: #12141a; border: 1px solid var(--glass-border); border-radius: 30px; padding: 8px 10px; display: none; gap: 8px; box-shadow: 0 12px 30px rgba(0,0,0,0.6); }
+        .reaction-picker.active { display: flex; }
+        .reaction-picker span { font-size: 24px; cursor: pointer; transition: transform 0.15s ease; }
+        .reaction-picker span:active { transform: scale(1.4) translateY(-4px); }
+
+        .nx-post { border-bottom: 8px solid rgba(255,255,255,0.03); padding: 14px 16px 6px; }
+        .nx-post-head { display: flex; align-items: center; gap: 10px; }
+        .nx-post-head img.pp { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .nx-post-head-info { flex: 1; min-width: 0; }
+        .nx-post-name { font-size: 13.5px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 5px; }
+        .nx-post-meta { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 4px; margin-top: 1px; }
+        .nx-post-more { color: var(--text-sub); font-size: 16px; cursor: pointer; padding: 6px; }
+        .nx-post-pin-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: var(--neon-cyan); margin-bottom: 4px; }
+        .nx-post-text { font-size: 13.5px; line-height: 1.5; color: #f1f5f9; margin: 8px 0; white-space: pre-wrap; }
+        .nx-post-text .see-more-link { color: var(--neon-cyan); font-weight: 700; cursor: pointer; }
+        .nx-post-media { border-radius: 14px; overflow: hidden; margin: 6px 0; position: relative; background:#111; }
+        .nx-post-media img, .nx-post-media video { width: 100%; display: block; max-height: 420px; object-fit: cover; background: #111; }
+        .nx-carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; border-radius: 14px; }
+        .nx-carousel::-webkit-scrollbar { display: none; }
+        .nx-carousel img { scroll-snap-align: start; width: 100%; flex-shrink: 0; max-height: 420px; object-fit: cover; }
+        .nx-carousel-dots { display: flex; justify-content: center; gap: 4px; margin-top: 6px; }
+        .nx-carousel-dots span { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.25); }
+        .video-mute-btn { position: absolute; bottom: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; }
+        .nx-post-stats { display: flex; align-items: center; justify-content: space-between; padding: 8px 2px; font-size: 11.5px; color: var(--text-sub); }
+        .nx-post-stats .reactor-icons { display: flex; align-items: center; }
+        .nx-post-stats .reactor-icons span { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; background: #222; margin-left: -4px; border: 1.5px solid var(--bg-void); }
+        .nx-post-actions { display: flex; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .nx-post-actions .npa-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 0; font-size: 12px; font-weight: 700; color: var(--text-sub); cursor: pointer; user-select: none; }
+        .nx-post-actions .npa-btn.liked { color: var(--neon-cyan); }
+        .nx-post-actions .npa-btn.saved { color: var(--neon-gold); }
+        .nx-post-actions .npa-btn i { font-size: 14px; }
+
+        .poll-wrap { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+        .poll-option { position: relative; border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 12px; cursor: pointer; overflow: hidden; }
+        .poll-option .poll-fill { position: absolute; inset: 0; background: rgba(253,224,141,0.14); width: 0%; transition: width 0.5s ease; z-index: 0; }
+        .poll-option .poll-label-row { position: relative; z-index: 1; display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: #fff; }
+        .poll-option.voted .poll-label-row { font-weight: 800; }
+        .poll-total { font-size: 10.5px; color: var(--text-sub); margin-top: 2px; }
+
+        .deal-card { display: flex; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 10px; margin: 8px 0; }
+        .deal-card .dc-price { font-size: 15px; font-weight: 800; color: var(--neon-green); }
+        .deal-card .dc-label { font-size: 10px; color: var(--text-sub); }
+        .deal-escrow-btn { margin-left: auto; background: var(--neon-green); color: #04140d; font-size: 11px; font-weight: 800; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; flex-shrink: 0; }
+
+        /* JOB / SKILL BOARD POST */
+        .job-card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 10px; margin: 8px 0; }
+        .job-card .jc-title { font-size: 13px; font-weight: 800; color: #60a5fa; }
+        .job-card .jc-meta { font-size: 10.5px; color: var(--text-sub); margin-top: 3px; }
+        .job-apply-btn { margin-top: 8px; background: #3b82f6; color: #fff; font-size: 11px; font-weight: 800; padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer; }
+
+        /* EMERGENCY / SOS POST */
+        .sos-card { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.4); border-radius: 12px; padding: 10px; margin: 8px 0; display:flex; align-items:center; gap:10px; }
+        .sos-card i { color: #ef4444; font-size: 20px; }
+        .sos-card .sc-title { font-size: 12.5px; font-weight: 800; color: #ef4444; }
+        .sos-respond-btn { margin-left:auto; background:#ef4444; color:#fff; font-size:11px; font-weight:800; padding:7px 12px; border-radius:8px; border:none; cursor:pointer; flex-shrink:0; }
+
+        /* fundraiser bar */
+        .fund-card { margin: 8px 0; }
+        .fund-bar-track { height: 8px; border-radius: 6px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 6px; }
+        .fund-bar-fill { height: 100%; background: linear-gradient(90deg, var(--neon-cyan), #b8860b); }
+        .fund-meta { display:flex; justify-content:space-between; font-size:10.5px; color: var(--text-sub); margin-top:4px; }
+        .fund-donate-btn { margin-top: 8px; background: linear-gradient(135deg, var(--neon-cyan), #b8860b); color: #1e1e1e; font-size: 11px; font-weight: 800; padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer; }
+
+        /* ---- GROUP INFO OVERLAY (opened by tapping header) ---- */
+        .group-info-overlay { position: fixed; inset: 0; z-index: 23000; background: var(--bg-void); display: none; flex-direction: column; overflow-y: auto; }
+        .group-info-overlay.active { display: flex; }
+        .gi-topbar { display: flex; align-items: center; gap: 34px; padding: 14px; position: sticky; top: 0; background: var(--bg-void); z-index: 5; }
+        .gi-topbar i { color: #fff; font-size: 17px; cursor: pointer; }
+        .gi-hero { display: flex; flex-direction: column; align-items: center; padding: 6px 20px 20px; text-align: center; }
+        .gi-hero img { width: 128px; height: 128px; border-radius: 50%; object-fit: cover; margin-bottom: 14px; }
+        .gi-hero .gi-name { font-size: 21px; font-weight: 800; color: #fff; }
+        .gi-hero .gi-meta { font-size: 12.5px; color: var(--text-sub); margin-top: 4px; }
+        .gi-hero .gi-desc { font-size: 12px; color: var(--neon-cyan); margin-top: 10px; cursor: pointer; max-width: 320px; }
+        .gi-action-row { display: flex; gap: 10px; padding: 14px 18px 20px; }
+        .gi-action { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: rgba(255,255,255,0.07); border-radius: 16px; padding: 10px 4px; height: 62px; box-sizing: border-box; cursor: pointer; }
+        .gi-action .gia-icon { width: auto; height: auto; background: none; font-size: 17px; color: #fff; }
+        .gi-action span { font-size: 10px; color: #fff; font-weight: 600; }
+        .gi-section { padding: 6px 18px; border-top: 8px solid rgba(255,255,255,0.03); }
+        .gi-section-title { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 6px; font-size: 12px; color: var(--text-sub); font-weight: 700; }
+        .gi-add-members-btn { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 13px 16px; margin: 4px 18px 18px; cursor: pointer; color: #fff; font-size: 13.5px; font-weight: 600; }
+        .gi-add-members-btn i { color: var(--neon-cyan); font-size: 15px; }
+        .gi-tabs-bar { display: flex; border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; background: var(--bg-void); z-index: 4; }
+        .gi-tab { flex: 1; text-align: center; padding: 13px 0; font-size: 12.5px; font-weight: 700; color: var(--text-sub); cursor: pointer; position: relative; }
+        .gi-tab.active { color: #4fb0ff; }
+        .gi-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 22%; right: 22%; height: 2px; background: #4fb0ff; border-radius: 2px; }
+        .gi-tab-panel { display: none; padding: 4px 18px 24px; }
+        .gi-tab-panel.active { display: block; }
+        .gi-member-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .gi-member-row img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .gi-member-row .gmr-name { font-size: 14px; font-weight: 600; color: #fff; }
+        .gi-member-row .gmr-status { font-size: 11.5px; color: var(--text-sub); margin-top: 1px; }
+        .gi-member-row .gmr-role { font-size: 12.5px; color: #4fb0ff; font-weight: 600; margin-left: auto; flex-shrink: 0; }
+        .gi-media-tab-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 4px; }
+        .gi-media-tab-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; }
+        .gi-empty-tab { text-align: center; color: var(--text-sub); font-size: 12.5px; padding: 50px 20px; }
+        .gi-options-menu { max-height: 72vh; overflow-y: auto; }
+        .invite-overlay { position: fixed; inset: 0; z-index: 24000; background: var(--bg-void); display: none; flex-direction: column; }
+        .invite-overlay.active { display: flex; }
+        .invite-topbar { display: flex; align-items: center; gap: 12px; padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+        .invite-topbar i.fa-arrow-left { color: #fff; font-size: 17px; cursor: pointer; }
+        .invite-group-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+        .invite-title { font-size: 15px; font-weight: 800; color: #fff; }
+        .invite-subtitle { font-size: 11.5px; color: var(--text-sub); margin-top: 1px; }
+        .invite-tabs-row { display: flex; align-items: center; padding: 0 8px 0 14px; border-bottom: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+        .invite-tab { padding: 13px 16px 4px; font-size: 13px; font-weight: 700; color: var(--text-sub); cursor: pointer; position: relative; }
+        .invite-tab.active { color: #4fb0ff; }
+        .invite-tab.active::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 0; height: 2px; background: #4fb0ff; border-radius: 2px; }
+        .invite-search-icon { margin-left: auto; color: #fff; font-size: 16px; cursor: pointer; padding: 12px; }
+        .invite-search-row { display: none; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+        .invite-search-row.active { display: flex; }
+        .invite-search-row i { color: #fff; font-size: 16px; cursor: pointer; }
+        .invite-search-row input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 20px; padding: 9px 14px; color: #fff; font-size: 13px; outline: none; }
+        .invite-list { flex: 1; overflow-y: auto; padding: 4px 14px 20px; }
+        .invite-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; }
+        .invite-row img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .invite-row .ir-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; min-width: 0; }
+        .invite-row .ir-invite-btn { background: #3b82f6; color: #fff; font-size: 11.5px; font-weight: 700; padding: 5px 14px; border-radius: 7px; border: none; cursor: pointer; flex-shrink: 0; }
+        .invite-row .ir-invite-btn.invited { background: rgba(255,255,255,0.08); color: var(--text-sub); }
+        .gi-media-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 10px; }
+        .gi-media-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+        .gi-row { display: flex; align-items: center; gap: 16px; padding: 13px 0; cursor: pointer; }
+        .gi-row i.gi-icon { width: 20px; text-align: center; color: var(--text-sub); font-size: 16px; }
+        .gi-row .gi-row-info { flex: 1; min-width: 0; }
+        .gi-row .gi-row-title { font-size: 14px; color: #fff; font-weight: 500; }
+        .gi-row .gi-row-sub { font-size: 11.5px; color: var(--text-sub); margin-top: 2px; }
+        .gi-toggle { position: relative; width: 40px; height: 22px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid var(--glass-border); flex-shrink: 0; cursor: pointer; }
+        .gi-toggle .gi-toggle-knob { position: absolute; top: 1px; left: 1px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.2s ease; }
+        .gi-toggle.on { background: var(--neon-green); border-color: var(--neon-green); }
+        .gi-toggle.on .gi-toggle-knob { transform: translateX(18px); }
+        .gi-danger { color: #ef4444; }
+        .gi-member-preview { display: flex; align-items: center; gap: 10px; padding: 9px 0; }
+        .gi-member-preview img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+        .gi-member-preview .gm-name { font-size: 13px; color: #fff; font-weight: 600; }
+        .gi-member-preview .gm-role { font-size: 10.5px; color: var(--neon-cyan); }
+        .gi-see-all { font-size: 12px; color: var(--neon-cyan); font-weight: 700; cursor: pointer; padding: 10px 0; }
+        .impact-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 8.5px; font-weight: 800; color: #04140d; background: linear-gradient(135deg, var(--neon-cyan), #b8860b); padding: 2px 6px; border-radius: 6px; }
+
+        /* ---- ESCROW / SEND MONEY MODAL ---- */
+        .pay-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .pay-row select, .pay-row input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 13px; outline: none; }
+        .pay-summary { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 12px; font-size: 12px; color: #e2e8f0; margin: 10px 0; line-height: 1.6; }
+
+        /* ---- CONTRIBUTION / AJO TRACKER ---- */
+        .ajo-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .ajo-row img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+        .ajo-row .ajo-name { font-size: 12.5px; font-weight: 700; color: #fff; }
+        .ajo-status { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 7px; margin-left: auto; }
+        .ajo-status.paid { color: var(--neon-green); background: rgba(16,185,129,0.12); }
+        .ajo-status.pending { color: #f59e0b; background: rgba(245,158,11,0.12); }
+    </style>
+</head>
+<body>
+<script>
+        if (localStorage.getItem('nexus_group_mode') === 'feed') {
+            document.documentElement.classList.add('preload-feed');
+        }
+</script>
+    <!-- ================= HEADER (mode-aware, tap-to-open Group Info) ================= -->
+    <header>
+        <!-- CHAT MODE HEADER CONTENT -->
+        <div class="header-left-dock" id="headerLeftChat" onclick="openGroupInfo()">
+            <div class="avatar-frame">
+                <img class="group-avatar" id="groupAvatarChat" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="Group">
+                <div class="pulse-ring"></div>
+            </div>
+
+            <div class="header-details">
+                <div class="group-title-row">
+                    <span class="group-title" id="groupTitleChat">Northern Innovators Hub 2026</span>
+                </div>
+                <div class="group-subtitle" id="groupSubtitleChat">● 12.4K members</div>
+            </div>
+        </div>
+
+       <!-- FEED MODE HEADER CONTENT -->
+        <div class="header-left-feed" id="headerLeftFeed">
+            <div class="new-post-bubble" onclick="openComposer()">
+                <svg width="34" height="34" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 4 C11.6 4 4 11.6 4 21 C4 30.4 11.6 38 21 38 L33.5 38 C35.5 38 37 36.5 37 34.5 C37 33 36.3 31.7 35 30.8 C36.9 28.1 38 24.7 38 21 C38 11.6 30.4 4 21 4 Z" fill="#fde08d"/>
+                    <path d="M30.8 30 C32.5 31.5 34.5 33.5 37 38 L31 38 C29.3 38 28 36.7 28 35 C28 33.2 29 31.5 30.8 30 Z" fill="#fde08d"/>
+                    <path d="M21 14V26" stroke="#1E1E1E" stroke-width="3.4" stroke-linecap="round"/>
+                    <path d="M15 20H27" stroke="#1E1E1E" stroke-width="3.4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <span class="fb-header-title" id="groupTitleFeed" onclick="openGroupInfo()">Northern Innovators Hub 2026</span>
+        </div>
+           <div class="header-actions">
+            <div class="mode-toggle-switch" id="modeSwitcher">
+                <div class="mode-toggle-thumb" id="modeThumb"></div>
+                <div class="mode-toggle-btn" id="toggleFeedBtn" onclick="switchMode('feed')">Feed</div>
+                <div class="mode-toggle-btn active" id="toggleChatBtn" onclick="switchMode('chat')">Chat</div>
+            </div>
+          <div class="header-icon-btn" onclick="toggleDotsMenu()" style="display:flex; align-items:center; gap:3px; background:none; border:none; width:auto; height:auto; padding:0 4px;">
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.3s;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.6s;">•</span>
+          </div>
+        </div>
+    </header>
+
+    <!-- TELEGRAM-STYLE HEADER DROPDOWN MENU -->
+    <div class="dots-menu-backdrop" id="dotsMenuBackdrop" onclick="toggleDotsMenu(false)"></div>
+    <div class="dots-dropdown-menu" id="dotsDropdownMenu">
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); openChatSearch();"><i class="fa-solid fa-magnifying-glass"></i> Search</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); boostGroup();"><i class="fa-solid fa-bolt"></i> Boost Group</div>
+        <div class="dots-menu-item" id="muteMenuItem" onclick="toggleDotsMenu(false); toggleMuteGroup();"><i class="fa-solid fa-volume-high" id="muteMenuIcon"></i> <span id="muteMenuLabel">Mute</span></div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); cycleChatTheme();"><i class="fa-solid fa-palette"></i> Chat Theme</div>
+        <div class="dots-menu-divider"></div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); toggleMembersModal(true);"><i class="fa-solid fa-users-gear"></i> Manage Members</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); showToast('Opening Market Directory', 'fa-store');"><i class="fa-solid fa-store"></i> Market Directory</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); openPaySheet();"><i class="fa-solid fa-vault"></i> Escrow Pay</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); openAjoTracker();"><i class="fa-solid fa-sack-dollar"></i> Contribution Tracker</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); openComposer('fund');"><i class="fa-solid fa-hand-holding-heart"></i> Start Fundraiser</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); showToast('An offline queue is now active — your messages will send automatically once you reconnect.', 'fa-wifi');"><i class="fa-solid fa-cloud-arrow-up"></i> Offline Queue</div>
+        <div class="dots-menu-divider"></div>
+        <div class="dots-menu-item danger" onclick="toggleDotsMenu(false); clearGroupHistory();"><i class="fa-solid fa-broom"></i> Clear History</div>
+    </div>
+
+    <!-- PINNED MESSAGE BAR (chat mode) -->
+    <div class="pinned-bar" id="pinnedBar" onclick="scrollToPinned()">
+        <i class="fa-solid fa-thumbtack"></i>
+        <span class="pb-text" id="pinnedBarText"></span>
+        <i class="fa-solid fa-xmark pb-close" onclick="event.stopPropagation(); unpinMessage()"></i>
+    </div>
+    <div id="toastStack"></div>
+
+    <!-- ================= GROUP INFO OVERLAY — opens on header tap (WhatsApp-style, expanded) ================= -->
+    <div class="group-info-overlay" id="groupInfoOverlay">
+        <div class="gi-topbar">
+            <i class="fa-solid fa-arrow-left" onclick="closeGroupInfo()"></i>
+            <span style="flex:1;"></span>
+            <i class="fa-solid fa-pen" onclick="renameGroupPrompt()" style="font-size:15px;"></i>
+            <i class="fa-solid fa-ellipsis-vertical" onclick="toggleGiOptionsMenu()"></i>
+        </div>
+        <div class="gi-hero">
+            <img id="giAvatarImg" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80">
+            <div class="gi-name" id="giGroupNameLabel">Northern Innovators Hub 2026</div>
+            <div class="gi-meta" id="giMetaText">12.4K members</div>
+        </div>
+        <div class="gi-action-row">
+            <div class="gi-action" onclick="showToast('Starting voice chat...', 'fa-phone')"><div class="gia-icon"><i class="fa-solid fa-phone"></i></div><span>Voice chat</span></div>
+            <div class="gi-action" onclick="showToast('Starting video chat...', 'fa-video')"><div class="gia-icon"><i class="fa-solid fa-video"></i></div><span>Video chat</span></div>
+            <div class="gi-action" onclick="openInviteOverlay()"><div class="gia-icon"><i class="fa-solid fa-user-plus"></i></div><span>Invite</span></div>
+            <div class="gi-action" onclick="closeGroupInfo(); openChatSearch();"><div class="gia-icon"><i class="fa-solid fa-magnifying-glass"></i></div><span>Search</span></div>
+        </div>
+
+        <div class="gi-add-members-btn" onclick="openInviteOverlay()">
+            <i class="fa-solid fa-user-plus"></i> Add Members
+        </div>
+
+        <div class="gi-tabs-bar">
+            <div class="gi-tab active" data-tab="members" onclick="switchGiTab('members')">Members</div>
+            <div class="gi-tab" data-tab="media" onclick="switchGiTab('media')">Media</div>
+            <div class="gi-tab" data-tab="links" onclick="switchGiTab('links')">Links</div>
+            <div class="gi-tab" data-tab="docs" onclick="switchGiTab('docs')">Docs</div>
+        </div>
+
+        <div class="gi-tab-panel active" id="giPanelMembers"></div>
+
+        <div class="gi-tab-panel" id="giPanelMedia">
+            <div class="gi-media-tab-grid">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80">
+            </div>
+        </div>
+
+        <div class="gi-tab-panel" id="giPanelLinks">
+            <div class="gi-empty-tab"><i class="fa-solid fa-link" style="font-size:22px; display:block; margin-bottom:10px; opacity:0.5;"></i>No links shared in this group yet.</div>
+        </div>
+
+        <div class="gi-tab-panel" id="giPanelDocs">
+            <div class="gi-empty-tab"><i class="fa-solid fa-file" style="font-size:22px; display:block; margin-bottom:10px; opacity:0.5;"></i>No documents shared in this group yet.</div>
+        </div>
+        <div style="height:30px;"></div>
+    </div>
+
+    <!-- GROUP INFO — OWN DROPDOWN MENU (separate from the chat header's dots menu) -->
+    <div class="dots-menu-backdrop" id="giOptionsBackdrop" onclick="toggleGiOptionsMenu(false)" style="z-index:23600;"></div>
+    <div class="dots-dropdown-menu gi-options-menu" id="giOptionsMenu" style="top:54px; z-index:23700;">
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); toggleMembersModal(true);"><i class="fa-solid fa-folder-open"></i> Manage storage <span class="dmi-chevron">1.6 MB</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Notification settings opened', 'fa-bell')"><i class="fa-solid fa-bell"></i> Notifications <span class="dmi-chevron">All</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Media visibility settings opened', 'fa-image')"><i class="fa-solid fa-image"></i> Media visibility</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('End-to-end encryption is active for this group', 'fa-lock')"><i class="fa-solid fa-lock"></i> Encryption</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Disappearing messages settings opened', 'fa-clock-rotate-left')"><i class="fa-solid fa-clock-rotate-left"></i> Disappearing messages <span class="dmi-chevron">Off</span></div>
+        <div class="dots-menu-item" id="chatLockMenuItem" onclick="toggleChatLockMenu()"><i class="fa-solid fa-lock" id="chatLockMenuIcon"></i> <span id="chatLockMenuLabel">Chat lock: Off</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Advanced chat privacy settings opened', 'fa-shield')"><i class="fa-solid fa-shield"></i> Advanced chat privacy <span class="dmi-chevron">Off</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Group permission settings opened', 'fa-gear')"><i class="fa-solid fa-gear"></i> Group permissions</div>
+        <div class="dots-menu-item" id="autoTranslateMenuItem" onclick="toggleAutoTranslateMenu()"><i class="fa-solid fa-globe" id="autoTranslateMenuIcon"></i> <span id="autoTranslateMenuLabel">Auto-translate: Off</span></div>
+        <div class="dots-menu-item" id="lowDataMenuItem" onclick="toggleLowDataMenu()"><i class="fa-solid fa-wifi" id="lowDataMenuIcon"></i> <span id="lowDataMenuLabel">Low-data mode: Off</span></div>
+        <div class="dots-menu-item" id="voiceA11yMenuItem" onclick="toggleVoiceA11yMenu()"><i class="fa-solid fa-microphone-lines" id="voiceA11yMenuIcon"></i> <span id="voiceA11yMenuLabel">Voice accessibility: Off</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); closeGroupInfo(); toggleEcosystem(true);"><i class="fa-solid fa-users-rectangle"></i> Add group to a community</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('New group created with the same members', 'fa-people-group')"><i class="fa-solid fa-people-group"></i> Create a similar group</div>
+        <div class="dots-menu-divider"></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Auto-delete timer opened', 'fa-hourglass-half')"><i class="fa-solid fa-hourglass-half"></i> Auto-Delete</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Starting group video chat...', 'fa-video')"><i class="fa-solid fa-video"></i> Start Video chat</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); openGroupStatistics();"><i class="fa-solid fa-chart-line"></i> Statistics</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); switchGiTab('members'); showToast('Search within members', 'fa-magnifying-glass')"><i class="fa-solid fa-magnifying-glass"></i> Search Members</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Added to Home Screen', 'fa-square-plus')"><i class="fa-solid fa-square-plus"></i> Add to Home Screen</div>
+        <div class="dots-menu-divider"></div>
+        <div class="dots-menu-item danger" onclick="toggleGiOptionsMenu(false); if(confirm('Leave this group?')){showToast('You have left the group', 'fa-right-from-bracket');}"><i class="fa-solid fa-right-from-bracket"></i> Leave Group</div>
+        <div class="dots-menu-item danger" onclick="toggleGiOptionsMenu(false); if(confirm('Delete this group for everyone? This cannot be undone.')){showToast('Group deleted', 'fa-trash');}"><i class="fa-solid fa-trash"></i> Delete Group</div>
+    </div>
+    <!-- INVITE MEMBERS OVERLAY -->
+    <div class="invite-overlay" id="inviteMembersOverlay">
+        <div class="invite-topbar">
+            <i class="fa-solid fa-arrow-left" onclick="closeInviteOverlay()"></i>
+            <img class="invite-group-avatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80">
+            <div>
+                <div class="invite-title">Invite members</div>
+                <div class="invite-subtitle">Northern Innovators Hub 2026</div>
+            </div>
+        </div>
+        <div class="invite-tabs-row" id="inviteTabsRow">
+            <div class="invite-tab active" data-tab="friends" onclick="switchInviteTab('friends')">Friends</div>
+            <div class="invite-tab" data-tab="suggested" onclick="switchInviteTab('suggested')">Suggested Friends</div>
+            <div class="invite-tab" data-tab="followers" onclick="switchInviteTab('followers')">Followers</div>
+            <div class="invite-tab" data-tab="groups" onclick="switchInviteTab('groups')">Groups</div>
+            <i class="fa-solid fa-magnifying-glass invite-search-icon" onclick="openInviteSearch()"></i>
+        </div>
+        <div class="invite-search-row" id="inviteSearchRow">
+            <i class="fa-solid fa-arrow-left" onclick="closeInviteSearch()"></i>
+            <input type="text" id="inviteSearchInput" placeholder="Search for friends..." oninput="runInviteSearch(this.value)">
+        </div>
+        <div class="invite-list" id="inviteListBody"></div>
+    </div>
+
+</parameter>
+    <!-- ================= CHAT MODE — MAIN CHAT FLOW AREA ================= -->
+    <div id="chat-flow"></div>
+
+    <!-- MESSAGE LONG-PRESS ACTION TRAY -->
+    <div class="msg-action-backdrop" id="msgActionBackdrop" onclick="closeMsgTray()"></div>
+    <div class="msg-action-tray" id="msgActionTray">
+        <div class="tray-emoji-row" id="trayEmojiRow"></div>
+        <div class="tray-action" onclick="trayReply()"><i class="fa-solid fa-reply"></i> Reply</div>
+        <div class="tray-action" onclick="trayForward()"><i class="fa-solid fa-share"></i> Forward</div>
+        <div class="tray-action" onclick="trayCopy()"><i class="fa-solid fa-copy"></i> Copy</div>
+        <div class="tray-action" onclick="trayStar()"><i class="fa-solid fa-star"></i> <span id="trayStarLabel">Star</span></div>
+        <div class="tray-action" onclick="trayPin()"><i class="fa-solid fa-thumbtack"></i> <span id="trayPinLabel">Pin</span></div>
+        <div class="tray-action danger" onclick="trayDelete()"><i class="fa-solid fa-trash"></i> Delete</div>
+    </div>
+
+    <!-- CHAT SEARCH OVERLAY -->
+    <div class="chat-search-overlay" id="chatSearchOverlay">
+        <div class="chat-search-head">
+            <i class="fa-solid fa-arrow-left" onclick="closeChatSearch()"></i>
+            <input type="text" id="chatSearchInput" placeholder="Search messages..." oninput="runChatSearch(this.value)" autofocus>
+        </div>
+        <div class="chat-search-results" id="chatSearchResults"></div>
+    </div>
+
+    <!-- ================= FEED MODE — FACEBOOK-GROUP STYLE VIEW ================= -->
+    <div id="feedView">
+        <div class="group-cover-wrap">
+            <img class="group-cover-img" id="groupCoverFeed" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80" alt="Group cover">
+            <div class="group-cover-fade"></div>
+        </div>
+
+        <div class="group-info-block">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div class="group-info-title" id="groupNameFeed">Northern Innovators Hub 2026</div>
+                <button class="invite-btn-fb" onclick="openInviteOverlay()" style="margin-top:0; flex-shrink:0;">
+                    <i class="fa-solid fa-user-plus"></i> Invite
+                </button>
+            </div>
+
+            <div class="group-meta-row">
+                <i class="fa-solid fa-earth-africa"></i>
+                <span id="groupMetaFeed">Public group · 12.4K members</span>
+            </div>
+
+            <div class="group-avatar-stack">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&auto=format&fit=crop&q=80" alt="">
+                <span class="stack-count">+12.4K</span>
+            </div>
+
+            <div class="smart-box-highlights">
+                <div class="highlights-scroll">
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(0)"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Launch</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(1)"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Deals</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(2)"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Events</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(3)"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Tech</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="timeline-area"></div>
+    </div>
+    <!-- CREATE POST COMPOSER SHEET -->
+    <div class="nx-sheet-backdrop" id="composerSheet">
+        <div class="nx-sheet" onclick="event.stopPropagation()" style="max-height:92vh;">
+            <div class="nx-sheet-head"><span>Create Post</span><i class="fa-solid fa-xmark" onclick="closeSheet('composerSheet')"></i></div>
+            <div class="nx-sheet-body">
+                <div class="composer-user-row">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="You">
+                    <div>
+                        <div class="cu-name">You</div>
+                        <div class="composer-audience"><i class="fa-solid fa-earth-africa"></i> Northern Innovators Hub 2026 · Everyone</div>
+                    </div>
+                </div>
+                <textarea id="composerText" placeholder="What's on your mind?" oninput="validateComposer()"></textarea>
+                <div class="composer-type-row">
+                    <div class="composer-type-pill active" data-type="text" onclick="setComposerType('text', this)"><i class="fa-solid fa-align-left"></i> Text</div>
+                    <div class="composer-type-pill" data-type="image" onclick="setComposerType('image', this)"><i class="fa-solid fa-image"></i> Photo</div>
+                    <div class="composer-type-pill" data-type="poll" onclick="setComposerType('poll', this)"><i class="fa-solid fa-square-poll-vertical"></i> Poll</div>
+                    <div class="composer-type-pill" data-type="deal" onclick="setComposerType('deal', this)"><i class="fa-solid fa-tags"></i> Deal Post</div>
+                    <div class="composer-type-pill" data-type="event" onclick="setComposerType('event', this)"><i class="fa-solid fa-calendar-days"></i> Event</div>
+                </div>
+                <div class="composer-extra-fields" id="composerImageField"><input type="text" id="composerImageUrl" placeholder="Paste image URL..."></div>
+                <div class="composer-extra-fields" id="composerPollField">
+                    <input type="text" id="pollOpt1" placeholder="Option 1">
+                    <input type="text" id="pollOpt2" placeholder="Option 2">
+                    <input type="text" id="pollOpt3" placeholder="Option 3 (optional)">
+                </div>
+                <div class="composer-extra-fields" id="composerDealField">
+                    <input type="text" id="dealTitle" placeholder="Product/service name">
+                    <input type="text" id="dealPrice" placeholder="Price (e.g. $250)">
+                </div>
+                <div class="composer-extra-fields" id="composerEventField">
+                    <input type="text" id="eventTitle" placeholder="Event name">
+                    <input type="text" id="eventDate" placeholder="Date and time">
+                </div>
+                <div class="composer-addon-row">
+                    <i class="fa-solid fa-image" title="Photo" onclick="setComposerType('image', document.querySelector('[data-type=image]'))"></i>
+                    <i class="fa-solid fa-user-tag" title="Tag someone" onclick="showToast('Choose a person to tag', 'fa-user-tag')"></i>
+                    <i class="fa-solid fa-location-dot" title="Location" onclick="showToast('Location attached', 'fa-location-dot')"></i>
+                    <i class="fa-solid fa-face-smile" title="Feeling" onclick="showToast('Choose how you feel', 'fa-face-smile')"></i>
+                </div>
+                <button class="composer-post-btn" id="composerPostBtn" onclick="submitComposer()" disabled>Post</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESCROW SEND-MONEY SHEET (high-impact chat feature) -->
+    <div class="nx-sheet-backdrop" id="paySheet" onclick="closeSheet('paySheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span><i class="fa-solid fa-vault" style="color:var(--neon-green);"></i> Send Escrow-Protected Payment</span><i class="fa-solid fa-xmark" onclick="closeSheet('paySheet')"></i></div>
+            <div class="nx-sheet-body">
+                <div class="pay-row"><select id="payRecipient"></select></div>
+                <div class="pay-row"><input type="text" id="payAmount" placeholder="Amount (e.g. $50 or 5,000 Pts)"></div>
+                <div class="pay-row"><input type="text" id="payNote" placeholder="What is this for?"></div>
+                <div class="pay-summary"><i class="fa-solid fa-circle-info"></i> Funds are held in Nexus Escrow and only released to the recipient once you confirm the goods/service were received. Full refund if anything goes wrong.</div>
+                <button class="composer-post-btn" style="background:linear-gradient(135deg, var(--neon-green), #059669); color:#04140d;" onclick="submitEscrowPayment()">Lock Funds in Escrow</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GROUP CONTRIBUTION / AJO TRACKER SHEET (high-impact — matches real payment-group use case) -->
+    <div class="nx-sheet-backdrop" id="ajoSheet" onclick="closeSheet('ajoSheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span><i class="fa-solid fa-sack-dollar" style="color:var(--neon-cyan);"></i> Group Contribution Tracker</span><i class="fa-solid fa-xmark" onclick="closeSheet('ajoSheet')"></i></div>
+            <div class="nx-sheet-body">
+                <div class="pay-summary" style="margin-top:0;">Round <span id="ajoRoundLabel">3 of 6</span> · Next payout: <span id="ajoNextPayout"></span></div>
+                <div id="ajoListBody"></div>
+                <button class="composer-post-btn" style="margin-top:14px;" onclick="markMyContributionPaid()">Mark My Contribution as Paid</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FRAUD/SCAM SAFETY SCAN RESULT SHEET -->
+    <div class="nx-sheet-backdrop" id="safetySheet" onclick="closeSheet('safetySheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span><i class="fa-solid fa-shield-halved" style="color:var(--neon-green);"></i> Nexus Safety Scan</span><i class="fa-solid fa-xmark" onclick="closeSheet('safetySheet')"></i></div>
+            <div class="nx-sheet-body" id="safetySheetBody"></div>
+        </div>
+    </div>
+    <!-- ================= FLOATING COMMAND DOCK — chat mode only (slim redesign) ================= -->
+    <div class="dock-container" id="dockContainer">
+        <div class="reply-composer-bar" id="replyComposerBar">
+            <i class="fa-solid fa-reply" style="color:var(--neon-cyan);"></i>
+            <div class="rc-body">
+                <div class="rc-name" id="rcName"></div>
+                <div class="rc-text" id="rcText"></div>
+            </div>
+            <i class="fa-solid fa-xmark rc-close" onclick="cancelReply()"></i>
+        </div>
+
+        <div class="quick-tools-row" id="quickToolsRow">
+            <div class="qtool" onclick="triggerAttach('image')"><i class="fa-solid fa-image"></i> Photo</div>
+            <div class="qtool" onclick="triggerAttach('camera')"><i class="fa-solid fa-camera"></i> Camera</div>
+            <div class="qtool" onclick="triggerAttach('document')"><i class="fa-solid fa-file"></i> File</div>
+            <div class="qtool" onclick="triggerAttach('location')"><i class="fa-solid fa-location-dot"></i> Location</div>
+            <div class="qtool" onclick="triggerAttach('pay')" style="color:var(--neon-green); border-color:rgba(16,185,129,0.3);"><i class="fa-solid fa-vault" style="color:var(--neon-green);"></i> Send Money</div>
+            <div class="qtool" onclick="triggerAttach('sos')" style="color:#ef4444; border-color:rgba(239,68,68,0.3);"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> SOS</div>
+            <div class="qtool suggest" id="smartSuggestChip" style="display:none;" onclick="useSmartSuggestion()"><i class="fa-solid fa-wand-magic-sparkles"></i> <span id="smartSuggestText"></span></div>
+        </div>
+
+        <div class="neural-dock">
+            <div class="dock-add-btn" onclick="toggleEcosystem(true)"><i class="fa-solid fa-plus"></i></div>
+            <div class="dock-add-btn" onclick="openEmojiPicker()" style="font-size:15px;">🙂</div>
+            <textarea id="dockInput" rows="1" placeholder="Message..." oninput="handleDockInput(this)"></textarea>
+
+            <div class="record-bar" id="recordBar">
+                <div class="record-dot"></div>
+                <span class="record-time" id="recordTime">00:00</span>
+                <span class="record-hint">Slide left to cancel ⟵</span>
+                <span class="record-cancel" onclick="cancelVoiceRecording()">Cancel</span>
+            </div>
+
+            <div class="dock-actions">
+                <div class="dock-trigger-btn" id="micTrigger" onmousedown="startVoiceRecording()" onmouseup="stopVoiceRecording(true)" ontouchstart="startVoiceRecording()" ontouchend="stopVoiceRecording(true)"><i class="fa-solid fa-microphone"></i></div>
+                <button class="dock-trigger-btn send-trigger" id="sendTrigger" onclick="sendDockMessage()"><i class="fa-solid fa-arrow-up"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPREHENSIVE EMOJI PICKER — categorized like a global comprehensive pack -->
+    <div class="nx-sheet-backdrop" id="emojiBackdrop" onclick="closeSheet('emojiBackdrop')">
+        <div class="emoji-picker-sheet active" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head" style="padding:0 0 4px;"><span>Emoji</span><i class="fa-solid fa-xmark" onclick="closeSheet('emojiBackdrop')"></i></div>
+            <div class="emoji-cat-tabs" id="emojiCatTabs"></div>
+            <div class="emoji-grid-scroll"><div class="emoji-grid" id="emojiGrid"></div></div>
+        </div>
+    </div>
+
+    <!-- SUPER-APP ECOSYSTEM MINI-TOOLS MODAL -->
+    <div class="ecosystem-drawer" id="ecosystemModal" onclick="toggleEcosystem(false)">
+        <div class="drawer-card" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; color:#fff; font-weight:800; font-size:14px; margin-bottom:10px;">
+                <span>Nexus Super-App Mini Tools</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleEcosystem(false)"></i>
+            </div>
+            <div class="drawer-grid">
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('Opening Market Directory', 'fa-store');">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Market Directory</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); triggerAttach('pay');">
+                    <i class="fa-solid fa-vault"></i>
+                    <span>Escrow Pay</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('TrustID Audit: this group is verified', 'fa-certificate');">
+                    <i class="fa-solid fa-certificate"></i>
+                    <span>TrustID Audit</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); toggleMembersModal(true);">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Manage Members</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openChatSearch();">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Search Group</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openAjoTracker();">
+                    <span class="hot-tag">HOT</span>
+                    <i class="fa-solid fa-sack-dollar"></i>
+                    <span>Contribution Tracker</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); triggerAttach('sos');">
+                    <span class="hot-tag">HOT</span>
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i>
+                    <span>Emergency SOS</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openComposer('job');">
+                    <span class="hot-tag">HOT</span>
+                    <i class="fa-solid fa-briefcase"></i>
+                    <span>Post a Job</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openComposer('fund');">
+                    <span class="hot-tag">HOT</span>
+                    <i class="fa-solid fa-hand-holding-heart"></i>
+                    <span>Start Fundraiser</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('An offline queue is now active — your messages will send automatically once you reconnect.', 'fa-wifi');">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Offline Queue</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); copyGroupLink();">
+                    <i class="fa-solid fa-link"></i>
+                    <span>Group Link</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEMBER MANAGEMENT & MODERATION DRAWER -->
+    <div class="ecosystem-drawer" id="membersModal" onclick="toggleMembersModal(false)">
+        <div class="drawer-card" onclick="event.stopPropagation()" style="max-height:78vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; color:#fff; font-weight:800; font-size:14px; margin-bottom:10px;">
+                <span>Members &amp; Administration</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleMembersModal(false)"></i>
+            </div>
+            <div class="member-tabs">
+                <div class="member-tab active" id="tabAll" onclick="switchMemberTab('all')">All Members (12.4K)</div>
+                <div class="member-tab" id="tabPending" onclick="switchMemberTab('pending')">Join Requests <span class="pending-count-badge" id="pendingCountBadge">3</span></div>
+            </div>
+            <div id="memberListPanel"></div>
+            <div id="pendingListPanel" style="display:none;"></div>
+        </div>
+    </div>
+    <!-- STORY / HIGHLIGHT VIEWER -->
+    <div class="story-viewer-overlay" id="storyViewerOverlay">
+        <div class="story-header">
+            <img id="storyUserAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80">
+            <div class="story-user-info">
+                <span class="story-username" id="storyUsername">Northern Innovators Hub 2026</span>
+                <span class="story-time" id="storyTime"></span>
+            </div>
+            <i class="fa-solid fa-xmark story-close" onclick="closeGroupStoryViewer()"></i>
+        </div>
+        <div class="story-media-wrap" id="storyMediaWrap">
+            <div class="story-tap-zone story-tap-left" onclick="prevGroupStory()"></div>
+            <div class="story-tap-zone story-tap-right" onclick="nextGroupStory()"></div>
+        </div>
+        <div class="story-footer" id="storyFooter">
+            <input type="text" class="story-reply-input" placeholder="Send message">
+            <i class="fa-regular fa-paper-plane"></i>
+        </div>
+    </div>
+
+    <!-- SHARED POST CARD TEMPLATE — single source of truth for generatePostHTML().
+         The group pulls its post cards directly from this file — nothing custom. -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="post-card-template.js"></script>
+
+    <script>
+        // ============================================================
+        // FIREBASE + REAL GROUP IDENTITY (oryzon-50ea4)
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+            authDomain: "oryzon-50ea4.firebaseapp.com",
+            databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+            projectId: "oryzon-50ea4",
+            storageBucket: "oryzon-50ea4.firebasestorage.app",
+            messagingSenderId: "782106742622",
+            appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+            measurementId: "G-K5085DLL2W"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const FieldValue = firebase.firestore.FieldValue;
+
+        const currentUsername = localStorage.getItem('nexus_user_session');
+        if (!currentUsername) window.location.href = 'login.html';
+
+        let authReadyResolve;
+        const authReadyPromise = new Promise(resolve => { authReadyResolve = resolve; });
+        auth.onAuthStateChanged(user => { authReadyResolve(user); });
+
+        const groupSlug = new URLSearchParams(window.location.search).get('group');
+        let groupData = null;
+        let isGroupAdmin = false;
+        let groupUnsub = null;
+        let groupPostsUnsub = null;
+        let groupMessagesUnsub = null;
+        let groupFeedLoaded = false;
+
+        function groupRef() { return db.collection('groups').doc(groupSlug); }
+        function formatMemberCount(n) {
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return (n || 0).toString();
+        }
+
+        async function initRealGroup() {
+            if (!groupSlug) return; // no ?group= — keep the built-in demo content as local preview
+
+            const authUser = await authReadyPromise;
+            if (!authUser) return;
+
+            // Auto-join: viewing a real group makes you a member (matches the
+            // "Public Group" privacy option from group-create.html). Private
+            // groups / approval requests are not built yet.
+            const memberRef = groupRef().collection('members').doc(currentUsername);
+            const memberSnap = await memberRef.get();
+            if (!memberSnap.exists) {
+                await memberRef.set({ joinedAt: FieldValue.serverTimestamp(), role: 'member' });
+                await groupRef().update({ memberCount: FieldValue.increment(1) }).catch(() => {});
+            }
+
+            groupUnsub = groupRef().onSnapshot(doc => {
+                if (!doc.exists) {
+                    showToast('This group doesn\'t exist yet', 'fa-triangle-exclamation');
+                    return;
+                }
+                groupData = doc.data();
+                isGroupAdmin = !!(currentUsername && (groupData.creatorUsername === currentUsername || (groupData.adminUsernames || []).includes(currentUsername)));
+
+                const name = groupData.name;
+                const memberLabel = formatMemberCount(groupData.memberCount || 0) + ' members';
+                document.getElementById('groupTitleChat').textContent = name;
+                document.getElementById('groupSubtitleChat').textContent = '● ' + memberLabel;
+                document.getElementById('groupTitleFeed').textContent = name;
+                document.getElementById('groupNameFeed').textContent = name;
+                document.getElementById('groupMetaFeed').textContent = (groupData.privacy === 'private' ? 'Private group' : 'Public group') + ' · ' + memberLabel;
+                document.getElementById('giGroupNameLabel').textContent = name;
+                document.getElementById('giMetaText').textContent = memberLabel;
+                if (groupData.avatarUrl) {
+                    document.getElementById('groupAvatarChat').src = groupData.avatarUrl;
+                    document.getElementById('giAvatarImg').src = groupData.avatarUrl;
+                }
+                if (groupData.coverUrl) document.getElementById('groupCoverFeed').src = groupData.coverUrl;
+
+                if (!groupFeedLoaded) { renderFeedPosts(); groupFeedLoaded = true; }
+                loadRealChatMessages();
+            }, err => console.error('group listener error:', err));
+        }
+
+        // ============================================================
+        // 0. UTILITIES
+        // ============================================================
+        function showToast(msg, icon = 'fa-circle-check') {
+            const stack = document.getElementById('toastStack');
+            const t = document.createElement('div');
+            t.className = 'nx-toast';
+            t.innerHTML = `<i class="fa-solid ${icon}"></i><span>${msg}</span>`;
+            stack.appendChild(t);
+            requestAnimationFrame(() => t.classList.add('show'));
+            setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2800);
+        }
+        function copyGroupLink() {
+            const link = 'https://rayhaani.github.io/Oryzon/group/northern-innovators-2026';
+            if (navigator.clipboard) navigator.clipboard.writeText(link).catch(() => {});
+            showToast('Invite link copied to clipboard', 'fa-link');
+        }
+        // ---- Invite Members overlay ----
+        let currentInviteTab = 'friends';
+        const inviteFriends = [
+            { id: 'f1', name: 'Usman Bin Sani', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'f2', name: 'Aliyu NG', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'f3', name: 'Sanusi Ashiru', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'f4', name: 'Shehu Hashimu', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', invited: false }
+        ];
+        const inviteSuggested = [
+            { id: 's1', name: 'Mubarak Lawal', pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 's2', name: 'Abubakar Sadeeq', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 's3', name: 'Amina Yusuf', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80', invited: false }
+        ];
+        const inviteFollowers = [
+            { id: 'fl1', name: 'Halima Bello', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'fl2', name: 'Tijjani Yusuf', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'fl3', name: 'Rukayya Ahmad', pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80', invited: false }
+        ];
+        const inviteGroups = [
+            { id: 'g1', name: 'Kano Traders Circle', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'g2', name: 'Abuja Business Network', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'g3', name: 'Lagos Tech Founders', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', invited: false }
+        ];
+        function openInviteOverlay() {
+            document.getElementById('inviteMembersOverlay').classList.add('active');
+            closeInviteSearch();
+            switchInviteTab('friends');
+        }
+        function closeInviteOverlay() {
+            document.getElementById('inviteMembersOverlay').classList.remove('active');
+        }
+        function switchInviteTab(tab) {
+            currentInviteTab = tab;
+            document.querySelectorAll('.invite-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            const list = tab === 'friends' ? inviteFriends : tab === 'suggested' ? inviteSuggested : tab === 'followers' ? inviteFollowers : inviteGroups;
+            renderInviteList(list);
+        }
+        function openInviteSearch() {
+            document.getElementById('inviteTabsRow').style.display = 'none';
+            document.getElementById('inviteSearchRow').classList.add('active');
+            document.getElementById('inviteSearchInput').value = '';
+            document.getElementById('inviteSearchInput').focus();
+            renderInviteList([...inviteFriends, ...inviteSuggested]);
+        }
+        function closeInviteSearch() {
+            document.getElementById('inviteSearchRow').classList.remove('active');
+            document.getElementById('inviteTabsRow').style.display = 'flex';
+            switchInviteTab(currentInviteTab);
+        }
+        function runInviteSearch(q) {
+            const all = [...inviteFriends, ...inviteSuggested, ...inviteFollowers, ...inviteGroups];
+            const filtered = q.trim() ? all.filter(f => f.name.toLowerCase().includes(q.toLowerCase())) : all;
+            renderInviteList(filtered);
+        }
+        function renderInviteList(list) {
+            document.getElementById('inviteListBody').innerHTML = list.length ? list.map(f => `
+                <div class="invite-row">
+                    <img src="${f.pic}">
+                    <div class="ir-name">${f.name}</div>
+                    <button class="ir-invite-btn ${f.invited ? 'invited' : ''}" onclick="sendInvite('${f.id}', this)">${f.invited ? 'Invited' : 'Invite'}</button>
+                </div>`).join('') : `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:40px 0;">No results found</p>`;
+        }
+        function sendInvite(id, btn) {
+            const f = [...inviteFriends, ...inviteSuggested, ...inviteFollowers, ...inviteGroups].find(x => x.id === id);
+            if (f) f.invited = true;
+            btn.textContent = 'Invited';
+            btn.classList.add('invited');
+            showToast('Invitation sent to ' + (f ? f.name : 'friend'), 'fa-user-plus');
+        }
+        function fmtClockTime(d) { return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+        function fmtRelative(d) {
+            const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+            return Math.floor(diff / 86400) + 'd';
+        }
+        function fmtDayLabel(d) {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const y = new Date(today); y.setDate(y.getDate() - 1);
+            const dd = new Date(d); dd.setHours(0,0,0,0);
+            if (dd.getTime() === today.getTime()) return 'Today';
+            if (dd.getTime() === y.getTime()) return 'Yesterday';
+            return d.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        function escapeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+        function closeSheet(id) { document.getElementById(id).classList.remove('active'); }
+        function openSheetEl(id) { document.getElementById(id).classList.add('active'); }
+
+        // ============================================================
+        // 1. GROUP INFO OVERLAY (Telegram-style)
+        // ============================================================
+        function openGroupInfo() {
+            document.getElementById('groupInfoOverlay').classList.add('active');
+            switchGiTab('members');
+        }
+        function closeGroupInfo() {
+            document.getElementById('groupInfoOverlay').classList.remove('active');
+            toggleGiOptionsMenu(false);
+        }
+        function switchGiTab(tab) {
+            document.querySelectorAll('.gi-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.querySelectorAll('.gi-tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('giPanel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+            if (tab === 'members') renderGiMembersTab();
+        }
+        function renderGiMembersTab() {
+            const roleLabel = { Admin: 'Owner', Moderator: 'Admin' };
+            document.getElementById('giPanelMembers').innerHTML = groupMembers.map(m => `
+                <div class="gi-member-row">
+                    <img src="${m.pic}">
+                    <div>
+                        <div class="gmr-name">${m.name}</div>
+                        <div class="gmr-status">${m.role === 'Admin' ? 'online' : 'last seen recently'}</div>
+                    </div>
+                    ${roleLabel[m.role] ? `<span class="gmr-role">${roleLabel[m.role]}</span>` : ''}
+                </div>`).join('');
+        }
+        function renameGroupPrompt() {
+            const current = document.getElementById('giGroupNameLabel').textContent;
+            const next = prompt('Rename group:', current);
+            if (next && next.trim()) {
+                document.getElementById('giGroupNameLabel').textContent = next.trim();
+                document.querySelectorAll('.group-title, .fb-header-title').forEach(el => el.textContent = next.trim());
+                showToast('Group renamed', 'fa-pen');
+            }
+        }
+        function openGroupStatistics() {
+            showToast('Group Statistics: 12.4K members · 318 posts this month · 92% weekly active', 'fa-chart-line');
+        }
+
+        // ---- Group Info's own "..." dropdown menu ----
+        function toggleGiOptionsMenu(show) {
+            const menu = document.getElementById('giOptionsMenu');
+            const backdrop = document.getElementById('giOptionsBackdrop');
+            const next = (show === undefined) ? !menu.classList.contains('active') : show;
+            menu.classList.toggle('active', next);
+            backdrop.classList.toggle('active', next);
+        }
+        let chatLockOn = false, autoTranslateOn = false, lowDataOn = false, voiceA11yOn = false;
+        function toggleChatLockMenu() {
+            chatLockOn = !chatLockOn;
+            document.getElementById('chatLockMenuLabel').textContent = 'Chat lock: ' + (chatLockOn ? 'On' : 'Off');
+            document.getElementById('chatLockMenuIcon').className = chatLockOn ? 'fa-solid fa-lock' : 'fa-solid fa-lock-open';
+            showToast(chatLockOn ? 'Chat locked on this device' : 'Chat unlocked', 'fa-lock');
+        }
+        function toggleAutoTranslateMenu() {
+            autoTranslateOn = !autoTranslateOn;
+            document.getElementById('autoTranslateMenuLabel').textContent = 'Auto-translate: ' + (autoTranslateOn ? 'On' : 'Off');
+            showToast(autoTranslateOn ? 'Auto-translate is now ON for this chat' : 'Auto-translate turned off', 'fa-globe');
+        }
+        function toggleLowDataMenu() {
+            lowDataOn = !lowDataOn;
+            document.getElementById('lowDataMenuLabel').textContent = 'Low-data mode: ' + (lowDataOn ? 'On' : 'Off');
+            showToast(lowDataOn ? 'Low-data mode enabled — optimized for weak networks' : 'Low-data mode disabled', 'fa-wifi');
+        }
+        function toggleVoiceA11yMenu() {
+            voiceA11yOn = !voiceA11yOn;
+            document.getElementById('voiceA11yMenuLabel').textContent = 'Voice accessibility: ' + (voiceA11yOn ? 'On' : 'Off');
+            showToast(voiceA11yOn ? 'Voice accessibility mode enabled' : 'Voice accessibility mode disabled', 'fa-microphone-lines');
+        }
+
+        // ============================================================
+        // 2. MODE SWITCHING
+        // ============================================================
+        let feedRendered = false;
+
+        function switchMode(mode) {
+            localStorage.setItem('nexus_group_mode', mode);
+            const isChat = mode === 'chat';
+
+            document.getElementById('headerLeftChat').style.display = isChat ? 'flex' : 'none';
+            document.getElementById('headerLeftFeed').style.display = isChat ? 'none' : 'flex';
+
+            document.getElementById('chat-flow').style.display = isChat ? 'flex' : 'none';
+            document.getElementById('dockContainer').style.display = isChat ? 'flex' : 'none';
+            document.getElementById('feedView').style.display = isChat ? 'none' : 'flex';
+            document.getElementById('pinnedBar').classList.toggle('active', isChat && !!pinnedMessageId);
+            if (isChat) {
+                document.querySelector('header').classList.remove('header-feed-transparent');
+            } else {
+                updateFeedHeaderState();
+                requestAnimationFrame(updateFeedHeaderState);
+            }
+            document.getElementById('toggleChatBtn').classList.toggle('active', isChat);
+            document.getElementById('toggleFeedBtn').classList.toggle('active', !isChat);
+            document.getElementById('modeThumb').style.transform = isChat ? 'translateX(100%)' : 'translateX(0%)';
+
+            if (!isChat && !feedRendered) {
+                renderFeedPosts();
+                feedRendered = true;
+            }
+        }
+
+        // ============================================================
+        // 3. CHAT ENGINE — single renderer for every bubble (fixes the
+        //    "different timestamp style" bug for good).
+        // ============================================================
+        let chatMessages = [
+            { id: 'c1', from: 'them', name: 'Ali_Developer', role: 'Chairman / CEO', roleClass: 'role-ceo', verified: true,
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80',
+              text: 'Great news — the full 2026 rollout schedule for the Super Community Platform is locked in.',
+              time: new Date(Date.now() - 1000 * 60 * 60 * 6), reactions: { '👍': 4, '🔥': 2 }, starred: false },
+            { id: 'c2', from: 'them', name: 'MmnAfrah Networker', role: 'P.R.O', roleClass: 'role-pro', verified: true,
+              avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop&q=80',
+              text: 'Here is a quick voice update from admin:', voice: { duration: '0:42' },
+              time: new Date(Date.now() - 1000 * 60 * 60 * 4), reactions: {}, starred: false },
+            { id: 'c3', from: 'me', text: 'This new header and typing bar design looks incredible — cleanest group experience I have used.',
+              time: new Date(Date.now() - 1000 * 60 * 60 * 2), reactions: {}, starred: false, status: 'read' }
+        ];
+        let replyTarget = null;
+        let pinnedMessageId = null;
+        let activeTrayMsgId = null;
+
+        function renderChatFlow() {
+            const flow = document.getElementById('chat-flow');
+            let html = '';
+            let lastDay = null;
+            let lastSender = null;
+            chatMessages.forEach(m => {
+                const dayLbl = fmtDayLabel(m.time);
+                if (dayLbl !== lastDay) { html += `<div class="day-divider"><span>${dayLbl}</span></div>`; lastDay = dayLbl; lastSender = null; }
+                const grouped = lastSender === m.from && !m.replyTo && !m.forwarded;
+                html += renderChatMessage(m, grouped);
+                lastSender = m.from;
+            });
+            flow.innerHTML = html;
+            if (typingIndicatorActive) flow.insertAdjacentHTML('beforeend', typingRowHTML());
+            flow.scrollTop = flow.scrollHeight;
+            renderPinnedBar();
+        }
+
+        function detectLinkSafety(text) {
+            if (!text) return '';
+            const hasLink = /https?:\/\/|www\./i.test(text);
+            if (!hasLink) return '';
+            const suspicious = /bit\.ly|free-?money|claim.*prize|verify.*account.*now|win.*lottery/i.test(text);
+            return suspicious
+                ? `<div class="msg-safety-badge warn"><i class="fa-solid fa-triangle-exclamation"></i> Nexus Safety Scan flagged this link as risky</div>`
+                : `<div class="msg-safety-badge"><i class="fa-solid fa-shield-halved"></i> Link scanned — looks safe</div>`;
+        }
+
+        function renderChatMessage(m, grouped) {
+            const isOut = m.from === 'me';
+            const reactionsHtml = Object.keys(m.reactions || {}).length
+                ? `<div class="msg-reactions">${Object.entries(m.reactions).map(([e,c]) => `<span class="msg-reaction-pill">${e} ${c}</span>`).join('')}</div>` : '';
+            const replyHtml = m.replyTo ? (() => {
+                const rt = chatMessages.find(x => x.id === m.replyTo);
+                if (!rt) return '';
+                return `<div class="msg-reply-quote"><span class="rq-name">${rt.from === 'me' ? 'You' : rt.name}</span><span class="rq-text">${escapeHtml(rt.text || (rt.voice ? '🎤 Voice message' : ''))}</span></div>`;
+            })() : '';
+            const fwdHtml = m.forwarded ? `<div class="msg-forwarded-tag"><i class="fa-solid fa-share"></i> Forwarded</div>` : '';
+            const voiceHtml = m.voice ? `
+                <div class="voice-card">
+                    <button class="play-btn" onclick="showToast('Playing voice message...', 'fa-play')"><i class="fa-solid fa-play"></i></button>
+                    <div class="waveform">${[8,16,12,20,10,14,6,18,9].map(h => `<bar style="height:${h}px"></bar>`).join('')}</div>
+                    <span class="speed-btn" onclick="this.textContent = this.textContent==='1x' ? '1.5x' : this.textContent==='1.5x' ? '2x' : '1x'">1x</span>
+                </div>` : '';
+            const imgHtml = m.image ? `<img src="${m.image}" style="width:100%; max-width:230px; border-radius:10px; margin-top:4px; display:block; cursor:pointer;" onclick="showToast('Opening full-size photo...', 'fa-image')">` : '';
+            const safetyHtml = detectLinkSafety(m.text);
+            const starFlag = m.starred ? `<i class="fa-solid fa-star msg-star-flag"></i>` : '';
+            const ticks = isOut ? `<span class="msg-ticks ${m.status === 'read' ? 'read' : ''}"><i class="fa-solid fa-check-double"></i></span>` : '';
+
+            const headerHtml = (!isOut && !grouped) ? `
+                <div class="msg-header">
+                    <span class="sender-name">${m.name} ${m.verified ? `<i class="fa-solid fa-circle-check" style="color:var(--neon-cyan); font-size:11px;"></i>` : ''}</span>
+                    <span class="role-tag ${m.roleClass}">${m.role}</span>
+                </div>` : '';
+
+            return `
+            <div class="msg-row ${isOut ? 'outgoing' : 'incoming'} ${grouped ? 'grouped-follow' : ''}" data-id="${m.id}" style="position:relative;" onmousedown="pressStart('${m.id}')" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchstart="pressStart('${m.id}')" ontouchend="pressEnd()">
+                ${!isOut ? `<img class="msg-avatar" src="${m.avatar}" alt="${m.name}">` : ''}
+                <div class="msg-card">
+                    ${starFlag}
+                    ${headerHtml}
+                    <div class="msg-body">
+                        ${fwdHtml}${replyHtml}${escapeHtml(m.text || '')}${voiceHtml}${imgHtml}${safetyHtml}
+                        <span class="msg-time-inline">${fmtClockTime(m.time)}${ticks}</span>
+                    </div>
+                    ${reactionsHtml}
+                </div>
+            </div>`;
+        }
+
+        let pressTimer = null;
+        function pressStart(id) { pressTimer = setTimeout(() => openMsgTray(id), 420); }
+        function pressEnd() { clearTimeout(pressTimer); }
+
+        function openMsgTray(id) {
+            activeTrayMsgId = id;
+            const m = chatMessages.find(x => x.id === id);
+            if (!m) return;
+            document.getElementById('trayEmojiRow').innerHTML = ['👍','❤️','😂','😮','😢','🙏'].map(e => `<span onclick="reactToMessage('${id}','${e}')">${e}</span>`).join('');
+            document.getElementById('trayStarLabel').textContent = m.starred ? 'Unstar' : 'Star';
+            document.getElementById('trayPinLabel').textContent = (pinnedMessageId === id) ? 'Unpin' : 'Pin';
+            const tray = document.getElementById('msgActionTray');
+            const row = document.querySelector(`.msg-row[data-id="${id}"]`);
+            const rect = row.getBoundingClientRect();
+            tray.style.top = Math.min(rect.top, window.innerHeight - 340) + 'px';
+            tray.style.left = (m.from === 'me' ? Math.max(rect.right - 210, 10) : rect.left) + 'px';
+            tray.classList.add('active');
+            document.getElementById('msgActionBackdrop').classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(15);
+        }
+        function closeMsgTray() {
+            document.getElementById('msgActionTray').classList.remove('active');
+            document.getElementById('msgActionBackdrop').classList.remove('active');
+        }
+        function reactToMessage(id, emoji) {
+            const m = chatMessages.find(x => x.id === id);
+            if (!m) return;
+            m.reactions = m.reactions || {};
+            m.reactions[emoji] = (m.reactions[emoji] || 0) + 1;
+            closeMsgTray();
+            renderChatFlow();
+        }
+        function trayReply() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            if (!m) return;
+            replyTarget = m;
+            document.getElementById('rcName').textContent = m.from === 'me' ? 'You' : m.name;
+            document.getElementById('rcText').textContent = m.text || (m.voice ? '🎤 Voice message' : 'Media');
+            document.getElementById('replyComposerBar').classList.add('active');
+            document.getElementById('dockInput').focus();
+            closeMsgTray();
+        }
+        function cancelReply() { replyTarget = null; document.getElementById('replyComposerBar').classList.remove('active'); }
+        function trayForward() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            const fwd = { ...m, id: 'c' + Date.now(), from: 'me', time: new Date(), forwarded: true, replyTo: null, reactions: {}, status: 'sent' };
+            chatMessages.push(fwd);
+            renderChatFlow();
+            showToast('Message forwarded', 'fa-share');
+        }
+        function trayCopy() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            if (navigator.clipboard && m.text) navigator.clipboard.writeText(m.text).catch(() => {});
+            showToast('Message copied', 'fa-copy');
+        }
+        function trayStar() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            m.starred = !m.starred;
+            renderChatFlow();
+            showToast(m.starred ? 'Message starred' : 'Removed from starred', 'fa-star');
+        }
+        function trayPin() {
+            const id = activeTrayMsgId;
+            closeMsgTray();
+            pinnedMessageId = (pinnedMessageId === id) ? null : id;
+            renderChatFlow();
+            showToast(pinnedMessageId ? 'Message pinned' : 'Unpinned', 'fa-thumbtack');
+        }
+        function trayDelete() {
+            const id = activeTrayMsgId;
+            closeMsgTray();
+            chatMessages = chatMessages.filter(x => x.id !== id);
+            if (pinnedMessageId === id) pinnedMessageId = null;
+            renderChatFlow();
+            showToast('Message deleted', 'fa-trash');
+        }
+        function renderPinnedBar() {
+            const bar = document.getElementById('pinnedBar');
+            if (!pinnedMessageId) { bar.classList.remove('active'); return; }
+            const m = chatMessages.find(x => x.id === pinnedMessageId);
+            if (!m) { bar.classList.remove('active'); return; }
+            document.getElementById('pinnedBarText').textContent = m.text || (m.voice ? '🎤 Voice message' : 'Media');
+            const isChatMode = document.getElementById('chat-flow').style.display !== 'none';
+            bar.classList.toggle('active', isChatMode);
+        }
+        function scrollToPinned() {
+            if (!pinnedMessageId) return;
+            const row = document.querySelector(`.msg-row[data-id="${pinnedMessageId}"]`);
+            if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function unpinMessage() { pinnedMessageId = null; renderPinnedBar(); }
+
+        let typingIndicatorActive = false;
+        function typingRowHTML() {
+            return `<div class="typing-row" id="typingRow"><div class="typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+        }
+        function simulateIncomingTyping() {
+            typingIndicatorActive = true;
+            const flow = document.getElementById('chat-flow');
+            flow.insertAdjacentHTML('beforeend', typingRowHTML());
+            flow.scrollTop = flow.scrollHeight;
+        }
+        function stopIncomingTyping() {
+            typingIndicatorActive = false;
+            const row = document.getElementById('typingRow');
+            if (row) row.remove();
+        }
+
+        function openChatSearch() {
+            document.getElementById('chatSearchOverlay').classList.add('active');
+            document.getElementById('chatSearchInput').value = '';
+            document.getElementById('chatSearchResults').innerHTML = '';
+            setTimeout(() => document.getElementById('chatSearchInput').focus(), 150);
+        }
+        function closeChatSearch() { document.getElementById('chatSearchOverlay').classList.remove('active'); }
+        function runChatSearch(q) {
+            const box = document.getElementById('chatSearchResults');
+            if (!q.trim()) { box.innerHTML = ''; return; }
+            const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+            const hits = chatMessages.filter(m => m.text && m.text.toLowerCase().includes(q.toLowerCase()));
+            box.innerHTML = hits.length ? hits.map(m => `
+                <div class="search-result-row" onclick="closeChatSearch(); jumpToMessage('${m.id}')">
+                    <div class="sr-name">${m.from === 'me' ? 'You' : m.name}</div>
+                    <div class="sr-text">${escapeHtml(m.text).replace(re, '<mark>$1</mark>')}</div>
+                </div>`).join('') : `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:20px;">No results found</p>`;
+        }
+        function jumpToMessage(id) {
+            switchMode('chat');
+            setTimeout(() => {
+                const row = document.querySelector(`.msg-row[data-id="${id}"]`);
+                if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); row.style.background = 'rgba(253,224,141,0.12)'; setTimeout(() => row.style.background = '', 1200); }
+            }, 80);
+        }
+
+        // ============================================================
+        // 4. TYPING BAR — slim redesign + high-impact quick actions
+        // ============================================================
+        function handleDockInput(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+
+            const sendTrigger = document.getElementById('sendTrigger');
+            const micTrigger = document.getElementById('micTrigger');
+            const suggestChip = document.getElementById('smartSuggestChip');
+
+            if (el.value.trim().length > 0) {
+                sendTrigger.style.display = 'flex';
+                micTrigger.style.display = 'none';
+                const s = smartSuggestFor(el.value);
+                if (s) { document.getElementById('smartSuggestText').textContent = s; suggestChip.style.display = 'flex'; }
+                else suggestChip.style.display = 'none';
+            } else {
+                sendTrigger.style.display = 'none';
+                micTrigger.style.display = 'flex';
+                suggestChip.style.display = 'none';
+            }
+        }
+        function smartSuggestFor(draft) {
+            const t = draft.trim().toLowerCase();
+            if (t.endsWith('?')) return 'Ask & get an instant AI-suggested reply';
+            if (t.length > 2 && t.length < 40) return 'Add more detail ✍️';
+            return null;
+        }
+        function useSmartSuggestion() {
+            const input = document.getElementById('dockInput');
+            input.value += ' ';
+            handleDockInput(input);
+            input.focus();
+        }
+
+        function triggerAttach(kind) {
+            switch (kind) {
+                case 'image':
+                case 'camera': {
+                    const url = prompt('Paste an image URL (or cancel):');
+                    if (url) pushOutgoingMessage({ image: url, text: '' });
+                    break;
+                }
+                case 'document':
+                    pushOutgoingMessage({ text: '📄 Document.pdf — 1.2MB' });
+                    showToast('File sent', 'fa-file');
+                    break;
+                case 'location':
+                    pushOutgoingMessage({ text: '📍 Shared current location (Live Location)' });
+                    break;
+                case 'pay':
+                    openPaySheet();
+                    break;
+                case 'sos':
+                    triggerSOS();
+                    break;
+                case 'contact':
+                    pushOutgoingMessage({ text: '👤 Contact Card: Ali_Developer' });
+                    break;
+            }
+        }
+        function pushOutgoingMessage(extra) {
+            if (groupSlug) {
+                sendRealGroupMessage(extra);
+                return;
+            }
+            const m = { id: 'c' + Date.now(), from: 'me', time: new Date(), reactions: {}, starred: false, status: 'sent', ...extra };
+            if (replyTarget) { m.replyTo = replyTarget.id; cancelReply(); }
+            chatMessages.push(m);
+            renderChatFlow();
+            setTimeout(() => { m.status = 'read'; renderChatFlow(); }, 1400);
+        }
+        async function sendRealGroupMessage(extra) {
+            const replyToId = replyTarget ? replyTarget.id : null;
+            if (replyTarget) cancelReply();
+            try {
+                const authUser = await authReadyPromise;
+                if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
+                await groupRef().collection('messages').add(Object.assign({
+                    senderUsername: currentUsername,
+                    timestamp: FieldValue.serverTimestamp(),
+                    replyTo: replyToId
+                }, extra));
+            } catch (e) {
+                console.error('sendRealGroupMessage error:', e);
+                showToast('Could not send — try again', 'fa-triangle-exclamation');
+            }
+        }
+        function loadRealChatMessages() {
+            if (groupMessagesUnsub) return; // already listening
+            groupMessagesUnsub = groupRef().collection('messages').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
+                chatMessages = snapshot.docs.map(d => {
+                    const data = d.data();
+                    return {
+                        id: d.id,
+                        from: data.senderUsername === currentUsername ? 'me' : 'them',
+                        name: data.senderUsername,
+                        role: (groupData && groupData.creatorUsername === data.senderUsername) ? 'Owner' : 'Member',
+                        roleClass: 'role-member',
+                        verified: false,
+                        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(data.senderUsername || 'user'),
+                        text: data.text || '',
+                        image: data.image || null,
+                        time: data.timestamp && data.timestamp.toDate ? data.timestamp.toDate() : new Date(),
+                        reactions: {},
+                        starred: false,
+                        replyTo: data.replyTo || null,
+                        status: 'read'
+                    };
+                });
+                renderChatFlow();
+            }, err => console.error('group messages listener error:', err));
+        }
+        function sendDockMessage() {
+            const input = document.getElementById('dockInput');
+            const text = input.value.trim();
+            if (!text) return;
+            pushOutgoingMessage({ text });
+            input.value = '';
+            handleDockInput(input);
+            document.getElementById('smartSuggestChip').style.display = 'none';
+        }
+
+        // ---- HIGH-IMPACT: in-chat Escrow payment ----
+        function openPaySheet() {
+            const sel = document.getElementById('payRecipient');
+            sel.innerHTML = groupMembers.filter(m => m.name !== 'You').map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+            document.getElementById('payAmount').value = '';
+            document.getElementById('payNote').value = '';
+            openSheetEl('paySheet');
+        }
+        function submitEscrowPayment() {
+            const to = document.getElementById('payRecipient').value;
+            const amount = document.getElementById('payAmount').value.trim();
+            const note = document.getElementById('payNote').value.trim();
+            if (!amount) { showToast('Enter an amount first', 'fa-triangle-exclamation'); return; }
+            closeSheet('paySheet');
+            pushOutgoingMessage({ text: `🔒 Escrow payment of ${amount} sent to ${to}${note ? ' — ' + note : ''}. Funds released only after confirmation.` });
+            showToast('Payment locked in Escrow', 'fa-vault');
+        }
+
+        // ---- HIGH-IMPACT: Emergency SOS ----
+        function triggerSOS() {
+            if (!confirm('Send an emergency SOS alert with your live location to all group admins right now?')) return;
+            pushOutgoingMessage({ text: '🚨 EMERGENCY SOS — this member needs urgent help. Live location shared with all admins.' });
+            showToast('SOS sent to all group admins with your location', 'fa-triangle-exclamation');
+        }
+
+        // ---- HIGH-IMPACT: Group Contribution / Ajo Tracker ----
+        let ajoContributors = [
+            { name: 'Ali_Developer', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80', paid: true },
+            { name: 'MmnAfrah Networker', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80', paid: true },
+            { name: 'Zainab_TrustID', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', paid: false },
+            { name: 'Ibrahim_Kano', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', paid: false },
+            { name: 'You', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80', paid: false }
+        ];
+        function openAjoTracker() {
+            document.getElementById('ajoNextPayout').textContent = 'Ibrahim_Kano';
+            renderAjoList();
+            openSheetEl('ajoSheet');
+        }
+        function renderAjoList() {
+            document.getElementById('ajoListBody').innerHTML = ajoContributors.map(c => `
+                <div class="ajo-row">
+                    <img src="${c.pic}">
+                    <div class="ajo-name">${c.name}</div>
+                    <div class="ajo-status ${c.paid ? 'paid' : 'pending'}">${c.paid ? 'Paid' : 'Pending'}</div>
+                </div>`).join('');
+        }
+        function markMyContributionPaid() {
+            const me = ajoContributors.find(c => c.name === 'You');
+            if (me) me.paid = true;
+            renderAjoList();
+            showToast('Your contribution has been marked as paid', 'fa-sack-dollar');
+        }
+
+        // ---- COMPREHENSIVE EMOJI PICKER (category tabs, large sets) ----
+        const EMOJI_CATEGORIES = [
+            { key: 'smileys', icon: '😀', label: 'Smileys & People', set: '😀 😃 😄 😁 😆 😅 😂 🤣 🙂 🙃 😉 😊 😇 🥰 😍 🤩 😘 😗 😚 😙 😋 😛 😜 🤪 😝 🤑 🤗 🤭 🤫 🤔 🤐 🤨 😐 😑 😶 😏 😒 🙄 😬 🤥 😌 😔 😪 🤤 😴 😷 🤒 🤕 🤢 🤮 🤧 🥵 🥶 🥴 😵 🤯 🤠 🥳 😎 🤓 🧐 😕 😟 🙁 😮 😯 😲 😳 🥺 😦 😧 😨 😰 😥 😢 😭 😱 😖 😣 😞 😓 😩 😫 🥱 😤 😡 😠 🤬 😈 👿 💀 👻 👽 🤖 💩 😺 😸 😹 😻 😼 😽 🙀 😿 😾 👶 🧒 👦 👧 🧑 👨 👩 🧓 👴 👵'.split(' ') },
+            { key: 'gestures', icon: '👋', label: 'Gestures & Body', set: '👋 🤚 🖐️ ✋ 🖖 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 🖕 👇 ☝️ 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 👐 🤲 🤝 🙏 ✍️ 💅 🤳 💪 🦾 🦵 🦿 🦶 👂 🦻 👃 🧠 🫀 🫁 🦷 🦴 👀 👁️ 👅 👄 💋 🩸'.split(' ') },
+            { key: 'animals', icon: '🐶', label: 'Animals & Nature', set: '🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐽 🐸 🐵 🙈 🙉 🙊 🐒 🐔 🐧 🐦 🐤 🐣 🐥 🦆 🦅 🦉 🦇 🐺 🐗 🐴 🦄 🐝 🪱 🐛 🦋 🐌 🐞 🐜 🪰 🪳 🦟 🦗 🕷️ 🕸️ 🦂 🐢 🐍 🦎 🦖 🦕 🐙 🦑 🦐 🦞 🦀 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🦧 🐘 🦛 🦏 🐪 🐫 🦒 🦘 🐃 🐂 🐄 🐎 🐖 🐏 🐑 🦙 🐐 🦌 🐕 🐩 🐈 🐓 🦃 🦤 🦚 🦜 🦢 🦩 🕊️ 🐇 🦝 🦨 🦡 🦫 🦦 🦥 🐁 🐀 🐿️ 🦔 🌵 🎄 🌲 🌳 🌴 🪵 🌱 🌿 ☘️ 🍀 🎍 🪴 🎋 🍃 🍂 🍁 🍄 🌾 💐 🌷 🌹 🥀 🌺 🌸 🌼 🌻 🌞 🌝 🌛 🌜 🌚 🌕 🌖 🌗 🌘 🌑 🌒 🌓 🌔 🌙 🌎 🌍 🌏 🪐 💫 ⭐ 🌟 ✨ ⚡ ☄️ 💥 🔥 🌪️ 🌈 ☀️ 🌤️ ⛅ 🌥️ ☁️ 🌦️ 🌧️ ⛈️ 🌩️ 🌨️ ❄️ ☃️ ⛄ 🌬️ 💨 💧 💦 🌊'.split(' ') },
+            { key: 'food', icon: '🍔', label: 'Food & Drink', set: '🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🫐 🍈 🍒 🍑 🥭 🍍 🥥 🥝 🍅 🍆 🥑 🥦 🥬 🥒 🌶️ 🫑 🌽 🥕 🫒 🧄 🧅 🥔 🍠 🥐 🥯 🍞 🥖 🥨 🧀 🥚 🍳 🧈 🥞 🧇 🥓 🥩 🍗 🍖 🦴 🌭 🍔 🍟 🍕 🫓 🥪 🥙 🧆 🌮 🌯 🫔 🥗 🥘 🫕 🥫 🍝 🍜 🍲 🍛 🍣 🍱 🥟 🦪 🍤 🍙 🍚 🍘 🍥 🥠 🥮 🍢 🍡 🍧 🍨 🍦 🥧 🧁 🍰 🎂 🍮 🍭 🍬 🍫 🍿 🍩 🍪 🌰 🥜 🍯 🥛 🍼 🫖 ☕ 🍵 🧃 🥤 🧋 🍶 🍺 🍻 🥂 🍷 🥃 🍸 🍹 🧉 🍾 🧊'.split(' ') },
+            { key: 'travel', icon: '✈️', label: 'Travel & Places', set: '🚗 🚕 🚙 🚌 🚎 🏎️ 🚓 🚑 🚒 🚐 🛻 🚚 🚛 🚜 🛵 🏍️ 🛺 🚲 🛴 🚨 🚔 🚍 🚘 🚖 🚡 🚠 🚟 🚃 🚋 🚞 🚝 🚄 🚅 🚈 🚂 🚆 🚇 🚊 🚉 ✈️ 🛫 🛬 🛩️ 💺 🛰️ 🚀 🛸 🚁 🛶 ⛵ 🚤 🛥️ 🛳️ ⛴️ 🚢 ⚓ 🪝 ⛽ 🚧 🚦 🚥 🗺️ 🗿 🗽 🗼 🏰 🏯 🏟️ 🎡 🎢 🎠 ⛲ ⛱️ 🏖️ 🏝️ 🏜️ 🌋 ⛰️ 🏔️ 🗻 🏕️ ⛺ 🏠 🏡 🏘️ 🏚️ 🏗️ 🏭 🏢 🏬 🏣 🏤 🏥 🏦 🏨 🏪 🏫 🏩 💒 🏛️ ⛪ 🕌 🕍 🛕 🕋 ⛩️ 🌁 🌃 🏙️ 🌄 🌅 🌆 🌇 🌉 ♨️'.split(' ') },
+            { key: 'activities', icon: '⚽', label: 'Activities', set: '⚽ 🏀 🏈 ⚾ 🥎 🎾 🏐 🏉 🎱 🪀 🏓 🏸 🏒 🏑 🥍 🏏 🪃 🥅 ⛳ 🪁 🏹 🎣 🤿 🥊 🥋 🎽 🛹 🛼 🛷 ⛸️ 🥌 🎿 ⛷️ 🏂 🪂 🏋️ 🤼 🤸 ⛹️ 🤺 🤾 🏌️ 🏇 🧘 🏄 🏊 🤽 🚣 🧗 🚵 🚴 🏆 🥇 🥈 🥉 🏅 🎖️ 🏵️ 🎗️ 🎫 🎟️ 🎪 🤹 🎭 🩰 🎨 🎬 🎤 🎧 🎼 🎹 🥁 🪘 🎷 🎺 🪗 🎸 🪕 🎻 🎲 ♟️ 🎯 🎳 🎮 🎰 🧩'.split(' ') },
+            { key: 'objects', icon: '💡', label: 'Objects', set: '⌚ 📱 💻 ⌨️ 🖥️ 🖨️ 🖱️ 🖲️ 🕹️ 🗜️ 💽 💾 💿 📀 📼 📷 📸 📹 🎥 📽️ 🎞️ 📞 ☎️ 📟 📠 📺 📻 🎙️ 🎚️ 🎛️ 🧭 ⏱️ ⏲️ ⏰ 🕰️ ⌛ ⏳ 📡 🔋 🪫 🔌 💡 🔦 🕯️ 🪔 🧯 🛢️ 💸 💵 💴 💶 💷 🪙 💰 💳 💎 ⚖️ 🪜 🧰 🪛 🔧 🔨 ⚒️ 🛠️ ⛏️ 🪓 🪚 🔩 ⚙️ 🪤 🧱 ⛓️ 🧲 🔫 💣 🧨 🪃 🔪 🗡️ ⚔️ 🛡️ 🚬 ⚰️ 🪦 ⚱️ 🏺 🔮 📿 🧿 💈 ⚗️ 🔭 🔬 🕳️ 🩹 🩺 💊 💉 🩸 🧬 🦠 🧫 🧪 🌡️ 🧹 🪠 🧺 🧻 🚽 🚰 🚿 🛁 🛀 🧴 🪒 🧽 🧼 🪥 🧷 🧵 🪡 🧶 🪢 👓 🕶️ 🥽 🥼 🦺 👔 👕 👖 🧣 🧤 🧥 🧦 👗 👘 🥻 🩱 🩲 🩳 👙 👚 👛 👜 👝 🎒 🩴 👞 👟 🥾 🥿 👠 👡 🩰 👢 👑 👒 🎩 🎓 🧢 🪖 ⛑️ 📿 💄 💍 💼'.split(' ') },
+            { key: 'symbols', icon: '❤️', label: 'Symbols', set: '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 ☮️ ✝️ ☪️ 🕉️ ☸️ ✡️ 🔯 🕎 ☯️ ☦️ 🛐 ⛎ ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓ 🆔 ⚛️ 🉑 ☢️ ☣️ 📴 📳 🈶 🈚 🈸 🈺 🈷️ ✴️ 🆚 💮 🉐 ㊙️ ㊗️ 🈴 🈵 🈹 🈲 🅰️ 🅱️ 🆎 🆑 🅾️ 🆘 ❌ ⭕ 🛑 ⛔ 📛 🚫 💯 💢 ♨️ 🚷 🚯 🚳 🚱 🔞 📵 🚭 ❗ ❕ ❓ ❔ ‼️ ⁉️ 🔅 🔆 〽️ ⚠️ 🚸 🔱 ⚜️ 🔰 ♻️ ✅ 🈯 💹 ❇️ ✳️ ❎ 🌐 💠 Ⓜ️ 🌀 💤 🏧 🚾 ♿ 🅿️ 🈳 🈂️ 🛂 🛃 🛄 🛅'.split(' ') },
+            { key: 'flags', icon: '🏳️', label: 'Flags', set: '🏳️ 🏴 🏁 🚩 🏳️‍🌈 🏳️‍⚧️ 🇺🇳 🇳🇬 🇺🇸 🇬🇧 🇨🇦 🇫🇷 🇩🇪 🇮🇹 🇪🇸 🇵🇹 🇧🇷 🇲🇽 🇮🇳 🇨🇳 🇯🇵 🇰🇷 🇷🇺 🇿🇦 🇰🇪 🇬🇭 🇪🇬 🇸🇦 🇦🇪 🇹🇷 🇦🇺 🇳🇿 🇸🇬 🇮🇩 🇲🇾 🇹🇭 🇻🇳 🇵🇭 🇵🇰 🇧🇩 🇳🇱 🇧🇪 🇨🇭 🇸🇪 🇳🇴 🇩🇰 🇫🇮 🇵🇱 🇬🇷 🇮🇪'.split(' ') }
+        ];
+        let currentEmojiCat = 0;
+        function openEmojiPicker() {
+            document.getElementById('emojiCatTabs').innerHTML = EMOJI_CATEGORIES.map((c,i) => `<div class="emoji-cat-tab ${i===currentEmojiCat?'active':''}" onclick="setEmojiCat(${i})">${c.icon}</div>`).join('');
+            renderEmojiGrid();
+            openSheetEl('emojiBackdrop');
+        }
+        function setEmojiCat(i) {
+            currentEmojiCat = i;
+            document.querySelectorAll('.emoji-cat-tab').forEach((el, idx) => el.classList.toggle('active', idx === i));
+            renderEmojiGrid();
+        }
+        function renderEmojiGrid() {
+            const cat = EMOJI_CATEGORIES[currentEmojiCat];
+            document.getElementById('emojiGrid').innerHTML = cat.set.map(e => `<span onclick="insertEmoji('${e}')">${e}</span>`).join('');
+        }
+        function insertEmoji(e) {
+            const input = document.getElementById('dockInput');
+            input.value += e;
+            handleDockInput(input);
+        }
+
+        let recTimer = null, recSeconds = 0;
+        function startVoiceRecording() {
+            recSeconds = 0;
+            document.getElementById('recordBar').classList.add('active');
+            document.getElementById('dockInput').style.display = 'none';
+            recTimer = setInterval(() => {
+                recSeconds++;
+                const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+                const s = String(recSeconds % 60).padStart(2, '0');
+                document.getElementById('recordTime').textContent = `${m}:${s}`;
+            }, 1000);
+        }
+        function stopVoiceRecording(send) {
+            if (!document.getElementById('recordBar').classList.contains('active')) return;
+            clearInterval(recTimer);
+            document.getElementById('recordBar').classList.remove('active');
+            document.getElementById('dockInput').style.display = 'block';
+            if (send && recSeconds > 0) {
+                pushOutgoingMessage({ text: '', voice: { duration: document.getElementById('recordTime').textContent } });
+                showToast('Voice message sent', 'fa-microphone');
+            }
+        }
+        function cancelVoiceRecording() { stopVoiceRecording(false); }
+
+        function toggleEcosystem(show) {
+            const modal = document.getElementById('ecosystemModal');
+            if (show) modal.classList.add('active');
+            else modal.classList.remove('active');
+        }
+
+        // ---- Telegram-style header dropdown menu ----
+        function toggleDotsMenu(show) {
+            const menu = document.getElementById('dotsDropdownMenu');
+            const backdrop = document.getElementById('dotsMenuBackdrop');
+            const next = (show === undefined) ? !menu.classList.contains('active') : show;
+            menu.classList.toggle('active', next);
+            backdrop.classList.toggle('active', next);
+        }
+        function boostGroup() {
+            showToast('🚀 Group boosted! Northern Innovators Hub 2026 just leveled up.', 'fa-bolt');
+        }
+        let groupMuted = false;
+        function toggleMuteGroup() {
+            groupMuted = !groupMuted;
+            document.getElementById('muteMenuIcon').className = groupMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+            document.getElementById('muteMenuLabel').textContent = groupMuted ? 'Unmute' : 'Mute';
+            showToast(groupMuted ? 'Notifications muted for this group' : 'Notifications unmuted', groupMuted ? 'fa-volume-xmark' : 'fa-volume-high');
+        }
+        const CHAT_THEMES = [
+            { name: 'Gold (Default)', cyan: '#fde08d' },
+            { name: 'Ocean Blue', cyan: '#4fb0ff' },
+            { name: 'Emerald', cyan: '#34d399' }
+        ];
+        let currentThemeIndex = 0;
+        function cycleChatTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % CHAT_THEMES.length;
+            const theme = CHAT_THEMES[currentThemeIndex];
+            document.documentElement.style.setProperty('--neon-cyan', theme.cyan);
+            document.documentElement.style.setProperty('--neon-purple', theme.cyan);
+            showToast(`Chat theme changed to ${theme.name}`, 'fa-palette');
+        }
+        function clearGroupHistory() {
+            if (!confirm('Clear all message history in this group? This cannot be undone.')) return;
+            chatMessages = [];
+            pinnedMessageId = null;
+            renderChatFlow();
+            showToast('Chat history cleared', 'fa-broom');
+        }
+
+        // ============================================================
+        // 5. MEMBER MANAGEMENT & MODERATION
+        // ============================================================
+        const groupMembers = [
+            { id: 'm1', name: 'Ali_Developer', role: 'Admin', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm2', name: 'MmnAfrah Networker', role: 'Moderator', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm3', name: 'Zainab_TrustID', role: 'Member', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm4', name: 'Ibrahim_Kano', role: 'Member', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm5', name: 'You', role: 'Member', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80' }
+        ];
+
+        const pendingRequests = [
+            { id: 'p1', name: 'Sadiq_Investor', pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80' },
+            { id: 'p2', name: 'Amina_Trader', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80' },
+            { id: 'p3', name: 'Bashir_Ops', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80' }
+        ];
+
+        function toggleMembersModal(show) {
+            const modal = document.getElementById('membersModal');
+            if (show) {
+                modal.classList.add('active');
+                renderMemberList();
+                renderPendingList();
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        function switchMemberTab(tab) {
+            const isAll = tab === 'all';
+            document.getElementById('tabAll').classList.toggle('active', isAll);
+            document.getElementById('tabPending').classList.toggle('active', !isAll);
+            document.getElementById('memberListPanel').style.display = isAll ? 'block' : 'none';
+            document.getElementById('pendingListPanel').style.display = isAll ? 'none' : 'block';
+        }
+
+        function renderMemberList() {
+            const roleClassMap = { Admin: 'role-ceo', Moderator: 'role-mod', Member: 'role-member' };
+            document.getElementById('memberListPanel').innerHTML = groupMembers.map(m => `
+                <div class="member-row">
+                    <img src="${m.pic}" alt="${m.name}">
+                    <div class="member-row-info">
+                        <div class="member-row-name">${m.name}</div>
+                        <div class="member-row-role role-tag ${roleClassMap[m.role]}">${m.role}</div>
+                    </div>
+                    ${m.role !== 'Admin' ? `
+                        <button class="member-action-btn" onclick="promoteMember('${m.id}')">${m.role === 'Moderator' ? 'Remove Mod' : 'Make Mod'}</button>
+                        <button class="member-action-btn danger" onclick="removeMember('${m.id}')">Remove</button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderPendingList() {
+            const panel = document.getElementById('pendingListPanel');
+            if (pendingRequests.length === 0) {
+                panel.innerHTML = `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:20px 0;">No one is waiting for approval right now.</p>`;
+                return;
+            }
+            panel.innerHTML = pendingRequests.map(p => `
+                <div class="member-row">
+                    <img src="${p.pic}" alt="${p.name}">
+                    <div class="member-row-info">
+                        <div class="member-row-name">${p.name}</div>
+                        <div class="member-row-role">Requested to join the group</div>
+                    </div>
+                    <button class="member-action-btn approve" onclick="approveRequest('${p.id}')">Approve</button>
+                    <button class="member-action-btn danger" onclick="rejectRequest('${p.id}')">Decline</button>
+                </div>
+            `).join('');
+        }
+
+        function promoteMember(id) {
+            const m = groupMembers.find(x => x.id === id);
+            if (!m) return;
+            m.role = m.role === 'Moderator' ? 'Member' : 'Moderator';
+            renderMemberList();
+        }
+
+        function removeMember(id) {
+            const idx = groupMembers.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            groupMembers.splice(idx, 1);
+            renderMemberList();
+        }
+
+        function approveRequest(id) {
+            const idx = pendingRequests.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const [approved] = pendingRequests.splice(idx, 1);
+            groupMembers.push({ id: approved.id, name: approved.name, role: 'Member', pic: approved.pic });
+            document.getElementById('pendingCountBadge').textContent = pendingRequests.length;
+            renderPendingList();
+        }
+
+        function rejectRequest(id) {
+            const idx = pendingRequests.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            pendingRequests.splice(idx, 1);
+            document.getElementById('pendingCountBadge').textContent = pendingRequests.length;
+            renderPendingList();
+        }
+
+        // ============================================================
+        // 6. FEED ENGINE — pulls every post card directly from
+        //    post-card-template.js (window.generatePostHTML). This file
+        //    only supplies post DATA in the schema that template expects
+        //    (id, username, userProfilePic, mediaUrl, mediaType, content,
+        //    timestamp, likesCount, commentsCount, pinned, isAdmin,
+        //    translatable, boosted) — the card markup itself is never
+        //    rebuilt here.
+        // ============================================================
+        let feedPosts = [
+            { id: 'p1', username: 'Ali_Developer', isAdmin: true,
+              userProfilePic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+              mediaUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80', mediaType: 'image',
+              baseText: "The full 2026 rollout schedule for the Super Community Platform is locked in. Thank you to every member who contributed to getting us here.",
+              timestamp: new Date(Date.now() - 1000 * 60 * 42), likesCount: 318, commentsCount: 47, pinned: true },
+            { id: 'p2', username: 'MmnAfrah',
+              userProfilePic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
+              baseText: "This week's admin meeting — which time works best for you?",
+              poll: { options: [{ label: 'Morning (9AM)', votes: 62 }, { label: 'Afternoon (4PM)', votes: 91 }, { label: 'Evening (8PM)', votes: 33 }], myVote: null },
+              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), likesCount: 44, commentsCount: 19 },
+            { id: 'p3', username: 'Zainab_TrustID', translatable: true,
+              userProfilePic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80',
+              mediaUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80', mediaType: 'image',
+              baseText: 'TrustID Audit has just been renewed for all verified sellers. Sealed iPhone 15 Pro available now —',
+              deal: { title: 'iPhone 15 Pro — Sealed', price: '₦1,250,000' },
+              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26), likesCount: 89, commentsCount: 11 },
+            { id: 'p4', username: 'Ibrahim_Kano',
+              userProfilePic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+              mediaUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=900&auto=format&fit=crop&q=80', mediaType: 'image',
+              baseText: "Photos from last week's launch event. Thank you to everyone who came out!",
+              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 50), likesCount: 56, commentsCount: 6 }
+        ];
+
+        // Builds the final `content` HTML handed to window.generatePostHTML():
+        // base text + (optional) poll / deal / event widget, freshly
+        // rendered every time so poll votes and other state stay live.
+        function buildPostContent(post) {
+            let html = escapeHtml(post.baseText || '');
+            if (post.poll) html += renderPollWidget(post);
+            if (post.deal) html += renderDealWidget(post);
+            if (post.event) html += renderEventWidget(post);
+            return html;
+        }
+
+        function renderPollWidget(post) {
+            const total = post.poll.options.reduce((a, o) => a + o.votes, 0) || 1;
+            return `<div class="poll-wrap">
+                ${post.poll.options.map((o, i) => {
+                    const pct = Math.round(o.votes / total * 100);
+                    const voted = post.poll.myVote === i;
+                    return `<div class="poll-option ${voted ? 'voted' : ''}" onclick="votePoll('${post.id}', ${i})">
+                        <div class="poll-fill" style="width:${post.poll.myVote !== null ? pct : 0}%"></div>
+                        <div class="poll-label-row"><span>${voted ? '✓ ' : ''}${o.label}</span><span>${post.poll.myVote !== null ? pct + '%' : ''}</span></div>
+                    </div>`;
+                }).join('')}
+                <div class="poll-total">${total} vote${total === 1 ? '' : 's'}</div>
+            </div>`;
+        }
+        function votePoll(id, idx) {
+            const post = feedPosts.find(p => p.id === id);
+            if (!post || post.poll.myVote !== null) return;
+            post.poll.options[idx].votes++;
+            post.poll.myVote = idx;
+            renderFeedPosts();
+        }
+
+        function renderDealWidget(post) {
+            return `<div class="deal-card">
+                <div><div class="dc-price">${post.deal.price}</div><div class="dc-label">${post.deal.title} · Escrow Protected</div></div>
+                <button class="deal-escrow-btn" onclick="event.stopPropagation(); buyWithEscrow('${post.id}')">Buy (Escrow)</button>
+            </div>`;
+        }
+        function buyWithEscrow(id) {
+            showToast('Escrow-protected purchase started. Your money is safe until you confirm delivery.', 'fa-vault');
+        }
+
+        function renderEventWidget(post) {
+            return `<div class="deal-card" style="background:rgba(59,130,246,0.08); border-color:rgba(59,130,246,0.3);">
+                <div><div class="dc-price" style="color:#60a5fa; font-size:13.5px;"><i class="fa-solid fa-calendar-days"></i> ${post.event.title}</div><div class="dc-label">${post.event.date}</div></div>
+                <button class="deal-escrow-btn" style="background:#3b82f6; color:#fff;" onclick="event.stopPropagation(); showToast('You are marked as interested in this event.', 'fa-calendar-check')">Interested</button>
+            </div>`;
+        }
+
+        function renderFeedPosts() {
+            if (groupSlug) {
+                renderRealGroupFeedPosts();
+                return;
+            }
+            const container = document.getElementById('timeline-area');
+            const sorted = [...feedPosts].sort((a, b) => (b.pinned === true) - (a.pinned === true) || b.timestamp - a.timestamp);
+            container.innerHTML = sorted.map(post => window.generatePostHTML({ ...post, content: buildPostContent(post) })).join('');
+            if (typeof window.postCard_observeVideos === 'function') {
+                window.postCard_observeVideos();
+            }
+        }
+
+        // Real Firestore-backed Timeline — same global 'posts' collection the
+        // homepage/profile timeline and pages.html use, filtered by groupId.
+        // Scope note: poll/deal/event composer types stay local-only (not
+        // persisted) — real group posts here are plain text + optional image.
+        function renderRealGroupFeedPosts() {
+            if (groupPostsUnsub) return; // already listening
+            groupPostsUnsub = db.collection('posts')
+                .where('groupId', '==', groupSlug)
+                .orderBy('timestamp', 'desc')
+                .onSnapshot(snapshot => {
+                    const container = document.getElementById('timeline-area');
+                    if (snapshot.empty) {
+                        container.innerHTML = '<div style="padding:30px 16px;color:rgba(255,255,255,0.5);font-size:13px;text-align:center;">No posts yet — be the first to post!</div>';
+                        return;
+                    }
+                    const posts = snapshot.docs.map(d => Object.assign({}, d.data(), { id: d.id }));
+                    container.innerHTML = posts.map(post => window.generatePostHTML(post)).join('');
+                    if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
+                    if (typeof window.postCard_restoreLikes === 'function') window.postCard_restoreLikes(container);
+                }, err => console.error('group posts listener error:', err));
+        }
+
+        // ---- composer: creates a new post using the SAME schema above,
+        //      then hands it straight to window.generatePostHTML() ----
+        function openComposer(type) {
+            openSheetEl('composerSheet');
+            if (type) setComposerType(type, document.querySelector(`.composer-type-pill[data-type="${type}"]`));
+            setTimeout(() => document.getElementById('composerText').focus(), 150);
+        }
+        let composerType = 'text';
+        function setComposerType(type, el) {
+            composerType = type;
+            document.querySelectorAll('.composer-type-pill').forEach(p => p.classList.remove('active'));
+            if (el) el.classList.add('active');
+            ['Image', 'Poll', 'Deal', 'Event'].forEach(f => {
+                const field = document.getElementById('composer' + f + 'Field');
+                if (field) field.classList.toggle('active', f.toLowerCase() === type);
+            });
+            validateComposer();
+        }
+        function validateComposer() {
+            const text = document.getElementById('composerText').value.trim();
+            document.getElementById('composerPostBtn').disabled = text.length === 0;
+        }
+        function submitComposer() {
+            const text = document.getElementById('composerText').value.trim();
+            if (!text) return;
+
+            if (groupSlug && composerType === 'text') {
+                submitRealGroupPost(text, null);
+                return;
+            }
+            if (groupSlug && composerType === 'image') {
+                const url = document.getElementById('composerImageUrl').value.trim();
+                submitRealGroupPost(text, url || null);
+                return;
+            }
+            if (groupSlug) {
+                // poll/deal/event aren't wired to Firestore yet — fall back to a plain real post
+                // so it's at least visible to the group rather than silently lost.
+                submitRealGroupPost(text, null);
+                showToast('Posted as text — polls/deals/events aren\'t saved yet for real groups', 'fa-circle-info');
+                return;
+            }
+
+            const post = {
+                id: 'p' + Date.now(),
+                username: 'You',
+                userProfilePic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80',
+                baseText: text,
+                timestamp: new Date(),
+                likesCount: 0,
+                commentsCount: 0
+            };
+            if (composerType === 'image') {
+                const url = document.getElementById('composerImageUrl').value.trim();
+                if (url) { post.mediaUrl = url; post.mediaType = 'image'; }
+            } else if (composerType === 'poll') {
+                const opts = [document.getElementById('pollOpt1').value, document.getElementById('pollOpt2').value, document.getElementById('pollOpt3').value].filter(Boolean);
+                post.poll = { options: (opts.length ? opts : ['Yes', 'No']).map(l => ({ label: l, votes: 0 })), myVote: null };
+            } else if (composerType === 'deal') {
+                post.deal = { title: document.getElementById('dealTitle').value || 'New item', price: document.getElementById('dealPrice').value || '—' };
+            } else if (composerType === 'event') {
+                post.event = { title: document.getElementById('eventTitle').value || 'New Event', date: document.getElementById('eventDate').value || '' };
+            }
+            feedPosts.unshift(post);
+            closeSheet('composerSheet');
+            document.getElementById('composerText').value = '';
+            setComposerType('text', document.querySelector('.composer-type-pill[data-type="text"]'));
+            renderFeedPosts();
+            showToast('Your post is live!', 'fa-circle-check');
+        }
+        async function submitRealGroupPost(text, mediaUrl) {
+            try {
+                const authUser = await authReadyPromise;
+                if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
+                await db.collection('posts').add({
+                    groupId: groupSlug,
+                    username: currentUsername,
+                    userProfilePic: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(currentUsername),
+                    content: text,
+                    mediaUrl: mediaUrl || null,
+                    mediaType: mediaUrl ? 'image' : null,
+                    likesCount: 0,
+                    commentsCount: 0,
+                    pinned: false,
+                    authorUsername: currentUsername,
+                    timestamp: FieldValue.serverTimestamp()
+                });
+                closeSheet('composerSheet');
+                document.getElementById('composerText').value = '';
+                setComposerType('text', document.querySelector('.composer-type-pill[data-type="text"]'));
+            } catch (e) {
+                console.error('submitRealGroupPost error:', e);
+                showToast('Could not publish — check Firestore rules for /posts', 'fa-triangle-exclamation');
+            }
+        }
+
+        // ============================================================
+        // 7. STORY / HIGHLIGHT VIEWER
+        // ============================================================
+        const groupHighlights = [
+            { img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80', label: 'Launch' },
+            { img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=900&auto=format&fit=crop&q=80', label: 'Deals' },
+            { img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80', label: 'Events' },
+            { img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80', label: 'Tech' }
+        ];
+        let currentStoryIndex = 0;
+
+        function viewGroupHighlight(index) {
+            currentStoryIndex = index;
+            renderGroupStory();
+            document.getElementById('storyViewerOverlay').style.display = 'block';
+        }
+        function renderGroupStory() {
+            const story = groupHighlights[currentStoryIndex];
+            document.getElementById('storyUsername').textContent = story.label + ' — Northern Innovators Hub 2026';
+            document.getElementById('storyTime').textContent = fmtRelative(new Date(Date.now() - 1000*60*60*(currentStoryIndex+2)));
+            const wrap = document.getElementById('storyMediaWrap');
+            const existing = wrap.querySelector('.story-slide');
+            if (existing) existing.remove();
+            const slide = document.createElement('div');
+            slide.className = 'story-slide';
+            slide.innerHTML = `<img src="${story.img}">`;
+            wrap.insertBefore(slide, wrap.firstChild);
+        }
+        function nextGroupStory() {
+            if (currentStoryIndex < groupHighlights.length - 1) { currentStoryIndex++; renderGroupStory(); }
+            else closeGroupStoryViewer();
+        }
+        function prevGroupStory() {
+            if (currentStoryIndex > 0) { currentStoryIndex--; renderGroupStory(); }
+        }
+        function closeGroupStoryViewer() {
+            document.getElementById('storyViewerOverlay').style.display = 'none';
+        }
+
+        // ============================================================
+        // 8. FEED HEADER TRANSPARENCY ON SCROLL
+        // ============================================================
+        function updateFeedHeaderState() {
+            const header = document.querySelector('header');
+            const feedView = document.getElementById('feedView');
+            const isChat = document.getElementById('chat-flow').style.display !== 'none';
+            if (isChat) return;
+            const scrollY = feedView.scrollTop;
+            if (scrollY < 120) {
+                header.classList.add('header-feed-transparent');
+            } else {
+                header.classList.remove('header-feed-transparent');
+            }
+        }
+
+        // ============================================================
+        // 9. INIT
+        // ============================================================
+        document.getElementById('feedView').addEventListener('scroll', updateFeedHeaderState, { passive: true });
+        window.addEventListener('scroll', updateFeedHeaderState, { passive: true });
+        // Hardening: re-check header state whenever the tab/page becomes visible
+        // again (covers browser tab-resume / back-forward-cache restores, where
+        // no scroll event fires but the header could otherwise show stale state).
+        window.addEventListener('pageshow', updateFeedHeaderState);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) updateFeedHeaderState(); });
+
+        document.getElementById('composerSheet').addEventListener('click', () => closeSheet('composerSheet'));
+
+        // initial paint: chat is the default view, render it through the unified renderer
+        renderChatFlow();
+        initRealGroup();
+
+        // one realistic "is typing…" demo cycle so the indicator is visibly wired up
+        // — only in local preview (no ?group=); a real group shouldn't get a fake message injected.
+        if (!groupSlug) {
+            setTimeout(() => {
+                if (document.getElementById('chat-flow').style.display !== 'none') {
+                    simulateIncomingTyping();
+                    setTimeout(() => {
+                        stopIncomingTyping();
+                        chatMessages.push({ id: 'c' + Date.now(), from: 'them', name: 'Zainab_TrustID', role: 'Member', roleClass: 'role-member', verified: false,
+                            avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&auto=format&fit=crop&q=80',
+                            text: 'This update looks fantastic — great work everyone! 🔥', time: new Date(), reactions: {}, starred: false });
+                        renderChatFlow();
+                    }, 2600);
+                }
+            }, 4000);
+        }
+
+        (function initSavedMode() {
+            const savedMode = localStorage.getItem('nexus_group_mode');
+            if (savedMode === 'feed') {
+                switchMode('feed');
+            }
+        })();
+    </script>
+</body>
+</html>
