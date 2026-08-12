@@ -246,8 +246,8 @@
             font-size: 13px !important;
         }
 
-        /* ===== INTERACTION BAR ===== */
-.post-interaction-bar, .interaction-bar {
+        
+        .post-interaction-bar, .interaction-bar {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -260,13 +260,12 @@
     box-sizing: border-box !important;
     z-index: 20 !important;
 
-    /* ✅ SOLUTION 3 — Fully transparent bar */
-   background: rgba(245, 245, 247, 0.22) !important;
-backdrop-filter: blur(20px) !important;
--webkit-backdrop-filter: blur(20px) !important;   
+    /* ✅ Bar din kansa babu background — capsules ne kadai ke da bayyanannen background */
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border-top: none !important;
 }
-        
         
         .post-action-capsules, .action-capsules {
             display: flex !important;
