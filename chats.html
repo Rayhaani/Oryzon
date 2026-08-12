@@ -1654,6 +1654,18 @@
         #newMessageOverlay .nmo-back-trigger { cursor: pointer; display: flex; align-items: center; flex-shrink:0; }
         #newMessageOverlay .nmo-header-top h1 { font-size: 21px; font-weight: 700; flex: 1; }
         #newMessageOverlay .nmo-sort-icon { cursor: pointer; flex-shrink: 0; }
+        #newMessageOverlay .nmo-filter-wrap { position: relative; flex-shrink: 0; }
+        #newMessageOverlay .nmo-filter-menu {
+            position: absolute; top: 32px; right: 0;
+            background: #15161c; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 6px; min-width: 180px;
+            display: none; flex-direction: column; gap: 2px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 10;
+        }
+        #newMessageOverlay .nmo-filter-menu.open { display: flex; }
+        #newMessageOverlay .nmo-filter-option { padding: 9px 12px; border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.75); cursor: pointer; }
+        #newMessageOverlay .nmo-filter-option:active { background: rgba(255,255,255,0.06); }
+        #newMessageOverlay .nmo-filter-option.active { color: #4FA3E3; font-weight: 600; }
 
         #newMessageOverlay .nmo-search-bar-wrap {
             margin: 10px 16px 0 16px;
@@ -4684,14 +4696,16 @@ window.openStatusOverlay = openStatusOverlay;
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
                 </div>
                 <h1>New Message</h1>
-                <div class="nmo-sort-icon">
-                    <svg width="24" height="20" viewBox="0 0 24 20" fill="none">
-                        <line x1="0" y1="2" x2="18" y2="2" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="0" y1="10" x2="14" y2="10" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="0" y1="18" x2="10" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                        <text x="19" y="19" font-size="13" font-weight="700" fill="white">A</text>
-                    </svg>
-                </div>
+                  <div class="nmo-filter-wrap">
+                    <div class="nmo-sort-icon" onclick="toggleNmoFilterMenu(event)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    </div>
+                    <div class="nmo-filter-menu" id="nmoFilterMenu">
+                        <div class="nmo-filter-option active" onclick="applyNmoFilter('all', this)">All contacts</div>
+                        <div class="nmo-filter-option" onclick="applyNmoFilter('online', this)">Online now</div>
+                        <div class="nmo-filter-option" onclick="applyNmoFilter('frequent', this)">Frequently contacted</div>
+                    </div>
+                  </div>
             </div>
 
             <div class="nmo-search-bar-wrap">
@@ -4785,6 +4799,26 @@ window.openStatusOverlay = openStatusOverlay;
                 renderNmoContacts(nmoContactsData);
                 document.getElementById('nmoSearchInput').value = '';
             };
+
+            window.toggleNmoFilterMenu = function (e) {
+                e.stopPropagation();
+                document.getElementById('nmoFilterMenu').classList.toggle('open');
+            };
+
+            window.applyNmoFilter = function (type, el) {
+                document.querySelectorAll('#nmoFilterMenu .nmo-filter-option').forEach(o => o.classList.remove('active'));
+                el.classList.add('active');
+                document.getElementById('nmoFilterMenu').classList.remove('open');
+                let filtered = nmoContactsData;
+                if (type === 'online') filtered = nmoContactsData.filter(c => c.online);
+                if (type === 'frequent') filtered = nmoContactsData.filter(c => c.frequent);
+                renderNmoContacts(filtered);
+            };
+
+            document.addEventListener('click', function (e) {
+                const menu = document.getElementById('nmoFilterMenu');
+                if (menu && !e.target.closest('.nmo-filter-wrap')) menu.classList.remove('open');
+            });
 
             window.closeNewMessageOverlay = function () {
                 document.getElementById('newMessageOverlay').classList.remove('nmo-open');
