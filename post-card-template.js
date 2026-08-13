@@ -589,7 +589,7 @@
 
         .gift-btn-nexus span { white-space: nowrap; }
         .post-username {
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     color: #fff !important;
     margin-top: 4px !important;
@@ -937,9 +937,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                 <div>
                     <!-- Username an kara masa girma da 2px (Ya koma 18px) -->
                     <div style="display:flex; align-items:center; gap:5px; line-height:1.2; min-width:0;">
-                       <span class="post-username" style="font-size:14px !important; font-weight:800; color:#fff; display:inline-block; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.username || 'unknown'}</span> 
-
-                       
+                      <span class="post-username" style="font-size:15px !important; font-weight:800; color:#fff; display:inline-block; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.username || 'unknown'}</span>                 
                        <span class="post-verified-badge" style="margin-left: 5px; display: inline-flex; align-items: center; vertical-align: middle; flex-shrink: 0;">
     <!-- Asalin SVG verified badge mai tudu 11 da checkmark daidai da na hoton 1000995375.jpg -->
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
@@ -965,9 +963,8 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                         // Idan babu 'ago', muna so harafin farko na Month ya zama babban harafi (Capitalize)
                         // Idan da 'ago', muna so ya zama completely small letters (lowercase)
                         let transformStyle = !cleanTime.includes('ago') ? 'capitalize' : 'lowercase';
-                        
-                        return `<span class="post-time" style="font-size:9px !important; font-weight: 700 !important; color:rgba(255,255,255,0.45); margin-top:3px; display:block; line-height:1; white-space: nowrap !important; text-transform: ${transformStyle} !important;">${cleanTime}</span>`;
-                    })() : ''}
+                        return `<span class="post-time" style="font-size:11px !important; font-weight: 700 !important; color:rgba(255,255,255,0.45); margin-top:4px; display:block; line-height:1; white-space: nowrap !important; text-transform: ${transformStyle} !important;">${cleanTime}</span>`;
+                          })() : ''}
                     
                     
                 </div>
