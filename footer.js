@@ -228,30 +228,10 @@
     // ------------------------------------------------------------
     // 5) Scroll behavior.
     // ------------------------------------------------------------
-    let lastScrollY = window.scrollY;
-    let footerIdleTimer = null;
-    const SCROLL_THRESHOLD = 6;
-
     function setupScrollBehavior() {
-        window.addEventListener('scroll', function () {
-            const footer = document.getElementById('instaFooter');
-            if (!footer) return;
-
-            const currentY = Math.max(0, window.scrollY);
-            const delta = currentY - lastScrollY;
-
-            if (delta < -SCROLL_THRESHOLD) {
-                footer.classList.add('footer-hidden');
-            }
-            lastScrollY = currentY;
-
-            clearTimeout(footerIdleTimer);
-            footerIdleTimer = setTimeout(() => {
-                footer.classList.remove('footer-hidden');
-            }, 2000);
-        }, { passive: true });
-
-        setTimeout(() => { lastScrollY = window.scrollY; }, 300);
+        // v1.3 — Footer ta daina ɓoyewa/motsi gaba ɗaya lokacin scrolling.
+        const footer = document.getElementById('instaFooter');
+        if (footer) footer.classList.remove('footer-hidden');
     }
 
     // ------------------------------------------------------------
