@@ -2383,7 +2383,57 @@ function refreshAllChatTimes() {
     });
 }
 setInterval(refreshAllChatTimes, 30000);
-        
+
+        function b64decodeBytes(str) {
+            const binary = atob(str);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return bytes;
+        }
+        let myE2EPrivateKeyPromise = null;
+        function getMyE2EPrivateKey() {
+            if (myE2EPrivateKeyPromise) return myE2EPrivateKeyPromise;
+            myE2EPrivateKeyPromise = (async () => {
+                const storedPriv = localStorage.getItem('nexus_e2e_priv_' + myId);
+                if (!storedPriv) return null;
+                const privJwk = JSON.parse(storedPriv);
+                return crypto.subtle.importKey('jwk', privJwk, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
+            })();
+            return myE2EPrivateKeyPromise;
+        }
+        const e2eSharedKeyCache = {};
+        function getSharedKeyWithPeer(peerId) {
+            if (e2eSharedKeyCache[peerId]) return e2eSharedKeyCache[peerId];
+            const p = (async () => {
+                try {
+                    const myPrivateKey = await getMyE2EPrivateKey();
+                    if (!myPrivateKey) return null;
+                    const peerDoc = await db.collection('users').doc(peerId).get();
+                    const peerData = peerDoc.data();
+                    if (!peerData || !peerData.e2ePublicKey) return null;
+                    const peerPubKey = await crypto.subtle.importKey('jwk', peerData.e2ePublicKey, { name: 'ECDH', namedCurve: 'P-256' }, true, []);
+                    return await crypto.subtle.deriveKey(
+                        { name: 'ECDH', public: peerPubKey }, myPrivateKey,
+                        { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+                    );
+                } catch (e) { console.error('getSharedKeyWithPeer error:', e); return null; }
+            })();
+            e2eSharedKeyCache[peerId] = p;
+            return p;
+        }
+        async function decryptLastMessagePreview(peerId, encData) {
+            try {
+                const key = await getSharedKeyWithPeer(peerId);
+                if (!key) return null;
+                const iv = b64decodeBytes(encData.iv);
+                const ctBytes = b64decodeBytes(encData.ciphertext);
+                const ptBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ctBytes);
+                const jsonStr = new TextDecoder().decode(ptBuf);
+                try { return JSON.parse(jsonStr).text || jsonStr; }
+                catch (e) { return jsonStr; }
+            } catch (e) { console.error('decryptLastMessagePreview error:', e); return null; }
+        }
+
         async function loadChats() {
             const container = document.getElementById('chats-list-container');
             container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
@@ -2437,15 +2487,25 @@ setInterval(refreshAllChatTimes, 30000);
                             </div>
                             <div class="chat-details">
                                 <span class="name" id="name-${rawUser}">${initialName}</span>
-                                <p class="preview-text">${lastMsg}</p>
+                               <p class="preview-text" id="preview-${rawUser}">${lastMsg}</p>
                             </div>
                             <div class="chat-meta">
                                 <span class="time" data-ts="${data.lastMessageTime || ''}">${lastTime}</span>
                                 ${unreadNum > 0 ? `<span class="wa-unread-badge">${unreadLabel}</span>` : ''}
                             </div>
                         </a>
-                    `);
-                    db.collection('users').doc(rawUser).get().then(userDoc => {
+                   `);
+
+                    if (data.lastMessageEnc && data.lastMessageEnc.ciphertext) {
+                        decryptLastMessagePreview(rawUser, data.lastMessageEnc).then(decrypted => {
+                            if (decrypted) {
+                                const el = document.getElementById(`preview-${rawUser}`);
+                                if (el) el.textContent = decrypted.length > 60 ? decrypted.substring(0, 60) + '…' : decrypted;
+                            }
+                        });
+                    }
+
+                    db.collection('users').doc(rawUser).get().then(userDoc => { 
                         if (userDoc.exists) {
                             const userData = userDoc.data();
                             const fullName = userData.fullName || userData.name || userData.username;
@@ -2481,7 +2541,7 @@ setInterval(refreshAllChatTimes, 30000);
 
                 injectRealFirebaseContacts();
                 updateSmartBtnBadge('personal', unreadSenderCount);
-
+                if (window.updateChatFooterBadge) window.updateChatFooterBadge(unreadSenderCount);
             } catch(err) {
                 console.error("Chat load error:", err);
                 container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
