@@ -2541,7 +2541,6 @@ setInterval(refreshAllChatTimes, 30000);
 
                 injectRealFirebaseContacts();
                 updateSmartBtnBadge('personal', unreadSenderCount);
-                if (window.updateChatFooterBadge) window.updateChatFooterBadge(unreadSenderCount);
             } catch(err) {
                 console.error("Chat load error:", err);
                 container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
@@ -2665,13 +2664,23 @@ setInterval(refreshAllChatTimes, 30000);
             }
         }
 
-        // Badge (jan circle) a saman kowane tab.
+       // Badge (jan circle) a saman kowane tab.
+        const nexusUnreadState = { personal: false, groups: false, channels: false, pages: false, updates: false };
+        function refreshChatFooterDot() {
+            const hasAny = Object.values(nexusUnreadState).some(Boolean);
+            if (window.updateChatFooterBadge) window.updateChatFooterBadge(hasAny);
+        }
         function updateSmartBtnBadge(tabId, count) {
             const badge = document.getElementById(`badge-${tabId}`);
-            if (!badge) return;
-            badge.textContent = count > 99 ? '99+' : count;
-            badge.classList.toggle('show', count > 0);
-        }
+            if (badge) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.classList.toggle('show', count > 0);
+            }
+            if (tabId in nexusUnreadState) {
+                nexusUnreadState[tabId] = count > 0;
+                refreshChatFooterDot();
+            }
+        } 
 
         /* =====================================================================
            GROUPS / PAGES / CHANNELS — BADGE BACKEND NA GASKIYA
