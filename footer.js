@@ -259,10 +259,21 @@
         attachListener();
     }
 
+   // ------------------------------------------------------------
+    // 6b) Chat badge — ana kiran wannan daga chats.html kai tsaye
+    // (window.updateChatFooterBadge) domin sabuntawa nan take.
+    // ------------------------------------------------------------
+    window.updateChatFooterBadge = function (count) {
+        const badge = document.getElementById('chatBadgeCount');
+        if (!badge) return;
+        badge.textContent = count > 9 ? '9+' : count;
+        badge.classList.toggle('show', count > 0);
+    };
+
     // ------------------------------------------------------------
     // 7) Saka CSS + HTML a cikin page, sannan kunna logic din sama.
     // ------------------------------------------------------------
-    function injectFooter() {
+        function injectFooter() {
         const placeholder = document.getElementById('footer-placeholder');
         if (!placeholder) {
             console.error('footer.js: ba a sami <div id="footer-placeholder"></div> a wannan page ba.');
