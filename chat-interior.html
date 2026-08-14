@@ -1114,7 +1114,8 @@ async function sendNeuralMessageDirect(text, replyPayload) {
 
     await db.collection('personalChats').doc(chatRoomId).collection('messages').add(payload);
     await db.collection('personalChats').doc(chatRoomId).set({
-        lastMessage: enc ? '🔒 Sako' : text.substring(0, 60),
+        lastMessage: enc ? '🔒 Message' : text.substring(0, 60),
+        lastMessageEnc: enc ? { iv: enc.iv, ciphertext: enc.ciphertext } : null,
         lastMessageTime: Date.now(),
         members: [myId, chatWith],
         [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
