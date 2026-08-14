@@ -272,12 +272,12 @@
     // 6b) Chat badge — ana kiran wannan daga chats.html kai tsaye
     // (window.updateChatFooterBadge) domin sabuntawa nan take.
     // ------------------------------------------------------------
-    window.updateChatFooterBadge = function (hasUnread) {
+   window.updateChatFooterBadge = function (hasUnread) {
+        window.__nexusChatHasUnread = !!hasUnread;
         const badge = document.getElementById('chatBadgeCount');
         if (!badge) return;
         badge.classList.toggle('show', !!hasUnread);
-    };
-
+    }; 
     // ------------------------------------------------------------
     // 7) Saka CSS + HTML a cikin page, sannan kunna logic din sama.
     // ------------------------------------------------------------
@@ -296,6 +296,7 @@
         }
 
         placeholder.outerHTML = FOOTER_HTML;
+       if (window.__nexusChatHasUnread !== undefined) window.updateChatFooterBadge(window.__nexusChatHasUnread);
 
         setActiveIcon();
         loadFooterProfile();
