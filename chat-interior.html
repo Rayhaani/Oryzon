@@ -872,7 +872,7 @@ let pendingMessages = []; // {id, kind, file, url, progress, status: 'uploading'
 
 function listenToNexusMessages() {
     db.collection('personalChats').doc(chatRoomId).set({
-        [`unreadCount.${myId}`]: 0
+        unreadCount: { [myId]: 0 }
     }, { merge: true }).catch(err => console.error('Reset unread error:', err));
 
     db.collection('personalChats').doc(chatRoomId).collection('messages')
@@ -907,7 +907,7 @@ function listenToNexusMessages() {
 let typingOffTimer = null;
 function setTypingState(isTyping) {
     db.collection('personalChats').doc(chatRoomId).set({
-        [`typing.${myId}`]: isTyping
+        typing: { [myId]: isTyping }
     }, { merge: true }).catch(() => {});
 }
 function notifyTyping() {
@@ -1120,7 +1120,7 @@ async function sendNeuralMessageDirect(text, replyPayload) {
         lastMessageEnc: enc ? { iv: enc.iv, ciphertext: enc.ciphertext } : null,
         lastMessageTime: Date.now(),
         members: [myId, chatWith],
-        [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
+        unreadCount: { [chatWith]: firebase.firestore.FieldValue.increment(1) }
     }, { merge: true });
 }
 
@@ -1436,7 +1436,7 @@ async function uploadAndSendMedia(file, kind, existingPendingId, caption, option
         await db.collection('personalChats').doc(chatRoomId).collection('messages').add(msgDoc);
         await db.collection('personalChats').doc(chatRoomId).set({
             lastMessage: viewOnce ? '📷 View once photo' : (encResult.encrypted ? `🔒 ${lastLabel}` : lastLabel), lastMessageTime: Date.now(), members: [myId, chatWith],
-            [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
+            unreadCount: { [chatWith]: firebase.firestore.FieldValue.increment(1) }
         }, { merge: true });
     } catch (err) {
         console.error('Media upload error:', err);
@@ -3048,7 +3048,7 @@ async function doForwardTo(peerId) {
                 await db.collection('personalChats').doc(targetRoomId).collection('messages').add(payload);
                 await db.collection('personalChats').doc(targetRoomId).set({
                     lastMessage: key ? '🔒 Sako' : plaintext.substring(0, 60), lastMessageTime: Date.now(), members: [myId, peerId],
-                    [`unreadCount.${peerId}`]: firebase.firestore.FieldValue.increment(1)
+                    unreadCount: { [peerId]: firebase.firestore.FieldValue.increment(1) }
                 }, { merge: true });
             } else if (data.type === 'image' || data.type === 'video' || data.type === 'audio') {
                 // Sakon MEDIA — samo blob da aka buɗe (ko a buɗe yanzu), sake ɓoye da sabon key, sake upload.
@@ -3204,7 +3204,7 @@ async function uploadAndSendMediaGroup(files) {
         });
         await db.collection('personalChats').doc(chatRoomId).set({
             lastMessage: `📷 ${uploaded.length} Photos`, lastMessageTime: Date.now(), members: [myId, chatWith],
-            [`unreadCount.${chatWith}`]: firebase.firestore.FieldValue.increment(1)
+            unreadCount: { [chatWith]: firebase.firestore.FieldValue.increment(1) }
         }, { merge: true });
     } catch (err) {
         console.error('Group media upload error:', err);
