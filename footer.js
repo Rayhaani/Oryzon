@@ -184,7 +184,7 @@
 
             <div class="footer-icon post-capsule" data-page="chats.html" onclick="window.location.href='chats.html'">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 11-7.6-12.7 8.38 8.38 0 013.8.9L21 3z"/></svg>
-                <span class="notif-badge" id="chatBadgeCount">0</span>
+              <span class="notif-badge chat-nav-dot" id="chatBadgeCount"></span>  
             </div>
 
             <div class="footer-icon post-capsule" data-page="nexus-feed.html" onclick="window.location.href='nexus-feed.html'">
