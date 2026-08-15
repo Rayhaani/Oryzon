@@ -1875,7 +1875,7 @@
 
         #newMessageOverlay .nmo-fab-add-contact {
             position: fixed;
-            bottom: 24px;
+            bottom: 60px;
             right: 20px;
             width: 52px;
             height: 52px;
@@ -1891,9 +1891,9 @@
 
         /* ================================================================
            ADD FRIENDS OVERLAY — opened from the New Message screen's
-           add-contact FAB. Reuses the app's existing Following/Suggested
-           data + row template (personRowHtml, loadFollowingList,
-           loadSuggestedTab) — only the containers here are new.
+           add-contact FAB. Reuses the app's existing suggestion engine
+           (loadSuggestedTab) with a dedicated "People You May Know" row
+           style (pymkRowHtml) — only the containers/CSS here are new.
            ================================================================ */
         #addFriendsOverlay {
             position: fixed; inset: 0; z-index: 5100;
@@ -1909,16 +1909,25 @@
         #addFriendsOverlay .nmo-header-top { display: flex; align-items: center; gap: 14px; }
         #addFriendsOverlay .nmo-back-trigger { cursor: pointer; display: flex; align-items: center; flex-shrink:0; }
         #addFriendsOverlay .nmo-header-top h1 { font-size: 21px; font-weight: 700; flex: 1; }
-        #addFriendsOverlay .afo-subtabs { display: flex; gap: 8px; padding: 10px 16px 4px 16px; }
-        #addFriendsOverlay .afo-subtab {
-            padding: 7px 16px; border-radius: 20px;
-            background: rgba(255,255,255,0.06);
-            font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6);
-            cursor: pointer;
+
+        .pymk-section-label { padding: 14px 16px 8px 16px; font-size: 14px; font-weight: 700; color: #fff; }
+        .pymk-row { display: flex; gap: 12px; padding: 10px 16px; align-items: flex-start; }
+        .pymk-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .pymk-info { flex: 1; min-width: 0; }
+        .pymk-name { font-size: 15px; font-weight: 700; color: #fff; }
+        .pymk-mutual { font-size: 12.5px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+        .pymk-btn-row { display: flex; gap: 8px; margin-top: 10px; }
+        .pymk-btn-add {
+            flex: 1; text-align: center; border: none; cursor: pointer;
+            background: var(--cyan-neon, #00F2FF); color: #050505;
+            font-weight: 700; font-size: 13px; padding: 9px; border-radius: 8px;
         }
-        #addFriendsOverlay .afo-subtab.active { background: var(--cyan-neon, #00F2FF); color: #050505; }
-        #addFriendsOverlay .afo-panel { display: none; margin-top: 6px; }
-        #addFriendsOverlay .afo-panel.active { display: block; }
+        .pymk-btn-add.done, .pymk-btn-add:disabled { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+        .pymk-btn-remove {
+            flex: 1; text-align: center; border: none; cursor: pointer;
+            background: rgba(255,255,255,0.1); color: #fff;
+            font-weight: 700; font-size: 13px; padding: 9px; border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -3592,27 +3601,20 @@ setInterval(refreshAllChatTimes, 30000);
         }
 
         // ============================================================
-        // ADD FRIENDS OVERLAY (Following / Suggested) — opened from the
+        // ADD FRIENDS OVERLAY (People You May Know) — opened from the
         // New Message screen's add-contact FAB. Reuses the exact same
-        // loadFollowingList() / loadSuggestedTab() / personRowHtml() the
-        // main Friends tab uses, just pointed at this overlay's own
-        // containers so nothing in the main Friends tab is touched.
+        // loadSuggestedTab() suggestion engine the main Friends tab uses,
+        // just pointed at this overlay's own container so nothing in the
+        // main Friends tab is touched.
         // ============================================================
-        const afoSubtabLoaded = { following: false, suggested: false };
+        let afoLoaded = false;
 
         function openAddFriendsOverlay() {
             document.getElementById('addFriendsOverlay').classList.add('nmo-open');
-            if (!afoSubtabLoaded.following) { afoSubtabLoaded.following = true; loadFollowingList('afoFollowingContainer'); }
+            if (!afoLoaded) { afoLoaded = true; loadSuggestedTab('afoSuggestedContainer', 'pymk'); }
         }
         function closeAddFriendsOverlay() {
             document.getElementById('addFriendsOverlay').classList.remove('nmo-open');
-        }
-        function switchAfoSubtab(tab) {
-            document.querySelectorAll('#addFriendsOverlay .afo-subtab').forEach(el => el.classList.remove('active'));
-            document.getElementById('afoSubtab-' + tab).classList.add('active');
-            document.querySelectorAll('#addFriendsOverlay .afo-panel').forEach(el => el.classList.remove('active'));
-            document.getElementById('afoPanel-' + tab).classList.add('active');
-            if (tab === 'suggested' && !afoSubtabLoaded.suggested) { afoSubtabLoaded.suggested = true; loadSuggestedTab('afoSuggestedContainer'); }
         }
 
         // Shared row template for Followers / Following / Suggested (plain contact-list style,
@@ -3885,11 +3887,16 @@ setInterval(refreshAllChatTimes, 30000);
             return parts.slice(0, 2).join(' · ') || 'Suggested for you';
         }
 
-        async function loadSuggestedTab(containerId = 'suggested-list-container') {
+        async function loadSuggestedTab(containerId = 'suggested-list-container', rowStyle = 'default') {
             const container = document.getElementById(containerId);
             if (!container) return;
             container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
 
+            let dismissedSet = new Set();
+            try {
+                const myDoc = await db.collection('users').doc(myId).get();
+                dismissedSet = new Set(myDoc.exists ? (myDoc.data().dismissedSuggestions || []) : []);
+            } catch (e) { console.error('Dismissed-suggestions fetch error:', e); }
             try {
                 // Use the already-loaded friends list if available; otherwise fetch a quick copy.
                 let myFriendIdSet;
@@ -4004,8 +4011,8 @@ setInterval(refreshAllChatTimes, 30000);
                 } catch (e) { console.error('Vendor signal error:', e); }
 
                 alreadyFollowing.forEach(uid => reasons.delete(uid));
+                dismissedSet.forEach(uid => reasons.delete(uid));
                 reasons.delete(myId);
-
                 document.getElementById('subtabCount-suggested').textContent = `(${reasons.size})`;
 
                 if (!reasons.size) {
@@ -4030,14 +4037,42 @@ setInterval(refreshAllChatTimes, 30000);
                         avatarUrl: userData.userProfilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${s.uid}`,
                         isOnline: userData.isOnline === true,
                         lastSeenMillis: tsToMillis(userData.lastSeen),
-                        reason: reasonLabel(s.r)
+                        reason: reasonLabel(s.r),
+                        mutual: s.r.mutual
                     };
-                    return personRowHtml(p, 'suggested');
+                    return rowStyle === 'pymk' ? pymkRowHtml(p) : personRowHtml(p, 'suggested');
                 }).join('');
             } catch (e) {
                 console.error('Suggestions error:', e);
                 container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading suggestions</p>';
             }
+          // "People You May Know" row style (Add Friends overlay) — avatar,
+        // name, mutual-friend line, then Add friend / Remove side by side.
+        function pymkRowHtml(p) {
+            return `
+                <div class="pymk-row" id="pymkRow-${p.uid}">
+                    <img class="pymk-avatar" src="${p.avatarUrl}" alt="${p.fullName}">
+                    <div class="pymk-info">
+                        <div class="pymk-name">${p.fullName}</div>
+                        ${p.mutual > 0 ? `<div class="pymk-mutual">${p.mutual} mutual friend${p.mutual !== 1 ? 's' : ''}</div>` : ''}
+                        <div class="pymk-btn-row">
+                            <button class="pymk-btn-add" onclick="event.stopPropagation(); followSuggestedUser('${p.uid}', this)">Add friend</button>
+                            <button class="pymk-btn-remove" onclick="event.stopPropagation(); removeSuggestion('${p.uid}')">Remove</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // Persists the dismissal on users/{myId}.dismissedSuggestions so this
+        // person never reappears in "People You May Know" again.
+        async function removeSuggestion(uid) {
+            const row = document.getElementById('pymkRow-' + uid);
+            if (row) row.remove();
+            try {
+                await db.collection('users').doc(myId).set({
+                    dismissedSuggestions: firebase.firestore.FieldValue.arrayUnion(uid)
+                }, { merge: true });
+            } catch (e) { console.error('Remove suggestion error:', e); }
         }
 
         async function followSuggestedUser(otherUser, btnEl) {
@@ -5649,18 +5684,10 @@ window.openStatusOverlay = openStatusOverlay;
                 </div>
                 <h1>Add Friends</h1>
             </div>
-            <div class="afo-subtabs">
-                <div class="afo-subtab active" id="afoSubtab-following" onclick="switchAfoSubtab('following')">Following</div>
-                <div class="afo-subtab" id="afoSubtab-suggested" onclick="switchAfoSubtab('suggested')">Suggested</div>
-            </div>
         </header>
 
-        <div class="afo-panel active" id="afoPanel-following">
-            <div id="afoFollowingContainer"></div>
-        </div>
-        <div class="afo-panel" id="afoPanel-suggested">
-            <div id="afoSuggestedContainer"></div>
-        </div>
+        <div class="pymk-section-label">People you may know</div>
+        <div id="afoSuggestedContainer"></div>
     </div>
 
     <script>
