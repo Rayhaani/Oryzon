@@ -268,6 +268,28 @@
         attachListener();
     }
 
+   function listenPersonalChatsBadge() {
+        const sessionUser = localStorage.getItem('nexus_user_session');
+        if (!sessionUser) return;
+
+        function attach() {
+            if (!window.firebase || !firebase.firestore) {
+                setTimeout(attach, 1000);
+                return;
+            }
+            firebase.firestore().collection('personalChats')
+                .where('members', 'array-contains', sessionUser)
+                .onSnapshot((snap) => {
+                    let hasUnread = false;
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        if (d.unreadCount && d.unreadCount[sessionUser] > 0) hasUnread = true;
+                    });
+                    window.updateChatFooterBadge(hasUnread);
+                }, err => console.error('Footer personal-chat badge error:', err));
+        }
+        attach();
+   }
    // ------------------------------------------------------------
     // 6b) Chat badge — ana kiran wannan daga chats.html kai tsaye
     // (window.updateChatFooterBadge) domin sabuntawa nan take.
@@ -302,6 +324,7 @@
         loadFooterProfile();
         setupScrollBehavior();
         listenServicesBadgeCount();
+        listenPersonalChatsBadge();
     }
 
     if (document.readyState === 'loading') {
