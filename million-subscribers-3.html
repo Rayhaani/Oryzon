@@ -1,0 +1,2456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TaskPro — Earn. Post. Grow.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <style>
+
+*, *::before, *::after { box-sizing: border-box; }
+/* ── TOKENS ─────────────────────────────────── */
+:root {
+--bg:        #0d0f14;
+--surface:   #161922;
+--surface2:  #1c202b;
+--surface3:  #232838;
+  --border:    rgba(255,255,255,0.08);
+  --border2:   rgba(255,255,255,0.15);
+  --lime:      #a78bfa;
+  --lime-dim:  rgba(167,139,250,.12);
+  --lime-glow: rgba(167,139,250,.25);
+  --teal:      #f472b6;
+  --teal-dim:  rgba(244,114,182,.10);
+  --amber:     #fbbf24;
+  --amber-dim: rgba(251,191,36,.10);
+  --red:       #f87171;
+  --text:      #ffffff;
+  --text2:     #8b90a0;
+  --text3:     #565b6b;
+  --accent-1:  #a78bfa;
+  --accent-2:  #f472b6;
+  --radius-sm: 10px;
+  --radius:    16px;
+  --radius-lg: 22px;
+  --font-b:    'Quicksand', sans-serif;
+  --font-m:    'Roboto Mono', monospace;
+  --ease:      cubic-bezier(.22,.68,0,1.2);
+}
+
+/* ── RESET ──────────────────────────────────── */
+body {
+    margin: 0;
+    font-family:var(--font-b);
+    font-weight: 500;
+    color: var(--text);
+    background: var(--bg);
+    background-image:
+        radial-gradient(circle at 50% 50%, rgba(112, 0, 255, 0.15), transparent),
+        url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+}
+    
+button,input,textarea,select{font-family:inherit;font-size:inherit;border:none;outline:none;background:none}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ── LAYOUT ──────────────────────────────────── */
+#app{
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER (hero style, matches Million Customers) ─────────── */
+#header{
+  background: transparent;
+  border-bottom: none;
+}
+.header-inner{
+  max-width:520px;
+  margin:0 auto;
+  padding:24px 20px 0;
+}
+.hero-section{
+  text-align: center;
+  margin-bottom: 20px;
+}
+.hero-top{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-bottom: 14px;
+}
+.brand-dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#fbbf24;
+  display:inline-block;
+  flex-shrink:0;
+}
+.brand-font-title{
+  font-family:'Quicksand', sans-serif;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-0.025em;
+  color:#ffffff;
+}
+.headline{
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.3px;
+  margin: 0 0 10px;
+}
+.subcopy{
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 0 auto;
+  max-width: 320px;
+}
+
+.app-title,.balance-chip,.balance-label,.balance-value,.brand,.brand-mark,.brand-name,.brand-tag{display:none}
+
+.tab-bar{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin:0 0 4px 0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:5px;
+}
+
+.tab-btn{
+  padding:10px 20px;
+  font-family:var(--font-b);
+  font-weight:700;
+  font-size:12.5px;
+  color:var(--text2);
+  background:transparent;
+  border:none;
+  border-radius:15px;
+  transition:all .25s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  letter-spacing:.1px;
+}
+
+.tab-btn .tab-icon{font-size:15px}
+
+.tab-btn.active{
+  background:linear-gradient(135deg,var(--accent-1),var(--accent-2));
+  color:#0d0f14;
+  font-weight:700;
+  box-shadow:none;
+}
+/* ── TABS ──────────────────────────────────── */
+
+/* ── CONTENT ──────────────────────────────────── */
+#content{
+  flex:1;
+  padding:24px 24px 100px;
+  overflow-y:auto;
+}
+
+/* ── SEARCH + CONTROLS ──────────────────────── */
+.search-wrap{
+  position:relative;
+  margin-bottom:14px;
+}
+.search-icon{
+  position:absolute;
+  left:14px;top:50%;transform:translateY(-50%);
+  font-size:14px;
+  pointer-events:none;
+  opacity:.4;
+}
+#searchInput{
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:12px 16px 12px 42px;
+  color:var(--text);
+  font-size:14px;
+  transition:border-color .2s, box-shadow .2s;
+}
+#searchInput:focus{
+  border-color:rgba(167,139,250,.4);
+  box-shadow:0 0 0 3px var(--lime-dim);
+}
+#searchInput::placeholder{color:var(--text3)}
+
+.pill-row{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding-bottom:2px;
+  margin-bottom:12px;
+  scrollbar-width:none;
+}
+.pill-row::-webkit-scrollbar{display:none}
+
+.pill{
+  padding:7px 14px;
+  border:1px solid var(--border);
+  border-radius:99px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--text2);
+  background:var(--surface);
+  white-space:nowrap;
+  transition:all .18s;
+  flex-shrink:0;
+}
+.pill:hover{border-color:var(--border2);color:var(--text)}
+.pill.active{
+  background:linear-gradient(135deg,var(--accent-1),var(--accent-2));
+  border-color:transparent;
+  color:#0d0f14;
+}
+
+.sort-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+
+.results-count{
+  font-size:11.5px;
+  color:var(--text2);
+  font-weight:600;
+}
+.results-count span{color:var(--accent-1);font-weight:700}
+
+.sort-select{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:6px 10px;
+  font-size:12px;
+  color:var(--text2);
+  font-weight:600;
+}
+
+/* ── TASK CARDS ──────────────────────────────── */
+#taskGrid{display:flex;flex-direction:column;gap:16px}
+
+.task-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:16px;
+  cursor:pointer;
+  transition: transform .22s var(--ease), box-shadow .22s, border-color .22s;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.task-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 16px 48px rgba(0,0,0,.4);
+  border-color: rgba(167,139,250,.3);
+}
+.task-card:active{transform:translateY(-1px)}
+
+.diff-badge{
+  margin-left:auto;
+  font-size:9px;
+  font-weight:700;
+  padding:3px 9px;
+  border-radius:99px;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+}
+
+.find-card-meta{
+  display:flex;
+  justify-content:space-between;
+  font-size:10px;
+  color:var(--accent-1);
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+.find-card-title{
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--text);
+  line-height:1.4;
+}
+
+.tag-row{display:flex;flex-wrap:wrap;gap:5px}
+.tag{
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  color:var(--text2);
+  font-size:10px;
+  padding:2px 8px;
+  border-radius:8px;
+  font-weight:700;
+  letter-spacing:.3px;
+}
+
+.slot-track{
+  height:6px;
+  background:rgba(0,0,0,0.3);
+  border-radius:20px;
+  overflow:hidden;
+  margin-bottom:5px;
+}
+.slot-fill{
+  height:100%;
+  border-radius:20px;
+  background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+  transition:width 1s cubic-bezier(.22,.68,0,1);
+}
+.slot-meta{
+  display:flex;justify-content:space-between;
+  font-size:10px;color:var(--text2);
+  font-weight:600;
+}
+.slot-meta .left-slots{font-weight:700}
+.slot-meta .left-slots.urgent{color:var(--red)}
+.slot-meta .left-slots.ok{color:var(--accent-1)}
+
+.find-card-footer{
+  display:flex;
+  gap:8px;
+}
+.find-btn-secondary{
+  flex:1;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--border);
+  color:#fff;
+  text-align:center;
+  padding:9px;
+  border-radius:14px;
+  font-size:11px;
+  font-weight:700;
+  transition:background .15s;
+}
+.find-btn-secondary:hover{background:rgba(255,255,255,0.1)}
+.find-btn-primary{
+  flex:1;
+  background:linear-gradient(135deg,var(--accent-1),var(--accent-2));
+  color:#0d0f14;
+  text-align:center;
+  padding:9px;
+  border-radius:14px;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  transition:opacity .15s;
+}
+.find-btn-primary:hover{opacity:.9}
+
+/* ── EMPTY STATE ──────────────────────────────── */
+#emptyState{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  padding:60px 20px;
+  text-align:center;
+  gap:10px;
+}
+#emptyState .e-icon{font-size:48px;opacity:.4}
+#emptyState h3{font-family:'Quicksand', sans-serif;font-size:19px;color:var(--text2)}
+#emptyState p{font-size:13px;color:var(--text3);line-height:1.6}
+
+/* ── POSTER PANEL ──────────────────────────────── */
+#posterPanel{display:flex;flex-direction:column;gap:0}
+
+.poster-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:20px;
+}
+
+.stat-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:14px 10px;
+  text-align:center;
+}
+.stat-icon{font-size:20px;margin-bottom:4px}
+.stat-val{
+  font-family:var(--font-m);
+  font-weight:700;
+  font-size:15px;
+  color:var(--accent-1);
+  line-height:1.1;
+}
+.stat-lbl{font-size:9px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.post-btn-main{
+  width:auto;
+  align-self:flex-start;
+  padding:10px 24px;
+  background:linear-gradient(135deg,var(--accent-1),var(--accent-2));
+  color:#0d0f14;
+  border-radius:99px;
+  font-family:var(--font-b);
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:.3px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:transform .15s var(--ease),box-shadow .2s;
+  margin-bottom:24px;
+  box-shadow:0 4px 15px rgba(167,139,250,0.2);
+}
+.post-btn-main:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(167,139,250,0.3);
+}
+
+.section-label{
+  font-size:15px;
+  font-weight:700;
+  color:var(--text);
+  text-transform:none;
+  letter-spacing:normal;
+  margin-bottom:10px;
+}
+
+/* Posted task item */
+.posted-task{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:16px;
+  margin-bottom:10px;
+}
+.posted-task-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:12px;
+}
+.posted-task-title{font-weight:700;font-size:14px;color:var(--text);line-height:1.3}
+.status-badge{
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:10.5px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:normal;
+  flex-shrink:0;
+  margin-left:8px;
+}
+.status-active{background:rgba(74,222,128,.12);color:#4ade80;border:none}
+.status-done{background:rgba(139,144,160,.12);color:var(--text2);border:none}
+
+.posted-meta{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:10px;
+}
+.posted-meta .pm-item:nth-child(1){ text-align:left; }
+.posted-meta .pm-item:nth-child(2){ text-align:center; }
+.posted-meta .pm-item:nth-child(3){ text-align:right; }
+.pm-item{}
+.pm-lbl{font-size:9px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.pm-val{font-size:13px;font-weight:700;color:var(--text2);margin-top:2px}
+
+.review-btn{
+  width:100%;
+  padding:10px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--border);
+  border-radius:12px;
+  color:var(--accent-1);
+  font-weight:700;
+  font-size:12px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  margin-top:10px;
+  transition:background .15s;
+}
+.review-btn:hover{background:rgba(255,255,255,0.1)}
+
+/* ── MODAL ──────────────────────────────────── */
+#modalOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  z-index:61000;
+  align-items:flex-end;
+  justify-content:center;
+}
+#modalOverlay.open{display:flex}
+
+#modalSheet{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:28px 28px 0 0;
+  width:100%;
+  max-width:520px;
+  max-height:92vh;
+  overflow-y:auto;
+  padding:0;
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(0.19,1,0.22,1);
+  scrollbar-width:none;
+}
+#modalSheet::-webkit-scrollbar{display:none}
+#modalSheet.open{transform:translateY(0)}
+
+.sheet-handle{
+  display:flex;justify-content:center;
+  padding:8px 0 0;
+}
+.sheet-handle-bar{width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:10px}
+
+.sheet-header{
+  position:relative;
+  display:flex;
+  align-items:center;
+  padding:10px 22px;
+  margin-bottom:2px;
+}
+.sheet-title{
+  font-family:var(--font-b);
+  font-size:15px;
+  font-weight:700;
+  color:var(--text);
+  letter-spacing:-.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:82%;
+  padding-right:36px;
+    }
+.close-btn{
+  position:absolute;
+  top:6px;
+  right:16px;
+  width:32px;height:32px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;
+  font-size:13px;
+  flex-shrink:0;
+  transition:background .15s, color .15s;
+  }
+.close-btn:hover{
+  background:rgba(248,113,113,.15);
+  color:var(--red);
+}
+
+.sheet-body{padding:8px 22px 32px}
+
+/* Reward hero in modal */
+.reward-hero{
+  background:linear-gradient(160deg,rgba(167,139,250,0.14),rgba(244,114,182,0.06));
+  border:1px solid rgba(167,139,250,.25);
+  border-left: 4px solid var(--accent-2);
+  border-radius:20px;
+  padding:14px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+  position:relative;
+  overflow:hidden;
+}
+.reward-hero::before{
+  content:'';
+  position:absolute;
+  top:-30px;right:-30px;
+  width:120px;height:120px;
+  background:radial-gradient(circle,rgba(167,139,250,.15),transparent 70%);
+  pointer-events:none;
+}
+
+.rh-left{}
+.rh-label{font-size:11.5px;color:var(--text2);text-transform:none;letter-spacing:normal;font-weight:600}
+#modalRewardAmt{
+  font-family:var(--font-b);
+  font-weight:700;
+  font-size:22px;
+  color:var(--accent-1);
+  letter-spacing:-1px;
+  line-height:1.1;
+  margin-top:2px;
+  transition:all .2s;
+}
+.rh-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+
+.modal-desc{
+  font-size:14px;
+  color:var(--text2);
+  line-height:1.7;
+  margin-bottom:20px;
+}
+
+/* Steps */
+.steps-box{
+  background:rgba(0,0,0,0.2);
+  border:1.5px dashed var(--border2);
+  border-radius:18px;
+  padding:16px 18px;
+  margin-bottom:20px;
+}
+.steps-heading{
+  font-size:11.5px;
+  color:var(--accent-1);
+  font-weight:700;
+  text-transform:none;
+  letter-spacing:normal;
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:6px;
+}
+.step-item{
+  display:flex;align-items:flex-start;gap:10px;
+  margin-bottom:10px;
+  font-size:13px;
+  color:var(--text2);
+  line-height:1.5;
+}
+.step-num{
+  width:20px;height:20px;
+  border-radius:7px;
+  background:rgba(167,139,250,0.1);
+  border:1px solid rgba(167,139,250,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;
+  font-weight:700;
+  color:var(--accent-1);
+  flex-shrink:0;
+  margin-top:1px;
+}
+.task-link-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  margin-top:8px;
+  background:linear-gradient(135deg,var(--accent-1),var(--accent-2));
+  color:#0d0f14;
+  padding:10px 18px;
+  border-radius:14px;
+  font-weight:700;
+  font-size:12px;
+  transition:transform .15s var(--ease),box-shadow .15s;
+}
+.task-link-btn:hover{transform:scale(1.03);box-shadow:0 6px 20px rgba(167,139,250,.3)}
+
+/* Proof input */
+.proof-label{
+  font-size:11.5px;
+  color:var(--text2);
+  font-weight:600;
+  text-transform:none;
+  letter-spacing:normal;
+  margin-bottom:8px;
+}
+.proof-input{
+  width:100%;
+  background:rgba(0,0,0,0.25);
+  border:1px dashed var(--border2);
+  border-radius:18px;
+  padding:13px 15px;
+  color:var(--text);
+  font-size:14px;
+  font-family:var(--font-b);
+  font-weight:700;
+  transition:border-color .2s,box-shadow .2s;
+  margin-bottom:16px;
+}
+.proof-input:focus{
+  border-color:rgba(167,139,250,.4);
+  box-shadow:0 0 0 3px var(--lime-dim);
+}
+.proof-input::placeholder{color:var(--text3)}
+
+.upload-zone{
+  border:1.5px dashed var(--border2);
+  border-radius:18px;
+  padding:28px 20px;
+  text-align:center;
+  cursor:pointer;
+  margin-bottom:16px;
+  transition:all .2s;
+  position:relative;
+  background:rgba(0,0,0,0.2);
+}
+.upload-zone:hover{border-color:rgba(167,139,250,.4)}
+.upload-zone input{
+  position:absolute;inset:0;
+  opacity:0;cursor:pointer;
+  width:100%;height:100%;
+}
+.upload-icon{font-size:28px;opacity:.4;margin-bottom:8px}
+.upload-text{font-size:13px;color:var(--text2)}
+.upload-text.filled{color:var(--accent-1);font-weight:700}
+
+.submit-btn{
+  width:100%;
+  padding:15px;
+  background:linear-gradient(135deg,var(--accent-1),var(--accent-2));
+  color:#0d0f14;
+  border-radius:18px;
+  font-family:var(--font-b);
+  font-weight:800;
+  font-size:15px;
+  letter-spacing:.2px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s var(--ease),box-shadow .2s,opacity .2s;
+}
+.submit-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px rgba(167,139,250,.35);
+}
+.submit-btn:disabled{
+  background:var(--surface2);
+  color:var(--text3);
+  transform:none;
+  box-shadow:none;
+  cursor:not-allowed;
+  opacity:.6;
+}
+
+/* Success state */
+.proof-success{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  padding:28px 0;
+  text-align:center;
+  gap:10px;
+}
+.success-ring{
+  width:72px;height:72px;
+  border-radius:50%;
+  background:rgba(74,222,128,.12);
+  border:2px solid #4ade80;
+  display:flex;align-items:center;justify-content:center;
+  font-size:30px;
+  animation:popIn .4s var(--ease);
+}
+@keyframes popIn{
+  0%{transform:scale(.5);opacity:0}
+  100%{transform:scale(1);opacity:1}
+}
+.success-title{font-family:'Quicksand', sans-serif;font-size:19px;color:#4ade80;font-weight:700}
+.success-sub{font-size:13px;color:var(--text3);line-height:1.6}
+
+/* ── CREATE TASK FORM ──────────────────────── */
+#createForm{display:flex;flex-direction:column}
+
+.create-task-card{
+  background: linear-gradient(160deg, rgba(167,139,250,0.14), rgba(244,114,182,0.06));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-left: 4px solid var(--accent-2);
+  border-radius: 28px;
+  padding: 20px;
+  margin-bottom: 24px;
+  width: calc(100% + 8px);
+  margin-left: -4px;
+  margin-right: -4px;
+}
+    
+.form-back{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;color:var(--text3);
+  font-weight:600;
+  margin-bottom:18px;
+  transition:color .15s;
+  width:fit-content;
+}
+.form-back:hover{color:var(--text2)}
+
+.form-section{
+  font-size:12px;
+  font-weight:700;
+  color:var(--accent-1);
+  text-transform:none;
+  letter-spacing:normal;
+  margin:20px 0 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.form-section::after{
+  content:'';flex:1;
+  height:1px;background:var(--border);
+}
+
+.form-group{margin-bottom:16px}
+.f-label{
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--text2);
+  text-transform:none;
+  letter-spacing:.2px;
+  margin-bottom:8px;
+}
+.f-input{
+  width:100%;
+  background:rgba(0,0,0,0.25);
+  border:1px dashed var(--border2);
+  border-radius:18px;
+  padding:12px 16px;
+  color:var(--text);
+  font-size:13px;
+  font-weight:700;
+  transition:border-color .2s,box-shadow .2s;
+}
+.f-input:focus{
+  border-color:rgba(167,139,250,.4);
+  box-shadow:0 0 0 3px var(--lime-dim);
+}
+.f-input::placeholder{color:var(--text3)}
+textarea.f-input{
+  resize:vertical;
+  min-height:60px;
+  font-family:var(--font-b);
+  line-height:1.5;
+}
+select.f-input{
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b90a0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  padding-right:32px;
+  cursor:pointer;
+}
+select.f-input option{background:var(--surface);color:var(--text)}
+
+/* Proof type grid */
+.proof-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.proof-option{
+  background:rgba(0,0,0,0.2);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:10px 12px;
+  cursor:pointer;
+  display:flex;align-items:center;gap:9px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--text2);
+  transition:all .15s;
+}
+.proof-option:hover{border-color:var(--border2);color:var(--text)}
+.proof-option.selected{
+  background:var(--lime-dim);
+  border-color:rgba(167,139,250,.45);
+  color:var(--accent-1);
+}
+.proof-option-icon{font-size:16px}
+
+/* 3-col grid */
+.three-col{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+}
+
+/* Cost box */
+.cost-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:16px 18px;
+  margin:20px 0;
+}
+.cost-row{
+  display:flex;justify-content:space-between;
+  font-size:12px;
+  color:var(--text2);
+  margin-bottom:8px;
+  font-weight:600;
+}
+.cost-row.total{
+  padding-top:10px;
+  border-top:1px solid var(--border);
+  margin-top:4px;
+  font-size:16px;
+  color:var(--accent-1);
+  font-weight:800;
+  font-family:var(--font-b);
+}
+
+.post-submit-btn{
+  width:100%;
+  padding:15px;
+  background:linear-gradient(135deg,var(--accent-1),var(--accent-2));
+  color:#0d0f14;
+  border-radius:18px;
+  font-family:var(--font-b);
+  font-weight:700;
+  font-size:13px;
+  text-transform:none;
+  letter-spacing:normal;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .2s;
+}
+.post-submit-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px rgba(167,139,250,.3);
+}
+.post-submit-btn:disabled{
+  background:rgba(255,255,255,0.06);
+  color:var(--text3);
+  transform:none;box-shadow:none;cursor:not-allowed;
+}
+/* ── TOAST ──────────────────────────────────── */
+#toast{
+  position:fixed;
+  top:-100px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--surface2);
+  border:1px solid rgba(167,139,250,.4);
+  border-radius:16px;
+  padding:12px 24px;
+  font-size:13px;
+  font-weight:700;
+  color:var(--text);
+  z-index:99999;
+  white-space:nowrap;
+  box-shadow:0 20px 40px rgba(0,0,0,.5);
+  transition:all .5s cubic-bezier(0.19,1,0.22,1);
+}
+#toast.show{top:24px}
+#toast .t-dot{
+  display:inline-block;
+  width:7px;height:7px;
+  border-radius:50%;
+  margin-right:7px;
+  vertical-align:middle;
+}
+
+/* ── REVIEW MODAL ──────────────────────────────── */
+#reviewOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(6px);
+  z-index:61000;
+  align-items:flex-end;
+  justify-content:center;
+}
+#reviewOverlay.open{display:flex}
+#reviewSheet{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:28px 28px 0 0;
+  width:100%;
+  max-width:520px;
+  max-height:88vh;
+  overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(0.19,1,0.22,1);
+  scrollbar-width:none;
+}
+#reviewSheet.open{transform:translateY(0)}
+#reviewSheet::-webkit-scrollbar{display:none}
+.review-sheet-body{padding:20px 22px 32px}
+
+.proof-review-item{
+  background:rgba(0,0,0,0.2);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:14px;
+  margin-bottom:10px;
+}
+.pri-top{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:10px;
+}
+.pri-worker{font-size:13px;font-weight:700;color:var(--text2)}
+.pri-time{font-size:10px;color:var(--text3)}
+.pri-proof{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  font-family:var(--font-b);
+  font-weight:700;
+  font-size:12px;
+  color:var(--accent-1);
+  margin-bottom:12px;
+  word-break:break-all;
+}
+.pri-actions{display:flex;gap:8px}
+.approve-btn{
+  flex:1;padding:9px;
+  background:rgba(74,222,128,.12);
+  border:1px solid rgba(74,222,128,.25);
+  border-radius:12px;
+  color:#4ade80;
+  font-weight:700;
+  font-size:12px;
+  transition:background .15s;
+}
+.approve-btn:hover{background:rgba(74,222,128,.2)}
+.reject-btn{
+  flex:1;padding:9px;
+  background:rgba(248,113,113,.1);
+  border:1px solid rgba(248,113,113,.2);
+  border-radius:12px;
+  color:var(--red);
+  font-weight:700;
+  font-size:12px;
+  transition:background .15s;
+}
+.reject-btn:hover{background:rgba(248,113,113,.18)}
+
+/* ── RESPONSIVE UTILITY ──────────────────────── */
+@media(max-width:400px){
+  .three-col{grid-template-columns:1fr 1fr}
+  .proof-grid{grid-template-columns:1fr}
+}
+
+  #synergy-dock {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(94%, 460px);
+    z-index: 60000;
+    border-radius: 32px;
+    background: rgba(13, 15, 20, 0.7);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--border);
+    border-top: 1px solid rgba(167, 139, 250, 0.25);
+    box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.7), 0 0 40px rgba(167, 139, 250, 0.06);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom)) 8px;
+}
+
+#dock-trace {
+    position: relative;
+    height: 1px;
+    margin: 0 20px 4px 20px;
+    background: linear-gradient(90deg, transparent, rgba(167,139,250,0.2) 15%, rgba(167,139,250,0.2) 85%, transparent);
+}
+#dock-pulse {
+    position: absolute;
+    top: -2px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-1);
+    box-shadow: 0 0 8px var(--accent-1), 0 0 16px rgba(167,139,250,0.6);
+    transition: left 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+#dock-items {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.dock-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    padding: 2px 0 0 0;
+    cursor: pointer;
+    background: none;
+    border: none;
+    position: relative;
+}
+
+.dock-icon-shell {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+    background: transparent;
+}
+
+.dock-node svg {
+    width: 24px;
+    height: 24px;
+    stroke: rgba(255,255,255,0.45);
+    fill: none;
+    stroke-width: 2;
+    transition: all 0.3s ease;
+}
+
+.dock-label {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: all 0.35s ease;
+    overflow: hidden;
+}
+
+.dock-node.active .dock-icon-shell {
+    background: rgba(167, 139, 250, 0.1);
+    box-shadow: 0 0 0 1px rgba(167,139,250,0.3), 0 0 18px rgba(167,139,250,0.15);
+    transform: translateY(-6px);
+}
+.dock-node.active svg { stroke: var(--accent-1); }
+.dock-node.active .dock-label {
+    color: var(--accent-1);
+    max-height: 12px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dock-ring {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.dock-live-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 6px #4ade80;
+    border: 1.5px solid var(--bg);
+}
+
+#profile-sheet {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 100%);
+    width: min(94%, 460px);
+    z-index: 70000;
+    background: var(--bg);
+    background-image:
+        radial-gradient(circle at 50% 50%, rgba(112, 0, 255, 0.15), transparent),
+        url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+    border: 1px solid rgba(167,139,250,0.15);
+    border-bottom: none;
+    border-top: 2px solid var(--accent-2);
+    border-radius: 24px 24px 0 0;
+    padding: 6px 16px calc(14px + env(safe-area-inset-bottom)) 16px;
+    transition: transform 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.6);
+    font-family: 'Quicksand', sans-serif;
+  }
+
+#profile-sheet.active { transform: translate(-50%, 0); }
+
+.sheet-handle {
+    width: 32px; height: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    margin: 6px auto 8px auto;
+}
+
+.sheet-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.sheet-item:last-child { border-bottom: none; }
+.sheet-item:hover, .sheet-item:active { background: rgba(255,255,255,0.04); }
+
+.sheet-icon-box {
+    width: 34px; height: 34px;
+    border-radius: 11px;
+    background: rgba(167,139,250,0.1);
+    border: 1px solid rgba(167,139,250,0.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.sheet-icon-box svg { width: 15px; height: 15px; stroke: var(--accent-1); fill: none; stroke-width: 2; }
+.sheet-icon-box.danger-box { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.2); }
+.sheet-icon-box.danger-box svg { stroke: #f87171; }
+
+.sheet-item-text { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.sheet-item-text span {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12.5px; font-weight: 700; color: #f1f1f1;
+}
+.sheet-item-text p {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 9.5px; font-weight: 500; color: rgba(255,255,255,0.35); margin: 0;
+}
+.sheet-item.danger .sheet-item-text span { color: #f87171; }
+
+.sheet-item .chevron { width: 14px; height: 14px; stroke: rgba(255,255,255,0.2); fill: none; stroke-width: 2; flex-shrink: 0; }
+
+.sheet-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 2px 4px; }
+
+.sheet-item span {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12.5px;
+    color: #eee;
+    font-weight: 700;
+}
+.sheet-item.danger span { color: #f87171; }
+    
+body { padding-bottom: 90px; }
+
+    /* Status 3D Filter Bar */
+.status-3d-bar{
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:8px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  overflow:hidden;
+  perspective:150px;
+  perspective-origin:top;
+  margin-bottom:20px;
+}
+.slope-3d-btn{
+  transform:rotateX(15deg);
+  transform-origin:bottom;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  backface-visibility:hidden;
+  border-radius:0 0 12px 12px;
+  padding:12px 4px;
+  text-align:center;
+  cursor:pointer;
+  background:none;
+  width:100%;
+}
+.slope-3d-btn:hover, .slope-3d-btn.selected{
+  transform:rotateX(5deg) translateY(-1px);
+  background-color:rgba(255,255,255,.05);
+}
+.slope-3d-btn .slope-label{
+  font-family:var(--font-b);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:normal;
+  text-transform:none;
+  white-space:nowrap;
+  display:block;
+}
+.slope-all{ background:rgba(167,139,250,.05); border-bottom:2px solid rgba(167,139,250,.4);}
+.slope-all .slope-label{ color:var(--accent-1); }
+.slope-active{ background:rgba(74,222,128,.05); border-bottom:2px solid rgba(74,222,128,.4);}
+.slope-active .slope-label{ color:#4ade80; }
+.slope-pending{ background:rgba(251,191,36,.05); border-bottom:2px solid rgba(251,191,36,.4);}
+.slope-pending .slope-label{ color:#fbbf24; }
+.slope-completed{ background:rgba(244,114,182,.05); border-bottom:2px solid rgba(244,114,182,.4);}
+.slope-completed .slope-label{ color:var(--accent-2); }
+  
+#profile-sheet-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(6px);
+    z-index: 69999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+#profile-sheet-overlay.active { opacity: 1; pointer-events: auto; }  
+
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+<header id="header">
+  <div class="header-inner">
+    <section class="hero-section">
+      <div class="hero-top">
+        <span class="brand-dot"></span>
+        <span class="brand-font-title">Million Subscribers</span>
+      </div>
+      <h1 class="headline">Grow your<br>subscriber base</h1>
+      <p class="subcopy">Post tasks for members to complete, or earn rewards by completing others' tasks.</p>
+    </section>
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="poster" onclick="switchTab('poster')">
+        Post Tasks
+      </button>
+      <button class="tab-btn" data-tab="tasks" onclick="switchTab('tasks')">
+        Find Tasks
+      </button>
+    </div>
+  </div>
+</header>
+  <!-- CONTENT -->
+  <main id="content">
+
+    <!-- ═══ TASKS PANEL ═══ -->
+    <div id="tasksPanel" style="display:none">
+      <!-- Search -->
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="search" id="searchInput" placeholder="Search tasks, tags…" oninput="filterTasks()"/>
+      </div>
+
+      <!-- Categories -->
+      <div class="pill-row" id="catRow"></div>
+
+      <!-- Sort row -->
+      <div class="sort-row">
+        <div class="results-count">
+          <span id="taskCount">0</span> tasks available
+        </div>
+        <select class="sort-select" onchange="sortTasks(this.value)">
+          <option value="hot">🔥 Hot First</option>
+          <option value="highest">💰 Highest Pay</option>
+          <option value="easy">✅ Easiest First</option>
+          <option value="newest">🕐 Newest</option>
+        </select>
+      </div>
+
+      <!-- Grid -->
+      <div id="taskGrid"></div>
+
+      <!-- Empty -->
+      <div id="emptyState" style="display:none;flex-direction:column;align-items:center;padding:60px 20px;text-align:center;gap:10px">
+        <div style="font-size:48px;opacity:.3">🔍</div>
+        <div style="font-family:'Quicksand', sans-serif;font-size:19px;color:var(--text2)">No tasks found</div>
+        <div style="font-size:13px;color:var(--text3);line-height:1.6">Try a different category or clear search</div>
+      </div>
+    </div>
+
+    <!-- ═══ POSTER PANEL ═══ -->
+    <div id="posterPanel">
+
+      <!-- Create form (hidden initially) -->
+      <div id="createForm" class="create-task-card">
+  <div style="font-family:var(--font-b);font-size:16px;font-weight:700;color:var(--accent-1);margin-bottom:4px">Create Task</div>
+  <div style="font-size:12px;color:var(--text2)">Fill in all fields. Workers will see exactly this.</div>
+        <div class="form-section">Basic Info</div>
+
+        <div class="form-group">
+          <div class="f-label">Task Title *</div>
+          <input type="text" class="f-input" id="fTitle" placeholder="e.g. Follow my Instagram and like a post"/>
+        </div>
+        <div class="form-group">
+          <div class="f-label">Category *</div>
+          <select class="f-input" id="fCat">
+            <option value="social">📱 Social Media</option>
+            <option value="signup">✍️ Sign Up / Register</option>
+            <option value="follow">👥 Follow / Subscribe</option>
+            <option value="app">📲 App Install</option>
+            <option value="review">⭐ Review / Rating</option>
+            <option value="referral">🔗 Referral</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="f-label">Task Description *</div>
+          <textarea class="f-input" id="fDesc" placeholder="Describe clearly what the worker must do…"></textarea>
+        </div>
+        <div class="form-group">
+          <div class="f-label">Step-by-step Instructions (one per line) *</div>
+          <textarea class="f-input" id="fSteps" rows="5" placeholder="Click the link below&#10;Register with your email&#10;Verify your phone number&#10;Copy your referral code&#10;Paste it as proof" style="font-family:var(--font-m);font-size:12px"></textarea>
+        </div>
+        <div class="form-group">
+          <div class="f-label">Task Link *</div>
+          <input type="url" class="f-input" id="fLink" placeholder="https://yourlink.com/ref/…"/>
+        </div>
+
+       <div class="form-section">Proof Required</div>
+<select class="f-input" id="proofGrid" onchange="selectProof(this)">
+  <option value="screenshot" selected>📸 Screenshot</option>
+  <option value="referral_code">🔑 Referral Code</option>
+  <option value="phone">📱 Phone Number</option>
+  <option value="email">📧 Email Address</option>
+  <option value="username">👤 Username</option>
+  <option value="code">#️⃣ Custom Code</option>
+</select> 
+
+        <div class="form-section">Budget & Slots</div>
+        <div class="three-col">
+          <div class="form-group">
+            <div class="f-label">Reward/Task (₦) *</div>
+            <input type="number" class="f-input" id="fReward" placeholder="500" oninput="updateCost()"/>
+          </div>
+          <div class="form-group">
+            <div class="f-label">Total Slots *</div>
+            <input type="number" class="f-input" id="fSlots" placeholder="100" oninput="updateCost()"/>
+          </div>
+          <div class="form-group">
+            <div class="f-label">Time Limit (min)</div>
+            <input type="number" class="f-input" id="fTime" placeholder="30"/>
+          </div>
+        </div>
+
+        <div class="cost-box" id="costBox" style="display:none">
+          <div class="cost-row"><span>Workers reward</span><span id="costWorkers">₦0</span></div>
+          <div class="cost-row"><span>Platform fee (20%)</span><span id="costFee">₦0</span></div>
+          <div class="cost-row total"><span>Total to pay</span><span id="costTotal">₦0</span></div>
+        </div>
+
+        <button class="post-submit-btn" id="postSubmitBtn" onclick="submitTask()" disabled>
+          🚀 Post Task
+        </button>
+      </div>
+
+      <!-- My overview -->
+    <div id="posterOverview">
+      <div id="posterPanel">
+
+  <!-- SABON WURI: status bar a saman komai -->
+  <div class="status-3d-bar">
+    <button class="slope-3d-btn slope-all selected" onclick="setPosterFilter('all', this)">
+      <span class="slope-label">All</span>
+    </button>
+    <button class="slope-3d-btn slope-active" onclick="setPosterFilter('active', this)">
+      <span class="slope-label">Active</span>
+    </button>
+    <button class="slope-3d-btn slope-pending" onclick="setPosterFilter('pending', this)">
+      <span class="slope-label">Pending</span>
+    </button>
+    <button class="slope-3d-btn slope-completed" onclick="setPosterFilter('completed', this)">
+      <span class="slope-label">Completed</span>
+    </button>
+  </div>
+
+        <div class="section-label">My Posted Tasks</div>
+        <div id="myPostedTasksContainer"></div>
+
+      </div>
+
+    </div><!-- /#posterPanel -->
+
+  </main>
+
+<!-- ═══ TASK DETAIL MODAL ═══ -->
+  
+<!-- ═══ TASK DETAIL MODAL ═══ -->
+<div id="modalOverlay" onclick="closeModal(event)">
+  <div id="modalSheet">
+    <div class="sheet-handle"><div class="sheet-handle-bar"></div></div>
+    <div class="sheet-header">
+      <div class="sheet-title" id="modalTitle"></div>
+      <button class="close-btn" onclick="closeModalDirect()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+
+      <!-- Reward hero -->
+      <div class="reward-hero">
+        <div class="rh-left">
+          <div class="rh-label">Your Reward</div>
+          <div id="modalRewardAmt">₦0</div>
+        </div>
+        <div class="rh-right">
+          <div id="modalDiffBadge" class="diff-badge"></div>
+          <div id="modalSlotsLeft" style="font-size:11px;color:var(--text3)"></div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="modal-desc" id="modalDesc"></div>
+
+      <!-- Proof form / success -->
+      <div id="proofForm">
+        <!-- Steps box -->
+        <div class="steps-box" id="stepsBox">
+          <div class="steps-heading">📋 Task Steps</div>
+          <div id="stepsList"></div>
+          <a id="taskLinkBtn" href="#" target="_blank" class="task-link-btn">🚀 Open Task Link <span>→</span></a>
+        </div>
+
+        <!-- Proof input -->
+        <div class="proof-label" id="proofLabelText"></div>
+        <div id="proofInputArea"></div>
+
+        <button class="submit-btn" id="submitProofBtn" onclick="submitProof()" disabled>
+          Submit Proof
+        </button>
+      </div>
+
+      <div class="proof-success" id="proofSuccess">
+        <div class="success-ring">✓</div>
+        <div class="success-title">Proof Submitted!</div>
+        <div class="success-sub">Your task is under review.<br/>You'll be paid once the poster approves.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ REVIEW MODAL ═══ -->
+<div id="reviewOverlay" onclick="closeReview(event)">
+  <div id="reviewSheet">
+    <div class="sheet-handle"><div class="sheet-handle-bar"></div></div>
+    <div class="sheet-header">
+      <div class="sheet-title">Review Proofs</div>
+      <button class="close-btn" onclick="closeReviewDirect()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="review-sheet-body" id="reviewBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<nav id="synergy-dock">
+    <div id="dock-trace">
+        <div id="dock-pulse"></div>
+    </div>
+    <div id="dock-items">
+
+        <button class="dock-node" data-index="0" onclick="setDockActive(0); location.href='wallet.html'">
+            <div class="dock-icon-shell">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H4v4M20 12v4H4v-4M20 12H4M12 4v16"></path></svg>
+            </div>
+            <span class="dock-label">Wallet</span>
+        </button>
+
+        <button class="dock-node" data-index="1" onclick="setDockActive(1); location.href='status-pay.html'">
+            <div class="dock-icon-shell">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <span class="dock-label">Customers</span>
+        </button>
+
+        <button class="dock-node active" data-index="2" onclick="setDockActive(2); location.href='million-subscribers.html'">
+            <div class="dock-icon-shell">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 1.94c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.94 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+            </div>
+            <span class="dock-label">Subscribers</span>
+        </button>
+
+        <button class="dock-node" data-index="3" onclick="setDockActive(3); location.href='dashboard.html'">
+            <div class="dock-icon-shell">
+                <svg id="task-ring-svg" class="dock-ring" viewBox="0 0 44 44">
+                    <circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2"></circle>
+                    <circle id="task-ring-progress" cx="22" cy="22" r="19" fill="none" stroke="#a78bfa" stroke-width="2"
+                        stroke-linecap="round" stroke-dasharray="119.4" stroke-dashoffset="119.4"
+                        transform="rotate(-90 22 22)" style="transition: stroke-dashoffset 0.8s ease;"></circle>
+                </svg>
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"></path><polygon points="9.545 15.568 9.545 8.432 15.818 12 9.545 15.568" fill="currentColor" stroke="none"></polygon></svg>
+            </div>
+            <span class="dock-label" id="task-dock-label">Tasks</span>
+        </button>
+
+        <button class="dock-node" data-index="4" onclick="setDockActive(4); openProfileSheet()">
+            <div class="dock-icon-shell">
+                <div class="dock-live-dot"></div>
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <span class="dock-label">Profile</span>
+        </button>
+
+    </div>
+</nav>
+
+<div id="profile-sheet-overlay" onclick="closeProfileSheet()"></div>
+
+<div id="profile-sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-item" onclick="location.href='referrals.html'">
+        <div class="sheet-icon-box">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="sheet-item-text">
+            <span>Referrals</span>
+            <p>Invite friends & earn rewards</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+
+    <div class="sheet-divider"></div>
+
+    <div class="sheet-item" onclick="location.href='settings.html'">
+        <div class="sheet-icon-box">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </div>
+        <div class="sheet-item-text">
+            <span>Settings</span>
+            <p>Bank details & withdrawal setup</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+
+    <div class="sheet-item" onclick="location.href='support.html'">
+        <div class="sheet-icon-box">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 18.36a9 9 0 1 0-12.72 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </div>
+        <div class="sheet-item-text">
+            <span>Support</span>
+            <p>Get help from our team</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+
+    <div class="sheet-divider"></div>
+
+    <div class="sheet-item danger" onclick="location.href='signin.html'">
+        <div class="sheet-icon-box danger-box">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </div>
+        <div class="sheet-item-text"><span>Log out</span></div>
+    </div>
+</div>
+<script>
+/* ── FIREBASE INIT ─────────────────────────── */
+const firebaseConfig = {
+    apiKey: "AIzaSyDLTwLq8Le9vYAwRkRcqXPGxFnEqW1yE2E",
+    authDomain: "synergy-protocol.firebaseapp.com",
+    databaseURL: "https://synergy-protocol-default-rtdb.firebaseio.com",
+    projectId: "synergy-protocol",
+    storageBucket: "synergy-protocol.firebasestorage.app",
+    messagingSenderId: "179647543031",
+    appId: "1:179647543031:web:388da8a36e1bbbb55d85f2"
+};
+
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+const db = firebase.firestore();
+const rtdb = firebase.database();
+const currentUser = localStorage.getItem('synergy_user');
+
+const VONK_RATE_NGN = 10; // 1 VNK = ₦10
+
+/* ── CLOSED-LOOP REVENUE SPLIT ──────────────
+   Advertiser pays: reward + fee (15% of reward).
+   Worker always gets the full `reward`, unaffected by referral.
+   The 15% fee is the pool that funds BOTH platform revenue AND
+   referral commission — referral is carved OUT of the fee, never
+   an extra cost on top. If no referrer: platform keeps the whole fee.
+   If referrer exists: platform keeps fee − referral commission. ── */
+const PLATFORM_FEE_RATE = 0.20;   // 20% of reward, paid by advertiser
+const REFERRAL_RATE = 0.10;       // 10% of reward, carved from the fee pool (worker's referrer)
+const ADVERTISER_REFERRAL_RATE = 0.03;   // 3% of workerPool, carved from the fee pool (advertiser's referrer)
+const ADVERTISER_REFERRAL_MONTHS = 6;    // eligibility window from advertiser's first completed campaign
+
+/* ── REVENUE LEDGER (full audit trail: advertiser cost vs user payout) ── */
+async function logRevenue(entry){
+  try {
+    await db.collection('revenue_ledger').add({
+      platform: 'taskpro',
+      ...entry,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error('logRevenue error:', err);
+  }
+}
+
+/* ── DATA ─────────────────────────────────── */
+let TASKS = [];
+
+const PROOF_META = {
+    screenshot:    { label: 'Upload screenshot showing you completed this task', placeholder: null },
+    referral_code: { label: 'Enter your Referral Code', placeholder: 'e.g. CB-A3X91' },
+    phone:         { label: 'Phone number used', placeholder: 'e.g. 08012345678' },
+    email:         { label: 'Email address used', placeholder: 'e.g. you@gmail.com' },
+    username:      { label: 'Your username', placeholder: 'e.g. @myusername' },
+    code:          { label: 'Enter the code', placeholder: 'e.g. XY1234' }
+};
+
+function loadTasksFromFirebase() {
+    rtdb.ref('subscriber_tasks').on('value', snapshot => {
+        const data = snapshot.val();
+        TASKS = [];
+        if (data) {
+            Object.entries(data).forEach(([key, t]) => {
+                TASKS.push({
+                    id: key,
+                    category: t.category,
+                    hot: false,
+                    featured: false,
+                    title: t.title,
+                    desc: t.desc,
+                    reward: t.reward,
+                    slots_total: t.slots_total,
+                    slots_filled: t.slots_filled || 0,
+                    time_limit: t.time_limit || null,
+                    difficulty: t.reward >= 1000 ? 'Hard' : (t.reward >= 400 ? 'Medium' : 'Easy'),
+                    poster: { name: t.postedBy, verified: false, avatar: (t.postedBy||'??').slice(0,2).toUpperCase() },
+                    tags: [t.category],
+                    created: t.createdAt,
+                    link: t.link,
+                    proof_type: t.proof_type,
+                    proof_label: (PROOF_META[t.proof_type]||{}).label || 'Enter proof',
+                    proof_placeholder: (PROOF_META[t.proof_type]||{}).placeholder || null,
+                    steps: t.steps || [],
+                    postedBy: t.postedBy
+                });
+            });
+        }
+        renderTasks();
+    });
+}
+
+let mySubmittedTaskIds = new Set();
+
+function loadMySubmissions() {
+    if (!currentUser) return;
+    db.collection("subscriber_task_submissions")
+        .where("submittedBy", "==", currentUser)
+        .onSnapshot(snapshot => {
+            mySubmittedTaskIds = new Set(snapshot.docs.map(doc => doc.data().taskId));
+            renderTasks();
+        });
+}
+
+let activeReviewTaskId = null;
+
+function loadMyPostedTasks() {
+    if (!currentUser) return;
+    rtdb.ref('subscriber_tasks').orderByChild('postedBy').equalTo(currentUser)
+        .on('value', async snapshot => {
+            const data = snapshot.val();
+            const container = document.getElementById('myPostedTasksContainer');
+            if (!data) {
+                container.innerHTML = '<p style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">No tasks posted yet.</p>';
+                return;
+            }
+
+            const entries = Object.entries(data).reverse();
+            let html = '';
+
+            for (const [taskId, t] of entries) {
+                const pendingSnap = await db.collection("subscriber_task_submissions")
+                    .where("taskId", "==", taskId)
+                    .where("status", "==", "pending")
+                    .get();
+                const pendingCount = pendingSnap.size;
+
+                const filled = t.slots_filled || 0;
+                const total = t.slots_total || 1;
+                const pct = Math.min(100, Math.round((filled/total)*100));
+                const spent = filled * t.reward;
+                const budget = total * t.reward;
+                const isComplete = filled >= total;
+                const status = isComplete ? 'completed' : (pendingCount > 0 ? 'active pending' : 'active');
+
+                html += `
+                <div class="posted-task" data-status="${status}">
+                  <div class="posted-task-top">
+                    <div class="posted-task-title">${t.title}</div>
+                    <span class="status-badge ${isComplete ? 'status-done' : 'status-active'}">${isComplete ? 'Completed' : 'Active'}</span>
+                  </div>
+                  <div class="posted-meta">
+                    <div class="pm-item"><div class="pm-lbl">Budget</div><div class="pm-val">₦${budget.toLocaleString()}</div></div>
+                    <div class="pm-item"><div class="pm-lbl">Spent</div><div class="pm-val">₦${spent.toLocaleString()}</div></div>
+                    <div class="pm-item"><div class="pm-lbl">Filled</div><div class="pm-val">${filled}/${total}</div></div>
+                  </div>
+                  <div class="slot-track"><div class="slot-fill" style="width:${pct}%"></div></div>
+                  ${pendingCount > 0 ? `<button class="review-btn" onclick="openReviewModal('${taskId}')">⏳ Review ${pendingCount} Pending Proof${pendingCount>1?'s':''} →</button>` : ''}
+                </div>`;
+            }
+
+            container.innerHTML = html;
+        });
+}
+
+const CATEGORIES = [
+  {id:'all',label:'All Tasks',icon:'⚡'},
+  {id:'social',label:'Social Media',icon:'📱'},
+  {id:'signup',label:'Sign Up',icon:'✍️'},
+  {id:'follow',label:'Follow',icon:'👥'},
+  {id:'app',label:'App Install',icon:'📲'},
+  {id:'review',label:'Reviews',icon:'⭐'},
+  {id:'referral',label:'Referral',icon:'🔗'},
+];
+
+const DIFF_COLORS = {Easy:'#4ade80',Medium:'#fbbf24',Hard:'var(--red)'};
+const DIFF_BG = {Easy:'rgba(74,222,128,.12)',Medium:'var(--amber-dim)',Hard:'rgba(248,113,113,.1)'};
+
+/* ── STATE ─────────────────────────────────── */
+let state = {
+  activeCategory: 'all',
+  search: '',
+  sort: 'hot',
+  selectedTask: null,
+  selectedProofType: 'screenshot',
+  fileUploaded: false,
+  proofValue: '',
+};
+
+/* ── FORMAT ─────────────────────────────────── */
+function fmtNGN(n){
+  return '₦' + Number(n).toLocaleString('en-NG');
+}
+
+function pct(filled,total){
+  return Math.min(100, Math.round((filled/total)*100));
+}
+
+/* ── TOAST ──────────────────────────────────── */
+let toastTimer;
+function showToast(msg, color='var(--accent-1)'){
+  const el = document.getElementById('toast');
+  el.innerHTML = `<span class="t-dot" style="background:${color}"></span>${msg}`;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 3200);
+}
+
+/* ── TABS ───────────────────────────────────── */
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.getElementById('tasksPanel').style.display = tab==='tasks' ? 'block' : 'none';
+  document.getElementById('posterPanel').style.display = tab==='poster' ? 'block' : 'none';
+}
+
+/* ── CATEGORIES ─────────────────────────────── */
+function buildCats(){
+  const row = document.getElementById('catRow');
+  row.innerHTML = CATEGORIES.map(c=>`
+    <button class="pill ${c.id===state.activeCategory?'active':''}"
+      onclick="setCategory('${c.id}')">
+      ${c.icon} ${c.label}
+    </button>
+  `).join('');
+}
+
+function setCategory(id){
+  state.activeCategory = id;
+  buildCats();
+  renderTasks();
+}
+
+/* ── SORT ───────────────────────────────────── */
+function sortTasks(val){
+  state.sort = val;
+  renderTasks();
+}
+
+/* ── SEARCH ─────────────────────────────────── */
+function filterTasks(){
+  state.search = document.getElementById('searchInput').value.toLowerCase().trim();
+  renderTasks();
+}
+
+/* ── RENDER TASKS ───────────────────────────── */
+function getFilteredTasks(){
+  return TASKS.filter(t=>{
+    if(mySubmittedTaskIds.has(t.id)) return false;
+    if(state.activeCategory !== 'all' && t.category !== state.activeCategory) return false;
+    if(state.search){
+      const hay = (t.title+' '+t.tags.join(' ')).toLowerCase();
+      if(!hay.includes(state.search)) return false;
+    }
+    return true;
+  }).sort((a,b)=>{
+    if(state.sort==='hot') return (b.hot?1:0)-(a.hot?1:0);
+    if(state.sort==='highest') return b.reward-a.reward;
+    if(state.sort==='easy'){
+      const order={Easy:0,Medium:1,Hard:2};
+      return order[a.difficulty]-order[b.difficulty];
+    }
+    return 0; // newest = original order
+  });
+}
+
+function renderTasks(){
+  const tasks = getFilteredTasks();
+  const grid = document.getElementById('taskGrid');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('taskCount').textContent = tasks.length;
+
+  if(tasks.length===0){
+    grid.innerHTML='';
+    empty.style.display='flex';
+    return;
+  }
+  empty.style.display='none';
+
+  grid.innerHTML = tasks.map((t,i)=>buildCard(t,i)).join('');
+
+  // Animate slot bars in after paint
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.slot-fill[data-pct]').forEach(el=>{
+      setTimeout(()=>{ el.style.width = el.dataset.pct + '%'; }, 80);
+    });
+  });
+}
+
+function buildCard(t, idx){
+  const p = pct(t.slots_filled, t.slots_total);
+  const remaining = t.slots_total - t.slots_filled;
+  const urgent = p > 85;
+  const catLabel = (CATEGORIES.find(c=>c.id===t.category)||{}).label || t.category;
+
+  return `
+  <div class="task-card" onclick="openTask('${t.id}')" style="animation:fadeUp .3s ${idx*0.04}s both">
+    <div>
+      <div class="find-card-meta">
+        <span>${catLabel}</span>
+        <span>${fmtNGN(t.reward)} Per Task</span>
+      </div>
+      <div class="find-card-title">${t.title}</div>
+    </div>
+
+    <div class="tag-row">
+      ${t.tags.map(tag=>`<span class="tag">#${tag}</span>`).join('')}
+      ${t.time_limit ? `<span class="tag">⏱ ${t.time_limit}min</span>` : ''}
+    </div>
+
+    <div>
+      <div class="slot-track">
+        <div class="slot-fill" data-pct="${p}" style="width:0%"></div>
+      </div>
+      <div class="slot-meta">
+        <span>${t.slots_filled.toLocaleString()} / ${t.slots_total.toLocaleString()} taken</span>
+        <span class="left-slots ${urgent?'urgent':'ok'}">${remaining.toLocaleString()} left</span>
+      </div>
+    </div>
+
+    <div class="find-card-footer">
+      <button class="find-btn-secondary" onclick="event.stopPropagation(); openTask('${t.id}')">View Steps</button>
+      <button class="find-btn-primary" onclick="event.stopPropagation(); openTask('${t.id}')">Start</button>
+    </div>
+  </div>`;
+    }
+
+/* ── OPEN TASK ──────────────────────────────── */
+function openTask(id){
+  const task = TASKS.find(t=>t.id===id);
+  if(!task) return;
+  state.selectedTask = task;
+  state.fileUploaded = false;
+  state.proofValue = '';
+
+  // Reset form
+  document.getElementById('proofForm').style.display='block';
+  document.getElementById('proofSuccess').style.display='none';
+  document.getElementById('submitProofBtn').disabled=true;
+  document.getElementById('submitProofBtn').textContent='Submit Proof';
+
+  // Fill modal
+  document.getElementById('modalTitle').textContent = task.title;
+  document.getElementById('modalDesc').textContent = task.desc;
+  document.getElementById('taskLinkBtn').href = task.link;
+
+  // Reward count-up animation
+  const rewardEl = document.getElementById('modalRewardAmt');
+  let cur=0, target=task.reward, step=Math.ceil(target/30);
+  rewardEl.textContent='₦0';
+  const inc=setInterval(()=>{
+    cur=Math.min(cur+step,target);
+    rewardEl.textContent=fmtNGN(cur);
+    if(cur>=target) clearInterval(inc);
+  }, 28);
+
+  // Difficulty badge
+  const db_ = document.getElementById('modalDiffBadge');
+  db_.textContent = task.difficulty;
+  db_.style.background = DIFF_BG[task.difficulty];
+  db_.style.color = DIFF_COLORS[task.difficulty];
+  db_.style.border = `1px solid ${DIFF_COLORS[task.difficulty]}44`;
+
+  // Slots
+  const remaining = task.slots_total - task.slots_filled;
+  document.getElementById('modalSlotsLeft').textContent = `${remaining.toLocaleString()} slots left`;
+
+  // Steps
+  document.getElementById('stepsList').innerHTML = task.steps.map((s,i)=>`
+    <div class="step-item">
+      <div class="step-num">${i+1}</div>
+      <span>${s}</span>
+    </div>
+  `).join('');
+
+  // Proof input
+  document.getElementById('proofLabelText').textContent = task.proof_label;
+  const area = document.getElementById('proofInputArea');
+
+  if(task.proof_type==='screenshot'){
+    area.innerHTML = `
+      <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleFileUpload(this)"/>
+        <div class="upload-icon" id="uploadIcon">📸</div>
+        <div class="upload-text" id="uploadText">Tap to upload screenshot</div>
+      </div>`;
+  } else {
+    area.innerHTML = `
+      <input type="text" class="proof-input" id="proofTextInput"
+        placeholder="${task.proof_placeholder||'Enter here...'}"
+        oninput="handleProofText(this.value)"/>`;
+  }
+
+  // Show modal
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('modalSheet').classList.add('open'), 10);
+}
+
+function handleFileUpload(input){
+  if(input.files && input.files[0]){
+    state.fileUploaded = true;
+    document.getElementById('uploadIcon').textContent = '🖼️';
+    document.getElementById('uploadText').textContent = input.files[0].name;
+    document.getElementById('uploadText').classList.add('filled');
+    document.getElementById('submitProofBtn').disabled = false;
+  }
+}
+
+function handleProofText(val){
+  state.proofValue = val.trim();
+  document.getElementById('submitProofBtn').disabled = state.proofValue.length < 2;
+}
+
+function closeModal(e){
+  if(e.target===document.getElementById('modalOverlay')) closeModalDirect();
+}
+function closeModalDirect(){
+  document.getElementById('modalSheet').classList.remove('open');
+  setTimeout(()=>document.getElementById('modalOverlay').classList.remove('open'), 320);
+}
+
+/* ── SUBMIT PROOF (worker/earner side) ─────── */
+async function submitProof(){
+  if (!currentUser) { showToast('Please login first!', 'var(--red)'); return; }
+
+  const task = state.selectedTask;
+  const btn = document.getElementById('submitProofBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Submitting…';
+
+  try {
+    // Hana sake yin proof akan task da aka riga aka submit
+    const existing = await db.collection("subscriber_task_submissions")
+      .where("submittedBy", "==", currentUser)
+      .where("taskId", "==", task.id)
+      .get();
+
+    if (!existing.empty) {
+      showToast('You already submitted proof for this task!', 'var(--red)');
+      btn.disabled = false;
+      btn.textContent = 'Submit Proof';
+      return;
+    }
+
+    const proofData = task.proof_type === 'screenshot'
+      ? (document.getElementById('fileInput')?.files[0]?.name || 'screenshot_uploaded')
+      : state.proofValue;
+
+    await db.collection("subscriber_task_submissions").add({
+      taskId: task.id,
+      taskTitle: task.title,
+      postedBy: task.postedBy,
+      submittedBy: currentUser,
+      proofType: task.proof_type,
+      proofValue: proofData,
+      reward: task.reward,
+      status: "pending",
+      submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById('proofForm').style.display='none';
+    document.getElementById('proofSuccess').style.display='flex';
+
+    showToast('Proof submitted — pending review ⏳', 'var(--accent-1)');
+
+    setTimeout(()=>{
+      closeModalDirect();
+    }, 2000);
+
+  } catch (err) {
+    console.error(err);
+    showToast('Error submitting proof. Try again.', 'var(--red)');
+    btn.disabled = false;
+    btn.textContent = 'Submit Proof';
+  }
+}
+
+/* ── POSTER PANEL ───────────────────────────── */
+function showCreateForm(){
+  document.getElementById('posterOverview').style.display='none';
+  document.getElementById('createForm').style.display='flex';
+  updateCost();
+}
+function hideCreateForm(){
+  document.getElementById('createForm').style.display='none';
+  document.getElementById('posterOverview').style.display='block';
+}
+
+function setPosterFilter(status, btn){
+  document.querySelectorAll('.slope-3d-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.querySelectorAll('.posted-task').forEach(card=>{
+    const statuses = (card.dataset.status||'').split(' ');
+    card.style.display = (status==='all' || statuses.includes(status)) ? 'block' : 'none';
+  });
+}
+  
+function selectProof(el){
+  state.selectedProofType = el.value;
+}
+
+function updateCost(){
+  const r = Number(document.getElementById('fReward').value)||0;
+  const s = Number(document.getElementById('fSlots').value)||0;
+  const workers = r*s;
+  const fee = Math.round(workers*PLATFORM_FEE_RATE);
+  const total = workers+fee;
+
+  const box = document.getElementById('costBox');
+  if(workers>0){
+    box.style.display='block';
+    document.getElementById('costWorkers').textContent=fmtNGN(workers);
+    document.getElementById('costFee').textContent=fmtNGN(fee);
+    document.getElementById('costTotal').textContent=fmtNGN(total);
+  } else {
+    box.style.display='none';
+  }
+
+  const btn = document.getElementById('postSubmitBtn');
+  const titleOk = (document.getElementById('fTitle').value||'').trim().length>3;
+  btn.disabled = !(r>0 && s>0 && titleOk);
+  btn.textContent = total>0 ? `🚀 Post Task · Pay ${fmtNGN(total)}` : '🚀 Post Task';
+}
+
+/* ── POST TASK (real Firebase) ──────────────── */
+async function submitTask(){
+  if (!currentUser) { showToast('Please login first!', 'var(--red)'); return; }
+
+  const btn = document.getElementById('postSubmitBtn');
+  const r = Number(document.getElementById('fReward').value)||0;
+  const s = Number(document.getElementById('fSlots').value)||0;
+  const workers = r*s;
+  const fee = Math.round(workers*PLATFORM_FEE_RATE);
+  const total = workers+fee;
+
+  btn.disabled=true;
+  btn.textContent='⏳ Posting task…';
+
+  try {
+    const userDoc = await db.collection("users").doc(currentUser).get();
+    const nairaBalance = userDoc.exists ? (userDoc.data().nairaBalance || 0) : 0;
+
+    if (nairaBalance < total) {
+      showToast('Insufficient Naira balance!', 'var(--red)');
+      btn.disabled = false;
+      updateCost();
+      return;
+    }
+
+    const stepsArr = (document.getElementById('fSteps').value || '')
+      .split('\n').map(s=>s.trim()).filter(Boolean);
+
+    const newTask = {
+      title: document.getElementById('fTitle').value.trim(),
+      category: document.getElementById('fCat').value,
+      desc: document.getElementById('fDesc').value.trim(),
+      steps: stepsArr,
+      link: document.getElementById('fLink').value.trim(),
+      proof_type: state.selectedProofType,
+      reward: r,
+      slots_total: s,
+      slots_filled: 0,
+      time_limit: Number(document.getElementById('fTime').value) || null,
+      postedBy: currentUser,
+      createdAt: Date.now()
+    };
+
+    const taskRef = await rtdb.ref('subscriber_tasks').push(newTask);
+
+    await db.collection("users").doc(currentUser).update({
+      nairaBalance: firebase.firestore.FieldValue.increment(-total)
+    });
+
+    // Advertiser-referral commission: 3% of the worker pool, carved from the
+    // 20% fee — paid to whoever referred THIS advertiser, but only once the
+    // advertiser has proven themselves by completing at least one prior
+    // campaign, and only within a 6-month window from that first completion.
+    const posterData = userDoc.exists ? userDoc.data() : {};
+    const posterReferredBy = posterData.referredBy || null;
+    const firstCompletedAt = posterData.firstCampaignCompletedAt || null;
+    let advertiserReferralNaira = 0;
+    let advertiserReferralVonk = 0;
+
+    if (posterReferredBy && firstCompletedAt) {
+      const completedDate = firstCompletedAt.toDate ? firstCompletedAt.toDate() : new Date(firstCompletedAt);
+      const windowEnd = new Date(completedDate);
+      windowEnd.setMonth(windowEnd.getMonth() + ADVERTISER_REFERRAL_MONTHS);
+      if (new Date() <= windowEnd) {
+        advertiserReferralNaira = Math.round(workers * ADVERTISER_REFERRAL_RATE);
+        advertiserReferralVonk = advertiserReferralNaira / VONK_RATE_NGN;
+        await db.collection("users").doc(posterReferredBy).update({
+          vonkBalance: firebase.firestore.FieldValue.increment(advertiserReferralVonk),
+          advertiserReferralVonkEarned: firebase.firestore.FieldValue.increment(advertiserReferralVonk)
+        });
+      }
+    }
+
+    await logRevenue({
+      type: 'task_funded',
+      refId: taskRef.key,
+      advertiser: currentUser,
+      grossNaira: total,
+      workerPoolNaira: workers,
+      feePoolNaira: fee,
+      advertiserReferralPayoutNaira: advertiserReferralNaira,
+      advertiserReferralPayoutVonk: advertiserReferralVonk,
+      advertiserReferrer: advertiserReferralVonk > 0 ? posterReferredBy : null
+    });
+
+    hideCreateForm();
+    showToast('Task posted successfully! Awaiting worker submissions.','var(--accent-1)');
+
+    ['fTitle','fDesc','fSteps','fLink','fReward','fSlots','fTime'].forEach(id=>{
+      document.getElementById(id).value='';
+    });
+    updateCost();
+
+  } catch (err) {
+    console.error(err);
+    showToast('Error posting task. Try again.', 'var(--red)');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ── REVIEW & APPROVE (poster side, real Firebase) ─────── */
+async function openReviewModal(taskId){
+  activeReviewTaskId = taskId;
+  const body = document.getElementById('reviewBody');
+  body.innerHTML = '<p style="color:var(--text3);font-size:12px;text-align:center">Loading...</p>';
+
+  document.getElementById('reviewOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('reviewSheet').classList.add('open'),10);
+
+  const snap = await db.collection("subscriber_task_submissions")
+    .where("taskId", "==", taskId)
+    .where("status", "==", "pending")
+    .get();
+
+  document.querySelector('#reviewOverlay .sheet-title').textContent = `Review Proofs (${snap.size})`;
+
+  if (snap.empty) {
+    body.innerHTML = '<p style="color:var(--text3);font-size:12px;text-align:center">No pending proofs.</p>';
+    return;
+  }
+
+  body.innerHTML = snap.docs.map(doc => {
+    const d = doc.data();
+    return `
+    <div class="proof-review-item" id="pri_${doc.id}">
+      <div class="pri-top">
+        <div class="pri-worker">${d.submittedBy}</div>
+        <div class="pri-time">pending</div>
+      </div>
+      <div class="pri-proof">${d.proofValue}</div>
+      <div class="pri-actions">
+        <button class="approve-btn" onclick="reviewAction('${doc.id}','approve')">✓ Approve</button>
+        <button class="reject-btn" onclick="reviewAction('${doc.id}','reject')">✕ Reject</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function reviewAction(submissionId, action){
+  const el = document.getElementById(`pri_${submissionId}`);
+  el.style.opacity='0.4';
+  el.style.pointerEvents='none';
+
+  try {
+    const subRef = db.collection("subscriber_task_submissions").doc(submissionId);
+    const subDoc = await subRef.get();
+    if (!subDoc.exists) return;
+    const sub = subDoc.data();
+
+    if (action === 'approve') {
+      const vonkAmount = sub.reward / VONK_RATE_NGN;
+
+      await db.collection("users").doc(sub.submittedBy).update({
+        vonkBalance: firebase.firestore.FieldValue.increment(vonkAmount),
+        subscriberVonkEarned: firebase.firestore.FieldValue.increment(vonkAmount)
+      });
+
+      // Referral commission is carved OUT of the 15% fee the advertiser already
+      // paid — it is never an extra cost to the platform. Worker's payout above
+      // is fixed and unaffected either way.
+      const workerDoc = await db.collection("users").doc(sub.submittedBy).get();
+      const referredBy = workerDoc.exists ? workerDoc.data().referredBy : null;
+      const referralVonk = referredBy ? (vonkAmount * REFERRAL_RATE) : 0;
+      if (referredBy) {
+        await db.collection("users").doc(referredBy).update({
+          vonkBalance: firebase.firestore.FieldValue.increment(referralVonk),
+          referralVonkEarned: firebase.firestore.FieldValue.increment(referralVonk)
+        });
+      }
+
+      const taskSnap = await rtdb.ref(`subscriber_tasks/${sub.taskId}`).get();
+      const currentFilled = taskSnap.exists() ? (taskSnap.val().slots_filled || 0) : 0;
+      const taskData = taskSnap.exists() ? taskSnap.val() : {};
+      await rtdb.ref(`subscriber_tasks/${sub.taskId}`).update({
+        slots_filled: currentFilled + 1
+      });
+
+      if (taskData.postedBy) {
+        const posterRef = db.collection("users").doc(taskData.postedBy);
+        const posterSnap = await posterRef.get();
+        if (posterSnap.exists && !posterSnap.data().firstCampaignCompletedAt) {
+          await posterRef.update({
+            firstCampaignCompletedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
+
+      const feePoolConsumedNaira = sub.reward * PLATFORM_FEE_RATE;
+      const referralPayoutNaira = referralVonk * VONK_RATE_NGN;
+      const platformNetRevenueNaira = feePoolConsumedNaira - referralPayoutNaira;
+
+      await logRevenue({
+        type: 'payout_approved',
+        refId: submissionId,
+        taskId: sub.taskId,
+        advertiser: taskData.postedBy || null,
+        worker: sub.submittedBy,
+        workerPayoutVonk: vonkAmount,
+        workerPayoutNaira: vonkAmount * VONK_RATE_NGN,
+        referralPayoutVonk: referralVonk,
+        referralPayoutNaira: referralPayoutNaira,
+        feePoolConsumedNaira: feePoolConsumedNaira,
+        platformNetRevenueNaira: platformNetRevenueNaira,
+        referrer: referredBy || null
+      });
+
+      await subRef.update({ status: 'approved' });
+      showToast('✓ Proof approved — Vonk released', '#4ade80');
+    } else {
+      await subRef.update({ status: 'rejected' });
+      showToast('✕ Proof rejected', 'var(--red)');
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('Error processing review. Try again.', 'var(--red)');
+    el.style.opacity = '1';
+    el.style.pointerEvents = 'auto';
+  }
+}
+
+function closeReview(e){
+  if(e.target===document.getElementById('reviewOverlay')) closeReviewDirect();
+}
+function closeReviewDirect(){
+  activeReviewTaskId = null;
+  document.getElementById('reviewSheet').classList.remove('open');
+  setTimeout(()=>document.getElementById('reviewOverlay').classList.remove('open'), 320);
+}
+
+/* ── CARD FADE ANIMATION ─────────────────────── */
+const style = document.createElement('style');
+style.textContent = `
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}`;
+document.head.appendChild(style);
+
+/* ── INIT ───────────────────────────────────── */
+function init(){
+  buildCats();
+  loadTasksFromFirebase();
+  loadMySubmissions();
+  loadMyPostedTasks();
+}
+init();
+
+function setDockActive(index) {
+    document.querySelectorAll('.dock-node').forEach(n => n.classList.remove('active'));
+    const node = document.querySelector(`.dock-node[data-index="${index}"]`);
+    if (node) node.classList.add('active');
+
+    const pulse = document.getElementById('dock-pulse');
+    const positions = [10, 30, 50, 70, 90];
+    if (pulse && index >= 0) pulse.style.left = `calc(${positions[index]}% - 2.5px)`;
+}
+
+function scrollToTasks() {
+    const el = document.getElementById('synergy-nodes-wrapper');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+function openProfileSheet() {
+    document.getElementById('profile-sheet-overlay').classList.add('active');
+    document.getElementById('profile-sheet').classList.add('active');
+}
+
+function closeProfileSheet() {
+    document.getElementById('profile-sheet-overlay').classList.remove('active');
+    document.getElementById('profile-sheet').classList.remove('active');
+    setDockActive(2);
+}
+
+// Rufe profile-sheet ta atomatik idan an danna ko'ina a dashboard (bayan overlay)
+document.addEventListener('click', function(e) {
+    const sheet = document.getElementById('profile-sheet');
+    const overlay = document.getElementById('profile-sheet-overlay');
+    if (!sheet || !overlay) return;
+
+    const isSheetOpen = sheet.classList.contains('active');
+    const clickedInsideSheet = sheet.contains(e.target);
+    const clickedProfileButton = e.target.closest('.dock-node[data-index="4"]');
+
+    // Idan sheet a bude yake, aka danna waje (ba cikin sheet ba, kuma ba profile button din ba)
+    if (isSheetOpen && !clickedInsideSheet && !clickedProfileButton) {
+        closeProfileSheet();
+    }
+});
+  
+function updateDockTaskRing(watched, limit = 5) {
+    const circle = document.getElementById('task-ring-progress');
+    const label = document.getElementById('task-dock-label');
+    if (!circle) return;
+    const circumference = 119.4;
+    const pct = Math.min(watched / limit, 1);
+    circle.style.strokeDashoffset = circumference - (pct * circumference);
+    if (label) label.innerText = `${Math.min(watched, limit)}/${limit}`;
+}
+
+document.addEventListener('DOMContentLoaded', () => setDockActive(2));
+</script>
+</body>
+</html>
