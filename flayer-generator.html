@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendor Flyer Generator — Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --ink:#161311;
+    --paper:#f6f1e8;
+    --panel:#ffffff;
+    --line:#e4dccb;
+    --muted:#8a8072;
+    --accent:#c1461d;
+    --accent-2:#1f6e4a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'DM Sans', sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+  header{margin-bottom:24px;}
+  header .eyebrow{
+    font-family:'DM Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:8px;
+  }
+  header h1{
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-weight:800;
+    font-size:clamp(26px,4vw,38px);
+    letter-spacing:-0.02em;
+    line-height:1.05;
+  }
+  header p{color:var(--muted);margin-top:8px;max-width:560px;font-size:14.5px;line-height:1.5;}
+
+  .layout{
+    display:grid;
+    grid-template-columns:400px 1fr;
+    gap:24px;
+    align-items:start;
+  }
+  @media (max-width:900px){ .layout{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:22px;
+  }
+  .panel h2{
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .panel .sub{font-size:12px;color:var(--muted);margin-bottom:16px;}
+
+  label{
+    display:block;
+    font-family:'DM Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:14px 0 6px;
+  }
+  label:first-of-type{margin-top:0;}
+  input[type=text], select, textarea{
+    width:100%;
+    border:1.5px solid var(--line);
+    background:#fffdf9;
+    border-radius:9px;
+    padding:9px 11px;
+    font-size:14px;
+    font-family:'DM Sans', sans-serif;
+    color:var(--ink);
+    outline:none;
+  }
+  input[type=text]:focus, select:focus, textarea:focus{border-color:var(--accent);}
+
+  .menu-row{
+    display:grid;
+    grid-template-columns:1fr 90px 30px;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .menu-row input{padding:8px 10px;font-size:13px;}
+  .del-btn{
+    border:none;background:none;color:var(--muted);
+    font-size:18px;cursor:pointer;line-height:1;
+  }
+  .del-btn:hover{color:var(--accent);}
+  .add-item{
+    margin-top:6px;
+    background:none;
+    border:1.5px dashed var(--line);
+    border-radius:9px;
+    padding:8px;
+    width:100%;
+    font-size:12.5px;
+    color:var(--muted);
+    cursor:pointer;
+    font-family:'DM Mono', monospace;
+  }
+  .add-item:hover{border-color:var(--accent);color:var(--accent);}
+
+  .swatches{display:flex;gap:8px;margin-top:2px;}
+  .swatch{
+    width:30px;height:30px;border-radius:50%;
+    cursor:pointer;border:2px solid transparent;
+  }
+  .swatch.active{border-color:var(--ink);}
+
+  .logo-drop{
+    border:1.5px dashed var(--line);
+    border-radius:9px;
+    padding:14px;
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .logo-drop img{max-height:44px;margin-bottom:6px;}
+
+  .generate-btn{
+    margin-top:22px;
+    width:100%;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:11px;
+    padding:14px;
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:opacity .15s;
+  }
+  .generate-btn:hover{opacity:0.85;}
+  .generate-btn:disabled{opacity:0.5;cursor:wait;}
+
+  .download-btn{
+    margin-top:10px;
+    width:100%;
+    background:none;
+    border:1.5px solid var(--ink);
+    color:var(--ink);
+    border-radius:11px;
+    padding:12px;
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .download-btn:disabled{opacity:0.35;cursor:not-allowed;}
+
+  .spinner{
+    width:14px;height:14px;border-radius:50%;
+    border:2px solid rgba(246,241,232,0.35);
+    border-top-color:var(--paper);
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* Preview stage */
+  .stage{
+    display:flex;
+    justify-content:center;
+    padding:10px;
+  }
+  .flyer{
+    width:520px;
+    min-height:680px;
+    background:var(--flyer-bg, #1a1512);
+    border-radius:6px;
+    position:relative;
+    overflow:hidden;
+    padding:40px 34px 30px;
+    color:#fff;
+    font-family:'DM Sans', sans-serif;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.35);
+  }
+  .flyer-texture{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 85% -5%, color-mix(in srgb, var(--flyer-accent) 35%, transparent), transparent 55%),
+      radial-gradient(circle at -5% 105%, color-mix(in srgb, var(--flyer-accent) 22%, transparent), transparent 50%);
+    pointer-events:none;
+  }
+  .f-tag{
+    font-family:'DM Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--flyer-accent);
+    margin-bottom:10px;
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .f-tag::before{content:"";width:18px;height:1px;background:var(--flyer-accent);}
+  .f-name{
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-weight:800;
+    font-size:38px;
+    line-height:1.02;
+    letter-spacing:-0.02em;
+    position:relative;
+  }
+  .f-tagline{
+    margin-top:12px;
+    font-size:13.5px;
+    line-height:1.55;
+    color:rgba(255,255,255,0.72);
+    max-width:340px;
+    position:relative;
+  }
+  .f-divider{
+    width:52px;height:3px;background:var(--flyer-accent);
+    margin:18px 0 20px;position:relative;border-radius:2px;
+  }
+  .f-menu{position:relative;display:flex;flex-direction:column;gap:0;}
+  .f-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:11px 0;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    font-size:14.5px;
+  }
+  .f-item:first-child{padding-top:0;}
+  .f-item-name{font-weight:600;}
+  .f-item-price{
+    font-family:'DM Mono', monospace;
+    color:var(--flyer-accent);
+    font-weight:500;
+    white-space:nowrap;
+    margin-left:14px;
+  }
+  .f-footer{
+    position:absolute;
+    left:34px;right:34px;bottom:28px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:10px;
+  }
+  .f-contact{font-size:11.5px;line-height:1.6;color:rgba(255,255,255,0.65);}
+  .f-contact b{color:#fff;display:block;font-size:12.5px;margin-bottom:2px;}
+  .f-logo{
+    width:46px;height:46px;border-radius:50%;
+    border:1.5px solid var(--flyer-accent);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-weight:800;font-size:15px;
+    color:var(--flyer-accent);
+    flex-shrink:0;
+    overflow:hidden;
+  }
+  .f-logo img{width:100%;height:100%;object-fit:cover;}
+
+  .note{
+    font-size:11.5px;color:var(--muted);text-align:center;margin-top:14px;
+    max-width:520px;margin-left:auto;margin-right:auto;line-height:1.5;
+  }
+  .status{
+    font-size:12px;
+    color:var(--accent-2);
+    margin-top:10px;
+    min-height:16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Prototype · Vendor Flyer Engine</div>
+    <h1>Danna "Generate", AI ya rubuta,<br>ka download flyer ɗinka.</h1>
+    <p>Ka shigar da bayanan business ɗinka a hagu — AI zai karanta menu ɗin ya rubuta tagline mai kayatarwa, sannan ya cika template ɗin nan take. Wannan shine yadda za a haɗa shi cikin business page na kowanne vendor.</p>
+  </header>
+
+  <div class="layout">
+    <div class="panel">
+      <h2>Bayanan Business</h2>
+      <div class="sub">Cika sannan danna Generate</div>
+
+      <label>Sunan Business</label>
+      <input type="text" id="bizName" placeholder="e.g. Rahama's Kitchen" value="Rahama's Kitchen">
+
+      <label>Nau'in Business (category)</label>
+      <input type="text" id="bizCategory" placeholder="e.g. meat pie, samosa da spring rolls" value="Meat pie, samosa da spring rolls">
+
+      <label>Menu Items</label>
+      <div id="menuList"></div>
+      <button class="add-item" type="button" id="addItem">+ Add menu item</button>
+
+      <label>Lambar Waya</label>
+      <input type="text" id="bizPhone" placeholder="0806xxxxxxx" value="08067649227">
+
+      <label>Adireshi</label>
+      <input type="text" id="bizAddress" placeholder="e.g. Laying Abdullahi Memorial" value="Laying Abdullahi Memorial, Opposite Yaji and Grill">
+
+      <label>Logo (optional)</label>
+      <div class="logo-drop" id="logoDrop">
+        <div id="logoPreviewWrap">📎 Danna don shigar da logo</div>
+        <input type="file" id="logoFile" accept="image/*" style="display:none">
+      </div>
+
+      <label>Accent Color</label>
+      <div class="swatches" id="swatches">
+        <div class="swatch active" style="background:#c1461d" data-color="#c1461d"></div>
+        <div class="swatch" style="background:#3ba55d" data-color="#3ba55d"></div>
+        <div class="swatch" style="background:#d4a017" data-color="#d4a017"></div>
+        <div class="swatch" style="background:#2f7ec9" data-color="#2f7ec9"></div>
+        <div class="swatch" style="background:#c94277" data-color="#c94277"></div>
+      </div>
+
+      <button class="generate-btn" id="generateBtn">✨ Generate Flyer</button>
+      <button class="download-btn" id="downloadBtn" disabled>⬇ Download flyer (PNG)</button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <div class="flyer" id="flyer" style="--flyer-bg:#1a1512; --flyer-accent:#c1461d;">
+          <div class="flyer-texture"></div>
+          <div class="f-tag" id="fTag">Tasty · Fresh · Trusted</div>
+          <div class="f-name" id="fName">Rahama's Kitchen</div>
+          <div class="f-tagline" id="fTagline">AI zai rubuta wannan bayani bayan ka danna Generate…</div>
+          <div class="f-divider"></div>
+          <div class="f-menu" id="fMenu"></div>
+          <div class="f-footer">
+            <div class="f-contact" id="fContact"></div>
+            <div class="f-logo" id="fLogo">R</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">Wannan template ɗaya ce kawai daga cikin da yawa da za a iya bayarwa — kowanne vendor zai iya zaɓar style dabam (dark, vintage, colorful, ad-card, da sauransu) yadda muka tattauna a baya.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let menuItems = [
+  {name:"Meat Pie", price:"500"},
+  {name:"Samosa (10pcs)", price:"2,000"},
+  {name:"Spring Rolls", price:"700"},
+];
+let logoDataUrl = null;
+let currentAccent = "#c1461d";
+
+const menuListEl = document.getElementById('menuList');
+function renderMenuInputs(){
+  menuListEl.innerHTML = '';
+  menuItems.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'menu-row';
+    row.innerHTML = `
+      <input type="text" value="${item.name}" data-i="${i}" data-field="name" placeholder="Sunan abinci">
+      <input type="text" value="${item.price}" data-i="${i}" data-field="price" placeholder="Farashi">
+      <button class="del-btn" data-i="${i}">×</button>
+    `;
+    menuListEl.appendChild(row);
+  });
+  menuListEl.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const i = +e.target.dataset.i, f = e.target.dataset.field;
+      menuItems[i][f] = e.target.value;
+    });
+  });
+  menuListEl.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      menuItems.splice(+e.target.dataset.i, 1);
+      renderMenuInputs();
+    });
+  });
+}
+renderMenuInputs();
+
+document.getElementById('addItem').addEventListener('click', () => {
+  menuItems.push({name:"", price:""});
+  renderMenuInputs();
+});
+
+document.querySelectorAll('.swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+    currentAccent = sw.dataset.color;
+    document.getElementById('flyer').style.setProperty('--flyer-accent', currentAccent);
+  });
+});
+
+const logoDrop = document.getElementById('logoDrop');
+const logoFile = document.getElementById('logoFile');
+logoDrop.addEventListener('click', () => logoFile.click());
+logoFile.addEventListener('change', () => {
+  const file = logoFile.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    logoDataUrl = e.target.result;
+    document.getElementById('logoPreviewWrap').innerHTML = `<img src="${logoDataUrl}" style="max-height:44px;border-radius:8px;">`;
+  };
+  reader.readAsDataURL(file);
+});
+
+function fmtPrice(p){
+  if(!p) return '';
+  const clean = p.toString().replace(/[^\d.]/g,'');
+  if(!clean) return p;
+  return '₦' + Number(clean).toLocaleString();
+}
+
+function renderFlyer({tag, tagline}){
+  const name = document.getElementById('bizName').value || 'Sunan Business';
+  const phone = document.getElementById('bizPhone').value;
+  const address = document.getElementById('bizAddress').value;
+
+  document.getElementById('fTag').textContent = tag;
+  document.getElementById('fName').textContent = name;
+  document.getElementById('fTagline').textContent = tagline;
+
+  const menuEl = document.getElementById('fMenu');
+  menuEl.innerHTML = '';
+  menuItems.filter(m=>m.name).forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'f-item';
+    row.innerHTML = `<span class="f-item-name">${item.name}</span><span class="f-item-price">${fmtPrice(item.price)}</span>`;
+    menuEl.appendChild(row);
+  });
+
+  document.getElementById('fContact').innerHTML = `<b>${phone}</b>${address}`;
+
+  const logoEl = document.getElementById('fLogo');
+  if(logoDataUrl){
+    logoEl.innerHTML = `<img src="${logoDataUrl}">`;
+  } else {
+    logoEl.textContent = name.trim().charAt(0).toUpperCase() || '•';
+  }
+}
+
+async function callClaude(prompt){
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 300,
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  const data = await response.json();
+  const text = data.content.map(b => b.text || '').join('');
+  return text;
+}
+
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('generateBtn');
+  const status = document.getElementById('status');
+  const name = document.getElementById('bizName').value || 'Business ɗin ku';
+  const category = document.getElementById('bizCategory').value;
+  const itemsList = menuItems.filter(m=>m.name).map(m => `${m.name} - ${m.price}`).join(', ');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Ana rubutawa…';
+  status.textContent = '';
+
+  const prompt = `You are writing marketing copy for a small food vendor's promotional flyer. Business: "${name}". Category: "${category}". Menu items: ${itemsList}.
+
+Return ONLY valid JSON, no markdown fences, no preamble, in this exact shape:
+{"tag": "3-5 word punchy eyebrow label in ALL CAPS, e.g. 'TASTY · FRESH · TRUSTED'", "tagline": "one short energetic sentence (max 22 words) selling this business, no quotes"}`;
+
+  try {
+    const raw = await callClaude(prompt);
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    renderFlyer({tag: parsed.tag, tagline: parsed.tagline});
+    status.textContent = '✓ AI ta gama rubuta flyer ɗinka.';
+    document.getElementById('downloadBtn').disabled = false;
+  } catch (err) {
+    console.error(err);
+    // Graceful fallback so the demo still shows the concept if the API call fails
+    renderFlyer({
+      tag: (category || 'QUALITY YOU CAN TRUST').toUpperCase().split(',')[0],
+      tagline: `Freshly made ${category || 'food'} — order today and taste the difference.`
+    });
+    status.textContent = 'An yi amfani da fallback text (an sami matsala wajen kiran AI).';
+    document.getElementById('downloadBtn').disabled = false;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✨ Generate Flyer';
+  }
+});
+
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+  const flyer = document.getElementById('flyer');
+  const canvas = await html2canvas(flyer, {scale: 2, useCORS: true});
+  const link = document.createElement('a');
+  link.download = (document.getElementById('bizName').value || 'flyer') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+// initial render with placeholder copy
+renderFlyer({tag:"Tasty · Fresh · Trusted", tagline:"Danna Generate Flyer domin AI ya rubuta maka bayani mai kayatarwa dangane da menu ɗinka."});
+</script>
+</body>
+</html>
