@@ -2418,6 +2418,38 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.firestore();
         const myId = localStorage.getItem("nexus_user_session");
+
+        // Groups na gaskiya — karanta ta collectionGroup('members') domin
+        // gano dukkan groups da wannan user memba ne a ciki, mu jera su a
+        // saman #groups tab (a sama da 2 demo rows din da suke can tuni).
+        async function renderMyGroups() {
+            if (!myId || typeof db === 'undefined') return;
+            try {
+                const snap = await db.collectionGroup('members').where('username', '==', myId).get();
+                const container = document.getElementById('groups');
+                if (!container) return;
+                const groupDocs = await Promise.all(snap.docs.map(d => d.ref.parent.parent.get()));
+                groupDocs.filter(g => g.exists).forEach(g => {
+                    const data = g.data();
+                    const gid = g.id;
+                    const row = document.createElement('a');
+                    row.href = `group.html?group=${encodeURIComponent(gid)}`;
+                    row.className = 'chat-item';
+                    row.innerHTML = `
+                        <div class="profile-stack" data-avatar-kind="group" data-avatar-key="${gid}" data-chat-href="group.html?group=${gid}" data-info-href="group.html?group=${gid}" onclick="handleAvatarTap(event)">
+                            <img src="${data.avatarUrl || 'https://via.placeholder.com/46/00F2FF/000?text=' + encodeURIComponent((data.name || 'G')[0])}" class="user-img" style="border-radius: 12px;">
+                        </div>
+                        <div class="chat-details">
+                            <div class="chat-header"><span class="name">${data.name || 'Group'}</span></div>
+                            <p class="preview-text">${data.privacy === 'private' ? 'Private group' : 'Public group'} · ${(data.memberCount || 0)} members</p>
+                        </div>`;
+                    container.insertBefore(row, container.firstChild);
+                });
+            } catch (err) {
+                console.error('renderMyGroups error:', err);
+            }
+        }
+        renderMyGroups();
         if (!myId) window.location.href = 'login.html';
 
         // Jiran Firebase Auth ya farfaɗo session kafin a yi query
