@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Wallet Overview</title>
+<script defer src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&family=Syncopate:wght@400;700&display=swap');
+
+  :root{
+    --bg:#0d0f14;
+    --vonk-a:#a78bfa;   /* accent-1 */
+    --vonk-b:#f472b6;   /* accent-2 */
+    --card:#0b1120;
+    --line:rgba(148,163,184,0.12);
+    --accent-1:#a78bfa;
+    --accent-2:#f472b6;
+  }
+  body{
+    background: var(--bg);
+    color:#fff;
+    font-family:'Quicksand', sans-serif;
+    margin:0; padding:0;
+    background-image: radial-gradient(circle at 50% 50%, rgba(112,0,255,0.15), transparent), url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+    background-color: var(--bg);
+    min-height:100vh;
+  }
+
+  .brand-font{ font-family:'Syncopate', sans-serif; }
+
+  /* ---- spark trace signature element ---- */
+.spark-edge{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  transform:translateZ(0);
+}
+  .spark-edge::before{
+    content:'';
+    position:absolute; inset:0;
+    padding:1px;
+    border-radius:inherit;
+    background: linear-gradient(120deg, transparent 0%, var(--vonk-b) 45%, var(--vonk-a) 55%, transparent 100%);
+    background-size:250% 250%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: sparkmove 5s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes sparkmove{
+    0%{ background-position:0% 0%; }
+    100%{ background-position:200% 200%; }
+  }
+
+  .bolt-pulse{ animation: boltpulse 2.2s ease-in-out infinite; }
+  @keyframes boltpulse{
+    0%,100%{ filter:drop-shadow(0 0 2px rgba(244,114,182,.5)); }
+    50%{ filter:drop-shadow(0 0 10px rgba(167,139,250,.9)); }
+  }
+
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+    border:1px solid var(--line);
+    border-radius:20px;
+  }
+
+  .grad-text{
+    background: linear-gradient(90deg, var(--vonk-b), var(--vonk-a));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  .pressable{ transition: transform .12s ease, background-color .12s ease; }
+  .pressable:active{ transform: scale(0.96); }
+
+  .glow-dot{ box-shadow:0 0 8px 2px rgba(167,139,250,0.7); }
+
+  /* ---- coming soon lock overlay ---- */
+  .locked{ position:relative; overflow:hidden; }
+  .locked .overlay{
+    position:absolute; inset:0;
+    background: rgba(2,6,23,0.72);
+    backdrop-filter: blur(3px);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
+  }
+  .soon-badge{
+    background: linear-gradient(90deg,var(--vonk-a),var(--vonk-b));
+    color:#020617; font-weight:700; font-size:10px;
+    padding:3px 10px; border-radius:999px; letter-spacing:.06em;
+  }
+
+  ::-webkit-scrollbar{ display:none; }
+
+  #synergy-dock {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(94%, 460px);
+    z-index: 60000;
+    border-radius: 32px;
+    background: rgba(5, 10, 21, 0.55);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(244, 114, 182, 0.25);
+    box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.7), 0 0 40px rgba(167, 139, 250, 0.06);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom)) 8px;
+}
+
+#dock-trace {
+    position: relative;
+    height: 1px;
+    margin: 0 20px 4px 20px;
+    background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.15) 15%, rgba(167, 139, 250, 0.15) 85%, transparent);
+}
+#dock-pulse {
+    position: absolute;
+    top: -2px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #a78bfa;
+    box-shadow: 0 0 8px #a78bfa, 0 0 16px rgba(167, 139, 250, 0.6);
+    transition: left 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+#dock-items {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.dock-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    padding: 2px 0 0 0;
+    cursor: pointer;
+    background: none;
+    border: none;
+    position: relative;
+}
+
+.dock-icon-shell {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+    background: transparent;
+}
+
+.dock-node svg {
+    width: 24px;
+    height: 24px;
+    stroke: rgba(255,255,255,0.45);
+    fill: none;
+    stroke-width: 2;
+    transition: all 0.3s ease;
+}
+
+.dock-label {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 6.5px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: all 0.35s ease;
+    overflow: hidden;
+}
+
+.dock-node.active .dock-icon-shell {
+    background: rgba(167, 139, 250, 0.08);
+    box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.25), 0 0 18px rgba(167, 139, 250, 0.15);
+    transform: translateY(-6px);
+}
+.dock-node.active svg { stroke: #a78bfa; }
+.dock-node.active .dock-label {
+    color: #a78bfa;
+    max-height: 12px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dock-ring {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.dock-live-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 6px #4ade80;
+    border: 1.5px solid #050a15;
+}
+
+#profile-sheet {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 100%);
+    width: min(94%, 460px);
+    z-index: 70000;
+    background: var(--bg);
+    background-image:
+        radial-gradient(circle at 50% 50%, rgba(112, 0, 255, 0.15), transparent),
+        url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc4JyBoZWlnaHQ9JzgnPjxyZWN0IHdpZHRoPSc4JyBoZWlnaHQ9JzgnIGZpbGw9J25vbmUnLz48cGF0aCBkPSdNMCA4TDggMFpNLTEgMUwxIC0xWk03IDlMOSA3Wicgc3Ryb2tlPSdyZ2JhKDI1NSwyNTUsMjU1LDAuMDQ1KScgc3Ryb2tlLXdpZHRoPScxJy8+PC9zdmc+Cg==');
+    border: 1px solid rgba(167,139,250,0.15);
+    border-bottom: none;
+    border-top: 2px solid var(--accent-2);
+    border-radius: 24px 24px 0 0;
+    padding: 6px 16px calc(14px + env(safe-area-inset-bottom)) 16px;
+    transition: transform 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.6);
+    font-family: 'Quicksand', sans-serif;
+}
+
+#profile-sheet.active { transform: translate(-50%, 0); }
+
+.sheet-handle {
+    width: 32px; height: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    margin: 6px auto 8px auto;
+}
+
+.sheet-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.sheet-item:last-child { border-bottom: none; }
+.sheet-item:hover, .sheet-item:active { background: rgba(255,255,255,0.04); }
+
+.sheet-icon-box {
+    width: 34px; height: 34px;
+    border-radius: 11px;
+    background: rgba(167, 139, 250, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.sheet-icon-box svg { width: 15px; height: 15px; stroke: #a78bfa; fill: none; stroke-width: 2; }
+.sheet-icon-box.danger-box { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.2); }
+.sheet-icon-box.danger-box svg { stroke: #f87171; }
+
+.sheet-item-text { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.sheet-item-text span {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12.5px; font-weight: 700; color: #f1f1f1;
+}
+.sheet-item-text p {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 9.5px; font-weight: 500; color: rgba(255,255,255,0.35); margin: 0;
+}
+.sheet-item.danger .sheet-item-text span { color: #f87171; }
+
+.sheet-item .chevron { width: 14px; height: 14px; stroke: rgba(255,255,255,0.2); fill: none; stroke-width: 2; flex-shrink: 0; }
+
+.sheet-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 2px 4px; }
+
+.sheet-item span {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12.5px;
+    color: #eee;
+    font-weight: 700;
+}
+.sheet-item.danger span { color: #f87171; }
+
+body { padding-bottom: 140px; }
+
+:root { --bg: #020617; }
+
+#profile-sheet-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(6px);
+    z-index: 69999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+#profile-sheet-overlay.active { opacity: 1; pointer-events: auto; }
+
+/* ---- session/auth fallback banner (shown only if no logged-in user is found) ---- */
+#session-banner {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 80000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-top)) 16px;
+    background: rgba(5, 10, 21, 0.92);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    border-bottom: 1px solid rgba(248,113,113,0.25);
+    font-family: 'Quicksand', sans-serif;
+}
+#session-banner p {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #fecaca;
+    flex: 1;
+}
+#session-banner button {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #020617;
+    background: linear-gradient(90deg,var(--vonk-a),var(--vonk-b));
+    border: none;
+    border-radius: 999px;
+    padding: 7px 14px;
+    white-space: nowrap;
+}
+  
+</style>
+</head>
+<body class="pb-10">
+<div id="session-banner" style="display:none">
+  <p>Session don ƙarewa — don Allah sake shiga don ganin wallet ɗin ku.</p>
+  <button onclick="location.href='signin.html'">Sign in</button>
+</div>
+
+  <!-- ===== Header ===== -->
+  <header class="flex items-center justify-center px-5 pt-6 pb-2">
+    <div class="text-center">
+      <p class="brand-font text-xl font-bold tracking-tight text-white" id="account-type-label">Member Dashboard</p>
+    </div>
+  </header>
+
+  <main class="px-4 mt-3 space-y-5">
+
+    <!-- ===== Vonk Balance Hero ===== -->
+    <section class="card spark-edge p-5 relative">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg class="bolt-pulse" width="18" height="18" viewBox="0 0 24 24" fill="url(#boltgrad)"><defs><linearGradient id="boltgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+          <span class="text-white/70 text-sm tracking-wide">Vonk Balance</span>
+        </div>
+        <button id="hideBtn" onclick="toggleHide()" class="text-xs text-white/60 border border-white/15 rounded-full px-3 py-1.5 flex items-center gap-1.5 pressable">
+          <svg id="eyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span id="hideLabel">Hide</span>
+        </button>
+      </div>
+
+      <div class="mt-3 flex items-end gap-2">
+        <span id="heroVonkBalance" class="text-4xl font-bold tracking-tight">0.00</span>
+        <span class="text-sm text-white/50 mb-1">VNK</span>
+      </div>
+      <div id="nairaEquiv" class="text-sm text-violet-300/80 mt-1">≈ ₦0.00</div>
+
+      <div class="h-px bg-white/10 my-4"></div>
+
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs text-white/50 tracking-wide">Pts Balance</p>
+          <p class="text-lg font-medium mt-0.5 flex items-center gap-1.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <span id="subPtsBalance">0</span> <span class="text-white/40 text-xs">PTS</span>
+          </p>
+        </div>
+        <button onclick="convertPts()" class="pressable text-xs font-medium px-4 py-2.5 rounded-xl" style="background:linear-gradient(90deg,var(--vonk-a),var(--vonk-b)); color:#020617;">
+          Convert → VONK
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== Earnings ===== -->
+    <section>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold tracking-wide text-white/80">Earnings</h2>
+        <span class="text-xs text-white/40">All time</span>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+
+        <div class="card p-3.5 pressable">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center mb-3" style="background:rgba(124,58,237,0.15)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          </div>
+          <p class="text-[11px] text-white/50 leading-tight">Status Pay</p>
+          <p class="text-base font-bold mt-1"><span id="statusPayEarning">0</span> <span class="text-[10px] text-white/40 font-medium">VNK</span></p>
+        </div>
+
+        <div class="card p-3.5 pressable">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center mb-3" style="background:rgba(34,211,238,0.15)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M8 15l2 2 4-4"/></svg>
+          </div>
+          <p class="text-[11px] text-white/50 leading-tight">TaskPro</p>
+          <p class="text-base font-bold mt-1"><span id="taskProEarning">0</span> <span class="text-[10px] text-white/40 font-medium">VNK</span></p>
+        </div>
+
+        <div class="card p-3.5 pressable">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center mb-3" style="background:rgba(248,113,113,0.15)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l5 3-5 3z" fill="#f87171" stroke="none"/></svg>
+          </div>
+          <p class="text-[11px] text-white/50 leading-tight">YouTube Task</p>
+          <p class="text-base font-bold mt-1"><span id="youtubeEarning">0</span> <span class="text-[10px] text-white/40 font-medium">pts</span></p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== Referral Commission ===== -->
+    <section class="card p-4 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="w-11 h-11 rounded-full flex items-center justify-center" style="background:linear-gradient(135deg, rgba(167,139,250,0.25), rgba(244,114,182,0.25))">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+    <div>
+      <p class="text-sm text-white/80 font-medium">Referral Commission</p>
+      <p class="text-xs text-white/40 mt-0.5"><span id="referralCount">0</span> referrals</p>
+    </div>
+  </div>
+  <div class="text-right">
+    <p class="font-bold text-emerald-400">+<span id="referralEarning">0</span> <span class="text-[10px] text-white/40 font-normal">VNK</span></p>
+    <p class="text-[10px] text-white/40 mt-0.5" id="referralBreakdown">0 worker</p>
+  </div>
+    </section>
+
+    <!-- ===== Quick Actions ===== -->
+    <section class="grid grid-cols-3 gap-3">
+      <button class="card p-4 flex flex-col items-center gap-2 pressable">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+        <span class="text-xs text-white/70">Deposit</span>
+      </button>
+      <button class="card p-4 flex flex-col items-center gap-2 pressable">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
+        <span class="text-xs text-white/70">Withdraw</span>
+      </button>
+      <button class="card p-4 flex flex-col items-center gap-2 pressable">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        <span class="text-xs text-white/70">Transfer</span>
+      </button>
+    </section>
+
+    <!-- ===== P2P — Coming Soon (locked) ===== -->
+    <section class="card locked spark-edge p-5">
+      <div class="flex items-center gap-2 relative z-10">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="url(#boltgrad)"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+        <h2 class="font-bold text-sm tracking-wide">VONK P2P Market</h2>
+      </div>
+      <p class="text-xs text-white/40 mt-2">Buy and sell VONK to Naira directly with other users worldwide.</p>
+
+      <div class="overlay">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span class="soon-badge">COMING SOON</span>
+      </div>
+    </section>
+
+    <!-- ===== Convert Pts to Vonk ===== -->
+    <section id="convertSection" class="card spark-edge p-5 space-y-6">
+      <div>
+        <h2 class="text-base font-bold text-white mt-1">Convert Pts to Vonk</h2>
+        <p class="text-xs text-gray-400 mt-1">Pts are not directly withdrawable. Convert them to Vonk to use or exchange them.</p>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-2">Pts Amount to Convert</label>
+          <input type="number" id="convertPtsAmount" placeholder="1000" oninput="calculatePtsSwap()" class="w-full bg-slate-950 border border-slate-900 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-violet-400">
+        </div>
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-900 space-y-2 text-xs">
+          <div class="flex justify-between">
+            <span class="text-gray-400">You Will Receive:</span>
+            <span id="estimatedTokensDisplay" class="font-bold grad-text">0.0000 VNK</span>
+          </div>
+          <div class="flex justify-between text-[11px] text-gray-500 border-t border-slate-900 pt-2">
+            <span>Conversion Rate:</span>
+            <span>1000 PTS = 1 VNK</span>
+          </div>
+        </div>
+        <button onclick="executePtsSwap()" class="pressable w-full font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition duration-300" style="background:linear-gradient(90deg,var(--vonk-a),var(--vonk-b)); color:#020617;">
+          Convert to Vonk
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== Transaction History ===== -->
+    <section>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold tracking-wide text-white/80">Transaction History</h2>
+        <button class="text-xs text-white/40 pressable">View All</button>
+      </div>
+
+      <div class="space-y-2.5" id="txList"></div>
+    </section>
+  </main>
+
+ <nav id="synergy-dock">
+    <div id="dock-trace">
+        <div id="dock-pulse"></div>
+    </div>
+    <div id="dock-items">
+
+        <button class="dock-node active" data-index="0" onclick="setDockActive(0); location.href='wallet.html'">
+            <div class="dock-icon-shell">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H4v4M20 12v4H4v-4M20 12H4M12 4v16"></path></svg>
+            </div>
+            <span class="dock-label">Wallet</span>
+        </button>
+
+        <button class="dock-node" data-index="1" onclick="setDockActive(1); location.href='status-pay.html'">
+            <div class="dock-icon-shell">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <span class="dock-label">Customers</span>
+        </button>
+
+        <button class="dock-node" data-index="2" onclick="setDockActive(2); location.href='million-subscribers.html'">
+            <div class="dock-icon-shell">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 1.94c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.94 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+            </div>
+            <span class="dock-label">Subscribers</span>
+        </button>
+
+        <button class="dock-node" data-index="3" onclick="setDockActive(3); location.href='dashboard.html'">
+          
+            <div class="dock-icon-shell">
+                <svg id="task-ring-svg" class="dock-ring" viewBox="0 0 44 44">
+                    <circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2"></circle>
+                    <circle id="task-ring-progress" cx="22" cy="22" r="19" fill="none" stroke="#a78bfa" stroke-width="2"
+                        stroke-linecap="round" stroke-dasharray="119.4" stroke-dashoffset="119.4"
+                        transform="rotate(-90 22 22)" style="transition: stroke-dashoffset 0.8s ease;"></circle>
+                </svg>
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"></path><polygon points="9.545 15.568 9.545 8.432 15.818 12 9.545 15.568" fill="currentColor" stroke="none"></polygon></svg>
+            </div>
+            <span class="dock-label" id="task-dock-label">Tasks</span>
+        </button>
+
+        <button class="dock-node" data-index="4" onclick="setDockActive(4); openProfileSheet()">
+            <div class="dock-icon-shell">
+                <div class="dock-live-dot"></div>
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <span class="dock-label">Profile</span>
+        </button>
+
+    </div>
+</nav>
+
+<div id="profile-sheet-overlay" onclick="closeProfileSheet()"></div>
+
+<div id="profile-sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-item" onclick="location.href='referrals.html'">
+        <div class="sheet-icon-box">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="sheet-item-text">
+            <span>Referrals</span>
+            <p>Invite friends & earn rewards</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+
+    <div class="sheet-divider"></div>
+
+    <div class="sheet-item" onclick="location.href='settings.html'">
+        <div class="sheet-icon-box">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </div>
+        <div class="sheet-item-text">
+            <span>Settings</span>
+            <p>Bank details & withdrawal setup</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+
+    <div class="sheet-item" onclick="location.href='support.html'">
+        <div class="sheet-icon-box">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 18.36a9 9 0 1 0-12.72 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </div>
+        <div class="sheet-item-text">
+            <span>Support</span>
+            <p>Get help from our team</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+
+    <div class="sheet-divider"></div>
+
+    <div class="sheet-item danger" onclick="location.href='signin.html'">
+        <div class="sheet-icon-box danger-box">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </div>
+        <div class="sheet-item-text"><span>Log out</span></div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  /* ── FIREBASE INIT ─────────────────────────── */
+  const firebaseConfig = {
+      apiKey: "AIzaSyDLTwLq8Le9vYAwRkRcqXPGxFnEqW1yE2E",
+      authDomain: "synergy-protocol.firebaseapp.com",
+      databaseURL: "https://synergy-protocol-default-rtdb.firebaseio.com",
+      projectId: "synergy-protocol",
+      storageBucket: "synergy-protocol.firebasestorage.app",
+      messagingSenderId: "179647543031",
+      appId: "1:179647543031:web:388da8a36e1bbbb55d85f2"
+  };
+
+  if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+  const db = firebase.firestore();
+  const currentUser = localStorage.getItem('synergy_user');
+  const VONK_RATE_NGN = 10; // 1 VNK = ₦10
+  const PTS_PER_VNK = 1000; // 1000 PTS = 1 VNK
+
+  if (!currentUser) {
+    const banner = document.getElementById('session-banner');
+    if (banner) banner.style.display = 'flex';
+    console.warn('No synergy_user found in localStorage — wallet data cannot load.');
+    setTimeout(() => { location.href = 'signin.html'; }, 4000);
+  }
+
+  let hidden = false;
+  let currentVonk = 0;
+  let currentPts = 0;
+
+  function fmt(n, decimals){
+    return Number(n).toLocaleString('en-NG', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+
+  function renderBalances(){
+    document.getElementById('heroVonkBalance').textContent = hidden ? '••••••' : fmt(currentVonk, 2);
+    document.getElementById('nairaEquiv').textContent = hidden ? '≈ ₦••••••' : `≈ ₦${fmt(currentVonk * VONK_RATE_NGN, 2)}`;
+    document.getElementById('subPtsBalance').textContent = hidden ? '••••' : fmt(currentPts, 0);
+  }
+
+  function toggleHide(){
+    hidden = !hidden;
+    document.getElementById('hideLabel').textContent = hidden ? 'Show' : 'Hide';
+    renderBalances();
+  }
+
+  function convertPts(){
+    document.getElementById('convertSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // Idan document ID a Firestore (currentUser daga localStorage) bai
+  // dace ba (misali kuskuren babba/karami harafi daga tsohon login),
+  // muna gwada lowercase version, sannan mu gyara localStorage kai
+  // tsaye (self-heal) domin kada matsalar ta sake faruwa.
+  async function resolveUserDocId(username) {
+    let doc = await db.collection('users').doc(username).get();
+    if (doc.exists) return username;
+
+    const lower = username.toLowerCase();
+    if (lower !== username) {
+      doc = await db.collection('users').doc(lower).get();
+      if (doc.exists) {
+        localStorage.setItem('synergy_user', lower);
+        return lower;
+      }
+    }
+    return null;
+  }
+
+  async function loadWallet(){
+    if (!currentUser) return;
+
+    const resolvedId = await resolveUserDocId(currentUser);
+    if (!resolvedId) {
+      const labelEl = document.getElementById('account-type-label');
+      if (labelEl) labelEl.textContent = 'Account Not Found';
+      console.error('wallet.html: no matching Firestore doc for', currentUser);
+      alert('Account error — please log out and log back in.');
+      return;
+    }
+
+    db.collection('users').doc(resolvedId).onSnapshot(doc => {
+      if (!doc.exists) return;
+      const d = doc.data();
+
+      currentVonk = d.vonkBalance || 0;
+      currentPts = d.pointsBalance || 0;
+      renderBalances();
+
+      // Member ko Leader - header yana sabuntawa daidai da leaderStatus
+      // (wannan filin server/admin kadai ke iya canzawa)
+      const labelEl = document.getElementById('account-type-label');
+      if (labelEl) {
+        labelEl.textContent = (d.leaderStatus === 'active') ? 'Leader Account' : 'Member Dashboard';
+      }
+
+      document.getElementById('statusPayEarning').textContent = fmt(d.statusPayVonkEarned || 0, 2);
+      document.getElementById('taskProEarning').textContent = fmt(d.subscriberVonkEarned || 0, 2);
+      document.getElementById('youtubeEarning').textContent = fmt(d.pointsBalance || 0, 0);
+
+      const workerRef = d.referralVonkEarned || 0;
+      const advertiserRef = d.advertiserReferralVonkEarned || 0;
+      document.getElementById('referralEarning').textContent = fmt(workerRef + advertiserRef, 2);
+      document.getElementById('referralBreakdown').textContent =
+        advertiserRef > 0
+          ? `${fmt(workerRef,2)} worker · ${fmt(advertiserRef,2)} advertiser`
+          : `${fmt(workerRef,2)} worker`;
+    }, err => {
+      console.error('loadWallet snapshot error:', err);
+    });
+  }
+
+  function loadReferralCount(){
+    if (!currentUser) return;
+    db.collection('users').where('referredBy', '==', currentUser).onSnapshot(snapshot => {
+      document.getElementById('referralCount').textContent = snapshot.size;
+    }, err => {
+      console.error('loadReferralCount snapshot error:', err);
+    });
+  }
+
+  function calculatePtsSwap() {
+    const amount = parseFloat(document.getElementById('convertPtsAmount').value) || 0;
+    document.getElementById('estimatedTokensDisplay').innerText = `${(amount / PTS_PER_VNK).toFixed(4)} VNK`;
+  }
+
+  async function executePtsSwap() {
+    const amount = parseFloat(document.getElementById('convertPtsAmount').value) || 0;
+    if (amount <= 0) { alert('Please enter a valid Pts amount!'); return; }
+    if (amount > currentPts) { alert('Amount exceeds your available Pts balance!'); return; }
+    if (!currentUser) { alert('Please login first!'); return; }
+
+    const vonkGained = amount / PTS_PER_VNK;
+
+    try {
+      await db.collection('users').doc(currentUser).update({
+        pointsBalance: firebase.firestore.FieldValue.increment(-amount),
+        vonkBalance: firebase.firestore.FieldValue.increment(vonkGained)
+      });
+
+      alert(`Converted ${amount.toLocaleString()} PTS → ${vonkGained.toFixed(4)} VNK!`);
+      document.getElementById('convertPtsAmount').value = '';
+      document.getElementById('estimatedTokensDisplay').innerText = '0.0000 VNK';
+
+    } catch (err) {
+      console.error(err);
+      alert('Conversion failed. Try again.');
+    }
+  }
+
+  const transactions = [
+    {type:"Deposit", desc:"Manual deposit", amount:"+5,000", unit:"pts", time:"Today • 1:42 PM", status:"Success", color:"#34d399", icon:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/>'},
+    {type:"TaskPro Reward", desc:"Task #4471 completed", amount:"+120", unit:"pts", time:"Today • 11:05 AM", status:"Success", color:"#22d3ee", icon:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M8 15l2 2 4-4"/>'},
+    {type:"Convert to VONK", desc:"Pts to Vonk", amount:"-2,000", unit:"pts", time:"Yesterday • 6:20 PM", status:"Success", color:"#a78bfa", icon:'<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>'},
+    {type:"Withdrawal", desc:"To bank account", amount:"-8,500", unit:"pts", time:"Yesterday • 9:10 AM", status:"Pending", color:"#fb923c", icon:'<rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M6 15h4"/>'},
+    {type:"Referral Bonus", desc:"New referral", amount:"+80", unit:"pts", time:"2 June • 3:55 PM", status:"Success", color:"#e2e8f0", icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>'},
+  ];
+
+  function renderTx(){
+    const statusColor = s => s === "Success" ? "#34d399" : s === "Pending" ? "#facc15" : "#f87171";
+    document.getElementById('txList').innerHTML = transactions.map(t => `
+      <div class="card p-3.5 flex items-center justify-between pressable">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background:${t.color}22">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${t.color}" stroke-width="2">${t.icon}</svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium">${t.type}</p>
+            <p class="text-[11px] text-white/40 mt-0.5">${t.desc}</p>
+            <p class="text-[10px] text-white/30 mt-0.5">${t.time}</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-bold" style="color:${t.amount.startsWith('+') ? '#34d399' : '#f87171'}">${t.amount} <span class="text-[10px] text-white/40 font-medium">${t.unit}</span></p>
+          <p class="text-[10px] mt-1 font-medium" style="color:${statusColor(t.status)}">${t.status}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+  renderTx();
+
+  function setDockActive(index) {
+    document.querySelectorAll('.dock-node').forEach(n => n.classList.remove('active'));
+    const node = document.querySelector(`.dock-node[data-index="${index}"]`);
+    if (node) node.classList.add('active');
+
+    const pulse = document.getElementById('dock-pulse');
+    const positions = [10, 30, 50, 70, 90];
+    if (pulse) pulse.style.left = `calc(${positions[index]}% - 2.5px)`;
+}
+
+function scrollToTasks() {
+    const el = document.getElementById('synergy-nodes-wrapper');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function openProfileSheet() {
+    document.getElementById('profile-sheet-overlay').classList.add('active');
+    document.getElementById('profile-sheet').classList.add('active');
+}
+
+function closeProfileSheet() {
+    document.getElementById('profile-sheet-overlay').classList.remove('active');
+    document.getElementById('profile-sheet').classList.remove('active');
+    setDockActive(0);
+}
+
+// Rufe profile-sheet ta atomatik idan an danna ko'ina a dashboard (bayan overlay)
+document.addEventListener('click', function(e) {
+    const sheet = document.getElementById('profile-sheet');
+    const overlay = document.getElementById('profile-sheet-overlay');
+    if (!sheet || !overlay) return;
+
+    const isSheetOpen = sheet.classList.contains('active');
+    const clickedInsideSheet = sheet.contains(e.target);
+    const clickedProfileButton = e.target.closest('.dock-node[data-index="4"]');
+
+    // Idan sheet a bude yake, aka danna waje (ba cikin sheet ba, kuma ba profile button din ba)
+    if (isSheetOpen && !clickedInsideSheet && !clickedProfileButton) {
+        closeProfileSheet();
+    }
+});
+
+function updateDockTaskRing(watched, limit = 5) {
+    const circle = document.getElementById('task-ring-progress');
+    const label = document.getElementById('task-dock-label');
+    if (!circle) return;
+    const circumference = 119.4;
+    const pct = Math.min(watched / limit, 1);
+    circle.style.strokeDashoffset = circumference - (pct * circumference);
+    if (label) label.innerText = `${Math.min(watched, limit)}/${limit}`;
+}
+
+/* Expose handlers referenced by inline onclick/oninput attributes in the HTML —
+   required because this code now runs inside a DOMContentLoaded closure (local
+   scope) rather than the global scope it used to run in. */
+window.toggleHide = toggleHide;
+window.convertPts = convertPts;
+window.calculatePtsSwap = calculatePtsSwap;
+window.executePtsSwap = executePtsSwap;
+window.setDockActive = setDockActive;
+window.scrollToTasks = scrollToTasks;
+window.openProfileSheet = openProfileSheet;
+window.closeProfileSheet = closeProfileSheet;
+window.updateDockTaskRing = updateDockTaskRing;
+
+setDockActive(0);
+window.addEventListener('load', loadWallet);
+window.addEventListener('load', loadReferralCount);
+}); // end DOMContentLoaded
+</script>
+
+</body>
+</html>
