@@ -1486,6 +1486,7 @@ let capCropMode = false;
 
 function openCaptionModal(file, kind) {
     const reopening = captionModeActive; // gallery/camera na iya canja fayil yayin da muke ciki tuni
+    if (!reopening) { history.pushState({ captionOpen: true }, ''); captionHistoryPushed = true; }
     pendingCaptionFile = file;
     pendingCaptionKind = kind;
     capRotation = 0; capOverlayUsed = false; capVideoEl = null; capVideoCrop = null;
@@ -1579,10 +1580,22 @@ function exitCaptionMode() {
 function confirmDiscardPhoto() {
     document.getElementById('discardDialogBackdrop').classList.add('show');
 }
+// Idan an danna back button na wayar/browser yayin da caption editor ke bude, kada mu
+// bar shafin ya fice — mu nuna discard dialog daidai kamar dannawa akan X.
+window.addEventListener('popstate', () => {
+    if (!captionHistoryPushed || !document.getElementById('captionOverlay').classList.contains('show')) return;
+    history.pushState({ captionOpen: true }, ''); // sake "toshe" back din, mu yanke shawara a nan
+    if (capCropMode) { cancelCropMode(); return; }
+    if (capDrawMode) { toggleDrawMode(); return; }
+    if (document.getElementById('textToolOverlay')) { cancelTextTool(); return; }
+    confirmDiscardPhoto();
+});
 function hideDiscardDialog() {
     document.getElementById('discardDialogBackdrop').classList.remove('show');
     }
+let captionHistoryPushed = false;
 function closeCaptionModal() {
+    document.getElementById('discardDialogBackdrop').classList.remove('show');
     document.getElementById('captionOverlay').classList.remove('show');
     document.getElementById('captionPreviewArea').innerHTML = '';
     pendingCaptionFile = null;
@@ -1591,6 +1604,8 @@ function closeCaptionModal() {
     closeStickerPicker();
     cleanupAllSubModes();
     exitCaptionMode();
+    if (captionHistoryPushed) { captionHistoryPushed = false; history.back(); } // share state din da muka tura
+    document.getElementById('galleryInput').click(); // mayar da mai amfani zuwa gallery, ba waje ba
 }
 async function confirmCaptionSend() {
     if (!pendingCaptionFile) return;
@@ -1604,6 +1619,7 @@ async function confirmCaptionSend() {
         closeStickerPicker();
         cleanupAllSubModes();
         exitCaptionMode();
+        if (captionHistoryPushed) { captionHistoryPushed = false; history.back(); }
         uploadAndSendMedia(f, kind, null, caption, { hd, viewOnce });
     };
 
