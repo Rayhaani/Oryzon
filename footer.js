@@ -155,14 +155,15 @@
             to { transform: scale(1); opacity: 1; }
         }
         .chat-nav-dot {
-            min-width: 10px !important;
-            width: 10px;
-            height: 10px !important;
-            padding: 0 !important;
-            border-radius: 50% !important;
-            top: 0px !important;
-            right: 4px !important;
-        }
+    min-width: 10px !important;
+    width: 10px;
+    height: 10px !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+    border-radius: 50% !important;
+    top: 0px !important;
+    right: 4px !important;
+}
     `;
 
     // ------------------------------------------------------------
