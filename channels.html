@@ -1180,7 +1180,7 @@
                 </div>
             `;
         } else {
-            bar.innerHTML = `<div class="subscribe-bar" onclick="subscribeToChannel()">${channelInfo.isSubscribedMember ? 'Subscribed' : 'Subscribe'}</div>`;
+            bar.innerHTML = `<div class="subscribe-bar" onclick="${channelInfo.isSubscribedMember ? 'unsubscribeFromChannel()' : 'subscribeToChannel()'}">${channelInfo.isSubscribedMember ? 'Subscribed' : 'Subscribe'}</div>`;
         }
         renderAttachMenu();
     }
@@ -1197,6 +1197,18 @@
             await channelRef().update({ subscriberCount: FieldValue.increment(1) });
             showToast('Subscribed to ' + channelInfo.name);
         } catch (e) { showToast('Could not subscribe — try again'); }
+    }
+    async function unsubscribeFromChannel() {
+        if (!channelInfo.isSubscribedMember) { showToast('You are not subscribed'); return; }
+        try {
+            await channelRef().collection('subscribers').doc(currentUsername).delete();
+            // Goge fan-out index din ma — in ba haka ba, badge/list dinka a
+            // chats.html zai ci gaba da nuna wannan channel kamar har yanzu
+            // mutum yana subscribed dashi ko da ya bar shi a nan.
+            await db.collection('users').doc(currentUsername).collection('mySubscriptions').doc(currentChannelId).delete();
+            await channelRef().update({ subscriberCount: FieldValue.increment(-1) });
+            showToast('Unsubscribed from ' + channelInfo.name);
+        } catch (e) { showToast('Could not unsubscribe — try again'); }
     }
 
     function renderAttachMenu() {
