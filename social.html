@@ -1737,7 +1737,6 @@ firebase.auth().onAuthStateChanged((user) => {
     if (user) {
         console.log("Auth ready, uid:", user.uid);
         listenNotifBadgeCount();
-        listenChatBadgeCount();
     } else {
         window.location.href = "login.html";
     }
@@ -1792,26 +1791,7 @@ window.addEventListener('DOMContentLoaded', () => {
               }, err => console.error('Notif badge error:', err));
       }
 
-function listenChatBadgeCount() {
-    if (!currentUser) return;
-    db.collection('personalChats')
-        .onSnapshot(snapshot => {
-            const badge = document.getElementById('chatBadgeCount');
-            if (!badge) return;
-            let total = 0;
-            snapshot.forEach(doc => {
-                const chatId = doc.id;
-                if (!chatId.includes(currentUser)) return;
-                const data = doc.data();
-                const unread = data.unreadCount && data.unreadCount[currentUser];
-                if (typeof unread === 'number') total += unread;
-            });
-            badge.textContent = total > 9 ? '9+' : total;
-            badge.classList.toggle('show', total > 0);
-        }, err => console.error('Chat badge error:', err));
-}
 
-    
       // ============================================================
       // OPTIMIZED FEED RENDERING
       // - Nuna skeleton / cached HTML nan take (babu farin allo)
