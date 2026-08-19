@@ -300,6 +300,11 @@
                 role: 'owner'
             });
 
+            // Fan-out: rubuta index a users/{me}/myGroups/{groupId} — wannan
+            // shine kadai abinda chats.html ke karantawa domin jera "my groups".
+            await db.collection('users').doc(currentUsername).collection('myGroups').doc(finalSlug)
+                .set({ joinedAt: FieldValue.serverTimestamp() });
+
             window.location.href = 'group.html?group=' + encodeURIComponent(finalSlug);
         } catch (e) {
             console.error('Create group error:', e);
