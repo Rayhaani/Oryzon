@@ -1394,6 +1394,18 @@
         auth.onAuthStateChanged(user => { authReadyResolve(user); });
 
         const groupSlug = new URLSearchParams(window.location.search).get('group');
+        // Real group (?group=slug present): clear the hardcoded demo title/name
+        // text SYNCHRONOUSLY right away, before any async Firestore/auth work
+        // starts, so the wrong "Northern Innovators Hub 2026" placeholder never
+        // has a chance to flash on screen for real groups.
+        if (groupSlug) {
+            ['groupTitleChat', 'groupTitleFeed', 'giGroupNameLabel', 'groupNameFeed'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '';
+            });
+            const inviteSub = document.querySelector('.invite-subtitle');
+            if (inviteSub) inviteSub.textContent = '';
+        }
         let groupData = null;
         let isGroupAdmin = false;
         let groupUnsub = null;
