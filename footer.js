@@ -273,11 +273,7 @@
         const sessionUser = localStorage.getItem('nexus_user_session');
         if (!sessionUser) return;
 
-        function attach() {
-            if (!window.firebase || !firebase.firestore) {
-                setTimeout(attach, 1000);
-                return;
-            }
+        function startListening() {
             firebase.firestore().collection('personalChats')
                 .where('members', 'array-contains', sessionUser)
                 .onSnapshot((snap) => {
@@ -288,6 +284,16 @@
                     });
                     window.updateChatFooterBadge(hasUnread);
                 }, err => console.error('Footer personal-chat badge error:', err));
+        }
+
+        function attach() {
+            if (!window.firebase || !firebase.auth) {
+                setTimeout(attach, 1000);
+                return;
+            }
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) startListening();
+            });
         }
         attach();
    }
