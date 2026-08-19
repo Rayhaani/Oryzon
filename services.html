@@ -5312,7 +5312,7 @@ body {
                 <div id="mb-category-pills" style="display:flex;gap:8px;overflow-x:auto;flex:1;"></div>
                 <button onclick="mbOpenCategoryManager()" style="flex-shrink:0;width:34px;height:34px;border-radius:10px;border:1.5px solid #e2e8f0;background:#ffffff;color:#334155;font-size:15px;cursor:pointer;">⚙️</button>
             </div>
-            <div id="mb-menu-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+            <div id="mb-menu-list" class="nxfm-item-grid"></div>
             <button onclick="mbOpenAddItem()" style="width:100%;margin-top:14px;border:2px dashed #ea580c;background:#fff7ed;color:#ea580c;border-radius:16px;padding:16px;font-weight:800;font-size:14px;cursor:pointer;">+ Add Item</button>
             <button onclick="mbOpenAddCategory()" style="width:100%;margin-top:14px;border:1.5px dashed #cbd5e1;background:#ffffff;color:#334155;border-radius:16px;padding:22px 16px;font-weight:700;font-size:14px;cursor:pointer;">+ Add Category</button>
         </div>
@@ -5751,7 +5751,16 @@ body {
         </div>
     </div>
     </div>
-
+ <!-- MY BUSINESS: ITEM DELETE SHEET -->
+<div id="mb-item-actions-sheet" style="position:fixed;inset:0;background:rgba(0,0,0,0.28);backdrop-filter:blur(2px);z-index:10100;display:none;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)mbCloseItemActions()">
+    <div style="width:100%;max-width:480px;background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border:1px solid rgba(255,255,255,0.12) !important;border-top-left-radius:24px;border-top-right-radius:24px;padding:8px 16px 24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+        <div style="width:36px;height:4px;background:rgba(255,255,255,0.25);border-radius:2px;margin:8px auto 16px;"></div>
+        <div style="font-weight:800;font-size:15px;color:#ffffff;margin-bottom:4px;">Delete this item?</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,0.6);margin-bottom:16px;">This action cannot be undone.</div>
+        <button onclick="mbActionsDelete()" style="width:100%;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:14px;padding:14px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:10px;">🗑️ Delete Item</button>
+        <button onclick="mbCloseItemActions()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:14px;padding:14px;font-weight:700;font-size:14px;cursor:pointer;">Cancel</button>
+    </div>
+</div>
 <!-- HIDDEN MENU FLYER TEMPLATE (used for html2canvas capture, never shown to user) -->
 <div id="mb-flyer-capture" style="position:fixed;left:-9999px;top:0;width:1080px;background:linear-gradient(160deg,#fff7ed 0%,#fed7aa 100%);font-family:'Segoe UI',sans-serif;">
     <div style="padding:48px 48px 32px;">
@@ -11450,16 +11459,17 @@ async function tiersSheetSelect(tierIndex) {
     }
 function mbRenderMenuItem(item, idx) {
     return `
-    <div style="background:#ffffff;border-radius:16px;padding:12px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-        <div style="width:56px;height:56px;border-radius:12px;background:#f8fafc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">${item.icon || '🍽️'}</div>
-        <div style="flex:1;min-width:0;">
-            <div style="font-weight:800;font-size:14px;color:#78350f;">${item.name}</div>
-            <div style="font-size:12px;color:#64748b;margin:2px 0 6px;">${item.desc || ''}</div>
-            <div style="font-weight:800;font-size:14px;color:#ea580c;">${item.pricingType === 'tiered' ? 'From ' + formatPrice(Math.min(...item.tiers.map(t=>t.price)), item.currency) : formatPrice(item.price, item.currency)}</div>        
+    <div class="nxfm-item-card-grid" onclick="mbOpenEditItem(${idx})">
+        <div class="nxfm-grid-thumb">
+            ${item.image ? `<img src="${item.image}">` : (item.icon || '🍽️')}
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-            <button onclick="mbOpenItemMenu(${idx})" style="width:30px;height:30px;border-radius:8px;background:#f1f5f9;border:none;cursor:pointer;">⋮</button>
-            <button style="width:30px;height:30px;border-radius:8px;background:#f1f5f9;border:none;cursor:pointer;">⠿</button>
+        <div class="nxfm-grid-info">
+            <div class="nxfm-grid-name">${item.name}</div>
+            <div class="nxfm-grid-desc">${item.desc || ''}</div>
+            <div class="nxfm-grid-bottom-row">
+                <div class="nxfm-grid-price">${item.pricingType === 'tiered' ? 'From ' + formatPrice(Math.min(...item.tiers.map(t=>t.price)), item.currency) : formatPrice(item.price, item.currency)}</div>
+                <button class="nxfm-grid-add-btn" onclick="event.stopPropagation();mbOpenItemMenu(${idx})">⋮</button>
+            </div>
         </div>
     </div>`;
 }
@@ -11900,13 +11910,20 @@ function mbOpenAddItem() {
     document.getElementById('mb-item-form-overlay').style.display = 'flex';
 }
 
+let mbActionsItemIdx = null;
 function mbOpenItemMenu(idx) {
-    if (confirm('Edit this item? (Cancel to delete instead)')) {
-        mbOpenEditItem(idx);
-    } else if (confirm('Delete this item permanently?')) {
-        mbDeleteItem(idx);
-    }
+    mbActionsItemIdx = idx;
+    document.getElementById('mb-item-actions-sheet').style.display = 'flex';
 }
+function mbCloseItemActions() {
+    document.getElementById('mb-item-actions-sheet').style.display = 'none';
+    mbActionsItemIdx = null;
+}
+function mbActionsDelete() {
+    const idx = mbActionsItemIdx;
+    mbCloseItemActions();
+    mbDeleteItem(idx);
+    }
 
 function mbOpenEditItem(idx) {
     const items = mbCurrentCategory ? mbAllItems.filter(i => i.category === mbCurrentCategory) : mbAllItems;
