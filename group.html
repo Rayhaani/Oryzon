@@ -2565,10 +2565,16 @@
 
         document.getElementById('composerSheet').addEventListener('click', () => closeSheet('composerSheet'));
 
-        // initial paint: chat is the default view, render it through the unified renderer
-        renderChatFlow();
+        // initial paint: chat is the default view, render it through the unified renderer.
+        // Skip the demo/hardcoded messages when this is a REAL group (?group=slug) —
+        // only show them in local preview mode so real groups don't flash demo content
+        // before Firestore data loads.
+        if (!groupSlug) {
+            renderChatFlow();
+        } else {
+            chatMessages = [];
+        }
         initRealGroup();
-
         // one realistic "is typing…" demo cycle so the indicator is visibly wired up
         // — only in local preview (no ?group=); a real group shouldn't get a fake message injected.
         if (!groupSlug) {
