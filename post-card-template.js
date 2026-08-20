@@ -357,7 +357,7 @@
     flex-direction: column !important;
     justify-content: flex-end !important;
     background: #000 !important;
-    padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom)) !important;
 }
 
         .immersive-mode .post-media {
