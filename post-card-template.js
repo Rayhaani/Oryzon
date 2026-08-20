@@ -482,6 +482,21 @@
     font-size: 14px !important;
 }
 
+.post-capsule svg, .capsule svg {
+            width: 1em !important;
+            height: 1em !important;
+            color: var(--premium-gold) !important;
+            vertical-align: -0.15em;
+        }
+        .post-card .post-capsule svg,
+        .post-card .capsule svg {
+            color: #ffffff !important;
+        }
+        .post-card.immersive-mode .post-capsule svg,
+        .post-card.immersive-mode .capsule svg {
+            color: #ffffff !important;
+        }
+        
 .post-capsule span, .capsule span {
     font-size: 11px !important;
     font-weight: 600 !important;
@@ -1117,14 +1132,14 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                     ${reactionPickerHTML}
                 </div>
                
-                    <div class="post-capsule" onclick="event.stopPropagation(); handleCommentBtn('${post.id}', event)" id="comment-btn-${post.id}">
-                     <i class="fa-regular fa-comment"></i>
+                  <div class="post-capsule" onclick="event.stopPropagation(); handleCommentBtn('${post.id}', event)" id="comment-btn-${post.id}">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                     <span id="comment-count-${post.id}">${comments}</span>
                 </div>
 
                <div class="post-capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
-                <div class="post-capsule"><i class="fa-regular fa-paper-plane"></i></div>
-                ${post.isAdmin ? `<div class="post-capsule" onclick="event.stopPropagation(); if(typeof openModal==='function') openModal('boostModal'); else showToast && showToast('🚀 Boost this post')"><i class="fa-solid fa-rocket"></i><span>Boost</span></div>` : ''}
+                <div class="post-capsule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg></div> 
+                                    ${post.isAdmin ? `<div class="post-capsule" onclick="event.stopPropagation(); if(typeof openModal==='function') openModal('boostModal'); else showToast && showToast('🚀 Boost this post')"><i class="fa-solid fa-rocket"></i><span>Boost</span></div>` : ''}
             </div>
             
                 
