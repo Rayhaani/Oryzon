@@ -369,22 +369,65 @@
             z-index: -1 !important;
         }
 
-       .immersive-mode .post-header,
-        .immersive-mode .post-content,
-        .immersive-mode .post-interaction-bar,
-        .immersive-mode .interaction-bar {
+      .immersive-mode .post-header,
+        .immersive-mode .post-content {
             position: relative !important;
             z-index: 5001 !important;
             background: linear-gradient(transparent, rgba(0,0,0,0.85)) !important;
         }
 
-        .immersive-mode .post-content,
-        .immersive-mode .post-interaction-bar,
-        .immersive-mode .interaction-bar {
+        .immersive-mode .post-content {
             padding: 10px 20px !important;
         }
 
- 
+        /* ===== IMMERSIVE — Capsules zuwa gefen dama, a tsaye, TSIRARA babu
+           background/circle a bayansu, kai tsaye a saman video/page ===== */
+        .immersive-mode .post-interaction-bar,
+        .immersive-mode .interaction-bar {
+            position: fixed !important;
+            right: 10px !important;
+            bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+            left: auto !important;
+            top: auto !important;
+            width: auto !important;
+            padding: 0 !important;
+            background: transparent !important;
+            z-index: 5001 !important;
+        }
+        .immersive-mode .post-action-capsules,
+        .immersive-mode .action-capsules,
+        .immersive-mode .post-save-capsule,
+        .immersive-mode .save-capsule {
+            flex-direction: column !important;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            border: none !important;
+            padding: 0 !important;
+            gap: 18px !important;
+            margin: 0 !important;
+        }
+        .immersive-mode .post-capsule,
+        .immersive-mode .capsule {
+            flex-direction: column !important;
+            background: transparent !important;
+            border: none !important;
+            min-width: auto !important;
+            height: auto !important;
+            padding: 0 !important;
+            gap: 4px !important;
+        }
+        .immersive-mode .post-capsule i,
+        .immersive-mode .capsule i {
+            font-size: 26px !important;
+            color: #ffffff !important;
+            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+        }
+        .immersive-mode .post-capsule span,
+        .immersive-mode .capsule span {
+            font-size: 11px !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        } 
         
         /* ===== HIDE NATIVE VIDEO CONTROLS ===== */
         video::-webkit-media-controls { display: none !important; }
@@ -1211,7 +1254,7 @@ window.toggleImmersive = function(card) {
         card._savedScrollTop = window.scrollY || window.pageYOffset;
         card.classList.add('immersive-mode');
 
-        if (footer) footer.classList.add('footer-hidden');
+        // if (footer) footer.classList.add('footer-hidden');
 
         if (video) {
             video.style.cssText = `
@@ -1258,7 +1301,6 @@ window.toggleImmersive = function(card) {
             if (sv) {
                 sv.remove();
                 document.body.style.overflow = '';
-                if (footer) footer.classList.add('footer-hidden');
                 history.pushState({ immersive: true }, '');
                 return;
             }
