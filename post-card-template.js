@@ -346,7 +346,7 @@
         .post-reaction-picker span:active { transform: scale(1.4) !important; }
 
         /* ===== FULL SCREEN / IMMERSIVE MODE ===== */
-        .post-card.immersive-mode {
+.post-card.immersive-mode {
     position: fixed !important;
     top: 0 !important; left: 0 !important;
     width: 100vw !important; height: 100dvh !important;
@@ -357,6 +357,7 @@
     flex-direction: column !important;
     justify-content: flex-end !important;
     background: #000 !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
 }
 
         .immersive-mode .post-media {
@@ -386,7 +387,7 @@
         .immersive-mode .interaction-bar {
             position: fixed !important;
             right: 10px !important;
-            bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+            bottom: calc(150px + env(safe-area-inset-bottom)) !important;
             left: auto !important;
             top: auto !important;
             width: auto !important;
@@ -421,15 +422,15 @@
             padding: 0 !important;
             gap: 4px !important;
         }
-        .immersive-mode .post-capsule i,
+       .immersive-mode .post-capsule i,
         .immersive-mode .capsule i {
-            font-size: 26px !important;
+            font-size: 50px !important;
             color: #ffffff !important;
             filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
         }
         .immersive-mode .post-capsule span,
         .immersive-mode .capsule span {
-            font-size: 11px !important;
+            font-size: 14px !important;
             color: #ffffff !important;
             font-weight: 700 !important;
         } 
