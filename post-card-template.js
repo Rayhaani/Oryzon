@@ -357,7 +357,7 @@
     flex-direction: column !important;
     justify-content: flex-end !important;
     background: #000 !important;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important;
 }
 
         .immersive-mode .post-media {
@@ -445,7 +445,6 @@
             height: 100vh !important;
             max-height: 100vh !important;
         }
-
 
            /* ===== CAPSULE BUTTONS — Clean inside pill ===== */
 .post-capsule, .capsule {
