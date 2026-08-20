@@ -382,7 +382,7 @@
 
         /* ===== IMMERSIVE — Capsules zuwa gefen dama, a tsaye, TSIRARA babu
            background/circle a bayansu, kai tsaye a saman video/page ===== */
-        .immersive-mode .post-interaction-bar,
+       .immersive-mode .post-interaction-bar,
         .immersive-mode .interaction-bar {
             position: fixed !important;
             right: 10px !important;
@@ -393,7 +393,12 @@
             padding: 0 !important;
             background: transparent !important;
             z-index: 5001 !important;
-        }
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 18px !important;
+        } 
         .immersive-mode .post-action-capsules,
         .immersive-mode .action-capsules,
         .immersive-mode .post-save-capsule,
