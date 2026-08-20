@@ -188,17 +188,17 @@
               <span class="notif-badge chat-nav-dot" id="chatBadgeCount"></span>  
             </div>
 
-            <div class="footer-icon post-capsule" data-page="nexus-feed.html" onclick="window.location.href='nexus-feed.html'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="10" cy="10" r="6.7" />
-                    <path d="M15.3 15.3L20 20" />
+           <div class="footer-icon post-capsule" data-page="shop.html" onclick="window.location.href='shop.html'">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9" cy="21" r="1"/>
+                    <circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                 </svg>
-            </div>
+            </div> 
 
-            <div class="footer-icon post-capsule" data-page="videos.html" onclick="window.location.href='videos.html';" style="cursor: pointer;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="3" width="20" height="18" rx="5" ry="5" />
-                    <path d="M10 9l5 3-5 3V9z" fill="currentColor" />
+            <div class="footer-icon post-capsule" data-page="health.html" onclick="window.location.href='health.html'">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                 </svg>
             </div>
 
