@@ -196,11 +196,12 @@
                 </svg>
             </div> 
 
-            <div class="footer-icon post-capsule" data-page="health.html" onclick="window.location.href='health.html'">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+           <div class="footer-icon post-capsule" data-page="videos.html" onclick="window.location.href='videos.html';" style="cursor: pointer;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="18" rx="5" ry="5" />
+                    <path d="M10 9l5 3-5 3V9z" fill="currentColor" />
                 </svg>
-            </div>
+            </div> 
 
             <div class="footer-icon post-capsule" data-page="me.html" onclick="window.location.href='me.html'">
                 <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq" alt="" class="profile-img" id="footerProfileImg" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=Sadiq'">
