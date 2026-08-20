@@ -5752,6 +5752,22 @@ body {
         </div>
     </div>
     </div>
+<!-- MY BUSINESS: ADD CATEGORY SHEET -->
+<div id="mb-add-category-overlay" style="position:fixed;inset:0;background:transparent;z-index:10101;display:none;align-items:flex-end;justify-content:center;">
+    <div style="width:100%;max-width:480px;background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border:1px solid rgba(255,255,255,0.12) !important;border-top-left-radius:24px;border-top-right-radius:24px;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;">
+            <div style="font-size:16px;font-weight:800;color:#ffffff;">Add Category</div>
+            <button onclick="mbCloseAddCategory()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);color:#ffffff;font-size:14px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:4px 20px 24px;display:flex;flex-direction:column;gap:14px;">
+            <div>
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:6px;">Category Name</div>
+                <input id="mb-inp-new-category" type="text" placeholder="e.g. Main Dish" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:12px;padding:12px 14px;font-size:14px;color:#ffffff;outline:none;box-sizing:border-box;">
+            </div>
+            <button onclick="mbSaveNewCategory()" style="width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#ffffff;border-radius:14px;padding:14px;font-weight:800;font-size:14px;cursor:pointer;margin-top:8px;">Save Category</button>
+        </div>
+    </div>
+</div>
  <!-- MY BUSINESS: ITEM DELETE SHEET -->
 <div id="mb-item-actions-sheet" style="position:fixed;inset:0;background:rgba(0,0,0,0.28);backdrop-filter:blur(2px);z-index:10100;display:none;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)mbCloseItemActions()">
     <div style="width:100%;max-width:480px;background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border:1px solid rgba(255,255,255,0.12) !important;border-top-left-radius:24px;border-top-right-radius:24px;padding:8px 16px 24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
@@ -12987,11 +13003,19 @@ function mbOpenWhatsNewModal() {
 }
 
 function mbOpenAddCategory() {
-    const name = prompt('New category name:');
-    if (!name || !name.trim()) return;
-    document.getElementById('mb-inp-category').value = name.trim();
+    document.getElementById('mb-inp-new-category').value = '';
+    document.getElementById('mb-add-category-overlay').style.display = 'flex';
+}
+function mbCloseAddCategory() {
+    document.getElementById('mb-add-category-overlay').style.display = 'none';
+}
+function mbSaveNewCategory() {
+    const name = document.getElementById('mb-inp-new-category').value.trim();
+    if (!name) return;
+    mbCloseAddCategory();
+    document.getElementById('mb-inp-category').value = name;
     mbOpenAddItem();
-    document.getElementById('mb-inp-category').value = name.trim();
+    document.getElementById('mb-inp-category').value = name;
     }
 function openOrderConfirm(itemName, itemPrice) {
     orderDraft.itemName = itemName;
