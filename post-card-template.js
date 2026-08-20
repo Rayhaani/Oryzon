@@ -424,7 +424,7 @@
         }
        .post-card.immersive-mode .post-capsule i,
         .post-card.immersive-mode .capsule i {
-            font-size: 30px !important;
+            font-size: 20px !important;
             color: #ffffff !important;
             filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
         }
@@ -464,8 +464,6 @@
     -webkit-backdrop-filter: blur(16px) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
-
-
 
     color: #ffffff !important;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
