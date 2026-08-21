@@ -1,12 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        // Anti-flash: if this is a real page (?page=slug), set a class on
+        // <html> IMMEDIATELY, before the browser even starts parsing <body>.
+        // The CSS below hides the hardcoded demo name/follower-count until
+        // real Firestore data arrives — so "Maijalalaini Islamic Medicine"
+        // or "182K followers" never get a chance to flash on screen.
+        if (new URLSearchParams(location.search).get('page')) {
+            document.documentElement.classList.add('pg-loading');
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Nexus — Page</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        html.pg-loading #headerTitleText,
+        html.pg-loading #pageNameTitle,
+        html.pg-loading #pageMetaRow,
+        html.pg-loading #sheetPageName,
+        html.pg-loading #sheetPageMeta {
+            visibility: hidden;
+        }
         :root {
             --bg-void: #030508;
             --card-incoming: rgba(15, 20, 31, 0.75);
@@ -1145,6 +1162,7 @@
                 document.getElementById('sheetPageAvatar').src = pageData.avatarUrl || document.getElementById('sheetPageAvatar').src;
                 document.getElementById('sheetPageName').childNodes[0].textContent = pageData.name + ' ';
                 document.getElementById('sheetPageMeta').textContent = formatCount(pageData.followerCount || 0) + ' followers · TrustScore ' + (pageData.trustScore || '—');
+                document.documentElement.classList.remove('pg-loading');
                 document.getElementById('menuGroupBoost').style.display = isOwner ? '' : 'none';
                 document.getElementById('menuGroupManage').style.display = isOwner ? '' : 'none';
                 document.getElementById('reportMenuItem').style.display = isOwner ? 'none' : '';
