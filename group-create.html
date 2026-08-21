@@ -138,13 +138,15 @@
         <div class="radio-dot" id="radioPrivate"></div>
     </div>
 
-    <div class="ownership-note">
+<div class="ownership-note">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
         <span>You'll be the permanent owner and admin of this group — that can't be transferred or taken over by anyone else.</span>
     </div>
 
-    <div class="error-banner" id="errorBanner"></div>
+    <div class="section-label" id="inviteSectionLabel" style="display:none;">Adding to this group</div>
+    <div id="pendingInvitesList" style="display:none; flex-wrap:wrap; gap:8px; padding:6px 16px 4px 16px;"></div>
 
+    <div class="error-banner" id="errorBanner"></div>
     <div class="create-btn-wrap">
         <div class="create-btn disabled" id="createBtn" onclick="createGroup()">Create Group</div>
     </div>
@@ -175,6 +177,29 @@
     let authReadyResolve;
     const authReadyPromise = new Promise(resolve => { authReadyResolve = resolve; });
     auth.onAuthStateChanged(user => { authReadyResolve(user); });
+
+    let pendingInvites = [];
+    (function loadPendingInvites() {
+        try {
+            const raw = sessionStorage.getItem('nexus_pending_invites');
+            if (raw) pendingInvites = JSON.parse(raw) || [];
+        } catch (e) { pendingInvites = []; }
+        renderPendingInvites();
+    })();
+
+    function renderPendingInvites() {
+        const label = document.getElementById('inviteSectionLabel');
+        const list = document.getElementById('pendingInvitesList');
+        if (!pendingInvites.length) { label.style.display = 'none'; list.style.display = 'none'; return; }
+        label.style.display = 'block';
+        list.style.display = 'flex';
+        list.innerHTML = pendingInvites.map(inv => `
+            <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border-radius:20px;padding:4px 10px 4px 4px;font-size:12.5px;">
+                <img src="${inv.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + inv.username}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;">
+                <span>${inv.username}</span>
+            </div>
+        `).join('');
+    }
 
     let selectedPrivacy = 'public';
     let slugCheckToken = 0;
@@ -291,7 +316,7 @@
                 description: desc,
                 privacy: selectedPrivacy,
                 link: 'nexus.app/g/' + finalSlug,
-                memberCount: 1,
+                memberCount: 1 + pendingInvites.length,
                 creatorUsername: currentUsername,
                 adminUsernames: [currentUsername],
                 createdAt: FieldValue.serverTimestamp()
@@ -307,6 +332,18 @@
             await db.collection('users').doc(currentUsername).collection('myGroups').doc(finalSlug)
                 .set({ joinedAt: FieldValue.serverTimestamp() });
 
+            // Kara duk zaɓaɓɓun friends (pending invites) a matsayin members
+            // nan take, tare da fan-out index a users/{su}/myGroups/{groupId}
+            // domin group ya bayyana a chats.html na kowanne friend da aka zaɓa.
+            await Promise.all(pendingInvites.map(async inv => {
+                await db.collection('groups').doc(finalSlug).collection('members').doc(inv.username).set({
+                    joinedAt: FieldValue.serverTimestamp(),
+                    role: 'member'
+                });
+                await db.collection('users').doc(inv.username).collection('myGroups').doc(finalSlug)
+                    .set({ joinedAt: FieldValue.serverTimestamp() });
+            }));
+            sessionStorage.removeItem('nexus_pending_invites');
             window.location.href = 'group.html?group=' + encodeURIComponent(finalSlug);
         } catch (e) {
             console.error('Create group error:', e);
