@@ -1135,8 +1135,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                 </div>
 
                <div class="post-capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div
-                <div class="post-capsule"><svg class="nx-icon-svg" viewBox="0 0 16 16" fill="currentColor"><path d="M5.921 11.9 1.353 8.62a.719.719 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.622z"/></svg></div>
-            
+                <div class="post-capsule"><svg class="nx-icon-svg" viewBox="0 0 16 16" fill="currentColor" style="transform:scaleX(-1);"><path d="M5.921 11.9 1.353 8.62a.719.719 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.622z"/></svg></div>   
             </div>
             
                 
