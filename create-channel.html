@@ -402,12 +402,18 @@
                 createdAt: FieldValue.serverTimestamp()
             });
 
-            await db.collection('channels').doc(finalSlug).collection('subscribers').doc(currentUsername).set({
+        await db.collection('channels').doc(finalSlug).collection('subscribers').doc(currentUsername).set({
                 subscribedAt: FieldValue.serverTimestamp(),
                 muted: false
             });
 
-            window.location.href = 'channels.html?channel=' + encodeURIComponent(finalSlug);
+            // Fan-out: rubuta index a users/{me}/mySubscriptions/{channelId} —
+            // wannan shine kadai abinda chats.html ke karantawa domin jera
+            // "my channels".
+            await db.collection('users').doc(currentUsername).collection('mySubscriptions').doc(finalSlug)
+                .set({ subscribedAt: FieldValue.serverTimestamp() });
+
+            window.location.href = 'channels.html?channel=' + encodeURIComponent(finalSlug);    
         } catch (e) {
             console.error('Create channel error:', e);
             btn.textContent = 'Create Channel';
