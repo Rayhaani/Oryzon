@@ -422,12 +422,19 @@
             padding: 0 !important;
             gap: 4px !important;
         }
-       .post-card.immersive-mode .post-capsule i,
+         .post-card.immersive-mode .post-capsule i,
         .post-card.immersive-mode .capsule i {
             font-size: 25px !important;
             color: #ffffff !important;
             filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
         }
+        .post-card.immersive-mode .post-capsule svg.nx-icon-svg,
+        .post-card.immersive-mode .capsule svg.nx-icon-svg {
+            width: 25px !important;
+            height: 25px !important;
+            color: #ffffff !important;
+            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+        } 
         .post-card.immersive-mode .post-capsule span,
         .post-card.immersive-mode .capsule span {
             font-size: 14px !important;
@@ -511,7 +518,7 @@
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 30px !important;
     padding: 3px !important;
-    margin-left: 6px !important;
+    margin-left: 4px !important;
 }
 
 
@@ -643,11 +650,17 @@
     text-overflow: ellipsis !important;
         }
 
-        /* ===== FORCE CAPSULE COLORS — FINAL OVERRIDE ===== */
+   /* ===== FORCE CAPSULE COLORS — FINAL OVERRIDE ===== */
 .post-card .post-capsule i,
 .post-card .capsule i {
     color: #ffffff !important;
     font-size: 15px !important;
+}
+.post-card .post-capsule svg.nx-icon-svg,
+.post-card .capsule svg.nx-icon-svg {
+    width: 15px !important;
+    height: 15px !important;
+    color: #ffffff !important;
 }
 
 .post-card .post-capsule span,
@@ -1116,19 +1129,20 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                 </div>
                
                  <div class="post-capsule" onclick="event.stopPropagation(); handleCommentBtn('${post.id}', event)" id="comment-btn-${post.id}">
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                     <svg class="nx-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1);"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    
                     <span id="comment-count-${post.id}">${comments}</span>
                 </div>
 
-               <div class="post-capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div>
-                <div class="post-capsule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg></div>                                     ${post.isAdmin ? `<div class="post-capsule" onclick="event.stopPropagation(); if(typeof openModal==='function') openModal('boostModal'); else showToast && showToast('🚀 Boost this post')"><i class="fa-solid fa-rocket"></i><span>Boost</span></div>` : ''}
+               <div class="post-capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div
+                <div class="post-capsule"><svg class="nx-icon-svg" viewBox="0 0 16 16" fill="currentColor"><path d="M5.921 11.9 1.353 8.62a.719.719 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.622z"/></svg></div>
+            
             </div>
             
                 
             <div class="post-action-capsules post-save-capsule">
-                <div class="post-capsule" onclick="toggleSave(this, '${post.id}')">
+                   <div class="post-capsule" onclick="toggleSave(this, '${post.id}')" style="min-width:auto;">
                     <i class="fa-regular fa-bookmark"></i>
-                    <span>Save</span>
                 </div>
             </div>
         </div>
