@@ -222,8 +222,10 @@
         <span>You'll be the permanent owner and admin of this channel — that can't be transferred or taken over by anyone else, even if they open it before you finish setting it up.</span>
     </div>
 
-    <div class="error-banner" id="errorBanner"></div>
+    <div class="section-label" id="inviteSectionLabel" style="display:none;">Adding to this channel</div>
+    <div id="pendingInvitesList" style="display:none; flex-wrap:wrap; gap:8px; padding:6px 16px 4px 16px;"></div>
 
+    <div class="error-banner" id="errorBanner"></div>
     <div class="create-btn-wrap">
         <div class="create-btn disabled" id="createBtn" onclick="createChannel()">Create Channel</div>
     </div>
@@ -254,6 +256,29 @@
     let authReadyResolve;
     const authReadyPromise = new Promise(resolve => { authReadyResolve = resolve; });
     auth.onAuthStateChanged(user => { authReadyResolve(user); });
+
+    let pendingInvites = [];
+    (function loadPendingInvites() {
+        try {
+            const raw = sessionStorage.getItem('nexus_pending_invites');
+            if (raw) pendingInvites = JSON.parse(raw) || [];
+        } catch (e) { pendingInvites = []; }
+        renderPendingInvites();
+    })();
+
+    function renderPendingInvites() {
+        const label = document.getElementById('inviteSectionLabel');
+        const list = document.getElementById('pendingInvitesList');
+        if (!pendingInvites.length) { label.style.display = 'none'; list.style.display = 'none'; return; }
+        label.style.display = 'block';
+        list.style.display = 'flex';
+        list.innerHTML = pendingInvites.map(inv => `
+            <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border-radius:20px;padding:4px 10px 4px 4px;font-size:12.5px;">
+                <img src="${inv.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + inv.username}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;">
+                <span>${inv.username}</span>
+            </div>
+        `).join('');
+    }
 
     let selectedPrivacy = 'public';
     let selectedCategory = 'General';
@@ -389,7 +414,7 @@
                 category: selectedCategory,
                 privacy: selectedPrivacy,
                 link: 'nexus.app/c/' + finalSlug,
-                subscriberCount: 1,
+                subscriberCount: 1 + pendingInvites.length,
                 verified: false,
                 creatorUsername: currentUsername,
                 adminUsernames: [currentUsername],
@@ -413,6 +438,18 @@
             await db.collection('users').doc(currentUsername).collection('mySubscriptions').doc(finalSlug)
                 .set({ subscribedAt: FieldValue.serverTimestamp() });
 
+            // Kara duk zaɓaɓɓun friends a matsayin subscribers nan take, tare
+            // da fan-out index a users/{su}/mySubscriptions/{channelId} domin
+            // channel ya bayyana a chats.html na kowanne friend da aka zaɓa.
+            await Promise.all(pendingInvites.map(async inv => {
+                await db.collection('channels').doc(finalSlug).collection('subscribers').doc(inv.username).set({
+                    subscribedAt: FieldValue.serverTimestamp(),
+                    muted: false
+                });
+                await db.collection('users').doc(inv.username).collection('mySubscriptions').doc(finalSlug)
+                    .set({ subscribedAt: FieldValue.serverTimestamp() });
+            }));
+            sessionStorage.removeItem('nexus_pending_invites');
             window.location.href = 'channels.html?channel=' + encodeURIComponent(finalSlug);    
         } catch (e) {
             console.error('Create channel error:', e);
