@@ -443,6 +443,13 @@
         .selected-chip img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
         .selected-chip .chip-remove { cursor: pointer; color: var(--text-dim); font-size: 12px; line-height: 1; padding-left: 1px; }
 
+        .gio-check-badge {
+            position: absolute; bottom: -1px; right: -1px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #3ECF6E; border: 2px solid #050505;
+            align-items: center; justify-content: center;
+        }
+        
         #groupInviteOverlay {
             position: fixed; inset: 0; z-index: 6000;
             display: none; flex-direction: column;
@@ -2788,7 +2795,7 @@ setInterval(refreshAllChatTimes, 30000);
             }
         }
 
-      function injectRealFirebaseContacts() {
+     function injectRealFirebaseContacts() {
             const listBody = document.getElementById('carpet-contacts-list');
             const searchEl = document.getElementById('gioSearchInput');
             const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
@@ -2806,24 +2813,33 @@ setInterval(refreshAllChatTimes, 30000);
                 return;
             }
 
+            // Ainihin friendRowHtml() layout (.friend-row-flex / .chat-item /
+            // .profile-stack / .chat-details / .preview-text) — daidai
+            // yadda Friends tab ke nunawa, kawai an kara ƙaramin checkmark
+            // badge domin selection maimakon cikakken row highlight.
             list.forEach(f => {
                 const contactUsername = f.otherUser;
                 const isSelected = selectedNodes.includes(contactUsername);
+                const statusLine = lastSeenLabel(f.isOnline, f.lastSeenMillis, f.isDeleted, f.isDeactivated);
 
                 listBody.insertAdjacentHTML('beforeend', `
-                    <div class="cyber-contact-node ${isSelected ? 'selected' : ''}" data-contact="${contactUsername}" onclick="toggleNodeSelection(this, '${contactUsername}')">
-                <div class="profile-stack">
-                            <img src="${f.avatarUrl}" id="overlay-avatar-${contactUsername}" class="user-img">
+                    <div class="friend-row-flex" data-contact="${contactUsername}" onclick="toggleNodeSelection(this, '${contactUsername}')">
+                        <div class="chat-item" style="flex:1;">
+                            <div class="profile-stack" style="position:relative;">
+                                <img src="${f.avatarUrl}" id="overlay-avatar-${contactUsername}" class="user-img">
+                                <div class="gio-check-badge" style="display:${isSelected ? 'flex' : 'none'};">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                            </div>
+                            <div class="chat-details">
+                                <span class="name" id="overlay-name-${contactUsername}">${f.fullName}</span>
+                                <p class="preview-text" style="margin:0;">${statusLine}</p>
+                            </div>
                         </div>
-                        <div class="chat-details">
-                            <span class="name" id="overlay-name-${contactUsername}" style="font-size:12.5px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${f.fullName}</span>
-                        </div>
-                        <div class="cyber-checkbox-ring"></div>
                     </div>
                 `);
             });
-        }
-
+        } 
         function filterInviteContacts(query) {
             injectRealFirebaseContacts();
         }
@@ -2845,13 +2861,15 @@ setInterval(refreshAllChatTimes, 30000);
             document.getElementById('groupInviteOverlay').classList.remove('gio-open');
         }  
 
-        function toggleNodeSelection(element, contact) {
+       function toggleNodeSelection(element, contact) {
             if(navigator.vibrate) navigator.vibrate(12);
-            element.classList.toggle('selected');
-            if(element.classList.contains('selected')) {
-                selectedNodes.push(contact);
-            } else {
+            const badge = element.querySelector('.gio-check-badge');
+            if (selectedNodes.includes(contact)) {
                 selectedNodes = selectedNodes.filter(id => id !== contact);
+                if (badge) badge.style.display = 'none';
+            } else {
+                selectedNodes.push(contact);
+                if (badge) badge.style.display = 'flex';
             }
             renderSelectedChips();
         }
@@ -2859,11 +2877,14 @@ setInterval(refreshAllChatTimes, 30000);
         function removeSelectedNode(contact) {
             if(navigator.vibrate) navigator.vibrate(10);
             selectedNodes = selectedNodes.filter(id => id !== contact);
-            document.querySelectorAll('.cyber-contact-node').forEach(node => {
-                if (node.getAttribute('data-contact') === contact) node.classList.remove('selected');
+            document.querySelectorAll('.friend-row-flex').forEach(node => {
+                if (node.getAttribute('data-contact') === contact) {
+                    const badge = node.querySelector('.gio-check-badge');
+                    if (badge) badge.style.display = 'none';
+                }
             });
             renderSelectedChips();
-        }
+        } 
 
        function renderSelectedChips() {
             const row = document.getElementById('selectedChipsRow');
