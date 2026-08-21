@@ -1,12 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        // Anti-flash: if this is a real group (?group=slug), set a class on
+        // <html> IMMEDIATELY, before the browser even starts parsing <body>.
+        // The CSS below hides the hardcoded demo name/count until real
+        // Firestore data arrives — so "Northern Innovators Hub 2026" or
+        // "12.4K" never get a chance to flash on screen, even briefly.
+        if (new URLSearchParams(location.search).get('group')) {
+            document.documentElement.classList.add('gi-loading');
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus - Next-Gen Super Community Protocol</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        html.gi-loading #groupTitleChat,
+        html.gi-loading #groupSubtitleChat,
+        html.gi-loading #groupTitleFeed,
+        html.gi-loading #giGroupNameLabel,
+        html.gi-loading #groupNameFeed,
+        html.gi-loading #groupMetaFeed,
+        html.gi-loading #giMetaText,
+        html.gi-loading .invite-subtitle,
+        html.gi-loading .stack-count,
+        html.gi-loading #tabAll {
+            visibility: hidden;
+        }
         :root {
             --bg-void: #030508;
             --card-incoming: rgba(15, 20, 31, 0.75);
@@ -1394,18 +1416,9 @@
         auth.onAuthStateChanged(user => { authReadyResolve(user); });
 
         const groupSlug = new URLSearchParams(window.location.search).get('group');
-        // Real group (?group=slug present): clear the hardcoded demo title/name
-        // text SYNCHRONOUSLY right away, before any async Firestore/auth work
-        // starts, so the wrong "Northern Innovators Hub 2026" placeholder never
-        // has a chance to flash on screen for real groups.
-        if (groupSlug) {
-            ['groupTitleChat', 'groupTitleFeed', 'giGroupNameLabel', 'groupNameFeed'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = '';
-            });
-            const inviteSub = document.querySelector('.invite-subtitle');
-            if (inviteSub) inviteSub.textContent = '';
-        }
+        // NOTE: the "gi-loading" class already hides the demo title/count
+        // elements via CSS (added in <head>) before this script even runs —
+        // no JS-based clearing needed here anymore.
         let groupData = null;
         let isGroupAdmin = false;
         let groupUnsub = null;
@@ -1420,29 +1433,15 @@
             return (n || 0).toString();
         }
 
-        async function initRealGroup() {
+       async function initRealGroup() {
             if (!groupSlug) return; // no ?group= — keep the built-in demo content as local preview
 
-            const authUser = await authReadyPromise;
-            if (!authUser) return;
-
-            // Auto-join: viewing a real group makes you a member (matches the
-            // "Public Group" privacy option from group-create.html). Private
-            // groups / approval requests are not built yet.
-            const memberRef = groupRef().collection('members').doc(currentUsername);
-            const memberSnap = await memberRef.get();
-            if (!memberSnap.exists) {
-                await memberRef.set({ joinedAt: FieldValue.serverTimestamp(), role: 'member' });
-                // Fan-out: rubuta index a KANSA (users/{me}/myGroups/{groupId}) —
-                // wannan shine kadai abinda chats.html zai karanta domin jera
-                // "my groups", don haka babu bukatar wata collectionGroup query
-                // mai bude membership na DUK groups a database.
-                await db.collection('users').doc(currentUsername).collection('myGroups').doc(groupSlug)
-                    .set({ joinedAt: FieldValue.serverTimestamp() });
-                await groupRef().update({ memberCount: FieldValue.increment(1) }).catch(() => {});
-            }
-
-            groupUnsub = groupRef().onSnapshot(doc => {
+            // Fara sauraren group doc NAN TAKE — karanta group baya bukatar
+            // auth (Firestore rule: allow read: if true), don haka ainihin
+            // suna/hoto/adadin members baya bukatar jiran auth + auto-join
+            // check da ke kasa. Wannan shi ne ke cire delay din daƙiƙa da yawa
+            // kafin sunan ya bayyana.
+            groupUnsub = groupRef().onSnapshot(doc => { 
                 if (!doc.exists) {
                     showToast('This group doesn\'t exist yet', 'fa-triangle-exclamation');
                     return;
@@ -1463,12 +1462,34 @@
                     document.getElementById('groupAvatarChat').src = groupData.avatarUrl;
                     document.getElementById('giAvatarImg').src = groupData.avatarUrl;
                 }
-                if (groupData.coverUrl) document.getElementById('groupCoverFeed').src = groupData.coverUrl;
+               if (groupData.coverUrl) document.getElementById('groupCoverFeed').src = groupData.coverUrl;
+
+                document.documentElement.classList.remove('gi-loading');
 
                 if (!groupFeedLoaded) { renderFeedPosts(); groupFeedLoaded = true; }
                 loadRealChatMessages();
             }, err => console.error('group listener error:', err));
-        }
+
+            // Auto-join: viewing a real group makes you a member (matches the
+            // "Public Group" privacy option from group-create.html). Private
+            // groups / approval requests are not built yet. Wannan yana gudana
+            // a daban, baya toshe display na sunan group.
+            const authUser = await authReadyPromise;
+            if (!authUser) return;
+
+            const memberRef = groupRef().collection('members').doc(currentUsername);
+            const memberSnap = await memberRef.get();
+            if (!memberSnap.exists) {
+                await memberRef.set({ joinedAt: FieldValue.serverTimestamp(), role: 'member' });
+                // Fan-out: rubuta index a KANSA (users/{me}/myGroups/{groupId}) —
+                // wannan shine kadai abinda chats.html zai karanta domin jera
+                // "my groups", don haka babu bukatar wata collectionGroup query
+                // mai bude membership na DUK groups a database.
+                await db.collection('users').doc(currentUsername).collection('myGroups').doc(groupSlug)
+                    .set({ joinedAt: FieldValue.serverTimestamp() });
+                await groupRef().update({ memberCount: FieldValue.increment(1) }).catch(() => {});
+            }
+       } 
 
         // ============================================================
         // 0. UTILITIES
