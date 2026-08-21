@@ -443,6 +443,42 @@
         .selected-chip img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
         .selected-chip .chip-remove { cursor: pointer; color: var(--text-dim); font-size: 12px; line-height: 1; padding-left: 1px; }
 
+        #groupInviteOverlay {
+            position: fixed; inset: 0; z-index: 6000;
+            display: none; flex-direction: column;
+            background-color: #050505;
+            color: #fff;
+            -webkit-font-smoothing: antialiased;
+        }
+        #groupInviteOverlay.gio-open { display: flex; }
+        #groupInviteOverlay * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        .gio-header { padding: 12px 16px 8px 16px; flex-shrink: 0; }
+        .gio-header-top { display: flex; align-items: center; gap: 14px; }
+        .gio-back-trigger { cursor: pointer; display: flex; align-items: center; flex-shrink: 0; }
+        .gio-header-top h1 { font-size: 20px; font-weight: 700; }
+        .gio-header-top p { font-size: 12.5px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+        #groupInviteOverlay #selectedChipsRow { display: none; align-items: center; gap: 6px; padding: 8px 0 0 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+        .gio-search-bar-wrap {
+            margin: 12px 0 0 0;
+            background: rgba(255,255,255,0.06);
+            border-radius: 12px;
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px;
+        }
+        .gio-search-bar-wrap input { flex: 1; background: transparent; border: none; outline: none; color: #fff; font-size: 14px; }
+        .gio-search-bar-wrap input::placeholder { color: rgba(255,255,255,0.4); }
+        #groupInviteOverlay .portal-scrollable-body { flex: 1; overflow-y: auto; padding: 6px 4px 90px; scrollbar-width: none; }
+        #groupInviteOverlay .portal-scrollable-body::-webkit-scrollbar { display: none; }
+        .gio-fab-continue {
+            position: fixed; bottom: 24px; right: 20px;
+            width: 54px; height: 54px; border-radius: 50%;
+            background: var(--cyan-neon);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 18px rgba(0,242,255,0.35);
+            cursor: pointer;
+            opacity: 0.4; pointer-events: none;
+            transition: 0.25s;
+        }
 
         /* FUTURE FEATURISTIC OPTIONS STYLES */
         .portal-options-container {
@@ -452,15 +488,15 @@
             gap: 8px;
         }
 
-        .futuristic-option-btn {
+       .futuristic-option-btn {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 12px 15px;
-            background: #f0f0f0; 
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: #15161c;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 14px;
-            color: #333; 
+            color: #fff;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
@@ -471,8 +507,7 @@
         }
         
         .futuristic-option-btn:hover {
-            background: #e0e0e0;
-            color: #000;
+            background: #1c1d24;
         }
 
         .futuristic-option-btn:active {
@@ -482,13 +517,13 @@
         }
 
         .futuristic-option-btn svg {
-            color: #555;
+            color: var(--text-dim);
             transition: 0.3s;
         }
 
         .futuristic-option-btn:active svg {
             color: var(--cyan-neon);
-        }
+              } 
         
         .header-icons {
     display: flex;
@@ -2358,15 +2393,36 @@
             </div>
         </div> 
 
-        <div id="portalContactsSubView" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
-           <div class="contacts-section-title" id="contactsViewSubtitle">Contacts On Oryzon</div>
-            <div id="selectedChipsRow" style="display:none; align-items:center; gap:6px; padding:6px 15px 4px; overflow-x:auto; white-space:nowrap; scrollbar-width:none;"></div>
-            <div class="portal-scrollable-body" id="carpet-contacts-list"></div> 
-            <div style="padding: 10px 15px; display: flex; justify-content: flex-end;">
-                <button class="btn-create-page" id="portalSubmitActionButton" onclick="initializeGroupFromOverlay()" style="border-radius: 10px; width: 100%; padding: 10px;">Deploy Cluster</button>
+       </div>
+
+    <!-- ================================================================
+         GROUP/PAGE/CHANNEL INVITE PICKER — full-page overlay (WhatsApp-
+         style "New Group" contact picker), reusing the app's real
+         friendsDataCache (same data as the Friends tab) and real theme
+         colors, instead of the small carpet-portal dropdown.
+         ================================================================ -->
+    <div id="groupInviteOverlay">
+        <header class="gio-header">
+            <div class="gio-header-top">
+                <div class="gio-back-trigger" onclick="closeGroupInviteOverlay()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+                </div>
+                <div>
+                    <h1 id="gioTitle">New Group</h1>
+                    <p id="gioSubtitle">Who would you like to add?</p>
+                </div>
             </div>
+            <div id="selectedChipsRow"></div>
+            <div class="gio-search-bar-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="gioSearchInput" placeholder="Who would you like to add?" oninput="filterInviteContacts(this.value)">
+            </div>
+        </header>
+        <div class="portal-scrollable-body" id="carpet-contacts-list"></div>
+        <div class="gio-fab-continue" id="portalSubmitActionButton" onclick="initializeGroupFromOverlay()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </div>
-    </div>
+    </div> 
 
 <div class="fab-new-chat" onclick="openNewMessageOverlay()">
         <svg width="52" height="52" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" style="transform: scaleX(-1);">
@@ -2732,32 +2788,62 @@ setInterval(refreshAllChatTimes, 30000);
             }
         }
 
-        function injectRealFirebaseContacts() {
+      function injectRealFirebaseContacts() {
             const listBody = document.getElementById('carpet-contacts-list');
+            const searchEl = document.getElementById('gioSearchInput');
+            const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+            let list = friendsDataCache.slice();
+            if (q) list = list.filter(f => f.fullName.toLowerCase().includes(q));
+
             listBody.innerHTML = '';
 
-            if(identifiedContacts.size === 0) {
-                listBody.innerHTML = '<p style="text-align:center; padding:15px; color:#555; font-size:11px;">No contacts found</p>';
+            if (friendsDataCache.length === 0) {
+                listBody.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No friends yet — when you and someone follow each other, they\'ll show up here automatically.</p>';
+                return;
+            }
+            if (list.length === 0) {
+                listBody.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No contacts match this search</p>';
                 return;
             }
 
-            identifiedContacts.forEach(contactUsername => {
-                const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${contactUsername}`;
-                const initialFormattedName = contactUsername.charAt(0).toUpperCase() + contactUsername.slice(1);
-                
+            list.forEach(f => {
+                const contactUsername = f.otherUser;
+                const isSelected = selectedNodes.includes(contactUsername);
+
                 listBody.insertAdjacentHTML('beforeend', `
-                    <div class="cyber-contact-node" data-contact="${contactUsername}" onclick="toggleNodeSelection(this, '${contactUsername}')">
+                    <div class="cyber-contact-node ${isSelected ? 'selected' : ''}" data-contact="${contactUsername}" onclick="toggleNodeSelection(this, '${contactUsername}')">
                 <div class="profile-stack">
-                            <img src="${defaultAvatar}" id="overlay-avatar-${contactUsername}" class="user-img">
+                            <img src="${f.avatarUrl}" id="overlay-avatar-${contactUsername}" class="user-img">
                         </div>
                         <div class="chat-details">
-                            <span class="name" id="overlay-name-${contactUsername}" style="font-size:12.5px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;">${initialFormattedName}</span>
+                            <span class="name" id="overlay-name-${contactUsername}" style="font-size:12.5px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${f.fullName}</span>
                         </div>
                         <div class="cyber-checkbox-ring"></div>
                     </div>
                 `);
             });
         }
+
+        function filterInviteContacts(query) {
+            injectRealFirebaseContacts();
+        }
+
+        async function openGroupInviteOverlay(mode) {
+            if (navigator.vibrate) navigator.vibrate([15, 10, 15]);
+            currentPortalMode = mode;
+            selectedNodes = [];
+            const titles = { group: 'New Group', page: 'New Page', channel: 'New Channel' };
+            document.getElementById('gioTitle').textContent = titles[mode] || 'New';
+            document.getElementById('gioSearchInput').value = '';
+            document.getElementById('groupInviteOverlay').classList.add('gio-open');
+            if (!friendsDataCache.length && typeof loadFriendsList === 'function') await loadFriendsList();
+            injectRealFirebaseContacts();
+            renderSelectedChips();
+        }
+
+        function closeGroupInviteOverlay() {
+            document.getElementById('groupInviteOverlay').classList.remove('gio-open');
+        }  
 
         function toggleNodeSelection(element, contact) {
             if(navigator.vibrate) navigator.vibrate(12);
@@ -2779,9 +2865,10 @@ setInterval(refreshAllChatTimes, 30000);
             renderSelectedChips();
         }
 
-        function renderSelectedChips() {
+       function renderSelectedChips() {
             const row = document.getElementById('selectedChipsRow');
             const btn = document.getElementById('portalSubmitActionButton');
+            const subtitle = document.getElementById('gioSubtitle');
             if (!row) return;
             if (selectedNodes.length === 0) {
                 row.style.display = 'none';
@@ -2795,11 +2882,16 @@ setInterval(refreshAllChatTimes, 30000);
                     return `<span class="selected-chip"><img src="${src}"><span>${label}</span><span class="chip-remove" onclick="removeSelectedNode('${u}')">✕</span></span>`;
                 }).join('');
             }
+            if (subtitle) {
+                subtitle.textContent = selectedNodes.length
+                    ? `${selectedNodes.length} of ${friendsDataCache.length} selected`
+                    : 'Who would you like to add?';
+            }
             if (btn) {
                 btn.style.opacity = selectedNodes.length ? '1' : '0.4';
                 btn.style.pointerEvents = selectedNodes.length ? 'auto' : 'none';
             }
-            }
+        } 
         function openCarpetPortal() {
             if(navigator.vibrate) navigator.vibrate([15, 10, 15]);
             backToPortalMenu(); 
@@ -2820,7 +2912,7 @@ setInterval(refreshAllChatTimes, 30000);
             document.getElementById('carpetPortal').classList.remove('unrolled');
         }
 
-        function triggerOptionAction(action) {
+       function triggerOptionAction(action) {
             if(navigator.vibrate) navigator.vibrate(15);
             
             if (action === 'status') {
@@ -2829,26 +2921,9 @@ setInterval(refreshAllChatTimes, 30000);
                 return;
             }
 
-            currentPortalMode = action;
-            document.getElementById('portalMainMenuOptions').style.display = 'none';
-            document.getElementById('portalContactsSubView').style.display = 'flex';
-            document.getElementById('portalBackBtn').style.display = 'flex';
-
-            const headline = document.getElementById('portalMainHeadline');
-            const submitBtn = document.getElementById('portalSubmitActionButton');
-            
-            if (action === 'group') {
-                headline.textContent = "Create Group";
-                submitBtn.textContent = "Continue";
-            } else if (action === 'page') {
-                headline.textContent = "Create Page";
-                submitBtn.textContent = "Continue";
-            } else if (action === 'channel') {
-                headline.textContent = "Create Channel";
-                submitBtn.textContent = "Continue";
-            }
-            renderSelectedChips();
-        }
+            closeCarpetPortal();
+            openGroupInviteOverlay(action);
+        } 
 
         function backToPortalMenu() {
             if(navigator.vibrate) navigator.vibrate(10);
@@ -2877,7 +2952,7 @@ setInterval(refreshAllChatTimes, 30000);
             // hardcoded default din Personal tab, ba matter da wace tab mutum
             // yake a kai kafin ya fara Create Group/Page/Channel.
             sessionStorage.setItem('nexus_return_tab', getActiveTabId());
-            closeCarpetPortal();
+            closeGroupInviteOverlay();
             if (currentPortalMode === 'group') {
                 window.location.href = 'group-create.html';
             } else if (currentPortalMode === 'page') {
@@ -5787,19 +5862,19 @@ window.openStatusOverlay = openStatusOverlay;
         </header>
 
        <div class="nmo-action-card">
-            <div class="nmo-quick-action-item" onclick="event.stopPropagation(); closeNewMessageOverlay(); triggerOptionAction('group'); document.getElementById('carpetPortal').classList.add('unrolled');">
+            <div class="nmo-quick-action-item" onclick="event.stopPropagation(); closeNewMessageOverlay(); triggerOptionAction('group');">                
                 <div class="nmo-quick-action-icon" style="background:#2F8CE0;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M17 20v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
                 <h3>New Group</h3>
             </div>
-            <div class="nmo-quick-action-item" onclick="event.stopPropagation(); closeNewMessageOverlay(); triggerOptionAction('page'); document.getElementById('carpetPortal').classList.add('unrolled');">
+             <div class="nmo-quick-action-item" onclick="event.stopPropagation(); closeNewMessageOverlay(); triggerOptionAction('page');">              
                 <div class="nmo-quick-action-icon" style="background:#8E6FF0;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M4 3h12l4 4v14H4z"/><path d="M16 3v4h4"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>
                 </div>
                 <h3>New Page</h3>
             </div>
-            <div class="nmo-quick-action-item" onclick="event.stopPropagation(); closeNewMessageOverlay(); triggerOptionAction('channel'); document.getElementById('carpetPortal').classList.add('unrolled');">
+        <div class="nmo-quick-action-item" onclick="event.stopPropagation(); closeNewMessageOverlay(); triggerOptionAction('channel');">            
                 <div class="nmo-quick-action-icon" style="background:#3EC95F;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 8a5 5 0 0 1 0 8"/><path d="M18 5a9 9 0 0 1 0 14"/></svg>
                 </div>
