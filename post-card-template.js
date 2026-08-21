@@ -1134,8 +1134,8 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                     <span id="comment-count-${post.id}">${comments}</span>
                 </div>
 
-               <div class="post-capsule"><i class="fa-solid fa-arrows-rotate"></i><span>5</span></div
-                <div class="post-capsule"><svg class="nx-icon-svg" viewBox="0 0 16 16" fill="currentColor" style="transform:scaleX(-1);"><path d="M5.921 11.9 1.353 8.62a.719.719 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.622z"/></svg></div>   
+                 <div class="post-capsule"><svg class="nx-icon-svg" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M11.534 7H13.5V9a.5.5 0 0 1-1 0V7.466L11.534 9.4a.25.25 0 0 1-.384 0L9.184 7.04a.25.25 0 0 1 .192-.41h1.842V4.5a.5.5 0 0 1 1 0zM4.466 9H2.5V7a.5.5 0 0 0-1 0v2.534L2.966 7.6a.25.25 0 0 0-.192-.41H.932a.25.25 0 0 0-.192.41L2.706 9.96a.25.25 0 0 0 .384 0L4.658 7.6a.25.25 0 0 0-.192-.41H4.466V9z"/><path d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg><span>5</span></div>
+                <div class="post-capsule"><svg class="nx-icon-svg" viewBox="0 0 16 16" fill="currentColor" style="transform:scaleX(-1);"><path d="M5.921 11.9 1.353 8.62a.719.719 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.622z"/></svg></div>           
             </div>
             
                 
