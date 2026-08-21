@@ -2437,9 +2437,39 @@
                 console.error('renderMyGroups error:', err);
             }
         }
-        renderMyGroups();
-        if (!myId) window.location.href = 'login.html';
+       renderMyGroups();
 
+        async function renderMyPages() {
+            if (!myId || typeof db === 'undefined') return;
+            try {
+                const pageIds = await getMyMembershipIds('followers');
+                const container = document.querySelector('#pages .pages-vertical-list');
+                if (!container || !pageIds.length) return;
+                const pageDocs = await Promise.all(pageIds.map(id => db.collection('pages').doc(id).get()));
+                pageDocs.filter(p => p.exists).forEach(p => {
+                    const data = p.data();
+                    const pid = p.id;
+                    const row = document.createElement('div');
+                    row.className = 'page-list-item';
+                    row.onclick = () => { window.location.href = `pages.html?page=${encodeURIComponent(pid)}`; };
+                    row.innerHTML = `
+                        <div class="page-info-block">
+                            <img src="${data.avatarUrl || 'https://via.placeholder.com/50/111?text=' + encodeURIComponent(data.initials || 'P')}" class="page-avatar" data-avatar-kind="page" data-avatar-key="${pid}" data-chat-href="pages.html?page=${pid}" data-info-href="pages.html?page=${pid}" onclick="handleAvatarTap(event)">
+                            <div class="page-text-meta">
+                                <h3>${data.name || 'Page'}</h3>
+                                <p>${data.description || ((data.followerCount || 0) + ' followers')}</p>
+                            </div>
+                        </div>
+                        <div class="page-action-view">${(data.followerCount || 0)} followers</div>`;
+                    container.insertBefore(row, container.firstChild);
+                });
+            } catch (err) {
+                console.error('renderMyPages error:', err);
+            }
+        }
+        renderMyPages();
+
+        if (!myId) window.location.href = 'login.html'; 
         // Jiran Firebase Auth ya farfaɗo session kafin a yi query
         let authReadyResolve;
         const authReadyPromise = new Promise((resolve) => { authReadyResolve = resolve; });
