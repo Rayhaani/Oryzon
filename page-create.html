@@ -293,6 +293,11 @@
                 followedAt: FieldValue.serverTimestamp()
             });
 
+            // Fan-out: rubuta index a users/{me}/myPages/{pageSlug} — wannan
+            // shine kadai abinda chats.html ke karantawa domin jera "my pages".
+            await db.collection('users').doc(currentUsername).collection('myPages').doc(finalSlug)
+                .set({ followedAt: FieldValue.serverTimestamp() });
+
             window.location.href = 'pages.html?page=' + encodeURIComponent(finalSlug);
         } catch (e) {
             console.error('Create page error:', e);
