@@ -2469,7 +2469,37 @@
         }
         renderMyPages();
 
-        if (!myId) window.location.href = 'login.html'; 
+        async function renderMyChannels() {
+            if (!myId || typeof db === 'undefined') return;
+            try {
+                const channelIds = await getMyMembershipIds('subscribers');
+                const container = document.querySelector('#channels .pages-vertical-list');
+                if (!container || !channelIds.length) return;
+                const channelDocs = await Promise.all(channelIds.map(id => db.collection('channels').doc(id).get()));
+                channelDocs.filter(c => c.exists).forEach(c => {
+                    const data = c.data();
+                    const cid = c.id;
+                    const row = document.createElement('div');
+                    row.className = 'page-list-item';
+                    row.onclick = () => { window.location.href = `channels.html?channel=${encodeURIComponent(cid)}`; };
+                    row.innerHTML = `
+                        <div class="page-info-block">
+                            <img src="${data.avatarUrl || 'https://via.placeholder.com/50/00F2FF/000?text=' + encodeURIComponent(data.initials || 'C')}" class="page-avatar" data-avatar-kind="channel" data-avatar-key="${cid}" data-chat-href="channels.html?channel=${cid}" data-info-href="channels.html?channel=${cid}" onclick="handleAvatarTap(event)">
+                            <div class="page-text-meta">
+                                <h3>${data.name || 'Channel'}</h3>
+                                <p>${data.description || ((data.subscriberCount || 0) + ' subscribers')}</p>
+                            </div>
+                        </div>
+                        <div class="page-action-view">${(data.subscriberCount || 0)} subscribers</div>`;
+                    container.insertBefore(row, container.firstChild);
+                });
+            } catch (err) {
+                console.error('renderMyChannels error:', err);
+            }
+        }
+        renderMyChannels();
+
+        if (!myId) window.location.href = 'login.html';
         // Jiran Firebase Auth ya farfaɗo session kafin a yi query
         let authReadyResolve;
         const authReadyPromise = new Promise((resolve) => { authReadyResolve = resolve; });
