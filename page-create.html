@@ -131,8 +131,10 @@
         <span>You'll be the permanent owner and admin of this page — that can't be transferred or taken over by anyone else.</span>
     </div>
 
-    <div class="error-banner" id="errorBanner"></div>
+    <div class="section-label" id="inviteSectionLabel" style="display:none;">Adding to this page</div>
+    <div id="pendingInvitesList" style="display:none; flex-wrap:wrap; gap:8px; padding:6px 16px 4px 16px;"></div>
 
+    <div class="error-banner" id="errorBanner"></div>
     <div class="create-btn-wrap">
         <div class="create-btn disabled" id="createBtn" onclick="createPage()">Create Page</div>
     </div>
@@ -163,6 +165,29 @@
     let authReadyResolve;
     const authReadyPromise = new Promise(resolve => { authReadyResolve = resolve; });
     auth.onAuthStateChanged(user => { authReadyResolve(user); });
+
+    let pendingInvites = [];
+    (function loadPendingInvites() {
+        try {
+            const raw = sessionStorage.getItem('nexus_pending_invites');
+            if (raw) pendingInvites = JSON.parse(raw) || [];
+        } catch (e) { pendingInvites = []; }
+        renderPendingInvites();
+    })();
+
+    function renderPendingInvites() {
+        const label = document.getElementById('inviteSectionLabel');
+        const list = document.getElementById('pendingInvitesList');
+        if (!pendingInvites.length) { label.style.display = 'none'; list.style.display = 'none'; return; }
+        label.style.display = 'block';
+        list.style.display = 'flex';
+        list.innerHTML = pendingInvites.map(inv => `
+            <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border-radius:20px;padding:4px 10px 4px 4px;font-size:12.5px;">
+                <img src="${inv.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + inv.username}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;">
+                <span>${inv.username}</span>
+            </div>
+        `).join('');
+    }
 
     let selectedCategory = 'General';
     let slugCheckToken = 0;
@@ -276,13 +301,13 @@
             const finalSlug = await findAvailableSlug(baseSlug);
             const initials = name.trim().slice(0, 2).toUpperCase();
 
-            await db.collection('pages').doc(finalSlug).set({
+           await db.collection('pages').doc(finalSlug).set({
                 name: name,
                 initials: initials,
                 description: desc,
                 category: selectedCategory,
                 link: 'nexus.app/p/' + finalSlug,
-                followerCount: 1,
+                followerCount: 1 + pendingInvites.length,
                 verified: false,
                 creatorUsername: currentUsername,
                 adminUsernames: [currentUsername],
@@ -298,6 +323,17 @@
             await db.collection('users').doc(currentUsername).collection('myPages').doc(finalSlug)
                 .set({ followedAt: FieldValue.serverTimestamp() });
 
+            // Kara duk zaɓaɓɓun friends a matsayin followers nan take, tare da
+            // fan-out index a users/{su}/myPages/{pageSlug} domin page ya
+            // bayyana a chats.html na kowanne friend da aka zaɓa.
+            await Promise.all(pendingInvites.map(async inv => {
+                await db.collection('pages').doc(finalSlug).collection('followers').doc(inv.username).set({
+                    followedAt: FieldValue.serverTimestamp()
+                });
+                await db.collection('users').doc(inv.username).collection('myPages').doc(finalSlug)
+                    .set({ followedAt: FieldValue.serverTimestamp() });
+            }));
+            sessionStorage.removeItem('nexus_pending_invites'); 
             window.location.href = 'pages.html?page=' + encodeURIComponent(finalSlug);
         } catch (e) {
             console.error('Create page error:', e);
