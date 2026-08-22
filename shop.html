@@ -125,10 +125,19 @@
         .so-empty-icon { font-size: 48px; margin-bottom: 18px; opacity: 0.7; }
         .so-empty-text { font-size: 14px; line-height: 1.6; }
 
-        .search-overlay-hint {
+       .search-overlay-hint {
             text-align: center; color: rgba(255,255,255,0.4);
             font-size: 12.5px; padding: 60px 20px; line-height: 1.6;
         }
+
+        .so-suggestion-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 13px 4px; cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            font-size: 14px; color: rgba(255,255,255,0.85);
+        }
+        .so-suggestion-item svg { flex-shrink: 0; }
+        .so-suggestion-item strong { color: #ffffff; font-weight: 700; } 
 
 
         /* 1b. OLD NEURAL HEADER (kept, unused — header tag removed from markup) */
@@ -950,7 +959,7 @@
         function renderProducts(list, opts = {}) {
             marketGrid.innerHTML = "";
             if (!list.length) {
-                marketGrid.innerHTML = `<div class="empty-state">Babu wani abu a nan tukuna.<br>Ka kasance farkon wanda ya sayar!</div>`;
+                marketGrid.innerHTML = `<div class="empty-state">Nothing here yet.<br>Be the first to sell!</div>`;
                 return;
             }
             list.forEach((product) => {
@@ -1061,7 +1070,7 @@
 
         window.selectRecentSearch = function (term) {
             searchOverlayInput.value = term;
-            handleOverlaySearch(term);
+            commitOverlaySearch(term);
         };
 
         window.commitOverlaySearch = function (value) {
@@ -1072,6 +1081,15 @@
                 return;
             }
             saveRecentSearch(value);
+            const matches = allProducts.filter(p =>
+                (p.name || '').toLowerCase().includes(q) ||
+                (p.location || '').toLowerCase().includes(q)
+            );
+            if (!matches.length) {
+                searchOverlayResults.innerHTML = `<div class="search-overlay-hint">No results found for "${value}".</div>`;
+                return;
+            }
+            searchOverlayResults.innerHTML = `<div class="market-grid" style="padding:0;">${matches.map(productCardHTML).join('')}</div>`;
         };
 
         window.openSearchOverlay = function () {
@@ -1087,23 +1105,41 @@
             searchOverlayInput.value = '';
         };
 
+        function buildSuggestions(q) {
+            const pool = new Set();
+            allProducts.forEach(p => {
+                if ((p.name || '').toLowerCase().includes(q)) pool.add(p.name);
+                if ((p.location || '').toLowerCase().includes(q)) pool.add(p.location);
+            });
+            VERTICALS.forEach(v => { if (v.label.toLowerCase().includes(q)) pool.add(v.label); });
+            return Array.from(pool).slice(0, 8);
+        }
+
+        function suggestionRowHTML(term, q) {
+            const idx = term.toLowerCase().indexOf(q);
+            const display = idx === 0
+                ? `${term.slice(0, q.length)}<strong>${term.slice(q.length)}</strong>`
+                : term;
+            return `
+                <div class="so-suggestion-item" onclick="selectRecentSearch(${JSON.stringify(term)})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span>${display}</span>
+                </div>`;
+        }
+
         window.handleOverlaySearch = function (value) {
             const q = value.trim().toLowerCase();
             if (!q) {
                 renderSearchLanding();
                 return;
             }
-            const matches = allProducts.filter(p =>
-                (p.name || '').toLowerCase().includes(q) ||
-                (p.location || '').toLowerCase().includes(q)
-            );
-            if (!matches.length) {
-                searchOverlayResults.innerHTML = `<div class="search-overlay-hint">Babu wani abu da ya dace da "${value}".</div>`;
+            const suggestions = buildSuggestions(q);
+            if (!suggestions.length) {
+                searchOverlayResults.innerHTML = `<div class="search-overlay-hint">No results found for "${value}".</div>`;
                 return;
             }
-            searchOverlayResults.innerHTML = `<div class="market-grid" style="padding:0;">${matches.map(productCardHTML).join('')}</div>`;
+            searchOverlayResults.innerHTML = suggestions.map(s => suggestionRowHTML(s, q)).join('');
         };
-
         searchFullOverlay.addEventListener('click', (e) => {
             if (e.target === searchFullOverlay) closeSearchOverlay();
         });
