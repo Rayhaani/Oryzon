@@ -787,6 +787,15 @@
         <div class="search-overlay-results" id="searchOverlayResults"></div>
     </div>
 
+    <!-- Full-page Browsing History overlay: opens when a browsing-history card is tapped -->
+    <div class="search-full-overlay" id="browsingHistoryOverlay">
+        <div class="search-overlay-inputrow">
+            <button class="search-overlay-back" onclick="closeBrowsingHistoryOverlay()">‹</button>
+            <div style="font-size:16px;font-weight:800;color:#fff;">Browsing History</div>
+        </div>
+        <div class="search-overlay-results" id="browsingHistoryResults"></div>
+    </div>
+
     <div id="filterBarSlot"></div>
 
     <div class="market-grid" id="marketGrid"></div>
@@ -1033,6 +1042,20 @@
                 </div>`;
         }
 
+        function browsingStripCardHTML(p) {
+            return `
+                <div class="product-card" onclick="openBrowsingHistoryOverlay()">
+                    <div class="image-container">
+                        <img src="${p.image}" class="product-image" loading="lazy">
+                        <div class="price-badge">${p.price}</div>
+                    </div>
+                    <div class="product-footer">
+                        <span class="product-name">${p.name}</span>
+                        <span class="product-location">${p.location}</span>
+                    </div>
+                </div>`;
+        }
+
         function renderSearchLanding() {
             const recents = getRecentSearches();
             const history = getBrowsingHistory();
@@ -1061,7 +1084,7 @@
                         <div class="so-section-title">Browsing history</div>
                     </div>
                     <div class="so-browsing-strip">
-                        ${history.map(productCardHTML).join('')}
+                        ${history.map(browsingStripCardHTML).join('')}
                     </div>`;
             }
             searchOverlayResults.innerHTML = html;
@@ -1102,6 +1125,27 @@
             searchFullOverlay.classList.remove('open');
             document.body.style.overflow = '';
             searchOverlayInput.value = '';
+        };
+
+        function renderBrowsingHistoryFull() {
+            const history = getBrowsingHistory();
+            const container = document.getElementById('browsingHistoryResults');
+            if (!history.length) {
+                container.innerHTML = `<div class="search-overlay-hint">No browsing history yet.</div>`;
+                return;
+            }
+            container.innerHTML = `<div class="market-grid" style="padding:0;">${history.map(productCardHTML).join('')}</div>`;
+        }
+
+        window.openBrowsingHistoryOverlay = function () {
+            document.getElementById('browsingHistoryOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            renderBrowsingHistoryFull();
+        };
+
+        window.closeBrowsingHistoryOverlay = function () {
+            document.getElementById('browsingHistoryOverlay').classList.remove('open');
+            document.body.style.overflow = '';
         };
 
         function buildSuggestions(q) {
