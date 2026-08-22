@@ -1160,51 +1160,123 @@
 
         <div id="timeline-area"></div>
     </div>
-    <!-- CREATE POST COMPOSER SHEET -->
-    <div class="nx-sheet-backdrop" id="composerSheet">
-        <div class="nx-sheet" onclick="event.stopPropagation()" style="max-height:92vh;">
-            <div class="nx-sheet-head"><span>Create Post</span><i class="fa-solid fa-xmark" onclick="closeSheet('composerSheet')"></i></div>
-            <div class="nx-sheet-body">
-                <div class="composer-user-row">
-                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="You">
-                    <div>
-                        <div class="cu-name">You</div>
-                        <div class="composer-audience"><i class="fa-solid fa-earth-africa"></i> Northern Innovators Hub 2026 · Everyone</div>
-                    </div>
+    <!-- CREATE POST — FULL-SCREEN COMPOSER PAGE -->
+    <div class="composer-page" id="composerPage">
+        <div class="composer-page-header">
+            <i class="fa-solid fa-xmark" onclick="closeComposer()"></i>
+            <span class="cp-header-title">Create Post</span>
+            <button class="cp-post-btn-top" id="composerPostBtnTop" onclick="submitComposer()" disabled>Post</button>
+        </div>
+        <div class="composer-page-body" id="composerPageBody">
+            <div class="composer-user-row">
+                <img id="composerAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="You">
+                <div>
+                    <div class="cu-name" id="composerUserName">You</div>
+                    <div class="composer-audience"><i class="fa-solid fa-earth-africa"></i> <span id="composerAudienceLabel">Northern Innovators Hub 2026 · Everyone</span></div>
                 </div>
-                <textarea id="composerText" placeholder="What's on your mind?" oninput="validateComposer()"></textarea>
-                <div class="composer-type-row">
-                    <div class="composer-type-pill active" data-type="text" onclick="setComposerType('text', this)"><i class="fa-solid fa-align-left"></i> Text</div>
-                    <div class="composer-type-pill" data-type="image" onclick="setComposerType('image', this)"><i class="fa-solid fa-image"></i> Photo</div>
-                    <div class="composer-type-pill" data-type="poll" onclick="setComposerType('poll', this)"><i class="fa-solid fa-square-poll-vertical"></i> Poll</div>
-                    <div class="composer-type-pill" data-type="deal" onclick="setComposerType('deal', this)"><i class="fa-solid fa-tags"></i> Deal Post</div>
-                    <div class="composer-type-pill" data-type="event" onclick="setComposerType('event', this)"><i class="fa-solid fa-calendar-days"></i> Event</div>
-                </div>
-                <div class="composer-extra-fields" id="composerImageField"><input type="text" id="composerImageUrl" placeholder="Paste image URL..."></div>
-                <div class="composer-extra-fields" id="composerPollField">
-                    <input type="text" id="pollOpt1" placeholder="Option 1">
-                    <input type="text" id="pollOpt2" placeholder="Option 2">
-                    <input type="text" id="pollOpt3" placeholder="Option 3 (optional)">
-                </div>
-                <div class="composer-extra-fields" id="composerDealField">
-                    <input type="text" id="dealTitle" placeholder="Product/service name">
-                    <input type="text" id="dealPrice" placeholder="Price (e.g. $250)">
-                </div>
-                <div class="composer-extra-fields" id="composerEventField">
-                    <input type="text" id="eventTitle" placeholder="Event name">
-                    <input type="text" id="eventDate" placeholder="Date and time">
-                </div>
-                <div class="composer-addon-row">
-                    <i class="fa-solid fa-image" title="Photo" onclick="setComposerType('image', document.querySelector('[data-type=image]'))"></i>
-                    <i class="fa-solid fa-user-tag" title="Tag someone" onclick="showToast('Choose a person to tag', 'fa-user-tag')"></i>
-                    <i class="fa-solid fa-location-dot" title="Location" onclick="showToast('Location attached', 'fa-location-dot')"></i>
-                    <i class="fa-solid fa-face-smile" title="Feeling" onclick="showToast('Choose how you feel', 'fa-face-smile')"></i>
-                </div>
-                <button class="composer-post-btn" id="composerPostBtn" onclick="submitComposer()" disabled>Post</button>
             </div>
+            <div class="composer-pill-row">
+                <div class="composer-pill"><i class="fa-regular fa-clock"></i> Schedule</div>
+                <div class="composer-pill"><i class="fa-solid fa-earth-africa"></i> Public group</div>
+                <div class="composer-pill" id="composerAddGroupsPill" onclick="openAddGroupsOverlay()"><i class="fa-solid fa-plus"></i> Add groups<span class="cp-count-badge" id="cpGroupCountBadge">0</span></div>
+            </div>
+            <textarea id="composerText" placeholder="Create a public post..." oninput="validateComposer()"></textarea>
+            <div class="composer-bg-row" id="composerBgRow">
+                <div class="composer-bg-swatch bg-default active" data-bg="default" onclick="selectBgSwatch('default', this)"><i class="fa-solid fa-font"></i></div>
+                <div class="composer-bg-swatch" data-bg="grad1" style="background:linear-gradient(135deg,#7b2ff7,#f107a3);" onclick="selectBgSwatch('grad1', this)"></div>
+                <div class="composer-bg-swatch" data-bg="grad2" style="background:linear-gradient(135deg,#ff416c,#ff4b2b);" onclick="selectBgSwatch('grad2', this)"></div>
+                <div class="composer-bg-swatch" data-bg="grad3" style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);" onclick="selectBgSwatch('grad3', this)"></div>
+                <div class="composer-bg-swatch" data-bg="grad4" style="background:linear-gradient(135deg,#4b1248,#f0729b);" onclick="selectBgSwatch('grad4', this)"></div>
+                <div class="composer-bg-swatch" data-bg="grad5" style="background:linear-gradient(135deg,#8e2de2,#4a00e0);" onclick="selectBgSwatch('grad5', this)"></div>
+                <div class="composer-bg-swatch" data-bg="grad6" style="background:linear-gradient(135deg,#f7971e,#ffd200);" onclick="selectBgSwatch('grad6', this)"></div>
+                <div class="composer-bg-swatch" data-bg="grad7" style="background:linear-gradient(135deg,#00c6ff,#0072ff);" onclick="selectBgSwatch('grad7', this)"></div>
+                <div class="composer-bg-swatch" data-bg="grad8" style="background:linear-gradient(135deg, var(--neon-cyan), #b8860b);" onclick="selectBgSwatch('grad8', this)"></div>
+            </div>
+            <div class="composer-meta-chip-row" id="composerMetaChipRow"></div>
+            <div class="composer-type-row">
+                <div class="composer-type-pill active" data-type="text" onclick="setComposerType('text', this)"><i class="fa-solid fa-align-left"></i> Text</div>
+                <div class="composer-type-pill" data-type="image" onclick="setComposerType('image', this)"><i class="fa-solid fa-image"></i> Photo</div>
+                <div class="composer-type-pill" data-type="poll" onclick="setComposerType('poll', this)"><i class="fa-solid fa-square-poll-vertical"></i> Poll</div>
+                <div class="composer-type-pill" data-type="deal" onclick="setComposerType('deal', this)"><i class="fa-solid fa-tags"></i> Deal Post</div>
+                <div class="composer-type-pill" data-type="event" onclick="setComposerType('event', this)"><i class="fa-solid fa-calendar-days"></i> Event</div>
+            </div>
+            <div class="composer-extra-fields" id="composerImageField"><input type="text" id="composerImageUrl" placeholder="Paste image URL..."></div>
+            <div class="composer-extra-fields" id="composerPollField">
+                <input type="text" id="pollOpt1" placeholder="Option 1">
+                <input type="text" id="pollOpt2" placeholder="Option 2">
+                <input type="text" id="pollOpt3" placeholder="Option 3 (optional)">
+            </div>
+            <div class="composer-extra-fields" id="composerDealField">
+                <input type="text" id="dealTitle" placeholder="Product/service name">
+                <input type="text" id="dealPrice" placeholder="Price (e.g. $250)">
+            </div>
+            <div class="composer-extra-fields" id="composerEventField">
+                <input type="text" id="eventTitle" placeholder="Event name">
+                <input type="text" id="eventDate" placeholder="Date and time">
+            </div>
+            <div class="composer-extra-fields" id="composerLocationField">
+                <input type="text" id="composerLocationInput" placeholder="Type a location..." oninput="updateLocationChip()">
+            </div>
+            <div class="composer-action-list">
+                <div class="cal-item" onclick="setComposerType('image', document.querySelector('.composer-type-pill[data-type=image]'))">
+                    <div class="cal-icon" style="color:#22c55e;"><i class="fa-solid fa-image"></i></div><span>Photo/Video</span>
+                </div>
+                <div class="cal-item" onclick="openTagPicker()">
+                    <div class="cal-icon" style="color:#3b82f6;"><i class="fa-solid fa-user-tag"></i></div><span>Tag people</span>
+                </div>
+                <div class="cal-item" onclick="toggleLocationField()">
+                    <div class="cal-icon" style="color:#ef4444;"><i class="fa-solid fa-location-dot"></i></div><span>Add location</span>
+                </div>
+                <div class="cal-item" onclick="openFeelingPicker()">
+                    <div class="cal-icon" style="color:#f59e0b;"><i class="fa-solid fa-face-smile"></i></div><span>Feeling/activity</span>
+                </div>
+                <div class="cal-item" onclick="setComposerType('poll', document.querySelector('.composer-type-pill[data-type=poll]'))">
+                    <div class="cal-icon" style="color:var(--neon-cyan);"><i class="fa-solid fa-square-poll-vertical"></i></div><span>Create poll</span>
+                </div>
+                <div class="cal-item" onclick="setComposerType('event', document.querySelector('.composer-type-pill[data-type=event]'))">
+                    <div class="cal-icon" style="color:#60a5fa;"><i class="fa-solid fa-calendar-days"></i></div><span>Create Event</span>
+                </div>
+                <div class="cal-item" onclick="setComposerType('deal', document.querySelector('.composer-type-pill[data-type=deal]'))">
+                    <div class="cal-icon" style="color:#f59e0b;"><i class="fa-solid fa-tags"></i></div><span>Deal Post</span>
+                </div>
+            </div>
+            <button class="composer-post-btn" id="composerPostBtn" onclick="submitComposer()" disabled>Post</button>
         </div>
     </div>
 
+    <!-- ADD GROUPS OVERLAY — real data from users/{me}/myGroups -->
+    <div class="composer-groups-overlay" id="addGroupsOverlay">
+        <i class="fa-solid fa-xmark cgo-close" onclick="closeAddGroupsOverlay()"></i>
+        <div class="cgo-header">
+            <span>Add groups</span>
+            <button class="cgo-save-btn" onclick="saveGroupSelection()">Save</button>
+        </div>
+        <div class="cgo-sub">
+            <strong>Post in more of your groups.</strong>
+            You can only post to additional groups that you are a member of.
+        </div>
+        <div class="cgo-list" id="addGroupsListBody">
+            <p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:40px 0;">Loading your groups...</p>
+        </div>
+    </div>
+
+    <!-- TAG PEOPLE SHEET — real data from group members -->
+    <div class="nx-sheet-backdrop" id="tagPickerSheet" onclick="closeSheet('tagPickerSheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span>Tag people</span><i class="fa-solid fa-xmark" onclick="closeSheet('tagPickerSheet')"></i></div>
+            <div class="nx-sheet-body" id="tagPickerBody"></div>
+        </div>
+    </div>
+
+    <!-- FEELING / ACTIVITY SHEET -->
+    <div class="nx-sheet-backdrop" id="feelingPickerSheet" onclick="closeSheet('feelingPickerSheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span>How are you feeling?</span><i class="fa-solid fa-xmark" onclick="closeSheet('feelingPickerSheet')"></i></div>
+            <div class="nx-sheet-body">
+                <div class="feeling-grid" id="feelingGrid"></div>
+            </div>
+        </div>
+    </div>
     <!-- ESCROW SEND-MONEY SHEET (high-impact chat feature) -->
     <div class="nx-sheet-backdrop" id="paySheet" onclick="closeSheet('paySheet')">
         <div class="nx-sheet" onclick="event.stopPropagation()">
