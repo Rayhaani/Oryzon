@@ -714,13 +714,8 @@
         /* ---- FULL-SCREEN COMPOSER PAGE ---- */
         .composer-page { position: fixed; inset: 0; z-index: 23000; background: #050505; display: none; flex-direction: column; }
         .composer-page.active { display: flex; }
-        .composer-page-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--glass-border); background: rgba(10,12,17,0.9); backdrop-filter: blur(12px); flex-shrink: 0; }
-        .composer-page-header i { font-size: 19px; color: var(--text-sub); cursor: pointer; width: 32px; }
-        .cp-header-title { font-size: 15px; font-weight: 800; color: #fff; }
-        .cp-post-btn-top { background: linear-gradient(135deg, var(--neon-cyan), #b8860b); color: #1e1e1e; border: none; font-weight: 800; font-size: 13px; padding: 8px 18px; border-radius: 20px; cursor: pointer; }
-        .cp-post-btn-top:disabled { opacity: 0.35; cursor: default; }
-        .composer-page-body { flex: 1; overflow-y: auto; padding: 16px 18px 100px; }
-
+        .composer-close-float { position: absolute; top: 16px; left: 16px; z-index: 5; font-size: 19px; color: #fff; cursor: pointer; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; }
+        .composer-page-body { flex: 1; overflow-y: auto; padding: 60px 18px 100px; } 
         .composer-pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
         .composer-pill { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); padding: 7px 12px; border-radius: 16px; cursor: pointer; white-space: nowrap; }
         .composer-pill i { font-size: 11px; color: var(--neon-cyan); }
@@ -739,8 +734,8 @@
         .cmc-chip { display: flex; align-items: center; gap: 6px; background: rgba(253,224,141,0.1); border: 1px solid rgba(253,224,141,0.25); color: var(--neon-cyan); font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 14px; }
         .cmc-chip i.cmc-remove { color: var(--text-sub); cursor: pointer; font-size: 10px; margin-left: 2px; }
 
-        .composer-action-list { display: flex; flex-direction: column; margin-top: 6px; border-top: 1px solid var(--glass-border); }
-        .cal-item { display: flex; align-items: center; gap: 14px; padding: 13px 4px; border-bottom: 1px solid var(--glass-border); cursor: pointer; }
+        .composer-action-list { display: flex; flex-direction: column; margin-top: 10px; }
+        .cal-item { display: flex; align-items: center; gap: 14px; padding: 13px 4px; cursor: pointer; }
         .cal-item span { font-size: 13.5px; font-weight: 600; color: #fff; }
         .cal-icon { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
 
@@ -765,6 +760,21 @@
         .feeling-item .fi-emoji { font-size: 26px; }
         .feeling-item .fi-label { font-size: 11px; font-weight: 700; color: #fff; }
         .feeling-item.active { border-color: var(--neon-cyan); background: rgba(253,224,141,0.1); } 
+        .composer-bg-row-wrap { position: relative; margin: 6px 0 14px; }
+        .composer-bg-row-wrap .composer-bg-row { margin: 0; padding: 6px 2px; }
+        .composer-bg-swatch { width: 48px; height: 48px; border-radius: 14px; position: relative; }
+        .composer-bg-swatch.bg-default { background: #f4f4f4; }
+        .composer-bg-swatch.active { transform: scale(1.05); }
+        .composer-bg-swatch.premium { border: 2px solid rgba(255,215,0,0.5); }
+        .premium-lock { position: absolute; top: -5px; right: -5px; font-size: 11px; color: #ffd700; background: #0a0c11; border-radius: 50%; padding: 3px; }
+        .cbb-back { display: none; position: absolute; left: 0; top: 50%; transform: translateY(-50%); z-index: 3; width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #1a1a1a; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+        .cbb-back.show { display: flex; }
+
+        .composer-media-preview { display: none; position: relative; margin: 10px 0; border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.04); }
+        .composer-media-preview.active { display: block; }
+        .composer-media-preview img, .composer-media-preview video { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+        .cmp-remove { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; }
+        .cmp-uploading { position: absolute; inset: 0; background: rgba(0,0,0,0.55); color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 700; }
         .post-meta-line { font-size: 11.5px; color: var(--text-sub); margin: 4px 0; }
         .comment-row { display: flex; gap: 8px; margin-bottom: 14px; }
         .comment-row img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
@@ -1217,11 +1227,7 @@
     </div>
     <!-- CREATE POST — FULL-SCREEN COMPOSER PAGE -->
     <div class="composer-page" id="composerPage">
-        <div class="composer-page-header">
-            <i class="fa-solid fa-xmark" onclick="closeComposer()"></i>
-            <span class="cp-header-title">Create Post</span>
-            <button class="cp-post-btn-top" id="composerPostBtnTop" onclick="submitComposer()" disabled>Post</button>
-        </div>
+        <i class="fa-solid fa-xmark composer-close-float" onclick="closeComposer()"></i>
         <div class="composer-page-body" id="composerPageBody">
             <div class="composer-user-row">
                 <img id="composerAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="You">
@@ -1236,26 +1242,40 @@
                 <div class="composer-pill" id="composerAddGroupsPill" onclick="openAddGroupsOverlay()"><i class="fa-solid fa-plus"></i> Add groups<span class="cp-count-badge" id="cpGroupCountBadge">0</span></div>
             </div>
             <textarea id="composerText" placeholder="Create a public post..." oninput="validateComposer()"></textarea>
-            <div class="composer-bg-row" id="composerBgRow">
-                <div class="composer-bg-swatch bg-default active" data-bg="default" onclick="selectBgSwatch('default', this)"><i class="fa-solid fa-font"></i></div>
-                <div class="composer-bg-swatch" data-bg="grad1" style="background:linear-gradient(135deg,#7b2ff7,#f107a3);" onclick="selectBgSwatch('grad1', this)"></div>
-                <div class="composer-bg-swatch" data-bg="grad2" style="background:linear-gradient(135deg,#ff416c,#ff4b2b);" onclick="selectBgSwatch('grad2', this)"></div>
-                <div class="composer-bg-swatch" data-bg="grad3" style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);" onclick="selectBgSwatch('grad3', this)"></div>
-                <div class="composer-bg-swatch" data-bg="grad4" style="background:linear-gradient(135deg,#4b1248,#f0729b);" onclick="selectBgSwatch('grad4', this)"></div>
-                <div class="composer-bg-swatch" data-bg="grad5" style="background:linear-gradient(135deg,#8e2de2,#4a00e0);" onclick="selectBgSwatch('grad5', this)"></div>
-                <div class="composer-bg-swatch" data-bg="grad6" style="background:linear-gradient(135deg,#f7971e,#ffd200);" onclick="selectBgSwatch('grad6', this)"></div>
-                <div class="composer-bg-swatch" data-bg="grad7" style="background:linear-gradient(135deg,#00c6ff,#0072ff);" onclick="selectBgSwatch('grad7', this)"></div>
-                <div class="composer-bg-swatch" data-bg="grad8" style="background:linear-gradient(135deg, var(--neon-cyan), #b8860b);" onclick="selectBgSwatch('grad8', this)"></div>
+
+            <div class="composer-media-preview" id="composerMediaPreview">
+                <img id="composerMediaImg" style="display:none;">
+                <video id="composerMediaVideo" style="display:none;" controls></video>
+                <i class="fa-solid fa-xmark cmp-remove" onclick="removeComposerMedia()"></i>
+                <div class="cmp-uploading" id="cmpUploadingBar" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i> Uploading...</div>
             </div>
+            <input type="file" id="composerFileInput" accept="image/*,video/*" style="display:none" onchange="handleComposerFileSelect(event)">
+
+            <div class="composer-bg-row-wrap">
+                <i class="fa-solid fa-chevron-left cbb-back" id="composerBgBackBtn" onclick="scrollBgRowToStart()"></i>
+                <div class="composer-bg-row" id="composerBgRow">
+                    <div class="composer-bg-swatch bg-default active" data-bg="default" onclick="selectBgSwatch('default', this)"><i class="fa-solid fa-font"></i></div>
+                    <div class="composer-bg-swatch" data-bg="grad1" style="background:linear-gradient(135deg,#7b2ff7,#f107a3);" onclick="selectBgSwatch('grad1', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad2" style="background:linear-gradient(135deg,#ff416c,#ff4b2b);" onclick="selectBgSwatch('grad2', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad3" style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);" onclick="selectBgSwatch('grad3', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad4" style="background:linear-gradient(135deg,#4b1248,#f0729b);" onclick="selectBgSwatch('grad4', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad5" style="background:linear-gradient(135deg,#8e2de2,#4a00e0);" onclick="selectBgSwatch('grad5', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad6" style="background:linear-gradient(135deg,#f7971e,#ffd200);" onclick="selectBgSwatch('grad6', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad7" style="background:linear-gradient(135deg,#00c6ff,#0072ff);" onclick="selectBgSwatch('grad7', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad8" style="background:linear-gradient(180deg,#1a1006,#7a5210,#ffd76a);" onclick="selectBgSwatch('grad8', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad9" style="background:linear-gradient(135deg,#11998e,#38ef7d);" onclick="selectBgSwatch('grad9', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad10" style="background:linear-gradient(135deg,#ee0979,#ff6a00);" onclick="selectBgSwatch('grad10', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad11" style="background:linear-gradient(135deg,#360033,#0b8793);" onclick="selectBgSwatch('grad11', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad12" style="background:linear-gradient(135deg,#1e3c72,#2a5298);" onclick="selectBgSwatch('grad12', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad13" style="background:linear-gradient(135deg,#e53935,#e35d5b);" onclick="selectBgSwatch('grad13', this)"></div>
+                    <div class="composer-bg-swatch premium" data-bg="prem1" style="background:linear-gradient(135deg,#ffd700,#ff8c00,#8b0000);" onclick="selectBgSwatch('prem1', this, true)"><i class="fa-solid fa-crown premium-lock"></i></div>
+                    <div class="composer-bg-swatch premium" data-bg="prem2" style="background:linear-gradient(135deg,#c0c0c0,#8a2be2,#000000);" onclick="selectBgSwatch('prem2', this, true)"><i class="fa-solid fa-crown premium-lock"></i></div>
+                    <div class="composer-bg-swatch premium" data-bg="prem3" style="background:linear-gradient(135deg,#00f5a0,#00d9f5,#7000ff);" onclick="selectBgSwatch('prem3', this, true)"><i class="fa-solid fa-crown premium-lock"></i></div>
+                </div>
+            </div>
+
             <div class="composer-meta-chip-row" id="composerMetaChipRow"></div>
-            <div class="composer-type-row">
-                <div class="composer-type-pill active" data-type="text" onclick="setComposerType('text', this)"><i class="fa-solid fa-align-left"></i> Text</div>
-                <div class="composer-type-pill" data-type="image" onclick="setComposerType('image', this)"><i class="fa-solid fa-image"></i> Photo</div>
-                <div class="composer-type-pill" data-type="poll" onclick="setComposerType('poll', this)"><i class="fa-solid fa-square-poll-vertical"></i> Poll</div>
-                <div class="composer-type-pill" data-type="deal" onclick="setComposerType('deal', this)"><i class="fa-solid fa-tags"></i> Deal Post</div>
-                <div class="composer-type-pill" data-type="event" onclick="setComposerType('event', this)"><i class="fa-solid fa-calendar-days"></i> Event</div>
-            </div>
-            <div class="composer-extra-fields" id="composerImageField"><input type="text" id="composerImageUrl" placeholder="Paste image URL..."></div>
+
             <div class="composer-extra-fields" id="composerPollField">
                 <input type="text" id="pollOpt1" placeholder="Option 1">
                 <input type="text" id="pollOpt2" placeholder="Option 2">
@@ -1272,8 +1292,9 @@
             <div class="composer-extra-fields" id="composerLocationField">
                 <input type="text" id="composerLocationInput" placeholder="Type a location..." oninput="updateLocationChip()">
             </div>
+
             <div class="composer-action-list">
-                <div class="cal-item" onclick="setComposerType('image', document.querySelector('.composer-type-pill[data-type=image]'))">
+                <div class="cal-item" onclick="triggerGalleryPicker()">
                     <div class="cal-icon" style="color:#22c55e;"><i class="fa-solid fa-image"></i></div><span>Photo/Video</span>
                 </div>
                 <div class="cal-item" onclick="openTagPicker()">
@@ -1285,20 +1306,19 @@
                 <div class="cal-item" onclick="openFeelingPicker()">
                     <div class="cal-icon" style="color:#f59e0b;"><i class="fa-solid fa-face-smile"></i></div><span>Feeling/activity</span>
                 </div>
-                <div class="cal-item" onclick="setComposerType('poll', document.querySelector('.composer-type-pill[data-type=poll]'))">
+                <div class="cal-item" onclick="setComposerType('poll')">
                     <div class="cal-icon" style="color:var(--neon-cyan);"><i class="fa-solid fa-square-poll-vertical"></i></div><span>Create poll</span>
                 </div>
-                <div class="cal-item" onclick="setComposerType('event', document.querySelector('.composer-type-pill[data-type=event]'))">
+                <div class="cal-item" onclick="setComposerType('event')">
                     <div class="cal-icon" style="color:#60a5fa;"><i class="fa-solid fa-calendar-days"></i></div><span>Create Event</span>
                 </div>
-                <div class="cal-item" onclick="setComposerType('deal', document.querySelector('.composer-type-pill[data-type=deal]'))">
+                <div class="cal-item" onclick="setComposerType('deal')">
                     <div class="cal-icon" style="color:#f59e0b;"><i class="fa-solid fa-tags"></i></div><span>Deal Post</span>
                 </div>
             </div>
             <button class="composer-post-btn" id="composerPostBtn" onclick="submitComposer()" disabled>Post</button>
         </div>
     </div>
-
     <!-- ADD GROUPS OVERLAY — real data from users/{me}/myGroups -->
     <div class="composer-groups-overlay" id="addGroupsOverlay">
         <i class="fa-solid fa-xmark cgo-close" onclick="closeAddGroupsOverlay()"></i>
@@ -1514,8 +1534,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="post-card-template.js"></script>
-
     <script>
         // ============================================================
         // FIREBASE + REAL GROUP IDENTITY (oryzon-50ea4)
@@ -1533,6 +1553,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const storage = firebase.storage();
         const FieldValue = firebase.firestore.FieldValue;
 
         const currentUsername = localStorage.getItem('nexus_user_session');
@@ -2587,7 +2608,8 @@
                 ? 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(currentUsername)
                 : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80';
             document.getElementById('composerPage').classList.add('active');
-            if (type) setComposerType(type, document.querySelector(`.composer-type-pill[data-type="${type}"]`));
+            if (type) setComposerType(type);
+            initComposerBgScroll();
             setTimeout(() => document.getElementById('composerText').focus(), 150);
         }
         function closeComposer() {
@@ -2600,14 +2622,13 @@
             document.getElementById('cpGroupCountBadge').textContent = '0';
             document.getElementById('cpGroupCountBadge').classList.remove('show');
             selectBgSwatch('default', document.querySelector('.composer-bg-swatch[data-bg="default"]'));
+            removeComposerMedia();
             renderComposerMetaChips();
-            setComposerType('text', document.querySelector('.composer-type-pill[data-type="text"]'));
+            setComposerType('text');
         }
-        function setComposerType(type, el) {
+        function setComposerType(type) {
             composerType = type;
-            document.querySelectorAll('.composer-type-pill').forEach(p => p.classList.remove('active'));
-            if (el) el.classList.add('active');
-            ['Image', 'Poll', 'Deal', 'Event'].forEach(f => {
+            ['Poll', 'Deal', 'Event', 'Location'].forEach(f => {
                 const field = document.getElementById('composer' + f + 'Field');
                 if (field) field.classList.toggle('active', f.toLowerCase() === type);
             });
@@ -2615,27 +2636,43 @@
         }
         function validateComposer() {
             const text = document.getElementById('composerText').value.trim();
-            const disabled = text.length === 0;
-            document.getElementById('composerPostBtn').disabled = disabled;
-            document.getElementById('composerPostBtnTop').disabled = disabled;
+            document.getElementById('composerPostBtn').disabled = text.length === 0;
         }
-        function selectBgSwatch(id, el) {
+        function initComposerBgScroll() {
+            const row = document.getElementById('composerBgRow');
+            const backBtn = document.getElementById('composerBgBackBtn');
+            row.onscroll = () => backBtn.classList.toggle('show', row.scrollLeft > 20);
+        }
+        function scrollBgRowToStart() {
+            document.getElementById('composerBgRow').scrollTo({ left: 0, behavior: 'smooth' });
+        }
+        window.currentUserIsPremium = window.currentUserIsPremium || false; // TODO: wire to real subscription/tier field on the user doc
+        const composerBgMap = {
+            grad1: 'linear-gradient(135deg,#7b2ff7,#f107a3)', grad2: 'linear-gradient(135deg,#ff416c,#ff4b2b)',
+            grad3: 'linear-gradient(135deg,#0f0c29,#302b63,#24243e)', grad4: 'linear-gradient(135deg,#4b1248,#f0729b)',
+            grad5: 'linear-gradient(135deg,#8e2de2,#4a00e0)', grad6: 'linear-gradient(135deg,#f7971e,#ffd200)',
+            grad7: 'linear-gradient(135deg,#00c6ff,#0072ff)', grad8: 'linear-gradient(180deg,#1a1006,#7a5210,#ffd76a)',
+            grad9: 'linear-gradient(135deg,#11998e,#38ef7d)', grad10: 'linear-gradient(135deg,#ee0979,#ff6a00)',
+            grad11: 'linear-gradient(135deg,#360033,#0b8793)', grad12: 'linear-gradient(135deg,#1e3c72,#2a5298)',
+            grad13: 'linear-gradient(135deg,#e53935,#e35d5b)',
+            prem1: 'linear-gradient(135deg,#ffd700,#ff8c00,#8b0000)', prem2: 'linear-gradient(135deg,#c0c0c0,#8a2be2,#000000)',
+            prem3: 'linear-gradient(135deg,#00f5a0,#00d9f5,#7000ff)'
+        };
+        function selectBgSwatch(id, el, isPremium) {
+            if (isPremium && !window.currentUserIsPremium) {
+                showToast('This background is for Premium members only', 'fa-crown');
+                return;
+            }
             composerSelectedBg = id;
             document.querySelectorAll('.composer-bg-swatch').forEach(s => s.classList.remove('active'));
             if (el) el.classList.add('active');
-            const bgMap = {
-                grad1: 'linear-gradient(135deg,#7b2ff7,#f107a3)', grad2: 'linear-gradient(135deg,#ff416c,#ff4b2b)',
-                grad3: 'linear-gradient(135deg,#0f0c29,#302b63,#24243e)', grad4: 'linear-gradient(135deg,#4b1248,#f0729b)',
-                grad5: 'linear-gradient(135deg,#8e2de2,#4a00e0)', grad6: 'linear-gradient(135deg,#f7971e,#ffd200)',
-                grad7: 'linear-gradient(135deg,#00c6ff,#0072ff)', grad8: 'linear-gradient(135deg, var(--neon-cyan), #b8860b)'
-            };
             const ta = document.getElementById('composerText');
             if (id === 'default') {
                 ta.classList.remove('bg-mode');
                 ta.style.background = 'transparent';
             } else {
                 ta.classList.add('bg-mode');
-                ta.style.background = bgMap[id] || 'transparent';
+                ta.style.background = composerBgMap[id] || 'transparent';
             }
         }
         function renderComposerMetaChips() {
@@ -2756,6 +2793,53 @@
             closeAddGroupsOverlay();
         }
         // ---- submit ----
+        // ---- Photo/Video — real device gallery + Firebase Storage upload ----
+        let composerUploadedMediaUrl = null;
+        let composerUploadedMediaType = null;
+        function triggerGalleryPicker() {
+            document.getElementById('composerFileInput').click();
+        }
+        async function handleComposerFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const isVideo = file.type.startsWith('video/');
+            const preview = document.getElementById('composerMediaPreview');
+            const img = document.getElementById('composerMediaImg');
+            const vid = document.getElementById('composerMediaVideo');
+            const localUrl = URL.createObjectURL(file);
+            preview.classList.add('active');
+            if (isVideo) {
+                vid.src = localUrl; vid.style.display = 'block'; img.style.display = 'none';
+            } else {
+                img.src = localUrl; img.style.display = 'block'; vid.style.display = 'none';
+            }
+            document.getElementById('cmpUploadingBar').style.display = 'flex';
+            try {
+                const authUser = await authReadyPromise;
+                if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
+                const path = 'post-media/' + currentUsername + '/' + Date.now() + '_' + file.name;
+                const ref = storage.ref().child(path);
+                await ref.put(file);
+                composerUploadedMediaUrl = await ref.getDownloadURL();
+                composerUploadedMediaType = isVideo ? 'video' : 'image';
+                validateComposer();
+            } catch (e) {
+                console.error('media upload error:', e);
+                showToast('Upload failed — check Storage rules', 'fa-triangle-exclamation');
+                removeComposerMedia();
+            } finally {
+                document.getElementById('cmpUploadingBar').style.display = 'none';
+            }
+        }
+        function removeComposerMedia() {
+            composerUploadedMediaUrl = null;
+            composerUploadedMediaType = null;
+            document.getElementById('composerFileInput').value = '';
+            document.getElementById('composerMediaPreview').classList.remove('active');
+            document.getElementById('composerMediaImg').style.display = 'none';
+            document.getElementById('composerMediaVideo').style.display = 'none';
+        }
+        // ---- submit ----
         function submitComposer() {
             const text = document.getElementById('composerText').value.trim();
             if (!text) return;
@@ -2767,13 +2851,12 @@
                 feeling: composerFeeling
             };
 
-            if (groupSlug && composerType === 'text') {
-                submitRealGroupPost(text, null, extra);
+            if (groupSlug && composerUploadedMediaUrl) {
+                submitRealGroupPost(text, composerUploadedMediaUrl, extra, composerUploadedMediaType);
                 return;
             }
-            if (groupSlug && composerType === 'image') {
-                const url = document.getElementById('composerImageUrl').value.trim();
-                submitRealGroupPost(text, url || null, extra);
+            if (groupSlug && composerType === 'text') {
+                submitRealGroupPost(text, null, extra);
                 return;
             }
             if (groupSlug && composerType === 'poll') {
@@ -2806,10 +2889,11 @@
                 location: extra.location,
                 feeling: extra.feeling
             };
-            if (composerType === 'image') {
-                const url = document.getElementById('composerImageUrl').value.trim();
-                if (url) { post.mediaUrl = url; post.mediaType = 'image'; }
-            } else if (composerType === 'poll') {
+            if (composerUploadedMediaUrl) {
+                post.mediaUrl = composerUploadedMediaUrl;
+                post.mediaType = composerUploadedMediaType;
+            }
+            if (composerType === 'poll') {
                 const opts = [document.getElementById('pollOpt1').value, document.getElementById('pollOpt2').value, document.getElementById('pollOpt3').value].filter(Boolean);
                 post.poll = { options: (opts.length ? opts : ['Yes', 'No']).map(l => ({ label: l, votes: 0 })), myVote: null };
             } else if (composerType === 'deal') {
@@ -2822,7 +2906,7 @@
             renderFeedPosts();
             showToast('Your post is live!', 'fa-circle-check');
         }
-        async function submitRealGroupPost(text, mediaUrl, extra = {}) {
+        async function submitRealGroupPost(text, mediaUrl, extra = {}, mediaType) {
             try {
                 const authUser = await authReadyPromise;
                 if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
@@ -2833,7 +2917,7 @@
                     userProfilePic: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(currentUsername),
                     content: text,
                     mediaUrl: mediaUrl || null,
-                    mediaType: mediaUrl ? 'image' : null,
+                    mediaType: mediaUrl ? (mediaType || 'image') : null,
                     background: extra.background || null,
                     taggedUsers: extra.taggedUsers && extra.taggedUsers.length ? extra.taggedUsers : null,
                     location: extra.location || null,
@@ -2848,12 +2932,13 @@
                     timestamp: FieldValue.serverTimestamp()
                 })));
                 closeComposer();
+                removeComposerMedia();
                 if (targetGroups.length > 1) showToast('Posted to ' + targetGroups.length + ' groups', 'fa-circle-check');
             } catch (e) {
                 console.error('submitRealGroupPost error:', e);
                 showToast('Could not publish — check Firestore rules for /posts', 'fa-triangle-exclamation');
             }
-        } 
+        }
 
         // ============================================================
         // 7. STORY / HIGHLIGHT VIEWER
