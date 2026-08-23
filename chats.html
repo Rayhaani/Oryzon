@@ -485,6 +485,91 @@
             transition: 0.25s;
         }
 
+        /* ================================================================
+           SHARED CREATE-FORM STYLES — #groupCreateOverlay yana amfani da
+           su, kuma Phase 2/3 (#pageCreateOverlay / #channelCreateOverlay)
+           za su sake amfani da wadannan classes guda daya, ba sabon CSS
+           daga karo ba.
+           ================================================================ */
+        .cfo-header {
+            position: sticky; top: 0; z-index: 5;
+            background: rgba(5,5,5,0.55);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            padding: 12px 16px 8px 16px;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .cfo-back-trigger { cursor: pointer; display: flex; align-items: center; flex-shrink: 0; }
+        .cfo-header h1 { font-size: 19px; font-weight: 700; }
+
+        .photo-picker-wrap { display: flex; justify-content: center; padding: 18px 0 10px 0; }
+        .photo-picker {
+            width: 96px; height: 96px; border-radius: 22px;
+            background: linear-gradient(135deg, rgba(0,242,255,0.12), rgba(255,0,85,0.12));
+            border: 1.5px dashed rgba(0,242,255,0.4);
+            display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px;
+            cursor: pointer;
+        }
+        .photo-picker span { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+        .field-group { padding: 10px 16px 0 16px; }
+        .field-input {
+            width: 100%; background: rgba(255,255,255,0.06); border: none; border-radius: 12px;
+            padding: 12px 14px; color: #fff; font-size: 15px; outline: none; resize: none; font-family: inherit;
+        }
+        .field-input:focus { box-shadow: 0 0 0 1.5px var(--cyan-neon); }
+        .field-input::placeholder { color: rgba(255,255,255,0.4); }
+        .char-count { text-align: right; font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; padding-right: 2px; }
+        .slug-preview { font-size: 11.5px; color: rgba(255,255,255,0.4); margin-top: 6px; padding-left: 2px; display: flex; align-items: center; gap: 6px; min-height: 16px; }
+        .slug-preview.taken { color: var(--red-danger, #FF4D4D); }
+        .slug-preview.available { color: #1EE676; }
+        .slug-spinner { width: 11px; height: 11px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--cyan-neon); animation: cfoSpin .7s linear infinite; }
+        @keyframes cfoSpin { to { transform: rotate(360deg); } }
+
+        .section-label { padding: 18px 16px 6px 16px; font-size: 13px; font-weight: 600; color: var(--cyan-neon); text-transform: uppercase; letter-spacing: 0.4px; }
+
+        .privacy-row { display: flex; align-items: center; gap: 14px; padding: 10px 16px; cursor: pointer; }
+        .privacy-row:active { background: rgba(255,255,255,0.04); }
+        .privacy-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(255,255,255,0.06); }
+        .privacy-text { flex: 1; }
+        .privacy-text h3 { font-size: 15px; font-weight: 500; }
+        .privacy-text p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+        .radio-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .radio-dot.checked { border-color: var(--cyan-neon); }
+        .radio-dot.checked::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--cyan-neon); }
+
+        .ownership-note {
+            margin: 18px 16px 0 16px; padding: 12px 14px; border-radius: 12px;
+            background: rgba(0,242,255,0.06); border: 1px solid rgba(0,242,255,0.2);
+            font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5;
+            display: flex; gap: 10px; align-items: flex-start;
+        }
+        .ownership-note svg { flex-shrink: 0; margin-top: 1px; }
+
+        .create-btn-wrap { padding: 22px 16px 0 16px; }
+        .create-btn {
+            width: 100%; text-align: center; padding: 14px; border-radius: 14px;
+            background: linear-gradient(135deg, var(--cyan-neon), var(--magenta-neon, #FF0055));
+            color: #050505; font-weight: 700; font-size: 15px; cursor: pointer;
+        }
+        .create-btn.disabled { opacity: 0.35; pointer-events: none; }
+
+        .error-banner {
+            margin: 12px 16px 0 16px; padding: 10px 14px; border-radius: 10px;
+            background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.3);
+            color: var(--red-danger, #FF4D4D); font-size: 12.5px; display: none;
+        }
+        .error-banner.show { display: block; }
+
+        /* ===== #groupCreateOverlay — full-page in-app overlay (babu reload) ===== */
+        #groupCreateOverlay {
+            position: fixed; inset: 0; z-index: 999991;
+            display: none;
+            background-color: #050505; color: #fff;
+            overflow-y: auto; padding-bottom: 40px;
+            -webkit-font-smoothing: antialiased;
+        }
+        #groupCreateOverlay.gco-open { display: block; }
+        #groupCreateOverlay * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         /* FUTURE FEATURISTIC OPTIONS STYLES */
         .portal-options-container {
             display: flex;
@@ -2426,6 +2511,74 @@
         </div>
     </div> 
 
+    <!-- ================================================================
+         GROUP CREATE OVERLAY — Phase 1: full-page in-app overlay maimakon
+         group-create.html mai zaman kansa, domin guje wa full page reload.
+         ================================================================ -->
+    <div id="groupCreateOverlay">
+        <header class="cfo-header">
+            <div class="cfo-back-trigger" onclick="closeGroupCreateOverlay()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+            </div>
+            <h1>New Group</h1>
+        </header>
+
+        <div class="photo-picker-wrap">
+            <div class="photo-picker" onclick="showToast('Photo upload isn\'t wired up yet — the group will use its initials as an icon for now.')">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Add Photo</span>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <input type="text" class="field-input" id="gcoName" placeholder="Group name" maxlength="30" oninput="gcoOnNameInput();" autocomplete="off">
+            <div class="char-count"><span id="gcoNameCount">0</span>/30</div>
+            <div class="slug-preview" id="gcoSlugPreview"></div>
+        </div>
+
+        <div class="field-group">
+            <textarea class="field-input" id="gcoDesc" placeholder="Description (optional)" rows="3" maxlength="120" oninput="gcoUpdateCounts();"></textarea>
+            <div class="char-count"><span id="gcoDescCount">0</span>/120</div>
+        </div>
+
+        <div class="section-label">Group Type</div>
+
+        <div class="privacy-row" onclick="gcoSetPrivacy('public')">
+            <div class="privacy-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="privacy-text">
+                <h3>Public Group</h3>
+                <p>Anyone can find and join via link or search</p>
+            </div>
+            <div class="radio-dot checked" id="gcoRadioPublic"></div>
+        </div>
+
+        <div class="privacy-row" onclick="gcoSetPrivacy('private')">
+            <div class="privacy-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="privacy-text">
+                <h3>Private Group</h3>
+                <p>Only people with an invite link can join</p>
+            </div>
+            <div class="radio-dot" id="gcoRadioPrivate"></div>
+        </div>
+
+        <div class="ownership-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>You'll be the permanent owner and admin of this group — that can't be transferred or taken over by anyone else.</span>
+        </div>
+
+        <div class="section-label" id="gcoInviteSectionLabel" style="display:none;">Adding to this group</div>
+        <div id="gcoPendingInvitesList" style="display:none; flex-wrap:wrap; gap:8px; padding:6px 16px 4px 16px;"></div>
+
+        <div class="error-banner" id="gcoErrorBanner"></div>
+        <div class="create-btn-wrap">
+            <div class="create-btn disabled" id="gcoCreateBtn" onclick="gcoCreateGroup()">Create Group</div>
+        </div>
+    </div>
+
 <div class="fab-new-chat" onclick="openNewMessageOverlay()">
         <svg width="52" height="52" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" style="transform: scaleX(-1);">
 
@@ -2965,27 +3118,210 @@ setInterval(refreshAllChatTimes, 30000);
             document.getElementById('portalMainHeadline').textContent = "";
         }
 
+        // Wannan array din yana zama a memory kadai (babu sessionStorage
+        // bukata yanzu) tunda create-overlay din yanzu suna a wannan page
+        // guda daya da groupInviteOverlay — Phase 2/3 (page/channel) za su
+        // sake amfani da wannan array guda daya.
+        let pendingInvites = [];
+
         function initializeGroupFromOverlay() {
             if(selectedNodes.length === 0) return alert("Zaɓi aƙalla mutum ɗaya kafin ka ci gaba.");
-            const invites = selectedNodes.map(username => {
+            pendingInvites = selectedNodes.map(username => {
                 const avatarEl = document.getElementById(`overlay-avatar-${username}`);
                 return { username, avatarUrl: avatarEl ? avatarEl.src : '' };
             });
-            sessionStorage.setItem('nexus_pending_invites', JSON.stringify(invites));
-            // An ajiye tab din da yake AIKI a yanzu (Personal/Groups/Pages/Channels)
-            // kafin mu bar wannan page din gaba daya zuwa group-create.html/
-            // page-create.html/create-channel.html — idan ba haka ba, dawowar
-            // chats.html (bayan an gama, ko an danna back) tana sake loading da
-            // hardcoded default din Personal tab, ba matter da wace tab mutum
-            // yake a kai kafin ya fara Create Group/Page/Channel.
-            sessionStorage.setItem('nexus_return_tab', getActiveTabId());
             closeGroupInviteOverlay();
             if (currentPortalMode === 'group') {
-                window.location.href = 'group-create.html';
+                openGroupCreateOverlay();
             } else if (currentPortalMode === 'page') {
-                window.location.href = 'page-create.html';
+                openGroupInviteOverlay('page'); // wucin gadi har Phase 2 ta shirya
             } else if (currentPortalMode === 'channel') {
-                window.location.href = 'create-channel.html';
+                openGroupInviteOverlay('channel'); // wucin gadi har Phase 3 ta shirya
+            }
+        }
+
+        // ================================================================
+        // GROUP CREATE OVERLAY — Phase 1 logic (daga group-create.html,
+        // an daidaita don amfani da 'db', 'myId', 'authReadyPromise' da
+        // suka riga sun wanzu a babban script na chats.html).
+        // ================================================================
+        let gcoSelectedPrivacy = 'public';
+        let gcoSlugCheckToken = 0;
+
+        function openGroupCreateOverlay() {
+            document.getElementById('gcoName').value = '';
+            document.getElementById('gcoDesc').value = '';
+            gcoSelectedPrivacy = 'public';
+            document.getElementById('gcoRadioPublic').classList.add('checked');
+            document.getElementById('gcoRadioPrivate').classList.remove('checked');
+            gcoUpdateCounts();
+            document.getElementById('gcoSlugPreview').textContent = '';
+            document.getElementById('gcoSlugPreview').className = 'slug-preview';
+            gcoClearError();
+            const btn = document.getElementById('gcoCreateBtn');
+            btn.textContent = 'Create Group';
+            btn.classList.add('disabled');
+            gcoRenderPendingInvites();
+            document.getElementById('groupCreateOverlay').classList.add('gco-open');
+        }
+
+        function closeGroupCreateOverlay() {
+            document.getElementById('groupCreateOverlay').classList.remove('gco-open');
+        }
+
+        function gcoRenderPendingInvites() {
+            const label = document.getElementById('gcoInviteSectionLabel');
+            const list = document.getElementById('gcoPendingInvitesList');
+            if (!pendingInvites.length) { label.style.display = 'none'; list.style.display = 'none'; return; }
+            label.style.display = 'block';
+            list.style.display = 'flex';
+            list.innerHTML = pendingInvites.map(inv => `
+                <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border-radius:20px;padding:4px 10px 4px 4px;font-size:12.5px;">
+                    <img src="${inv.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + inv.username}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;">
+                    <span>${inv.username}</span>
+                </div>
+            `).join('');
+        }
+
+        function gcoSetPrivacy(type) {
+            gcoSelectedPrivacy = type;
+            document.getElementById('gcoRadioPublic').classList.toggle('checked', type === 'public');
+            document.getElementById('gcoRadioPrivate').classList.toggle('checked', type === 'private');
+        }
+
+        function slugify(name) {
+            return name.toLowerCase().trim()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '')
+                .slice(0, 40);
+        }
+
+        function gcoUpdateCounts() {
+            document.getElementById('gcoNameCount').textContent = document.getElementById('gcoName').value.length;
+            document.getElementById('gcoDescCount').textContent = document.getElementById('gcoDesc').value.length;
+        }
+
+        function gcoOnNameInput() {
+            gcoUpdateCounts();
+            const name = document.getElementById('gcoName').value.trim();
+            const btn = document.getElementById('gcoCreateBtn');
+            const preview = document.getElementById('gcoSlugPreview');
+
+            if (!name) {
+                btn.classList.add('disabled');
+                preview.textContent = '';
+                preview.className = 'slug-preview';
+                return;
+            }
+
+            const slug = slugify(name) || 'group';
+            preview.className = 'slug-preview';
+            preview.innerHTML = '<span class="slug-spinner"></span> nexus.app/g/' + slug;
+            btn.classList.add('disabled');
+
+            const myToken = ++gcoSlugCheckToken;
+            clearTimeout(window._gcoSlugDebounce);
+            window._gcoSlugDebounce = setTimeout(async () => {
+                try {
+                    const doc = await db.collection('groups').doc(slug).get();
+                    if (myToken !== gcoSlugCheckToken) return;
+                    if (doc.exists) {
+                        preview.className = 'slug-preview taken';
+                        preview.textContent = 'nexus.app/g/' + slug + ' — already taken, a number will be added automatically';
+                    } else {
+                        preview.className = 'slug-preview available';
+                        preview.textContent = 'nexus.app/g/' + slug + ' — available';
+                    }
+                    btn.classList.remove('disabled');
+                } catch (e) {
+                    if (myToken !== gcoSlugCheckToken) return;
+                    preview.className = 'slug-preview';
+                    preview.textContent = '';
+                    btn.classList.remove('disabled');
+                }
+            }, 400);
+        }
+
+        function gcoShowError(msg) {
+            const banner = document.getElementById('gcoErrorBanner');
+            banner.textContent = msg;
+            banner.classList.add('show');
+        }
+        function gcoClearError() { document.getElementById('gcoErrorBanner').classList.remove('show'); }
+
+        async function gcoFindAvailableSlug(baseSlug) {
+            let slug = baseSlug;
+            let attempt = 0;
+            while (attempt < 8) {
+                const doc = await db.collection('groups').doc(slug).get();
+                if (!doc.exists) return slug;
+                attempt++;
+                slug = baseSlug + '-' + Math.random().toString(36).slice(2, 6);
+            }
+            return baseSlug + '-' + Date.now().toString(36);
+        }
+
+        async function gcoCreateGroup() {
+            gcoClearError();
+            const name = document.getElementById('gcoName').value.trim();
+            const desc = document.getElementById('gcoDesc').value.trim();
+            if (!name) return;
+            if (!myId) { gcoShowError('You need to be signed in to create a group.'); return; }
+
+            const btn = document.getElementById('gcoCreateBtn');
+            btn.classList.add('disabled');
+            btn.textContent = 'Creating...';
+
+            try {
+                const authUser = await authReadyPromise;
+                if (!authUser) { gcoShowError('You need to be signed in to create a group.'); btn.textContent = 'Create Group'; btn.classList.remove('disabled'); return; }
+
+                const baseSlug = slugify(name) || 'group';
+                const finalSlug = await gcoFindAvailableSlug(baseSlug);
+                const initials = name.trim().slice(0, 2).toUpperCase();
+
+                await db.collection('groups').doc(finalSlug).set({
+                    name: name,
+                    initials: initials,
+                    description: desc,
+                    privacy: gcoSelectedPrivacy,
+                    link: 'nexus.app/g/' + finalSlug,
+                    memberCount: 1 + pendingInvites.length,
+                    creatorUsername: myId,
+                    adminUsernames: [myId],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('groups').doc(finalSlug).collection('members').doc(myId).set({
+                    joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    role: 'owner'
+                });
+
+                await db.collection('users').doc(myId).collection('myGroups').doc(finalSlug)
+                    .set({ joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+                await Promise.all(pendingInvites.map(async inv => {
+                    await db.collection('groups').doc(finalSlug).collection('members').doc(inv.username).set({
+                        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        role: 'member'
+                    });
+                    await db.collection('users').doc(inv.username).collection('myGroups').doc(finalSlug)
+                        .set({ joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                }));
+
+                pendingInvites = [];
+                window.location.href = 'group.html?group=' + encodeURIComponent(finalSlug);
+            } catch (e) {
+                console.error('Create group error:', e);
+                btn.textContent = 'Create Group';
+                btn.classList.remove('disabled');
+                if (e && e.code === 'permission-denied') {
+                    gcoShowError('Firestore denied this — your Security Rules need to allow writes to /groups/{id} for signed-in users.');
+                } else {
+                    gcoShowError('Could not create the group — please try again.');
+                }
             }
         }
 
