@@ -2609,14 +2609,24 @@
         return `${hours}:${minutes} ${ampm}`;
     }
 
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-    if (yesterday.toDateString() === msgDate.toDateString()) return "Yesterday";
+    // Kwatanta midnight-to-midnight domin daidaiton kirga kwanaki
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMsgDate = new Date(msgDate.getFullYear(), msgDate.getMonth(), msgDate.getDate());
+    const daysDiff = Math.round((startOfToday - startOfMsgDate) / 86400000);
+
+    if (daysDiff === 1) return "Yesterday";
+
+    // Daga kwana 2 zuwa kwana 6 da suka wuce: nuna sunan ranar (Monday, Tuesday, da sauransu)
+    // Ba mu wuce kwana 6 ba domin idan mun kai kwana 7, ranar za ta zagayo ta zama
+    // daidai da ranar yau, wanda zai rikita mutane.
+    if (daysDiff >= 2 && daysDiff <= 6) {
+        return msgDate.toLocaleDateString('en-US', { weekday: 'long' });
+    }
 
     const dd = msgDate.getDate().toString().padStart(2, '0');
     const mm = (msgDate.getMonth() + 1).toString().padStart(2, '0');
     return `${dd}/${mm}/${msgDate.getFullYear()}`;
-}
+        }
 
 function refreshAllChatTimes() {
     document.querySelectorAll('.time[data-ts]').forEach(el => {
