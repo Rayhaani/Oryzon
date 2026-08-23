@@ -570,6 +570,46 @@
         }
         #groupCreateOverlay.gco-open { display: block; }
         #groupCreateOverlay * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* ===== Sauran shared classes da Phase 2 (Page) da Phase 3 (Channel)
+           ke bukata — .category-scroll/.category-chip (Page + Channel),
+           .info-note (Page kadai, domin "Pages are always public" note) ===== */
+        .category-scroll { display: flex; gap: 8px; padding: 4px 16px 4px 16px; overflow-x: auto; scrollbar-width: none; }
+        .category-scroll::-webkit-scrollbar { display: none; }
+        .category-chip {
+            flex-shrink: 0; padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.06);
+            border: 1px solid transparent; font-size: 13px; color: rgba(255,255,255,0.7); cursor: pointer; white-space: nowrap;
+        }
+        .category-chip.selected { border-color: var(--cyan-neon); background: rgba(0,242,255,0.1); color: var(--cyan-neon); font-weight: 600; }
+        .info-note {
+            margin: 18px 16px 0 16px; padding: 12px 14px; border-radius: 12px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5;
+            display: flex; gap: 10px; align-items: flex-start;
+        }
+        .info-note svg { flex-shrink: 0; margin-top: 1px; }
+
+        /* ===== #pageCreateOverlay — Phase 2 ===== */
+        #pageCreateOverlay {
+            position: fixed; inset: 0; z-index: 999991;
+            display: none;
+            background-color: #050505; color: #fff;
+            overflow-y: auto; padding-bottom: 40px;
+            -webkit-font-smoothing: antialiased;
+        }
+        #pageCreateOverlay.pco-open { display: block; }
+        #pageCreateOverlay * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* ===== #channelCreateOverlay — Phase 3 ===== */
+        #channelCreateOverlay {
+            position: fixed; inset: 0; z-index: 999991;
+            display: none;
+            background-color: #050505; color: #fff;
+            overflow-y: auto; padding-bottom: 40px;
+            -webkit-font-smoothing: antialiased;
+        }
+        #channelCreateOverlay.cco-open { display: block; }
+        #channelCreateOverlay * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         /* FUTURE FEATURISTIC OPTIONS STYLES */
         .portal-options-container {
             display: flex;
@@ -2579,6 +2619,129 @@
         </div>
     </div>
 
+    <!-- ================================================================
+         PAGE CREATE OVERLAY — Phase 2: full-page in-app overlay maimakon
+         page-create.html mai zaman kansa.
+         ================================================================ -->
+    <div id="pageCreateOverlay">
+        <header class="cfo-header">
+            <div class="cfo-back-trigger" onclick="closePageCreateOverlay()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+            </div>
+            <h1>New Page</h1>
+        </header>
+
+        <div class="photo-picker-wrap">
+            <div class="photo-picker" onclick="showToast('Photo upload isn\'t wired up yet — the page will use its initials as an icon for now.')">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Add Photo</span>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <input type="text" class="field-input" id="pcoName" placeholder="Page name" maxlength="30" oninput="pcoOnNameInput();" autocomplete="off">
+            <div class="char-count"><span id="pcoNameCount">0</span>/30</div>
+            <div class="slug-preview" id="pcoSlugPreview"></div>
+        </div>
+
+        <div class="field-group">
+            <textarea class="field-input" id="pcoDesc" placeholder="What is this page about?" rows="3" maxlength="120" oninput="pcoUpdateCounts();"></textarea>
+            <div class="char-count"><span id="pcoDescCount">0</span>/120</div>
+        </div>
+
+        <div class="section-label">Category</div>
+        <div class="category-scroll" id="pcoCategoryScroll"></div>
+
+        <div class="info-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>Pages are always public and discoverable — anyone can find and follow this page.</span>
+        </div>
+
+        <div class="ownership-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>You'll be the permanent owner and admin of this page — that can't be transferred or taken over by anyone else.</span>
+        </div>
+
+        <div class="section-label" id="pcoInviteSectionLabel" style="display:none;">Adding to this page</div>
+        <div id="pcoPendingInvitesList" style="display:none; flex-wrap:wrap; gap:8px; padding:6px 16px 4px 16px;"></div>
+
+        <div class="error-banner" id="pcoErrorBanner"></div>
+        <div class="create-btn-wrap">
+            <div class="create-btn disabled" id="pcoCreateBtn" onclick="pcoCreatePage()">Create Page</div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         CHANNEL CREATE OVERLAY — Phase 3: full-page in-app overlay
+         maimakon create-channel.html mai zaman kansa.
+         ================================================================ -->
+    <div id="channelCreateOverlay">
+        <header class="cfo-header">
+            <div class="cfo-back-trigger" onclick="closeChannelCreateOverlay()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+            </div>
+            <h1>New Channel</h1>
+        </header>
+
+        <div class="photo-picker-wrap">
+            <div class="photo-picker" onclick="showToast('Photo upload isn\'t wired up yet — the channel will use its initials as an icon for now.')">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Add Photo</span>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <input type="text" class="field-input" id="ccoName" placeholder="Channel name" maxlength="30" oninput="ccoOnNameInput();" autocomplete="off">
+            <div class="char-count"><span id="ccoNameCount">0</span>/30</div>
+            <div class="slug-preview" id="ccoSlugPreview"></div>
+        </div>
+
+        <div class="field-group">
+            <textarea class="field-input" id="ccoDesc" placeholder="Description (optional)" rows="3" maxlength="120" oninput="ccoUpdateCounts();"></textarea>
+            <div class="char-count"><span id="ccoDescCount">0</span>/120</div>
+        </div>
+
+        <div class="section-label">Category</div>
+        <div class="category-scroll" id="ccoCategoryScroll"></div>
+
+        <div class="section-label">Channel Type</div>
+
+        <div class="privacy-row" onclick="ccoSetPrivacy('public')">
+            <div class="privacy-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="privacy-text">
+                <h3>Public Channel</h3>
+                <p>Anyone can find and join via link or search</p>
+            </div>
+            <div class="radio-dot checked" id="ccoRadioPublic"></div>
+        </div>
+
+        <div class="privacy-row" onclick="ccoSetPrivacy('private')">
+            <div class="privacy-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="privacy-text">
+                <h3>Private Channel</h3>
+                <p>Only people with an invite link can join</p>
+            </div>
+            <div class="radio-dot" id="ccoRadioPrivate"></div>
+        </div>
+
+        <div class="ownership-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>You'll be the permanent owner and admin of this channel — that can't be transferred or taken over by anyone else, even if they open it before you finish setting it up.</span>
+        </div>
+
+        <div class="section-label" id="ccoInviteSectionLabel" style="display:none;">Adding to this channel</div>
+        <div id="ccoPendingInvitesList" style="display:none; flex-wrap:wrap; gap:8px; padding:6px 16px 4px 16px;"></div>
+
+        <div class="error-banner" id="ccoErrorBanner"></div>
+        <div class="create-btn-wrap">
+            <div class="create-btn disabled" id="ccoCreateBtn" onclick="ccoCreateChannel()">Create Channel</div>
+        </div>
+    </div>
+
 <div class="fab-new-chat" onclick="openNewMessageOverlay()">
         <svg width="52" height="52" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" style="transform: scaleX(-1);">
 
@@ -3131,14 +3294,14 @@ setInterval(refreshAllChatTimes, 30000);
                 return { username, avatarUrl: avatarEl ? avatarEl.src : '' };
             });
             closeGroupInviteOverlay();
-            if (currentPortalMode === 'group') {
+           if (currentPortalMode === 'group') {
                 openGroupCreateOverlay();
             } else if (currentPortalMode === 'page') {
-                openGroupInviteOverlay('page'); // wucin gadi har Phase 2 ta shirya
+                openPageCreateOverlay();
             } else if (currentPortalMode === 'channel') {
-                openGroupInviteOverlay('channel'); // wucin gadi har Phase 3 ta shirya
-            }
-        }
+                openChannelCreateOverlay();
+            } 
+    }
 
         // ================================================================
         // GROUP CREATE OVERLAY — Phase 1 logic (daga group-create.html,
@@ -3321,6 +3484,373 @@ setInterval(refreshAllChatTimes, 30000);
                     gcoShowError('Firestore denied this — your Security Rules need to allow writes to /groups/{id} for signed-in users.');
                 } else {
                     gcoShowError('Could not create the group — please try again.');
+                }
+            }
+        }
+
+        // ================================================================
+        // PAGE CREATE OVERLAY — Phase 2 logic (daga page-create.html).
+        // ================================================================
+        const PCO_CATEGORIES = ['General', 'Business', 'Community', 'Entertainment', 'News & Media', 'Education', 'Religion', 'Health'];
+        let pcoSelectedCategory = 'General';
+        let pcoSlugCheckToken = 0;
+
+        function openPageCreateOverlay() {
+            document.getElementById('pcoName').value = '';
+            document.getElementById('pcoDesc').value = '';
+            pcoSelectedCategory = 'General';
+            document.getElementById('pcoCategoryScroll').innerHTML = PCO_CATEGORIES.map(c =>
+                `<div class="category-chip ${c === pcoSelectedCategory ? 'selected' : ''}" data-cat="${c}" onclick="pcoSetCategory('${c}')">${c}</div>`
+            ).join('');
+            pcoUpdateCounts();
+            document.getElementById('pcoSlugPreview').textContent = '';
+            document.getElementById('pcoSlugPreview').className = 'slug-preview';
+            pcoClearError();
+            const btn = document.getElementById('pcoCreateBtn');
+            btn.textContent = 'Create Page';
+            btn.classList.add('disabled');
+            pcoRenderPendingInvites();
+            document.getElementById('pageCreateOverlay').classList.add('pco-open');
+        }
+
+        function closePageCreateOverlay() {
+            document.getElementById('pageCreateOverlay').classList.remove('pco-open');
+        }
+
+        function pcoSetCategory(cat) {
+            pcoSelectedCategory = cat;
+            document.querySelectorAll('#pcoCategoryScroll .category-chip').forEach(el => el.classList.toggle('selected', el.dataset.cat === cat));
+        }
+
+        function pcoRenderPendingInvites() {
+            const label = document.getElementById('pcoInviteSectionLabel');
+            const list = document.getElementById('pcoPendingInvitesList');
+            if (!pendingInvites.length) { label.style.display = 'none'; list.style.display = 'none'; return; }
+            label.style.display = 'block';
+            list.style.display = 'flex';
+            list.innerHTML = pendingInvites.map(inv => `
+                <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border-radius:20px;padding:4px 10px 4px 4px;font-size:12.5px;">
+                    <img src="${inv.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + inv.username}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;">
+                    <span>${inv.username}</span>
+                </div>
+            `).join('');
+        }
+
+        function pcoUpdateCounts() {
+            document.getElementById('pcoNameCount').textContent = document.getElementById('pcoName').value.length;
+            document.getElementById('pcoDescCount').textContent = document.getElementById('pcoDesc').value.length;
+        }
+
+        function pcoOnNameInput() {
+            pcoUpdateCounts();
+            const name = document.getElementById('pcoName').value.trim();
+            const btn = document.getElementById('pcoCreateBtn');
+            const preview = document.getElementById('pcoSlugPreview');
+
+            if (!name) {
+                btn.classList.add('disabled');
+                preview.textContent = '';
+                preview.className = 'slug-preview';
+                return;
+            }
+
+            const slug = slugify(name) || 'page';
+            preview.className = 'slug-preview';
+            preview.innerHTML = '<span class="slug-spinner"></span> nexus.app/p/' + slug;
+            btn.classList.add('disabled');
+
+            const myToken = ++pcoSlugCheckToken;
+            clearTimeout(window._pcoSlugDebounce);
+            window._pcoSlugDebounce = setTimeout(async () => {
+                try {
+                    const doc = await db.collection('pages').doc(slug).get();
+                    if (myToken !== pcoSlugCheckToken) return;
+                    if (doc.exists) {
+                        preview.className = 'slug-preview taken';
+                        preview.textContent = 'nexus.app/p/' + slug + ' — already taken, a number will be added automatically';
+                    } else {
+                        preview.className = 'slug-preview available';
+                        preview.textContent = 'nexus.app/p/' + slug + ' — available';
+                    }
+                    btn.classList.remove('disabled');
+                } catch (e) {
+                    if (myToken !== pcoSlugCheckToken) return;
+                    preview.className = 'slug-preview';
+                    preview.textContent = '';
+                    btn.classList.remove('disabled');
+                }
+            }, 400);
+        }
+
+        function pcoShowError(msg) {
+            const banner = document.getElementById('pcoErrorBanner');
+            banner.textContent = msg;
+            banner.classList.add('show');
+        }
+        function pcoClearError() { document.getElementById('pcoErrorBanner').classList.remove('show'); }
+
+        async function pcoFindAvailableSlug(baseSlug) {
+            let slug = baseSlug;
+            let attempt = 0;
+            while (attempt < 8) {
+                const doc = await db.collection('pages').doc(slug).get();
+                if (!doc.exists) return slug;
+                attempt++;
+                slug = baseSlug + '-' + Math.random().toString(36).slice(2, 6);
+            }
+            return baseSlug + '-' + Date.now().toString(36);
+        }
+
+        async function pcoCreatePage() {
+            pcoClearError();
+            const name = document.getElementById('pcoName').value.trim();
+            const desc = document.getElementById('pcoDesc').value.trim();
+            if (!name) return;
+            if (!myId) { pcoShowError('You need to be signed in to create a page.'); return; }
+
+            const btn = document.getElementById('pcoCreateBtn');
+            btn.classList.add('disabled');
+            btn.textContent = 'Creating...';
+
+            try {
+                const authUser = await authReadyPromise;
+                if (!authUser) { pcoShowError('You need to be signed in to create a page.'); btn.textContent = 'Create Page'; btn.classList.remove('disabled'); return; }
+
+                const baseSlug = slugify(name) || 'page';
+                const finalSlug = await pcoFindAvailableSlug(baseSlug);
+                const initials = name.trim().slice(0, 2).toUpperCase();
+
+                await db.collection('pages').doc(finalSlug).set({
+                    name: name,
+                    initials: initials,
+                    description: desc,
+                    category: pcoSelectedCategory,
+                    link: 'nexus.app/p/' + finalSlug,
+                    followerCount: 1 + pendingInvites.length,
+                    verified: false,
+                    creatorUsername: myId,
+                    adminUsernames: [myId],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('pages').doc(finalSlug).collection('followers').doc(myId).set({
+                    followedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('users').doc(myId).collection('myPages').doc(finalSlug)
+                    .set({ followedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+                await Promise.all(pendingInvites.map(async inv => {
+                    await db.collection('pages').doc(finalSlug).collection('followers').doc(inv.username).set({
+                        followedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await db.collection('users').doc(inv.username).collection('myPages').doc(finalSlug)
+                        .set({ followedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                }));
+
+                pendingInvites = [];
+                window.location.href = 'pages.html?page=' + encodeURIComponent(finalSlug);
+            } catch (e) {
+                console.error('Create page error:', e);
+                btn.textContent = 'Create Page';
+                btn.classList.remove('disabled');
+                if (e && e.code === 'permission-denied') {
+                    pcoShowError('Firestore denied this — your Security Rules need to allow writes to /pages/{id} for signed-in users.');
+                } else {
+                    pcoShowError('Could not create the page — please try again.');
+                }
+            }
+        }
+
+        // ================================================================
+        // CHANNEL CREATE OVERLAY — Phase 3 logic (daga create-channel.html).
+        // ================================================================
+        const CCO_CATEGORIES = ['General', 'Technology', 'Business', 'Fashion', 'Entertainment', 'Sports', 'News', 'Education', 'Lifestyle'];
+        let ccoSelectedCategory = 'General';
+        let ccoSelectedPrivacy = 'public';
+        let ccoSlugCheckToken = 0;
+
+        function openChannelCreateOverlay() {
+            document.getElementById('ccoName').value = '';
+            document.getElementById('ccoDesc').value = '';
+            ccoSelectedCategory = 'General';
+            ccoSelectedPrivacy = 'public';
+            document.getElementById('ccoCategoryScroll').innerHTML = CCO_CATEGORIES.map(c =>
+                `<div class="category-chip ${c === ccoSelectedCategory ? 'selected' : ''}" data-cat="${c}" onclick="ccoSetCategory('${c}')">${c}</div>`
+            ).join('');
+            document.getElementById('ccoRadioPublic').classList.add('checked');
+            document.getElementById('ccoRadioPrivate').classList.remove('checked');
+            ccoUpdateCounts();
+            document.getElementById('ccoSlugPreview').textContent = '';
+            document.getElementById('ccoSlugPreview').className = 'slug-preview';
+            ccoClearError();
+            const btn = document.getElementById('ccoCreateBtn');
+            btn.textContent = 'Create Channel';
+            btn.classList.add('disabled');
+            ccoRenderPendingInvites();
+            document.getElementById('channelCreateOverlay').classList.add('cco-open');
+        }
+
+        function closeChannelCreateOverlay() {
+            document.getElementById('channelCreateOverlay').classList.remove('cco-open');
+        }
+
+        function ccoSetCategory(cat) {
+            ccoSelectedCategory = cat;
+            document.querySelectorAll('#ccoCategoryScroll .category-chip').forEach(el => el.classList.toggle('selected', el.dataset.cat === cat));
+        }
+
+        function ccoSetPrivacy(type) {
+            ccoSelectedPrivacy = type;
+            document.getElementById('ccoRadioPublic').classList.toggle('checked', type === 'public');
+            document.getElementById('ccoRadioPrivate').classList.toggle('checked', type === 'private');
+        }
+
+        function ccoRenderPendingInvites() {
+            const label = document.getElementById('ccoInviteSectionLabel');
+            const list = document.getElementById('ccoPendingInvitesList');
+            if (!pendingInvites.length) { label.style.display = 'none'; list.style.display = 'none'; return; }
+            label.style.display = 'block';
+            list.style.display = 'flex';
+            list.innerHTML = pendingInvites.map(inv => `
+                <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border-radius:20px;padding:4px 10px 4px 4px;font-size:12.5px;">
+                    <img src="${inv.avatarUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + inv.username}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;">
+                    <span>${inv.username}</span>
+                </div>
+            `).join('');
+        }
+
+        function ccoUpdateCounts() {
+            document.getElementById('ccoNameCount').textContent = document.getElementById('ccoName').value.length;
+            document.getElementById('ccoDescCount').textContent = document.getElementById('ccoDesc').value.length;
+        }
+
+        function ccoOnNameInput() {
+            ccoUpdateCounts();
+            const name = document.getElementById('ccoName').value.trim();
+            const btn = document.getElementById('ccoCreateBtn');
+            const preview = document.getElementById('ccoSlugPreview');
+
+            if (!name) {
+                btn.classList.add('disabled');
+                preview.textContent = '';
+                preview.className = 'slug-preview';
+                return;
+            }
+
+            const slug = slugify(name) || 'channel';
+            preview.className = 'slug-preview';
+            preview.innerHTML = '<span class="slug-spinner"></span> nexus.app/c/' + slug;
+            btn.classList.add('disabled');
+
+            const myToken = ++ccoSlugCheckToken;
+            clearTimeout(window._ccoSlugDebounce);
+            window._ccoSlugDebounce = setTimeout(async () => {
+                try {
+                    const doc = await db.collection('channels').doc(slug).get();
+                    if (myToken !== ccoSlugCheckToken) return;
+                    if (doc.exists) {
+                        preview.className = 'slug-preview taken';
+                        preview.textContent = 'nexus.app/c/' + slug + ' — already taken, a number will be added automatically';
+                    } else {
+                        preview.className = 'slug-preview available';
+                        preview.textContent = 'nexus.app/c/' + slug + ' — available';
+                    }
+                    btn.classList.remove('disabled');
+                } catch (e) {
+                    if (myToken !== ccoSlugCheckToken) return;
+                    preview.className = 'slug-preview';
+                    preview.textContent = '';
+                    btn.classList.remove('disabled');
+                }
+            }, 400);
+        }
+
+        function ccoShowError(msg) {
+            const banner = document.getElementById('ccoErrorBanner');
+            banner.textContent = msg;
+            banner.classList.add('show');
+        }
+        function ccoClearError() { document.getElementById('ccoErrorBanner').classList.remove('show'); }
+
+        async function ccoFindAvailableSlug(baseSlug) {
+            let slug = baseSlug;
+            let attempt = 0;
+            while (attempt < 8) {
+                const doc = await db.collection('channels').doc(slug).get();
+                if (!doc.exists) return slug;
+                attempt++;
+                slug = baseSlug + '-' + Math.random().toString(36).slice(2, 6);
+            }
+            return baseSlug + '-' + Date.now().toString(36);
+        }
+
+        async function ccoCreateChannel() {
+            ccoClearError();
+            const name = document.getElementById('ccoName').value.trim();
+            const desc = document.getElementById('ccoDesc').value.trim();
+            if (!name) return;
+            if (!myId) { ccoShowError('You need to be signed in to create a channel.'); return; }
+
+            const btn = document.getElementById('ccoCreateBtn');
+            btn.classList.add('disabled');
+            btn.textContent = 'Creating...';
+
+            try {
+                const authUser = await authReadyPromise;
+                if (!authUser) { ccoShowError('You need to be signed in to create a channel.'); btn.textContent = 'Create Channel'; btn.classList.remove('disabled'); return; }
+
+                const baseSlug = slugify(name) || 'channel';
+                const finalSlug = await ccoFindAvailableSlug(baseSlug);
+                const initials = name.trim().slice(0, 2).toUpperCase();
+
+                await db.collection('channels').doc(finalSlug).set({
+                    name: name,
+                    initials: initials,
+                    description: desc,
+                    category: ccoSelectedCategory,
+                    privacy: ccoSelectedPrivacy,
+                    link: 'nexus.app/c/' + finalSlug,
+                    subscriberCount: 1 + pendingInvites.length,
+                    verified: false,
+                    creatorUsername: myId,
+                    adminUsernames: [myId],
+                    tiers: [
+                        { id: 'free', name: 'Free', price: 0, desc: 'Regular posts, polls and reactions.' },
+                        { id: 'plus', name: name + ' Plus', price: 5, desc: 'Early access, exclusive drops, no ads. $5/month' },
+                        { id: 'vip', name: name + ' VIP', price: 15, desc: 'Everything in Plus, plus priority support. $15/month' }
+                    ],
+                    duoPartner: { active: false, name: '' },
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('channels').doc(finalSlug).collection('subscribers').doc(myId).set({
+                    subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    muted: false
+                });
+
+                await db.collection('users').doc(myId).collection('mySubscriptions').doc(finalSlug)
+                    .set({ subscribedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+                await Promise.all(pendingInvites.map(async inv => {
+                    await db.collection('channels').doc(finalSlug).collection('subscribers').doc(inv.username).set({
+                        subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        muted: false
+                    });
+                    await db.collection('users').doc(inv.username).collection('mySubscriptions').doc(finalSlug)
+                        .set({ subscribedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                }));
+
+                pendingInvites = [];
+                window.location.href = 'channels.html?channel=' + encodeURIComponent(finalSlug);
+            } catch (e) {
+                console.error('Create channel error:', e);
+                btn.textContent = 'Create Channel';
+                btn.classList.remove('disabled');
+                if (e && e.code === 'permission-denied') {
+                    ccoShowError('Firestore denied this — your Security Rules need to allow writes to /channels/{id} for signed-in users.');
+                } else {
+                    ccoShowError('Could not create the channel — please try again.');
                 }
             }
         }
