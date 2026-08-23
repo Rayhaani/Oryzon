@@ -4069,10 +4069,10 @@ setInterval(refreshAllChatTimes, 30000);
             }
         }
 
-       function switchTab(element, tabId) {
+    function switchTab(element, tabId) {
     document.querySelectorAll('.smart-btn').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
-
+    localStorage.setItem('nexus_active_tab', tabId);
     const searchBar = document.getElementById('searchBarContainer');
     const searchWasOpen = searchBar && searchBar.classList.contains('active');
 
@@ -4117,19 +4117,15 @@ setInterval(refreshAllChatTimes, 30000);
         }
 
         // Mayar da mutum zuwa tab din da yake AIKI a kai (Groups/Pages/Channels/
-        // Friends) idan ya bar wannan page zuwa group-create.html/page-create.html/
-        // create-channel.html sannan ya dawo — maimakon a bar shi ya fadi kan
-        // hardcoded default din Personal tab a duk lokacin da page ta sake load.
-        // Duba nexus_return_tab a initializeGroupFromOverlay() domin inda ake ajiyewa.
+        // Friends) a KOWANE page load ko refresh — ba kawai bayan wani babban
+        // navigation flow ba — ta amfani da 'nexus_active_tab' da switchTab()
+        // ke ajiyewa duk lokacin da aka canza tab.
         document.addEventListener('DOMContentLoaded', () => {
-            const returnTab = sessionStorage.getItem('nexus_return_tab');
-            if (!returnTab) return;
-            sessionStorage.removeItem('nexus_return_tab');
-            if (returnTab === 'personal') return; // tuni shine default, babu bukatar sauyawa
-            const btn = document.querySelector(`.smart-btn[onclick*="'${returnTab}'"]`);
-            if (btn) switchTab(btn, returnTab);
+            const savedTab = localStorage.getItem('nexus_active_tab');
+            if (!savedTab || savedTab === 'personal') return; // tuni shine default, babu bukatar sauyawa
+            const btn = document.querySelector(`.smart-btn[onclick*="'${savedTab}'"]`);
+            if (btn) switchTab(btn, savedTab);
         });
-
         // ============================================================
         // AVATAR TAP BEHAVIOR — shared by Personal, Friends, Groups,
         // Pages and Channels avatars.
