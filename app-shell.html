@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@600;700&family=Montserrat:wght@600&family=Dancing+Script:wght@700&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- Firebase SDK — loaded ONCE for the whole app, never duplicated per tab.
+     10.7.1 app/auth/firestore/storage/analytics/database covers everything
+     the Feed and Chats fragments need (compat API unchanged from 9.23.0). -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html, body { height:100%; background:#050505; }
+    body {
+        font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color:#fff; overflow-x:hidden;
+    }
+
+    /* ---------- Tab container: each tab is a hidden/shown panel, never a page navigation ---------- */
+    #tab-root { min-height:100vh; padding-bottom:60px; }
+    .app-tab-panel { display:none; }
+    .app-tab-panel.active { display:block; }
+
+    /* Simple loading pulse shown only the FIRST time a tab is opened (fragment fetch) */
+    .tab-loading {
+        display:flex; align-items:center; justify-content:center;
+        height:60vh; color:rgba(255,255,255,0.4); font-size:13px; letter-spacing:0.3px;
+    }
+    .tab-loading .dot {
+        width:8px; height:8px; border-radius:50%; background:#00F2FF; margin-right:8px;
+        animation:pulse 1s infinite ease-in-out;
+        box-shadow:0 0 8px rgba(0,242,255,0.6);
+    }
+    @keyframes pulse { 0%,100%{opacity:.25} 50%{opacity:1} }
+</style>
+</head>
+<body>
+
+<div id="tab-root">
+    <!-- Each panel below is a lazy-load target. Content is fetched from /fragments/*.html
+         ONLY the first time its tab is opened, then cached in memory (see TABS registry).
+         Switching tabs after that is pure show/hide — zero network, zero reload. -->
+    <div class="app-tab-panel" id="panel-feed"></div>
+    <div class="app-tab-panel" id="panel-tools"></div>
+    <div class="app-tab-panel active" id="panel-chats"></div>
+    <div class="app-tab-panel" id="panel-shop"></div>
+    <div class="app-tab-panel" id="panel-reels"></div>
+    <div class="app-tab-panel" id="panel-profile"></div>
+</div>
+
+<!-- Your real shared footer. footer.js injects its own HTML/CSS here ONCE,
+     on the real page-load DOMContentLoaded — it is NOT part of any tab
+     fragment, so it never reloads or flickers when switching tabs. -->
+<div id="footer-placeholder"></div>
+
+<script>
+/* =====================================================================
+   SHARED FIREBASE — initialized ONCE for the whole app. Every fragment
+   reads window.db / window.myId / window.BACKEND_URL instead of
+   re-declaring its own `const db = firebase.firestore()`. This is the
+   piece that removes the reconnect delay when switching tabs.
+   ===================================================================== */
+window.BACKEND_URL = 'https://oryzon-backend-ed1q.onrender.com';
+const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+    measurementId: "G-K5085DLL2W"
+};
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+window.db = firebase.firestore();
+window.storage = firebase.storage();
+window.myId = localStorage.getItem("nexus_user_session");
+
+/* =====================================================================
+   TAB REGISTRY — add one line here per new tab. `src` points at the
+   fragment file (just the inner markup+script, no <html>/<head>/<body>).
+   `loaded` flips true after first fetch so we never re-fetch or
+   re-run the tab's <script> a second time.
+   ===================================================================== */
+const TABS = {
+    feed:    { src: 'fragments/feed.html',    loaded: false, title: 'Home' },
+    tools:   { src: 'fragments/tools.html',   loaded: false, title: 'Tools' },
+    chats:   { src: 'fragments/chats.html',   loaded: false, title: 'Chats' },
+    shop:    { src: 'fragments/shop.html',    loaded: false, title: 'Shop' },
+    reels:   { src: 'fragments/reels.html',   loaded: false, title: 'Reels' },
+    profile: { src: 'fragments/profile.html', loaded: false, title: 'Profile' },
+};
+
+let currentTab = 'chats';
+
+window.AppShell = {
+    getCurrentTab() { return currentTab; },
+
+    async switchTab(name) {
+        if (!TABS[name]) return;
+
+        // 1. Toggle panel visibility (instant — no network on repeat visits)
+        document.querySelectorAll('.app-tab-panel').forEach(p => p.classList.remove('active'));
+        const panel = document.getElementById('panel-' + name);
+        panel.classList.add('active');
+        currentTab = name;
+
+        // 2. Tell your real footer which icon should be gold/active now
+        if (window.NexusFooter && window.NexusFooter.setActive) {
+            window.NexusFooter.setActive(name);
+        }
+
+        // 3. Lazy-load the fragment the FIRST time this tab is opened
+        if (!TABS[name].loaded) {
+            await AppShell._loadFragment(name, panel);
+        }
+    },
+
+    async _loadFragment(name, panel) {
+        panel.innerHTML = '<div class="tab-loading"><span class="dot"></span>Loading ' + TABS[name].title + '…</div>';
+        try {
+            const res = await fetch(TABS[name].src, { cache: 'no-cache' });
+            if (!res.ok) throw new Error('fragment fetch failed: ' + res.status);
+            const html = await res.text();
+
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            const scripts = [...tmp.querySelectorAll('script')];
+            scripts.forEach(s => s.remove());
+
+            panel.innerHTML = '';
+            panel.appendChild(tmp);
+
+            // ---- Capture DOMContentLoaded listeners instead of redispatching
+            // globally. The page's real DOMContentLoaded already fired long
+            // before this tab opened, so the fragment's own
+            // `document.addEventListener('DOMContentLoaded', fn)` /
+            // `window.addEventListener('DOMContentLoaded', fn)` calls (a
+            // pattern used a lot in the original standalone pages) would
+            // otherwise never run. We intercept those two calls just while
+            // THIS fragment's scripts execute, collect the handlers, and
+            // invoke them directly once — WITHOUT registering them on
+            // document/window. That's what stops a later tab's load from
+            // ever re-triggering an earlier tab's already-run setup code.
+            const captured = [];
+            const realDocAdd = document.addEventListener.bind(document);
+            const realWinAdd = window.addEventListener.bind(window);
+            document.addEventListener = (type, fn, opts) => {
+                if (type === 'DOMContentLoaded') { captured.push(fn); return; }
+                return realDocAdd(type, fn, opts);
+            };
+            window.addEventListener = (type, fn, opts) => {
+                if (type === 'DOMContentLoaded') { captured.push(fn); return; }
+                return realWinAdd(type, fn, opts);
+            };
+
+            // Run scripts in original order, exactly like a normal full page
+            // load: external files (post-card-template.js, nexus-algorithm.js)
+            // execute as real <script src> tags so later inline code can see
+            // their globals. Consecutive INLINE scripts are batched together
+            // and share ONE scope — the original page relied on its several
+            // multiple script blocks (e.g. chats.html has 4) being able to
+            // see each other's `const db`, `const myId`, functions, etc. Only
+            // at the FRAGMENT boundary do we isolate scope (one IIFE per
+            // batch), so this tab's `db` can never collide with another
+            // tab's `db`.
+            let inlineBatch = [];
+            const flushBatch = () => {
+                if (!inlineBatch.length) return Promise.resolve();
+                const code = inlineBatch.join('\n');
+                inlineBatch = [];
+                return AppShell._runScript({ src: null, textContent: code }, panel);
+            };
+            try {
+                for (const old of scripts) {
+                    if (old.src) {
+                        await flushBatch();
+                        await AppShell._runScript(old, panel);
+                    } else {
+                        inlineBatch.push(old.textContent);
+                    }
+                }
+                await flushBatch();
+            } finally {
+                document.addEventListener = realDocAdd;
+                window.addEventListener = realWinAdd;
+            }
+
+            // Now run every captured DOMContentLoaded handler exactly once.
+            captured.forEach(fn => {
+                try { fn(new Event('DOMContentLoaded')); }
+                catch (e) { console.error('Fragment "' + name + '" DOMContentLoaded handler failed:', e); }
+            });
+
+            TABS[name].loaded = true;
+        } catch (err) {
+            panel.innerHTML = '<div class="tab-loading" style="color:#ff6b6b;">Couldn\'t load ' + TABS[name].title + '. Tap to retry.</div>';
+            panel.querySelector('.tab-loading').onclick = () => AppShell._loadFragment(name, panel);
+            console.error(err);
+        }
+    },
+
+    _runScript(old, panel) {
+        return new Promise((resolve) => {
+            const s = document.createElement('script');
+            if (old.src) {
+                // External file (e.g. post-card-template.js, nexus-algorithm.js) —
+                // load as-is, no wrapping, and wait for it before continuing.
+                s.src = old.src;
+                s.onload = resolve;
+                s.onerror = resolve;
+                panel.appendChild(s);
+            } else {
+                // Inline script — wrapped in its own IIFE so `const`/`let` declared
+                // by one tab (e.g. `const db`, `const firebaseConfig`) can never
+                // collide with the same names declared by another tab's fragment.
+                s.textContent = '(function(){\n' + old.textContent + '\n})();';
+                panel.appendChild(s); // executes synchronously on append
+                resolve();
+            }
+        });
+    }
+};
+
+// Boot: load Chats immediately since it's the default/active tab
+AppShell.switchTab('chats');
+</script>
+
+<!-- Your real shared footer — same file, drop-in, only its navigation
+     now calls AppShell.switchTab() instead of window.location.href. -->
+<script src="footer.js"></script>
+
+</body>
+</html>
