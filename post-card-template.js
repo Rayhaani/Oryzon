@@ -1151,50 +1151,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
 
 // ============================================================
 // 6. CONVEYOR STORIES — Auto-sliding belt
-// ============================================================
-(function initConveyorStories() {
-
-    const SPEED = 22; // px per second — slow and smooth
-    let beltOffset = 0;
-    let lastTime = null;
-    let animFrame;
-    let isPaused = false;
-    let totalWidth = 0;
-
-    function startConveyor() {
-        const belt = document.getElementById('conveyorBelt');
-        if (!belt) return;
-
-        // Count cards for total width
-        const cards = belt.querySelectorAll('.s-card');
-        const CARD_W = 80; // card width + gap
-        const originalCount = cards.length;
-        totalWidth = originalCount * CARD_W;
-
-        // Clone cards 2x for seamless loop
-        cards.forEach(card => {
-            belt.appendChild(card.cloneNode(true));
-            belt.appendChild(card.cloneNode(true));
-        });
-
-        // Re-attach click events after cloning
-        belt.querySelectorAll('.s-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const username = card.dataset.username;
-                if (username) openStoryByUsername(username);
-            });
-        });
-
-        // Pause on touch
-        belt.addEventListener('touchstart', () => { isPaused = true; }, { passive: true });
-        belt.addEventListener('touchend',   () => { isPaused = false; lastTime = null; });
-
-        cancelAnimationFrame(animFrame);
-        animFrame = requestAnimationFrame(animate);
-    }
-
-
-
+// ============================================================   
    // SHARED - Follow button handler
 window.handleFollowBtn = function(btn) {
     const span = btn.querySelector('span');
@@ -1212,42 +1169,7 @@ window.handleFollowBtn = function(btn) {
 
     if (navigator.vibrate) navigator.vibrate(10);
 };
-
-
-
-    function animate(ts) {
-        if (!lastTime) lastTime = ts;
-        const dt = (ts - lastTime) / 1000;
-        lastTime = ts;
-
-        if (!isPaused) {
-            beltOffset -= SPEED * dt;
-            if (Math.abs(beltOffset) >= totalWidth) {
-                beltOffset += totalWidth; // seamless reset
-            }
-            const belt = document.getElementById('conveyorBelt');
-            if (belt) belt.style.transform = `translateX(${beltOffset}px)`;
-        }
-
-        animFrame = requestAnimationFrame(animate);
-    }
-
-    // Wait for DOM then start
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', startConveyor);
-    } else {
-        setTimeout(startConveyor, 300);
-    }
-
-    window.stopConveyor = () => cancelAnimationFrame(animFrame);
-    window.resumeConveyor = () => {
-        lastTime = null;
-        animFrame = requestAnimationFrame(animate);
-    };
-
-})();
-
-
+ 
  // ============================================================
 // 7. SHARED toggleImmersive — Don dukkan pages su iya amfani
 // ============================================================
