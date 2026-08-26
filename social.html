@@ -2053,63 +2053,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-
-
-  (function initConveyor() {
-    const SPEED = 15;
-    let offset = 0;
-    let lastTime = null;
-    let paused = false;
-    let singleSetWidth = 0;
-
-    function setup() {
-        const belt = document.getElementById('conveyorBelt');
-        if (!belt) return;
-
-        // Auna kowane card daidai
-        const originals = Array.from(belt.children);
-        const gap = 8;
-        let measuredWidth = 0;
-        originals.forEach(card => {
-            measuredWidth += card.offsetWidth + gap;
-        });
-        singleSetWidth = measuredWidth;
-
-        // Clone 3x don loop seamless
-        originals.forEach(card => belt.appendChild(card.cloneNode(true)));
-        originals.forEach(card => belt.appendChild(card.cloneNode(true)));
-        originals.forEach(card => belt.appendChild(card.cloneNode(true)));
-
-        belt.addEventListener('touchstart', () => { paused = true; }, { passive: true });
-        belt.addEventListener('touchend', () => { paused = false; lastTime = null; }, { passive: true });
-
-        requestAnimationFrame(tick);
-    }
-
-    function tick(ts) {
-        if (!lastTime) lastTime = ts;
-        const dt = Math.min((ts - lastTime) / 1000, 0.032);
-        lastTime = ts;
-
-        if (!paused && singleSetWidth > 0) {
-            offset -= SPEED * dt;
-            if (offset <= -singleSetWidth) {
-                offset += singleSetWidth;
-            }
-            const belt = document.getElementById('conveyorBelt');
-            if (belt) belt.style.transform = `translateX(${offset}px)`;
-        }
-
-        requestAnimationFrame(tick);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setup);
-    } else {
-        setTimeout(setup, 600);
-    }
-})();
-
 // ============================================================
 // NODE ACTIONS — PREMIUM MENU (dynamic owner/viewer + verified-only gating)
 // ============================================================
