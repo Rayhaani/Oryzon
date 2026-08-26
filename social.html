@@ -1538,6 +1538,13 @@ body {
                 </div>
                 <span class="sheet-text">Report</span>
             </a>
+
+        <a href="#" class="sheet-item" id="deletePostItem" style="--accent: #ff4d6d; display:none;" onclick="event.preventDefault(); deletePostFromMenu();">
+    <div class="sheet-icon-box">
+        <i class="fa-solid fa-trash-can"></i>
+    </div>
+    <span class="sheet-text">Delete Post</span>
+        </a>
         </div>
 
         <div class="sheet-footer">
@@ -2137,10 +2144,30 @@ document.addEventListener('click', function(event) {
 })();
 
 // Ayyukan sarrafa Premium Neural Bottom Sheet Menu
-function openNeuralMenu() {
+let neuralMenuPostId = null;
+
+function openNeuralMenu(postId, postUsername) {
     const sheet = document.getElementById('neuralBottomMenu');
+    neuralMenuPostId = postId || null;
+
+    const deleteItem = document.getElementById('deletePostItem');
+    if (deleteItem) {
+        deleteItem.style.display = (postUsername && postUsername === currentUser) ? 'flex' : 'none';
+    }
+
     sheet.classList.add('is-open');
-    if (navigator.vibrate) navigator.vibrate(20); // Karamin jiri don dadi
+    if (navigator.vibrate) navigator.vibrate(20);
+}
+
+function deletePostFromMenu() {
+    if (!neuralMenuPostId) return;
+    if (!confirm('Are you sure you want to delete this post?')) return;
+
+    db.collection("posts").doc(neuralMenuPostId).delete().then(() => {
+        const card = document.querySelector(`.post-card[data-post-id="${neuralMenuPostId}"]`);
+        if (card) card.remove();
+        closeNeuralMenu();
+    }).catch(err => alert("An error occurred: " + err.message));
 }
 
 function closeNeuralMenu() {
