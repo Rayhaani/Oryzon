@@ -215,6 +215,7 @@
 
             // Swap content + title.
             currentContentEl.innerHTML = newContent.innerHTML;
+           window.scrollTo(0, 0);
             if (newDoc.title) document.title = newDoc.title;
 
             // Update history + internal state.
