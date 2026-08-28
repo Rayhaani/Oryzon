@@ -10,7 +10,8 @@
    storage, analytics, BACKEND_URL, firebase (app+database+
    messaging compat SDKs). Kada a sake ayyana su a nan.
    ============================================================ */
-
+const __servicesInitCallbacks = [];
+function runOnServicesInit(fn) { __servicesInitCallbacks.push(fn); }
        // Core Static Local Data Context Stores Verbatim
 let CATEGORIES = [
     { id: "plumber", label: "Plumber", icon: "🔧" },
@@ -9441,9 +9442,6 @@ function closeAllStoriesOverlay() {
 // ke kira KOWANE LOKACI mutum ya shigo services.html, ko ta
 // native full load ko ta SPA navigation.
 // ============================================================
-const __servicesInitCallbacks = [];
-function runOnServicesInit(fn) { __servicesInitCallbacks.push(fn); }
-
 function initServicesPage() {
     __servicesInitCallbacks.forEach(fn => {
         try { fn(); } catch (e) { console.error('services.js init callback error:', e); }
