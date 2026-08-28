@@ -67,6 +67,7 @@
     const registeredPages = {}; // path -> { init, destroy }
     let currentPath = normalizePath(window.location.pathname);
     let isNavigating = false;
+    const pageCache = new Map();
 
     // A page's own <script src="social.js"> tag (native full load) already
     // executes it once via a normal <script> tag, NOT via loadScriptOnce().
@@ -186,10 +187,13 @@
         isNavigating = true;
 
         try {
-            const response = await fetch(url, { credentials: 'same-origin' });
-            if (!response.ok) throw new Error('Fetch failed with status ' + response.status);
-
-            const html = await response.text();
+            let html = pageCache.get(targetPath);
+            if (!html) {
+                const response = await fetch(url, { credentials: 'same-origin' });
+                if (!response.ok) throw new Error('Fetch failed with status ' + response.status);
+                html = await response.text();
+                pageCache.set(targetPath, html);
+            }
             const parser = new DOMParser();
             const newDoc = parser.parseFromString(html, 'text/html');
 
