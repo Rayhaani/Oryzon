@@ -126,9 +126,9 @@
     async function loadScriptsInOrder(list) {
         if (!list) return;
         const scripts = Array.isArray(list) ? list : [list];
-        for (const src of scripts) {
-            await loadScriptOnce(src);
-        }
+        const last = scripts[scripts.length - 1];
+        await Promise.all(scripts.slice(0, -1).map(loadScriptOnce));
+        await loadScriptOnce(last);
     }
 
     function loadStylesheetOnce(href) {
