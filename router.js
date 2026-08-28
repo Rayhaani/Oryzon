@@ -206,15 +206,17 @@
                 return;
             }
 
-            // Loda CSS din target page KAFIN a canza content, domin
-            // guje wa "flash of unstyled content".
-            await loadStylesheetOnce(PAGE_STYLES[targetPath]);
-
+            // Fara loda CSS a BACKGROUND (ba a JIRA shi ba) — content
+            // zai canza NAN TAKE, CSS zai iya biyowa cikin ‘yan
+            // milliseconds na baya (yawanci baya jin dadewa domin
+            // browser cache ke rikewa bayan ziyara ta farko).
+            const stylePromise = loadStylesheetOnce(PAGE_STYLES[targetPath]);
             // Lifecycle: tear down outgoing page.
             runDestroy(currentPath);
 
             // Swap content + title.
             currentContentEl.innerHTML = newContent.innerHTML;
+           stylePromise.catch(() => {});
            window.scrollTo(0, 0);
             if (newDoc.title) document.title = newDoc.title;
 
