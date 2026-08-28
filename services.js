@@ -9449,7 +9449,21 @@ function initServicesPage() {
 }
 
 function destroyServicesPage() {
-    // Babu wani listener na musamman da ke bukatar cleanup a yanzu.
+    if (notifListener) {
+        const sessionUser = localStorage.getItem('nexus_user_session');
+        if (sessionUser && firebase && firebase.database) {
+            firebase.database().ref(`providers/${sessionUser}/notifications`)
+                .orderByChild('createdAt')
+                .limitToLast(20)
+                .off('value', notifListener);
+        }
+        notifListener = null;
+    }
+    if (activeOrderStatusListener && activeOrderStatusProId && activeOrderStatusRequestId) {
+        firebase.database().ref(`providers/${activeOrderStatusProId}/orderRequests/${activeOrderStatusRequestId}`)
+            .off('value', activeOrderStatusListener);
+        activeOrderStatusListener = null;
+    }
 }
 
 if (window.NexusRouter) {
