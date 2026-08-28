@@ -507,11 +507,11 @@ async function loadRealProvidersFromFirebase() {
             }
 
             PROS.push(newPro);
-        }
+        });
     } catch (e) {
         console.warn('Could not load real providers:', e);
     }
-        }
+}
 async function loadContentFromFirebase() {
     try {
         const snap = await firebase.database().ref('admin/content').once('value');
