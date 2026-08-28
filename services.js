@@ -459,18 +459,21 @@ async function loadRealProvidersFromFirebase() {
         const snap = await firebase.database().ref('providers').once('value');
         const data = snap.val();
         if (!data) return;
-        for (const username of Object.keys(data)) {
+        const eligibleUsernames = Object.keys(data).filter(username => {
             const p = data[username];
-            if (!p || p.status !== 'approved') continue;
-            if (PROS.some(existing => String(existing.id) === username)) continue;
-           const catalog = p.categories || {};
+            return p && p.status === 'approved' && !PROS.some(existing => String(existing.id) === username);
+        });
+        const photoUrls = await Promise.all(eligibleUsernames.map(username => fetchProPhoto(username)));
+        eligibleUsernames.forEach((username, idx) => {
+            const p = data[username];
+            const catalog = p.categories || {};
             const flatItems = [];
             Object.keys(catalog).forEach(catKey => {
                 const items = catalog[catKey].items || {};
                 Object.keys(items).forEach(itemId => flatItems.push({ ...items[itemId], category: catKey }));
             });
             const isFoodCategory = ['chef', 'snacks', 'beverages'].includes(p.category);
-            const photoUrl = await fetchProPhoto(username);
+            const photoUrl = photoUrls[idx];
 
             const newPro = {
                 id: username,
