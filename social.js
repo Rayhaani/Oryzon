@@ -229,15 +229,12 @@ if (window.NexusRouter) {
     NexusRouter.registerPage('social.html', { init: initSocialPage, destroy: destroySocialPage });
 }
 
-// First real load: mu jira DOMContentLoaded kamar yadda tsohon tsari
-// yake, amma idan script din ya riga ya gudu bayan DOM ya riga ya
-// kasance ready (misali idan an loda ta ta hanyar router), mu kira
-// initSocialPage() nan take.
-if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', initSocialPage);
-} else {
-    initSocialPage();
-}
+// SPA: router.js din shine kadai ke da alhakin kiran initSocialPage()
+// bayan wannan file ya gama loda (ta runInit()). Idan an sake kiranta
+// a nan MA lokacin da readyState='complete' (SPA), za a kira ta SAU
+// BIYU. Saboda haka a NAN kadai muke jiran DOMContentLoaded (native
+// load) — babu 'else' immediate-call.
+window.addEventListener('DOMContentLoaded', initSocialPage);
 
 
       // ============================================================
