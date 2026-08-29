@@ -223,7 +223,7 @@
             // milliseconds na baya (yawanci baya jin dadewa domin
             // browser cache ke rikewa bayan ziyara ta farko).
             runDestroy(currentPath);
-            try { await loadStylesheetsAll(PAGE_STYLES[targetPath]); } catch (e) { console.error(e); }
+            loadStylesheetOnce(PAGE_STYLES[targetPath]).catch(e => console.error(e));
             currentContentEl.innerHTML = newContent.innerHTML;
             window.scrollTo(0, 0);
             if (newDoc.title) document.title = newDoc.title;
