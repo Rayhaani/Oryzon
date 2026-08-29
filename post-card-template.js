@@ -530,6 +530,11 @@
     padding: 3px !important;
 }
 
+/* ===== FIX: save-capsule kada ya karɓi flex:1 daga .post-action-capsules ===== */
+.post-interaction-bar .post-save-capsule.post-action-capsules,
+.interaction-bar .save-capsule.action-capsules {
+    flex: 0 0 auto !important;
+}
 
        /* ===== IMMERSIVE BACK BUTTON ===== */
 .immersive-back-btn {
@@ -780,20 +785,22 @@
         /* Grid view — all media items at once, toggled on via .grid-mode.
            Each cell plays a staggered pop-in animation (delay set inline
            per item in JS) for a satisfying reveal instead of a hard cut. */
+       
         .post-media-grid {
-            display: none;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px;
-            width: 100%;
-            opacity: 1;
-            transition: opacity 0.25s ease !important;
-        }
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 1fr;
+    gap: 2px;
+    width: 100%;
+    height: 100% !important;
+    opacity: 1;
+    transition: opacity 0.25s ease !important;
+}
         .post-media-grid.active { display: grid !important; }
         .post-media-grid.leaving { opacity: 0 !important; }
         .post-media-grid img, .post-media-grid video {
             width: 100% !important;
             height: 100% !important;
-            aspect-ratio: 1/1 !important;
             object-fit: cover !important;
             display: block !important;
             background: #1a1a1a !important;
@@ -1076,14 +1083,16 @@ window.postCard_toggleGridView = function(event, postId) {
         setTimeout(() => grid.classList.remove('active', 'leaving'), 260);
     }
 
-    // 3) Once the DOM has the new layer in place, measure its natural
-    //    height and animate the wrapper to it, then release back to auto.
+    // 3) Grid view ya rage daidai da girman da aka riga aka kulle a
+    //    step (1) — babu raguwa. Sai idan an koma track view ne kawai
+    //    muke sakin height ɗin zuwa girman track na asali.
     requestAnimationFrame(() => {
-        const targetHeight = goingToGrid ? grid.scrollHeight : track.scrollHeight;
-        carousel.style.height = targetHeight + 'px';
-        setTimeout(() => { carousel.style.height = ''; }, 460);
+        if (!goingToGrid) {
+            const targetHeight = track.scrollHeight;
+            carousel.style.height = targetHeight + 'px';
+            setTimeout(() => { carousel.style.height = ''; }, 460);
+        }
     });
-
     if (navigator.vibrate) navigator.vibrate(10);
 };
 
