@@ -48,14 +48,19 @@
     // daban). #page-content innerHTML swap BAI TABA</main> ba, don
     // haka wannan shine kadai hanyar da CSS din target page zai loda
     // idan mutum bai bude wannan page ta native ba tun farko.
-    const PAGE_STYLES = {
-        'social.html': 'social.css',
-        'services.html': 'services.css',
-        // 'chats.html': 'chats.css',
-        // 'videos.html': 'videos.css',
-        // 'shop.html': 'shop.css',
-        // 'me.html': 'me.css',
-    };
+   const PAGE_STYLES = {
+    'social.html': [
+        'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@700&family=Montserrat:wght@600&display=swap',
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
+        'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap',
+        'https://fonts.googleapis.com/css2?family=Syncopate:wght@700&display=swap',
+        'social.css'
+    ],
+    'services.html': [
+        'https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap',
+        'services.css'
+    ],
+}; 
     const loadedStyles = new Set();
 
     const CONTENT_SELECTOR = '#page-content';
@@ -75,14 +80,15 @@
         (Array.isArray(initial) ? initial : [initial]).forEach(src => loadedScripts.add(src));
     }
     if (PAGE_STYLES[currentPath]) {
-        loadedStyles.add(PAGE_STYLES[currentPath]);
+    (Array.isArray(PAGE_STYLES[currentPath]) ? PAGE_STYLES[currentPath] : [PAGE_STYLES[currentPath]]).forEach(h => loadedStyles.add(h));
     }
     // Preload duk sauran page CSS a background tun farko, domin
     // await loadStylesheetOnce() a navigateTo() ya samu su a cache
     // dinsa nan take, ba tare da jira network ba.
     Object.keys(PAGE_STYLES).forEach(function (p) {
-        if (p !== currentPath) loadStylesheetOnce(PAGE_STYLES[p]);
-    });
+    if (p === currentPath) return;
+    (Array.isArray(PAGE_STYLES[p]) ? PAGE_STYLES[p] : [PAGE_STYLES[p]]).forEach(loadStylesheetOnce);
+});
     // ------------------------------------------------------------
     // 2) Public API
     // ------------------------------------------------------------
@@ -153,6 +159,11 @@
         });
     }
 
+   function loadStylesheetsAll(list) {
+    if (!list) return Promise.resolve();
+    return Promise.all((Array.isArray(list) ? list : [list]).map(loadStylesheetOnce));
+   }
+   
     function runDestroy(path) {
         const page = registeredPages[path];
         if (page && typeof page.destroy === 'function') {
@@ -212,7 +223,7 @@
             // milliseconds na baya (yawanci baya jin dadewa domin
             // browser cache ke rikewa bayan ziyara ta farko).
             runDestroy(currentPath);
-            try { await loadStylesheetOnce(PAGE_STYLES[targetPath]); } catch (e) { console.error(e); }
+            try { await loadStylesheetsAll(PAGE_STYLES[targetPath]); } catch (e) { console.error(e); }
             currentContentEl.innerHTML = newContent.innerHTML;
             window.scrollTo(0, 0);
             if (newDoc.title) document.title = newDoc.title;
