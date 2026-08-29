@@ -535,54 +535,38 @@ function goToNextMember() {
 function nextStory() { showSlide(currentSlide + 1); }
 function prevStory() { showSlide(currentSlide - 1); }
 
-// ===== TAP TO PAUSE / RESUME =====
-// Mun cire tap zones na prev/next, mun sanya hold logic a maimakon
-const viewer = document.getElementById('storyViewer');
-
+// ===== TAP TO PAUSE / RESUME (delegated — yana aiki ko da an sake swap DOM) =====
 let holdTimer = null;
 let isHolding = false;
+let touchStartY = 0;
 
-viewer.addEventListener('touchstart', (e) => {
-    // Kar a pause idan suna danna close btn ko input
+document.addEventListener('touchstart', (e) => {
+    const viewer = e.target.closest('#storyViewer');
+    if (!viewer || !viewer.classList.contains('open')) return;
+    touchStartY = e.touches[0].clientY;
     if (e.target.closest('.story-close-btn') || e.target.closest('.hud-footer-capsule')) return;
-    
     holdTimer = setTimeout(() => {
         isHolding = true;
-        isPaused = true; // ← PAUSE
-    }, 150); // Hold 150ms = pause
+        isPaused = true;
+    }, 150);
 }, { passive: true });
 
-viewer.addEventListener('touchend', (e) => {
+document.addEventListener('touchend', (e) => {
+    const viewer = e.target.closest('#storyViewer');
+    if (!viewer || !viewer.classList.contains('open')) return;
     clearTimeout(holdTimer);
-    
-    if (isHolding) {
-        // Saki yatsa = resume
-        isPaused = false;
-        isHolding = false;
-        return;
-    }
 
-    // Gajeren danna = prev/next
+    const swipeDown = e.changedTouches[0].clientY - touchStartY;
+    if (swipeDown > 80 && !isHolding) { closeStoryViewer(); isHolding = false; return; }
+
+    if (isHolding) { isPaused = false; isHolding = false; return; }
+
     if (e.target.closest('.story-close-btn') || e.target.closest('.hud-footer-capsule')) return;
 
     const x = e.changedTouches[0].clientX;
     const halfScreen = window.innerWidth / 2;
-    if (x < halfScreen) {
-        prevStory();
-    } else {
-        nextStory();
-    }
+    if (x < halfScreen) prevStory(); else nextStory();
 }, { passive: true });
-
-// Swipe down don rufe
-let touchStartY = 0;
-viewer.addEventListener('touchstart', e => {
-    touchStartY = e.touches[0].clientY;
-}, { passive: true });
-viewer.addEventListener('touchend', e => {
-    const swipeDown = e.changedTouches[0].clientY - touchStartY;
-    if (swipeDown > 80 && !isHolding) closeStoryViewer();
-});
 
 
         /* ================= CONTROLLER NA DROPDOWN ================= */
