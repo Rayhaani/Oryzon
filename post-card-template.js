@@ -1050,6 +1050,14 @@ window.postCard_handleCarouselScroll = function(event, postId) {
 // outgoing layer fades+shrinks slightly and the incoming one pops in.
 window.postCard_toggleGridView = function(event, postId) {
     event.stopPropagation();
+
+    // ===== KARIYA: hana wannan aiki gudana sau biyu a jere (idan
+    // wani listener/dalili daban ya sake kiranta ba da gangan ba) =====
+    if (!window.__nxGridToggleLock) window.__nxGridToggleLock = {};
+    if (window.__nxGridToggleLock[postId]) return;
+    window.__nxGridToggleLock[postId] = true;
+    setTimeout(() => { window.__nxGridToggleLock[postId] = false; }, 200);
+
     const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
     if (!card) return;
     const carousel = card.querySelector('.post-media-carousel');
@@ -1058,7 +1066,7 @@ window.postCard_toggleGridView = function(event, postId) {
     if (!carousel || !grid || !track) return;
 
     const goingToGrid = !carousel.classList.contains('grid-mode');
-    const icon = event.currentTarget.querySelector('i');
+const icon = event.currentTarget.querySelector('i');
 
     // 1) Lock the carousel at its current on-screen height so the
     //    animation has a real starting point instead of jumping.
