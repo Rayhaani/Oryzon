@@ -36,7 +36,7 @@
     // su loda KAFIN services.js, domin services.js yana amfani da su
     // nan take a init).
     const PAGE_SCRIPTS = {
-        'social.html': 'social.js',
+        'social.html': ['post-card-template.js', 'social.js'],
         'services.html': 'services.js',
         // 'chats.html': 'chats.js',
         // 'videos.html': 'videos.js',
