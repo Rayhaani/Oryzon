@@ -1145,9 +1145,9 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
         const dotsHTML = nxMediaItems.map((_, i) => `<span class="post-media-dot${i === 0 ? ' active' : ''}"></span>`).join('');
 
         const gridHTML = nxMediaItems.map(item => item.type === 'video'
-            ? `<video src="${nxFastUrl(item.url)}" muted playsinline preload="metadata"></video>`
-            : `<img src="${nxFastUrl(item.url)}" loading="lazy" alt="post image">`
-        ).join('');
+    ? `<video src="${nxFastUrl(item.url)}" muted playsinline preload="auto"></video>`
+    : `<img src="${nxFastUrl(item.url)}" alt="post image">`
+).join('');
 
         mediaWrapperHTML = `
             <div style="position:relative;">
@@ -1428,7 +1428,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
             </div>
             
                 
-            <div class="post-action-capsules post-save-capsule">
+            <div class="post-action-capsules post-save-capsule" style="flex:0 0 auto !important;margin-left:auto !important;">
                    <div class="post-capsule" onclick="toggleSave(this, '${post.id}')" style="min-width:auto;">
                     <i class="fa-regular fa-bookmark"></i>
                 </div>
