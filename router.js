@@ -206,14 +206,10 @@
             // zai canza NAN TAKE, CSS zai iya biyowa cikin ‘yan
             // milliseconds na baya (yawanci baya jin dadewa domin
             // browser cache ke rikewa bayan ziyara ta farko).
-            const stylePromise = loadStylesheetOnce(PAGE_STYLES[targetPath]);
-            // Lifecycle: tear down outgoing page.
             runDestroy(currentPath);
-
-            // Swap content + title.
+            try { await loadStylesheetOnce(PAGE_STYLES[targetPath]); } catch (e) { console.error(e); }
             currentContentEl.innerHTML = newContent.innerHTML;
-           stylePromise.catch(() => {});
-           window.scrollTo(0, 0);
+            window.scrollTo(0, 0);
             if (newDoc.title) document.title = newDoc.title;
 
             // Update history + internal state.
