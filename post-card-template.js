@@ -799,15 +799,15 @@
         .post-media-grid.active { display: grid !important; }
         .post-media-grid.leaving { opacity: 0 !important; }
         .post-media-grid img, .post-media-grid video {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-            display: block !important;
-            background: #1a1a1a !important;
-            opacity: 0 !important;
-            transform: scale(0.85) !important;
-            animation: nxGridItemIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards !important;
-        }
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+    background: #1a1a1a !important;
+    opacity: 0;
+    transform: scale(0.85);
+    animation: nxGridItemIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
         @keyframes nxGridItemIn {
             to { opacity: 1 !important; transform: scale(1) !important; }
         }
