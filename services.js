@@ -3356,7 +3356,10 @@ runOnServicesInit(() => {
 // ── DOMContentLoaded ──
 runOnServicesInit(() => {
    populateCurrencyDropdowns();
+   initAppElements();
+   if (!window._nexusProvidersLoadedOnce) {
    Promise.all([loadContentFromFirebase(), loadRealProvidersFromFirebase()]).then(() => {
+        window._nexusProvidersLoadedOnce = true;
         initAppElements();
 
         // ── Idan an bude shafin ta hanyar shared link (?pro=ID) ──
@@ -3366,8 +3369,8 @@ runOnServicesInit(() => {
             const targetPro = PROS.find(p => String(p.id) === sharedProId);
             if (targetPro) openProfileSheet(targetPro.id);
         }
-    }); 
-
+    });
+   }
     document.getElementById("search-input").addEventListener("keydown", (e) => { if(e.key==="Enter") triggerRouterCheck(); });
     document.getElementById("search-trigger-btn").addEventListener("click", triggerRouterCheck);
     document.getElementById("route-all-opt").addEventListener("click", () => selectRoutePreference("all"));
