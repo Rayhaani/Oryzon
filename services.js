@@ -3377,23 +3377,40 @@ runOnServicesInit(() => {
     document.getElementById("route-near-opt").addEventListener("click", () => selectRoutePreference("near"));
     document.getElementById("router-overlay").addEventListener("click", () => { document.getElementById("router-overlay").style.display = "none"; });
 
+   function nxLazyLoadScript(src) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = () => resolve();
+            s.onerror = () => reject(new Error('Failed to load ' + src));
+            document.body.appendChild(s);
+        });
+   }
+   
     document.getElementById("near-me-btn").addEventListener("click", () => {
         const locator = document.getElementById("locating-status");
         locator.style.display = "block";
-        if (typeof initNearMe === "function") {
-            initNearMe('skilled_pro', null, 'results-list-container').then(() => {
-                locator.style.display = "none";
-                state.nearMeActive = true;
-                switchView("results");
-            }).catch(err => {
+        (async () => {
+            try {
+                if (typeof initNearMe !== "function") await nxLazyLoadScript('nearme-engine.js');
+                if (typeof initNearMe === "function") {
+                    await initNearMe('skilled_pro', null, 'results-list-container');
+                    locator.style.display = "none";
+                    state.nearMeActive = true;
+                    switchView("results");
+                } else {
+                    locator.style.display = "none";
+                    state.nearMeActive = true;
+                    switchView("results");
+                }
+            } catch (err) {
                 locator.style.display = "none";
                 alert("📍 " + err.message);
-            });
-        } else {
-            setTimeout(() => { locator.style.display = "none"; state.nearMeActive = true; switchView("results"); }, 800);
-        }
+            }
+        })();
     });
-
+   
     document.getElementById("view-all-traders-btn").addEventListener("click", () => { state.selectedCat = null; switchView("results"); });
     document.getElementById("close-profile-sheet-btn").addEventListener("click", closeProfileSheet);
 
@@ -6508,7 +6525,10 @@ async function mbGenerateAndUploadFlyer(username, data) {
     }).join('');
 
     const captureEl = document.getElementById('mb-flyer-capture');
-    const canvas = await html2canvas(captureEl, { scale: 2, useCORS: true, backgroundColor: null });
+    if (typeof html2canvas === 'undefined') {
+        await nxLazyLoadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    }
+   const canvas = await html2canvas(captureEl, { scale: 2, useCORS: true, backgroundColor: null });
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.95));
 
     const formData = new FormData();
