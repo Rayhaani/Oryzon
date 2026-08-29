@@ -697,11 +697,11 @@
 
         /* ===== FEED CONTAINER ===== */
         #timeline-area,
-        .feed-container {
-            padding: 0 10px !important;
-            box-sizing: border-box !important;
-            overflow: hidden !important;
-        }
+.feed-container {
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
 
         /* ============================================================
            NEW — MULTI-MEDIA CAROUSEL + DOTS + COUNTER + GRID TOGGLE
