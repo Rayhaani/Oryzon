@@ -37,11 +37,7 @@
     // nan take a init).
     const PAGE_SCRIPTS = {
         'social.html': 'social.js',
-        'services.html': [
-            'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-            'nearme-engine.js',
-            'services.js'
-        ],
+        'services.html': 'services.js',
         // 'chats.html': 'chats.js',
         // 'videos.html': 'videos.js',
         // 'shop.html': 'shop.js',
