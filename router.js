@@ -77,7 +77,12 @@
     if (PAGE_STYLES[currentPath]) {
         loadedStyles.add(PAGE_STYLES[currentPath]);
     }
-
+    // Preload duk sauran page CSS a background tun farko, domin
+    // await loadStylesheetOnce() a navigateTo() ya samu su a cache
+    // dinsa nan take, ba tare da jira network ba.
+    Object.keys(PAGE_STYLES).forEach(function (p) {
+        if (p !== currentPath) loadStylesheetOnce(PAGE_STYLES[p]);
+    });
     // ------------------------------------------------------------
     // 2) Public API
     // ------------------------------------------------------------
