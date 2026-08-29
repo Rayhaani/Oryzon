@@ -217,6 +217,7 @@ function initSocialPage() {
 // dogaro da DOM elements na wannan page (in ba haka ba, listeners din
 // za su ci gaba da aiki a boye kan elements da suka riga sun bace).
 function destroySocialPage() {
+    document.body.style.overflow = '';
     if (feedUnsub) { feedUnsub(); feedUnsub = null; }
     if (liveViewersUnsub) { liveViewersUnsub(); liveViewersUnsub = null; }
     if (liveChatUnsub) { liveChatUnsub(); liveChatUnsub = null; }
