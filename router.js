@@ -383,11 +383,23 @@
     // ------------------------------------------------------------
     // 4) Core navigation
     // ------------------------------------------------------------
+    let pendingNav = null;
+
     async function navigateTo(url, options) {
         options = options || {};
         const pushHistory = options.pushHistory !== false;
 
-        if (isNavigating) return;
+        if (isNavigating) {
+            // Wani navigation yana ci gaba a yanzu (misali health.html
+            // yana loda scripts dinsa). Maimakon a WATSAR da wannan
+            // request kai tsaye (wanda ke haddasa history desync idan
+            // an danna back yayin ana loda — back button na browser YA
+            // RIGA YA MATSA a hakika koda mun watsar da shi a nan), sai
+            // mu ajiye shi mu aiwatar da shi nan take bayan na yanzu
+            // ya gama, a cikin 'finally' block kasa.
+            pendingNav = { url: url, options: options };
+            return;
+        }
 
         const targetPath = normalizePath(new URL(url, window.location.href).pathname);
 
@@ -461,13 +473,16 @@
             document.dispatchEvent(new CustomEvent('nexus:routechange', { detail: { path: targetPath } }));
 
             runInit(targetPath);
-            schedulePrefetch();
         } catch (err) {
             console.error('Router navigation error, falling back to full reload:', err);
             fullReload(url);
         } finally {
             isNavigating = false;
-        }
+            if (pendingNav) {
+                const next = pendingNav;
+                pendingNav = null;
+                navigateTo(next.url, next.options);
+            }
     }
 
     // ------------------------------------------------------------
@@ -494,59 +509,10 @@
     });
 
     // ------------------------------------------------------------
-    // 8) Prefetch — warms the browser cache for pages LINKED FROM the
-    //    current page, during idle time. Uses <link rel="prefetch">,
-    //    which only downloads+caches — it NEVER executes a script or
-    //    applies a stylesheet, so it can't affect the current page.
-    //    Result: when the user later taps that link for real,
-    //    loadStylesheetOnce/loadScriptOnce below hit an already-warm
-    //    cache instead of a cold network fetch.
-    // ------------------------------------------------------------
-    const prefetchedPaths = new Set();
-    function prefetchAssetsFor(path) {
-        if (prefetchedPaths.has(path)) return;
-        prefetchedPaths.add(path);
-
-        const urls = [];
-        const styles = PAGE_STYLES[path];
-        if (styles) urls.push.apply(urls, Array.isArray(styles) ? styles : [styles]);
-        const scripts = PAGE_SCRIPTS[path];
-        if (scripts) urls.push.apply(urls, Array.isArray(scripts) ? scripts : [scripts]);
-
-        urls.forEach(function (href) {
-            if (loadedStyles.has(href) || loadedScripts.has(href)) return;
-            const link = document.createElement('link');
-            link.rel = 'prefetch';
-            link.href = href;
-            document.head.appendChild(link);
-        });
-    }
-
-    function prefetchLinkedPages() {
-        document.querySelectorAll('[data-spa-link], [data-page]').forEach(function (el) {
-            const url = el.getAttribute('data-spa-link') || el.getAttribute('data-page');
-            if (!url) return;
-            const path = normalizePath(url);
-            if (path === currentPath) return;
-            prefetchAssetsFor(path);
-        });
-    }
-
-    function schedulePrefetch() {
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(prefetchLinkedPages, { timeout: 3000 });
-        } else {
-            setTimeout(prefetchLinkedPages, 1500);
-        }
-    }
-
-    // ------------------------------------------------------------
     // 7) Init.
-    // ------------------------------------------------------------ 
+    // ------------------------------------------------------------
    document.addEventListener('click', onDocumentClick);
-
-    // Register initial page's history state so popstate works from the start.
+  // Register initial page's history state so popstate works from the start.
     window.history.replaceState({ nexusRoute: currentPath }, '', window.location.href);
-
-    schedulePrefetch();
-})();
+ })();
+    
