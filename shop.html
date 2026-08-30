@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Protocol - Global Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shop.css">
+    <script src="router.js"></script>
+</head>
+<body class="pos-shop">
+    <div id="page-content">
+        <div class="galaxy-overlay"></div>
+
+    <div class="top-searchbar-full" id="topSearchBar" onclick="openSearchOverlay()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="topSearchDisplay" placeholder="Search products, vendors, categories, marketplaces..." readonly>
+        <!-- hidden — kept so existing vertical-menu script (initTriggerAndMenu) keeps working -->
+        <svg id="triggerIcon" viewBox="0 0 24 24" fill="none" style="display:none;"></svg>
+        <span id="currentVerticalLabel" style="display:none;"></span>
+    </div>
+
+    <div class="dropdown-overlay" id="dropdownOverlay"></div>
+    <div class="vertical-dropdown" id="verticalDropdown">
+        <div class="dropdown-title">Zaɓi Kasuwa</div>
+        <div id="dropdownList"></div>
+    </div>
+
+    <div class="market-nav">
+        <div class="nav-pill dropdown-trigger" id="verticalTrigger">
+            <span class="pill-text">Marketplaces</span>
+        </div>
+        <div class="nav-pill" onclick="NexusRouter.navigateTo('categories.html')">
+            <span class="pill-text">Categories</span>
+        </div>
+        <div class="nav-pill" id="sellPill" onclick="NexusRouter.navigateTo('sell.html')">
+            <span class="pill-text" id="sellPillText">Sell</span>
+        </div>
+        <div class="nav-pill" onclick="NexusRouter.navigateTo('inbox.html')">
+            <span class="pill-text">Inbox</span>
+        </div>
+        <div class="nav-pill" id="fabNearMe" onclick="toggleNearMe()">
+            <span class="pill-text">Vendors near me</span>
+        </div>
+    </div>
+
+    <!-- Full-page search overlay: opens when the top search bar is tapped -->
+    <div class="search-full-overlay" id="searchFullOverlay">
+        <div class="search-overlay-inputrow">
+            <button class="search-overlay-back" onclick="closeSearchOverlay()">‹</button>
+            <div class="search-bar-wrap-full">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="searchOverlayInput" placeholder="Search products, vendors, categories, marketplaces..." oninput="handleOverlaySearch(this.value)" onkeydown="if(event.key==='Enter') commitOverlaySearch(this.value)">
+            </div>
+        </div>
+        <div class="search-overlay-results" id="searchOverlayResults"></div>
+    </div>
+
+    <!-- Full-page Browsing History overlay: opens when a browsing-history card is tapped -->
+    <div class="search-full-overlay" id="browsingHistoryOverlay">
+        <div class="search-overlay-inputrow">
+            <button class="search-overlay-back" onclick="closeBrowsingHistoryOverlay()">‹</button>
+            <div style="font-size:16px;font-weight:800;color:#fff;">Browsing History</div>
+        </div>
+        <div class="search-overlay-results" id="browsingHistoryResults"></div>
+    </div>
+
+    <div id="filterBarSlot"></div>
+
+    <div class="market-grid" id="marketGrid"></div>
+
+    <div class="fab-nearme-float" id="fabNearMeFloat" onclick="toggleNearMe()">
+        <div class="radar-ring r1"></div>
+        <div class="radar-ring r2"></div>
+        <div class="fab-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/>
+                <circle cx="12" cy="9" r="2.3"/>
+            </svg>
+        </div>
+    </div>
+<!-- ===== MY BUSINESS DASHBOARD (ported from services.html) ===== -->
+<!-- MY BUSINESS DASHBOARD OVERLAY -->
+<div id="my-business-overlay" style="position:fixed;inset:0;background-color:#050505 !important;background-image:none !important;color:#ffffff;z-index:10098;display:none;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;">
+<div style="background:#262626 !important;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;">        
+    <div style="display:flex;align-items:center;gap:10px;">
+            <button onclick="closeMyBusinessDashboard()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);cursor:pointer;color:#ffffff;display:flex;align-items:center;justify-content:center;padding:0;">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="font-size:15px;font-weight:800;color:#ffffff;" id="mb-business-name">My Business</div>
+                    <span id="mb-plan-badge" style="background:rgba(56,189,248,0.18);color:#7dd3fc;font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;">FREE</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;">
+                    <span style="color:#fbbf24;">⭐ <span id="mb-badge-rating">—</span></span>
+                    <span style="color:rgba(255,255,255,0.25);">·</span>
+                    <span style="color:#4ade80;">✅ <span id="mb-badge-completion">0%</span> Completion</span>
+                </div>
+            </div>
+        </div>
+     <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="mbOpenCategoryManager()" style="width:38px;height:38px;background:rgba(255,255,255,0.12);color:#ffffff;border:1px solid rgba(255,255,255,0.15);border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚙️</button>
+            <button id="mb-header-publish-btn" onclick="mbOpenAddItem()" style="width:38px;height:38px;background:rgba(255,255,255,0.12);color:#ffffff;border:1px solid rgba(255,255,255,0.15);border-radius:50%;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+     </div>  
+</div>      
+        <div class="nxfm-tabs-row" style="background:transparent !important;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <button class="nxfm-tab active" style="flex:1;" onclick="mbSwitchTab('overview')" id="mb-tab-overview">Overview</button>
+       <button class="nxfm-tab" style="flex:1;" onclick="NexusRouter.navigateTo('store-front.html')" id="mb-tab-menu">Shop</button>      
+        <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('orders')" id="mb-tab-orders">Orders</button>
+        <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('sales')" id="mb-tab-sales">Sales</button>
+        <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('bookings')" id="mb-tab-bookings">Delivery Requests</button>
+        <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('customers')" id="mb-tab-customers">Customers</button>
+        <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('insights')" id="mb-tab-insights">Insights</button>
+        <button class="nxfm-tab" style="flex:1;" onclick="mbSwitchTab('reviews')" id="mb-tab-reviews">Reviews</button>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;">
+        <!-- MENU TAB -->
+        <div id="mb-panel-menu" style="padding:16px;">
+            <div style="margin-bottom:16px;">
+                <div id="mb-category-pills" class="nxfm-tabs-row" style="margin:0;width:100%;"></div>
+            </div>
+            <div id="mb-menu-list" class="nxfm-item-grid"></div>
+        </div>
+  <div id="mb-category-manager-overlay" style="display:none;position:fixed;inset:0;background:transparent;z-index:10600;align-items:flex-end;justify-content:center;">
+            <div style="background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(30px) saturate(180%) !important;-webkit-backdrop-filter:blur(30px) saturate(180%) !important;border:1px solid rgba(255,255,255,0.12) !important;border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:480px;max-height:75vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3);">              
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                    <div class="mb-heading-brand" style="font-size:16px;font-weight:800;color:#ffffff;">Manage Categories</div>
+                    <button onclick="mbCloseCategoryManager()" style="width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.1);color:#ffffff;font-size:14px;cursor:pointer;">✕</button>
+                </div>
+                <div id="mb-category-manager-list"></div>
+                <button onclick="mbOpenAddCategory()" style="width:100%;margin-top:12px;border:1.5px dashed rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);color:#ffffff;border-radius:14px;padding:14px;font-weight:700;font-size:13px;cursor:pointer;">+ Add Category</button>
+            </div>
+    </div> 
+        <div id="mb-customize-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10600;align-items:flex-end;justify-content:center;">
+            <div style="background:#ffffff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                    <div class="mb-heading-brand" style="font-size:16px;font-weight:800;color:#1e293b;">Customize Profile</div>
+                    <button onclick="mbCloseCustomizeModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:#f1f5f9;color:#334155;font-size:14px;cursor:pointer;">✕</button>
+                </div>
+
+                <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Accent Color</div>
+                <div id="mb-customize-swatches" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;"></div>
+
+                <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Cover Photo</div>
+                <div id="mb-customize-cover-preview" style="width:100%;height:110px;border-radius:14px;background:#f1f5f9;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;margin-bottom:10px;">No cover photo set</div>
+                <label style="display:block;width:100%;text-align:center;border:1.5px dashed #cbd5e1;border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:#334155;cursor:pointer;">
+                    📷 Upload Cover Photo
+                    <input type="file" accept="image/*" onchange="mbUploadCoverPhoto(event)" style="display:none;">
+                </label>
+            </div>
+        </div>
+        
+ <div id="mb-business-settings-overlay" style="display:none;position:fixed;inset:0;background:transparent;z-index:10700;align-items:flex-end;justify-content:center;">
+            <div style="background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border:1px solid rgba(255,255,255,0.12) !important;border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+                <div style="padding:18px 20px 12px;display:flex;align-items:center;justify-content:space-between;">
+                    <div>
+                        <div class="mb-heading-brand" style="font-size:17px;font-weight:800;color:#ffffff;">Business Settings</div>
+                        <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:2px;">Visible to customers on your profile</div>
+                    </div>
+                    <button onclick="mbCloseBusinessSettings()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);color:#ffffff;font-size:15px;cursor:pointer;">✕</button>
+                </div>
+
+                <div style="overflow-y:auto;padding:6px 18px 18px;flex:1;">
+
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <span style="font-size:18px;">📞</span>
+                            <div class="mb-heading-brand" style="font-size:14px;font-weight:800;color:#ffffff;">Contact Details</div>
+                        </div>
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">Phone Number</label>
+                        <input id="bs-phone" type="tel" placeholder="+234 800 000 0000" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">Email Address</label>
+                        <input id="bs-email" type="email" placeholder="you@business.com" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">Website</label>
+                        <input id="bs-website" type="url" placeholder="https://yourbusiness.com" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;">
+                    </div>
+
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <span style="font-size:18px;">📍</span>
+                            <div class="mb-heading-brand" style="font-size:14px;font-weight:800;color:#ffffff;">Location & Currency</div>
+                        </div>
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">Country</label>
+                        <input id="bs-country" type="text" placeholder="Nigeria" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <div style="display:flex;gap:10px;margin-bottom:14px;">
+                            <div style="flex:1;">
+                                <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">State</label>
+                                <input id="bs-state" type="text" placeholder="Kano" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;">
+                            </div>
+                            <div style="flex:1;">
+                                <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">City</label>
+                                <input id="bs-city" type="text" placeholder="Kano City" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;">
+                            </div>
+                        </div>
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">Currency</label>
+                        <button type="button" id="bs-currency" onclick="openCurrencyPicker('bs-currency')" data-currency="" style="width:100%;text-align:left;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;font-size:13.5px;padding:11px 12px;cursor:pointer;font-family:inherit;margin:6px 0 14px;border-radius:10px;">🌍 Select Currency <span style="float:right;opacity:0.5;">▾</span></button>
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">Store Address</label>
+                        <textarea id="bs-address" placeholder="123 Main Street, Downtown" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;min-height:60px;font-family:inherit;resize:vertical;"></textarea>
+                    </div>
+
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <span style="font-size:18px;">🕐</span>
+                            <div class="mb-heading-brand" style="font-size:14px;font-weight:800;color:#ffffff;">Operating Hours</div>
+                        </div>
+                        <div id="bs-hours-list"></div>
+                    </div>
+
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <span style="font-size:18px;">🔗</span>
+                            <div class="mb-heading-brand" style="font-size:14px;font-weight:800;color:#ffffff;">Social Media</div>
+                        </div>
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">WhatsApp Number</label>
+                        <input id="bs-whatsapp" type="tel" placeholder="+234 800 000 0000" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">Instagram Link</label>
+                        <input id="bs-instagram" type="url" placeholder="https://instagram.com/yourbusiness" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">Facebook Link</label>
+                        <input id="bs-facebook" type="url" placeholder="https://facebook.com/yourbusiness" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">Twitter / X Link</label>
+                        <input id="bs-twitter" type="url" placeholder="https://x.com/yourbusiness" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">YouTube Link</label>
+                        <input id="bs-youtube" type="url" placeholder="https://youtube.com/@yourbusiness" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">LinkedIn Link</label>
+                        <input id="bs-linkedin" type="url" placeholder="https://linkedin.com/company/yourbusiness" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 14px;box-sizing:border-box;">
+                        <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);">TikTok Link</label>
+                        <input id="bs-tiktok" type="url" placeholder="https://tiktok.com/@yourbusiness" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:10px;padding:11px 12px;font-size:13.5px;margin:6px 0 0;box-sizing:border-box;">
+                    </div>
+
+                </div>
+
+                <div style="padding:14px 18px;">
+                    <button id="bs-save-btn" onclick="mbSaveBusinessSettings()" style="width:100%;background:rgba(255,255,255,0.12);color:#ffffff;border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;">Save All Changes</button>
+                </div>
+            </div>
+ </div>        
+       <div id="mb-help-overlay" style="display:none;position:fixed;inset:0;background:transparent;z-index:10700;align-items:flex-end;justify-content:center;">
+            <div style="background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border:1px solid rgba(255,255,255,0.12) !important;border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+                <div style="padding:18px 20px 12px;display:flex;align-items:center;justify-content:space-between;">
+                    <div class="mb-heading-brand" style="font-size:17px;font-weight:800;color:#ffffff;">Help & Support</div>
+                    <button onclick="document.getElementById('mb-help-overlay').style.display='none'" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);color:#ffffff;font-size:15px;cursor:pointer;">✕</button>
+                </div>
+
+                <div style="overflow-y:auto;padding:6px 18px 18px;flex:1;">
+                    <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:10px;">Frequently Asked Questions</div>
+                    <div id="mb-faq-list"></div>
+
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;margin-top:20px;text-align:center;">
+                        <div style="font-size:13px;font-weight:800;color:#ffffff;margin-bottom:4px;">Still need help?</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:14px;">Our support team is here for you</div>
+                        <a href="https://wa.me/2348000000000" target="_blank" style="display:block;background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.3);color:#4ade80;text-decoration:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;margin-bottom:8px;">💬 Chat on WhatsApp</a>
+                        <a href="mailto:support@nexusprotocol.app" style="display:block;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#ffffff;text-decoration:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;">✉️ Email Support</a>
+                    </div>
+                </div>
+            </div>
+       </div> 
+
+        <div id="mb-whatsnew-overlay" style="display:none;position:fixed;inset:0;background:transparent;z-index:10700;align-items:flex-end;justify-content:center;">
+            <div style="background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border:1px solid rgba(255,255,255,0.12) !important;border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+                <div style="padding:18px 20px 12px;display:flex;align-items:center;justify-content:space-between;">
+                    <div class="mb-heading-brand" style="font-size:17px;font-weight:800;color:#ffffff;">What's New</div>
+                    <button onclick="document.getElementById('mb-whatsnew-overlay').style.display='none'" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);color:#ffffff;font-size:15px;cursor:pointer;">✕</button>
+                </div>
+                <div style="overflow-y:auto;padding:6px 18px 18px;flex:1;" id="mb-whatsnew-list"></div>
+            </div>
+        </div>
+        <div id="mb-panel-overview" style="display:none;padding:16px;">
+
+<div class="mb-aurora-bar"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+            <div class="mb-aurora-text" style="font-size:21px;font-weight:800;" id="mb-greeting">Good morning</div>
+            <div class="mb-heading-brand" style="font-size:13px;color:rgba(255,255,255,0.55);margin-top:3px;font-weight:600;" id="mb-greeting-sub">Here's how your business is doing today</div>
+        </div>
+        <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--np-cyan,#06b6d4),var(--np-blue,#1d4ed8));display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;">👋</div>
+    </div>
+<div class="mb-glass-card" style="margin-top:16px;border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <div id="mb-health-ring" style="width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--np-green,#10b981) 0deg,rgba(255,255,255,0.1) 0deg);transition:background 0.4s ease;">
+            <div style="width:44px;height:44px;border-radius:50%;background:#0a0a0a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#ffffff;" id="mb-health-score">0%</div>
+        </div>
+        <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;color:#ffffff;">Profile Health</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:2px;" id="mb-health-tip">Complete your setup to boost visibility</div>
+        </div>
+</div>
+    <div id="mb-publish-banner" class="mb-glass-card" style="display:none;margin-top:18px;border-radius:16px;padding:16px;align-items:center;justify-content:space-between;gap:12px;border-left:3px solid var(--np-amber,#f59e0b);">
+        <div>
+            <div style="font-weight:800;font-size:14px;color:#ffffff;">Your menu is unpublished <span style="color:var(--np-red,#ef4444);">●</span></div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:3px;">Hidden from customers. Publish to make it visible.</div>
+        </div>
+        <button onclick="mbPublish()" style="flex-shrink:0;background:#ffffff;color:#0f172a;border:none;border-radius:12px;padding:10px 16px;font-size:12px;font-weight:800;cursor:pointer;">Publish</button>
+    </div>
+
+    <div id="mb-bookings-banner" class="mb-glass-card" style="display:none;margin-top:18px;border-radius:16px;padding:16px;align-items:center;justify-content:space-between;gap:12px;border-left:3px solid var(--np-blue,#3b82f6);cursor:pointer;" onclick="mbSwitchTab('bookings')">
+        <div>
+    <div style="font-weight:800;font-size:14px;color:#ffffff;">📅 <span id="mb-bookings-count">0</span> upcoming delivery request<span id="mb-bookings-plural">s</span></div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:3px;" id="mb-bookings-urgent-tip">Tap to review delivery requests</div>
+        </div>
+        <div style="flex-shrink:0;color:rgba(255,255,255,0.5);font-size:18px;">→</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;">
+        <div class="mb-glass-card mb-stat-card">
+            <div class="mb-stat-icon" style="background:rgba(59,130,246,0.16);color:var(--np-blue,#3b82f6);">📅</div>
+            <div>
+                <div style="font-size:20px;font-weight:800;color:#ffffff;line-height:1.1;" id="mb-stat-bookings-today">0</div>
+       <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:3px;">Deliveries Today</div>
+            </div>
+        </div>
+        <div class="mb-glass-card mb-stat-card">
+            <div class="mb-stat-icon" style="background:rgba(6,182,212,0.16);color:var(--np-cyan,#06b6d4);">🧾</div>
+            <div>
+                <div style="font-size:20px;font-weight:800;color:#ffffff;line-height:1.1;" id="mb-stat-orders">0</div>
+                <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:3px;" id="mb-stat-orders-label">Orders Today</div>
+            </div>
+        </div>
+        <div class="mb-glass-card mb-stat-card">
+            <div class="mb-stat-icon" style="background:rgba(236,72,153,0.16);color:var(--np-pink,#ec4899);">⏳</div>
+            <div>
+                <div style="font-size:20px;font-weight:800;color:#ffffff;line-height:1.1;" id="mb-stat-pending-orders">0</div>
+                <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:3px;">Pending Orders</div>
+            </div>
+        </div>
+        <div class="mb-glass-card mb-stat-card">
+            <div class="mb-stat-icon" style="background:rgba(168,85,247,0.16);color:#a855f7;">👁️</div>
+            <div>
+                <div style="font-size:20px;font-weight:800;color:#ffffff;line-height:1.1;" id="mb-stat-visitors">0</div>
+                <div style="font-size:11.5px;color:rgba(255,255,255,0.55);margin-top:3px;">Visitors Today</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:14px;">
+        <div class="mb-glass-card" style="flex:1;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#ffffff;" id="mb-stat-total-orders">0</div>
+            <div style="font-size:10.5px;color:rgba(255,255,255,0.5);margin-top:3px;">Total Orders</div>
+        </div>
+        <div class="mb-glass-card" style="flex:1;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#ffffff;" id="mb-stat-total-bookings">0</div>
+     <div style="font-size:10.5px;color:rgba(255,255,255,0.5);margin-top:3px;">Total Deliveries</div>       
+        </div>
+    </div>
+
+    <div class="mb-glass-card" style="margin-top:18px;border-radius:16px;padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="font-size:13px;font-weight:800;color:#ffffff;">Last 7 Days</div>
+            <div style="display:flex;gap:12px;">
+                <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:rgba(255,255,255,0.6);"><span style="width:8px;height:8px;border-radius:50%;background:#38bdf8;display:inline-block;"></span>Orders</div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:rgba(255,255,255,0.6);"><span style="width:8px;height:8px;border-radius:50%;background:#f472b6;display:inline-block;"></span>Deliveries</div>           
+            </div>
+        </div>
+        <svg id="mb-trend-svg" viewBox="0 0 300 110" style="width:100%;height:110px;display:block;" preserveAspectRatio="none"></svg>
+        <div id="mb-trend-labels" style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;"></div>
+    </div>
+
+    <div class="mb-heading-brand" style="font-size:13px;font-weight:800;color:#ffffff;margin-top:22px;margin-bottom:10px;">Quick Actions</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="mb-glass-card mb-quick-btn" onclick="mbOpenAddItem()"><span style="font-size:18px;">➕</span>Add Item</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbSwitchTab('orders')"><span style="font-size:18px;">📦</span>Orders</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbSwitchTab('sales')"><span style="font-size:18px;">📊</span>Sales</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbShareMenuLink()"><span style="font-size:18px;">🔗</span>Menu Link</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbOpenUpgradeModal()"><span style="font-size:18px;">💳</span>Billing</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbOpenCustomizeModal()"><span style="font-size:18px;">🎨</span>Customize</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbOpenBusinessSettings()"><span style="font-size:18px;">🏢</span>Business</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbOpenHelpModal()"><span style="font-size:18px;">❓</span>Help</button>
+        <button class="mb-glass-card mb-quick-btn" onclick="mbOpenWhatsNewModal()"><span style="font-size:18px;">🔔</span>What's New</button>
+    </div>
+
+    <div class="mb-heading-brand" style="font-size:15px;font-weight:800;color:#ffffff;margin-top:24px;margin-bottom:10px;">Complete Your Setup</div>
+    <div id="mb-setup-checklist" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+    <div class="mb-heading-brand" style="font-size:15px;font-weight:800;color:#ffffff;margin-top:24px;margin-bottom:10px;">Announcements</div>
+    <div id="mb-announce-track" class="mb-announce-track"></div>
+    <div id="mb-announce-dots" class="mb-announce-dots"></div>
+        </div>
+     
+        <div id="mb-panel-orders" style="display:none;padding:16px;">
+    <input type="text" id="mb-orders-search" oninput="mbRenderOrders()" placeholder="🔍 Search by item or customer..." style="width:100%;background:#262626 !important;border:1.5px solid rgba(255,255,255,0.12);color:#ffffff;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:12px;box-sizing:border-box;">
+    <div id="mb-order-pills" class="nxfm-tabs-row" style="margin:0 0 16px;">
+        <div onclick="mbFilterOrders('all')" class="nxfm-tab mb-order-pill active" data-status="all">All</div>
+        <div onclick="mbFilterOrders('pending')" class="nxfm-tab mb-order-pill" data-status="pending">Pending</div>
+        <div onclick="mbFilterOrders('confirmed')" class="nxfm-tab mb-order-pill" data-status="confirmed">Confirmed</div>
+        <div onclick="mbFilterOrders('completed')" class="nxfm-tab mb-order-pill" data-status="completed">Completed</div>
+        <div onclick="mbFilterOrders('cancelled')" class="nxfm-tab mb-order-pill" data-status="cancelled">Cancelled</div>
+    </div>
+            <div id="mb-orders-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        <div id="mb-panel-bookings" style="display:none;padding:16px;">
+    <div id="mb-bookings-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        <div id="mb-panel-customers" style="display:none;padding:16px;">
+    <div id="mb-customers-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+       <div id="mb-panel-insights" style="display:none;padding:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;">
+        <div style="background:#262626 !important;border-radius:14px;padding:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#ffffff;" id="mb-insights-views-today">0</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px;">Views Today</div>
+        </div>
+        <div style="background:#262626 !important;border-radius:14px;padding:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#ffffff;" id="mb-insights-total-views">0</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px;">Total Views</div>
+        </div>
+        <div style="background:#262626 !important;border-radius:14px;padding:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#ffffff;" id="mb-insights-conversion">0%</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px;">Conversion</div>
+        </div>
+    </div>
+    <div style="font-size:12px;font-weight:800;color:#ffffff;margin-bottom:10px;">Views — Last 7 Days</div>
+    <div id="mb-insights-chart" style="display:flex;gap:8px;align-items:flex-end;background:#262626 !important;border-radius:14px;padding:14px 10px;min-height:110px;"></div>
+       </div> 
+        <div id="mb-panel-reviews" style="display:none;padding:16px;">
+    <div style="background:#262626 !important;border-radius:16px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:18px;">
+        <div style="text-align:center;flex-shrink:0;">
+            <div style="font-size:32px;font-weight:800;color:#ffffff;" id="mb-reviews-avg">—</div>
+            <div style="color:#f59e0b;font-size:14px;" id="mb-reviews-avg-stars">☆☆☆☆☆</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:2px;" id="mb-reviews-count">0 reviews</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px;" id="mb-reviews-breakdown"></div>
+    </div>
+    <div id="mb-reviews-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        
+<div id="mb-panel-sales" style="display:none;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div>
+            <div style="font-size:19px;font-weight:800;color:#ffffff;">Sales</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;">Revenue, transactions and order performance</div>
+        </div>
+        <select id="mb-sales-range" onchange="mbLoadSales()" style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:9px 12px;font-size:12px;font-weight:700;color:#ffffff;outline:none;background:#262626 !important;">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="365">Last 12 months</option>
+            <option value="0">All time</option>
+        </select>
+    </div>
+
+    <div style="background:#262626 !important;border-radius:16px;padding:18px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.5px;">Total Sales</div>
+       <div style="font-size:26px;font-weight:800;color:#ffffff;margin-top:4px;" id="mb-sales-total">0</div> 
+        <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;" id="mb-sales-total-sub">0 completed orders</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:#262626 !important;border-radius:16px;padding:16px;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;">Total Orders</div>
+            <div style="font-size:20px;font-weight:800;color:#ffffff;margin-top:4px;" id="mb-sales-total-orders">0</div>
+        </div>
+        <div style="background:#262626 !important;border-radius:16px;padding:16px;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;">Completed</div>
+            <div style="font-size:20px;font-weight:800;color:#16a34a;margin-top:4px;" id="mb-sales-completed">0</div>
+        </div>
+        <div style="background:#262626 !important;border-radius:16px;padding:16px;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;">In Progress</div>
+            <div style="font-size:20px;font-weight:800;color:#d97706;margin-top:4px;" id="mb-sales-progress">0</div>
+        </div>
+        <div style="background:#262626 !important;border-radius:16px;padding:16px;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;">Cancelled</div>
+            <div style="font-size:20px;font-weight:800;color:#dc2626;margin-top:4px;" id="mb-sales-cancelled">0</div>
+        </div>
+    </div>
+
+   <div style="font-size:15px;font-weight:800;color:#ffffff;margin-top:24px;margin-bottom:10px;">Revenue Trend (Last 14 Days)</div>
+    <div id="mb-sales-chart-wrap" style="position:relative;">
+        <div id="mb-sales-chart" style="display:flex;gap:6px;align-items:flex-end;background:#262626 !important;border-radius:16px;padding:16px 10px;min-height:130px;"></div>
+        <div id="mb-sales-chart-lock" style="display:none;"></div>
+    </div>
+
+   <div style="font-size:15px;font-weight:800;color:#ffffff;margin-top:24px;margin-bottom:10px;">Top Selling Items</div>
+    <div id="mb-top-items-wrap" style="position:relative;">
+        <div id="mb-top-items" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div id="mb-top-items-lock" style="display:none;"></div>
+    </div>
+    
+    <div style="font-size:15px;font-weight:800;color:#ffffff;margin-top:24px;margin-bottom:10px;">Recent Transactions</div>
+    <div id="mb-recent-tx-wrap" style="position:relative;">
+        <div id="mb-recent-transactions" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div id="mb-recent-tx-lock" style="display:none;"></div>
+    </div> 
+        </div>
+    </div>
+</div>
+<!-- MY BUSINESS: ADD/EDIT ITEM FORM -->
+<div id="mb-item-form-overlay" style="position:fixed;inset:0;background:transparent;z-index:10099;display:none;align-items:flex-end;justify-content:center;">  
+    <div style="width:100%;max-width:480px;max-height:90vh;background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border:1px solid rgba(255,255,255,0.12) !important;border-top-left-radius:24px;border-top-right-radius:24px;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;">        
+            <div id="mb-form-title" style="font-size:16px;font-weight:800;color:#ffffff;">Add Item</div>
+            <button onclick="mbCloseItemForm()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);color:#ffffff;font-size:14px;cursor:pointer;">✕</button>
+        </div>
+
+        <div style="padding:4px 20px 24px;display:flex;flex-direction:column;gap:14px;">
+            <div>
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:6px;">Item Name</div>
+                <input id="mb-inp-name" type="text" placeholder="e.g. Jollof Rice & Chicken" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:12px;padding:12px 14px;font-size:14px;color:#ffffff;outline:none;box-sizing:border-box;">
+            </div>
+            <div>
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:6px;">Description</div>
+                <textarea id="mb-inp-desc" rows="2" placeholder="Short description customers will see" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:12px;padding:12px 14px;font-size:14px;color:#ffffff;outline:none;resize:none;box-sizing:border-box;"></textarea>
+            </div>
+            <div>
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:6px;">Category</div>
+                <input id="mb-inp-category" type="text" placeholder="e.g. Main Dish" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:12px;padding:12px 14px;font-size:14px;color:#ffffff;outline:none;box-sizing:border-box;">
+            </div>
+            <div>
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:6px;">Icon (emoji)</div>
+                <input id="mb-inp-icon" type="text" maxlength="2" placeholder="🍽️" style="width:80px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:12px;padding:12px 14px;font-size:18px;text-align:center;color:#ffffff;outline:none;">
+            </div>
+
+            <div>
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:8px;">Pricing Type</div>
+                <div style="display:flex;gap:8px;">
+                    <button id="mb-price-type-flat" onclick="mbSetPricingType('flat')" style="flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.1);color:#ffffff;font-weight:700;font-size:13px;cursor:pointer;">Fixed Price</button>
+                    <button id="mb-price-type-tiered" onclick="mbSetPricingType('tiered')" style="flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.11);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);font-weight:700;font-size:13px;cursor:pointer;">Package Tiers</button>
+                </div>
+            </div>
+
+            <div id="mb-flat-price-block">
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:6px;">Price ($)</div>
+                <input id="mb-inp-price" type="number" placeholder="3500" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:12px;padding:12px 14px;font-size:14px;color:#ffffff;outline:none;box-sizing:border-box;">
+            </div>
+
+            <div id="mb-tiers-block" style="display:none;flex-direction:column;gap:10px;">
+                <div id="mb-tiers-inputs"></div>
+                <button onclick="mbAddTierRow()" style="background:none;border:1px dashed rgba(255,255,255,0.25);border-radius:10px;padding:8px;color:rgba(255,255,255,0.55);font-weight:700;font-size:12px;cursor:pointer;">+ Add Tier</button>
+            </div>
+
+            <button onclick="mbSaveItem()" style="width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#ffffff;border-radius:14px;padding:14px;font-weight:800;font-size:14px;cursor:pointer;margin-top:8px;">Save Item</button>
+        </div>
+    </div>
+    </div>
+<!-- MY BUSINESS: ADD CATEGORY SHEET -->
+<div id="mb-add-category-overlay" style="position:fixed;inset:0;background:transparent;z-index:10101;display:none;align-items:flex-end;justify-content:center;">
+    <div style="width:100%;max-width:480px;background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border:1px solid rgba(255,255,255,0.12) !important;border-top-left-radius:24px;border-top-right-radius:24px;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;">
+            <div style="font-size:16px;font-weight:800;color:#ffffff;">Add Category</div>
+            <button onclick="mbCloseAddCategory()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);color:#ffffff;font-size:14px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:4px 20px 24px;display:flex;flex-direction:column;gap:14px;">
+            <div>
+                <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:6px;">Category Name</div>
+                <input id="mb-inp-new-category" type="text" placeholder="e.g. Main Dish" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:12px;padding:12px 14px;font-size:14px;color:#ffffff;outline:none;box-sizing:border-box;">
+            </div>
+            <button onclick="mbSaveNewCategory()" style="width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#ffffff;border-radius:14px;padding:14px;font-weight:800;font-size:14px;cursor:pointer;margin-top:8px;">Save Category</button>
+        </div>
+    </div>
+</div>
+ <!-- MY BUSINESS: ITEM DELETE SHEET -->
+<div id="mb-item-actions-sheet" style="position:fixed;inset:0;background:rgba(0,0,0,0.28);backdrop-filter:blur(2px);z-index:10100;display:none;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)mbCloseItemActions()">
+    <div style="width:100%;max-width:480px;background:rgba(245,245,247,0.35) !important;backdrop-filter:blur(20px) !important;-webkit-backdrop-filter:blur(20px) !important;border:1px solid rgba(255,255,255,0.12) !important;border-top-left-radius:24px;border-top-right-radius:24px;padding:8px 16px 24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+        <div style="width:36px;height:4px;background:rgba(255,255,255,0.25);border-radius:2px;margin:8px auto 16px;"></div>
+        <div style="font-weight:800;font-size:15px;color:#ffffff;margin-bottom:4px;">Delete this item?</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,0.6);margin-bottom:16px;">This action cannot be undone.</div>
+        <button onclick="mbActionsDelete()" style="width:100%;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:14px;padding:14px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:10px;">🗑️ Delete Item</button>
+        <button onclick="mbCloseItemActions()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);color:#ffffff;border-radius:14px;padding:14px;font-weight:700;font-size:14px;cursor:pointer;">Cancel</button>
+    </div>
+</div>
+<!-- HIDDEN MENU FLYER TEMPLATE (used for html2canvas capture, never shown to user) -->
+<div id="mb-flyer-capture" style="position:fixed;left:-9999px;top:0;width:1080px;background:linear-gradient(160deg,#fff7ed 0%,#fed7aa 100%);font-family:'Segoe UI',sans-serif;">
+    <div style="padding:48px 48px 32px;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px;">
+            <div id="mb-flyer-avatar" style="width:64px;height:64px;border-radius:50%;background:#ea580c;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:26px;font-weight:900;flex-shrink:0;">B</div>
+            <div>
+                <div id="mb-flyer-business-name" style="font-size:30px;font-weight:900;color:#78350f;line-height:1.1;">Business Name</div>
+                <div id="mb-flyer-category" style="font-size:16px;font-weight:700;color:#ea580c;margin-top:2px;">Category</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="background:#ffffff;border-radius:36px 36px 0 0;padding:40px 48px 48px;min-height:600px;">
+        <div style="font-size:40px;font-weight:900;color:#78350f;margin-bottom:6px;">Our Menu 🍽️</div>
+        <div style="width:64px;height:6px;background:#ea580c;border-radius:4px;margin-bottom:32px;"></div>
+        <div id="mb-flyer-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"></div>
+    </div>
+
+    <div style="background:#78350f;padding:24px 48px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="color:#fdba74;font-size:18px;font-weight:800;">🛍️ Order now on Nexus</div>
+        <div style="color:#ffffff;font-size:15px;font-weight:700;">nexus.app</div>
+    </div>
+</div>
+    
+<!-- RATINGS & REVIEWS FILTER PAGE -->
+<div id="ratings-filter-page" style="position:fixed;inset:0;background-color:#050505 !important;background-image:none !important;color:#ffffff;z-index:10097;display:none;flex-direction:column;">
+    <div style="display:flex;align-items:center;gap:16px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.1);flex-shrink:0;">
+       <button onclick="closeRatingsFilterPage()" style="width:36px;height:36px;border-radius:50%;background:transparent;border:1px solid rgba(255,255,255,0.18);color:#ffffff;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;">←</button>         
+        <div style="font-size:16px;font-weight:800;color:#ffffff;">Ratings and reviews</div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px;">
+        <div id="rf-dim-pills" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
+        <div style="height:1px;background:rgba(255,255,255,0.1);margin:4px 0 16px;"></div>
+        <div style="display:flex;gap:8px;">
+       <button onclick="rfFilterSentiment('positive')" id="rf-pill-positive" style="flex:1;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:10px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.15);background:#262626 !important;color:#ffffff;font-weight:700;font-size:12.5px;cursor:pointer;">👍 Positive Reviews</button>
+<button onclick="rfFilterSentiment('negative')" id="rf-pill-negative" style="flex:1;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:10px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.15);background:#262626 !important;color:#ffffff;font-weight:700;font-size:12.5px;cursor:pointer;">👎 Negative Reviews</button> 
+        </div>
+        <div id="rf-reviews-list" style="margin-top:20px;display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+</div>
+<!-- UPGRADE / PRICING PAGE -->
+<!-- UPGRADE / PRICING PAGE -->
+<div id="mb-upgrade-page" style="position:fixed;inset:0;background-color:#050505 !important;background-image:none !important;z-index:10100;display:none;flex-direction:column;overflow-y:auto;font-family:var(--np-font);">
+    <div style="display:flex;align-items:center;gap:16px;padding:16px;flex-shrink:0;">
+        <button onclick="mbCloseUpgradeModal()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);cursor:pointer;color:#ffffff;display:flex;align-items:center;justify-content:center;padding:0;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+    </div>
+    <div style="text-align:center;padding:0 24px 20px;">
+        <div style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:-0.4px;margin-bottom:8px;">Grow your business faster</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);">Choose the plan that fits where you are today</div>
+    </div>
+
+    <div style="padding:0 20px 18px;">
+        <div id="mb-current-plan-card" class="mb-glass-card" style="border-radius:18px;padding:16px 18px;"></div>
+    </div>
+
+    <div style="padding:0 20px 20px;text-align:center;">
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:12px;">Save up to <span style="color:var(--np-amber,#f59e0b);font-weight:800;">40%</span> on a yearly plan</div>
+        <div style="display:inline-flex;background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:4px;gap:2px;">
+            <button class="mb-billing-toggle-btn" data-period="monthly" onclick="mbSetBillingPeriod('monthly')">Monthly</button>
+            <button class="mb-billing-toggle-btn" data-period="quarterly" onclick="mbSetBillingPeriod('quarterly')">Quarterly <span style="color:var(--np-green,#10b981);">-10%</span></button>
+            <button class="mb-billing-toggle-btn" data-period="yearly" onclick="mbSetBillingPeriod('yearly')">Yearly <span style="color:var(--np-green,#10b981);">-40%</span></button>
+        </div>
+    </div>
+
+    <div id="mb-plan-cards" style="display:flex;flex-direction:column;gap:14px;padding:0 20px 40px;"></div>
+</div>
+
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <!-- Compat SDK for the My Business dashboard (Realtime Database, classic firebase.* API) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="shop.js"></script>
+    <script src="footer.js?v=4"></script>
+</body>
+</html>
