@@ -157,7 +157,14 @@
                     const cid = c.id;
                     const row = document.createElement('div');
                     row.className = 'page-list-item';
-                    row.onclick = () => { window.location.href = `channels.html?channel=${encodeURIComponent(cid)}`; };
+                    row.onclick = () => {
+    const url = `channels.html?channel=${encodeURIComponent(cid)}`;
+    if (window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
+        window.NexusRouter.navigateTo(url);
+    } else {
+        window.location.href = url;
+    }
+};
                     row.innerHTML = `
                         <div class="page-info-block">
                             <img src="${data.avatarUrl || 'https://via.placeholder.com/50/00F2FF/000?text=' + encodeURIComponent(data.initials || 'C')}" class="page-avatar" data-avatar-kind="channel" data-avatar-key="${cid}" data-chat-href="channels.html?channel=${cid}" data-info-href="channels.html?channel=${cid}" onclick="handleAvatarTap(event)">
@@ -1129,7 +1136,12 @@ let refreshChatTimesInterval = setInterval(refreshAllChatTimes, 30000);
                 }));
 
                 pendingInvites = [];
-                window.location.href = 'channels.html?channel=' + encodeURIComponent(finalSlug);
+                const newChannelUrl = 'channels.html?channel=' + encodeURIComponent(finalSlug);
+if (window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
+    window.NexusRouter.navigateTo(newChannelUrl);
+} else {
+    window.location.href = newChannelUrl;
+}
             } catch (e) {
                 console.error('Create channel error:', e);
                 btn.textContent = 'Create Channel';
@@ -1493,7 +1505,7 @@ let refreshChatTimesInterval = setInterval(refreshAllChatTimes, 30000);
                 const url = apvCurrentTarget.chatHref + sep + 'autofocus=1';
                 // group.html da pages.html kadai ke SPA-ready a yanzu —
                 // sauran (channel/friend) na ci gaba da full reload kamar da.
-                const spaReady = apvCurrentTarget.kind === 'group' || apvCurrentTarget.kind === 'page';
+               const spaReady = apvCurrentTarget.kind === 'group' || apvCurrentTarget.kind === 'page' || apvCurrentTarget.kind === 'channel'; 
                 if (spaReady && window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
                     window.NexusRouter.navigateTo(url);
                 } else {
@@ -1504,7 +1516,7 @@ let refreshChatTimesInterval = setInterval(refreshAllChatTimes, 30000);
         function apvInfoAction() {
             closeAvatarPhotoViewer();
             if (apvCurrentTarget && apvCurrentTarget.infoHref) {
-                const spaReady = apvCurrentTarget.kind === 'group' || apvCurrentTarget.kind === 'page';
+                const spaReady = apvCurrentTarget.kind === 'group' || apvCurrentTarget.kind === 'page' || apvCurrentTarget.kind === 'channel';
                 if (spaReady && window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
                     window.NexusRouter.navigateTo(apvCurrentTarget.infoHref);
                 } else {
