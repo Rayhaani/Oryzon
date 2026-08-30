@@ -1274,6 +1274,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
 
     return `
     <div class="post-card" data-post-id="${postId}" onclick="
+        if (this.querySelector('.post-media-carousel.grid-mode')) return;
         const media = this.querySelector('.post-media');
         if(media && media.tagName === 'VIDEO' && typeof toggleImmersive === 'function') toggleImmersive(this);
     ">
