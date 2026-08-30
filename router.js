@@ -483,6 +483,7 @@
                 pendingNav = null;
                 navigateTo(next.url, next.options);
             }
+        }
     }
 
     // ------------------------------------------------------------
