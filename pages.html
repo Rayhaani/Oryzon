@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Anti-flash: if this is a real page (?page=slug), set a class on
+        // <html> IMMEDIATELY, before the browser even starts parsing <body>.
+        // The CSS below hides the hardcoded demo name/follower-count until
+        // real Firestore data arrives — so "Maijalalaini Islamic Medicine"
+        // or "182K followers" never get a chance to flash on screen.
+        if (new URLSearchParams(location.search).get('page')) {
+            document.documentElement.classList.add('pg-loading');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Nexus — Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS din wannan page an fitar da shi zuwa pages.css domin SPA
+         navigation (router.js) tana canza #page-content kadai — <style>
+         a cikin <head> na wata page ba ya tafiya tare da ita idan an
+         bude ta ta hanyar fetch + innerHTML swap daga wata page. -->
+    <link rel="stylesheet" href="pages.css">
+</head>
+<body>
+<div id="page-content">
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="fb-back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></div>
+        <span class="fb-header-title" id="headerTitleText">Maijalalaini Islamic Medicine <i class="fa-solid fa-circle-check verified-badge" id="headerVerifiedIcon"></i></span>
+        <div class="header-actions">
+            <div class="header-icon-btn" onclick="openModal('searchModal')"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="header-icon-btn" onclick="openMenuSheet()" style="display:flex; align-items:center; gap:3px; background:none; border:none; width:auto; height:auto; padding:0 4px;">
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.3s;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.6s;">•</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= PAGE VIEW ================= -->
+    <div id="pageView">
+
+        <!-- COVER + AVATAR -->
+        <div class="page-header-wrap">
+            <div class="group-cover-wrap">
+                <img class="group-cover-img" id="pageCoverImg" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80" alt="Page cover">
+                <div class="group-cover-fade"></div>
+                <div class="live-pill"><span class="live-dot"></span> LIVE</div>
+                <div class="cover-edit-btn" id="coverEditBtn" style="display:none;"><i class="fa-solid fa-camera"></i> Edit cover</div>
+            </div>
+            <div class="page-avatar-frame">
+                <div class="avatar-online-ring"></div>
+                <img id="pageAvatarImg" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80" alt="Page avatar">
+            </div>
+        </div>
+
+        <div class="group-info-block">
+            <div class="page-name-row">
+                <div class="group-info-title" id="pageNameTitle">
+                    Maijalalaini Islamic Medicine
+                    <i class="fa-solid fa-circle-check verified-badge" id="pageVerifiedIcon"></i>
+                    <span class="trust-badge" id="pageTrustBadge" style="display:none;"><i class="fa-solid fa-shield-halved"></i> TrustScore 97</span>
+                </div>
+                <div class="group-meta-row"><span id="pageMetaRow">182K followers · 9 following · 4K posts</span></div>
+            </div>
+
+            <div class="rating-row">
+                <span class="rating-stars">★★★★★</span>
+                <strong>4.9</strong>
+                <span class="rlink" onclick="switchTab('reviews')">2,340 reviews</span>
+            </div>
+
+            <div class="page-bio" id="pageBioText">
+                We provide trusted, quality-tested natural remedies for a wide range of conditions, In Sha Allah. Same-day delivery available nationwide.
+            </div>
+
+            <div class="page-contact-list">
+                <div class="crow"><i class="fa-solid fa-phone"></i> <a href="tel:+2348088886000">+234 808 888 6000</a></div>
+                <div class="crow"><i class="fa-solid fa-globe"></i> <a href="#">www.maijalalainimedicine.com</a></div>
+                <div class="crow"><i class="fa-solid fa-location-dot"></i> Kano, Nigeria</div>
+                <div class="crow"><i class="fa-solid fa-clock"></i> <span class="open-tag">Open now</span> · Closes 9:00 PM</div>
+            </div>
+
+            <div class="page-category-row" id="pageCategoryRow"><i class="fa-solid fa-notes-medical"></i><span id="pageCategoryText">Medical &amp; Health</span></div>
+
+            <div class="page-followed-row">
+                <div class="followed-avatars">
+                    <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80" alt="">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="">
+                </div>
+                <span>Followed by <strong>Fatima Shuaibu Yusuf</strong> and <strong>Shehu Hashimu</strong></span>
+            </div>
+
+            <div class="page-buttons-row">
+                <button class="invite-btn-fb" onclick="openModal('ctaModal')"><i class="fa-solid fa-bag-shopping"></i> Shop now</button>
+                <button class="follow-btn-fb is-following" id="followBtn" onclick="toggleFollow()"><i class="fa-solid fa-bell"></i> <span id="followLabel">Following</span></button>
+                <button class="follow-btn-fb" id="ownerPostBtn" onclick="openCreatePostModal()" style="display:none;"><i class="fa-solid fa-plus"></i> <span>Create post</span></button>
+                <div class="icon-square-btn" onclick="openModal('messageModal')"><i class="fa-regular fa-comment-dots"></i></div>
+                <div class="icon-square-btn" onclick="toggleNotifDropdown()" style="position:relative;">
+                    <i class="fa-solid fa-ellipsis"></i>
+                    <div class="notif-dropdown" id="notifDropdown">
+                        <div class="nd-item active-opt" onclick="setNotifPref(this,'All')"><i class="fa-solid fa-check"></i> All notifications</div>
+                        <div class="nd-item" onclick="setNotifPref(this,'Highlights')"><i class="fa-solid fa-star"></i> Highlights only</div>
+                        <div class="nd-item" onclick="setNotifPref(this,'Off')"><i class="fa-solid fa-bell-slash"></i> Turn off</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extra CTA carousel (custom paid Call-To-Action buttons) -->
+            <div class="cta-carousel">
+                <div class="cta-chip" onclick="showToast('📅 Booking calendar opened')"><i class="fa-regular fa-calendar-check"></i> Book appointment</div>
+                <div class="cta-chip" onclick="showToast('📞 Calling page…')"><i class="fa-solid fa-phone"></i> Call now</div>
+                <div class="cta-chip" onclick="showToast('📝 Opening quote form…')"><i class="fa-solid fa-file-pen"></i> Get a quote</div>
+                <div class="cta-chip" onclick="showToast('🎟 Opening sign-up form…')"><i class="fa-regular fa-square-plus"></i> Sign up</div>
+            </div>
+
+            <!-- HIGHLIGHTS STRIP -->
+            <div class="smart-box-highlights">
+                <div class="highlights-scroll">
+                    <div class="highlight-item">
+                        <div class="highlight-add" onclick="showToast('Add to your story')"><i class="fa-solid fa-plus"></i></div>
+                        <p class="highlight-label">Add</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(0)"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Launch</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(1)"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Deals</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(2)"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Events</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring thread-ring" onclick="viewGroupHighlight(3)">
+                            <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80" loading="lazy">
+                            <div class="thread-tag">THREAD</div>
+                        </div>
+                        <p class="highlight-label">Recovery Stories</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TABS ================= -->
+        <div class="page-tabs" id="pageTabs">
+            <div class="ptab active" data-tab="posts" onclick="switchTab('posts')">Posts</div>
+            <div class="ptab" data-tab="reels" onclick="switchTab('reels')">Reels</div>
+            <div class="ptab" data-tab="photos" onclick="switchTab('photos')">Photos</div>
+            <div class="ptab" data-tab="shop" onclick="switchTab('shop')">Shop <span class="pro-tag">Pro</span></div>
+            <div class="ptab" data-tab="events" onclick="switchTab('events')">Events</div>
+            <div class="ptab" data-tab="reviews" onclick="switchTab('reviews')">Reviews</div>
+            <div class="ptab" data-tab="community" onclick="switchTab('community')">Community</div>
+            <div class="ptab" data-tab="about" onclick="switchTab('about')">About</div>
+        </div>
+
+        <!-- ===== POSTS TAB ===== -->
+        <div class="tab-panel active" id="tab-posts">
+            <div id="timeline-area"></div>
+        </div>
+
+        <!-- ===== REELS TAB ===== -->
+        <div class="tab-panel" id="tab-reels">
+            <div class="media-grid" id="reelsGrid"></div>
+        </div>
+
+        <!-- ===== PHOTOS TAB ===== -->
+        <div class="tab-panel" id="tab-photos">
+            <div class="media-grid" id="photosGrid"></div>
+        </div>
+
+        <!-- ===== SHOP TAB ===== -->
+        <div class="tab-panel" id="tab-shop">
+            <div class="shop-grid" id="shopGrid"></div>
+        </div>
+
+        <!-- ===== EVENTS TAB ===== -->
+        <div class="tab-panel" id="tab-events">
+            <div class="events-list" id="eventsList"></div>
+        </div>
+
+        <!-- ===== REVIEWS TAB ===== -->
+        <div class="tab-panel" id="tab-reviews">
+            <div class="reviews-section">
+                <div class="review-summary-box">
+                    <div><div class="review-big-num">4.9</div><div class="rating-stars" style="margin-top:4px;">★★★★★</div></div>
+                    <div class="review-bars">
+                        <div class="review-bar-row"><span>5★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:88%;"></div></div><span>88%</span></div>
+                        <div class="review-bar-row"><span>4★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:8%;"></div></div><span>8%</span></div>
+                        <div class="review-bar-row"><span>3★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:2%;"></div></div><span>2%</span></div>
+                        <div class="review-bar-row"><span>2★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:1%;"></div></div><span>1%</span></div>
+                        <div class="review-bar-row"><span>1★</span><div class="review-bar-track"><div class="review-bar-fill" style="width:1%;"></div></div><span>1%</span></div>
+                    </div>
+                </div>
+                <div id="reviewsList"></div>
+            </div>
+        </div>
+
+        <!-- ===== COMMUNITY TAB ===== -->
+        <div class="tab-panel" id="tab-community">
+            <div class="community-section">
+                <div class="about-block" style="margin-bottom:14px;">
+                    <h4>Top contributors this month</h4>
+                    <div id="communityList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ABOUT TAB ===== -->
+        <div class="tab-panel" id="tab-about">
+            <div class="about-section">
+                <div class="about-block">
+                    <h4>Page transparency</h4>
+                    <div class="arow"><i class="fa-solid fa-calendar"></i> Page created April 12, 2019</div>
+                    <div class="arow"><i class="fa-solid fa-user-shield"></i> 4 admins · primary location: Kano, Nigeria</div>
+                    <div class="arow"><i class="fa-solid fa-pen"></i> No name changes in the last 90 days</div>
+                </div>
+                <div class="about-block">
+                    <h4>Contact &amp; basic info</h4>
+                    <div class="arow"><i class="fa-solid fa-phone"></i> +234 808 888 6000</div>
+                    <div class="arow"><i class="fa-solid fa-envelope"></i> support@maijalalainimedicine.com</div>
+                    <div class="arow"><i class="fa-solid fa-globe"></i> www.maijalalainimedicine.com</div>
+                    <div class="arow"><i class="fa-solid fa-location-dot"></i> No. 12 Zoo Road, Kano, Nigeria</div>
+                </div>
+                <div class="about-block">
+                    <h4>Verified impact record</h4>
+                    <div class="impact-detail-grid">
+                        <div class="impact-detail-card"><div class="num">12.4K</div><div class="lbl">Patients helped</div></div>
+                        <div class="impact-detail-card"><div class="num">98%</div><div class="lbl">Satisfaction</div></div>
+                        <div class="impact-detail-card"><div class="num">36K</div><div class="lbl">Orders delivered</div></div>
+                        <div class="impact-detail-card"><div class="num">6 yrs</div><div class="lbl">On Nexus</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= AI PAGE TWIN — NEW FEATURE #7 ================= -->
+    <div class="ai-twin-fab" onclick="openModal('aiTwinModal')">
+        <div class="ping"></div>
+        <i class="fa-solid fa-robot"></i>
+    </div>
+
+    <!-- ================= 3-DOT WORLD-CLASS MENU SHEET ================= -->
+    <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeMenuSheet()"></div>
+    <div class="menu-sheet" id="menuSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-page-head">
+            <img id="sheetPageAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80">
+            <div>
+                <div class="spname" id="sheetPageName">Maijalalaini Islamic Medicine <i class="fa-solid fa-circle-check verified-badge"></i></div>
+                <div class="spmeta" id="sheetPageMeta">182K followers · TrustScore 97</div>
+            </div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-group-label">Page tools</div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('shareModal')"><div class="mico"><i class="fa-solid fa-share"></i></div><div class="mtext"><div class="mtitle">Share page</div><div class="msub">Send via chat, socials, or copy link</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('qrModal')"><div class="mico"><i class="fa-solid fa-qrcode"></i></div><div class="mtext"><div class="mtitle">Page QR code</div><div class="msub">Let people scan to follow instantly</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); toggleSave()"><div class="mico"><i class="fa-regular fa-bookmark" id="saveIcon"></i></div><div class="mtext"><div class="mtitle" id="saveLabel">Save page</div><div class="msub">Add to your saved list</div></div></div>
+        </div>
+
+        <!-- ADMIN-ONLY: an boye ta default, JS ke bude ta idan isOwner === true -->
+        <div class="menu-group" id="menuGroupBoost" style="display:none;">
+            <div class="menu-group-label">Grow &amp; monetize</div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('boostModal')"><div class="mico"><i class="fa-solid fa-rocket"></i></div><div class="mtext"><div class="mtitle">Boost this page <span class="pro-tag">Paid</span></div><div class="msub">Reach more people with an ad</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openInsightsModal()"><div class="mico"><i class="fa-solid fa-chart-line"></i></div><div class="mtext"><div class="mtitle">Insights &amp; analytics</div><div class="msub">Followers, reach, engagement</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('monetizeModal')"><div class="mico"><i class="fa-solid fa-sack-dollar"></i></div><div class="mtext"><div class="mtitle">Monetization studio <span class="pro-tag">Pro</span></div><div class="msub">Subscriptions, tips &amp; gifts, ads</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('adsManagerModal')"><div class="mico"><i class="fa-solid fa-bullhorn"></i></div><div class="mtext"><div class="mtitle">Ads manager <span class="pro-tag">Paid</span></div><div class="msub">Create and manage ad campaigns</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+        </div>
+
+        <!-- ADMIN-ONLY -->
+        <div class="menu-group" id="menuGroupManage" style="display:none;">
+            <div class="menu-group-label">Manage page</div>
+            <div class="menu-item" onclick="closeMenuSheet(); openEditPageModal()"><div class="mico"><i class="fa-solid fa-pen-to-square"></i></div><div class="mtext"><div class="mtitle">Edit page info</div><div class="msub">Name, category, bio, contact details</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openRolesModal()"><div class="mico"><i class="fa-solid fa-user-group"></i></div><div class="mtext"><div class="mtitle">Page roles</div><div class="msub" id="rolesSubLabel">Manage admins &amp; editors</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openScheduledModal()"><div class="mico"><i class="fa-regular fa-clock"></i></div><div class="mtext"><div class="mtitle">Scheduled &amp; time-capsule posts</div><div class="msub" id="scheduledSubLabel">0 posts scheduled</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-group-label">Preferences</div>
+            <div class="menu-item" onclick="closeMenuSheet(); toggleNotifDropdown()"><div class="mico"><i class="fa-solid fa-bell"></i></div><div class="mtext"><div class="mtitle">Notification preferences</div><div class="msub" id="notifSubLabel">All notifications</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('languageModal')"><div class="mico"><i class="fa-solid fa-language"></i></div><div class="mtext"><div class="mtitle">Language &amp; live translation</div><div class="msub" id="langSubLabel">English (auto-detect on)</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('displayModal')"><div class="mico"><i class="fa-solid fa-circle-half-stroke"></i></div><div class="mtext"><div class="mtitle">Display &amp; accessibility</div><div class="msub">Theme, text size, captions</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+        </div>
+
+        <div class="menu-group" style="border-bottom:none;">
+            <div class="menu-group-label">Safety</div>
+            <div class="menu-item" onclick="closeMenuSheet(); openModal('transparencyModal')"><div class="mico"><i class="fa-solid fa-circle-info"></i></div><div class="mtext"><div class="mtitle">Page transparency</div><div class="msub">See who manages this page</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item danger" id="reportMenuItem" onclick="closeMenuSheet(); openModal('reportModal')"><div class="mico"><i class="fa-solid fa-flag"></i></div><div class="mtext"><div class="mtitle">Report page</div></div><i class="fa-solid fa-chevron-right mchev"></i></div>
+            <div class="menu-item danger" id="blockMenuItem" onclick="closeMenuSheet(); confirmBlock()"><div class="mico"><i class="fa-solid fa-ban"></i></div><div class="mtext"><div class="mtitle">Block page</div></div></div>
+        </div>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Share modal -->
+    <div class="modal-backdrop" id="shareModal-bg" onclick="closeModalOnBg(event,'shareModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('shareModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Share this page</div>
+            <div class="modal-sub">Share Maijalalaini Islamic Medicine with your network</div>
+            <div class="share-grid">
+                <div class="share-opt" onclick="showToast('Shared to WhatsApp')"><div class="sicon" style="background:#25D366;"><i class="fa-brands fa-whatsapp"></i></div>WhatsApp</div>
+                <div class="share-opt" onclick="showToast('Shared to Messenger')"><div class="sicon" style="background:#4f46e5;"><i class="fa-brands fa-facebook-messenger"></i></div>Messenger</div>
+                <div class="share-opt" onclick="showToast('Shared to X')"><div class="sicon" style="background:#111;border:1px solid #333;"><i class="fa-brands fa-x-twitter"></i></div>X</div>
+                <div class="share-opt" onclick="showToast('Shared via Telegram')"><div class="sicon" style="background:#229ED9;"><i class="fa-brands fa-telegram"></i></div>Telegram</div>
+                <div class="share-opt" onclick="showToast('Shared to your story')"><div class="sicon" style="background:linear-gradient(135deg,#f59e0b,#ec4899);"><i class="fa-solid fa-circle-plus"></i></div>Your story</div>
+                <div class="share-opt" onclick="showToast('Sent to Nexus friend')"><div class="sicon" style="background:#334155;"><i class="fa-solid fa-paper-plane"></i></div>Nexus DM</div>
+                <div class="share-opt" onclick="showToast('Email opened')"><div class="sicon" style="background:#334155;"><i class="fa-solid fa-envelope"></i></div>Email</div>
+                <div class="share-opt" onclick="showToast('Embed code copied')"><div class="sicon" style="background:#334155;"><i class="fa-solid fa-code"></i></div>Embed</div>
+            </div>
+            <div class="copy-link-row"><span>nexus.app/maijalalaini-medicine</span><button onclick="showToast('🔗 Link copied')">Copy</button></div>
+        </div>
+    </div>
+
+    <!-- QR modal -->
+    <div class="modal-backdrop" id="qrModal-bg" onclick="closeModalOnBg(event,'qrModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('qrModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Page QR code</div>
+            <div class="modal-sub">Scan with any camera to open this page instantly</div>
+            <div class="qr-box"><i class="fa-solid fa-qrcode"></i></div>
+            <button class="modal-primary-btn" onclick="showToast('⬇️ QR code saved to gallery')">Download QR code</button>
+        </div>
+    </div>
+
+    <!-- CTA / Shop now modal -->
+    <div class="modal-backdrop" id="ctaModal-bg" onclick="closeModalOnBg(event,'ctaModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('ctaModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Shop Maijalalaini Islamic Medicine</div>
+            <div class="modal-sub">Browse products directly — checkout without leaving the app</div>
+            <div class="shop-grid" style="padding:0;" id="ctaShopGrid"></div>
+        </div>
+    </div>
+
+    <!-- Message modal -->
+    <div class="modal-backdrop" id="messageModal-bg" onclick="closeModalOnBg(event,'messageModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('messageModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Message the page</div>
+            <div class="modal-sub">Usually replies within a few minutes</div>
+            <div class="form-field"><textarea rows="4" placeholder="Type your message…"></textarea></div>
+            <button class="modal-primary-btn" onclick="closeModal('messageModal'); showToast('✅ Message sent')">Send message</button>
+        </div>
+    </div>
+
+    <!-- Create Post modal (page owner only) -->
+    <div class="modal-backdrop" id="createPostModal-bg" onclick="closeModalOnBg(event,'createPostModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('createPostModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Create a post</div>
+            <div class="modal-sub">Publishes to this page's Timeline right away</div>
+            <div class="form-field"><textarea id="createPostText" rows="4" placeholder="Write something…"></textarea></div>
+            <div class="form-field"><input type="text" id="createPostImageUrl" placeholder="Image URL (optional)"></div>
+            <div class="form-field">
+                <label>When should this post go live?</label>
+                <select id="createPostTiming" onchange="onCreatePostTimingChange()">
+                    <option value="now">Publish now</option>
+                    <option value="scheduled">Schedule for later</option>
+                    <option value="capsule">Time-capsule (locked until date)</option>
+                </select>
+            </div>
+            <div class="form-field" id="createPostDateField" style="display:none;">
+                <label id="createPostDateLabel">Publish at</label>
+                <input type="datetime-local" id="createPostDateInput">
+            </div>
+            <button class="modal-primary-btn" id="createPostSubmitBtn" onclick="submitCreatePost()">Publish</button>
+        </div>
+    </div>
+
+    <!-- Boost modal (paid) -->
+    <div class="modal-backdrop" id="boostModal-bg" onclick="closeModalOnBg(event,'boostModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('boostModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Boost this page <span class="pro-tag">Paid</span></div>
+            <div class="modal-sub">Reach thousands of new potential followers nearby</div>
+            <div class="radio-option"><input type="radio" name="boost" checked><div><div class="rtitle">Reach — ₦8,500</div><div class="rsub">~45,000–60,000 people · 5 days</div></div></div>
+            <div class="radio-option"><input type="radio" name="boost"><div><div class="rtitle">Followers — ₦15,000</div><div class="rsub">Est. 800–1,200 new followers · 7 days</div></div></div>
+            <div class="radio-option"><input type="radio" name="boost"><div><div class="rtitle">Engagement — ₦12,000</div><div class="rsub">More likes, comments &amp; shares · 5 days</div></div></div>
+            <button class="modal-primary-btn" onclick="closeModal('boostModal'); showToast('🚀 Boost campaign submitted')">Continue to payment</button>
+        </div>
+    </div>
+
+    <!-- Insights modal — REAL data (na gaskiya, ba mock ba tun yanzu) -->
+    <div class="modal-backdrop" id="insightsModal-bg" onclick="closeModalOnBg(event,'insightsModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('insightsModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Insights &amp; analytics</div>
+            <div class="modal-sub">Last 7 days performance — an tattara ta kai-tsaye</div>
+            <div class="insight-mini-grid">
+                <div class="insight-mini-card"><div class="inum" id="insFollowers">—</div><div class="ilbl">Total followers</div></div>
+                <div class="insight-mini-card"><div class="inum" id="insViews">—</div><div class="ilbl">Page views (7d)</div></div>
+                <div class="insight-mini-card"><div class="inum" id="insEngagements">—</div><div class="ilbl">Engagements (likes+comments)</div></div>
+                <div class="insight-mini-card"><div class="inum" id="insNetFollows">—</div><div class="ilbl">Net follows (7d)</div></div>
+            </div>
+            <div class="about-block" style="margin:0;">
+                <h4>Page views — last 7 days</h4>
+                <div class="mini-chart" id="miniChart"></div>
+            </div>
+            <div class="about-block" id="insTopPostBlock" style="display:none;">
+                <h4>Top post</h4>
+                <div class="arow" id="insTopPostRow"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit page info modal — NEW, real Firestore update -->
+    <div class="modal-backdrop" id="editPageModal-bg" onclick="closeModalOnBg(event,'editPageModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('editPageModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Edit page info</div>
+            <div class="modal-sub">Visible to everyone who views this page</div>
+            <div class="form-field"><label>Name</label><input type="text" id="editPageName"></div>
+            <div class="form-field"><label>Category</label><input type="text" id="editPageCategory"></div>
+            <div class="form-field"><label>Bio / description</label><textarea rows="3" id="editPageDesc"></textarea></div>
+            <div class="form-field"><label>Contact phone</label><input type="text" id="editPagePhone" placeholder="Optional"></div>
+            <div class="form-field"><label>Contact email</label><input type="text" id="editPageEmail" placeholder="Optional"></div>
+            <button class="modal-primary-btn" id="editPageSubmitBtn" onclick="submitEditPage()">Save changes</button>
+        </div>
+    </div>
+
+    <!-- Page roles modal — NEW, real admin add/remove -->
+    <div class="modal-backdrop" id="rolesModal-bg" onclick="closeModalOnBg(event,'rolesModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('rolesModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Page roles</div>
+            <div class="modal-sub">Admins can edit page info, manage roles, and post as the page</div>
+            <div id="rolesList"></div>
+            <div class="form-field"><label>Add admin (username)</label><input type="text" id="addAdminInput" placeholder="username"></div>
+            <button class="modal-primary-btn" onclick="addAdminUsername()">Add admin</button>
+        </div>
+    </div>
+
+    <!-- Scheduled & time-capsule posts modal — NEW -->
+    <div class="modal-backdrop" id="scheduledModal-bg" onclick="closeModalOnBg(event,'scheduledModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('scheduledModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Scheduled &amp; time-capsule posts</div>
+            <div class="modal-sub">Posts here are hidden from the Timeline until their time arrives</div>
+            <div id="scheduledList"></div>
+        </div>
+    </div>
+
+    <!-- Display & accessibility modal — NEW, real localStorage-backed app-wide pref -->
+    <div class="modal-backdrop" id="displayModal-bg" onclick="closeModalOnBg(event,'displayModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('displayModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Display &amp; accessibility</div>
+            <div class="modal-sub">Applies across Nexus, not just this page</div>
+            <div class="form-field"><label>Text size</label>
+                <div class="radio-option" onclick="setTextSize('small')"><input type="radio" name="textsize" id="textSizeSmall"><div class="rtitle">Small</div></div>
+                <div class="radio-option" onclick="setTextSize('normal')"><input type="radio" name="textsize" id="textSizeNormal"><div class="rtitle">Normal</div></div>
+                <div class="radio-option" onclick="setTextSize('large')"><input type="radio" name="textsize" id="textSizeLarge"><div class="rtitle">Large</div></div>
+            </div>
+            <div class="menu-item" style="padding-left:0;" onclick="toggleCaptions()"><div class="mtext"><div class="mtitle">Auto-captions on videos</div></div><i class="fa-solid fa-toggle-off mchev" id="captionsToggleIcon" style="font-size:22px;"></i></div>
+        </div>
+    </div>
+
+    <!-- Monetization studio modal -->
+    <div class="modal-backdrop" id="monetizeModal-bg" onclick="closeModalOnBg(event,'monetizeModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('monetizeModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Monetization studio <span class="pro-tag">Pro</span></div>
+            <div class="modal-sub">Turn your community into sustainable income</div>
+            <div class="about-block"><h4>Fan subscriptions</h4><div class="arow"><i class="fa-solid fa-star"></i> ₦2,000/mo — exclusive posts &amp; early access</div></div>
+            <div class="about-block"><h4>Tips &amp; gifts</h4><div class="arow"><i class="fa-solid fa-gift"></i> Enable one-tap tipping on live streams</div></div>
+            <div class="about-block"><h4>In-stream ads</h4><div class="arow"><i class="fa-solid fa-tv"></i> Earn from ads shown on your videos</div></div>
+            <button class="modal-primary-btn" onclick="closeModal('monetizeModal'); showToast('💰 Monetization studio opened')">Open studio</button>
+        </div>
+    </div>
+
+    <!-- Ads manager modal -->
+    <div class="modal-backdrop" id="adsManagerModal-bg" onclick="closeModalOnBg(event,'adsManagerModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('adsManagerModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Ads manager <span class="pro-tag">Paid</span></div>
+            <div class="modal-sub">Create a new campaign for this page</div>
+            <div class="form-field"><label>Campaign goal</label><select><option>Page followers</option><option>Website visits</option><option>Message conversations</option><option>Product sales</option></select></div>
+            <div class="form-field"><label>Daily budget</label><input type="text" placeholder="₦5,000"></div>
+            <button class="modal-primary-btn" onclick="closeModal('adsManagerModal'); showToast('📣 Campaign draft created')">Create campaign</button>
+        </div>
+    </div>
+
+    <!-- Language modal -->
+    <div class="modal-backdrop" id="languageModal-bg" onclick="closeModalOnBg(event,'languageModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('languageModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Language &amp; live translation</div>
+            <div class="modal-sub">Every post is auto-translated to your language in real time</div>
+            <div class="radio-option" onclick="selectLangOption('en')"><input type="radio" name="lang" id="langOptEn"><div class="rtitle">English</div></div>
+            <div class="radio-option" onclick="selectLangOption('ha')"><input type="radio" name="lang" id="langOptHa"><div class="rtitle">Hausa</div></div>
+            <div class="radio-option" onclick="selectLangOption('fr')"><input type="radio" name="lang" id="langOptFr"><div class="rtitle">French</div></div>
+            <div class="radio-option" onclick="selectLangOption('ar')"><input type="radio" name="lang" id="langOptAr"><div class="rtitle">Arabic</div></div>
+            <button class="modal-primary-btn" onclick="saveLangPref()">Save</button>
+        </div>
+    </div>
+
+    <!-- Transparency modal — REAL data -->
+    <div class="modal-backdrop" id="transparencyModal-bg" onclick="closeModalOnBg(event,'transparencyModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('transparencyModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Page transparency</div>
+            <div class="modal-sub">Information Nexus shows to keep this page accountable</div>
+            <div class="about-block"><h4>Created</h4><div class="arow" id="transpCreated"><i class="fa-solid fa-calendar"></i> —</div></div>
+            <div class="about-block"><h4>Page owner</h4><div class="arow" id="transpOwner"><i class="fa-solid fa-user"></i> —</div></div>
+            <div class="about-block"><h4>Admins</h4><div class="arow" id="transpAdmins"><i class="fa-solid fa-user-group"></i> —</div></div>
+        </div>
+    </div>
+
+    <!-- Report modal — REAL, ana rubutawa zuwa Firestore -->
+    <div class="modal-backdrop" id="reportModal-bg" onclick="closeModalOnBg(event,'reportModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('reportModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Report this page</div>
+            <div class="modal-sub">Your report is anonymous, except if you're reporting an intellectual property infringement</div>
+            <div class="radio-option" onclick="selectReportReason(this,'Misleading or false information')"><input type="radio" name="report"><div class="rtitle">Misleading or false information</div></div>
+            <div class="radio-option" onclick="selectReportReason(this,'Scam or fraud')"><input type="radio" name="report"><div class="rtitle">Scam or fraud</div></div>
+            <div class="radio-option" onclick="selectReportReason(this,'Hate speech or harassment')"><input type="radio" name="report"><div class="rtitle">Hate speech or harassment</div></div>
+            <div class="radio-option" onclick="selectReportReason(this,'Something else')"><input type="radio" name="report"><div class="rtitle">Something else</div></div>
+            <button class="modal-primary-btn" onclick="submitReport()">Submit report</button>
+        </div>
+    </div>
+
+    <!-- Search modal -->
+    <div class="modal-backdrop" id="searchModal-bg" onclick="closeModalOnBg(event,'searchModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('searchModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-title">Search this page</div>
+            <div class="form-field"><input type="text" placeholder="Search posts, photos, products…" autofocus></div>
+        </div>
+    </div>
+
+    <!-- AI Page Twin chat modal — NEW FEATURE #7 -->
+    <div class="modal-backdrop" id="aiTwinModal-bg" onclick="closeModalOnBg(event,'aiTwinModal')">
+        <div class="modal-box">
+            <div class="modal-close" onclick="closeModal('aiTwinModal')"><i class="fa-solid fa-xmark"></i></div>
+            <div class="ai-chat-box">
+                <div class="ai-chat-head">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80">
+                    <div><div class="aname">Page AI Twin <i class="fa-solid fa-robot" style="color:#a78bfa;font-size:11px;"></i></div><div class="asub">● Trained on this page · Always labeled AI</div></div>
+                </div>
+                <div class="ai-chat-body" id="aiChatBody">
+                    <div class="ai-msg bot">Hello! I'm this page's AI Twin — trained on their catalog and FAQs so I can answer instantly, 24/7. A human admin will follow up for anything I can't handle. How can I help?</div>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput" placeholder="Ask about products, hours, orders…" onkeydown="if(event.key==='Enter') sendAiMsg()">
+                    <button onclick="sendAiMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STORY / HIGHLIGHT VIEWER -->
+    <div class="story-viewer-overlay" id="storyViewerOverlay">
+        <div class="story-header">
+            <img id="storyUserAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80">
+            <div class="story-user-info">
+                <span class="story-username" id="storyUsername">Maijalalaini Islamic Medicine</span>
+                <span class="story-time" id="storyTime"></span>
+            </div>
+            <i class="fa-solid fa-xmark story-close" onclick="closeGroupStoryViewer()"></i>
+        </div>
+        <div class="story-media-wrap" id="storyMediaWrap">
+            <div class="story-tap-zone story-tap-left" onclick="prevGroupStory()"></div>
+            <div class="story-tap-zone story-tap-right" onclick="nextGroupStory()"></div>
+        </div>
+        <div class="story-footer" id="storyFooter">
+            <input type="text" class="story-reply-input" placeholder="Send message">
+            <i class="fa-regular fa-paper-plane"></i>
+        </div>
+    </div>
+
+    <div class="toast" id="toastBox"></div>
+</div>
+
+    <!-- SHARED POST CARD TEMPLATE — single source of truth for generatePostHTML() -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="post-card-template.js"></script>
+    <script src="router.js"></script>
+    <script src="pages.js"></script>
+</body>
+</html>
