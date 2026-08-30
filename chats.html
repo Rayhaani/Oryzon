@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function () {
+            var savedTab = localStorage.getItem('nexus_active_tab');
+            if (savedTab && savedTab !== 'personal') {
+                document.documentElement.classList.add('tab-restore-pending');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus - Unified Inbox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600&family=Orbitron:wght=600;700&display=swap" rel="stylesheet">
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+   <script src="router.js?v=2"></script>
+   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
+        <link rel="stylesheet" href="chats.css?v=3">
+</head>
+<body>
+<main id="page-content">
+    <header>
+        <div class="header-top">
+            <h1 id="mainHeaderTitle">Chats</h1>
+            
+           <div class="header-icons">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleSearchBar()" style="cursor:pointer;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg id="globalNetworkViewToggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleNetworkView()" style="cursor:pointer; display:none;" title="Constellation View"><circle cx="5" cy="6" r="2.4"></circle><circle cx="19" cy="6" r="2.4"></circle><circle cx="12" cy="18" r="2.6"></circle><line x1="7" y1="7.2" x2="10" y2="16"></line><line x1="17" y1="7.2" x2="14" y2="16"></line><line x1="7.4" y1="6" x2="16.6" y2="6"></line></svg>
+                <div class="friend-status-filter-wrap" id="friendStatusFilterWrap" style="display:none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="toggleFriendStatusFilterMenu(event)" style="cursor:pointer;" title="Filter by status"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <div class="friend-status-filter-menu" id="friendStatusFilterMenu">
+                        <div class="friend-status-filter-option active" onclick="applyFriendStatusFilter('all', this)">All</div>
+                        <div class="friend-status-filter-option" onclick="applyFriendStatusFilter('online', this)">Online now</div>
+                        <div class="friend-status-filter-option" onclick="applyFriendStatusFilter('recent', this)">Recently active</div>
+                        <div class="friend-status-filter-option" onclick="applyFriendStatusFilter('month', this)">Within this month</div>
+                        <div class="friend-status-filter-option" onclick="applyFriendStatusFilter('longago', this)">Long time ago</div>
+                        <div class="friend-status-filter-option" onclick="applyFriendStatusFilter('deleted', this)">Deleted</div>
+                        <div class="friend-status-filter-option" onclick="applyFriendStatusFilter('deactivated', this)">Deactivated</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-bar-container" id="searchBarContainer">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search chats..." oninput="performGlobalSearch(this.value)">
+                <div onclick="toggleSearchBar()" style="cursor:pointer; color: var(--cyan-neon); display:flex; align-items:center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </div>
+            </div> 
+        </div>
+
+        <div class="smart-btn-group">
+    <div class="smart-btn active" onclick="switchTab(this, 'personal')">Personal<span class="smart-btn-badge" id="badge-personal">0</span></div>
+    <div class="smart-btn" onclick="switchTab(this, 'groups')">Groups<span class="smart-btn-badge" id="badge-groups">0</span></div>
+    <div class="smart-btn" onclick="switchTab(this, 'pages')">Pages<span class="smart-btn-badge" id="badge-pages">0</span></div>
+    <div class="smart-btn" onclick="switchTab(this, 'channels')">Channels<span class="smart-btn-badge" id="badge-channels">0</span></div>
+    <div class="smart-btn" onclick="switchTab(this, 'updates')">Updates<span class="smart-btn-badge" id="badge-updates">0</span></div>
+    <div class="smart-btn" onclick="switchTab(this, 'friends')">Friends</div>
+        </div>
+        
+    </header>
+
+    <div class="view-container">
+        <div id="personal" class="tab-view active">
+            <div id="chats-list-container">
+                </div>
+        </div>
+
+        <div id="groups" class="tab-view">
+            <a href="group.html" class="chat-item">
+                <div class="profile-stack" data-avatar-kind="group" data-avatar-key="kanomart-devs" data-chat-href="group.html" data-info-href="group.html" onclick="handleAvatarTap(event)"><img src="https://via.placeholder.com/46/00F2FF/000?text=KM" class="user-img" style="border-radius: 12px;"></div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">KanoMart Devs</span><span class="time">1:10 PM</span></div>
+                    <p class="preview-text">Ali: Update logic ɗin yanzu...</p>
+                </div>
+            </a>
+            <a href="group.html" class="chat-item">
+                <div class="profile-stack" data-avatar-kind="group" data-avatar-key="synergy-core" data-chat-href="group.html" data-info-href="group.html" onclick="handleAvatarTap(event)"><img src="https://via.placeholder.com/46/333/00F2FF?text=SY" class="user-img" style="border-radius: 12px;"></div>
+                <div class="chat-details">
+                    <div class="chat-header"><span class="name">Synergy Core</span><span class="time">Yesterday</span></div>
+                    <p class="preview-text">Bello: The protocol is live!</p>
+                </div>
+            </a>
+        </div>
+
+                <div id="pages" class="tab-view">
+            <div class="pages-vertical-list">
+                
+                <div class="page-list-item" onclick="window.location.href='pages.html?page=sirrin-rike-miji'">
+                    <div class="page-info-block">
+                        <img src="https://via.placeholder.com/50/111?text=SRM" class="page-avatar" data-avatar-kind="page" data-avatar-key="sirrin-rike-miji" data-chat-href="pages.html?page=sirrin-rike-miji" data-info-href="pages.html?page=sirrin-rike-miji" onclick="handleAvatarTap(event)">
+                        <div class="page-text-meta">
+                            <h3>Sirrin rike miji 🌍</h3>
+                            <p>Kece Kike Bukatar Namiji Mai Gemu...</p>
+                        </div>
+                    </div>
+                    <div class="page-action-view">10m ago</div>
+                </div>
+
+                <div class="page-list-item" onclick="window.location.href='pages.html?page=simon-updates'">
+                    <div class="page-info-block">
+                        <img src="https://via.placeholder.com/50/222?text=SU" class="page-avatar" data-avatar-kind="page" data-avatar-key="simon-updates" data-chat-href="pages.html?page=simon-updates" data-info-href="pages.html?page=simon-updates" onclick="handleAvatarTap(event)">
+                        <div class="page-text-meta">
+                            <h3>Simon's Updates.</h3>
+                            <p>If you have issue or concern. You can...</p>
+                        </div>
+                    </div>
+                    <div class="page-action-view">Yesterday</div>
+                </div>
+
+                <div class="page-list-item" onclick="window.location.href='pages.html?page=annahjul-hameed'">
+                    <div class="page-info-block">
+                        <img src="https://via.placeholder.com/50/333?text=ATV" class="page-avatar" data-avatar-kind="page" data-avatar-key="annahjul-hameed" data-chat-href="pages.html?page=annahjul-hameed" data-info-href="pages.html?page=annahjul-hameed" onclick="handleAvatarTap(event)">
+                        <div class="page-text-meta">
+                            <h3>Annahjul-Hameed TV</h3>
+                            <p>Addu'ar Sujuda🇲🇳🇲🇳...</p>
+                        </div>
+                    </div>
+                    <div class="page-action-view">2 days ago</div>
+                </div>
+
+            </div>
+                </div>
+
+<!-- ================= SABON TAB VIEW NA CHANNELS ================= -->
+<div id="channels" class="tab-view">
+    <div class="pages-vertical-list">
+        
+        <!-- Channels Item 1 (Danna kanta zai buɗe channels.html) -->
+        <div class="page-list-item" onclick="window.location.href='channels.html?channel=tech-pulse'">
+            <div class="page-info-block">
+                <img src="https://via.placeholder.com/50/00F2FF/000?text=TP" class="page-avatar" data-avatar-kind="channel" data-avatar-key="tech-pulse" data-chat-href="channels.html?channel=tech-pulse" data-info-href="channels.html?channel=tech-pulse" onclick="handleAvatarTap(event)">
+                <div class="page-text-meta">
+                    <h3>Tech Pulse Hub ⚡</h3>
+                    <p>New updates released for Nexus Ecosystem...</p>
+                </div>
+            </div>
+            <div class="page-action-view">5m ago</div>
+        </div>
+
+        <!-- Channels Item 2 -->
+        <div class="page-list-item" onclick="window.location.href='channels.html?channel=kano-market-news'">
+            <div class="page-info-block">
+                <img src="https://via.placeholder.com/50/333/00F2FF?text=KM" class="page-avatar" data-avatar-kind="channel" data-avatar-key="kano-market-news" data-chat-href="channels.html?channel=kano-market-news" data-info-href="channels.html?channel=kano-market-news" onclick="handleAvatarTap(event)">
+                <div class="page-text-meta">
+                    <h3>Kano Market Broadcast</h3>
+                    <p>Daily updates on B2B prices and vendors...</p>
+                </div>
+            </div>
+            <div class="page-action-view">1h ago</div>
+        </div>
+
+        <!-- Channels Item 3 -->
+        <div class="page-list-item" onclick="window.location.href='channels.html?channel=urban-vision'">
+            <div class="page-info-block">
+                <img src="https://via.placeholder.com/50/222/FFF?text=UV" class="page-avatar" data-avatar-kind="channel" data-avatar-key="urban-vision" data-chat-href="channels.html?channel=urban-vision" data-info-href="channels.html?channel=urban-vision" onclick="handleAvatarTap(event)">
+                <div class="page-text-meta">
+                    <h3>Urban Vision 2050</h3>
+                    <p>Check out the latest futuristic release...</p>
+                </div>
+            </div>
+            <div class="page-action-view">Yesterday</div>
+        </div>
+
+    </div>
+</div>
+
+        <div id="friends" class="tab-view">
+            <div class="friends-subtabs" id="friendsSubtabs">
+                <div class="friends-subtab active" data-subtab="friends" onclick="switchFriendsSubtab('friends')">Friends <span id="subtabCount-friends">(0)</span></div>
+                <div class="friends-subtab" data-subtab="followers" onclick="switchFriendsSubtab('followers')">Followers <span id="subtabCount-followers">(0)</span></div>
+                <div class="friends-subtab" data-subtab="following" onclick="switchFriendsSubtab('following')">Following <span id="subtabCount-following">(0)</span></div>
+                <div class="friends-subtab" data-subtab="suggested" onclick="switchFriendsSubtab('suggested')">Suggested <span id="subtabCount-suggested">(0)</span></div>
+            </div>
+
+            <div id="friendsSubtabPanel-friends" class="friends-subtab-panel active">
+                <div id="friendsListView">
+                    <div id="closeFriendsSection" style="display:none;">
+                        <div class="friends-section-label">⭐ Close Friends</div>
+                        <div id="close-friends-container"></div>
+                    </div>
+                    <div id="allFriendsSection">
+                        <div id="friends-list-container"></div>
+                    </div>
+                </div>
+                <div class="network-view-container" id="networkViewContainer">
+                    <div class="network-hint">Tap a node to open the chat. Brighter lines mean you talk more often.</div>
+                    <div class="network-svg-wrap" id="networkSvgWrap"></div>
+                </div>
+            </div>
+
+            <div id="friendsSubtabPanel-followers" class="friends-subtab-panel">
+                <div id="followers-list-container"></div>
+            </div>
+
+            <div id="friendsSubtabPanel-following" class="friends-subtab-panel">
+                <div id="following-list-container"></div>
+            </div>
+
+            <div id="friendsSubtabPanel-suggested" class="friends-subtab-panel">
+                <div id="suggested-list-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="updatesOverlay">
+    <div class="nexus-updates-container">
+
+     <div class="status-horizontal-reel" id="statusReelContainer"></div>
+       <div class="section-title-area">
+    <span class="section-title">Expiring Soon</span>
+    <div class="view-toggle-group">
+        <button class="view-toggle-btn active" id="listViewBtn" onclick="setUpdatesView('list')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <button class="view-toggle-btn" id="gridViewBtn" onclick="setUpdatesView('grid')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+    </div>
+</div>
+<div class="status-updates-list" id="statusUpdatesListContainer"></div>
+<div class="status-updates-grid" id="statusUpdatesGridContainer" style="display:none;"></div> 
+    </div>
+        
+    <div class="premium-blur-overlay" id="globalGlassOverlay" onclick="hidePremiumOverlay()">
+        <div class="glass-panel-container" onclick="event.stopPropagation()">
+            
+            <div class="glass-panel-header">
+                <h2>Add status</h2>
+                <div class="glass-close-x" onclick="hidePremiumOverlay()">✕</div>
+            </div>
+            
+            <div class="glass-cards-row">
+                
+                <div class="overlay-action-card" onclick="dispatchAction('camera')">
+                    <div class="overlay-card-ring or-camera">📷</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Camera</span>
+                </div>
+
+                <div class="overlay-action-card" onclick="dispatchAction('gallery')">
+                    <div class="overlay-card-ring or-gallery">🖼️</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Gallery</span>
+                </div>
+
+                <div class="overlay-action-card" onclick="dispatchAction('text')">
+                    <div class="overlay-card-ring or-text">✏️</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1516414447565-b14be0adf13e?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Text</span>
+                </div>
+
+                <div class="overlay-action-card" onclick="dispatchAction('music')">
+                    <div class="overlay-card-ring or-music">🎵</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Music</span>
+                </div>
+
+                <div class="overlay-action-card" onclick="dispatchAction('voice')">
+                    <div class="overlay-card-ring or-voice">🎙️</div>
+                    <div class="overlay-card-bg" style="background-image: url('https://images.unsplash.com/photo-1478737270239-2f02b77fc618?q=80&w=150&auto=format&fit=crop');"></div>
+                    <span class="overlay-card-label">Voice</span>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- COMPOSE PREVIEW: hoto/video preview + caption + privacy kafin post -->
+    <div class="premium-blur-overlay" id="composePreviewOverlay">
+        <div class="glass-panel-container" onclick="event.stopPropagation()">
+            <div class="glass-panel-header">
+                <h2>New Status</h2>
+                <div class="glass-close-x" onclick="cancelComposePreview()">✕</div>
+            </div>
+            <div class="compose-preview-media">
+                <img id="composePreviewImg" style="display:none;">
+                <video id="composePreviewVideo" style="display:none;" controls muted></video>
+            </div>
+            <textarea id="composeCaptionInput" class="compose-caption-input" placeholder="Add a caption..." rows="2"></textarea>
+            <div class="privacy-picker-row" id="privacyPickerRow">
+                <div class="privacy-chip active" data-vis="friends" onclick="setUploadPrivacy('friends')">👥 Friends</div>
+                <div class="privacy-chip" data-vis="closeFriends" onclick="setUploadPrivacy('closeFriends')">💚 Close Friends</div>
+                <div class="privacy-chip" data-vis="except" onclick="setUploadPrivacy('except')">🚫 Except</div>
+            </div>
+            <div class="compose-actions-row">
+                <button class="compose-cancel-btn" onclick="cancelComposePreview()">Cancel</button>
+                <button class="compose-post-btn" id="composePostBtn" onclick="confirmPostStatus()">Post</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEWERS SHEET: yana nuna wanene ya duba My Status -->
+    <div class="premium-blur-overlay" id="viewersSheetOverlay" onclick="hideViewersSheet()">
+        <div class="glass-panel-container" onclick="event.stopPropagation()">
+            <div class="glass-panel-header">
+                <h2 id="viewersSheetTitle">Viewed by</h2>
+                <div class="glass-close-x" onclick="hideViewersSheet()">✕</div>
+            </div>
+            <div class="viewers-sheet-body" id="viewersSheetBody"></div>
+        </div>
+    </div>
+
+    <!-- CONTEXT MENU: Mute / Privacy / Delete (long-press a kan katin status) -->
+    <div class="ctx-menu-overlay" id="ctxMenuOverlay" onclick="hideCtxMenu()">
+        <div class="ctx-menu-sheet" onclick="event.stopPropagation()">
+            <div class="ctx-menu-handle"></div>
+            <div id="ctxMenuItems"></div>
+        </div>
+    </div>
+
+    <!-- MY STATUS LIST: WhatsApp-style, overlay ne ba independent page ba -->
+    <div class="my-status-list-overlay" id="myStatusListOverlay">
+        <div class="mysl-header">
+            <span class="mysl-back" onclick="closeMyStatusList()">←</span>
+            <h2>My Status</h2>
+        </div>
+        <div class="mysl-body" id="myStatusListBody"></div>
+        <div class="mysl-fab" onclick="closeMyStatusList(); triggerAddStatus();">📷</div>
+
+        <div class="slide-dropdown-catcher" id="slideDropdownCatcher" onclick="closeSlideDropdown()"></div>
+        <div class="slide-dropdown-menu" id="slideDropdownMenu" style="display:none;"></div>
+    </div>
+
+    <div class="nx-toast" id="nxToast"></div>
+
+    <input type="file" id="hiddenCameraInput" accept="image/*" style="display: none;" onchange="handleStatusUpload(this, 'image')">
+    <input type="file" id="hiddenVideoInput" accept="video/*" style="display: none;" onchange="handleStatusUpload(this, 'video')">
+</div>
+
+
+    <div class="friend-action-backdrop" id="friendActionBackdrop" onclick="if(event.target===this) closeFriendActions()">
+        <div class="friend-action-sheet">
+            <div class="friend-action-sheet-handle"></div>
+            <div class="friend-action-sheet-title" id="friendActionTitle">Friend</div>
+
+            <div class="friend-action-item" id="friendActionSeeFriends">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span class="friend-action-text"><span id="friendActionSeeFriendsLabel">See Friends</span></span>
+            </div>
+            <div class="friend-action-item" id="friendActionMessage">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span class="friend-action-text"><span id="friendActionMessageLabel">Message</span></span>
+            </div>
+            <div class="friend-action-item" id="friendActionProfile">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg>
+                <span class="friend-action-text"><span>View Profile</span></span>
+            </div>
+            <div class="friend-action-item" id="friendActionPin">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"></polygon></svg>
+                <span class="friend-action-text"><span id="friendActionPinLabel">Add to Close Friends</span></span>
+            </div>
+            <div class="friend-action-item" id="friendActionMute">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                <span class="friend-action-text">
+                    <span id="friendActionMuteLabel">Mute Posts</span>
+                    <span class="friend-action-desc" id="friendActionMuteDesc">Stop seeing their posts in your feed. You'll stay friends and they won't be notified.</span>
+                </span>
+            </div>
+
+            <div class="friend-action-divider"></div>
+
+            <div class="friend-action-item danger" id="friendActionBlock">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line></svg>
+                <span class="friend-action-text">
+                    <span id="friendActionBlockLabel">Block</span>
+                    <span class="friend-action-desc">They won't be able to message you, see your profile, or find you in search.</span>
+                </span>
+            </div>
+            <div class="friend-action-item danger" id="friendActionRemove">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"></circle><path d="M2 21c0-4.4 3.1-8 7-8s7 3.6 7 8"></path><line x1="17" y1="10" x2="23" y2="10"></line></svg>
+                <span class="friend-action-text">
+                    <span id="friendActionRemoveLabel">Remove Friend</span>
+                    <span class="friend-action-desc">You'll unfollow each other and stop appearing as friends.</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avatar photo viewer — opened when tapping an avatar that has no active
+         status (Personal/Friends), or on the 2nd tap after its status was seen,
+         or always for Groups/Pages/Channels. -->
+    <div class="avatar-photo-backdrop" id="avatarPhotoBackdrop" onclick="if(event.target===this) closeAvatarPhotoViewer()">
+        <div class="avatar-photo-card">
+            <div class="apv-image-wrap">
+                <div class="apv-close" onclick="closeAvatarPhotoViewer()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </div>
+                <img id="apvImage" class="apv-image" src="" alt="">
+                <div class="apv-title-overlay"><span id="apvName"></span></div>
+                <div class="apv-cap-bar" id="apvCapBar"><!-- an cika ta ta hanyar renderApvCapBar() --></div>
+            </div>
+        </div>
+    </div>
+    <!-- Highlights mini-viewer (Groups/Pages/Channels) — see openApvHighlights() -->
+    <div id="apvHighlightsOverlay">
+        <div class="apv-hl-progress" id="apvHlProgress"></div>
+        <div class="apv-hl-close" onclick="closeApvHighlights()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </div>
+        <img id="apvHlMedia" class="apv-hl-media" src="" alt="">
+        <div class="apv-hl-caption" id="apvHlCaption"></div>
+        <div class="apv-hl-zones">
+            <div id="apvHlZoneLeft"></div>
+            <div id="apvHlZoneRight"></div>
+        </div>
+    </div>
+
+    <div class="carpet-portal" id="carpetPortal">
+        <div class="portal-top-bar">
+            <div class="portal-left-controls">
+                <div id="portalBackBtn" onclick="backToPortalMenu()" style="cursor: pointer; display: none; align-items: center; color: var(--text-dim); margin-right: 4px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </div>
+                <span class="portal-headline" id="portalMainHeadline"></span>
+            </div>
+
+        </div>
+        
+        <div id="portalMainMenuOptions" class="portal-options-container">
+            <div class="futuristic-option-btn" onclick="triggerOptionAction('status')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                Add Status
+            </div>
+            <div class="futuristic-option-btn" onclick="triggerOptionAction('group')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Create Group
+            </div>
+           <div class="futuristic-option-btn" onclick="triggerOptionAction('page')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                Create Page
+            </div>
+            <div class="futuristic-option-btn" onclick="triggerOptionAction('channel')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg>
+                Create Channel
+            </div>
+        </div> 
+
+       </div>
+
+    <!-- ================================================================
+         GROUP/PAGE/CHANNEL INVITE PICKER — full-page overlay (WhatsApp-
+         style "New Group" contact picker), reusing the app's real
+         friendsDataCache (same data as the Friends tab) and real theme
+         colors, instead of the small carpet-portal dropdown.
+         ================================================================ -->
+    <div id="groupInviteOverlay">
+        <header class="gio-header">
+            <div class="gio-header-top">
+                <div class="gio-back-trigger" onclick="closeGroupInviteOverlay()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+                </div>
+                <div>
+                    <h1 id="gioTitle">New Group</h1>
+                    <p id="gioSubtitle">Who would you like to add?</p>
+                </div>
+            </div>
+            <div id="selectedChipsRow"></div>
+            <div class="gio-search-bar-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="gioSearchInput" placeholder="Who would you like to add?" oninput="filterInviteContacts(this.value)">
+            </div>
+        </header>
+        <div class="portal-scrollable-body" id="carpet-contacts-list"></div>
+        <div class="gio-fab-continue" id="portalSubmitActionButton" onclick="initializeGroupFromOverlay()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+    </div> 
+
+    <!-- ================================================================
+         GROUP CREATE OVERLAY — Phase 1: full-page in-app overlay maimakon
+         group-create.html mai zaman kansa, domin guje wa full page reload.
+         ================================================================ -->
+    <div id="groupCreateOverlay">
+        <header class="cfo-header">
+            <div class="cfo-back-trigger" onclick="closeGroupCreateOverlay()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+            </div>
+            <h1>New Group</h1>
+        </header>
+
+        <div class="photo-picker-wrap">
+            <div class="photo-picker" onclick="showToast('Photo upload isn\'t wired up yet — the group will use its initials as an icon for now.')">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Add Photo</span>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <input type="text" class="field-input" id="gcoName" placeholder="Group name" maxlength="30" oninput="gcoOnNameInput();" autocomplete="off">
+            <div class="char-count"><span id="gcoNameCount">0</span>/30</div>
+            <div class="slug-preview" id="gcoSlugPreview"></div>
+        </div>
+
+        <div class="field-group">
+            <textarea class="field-input" id="gcoDesc" placeholder="Description (optional)" rows="3" maxlength="120" oninput="gcoUpdateCounts();"></textarea>
+            <div class="char-count"><span id="gcoDescCount">0</span>/120</div>
+        </div>
+
+        <div class="section-label">Group Type</div>
+
+        <div class="privacy-row" onclick="gcoSetPrivacy('public')">
+            <div class="privacy-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="privacy-text">
+                <h3>Public Group</h3>
+                <p>Anyone can find and join via link or search</p>
+            </div>
+            <div class="radio-dot checked" id="gcoRadioPublic"></div>
+        </div>
+
+        <div class="privacy-row" onclick="gcoSetPrivacy('private')">
+            <div class="privacy-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="privacy-text">
+                <h3>Private Group</h3>
+                <p>Only people with an invite link can join</p>
+            </div>
+            <div class="radio-dot" id="gcoRadioPrivate"></div>
+        </div>
+
+        <div class="ownership-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>You'll be the permanent owner and admin of this group — that can't be transferred or taken over by anyone else.</span>
+        </div>
+
+        <div class="section-label" id="gcoInviteSectionLabel" style="display:none;">Adding to this group</div>
+        <div id="gcoPendingInvitesList" style="display:none; flex-wrap:wrap; gap:8px; padding:6px 16px 4px 16px;"></div>
+
+        <div class="error-banner" id="gcoErrorBanner"></div>
+        <div class="create-btn-wrap">
+            <div class="create-btn disabled" id="gcoCreateBtn" onclick="gcoCreateGroup()">Create Group</div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         PAGE CREATE OVERLAY — Phase 2: full-page in-app overlay maimakon
+         page-create.html mai zaman kansa.
+         ================================================================ -->
+    <div id="pageCreateOverlay">
+        <header class="cfo-header">
+            <div class="cfo-back-trigger" onclick="closePageCreateOverlay()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+            </div>
+            <h1>New Page</h1>
+        </header>
+
+        <div class="photo-picker-wrap">
+            <div class="photo-picker" onclick="showToast('Photo upload isn\'t wired up yet — the page will use its initials as an icon for now.')">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Add Photo</span>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <input type="text" class="field-input" id="pcoName" placeholder="Page name" maxlength="30" oninput="pcoOnNameInput();" autocomplete="off">
+            <div class="char-count"><span id="pcoNameCount">0</span>/30</div>
+            <div class="slug-preview" id="pcoSlugPreview"></div>
+        </div>
+
+        <div class="field-group">
+            <textarea class="field-input" id="pcoDesc" placeholder="What is this page about?" rows="3" maxlength="120" oninput="pcoUpdateCounts();"></textarea>
+            <div class="char-count"><span id="pcoDescCount">0</span>/120</div>
+        </div>
+
+        <div class="section-label">Category</div>
+        <div class="category-scroll" id="pcoCategoryScroll"></div>
+
+        <div class="info-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>Pages are always public and discoverable — anyone can find and follow this page.</span>
+        </div>
+
+        <div class="ownership-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>You'll be the permanent owner and admin of this page — that can't be transferred or taken over by anyone else.</span>
+        </div>
+
+        <div class="section-label" id="pcoInviteSectionLabel" style="display:none;">Adding to this page</div>
+        <div id="pcoPendingInvitesList" style="display:none; flex-wrap:wrap; gap:8px; padding:6px 16px 4px 16px;"></div>
+
+        <div class="error-banner" id="pcoErrorBanner"></div>
+        <div class="create-btn-wrap">
+            <div class="create-btn disabled" id="pcoCreateBtn" onclick="pcoCreatePage()">Create Page</div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         CHANNEL CREATE OVERLAY — Phase 3: full-page in-app overlay
+         maimakon create-channel.html mai zaman kansa.
+         ================================================================ -->
+    <div id="channelCreateOverlay">
+        <header class="cfo-header">
+            <div class="cfo-back-trigger" onclick="closeChannelCreateOverlay()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+            </div>
+            <h1>New Channel</h1>
+        </header>
+
+        <div class="photo-picker-wrap">
+            <div class="photo-picker" onclick="showToast('Photo upload isn\'t wired up yet — the channel will use its initials as an icon for now.')">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Add Photo</span>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <input type="text" class="field-input" id="ccoName" placeholder="Channel name" maxlength="30" oninput="ccoOnNameInput();" autocomplete="off">
+            <div class="char-count"><span id="ccoNameCount">0</span>/30</div>
+            <div class="slug-preview" id="ccoSlugPreview"></div>
+        </div>
+
+        <div class="field-group">
+            <textarea class="field-input" id="ccoDesc" placeholder="Description (optional)" rows="3" maxlength="120" oninput="ccoUpdateCounts();"></textarea>
+            <div class="char-count"><span id="ccoDescCount">0</span>/120</div>
+        </div>
+
+        <div class="section-label">Category</div>
+        <div class="category-scroll" id="ccoCategoryScroll"></div>
+
+        <div class="section-label">Channel Type</div>
+
+        <div class="privacy-row" onclick="ccoSetPrivacy('public')">
+            <div class="privacy-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="privacy-text">
+                <h3>Public Channel</h3>
+                <p>Anyone can find and join via link or search</p>
+            </div>
+            <div class="radio-dot checked" id="ccoRadioPublic"></div>
+        </div>
+
+        <div class="privacy-row" onclick="ccoSetPrivacy('private')">
+            <div class="privacy-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="privacy-text">
+                <h3>Private Channel</h3>
+                <p>Only people with an invite link can join</p>
+            </div>
+            <div class="radio-dot" id="ccoRadioPrivate"></div>
+        </div>
+
+        <div class="ownership-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>You'll be the permanent owner and admin of this channel — that can't be transferred or taken over by anyone else, even if they open it before you finish setting it up.</span>
+        </div>
+
+        <div class="section-label" id="ccoInviteSectionLabel" style="display:none;">Adding to this channel</div>
+        <div id="ccoPendingInvitesList" style="display:none; flex-wrap:wrap; gap:8px; padding:6px 16px 4px 16px;"></div>
+
+        <div class="error-banner" id="ccoErrorBanner"></div>
+        <div class="create-btn-wrap">
+            <div class="create-btn disabled" id="ccoCreateBtn" onclick="ccoCreateChannel()">Create Channel</div>
+        </div>
+    </div>
+
+<div class="fab-new-chat" onclick="openNewMessageOverlay()">
+        <svg width="52" height="52" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" style="transform: scaleX(-1);">
+
+            <!-- Bubble -->
+            <path
+                d="
+                    M21 4
+                    C11.6 4 4 11.6 4 21
+                    C4 30.4 11.6 38 21 38
+                    L33.5 38
+                    C35.5 38 37 36.5 37 34.5
+                    C37 33 36.3 31.7 35 30.8
+                    C36.9 28.1 38 24.7 38 21
+                    C38 11.6 30.4 4 21 4
+                    Z"
+                fill="#D4D0C8"
+            />
+
+            <!-- Tail -->
+            <path
+                d="
+                    M30.8 30
+                    C32.5 31.5 34.5 33.5 37 38
+                    L31 38
+                    C29.3 38 28 36.7 28 35
+                    C28 33.2 29 31.5 30.8 30
+                    Z"
+                fill="#D4D0C8"
+            />
+
+            <!-- Plus -->
+            <path
+                d="M21 14V26"
+                stroke="#1E1E1E"
+                stroke-width="3.4"
+                stroke-linecap="round"
+            />
+
+            <path
+                d="M15 20H27"
+                stroke="#1E1E1E"
+                stroke-width="3.4"
+                stroke-linecap="round"
+            />
+
+        </svg>
+</div>
+<div id="statusOverlay">
+    <div class="story-matrix-container" id="matrixContainer">
+        <div class="ambient-projector" id="ambientProjector"></div>
+        <div class="scan-overlay"></div>
+
+        <div class="hud-progress-timeline" id="hudTimeline"></div>
+
+        <div class="hud-header">
+            <div class="hud-back-arrow" onclick="closeStatusOverlay()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </div>
+            <div class="cyber-user-node">
+                <div class="avatar-ring-status">
+                    <img src="" id="hudAvatar">
+                </div>
+                <div class="node-meta">
+                    <h2 id="hudUsername">System Booting...</h2>
+                    <span class="story-time" id="hudTimeLabel">1h ago</span>
+                </div>
+            </div>
+            <div class="hud-action-node owner-delete-btn" id="ownerDeleteBtn" style="display:none;" onclick="deleteCurrentSlide()" title="Delete this status">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+            </div>
+        </div>
+
+        <div class="cyber-touch-grids">
+            <div class="grid-left" id="touchLeft"></div>
+            <div class="grid-right" id="touchRight"></div>
+        </div>
+
+        <div class="viewport-canvas" id="viewportCanvas">
+            <img src="" class="matrix-media-frame" id="matrixMedia">
+            <div class="double-tap-heart" id="doubleTapHeart">❤️</div>
+        </div>
+
+        <div class="reaction-strip" id="reactionStrip">
+            <span onclick="sendReaction('❤️')">❤️</span><span onclick="sendReaction('😂')">😂</span>
+            <span onclick="sendReaction('😮')">😮</span><span onclick="sendReaction('😢')">😢</span>
+            <span onclick="sendReaction('🔥')">🔥</span><span onclick="sendReaction('👏')">👏</span>
+        </div>
+
+        <div class="viewers-strip" id="viewersStrip" style="display:none;" onclick="openViewersSheet()">
+            <div class="vs-avatars" id="viewersStripAvatars"></div>
+            <span id="viewersStripCount">0 views</span>
+        </div>
+
+        <div class="hud-footer-capsule" id="footerCapsule">
+            <div class="hud-action-node" id="ghostNode" onclick="toggleGhostInfiltration()" title="Ghost Mode (Incognito View)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+
+            <div class="hud-action-node tip-btn" onclick="triggerSynergyTip()" title="Tip Synergy Token">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--magenta-neon)" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+
+            <textarea class="cyber-input" id="replyInput" placeholder="Type a message..." rows="1"></textarea>
+
+            <div class="hud-action-node" id="aiEnhanceBtn" onclick="enhanceWithAI()" title="AI Story Enhancer">✨</div>
+            <div class="hud-action-node" id="duetBtn" onclick="startDuetRecording()" title="Story Duet">🎬</div>
+
+            <div class="hud-action-node share-btn" onclick="shareToMyStatus()" title="Share to My Status">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00F2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>
+                </svg>
+            </div>
+
+            <div class="hud-action-node" onclick="executeMediaDownload()" title="Download Status to Storage">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="viewers-sheet-overlay" id="statusViewersSheetOverlay" onclick="closeViewersSheet()">
+        <div class="vsheet-panel" onclick="event.stopPropagation()">
+            <h3 id="vsheetTitle">Viewed by</h3>
+            <div id="vsheetBody"></div>
+        </div>
+    </div>
+
+    <div class="nx-toast-status" id="nxToastStatus"></div>
+</div>
+
+    <!-- ================================================================
+         NEW MESSAGE OVERLAY — markup ported from the old create-group.html
+         page. Namespaced with "nmo-" classes / "nmo" ids throughout.
+         ================================================================ -->
+    <div id="newMessageOverlay">
+        <header class="nmo-header">
+            <div class="nmo-header-top">
+                <div class="nmo-back-trigger" onclick="closeNewMessageOverlay()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+                </div>
+                <h1>New Message</h1>
+                  <div class="nmo-filter-wrap">
+                    <div class="nmo-sort-icon" onclick="toggleNmoFilterMenu(event)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    </div>
+                    <div class="nmo-filter-menu" id="nmoFilterMenu">
+                        <div class="nmo-filter-option active" onclick="applyNmoFilter('all', this)">All</div>
+                        <div class="nmo-filter-option" onclick="applyNmoFilter('online', this)">Online now</div>
+                        <div class="nmo-filter-option" onclick="applyNmoFilter('recent', this)">Recently active</div>
+                        <div class="nmo-filter-option" onclick="applyNmoFilter('month', this)">Within this month</div>
+                        <div class="nmo-filter-option" onclick="applyNmoFilter('longago', this)">Long time ago</div>
+                        <div class="nmo-filter-option" onclick="applyNmoFilter('deleted', this)">Deleted</div>
+                        <div class="nmo-filter-option" onclick="applyNmoFilter('deactivated', this)">Deactivated</div>
+                    </div>
+                  </div>
+            </div>
+
+            <div class="nmo-search-bar-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="nmoSearchInput" placeholder="Search Contacts" oninput="filterNmoContacts(this.value)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+            </div>
+        </header>
+
+       <div class="nmo-action-card">
+            <div class="nmo-quick-action-item" onclick="event.stopPropagation(); closeNewMessageOverlay(); triggerOptionAction('group');">                
+                <div class="nmo-quick-action-icon" style="background:#2F8CE0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M17 20v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <h3>New Group</h3>
+            </div>
+             <div class="nmo-quick-action-item" onclick="event.stopPropagation(); closeNewMessageOverlay(); triggerOptionAction('page');">              
+                <div class="nmo-quick-action-icon" style="background:#8E6FF0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M4 3h12l4 4v14H4z"/><path d="M16 3v4h4"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>
+                </div>
+                <h3>New Page</h3>
+            </div>
+        <div class="nmo-quick-action-item" onclick="event.stopPropagation(); closeNewMessageOverlay(); triggerOptionAction('channel');">            
+                <div class="nmo-quick-action-icon" style="background:#3EC95F;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 8a5 5 0 0 1 0 8"/><path d="M18 5a9 9 0 0 1 0 14"/></svg>
+                </div>
+                <h3>New Channel</h3>
+            </div>
+       </div> 
+
+        <div class="nmo-contacts-card">
+            <div class="nmo-sorted-label">Sorted by last seen time</div>
+            <div id="nmoContactsListContainer"></div>
+        </div>
+
+        <div class="nmo-fab-add-contact" onclick="openAddFriendsOverlay()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E1E1E" stroke-width="2.4"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         ADD FRIENDS OVERLAY — Following + Suggested, reusing the app's
+         real loadFollowingList() / loadSuggestedTab() / personRowHtml().
+         ================================================================ -->
+    <div id="addFriendsOverlay">
+        <header class="nmo-header">
+            <div class="nmo-header-top">
+                <div class="nmo-back-trigger" onclick="closeAddFriendsOverlay()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg>
+                </div>
+                <h1>Add Friends</h1>
+            </div>
+            <div class="afo-subtabs">
+                <div class="afo-subtab active" id="afoSubtab-following" onclick="switchAfoSubtab('following')">Following</div>
+                <div class="afo-subtab" id="afoSubtab-suggested" onclick="switchAfoSubtab('suggested')">Suggested</div>
+            </div>
+        </header>
+
+        <div class="afo-panel active" id="afoPanel-following">
+            <div id="afoFollowingContainer"></div>
+        </div>
+        <div class="afo-panel" id="afoPanel-suggested">
+            <div id="afoSuggestedContainer"></div>
+        </div>
+    </div>
+</main>
+<div id="footer-placeholder"></div>
+<script src="footer.js?v=4"></script>
+<script src="chats.js?v=1"></script>
+</body>
+</html>
