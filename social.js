@@ -577,9 +577,10 @@ function toggleMinimalMenu() {
 document.addEventListener('click', function(event) {
     const dropdown = document.getElementById('CyberDropdown');
     const menuBtn = document.getElementById('cyberMenu');
-    
+    if (!dropdown || !menuBtn) return;
+
     if (!dropdown.contains(event.target) && !menuBtn.contains(event.target)) {
-        dropdown.classList.remove('Active');
+dropdown.classList.remove('Active');
         menuBtn.classList.remove('is-active');
     }
 });
