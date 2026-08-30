@@ -1345,14 +1345,14 @@ function initHealthPage() {
     // WAJEN #page-content a shell din, don haka SPA content-swap baya
     // taba shi — sai a boye shi da hannu a nan, a mayar da shi a
     // destroyHealthPage() domin sauran pages da suke bukatarsa.
-    const footer = document.getElementById('footer-placeholder');
-    if (footer) footer.style.display = 'none';
+    const footer = document.getElementById('instaFooter');
+    if (footer) footer.classList.add('footer-hidden');
 }
 
 function destroyHealthPage() {
     clearTimeout(window._toastTimer);
-    const footer = document.getElementById('footer-placeholder');
-    if (footer) footer.style.display = '';
+    const footer = document.getElementById('instaFooter');
+    if (footer) footer.classList.remove('footer-hidden');
 }
 
 if (window.NexusRouter) {
