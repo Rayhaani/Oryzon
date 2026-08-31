@@ -314,6 +314,7 @@
             }
             const script = document.createElement('script');
             script.src = src;
+            script.async = false;
             script.onload = function () {
                 loadedScripts.add(src);
                 resolve();
