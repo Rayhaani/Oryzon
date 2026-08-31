@@ -287,6 +287,7 @@ async function bootStoreFront() {
             modal.style.display = 'none';
         };
     } catch (err) {
+        document.getElementById('storeName').textContent = 'ERROR: ' + err.message;
         console.error('bootStoreFront failed:', err);
     }
 }
