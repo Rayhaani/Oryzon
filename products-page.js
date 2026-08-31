@@ -273,13 +273,7 @@ async function ensureProductsPageFirebase() {
 }
 
 function goBackToStore() {
-    if (document.referrer && document.referrer.includes('store-front.html')) {
-        history.back();
-    } else if (window.currentVendorId) {
-        NexusRouter.navigateTo(`store-front.html?vendor=${encodeURIComponent(window.currentVendorId)}`);
-    } else {
-        history.back();
-    }
+    history.back();
 }
 
 async function loadSellerInfo(vendorId) {
