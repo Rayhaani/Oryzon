@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNERGY | FACEBOOK STYLE V13</title>
+    <script src="router.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+   <script src="nexus-core.js"></script>
+   <script src="post-card-template.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
+    <link rel="stylesheet" href="me.css">
+</head>
+<body>
+
+<main id="page-content">
+<!-- COVER - taba ko'ina ya buɗe gallery -->
+<div style="width: 100%; height: 160px; overflow: hidden; position: relative; cursor: pointer;"
+     onclick="document.getElementById('cover-upload').click()">
+    <img id="main-cover-img" src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200" 
+         style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
+    <input type="file" id="cover-upload" accept="image/*" class="hidden" onchange="updatePhoto(event, 'cover')">
+</div>
+
+<!-- AVATAR + SUNA + STATS -->
+<div style="display: flex; align-items: flex-start; padding: 0 15px; margin-top: -45px;">
+    
+    <!-- AVATAR -->
+ <div style="width: 90px; height: 90px; border-radius: 50%; padding: 2px; background: #050505; position: relative; flex-shrink: 0; z-index: 30;">
+    <img id="main-profile-img" src="https://api.dicebear.com/7.x/bottts/svg?seed=mamba" 
+         style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #050505;">    
+         <!-- Camera icon -->
+        <div onclick="event.stopPropagation(); document.getElementById('profile-upload').click()" 
+             style="position: absolute; bottom: 0; right: 0; width: 26px; height: 26px; background: #e4e6eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #050505; cursor: pointer; z-index: 40;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+        </div>
+    </div>
+    <!-- ↑ AVATAR div ya rufe -->
+
+    <!-- Input a WAJE daga avatar div, amma cikin flex row -->
+    <input type="file" id="profile-upload" accept="image/*" class="hidden" onchange="updatePhoto(event, 'profile')">
+
+    <!-- SUNA + STATS -->
+    <div style="flex: 1; padding-left: 12px; margin-top: 48px;">
+        
+        <!-- Suna -->
+        <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 8px;">
+            <h1 id="profile-name-text" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 800; color: #fff; margin: 0;">Loading...</h1>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#fde08d"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.97-.81-4.08s-2.49-1.46-4.08-1.27c-.66-1.1-1.91-1.81-3.17-1.81s-2.51.71-3.17 1.81c-1.58-.19-3.07.16-4.08 1.27s-1.27 2.69-.81 4.08c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.97.81 4.08s2.49 1.46 4.08 1.27c.66 1.1 1.91 1.81 3.17 1.81s2.51-.71 3.17-1.81c1.58.19 3.07-.16 4.08-1.27s1.27-2.69.81-4.08c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.25L6.85 12.5l1.44-1.44 2.25 2.25 5.27-5.27 1.44 1.44-6.71 6.77z"/></svg>
+            <span id="getVerifiedBtn" onclick="openSubModal()" style="color: #fde08d; font-size: 11px; font-weight: 700; cursor: pointer;">Get Verified</span>
+        </div>
+
+        <!-- Stats -->
+        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 0;">
+            
+            <div onclick="switchTab('showcase')" style="cursor: pointer; display: flex; align-items: baseline; gap: 4px; margin-right: 14px;">
+                <span id="stats-posts-count" style="font-size: 14px; font-weight: 700; color: #fff;">0</span>
+                <span style="font-size: 12px; color: #71767b;">Posts</span>
+            </div>
+
+            <div style="cursor: pointer; display: flex; align-items: baseline; gap: 4px; margin-right: 14px;">
+    <span id="stats-followers-count" style="font-size: 14px; font-weight: 700; color: #fff;">0</span>
+    <span style="font-size: 12px; color: #71767b;">Followers</span>
+            </div>
+
+            <div style="cursor: pointer; display: flex; align-items: baseline; gap: 4px;">
+    <span id="stats-friends-count" style="font-size: 14px; font-weight: 700; color: #fff;">0</span>
+    <span id="stats-third-label" style="font-size: 12px; color: #71767b;">Friends</span>
+            </div>
+
+        </div>
+    </div>
+    <!-- ↑ SUNA+STATS div ya rufe -->
+
+</div>
+<!-- ↑ AVATAR+SUNA row div ya rufe -->
+    
+
+                <div class="mt-4 pt-2" style="padding: 0 15px;">
+                    <p class="text-gray-400 text-[11px] leading-relaxed max-w-sm mb-4">
+                        <span class="text-white font-bold">Global Trust Authority</span> | <span class="text-cyan-400">@SynergyProtocol</span><br>
+                        Crafting the largest Wholesale Directory in Kano. 
+                        Wholesaler of Luxury Sudanese Toubs & Traditional Wear.
+                    </p>
+                    <div class="flex gap-3 mb-6">
+                        
+                    <button id="follow-btn" onclick="toggleFollow()" class="btn-slim btn-black">Follow</button>
+
+                    <button id="editProfileBtn" onclick="openEditProfileModal()" class="btn-slim btn-black" style="display:none;">Edit Profile</button>
+
+                    <button id="contact-btn" onclick="handleChatBtn()" class="btn-slim btn-white flex items-center justify-center">Chat</button>
+
+<!-- Dropdown menu -->
+<div id="chat-dropdown" style="
+    display:none;
+    position:absolute;
+    background:#111;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;
+    overflow:hidden;
+    z-index:9999;
+    min-width:200px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    backdrop-filter:blur(20px);
+">
+    <div onclick="window.location.href='chat-interior.html?with='+getProfileUser()" style="
+        padding:14px 18px;
+        display:flex; align-items:center; gap:10px;
+        border-bottom:1px solid rgba(255,255,255,0.06);
+        cursor:pointer;
+        font-size:13px; font-weight:600; color:#fff;
+    ">
+        <i class="fa-regular fa-comment" style="color:#00f2fe; font-size:16px;"></i>
+        Personal Chat
+    </div>
+    <div onclick="window.location.href='vendor-chat.html?vendorId='+getProfileUser()" style="
+        padding:14px 18px;
+        display:flex; align-items:center; gap:10px;
+        cursor:pointer;
+        font-size:13px; font-weight:600; color:#fff;
+    ">
+        <i class="fa-solid fa-store" style="color:#fde08d; font-size:16px;"></i>
+        Business Chat
+    </div>
+</div>
+
+                        
+                    </div>
+                    <div class="smart-box-highlights" id="highlights-box">
+    <div class="highlights-scroll" id="highlights-scroll"></div>
+                    </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-4 my-6">
+     <button id="btn-showcase" onclick="switchTab('showcase')" class="btn-slim btn-white">Showcase</button>
+     <button id="btn-timeline" onclick="switchTab('timeline')" class="btn-slim btn-trans">Timeline</button>
+</div>
+
+<!-- Ka tabbatar timeline-area yana farawa da "display: none" a CSS ko kuma ka bashi class="hidden" -->
+<div id="timeline-area" class="hidden pb-10 px-1">
+    <!-- Post zasu shigo nan -->
+</div>
+        
+        
+        <!-- SHOWCASE AREA (Dynamic) -->
+<div id="showcase-area" class="insta-grid pb-10">
+    <!-- Hotunan Firebase za su fito a nan -->
+</div>
+        
+
+        <!-- TIMELINE AREA WITH FULL DETAILS -->
+        <div id="timeline-area" class="hidden pb-10 px-1">
+        <!-- Post 1 -->
+            <div class="glass-vault p-4 rounded-[30px] border-none bg-white/5">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=mamba" class="w-10 h-10 rounded-full border border-cyan-400/30">
+                        <div>
+                            <h4 class="text-white font-bold text-xs">Aliyu Haedar</h4>
+                            <p class="text-gray-500 text-[10px]">2 hours ago • <span class="text-cyan-400 font-bold">Public</span></p>
+                        </div>
+                    </div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <p class="text-gray-300 text-xs mb-4">Barka da dare abokai! Yau na zagaya kasuwar Kantin Kwari, gaskiya harkar Toubs tana kara bunkasa. 🚀</p>
+                <div class="rounded-2xl overflow-hidden border border-white/5">
+                    <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=500" class="w-full">
+                </div>
+                <div class="flex justify-between mt-4 pt-3 border-t border-white/5">
+                    <div class="flex gap-4">
+                        <span class="text-[10px] text-gray-500 font-bold">❤️ 1.2k</span>
+                        <span class="text-[10px] text-gray-500 font-bold">💬 45 Comments</span>
+                    </div>
+                    <span class="text-[10px] text-cyan-400 font-bold cursor-pointer">Write a comment...</span>
+                </div>
+            </div>
+            
+            <!-- Post 2 -->
+            <div class="glass-vault p-4 rounded-[30px] border-none bg-white/5">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=mamba" class="w-10 h-10 rounded-full border border-cyan-400/30">
+                        <div>
+                            <h4 class="text-white font-bold text-xs">Aliyu Haedar</h4>
+                            <p class="text-gray-500 text-[10px]">Yesterday at 10:45 PM</p>
+                        </div>
+                    </div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <p class="text-[14px] text-white italic font-medium">"Success is not just about profit, it's about the value you bring to your community." 💡</p>
+                <div class="flex gap-4 mt-4 pt-3 border-t border-white/5">
+                    <span class="text-[10px] text-gray-500 font-bold">❤️ 850</span>
+                    <span class="text-[10px] text-gray-500 font-bold">💬 12 Comments</span>
+                </div>
+            </div>
+        </div>
+
+        
+<div id="subscriptionModal" class="premium-global-overlay">
+    <!-- Header: Back Arrow + Title -->
+    <div class="p-nav">
+        <i class="fas fa-arrow-left" onclick="closeSubModal()"></i>
+        <span>Subscribe</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="p-main">
+        <h1 class="p-title">Get verified with Premium</h1>
+        <p class="p-desc">Enjoy an enhanced experience, exclusive creator tools, top-tier verification and security.</p>
+
+        <!-- The Slider Container -->
+        <div class="p-slider">
+            <!-- Card 1 -->
+            <div class="p-card slate">
+                <div class="p-banner"><h2>Premium</h2></div>
+                <div class="p-inner">
+                    <p class="p-section">Enhanced Experience</p>
+                    <div class="p-row"><span>Ads</span><b>Minimal</b></div>
+                    <div class="p-row"><span>Edit Post</span><i class="fas fa-check"></i></div>
+                    <div class="p-row"><span>Longer Videos</span><i class="fas fa-check"></i></div>
+                </div>
+                <button class="p-btn">Subscribe ₦3,050.00/mo</button>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="p-card obsidian">
+                <div class="p-banner"><h2>Premium+</h2></div>
+                <div class="p-inner">
+                    <p class="p-section">Ultimate Experience</p>
+                    <div class="p-row"><span>Ads</span><b>Fully Ad-Free</b></div>
+                    <div class="p-row"><span>Grok AI</span><i class="fas fa-star" style="color:gold"></i></div>
+                    <div class="p-row"><span>Priority</span><b>Largest Boost</b></div>
+                </div>
+                <button class="p-btn gold-vibe">Subscribe ₦38,900.00/mo</button>
+            </div>
+        </div>
+    </div>
+</div>
+        
+     <div class="hl-modal-overlay" id="hlModalOverlay">
+    <div class="hl-modal-box">
+        <h3>Sabon Highlight</h3>
+        <input type="text" id="hlLabelInput" placeholder="Sunan Highlight (misali: Toubs)">
+        <div class="hl-preview-box" id="hlPreviewBox" onclick="document.getElementById('hlFileInput').click()">
+            <span id="hlPreviewText">Danna domin zaɓi hoto/video</span>
+            <input type="file" id="hlFileInput" accept="image/*,video/*" style="display:none">
+        </div>
+        <div class="hl-modal-actions">
+            <button class="hl-btn-cancel" onclick="closeHighlightModal()">Soke</button>
+            <button class="hl-btn-save" onclick="saveNewHighlight()">Ajiye</button>
+        </div>
+    </div>
+     </div>
+
+    <div class="ep-modal-overlay" id="editProfileModalOverlay">
+        <div class="ep-modal-box">
+            <h3>Edit Profile Details</h3>
+            <p class="ep-modal-subtitle">Wannan yana taimaka wa Oryzon nuna maka mutanen da suka fi maka dacewa a "People You May Know".</p>
+
+            <label class="ep-label">Workplace</label>
+            <input type="text" id="epWorkplace" placeholder="e.g. Oryzon Technologies">
+
+            <label class="ep-label">School</label>
+            <input type="text" id="epSchool" placeholder="e.g. Bayero University Kano">
+
+            <label class="ep-label">City / Gari</label>
+            <input type="text" id="epCity" placeholder="e.g. Kano">
+
+            <label class="ep-label">Neighborhood / Unguwa</label>
+            <input type="text" id="epNeighborhood" placeholder="e.g. Sabon Gari">
+
+            <label class="ep-label">Occupation / Sana'a</label>
+            <input type="text" id="epOccupation" placeholder="e.g. Dan Kasuwa, Malami, Injiniya">
+
+            <div class="ep-modal-actions">
+                <button class="ep-btn-cancel" onclick="closeEditProfileModal()">Soke</button>
+                <button class="ep-btn-save" id="epSaveBtn" onclick="saveProfileDetails()">Ajiye</button>
+            </div>
+        </div>
+    </div>
+
+<div class="story-viewer-overlay" id="storyViewerOverlay">
+ <div class="story-header">
+    <img id="storyUserAvatar" src="">
+    <div class="story-user-info">
+        <span class="story-username" id="storyUsername"></span>
+        <span class="story-time" id="storyTime"></span>
+    </div>
+    <button id="storyFollowBtn" class="story-follow-btn" onclick="followFromStory()" style="display:none;">Follow</button>
+    <i class="fa-solid fa-ellipsis-vertical" style="color:#fff; font-size:18px; cursor:pointer; padding:5px;" onclick="openStoryOptionsMenu(event)"></i>
+ </div>
+    
+    <div class="story-media-wrap" id="storyMediaWrap">
+        <div class="story-tap-zone story-tap-left" onclick="prevStory()"></div>
+        <div class="story-tap-zone story-tap-right" onclick="nextStory()"></div>
+    </div>
+<div class="story-footer" id="storyFooter">
+    <input type="text" class="story-reply-input" placeholder="Send message" id="storyReplyInput">
+    <i class="fa-regular fa-clone" onclick="shareStory()"></i>
+    <i class="fa-regular fa-heart" onclick="likeStory()"></i>
+    <i class="fa-regular fa-paper-plane" onclick="sendStoryReply()"></i>
+</div>
+</div> 
+    
+</main>
+
+<script src="me.js"></script>
+<div id="footer-placeholder"></div>
+<script src="footer.js?v=4"></script>
+    </body>
+    </html>
