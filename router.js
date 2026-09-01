@@ -86,7 +86,12 @@
             'nearme-engine.js',
             'services.js'
         ],
-        'chats.html': 'chats.js',
+           'chats.html': [
+            'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+            'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
+            'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
+            'chats.js'
+        ],
         // group.html yana bukatar firebase compat SDKs + post-card-template.js
         // su gama loda KAFIN group.js ya fara gudana (yana amfani da su nan
         // take a top-level, ba a cikin wani listener ba).
