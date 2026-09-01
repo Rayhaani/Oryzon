@@ -545,8 +545,12 @@ async function bootShopMarketplace() {
         }
     } catch (err) {
         console.error('bootShopMarketplace failed:', err);
+        const marketGrid = document.getElementById('marketGrid');
+        if (marketGrid) {
+            marketGrid.innerHTML = `<div class="empty-state">Wani kuskure ya faru wajen lodawa. <span style="text-decoration:underline;cursor:pointer;" onclick="bootShopMarketplace()">Danna nan a sake gwadawa</span></div>`;
+        }
     }
-}
+} 
 
 function destroyShopMarketplace() {
     shopPageUnsubscribes.forEach(fn => { try { fn(); } catch (e) {} });
