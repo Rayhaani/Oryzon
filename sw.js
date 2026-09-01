@@ -1,111 +1,84 @@
-// ═══════════════════════════════════════════════════
-//  NEXUS Service Worker — Call Notifications
-// ═══════════════════════════════════════════════════
+/* ============================================================
+   NEXUS SERVICE WORKER — sw.js
+   ------------------------------------------------------------
+   Manufa: idan network ya yanke ko ya yi rauni bayan mai amfani
+   ya riga ya ziyarci wata page a baya, sai a nuna masa AININHIN
+   copy ɗin da ke cikin cache (CSS/JS/HTML/fonts duka a ciki),
+   maimakon "raw" HTML mara-salo.
 
-const CACHE_NAME = 'nexus-v1';
+   TSARI (NETWORK-FIRST GA KOMAI — HTML DA CSS/JS/fonts duka):
+   - Kowace GET request (HTML, CSS, JS, fonts, firebase SDK, da
+     sauransu): a GWADA NETWORK TUKUN. Idan ya yi nasara, a nuna
+     wa mai amfani AININHIN sabon content ɗin nan take, KUMA a
+     sabunta cache ɗin da wannan sabon copy — don haka BABU
+     bukatar bump CACHE_NAME duk lokacin da ka canza wani file;
+     canjinka yana bayyana nan take idan akwai net.
+   - Idan network ya kasa (babu net/network ya yanke) SAI a koma
+     ga TSOHON copy da ke cikin cache (idan akwai) — wannan shine
+     kawai lokacin da cache ke amfani, don haka offline fallback
+     ne kawai, ba wata dabara ta "saurin gudu" ba.
+   - Firestore/Auth/Realtime-DB calls (ba GET na yau da kullum
+     ba, akasari WebSocket/long-polling) BA a taɓa su — Service
+     Worker kawai yana kama fetch() na yau da kullum, ba ya
+     shafar Firestore SDK.
 
-self.addEventListener('install', e => {
+   CACHE_NAME — a yanzu BA a bukatar bump ɗinsa akan kowace edit
+   (network koyaushe yake da fifiko, cache yana sabuntawa ta
+   kansa). Ka canza shi kawai idan kana son share tsofaffin
+   fayiloli marasa amfani daga cache (maintenance na zaɓi kawai).
+   ============================================================ */
+
+const CACHE_NAME = 'nexus-v1'; // <-- KARA lambar wannan duk lokacin da ka canza wani file
+
+self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-self.addEventListener('activate', e => {
-    e.waitUntil(clients.claim());
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((keys) =>
+            Promise.all(
+                keys
+                    .filter((key) => key !== CACHE_NAME)
+                    .map((key) => caches.delete(key))
+            )
+        ).then(() => self.clients.claim())
+    );
 });
 
-// ── Listen for messages from app ──────────────────
-self.addEventListener('message', e => {
-    const data = e.data;
+self.addEventListener('fetch', (event) => {
+    const req = event.request;
 
-    if (data.type === 'INCOMING_CALL') {
-        showCallNotification(data);
-    }
+    // Kawai GET requests — POST/PUT (misali uploads zuwa backend) an bar
+    // su su gudana kai-tsaye, babu SW cache a kansu.
+    if (req.method !== 'GET') return;
 
-    if (data.type === 'CALL_ENDED') {
-        // Close any open call notifications
-        self.registration.getNotifications({ tag: 'nexus-call' })
-            .then(notifications => notifications.forEach(n => n.close()));
-    }
-});
-
-// ── Show Call Notification ─────────────────────────
-function showCallNotification({ callerName, callerAvatar, docId, callType }) {
-    const options = {
-        body: callType === 'video' ? '📹 Incoming Video Call' : '📞 Incoming Voice Call',
-        icon: callerAvatar || '/Oryzon/icon.png',
-        badge: '/Oryzon/icon.png',
-        image: callerAvatar,
-        tag: 'nexus-call',
-        renotify: true,
-        requireInteraction: true,  // Notification stays until user acts
-        vibrate: [300, 100, 300, 100, 300],
-        actions: [
-            {
-                action: 'decline',
-                title: '❌ Decline',
-            },
-            {
-                action: 'accept',
-                title: '✅ Accept',
-            }
-        ],
-        data: { docId, callType, callerName, callerAvatar }
-    };
-
-    self.registration.showNotification(`${callerName} is calling...`, options);
-}
-
-// ── Handle Notification Click ──────────────────────
-self.addEventListener('notificationclick', e => {
-    const notification = e.notification;
-    const action = e.action;
-    const data = notification.data;
-
-    notification.close();
-
-    if (action === 'decline') {
-        // Aika decline message zuwa app
-        e.waitUntil(
-            clients.matchAll({ type: 'window' }).then(clientList => {
-                clientList.forEach(client => {
-                    client.postMessage({
-                        type: 'DECLINE_CALL',
-                        docId: data.docId
-                    });
-                });
-            })
+    // HTML navigation (buɗe/refresh wata page) — NETWORK FIRST.
+    if (req.mode === 'navigate') {
+        event.respondWith(
+            fetch(req)
+                .then((res) => {
+                    const resClone = res.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+                    return res;
+                })
+                .catch(() => caches.match(req).then((cached) => cached || caches.match('./chats.html')))
         );
-    } else {
-        // Accept — buɗe app a call screen
-        e.waitUntil(
-            clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
-                // Idan app tana buɗe, focus ta
-                for (const client of clientList) {
-                    if (client.url.includes('chat-interior') || client.url.includes('Oryzon')) {
-                        client.focus();
-                        client.postMessage({
-                            type: 'ACCEPT_CALL',
-                            docId: data.docId,
-                            callerName: data.callerName,
-                            callerAvatar: data.callerAvatar,
-                            callType: data.callType
-                        });
-                        return;
-                    }
+        return;
+    }
+
+    // Sauran static assets (CSS/JS/fonts/hotuna, ciki har da firebase SDK
+    // da Google Fonts) — NETWORK FIRST, cache kawai a matsayin offline
+    // fallback (haka babu bukatar bump CACHE_NAME akan kowace edit).
+    event.respondWith(
+        fetch(req)
+            .then((res) => {
+                if (res && res.status === 200) {
+                    const resClone = res.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
                 }
-                // Idan ba a buɗe ba, buɗe sabon tab
-                clients.openWindow(`/Oryzon/chat-interior.html?accept_call=${data.docId}&type=${data.callType}`);
+                return res;
             })
-        );
-    }
-});
-
-// ── Handle notification close ──────────────────────
-self.addEventListener('notificationclose', e => {
-    const data = e.notification.data;
-    // Auto-decline idan user ya goge notification
-    clients.matchAll({ type: 'window' }).then(clientList => {
-        clientList.forEach(client => {
-            client.postMessage({ type: 'DECLINE_CALL', docId: data.docId });
-        });
-    });
+            .catch(() => caches.match(req))
+    );
 });
