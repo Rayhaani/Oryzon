@@ -49,6 +49,14 @@
 
     if (window.NexusRouter) return; // prevent double-init if included twice
 
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch((err) => {
+                console.error('SW registration failed:', err);
+            });
+        });
+    }
+
     // ------------------------------------------------------------
     // 1) CONFIG — map each route to its page-specific script file.
     //    Add an entry here whenever a page gets its own JS module.
