@@ -2752,16 +2752,18 @@ function renderVisualProof(images) {
     const extra = images.slice(3);
     const hasMore = extra.length > 0;
 
-    let html = visible.slice(0, Math.min(2, visible.length)).map((u, i) =>
+    let html = visible.slice(0, Math.min(2, visible.length - 1 > 0 ? 2 : visible.length)).map((u, i) =>
         `<img src="${u}" class="stack-img vp-stack-img" onclick="openVisualProofFS(${i})">`
     ).join('');
 
-    if (visible.length >= 3) {
+    if (visible.length >= 1) {
+        const lastImg = visible[visible.length - 1];
+        const lastIndex = visible.length - 1;
         html += `
             <div id="vp-last-wrap" style="position:relative;">
-                <img src="${visible[2]}" class="stack-img vp-stack-img" onclick="openVisualProofFS(2)">
-                ${hasMore ? `
+                <img src="${lastImg}" class="stack-img vp-stack-img" onclick="openVisualProofFS(${lastIndex})">
                 <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(to bottom, transparent 0%, #050505 100%);pointer-events:none;"></div>
+                ${hasMore ? `
                 <div id="vp-seeall-wrap" onclick="expandVisualProof(event)" style="display:block;position:absolute;bottom:14px;left:0;width:100%;text-align:center;cursor:pointer;">
                     <div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;">
                         <span style="font-size:12px;font-weight:800;color:#F5F5DC;text-transform:uppercase;">See all</span>
@@ -2770,7 +2772,6 @@ function renderVisualProof(images) {
                 </div>` : ''}
             </div>`;
     }
-
     grid.innerHTML = html;
 
     if (extraGrid) {
