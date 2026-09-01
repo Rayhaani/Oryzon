@@ -341,6 +341,24 @@
         return p.split('?')[0].split('#')[0];
     }
 
+      let navProgressEl = null;
+    function showNavProgress() {
+        if (!navProgressEl) {
+            navProgressEl = document.createElement('div');
+            navProgressEl.id = 'nexus-nav-progress';
+            navProgressEl.style.cssText = 'position:fixed;top:0;left:0;height:3px;width:0%;background:#3b82f6;z-index:99999;transition:width .3s ease;';
+            document.body.appendChild(navProgressEl);
+        }
+        navProgressEl.style.width = '0%';
+        navProgressEl.style.opacity = '1';
+        requestAnimationFrame(() => { navProgressEl.style.width = '70%'; });
+    }
+    function hideNavProgress() {
+        if (!navProgressEl) return;
+        navProgressEl.style.width = '100%';
+        setTimeout(() => { navProgressEl.style.opacity = '0'; }, 200);
+    }
+
     function loadScriptOnce(src) {
         return new Promise(function (resolve, reject) {
             if (!src || loadedScripts.has(src)) {
@@ -464,6 +482,7 @@
         if (targetPath === currentPath && pushHistory) return;
 
         isNavigating = true;
+        showNavProgress();
 
         try {
             let html = pageCache.get(targetPath);
@@ -535,6 +554,7 @@
             fullReload(url);
         } finally {
             isNavigating = false;
+            hideNavProgress();
             if (pendingNav) {
                 const next = pendingNav;
                 pendingNav = null;
