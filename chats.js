@@ -40,7 +40,7 @@
             window.BACKEND_URL = 'https://oryzon-backend-ed1q.onrender.com'; // Backblaze upload endpoint — ana amfani da wannan a updates/status modules
         }
 
-        if (typeof db === 'undefined') {
+         if (typeof db === 'undefined') {
             const __chatsFirebaseConfig = {
                 apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
                 authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -53,6 +53,15 @@
             };
             if (!firebase.apps.length) { firebase.initializeApp(__chatsFirebaseConfig); }
             window.db = firebase.firestore();
+        }
+        // 'chatsAuth' — ƙulla NAN TAKE zuwa ainihin firebase.auth() na
+        // YANZU, domin ko da wata page (mai DABAN-DABAN sigar Firebase
+        // SDK) ta sake canza global 'firebase' bayan haka, chats.js zai
+        // ci gaba da amfani da AININHIN auth instance ɗin da ya fara da
+        // shi — ba za mu sake kiran 'firebase.auth()' kai-tsaye a ko'ina
+        // cikin wannan file ba.
+        if (typeof chatsAuth === 'undefined') {
+            window.chatsAuth = firebase.auth();
         }
 
         if (typeof myId === 'undefined') {
@@ -186,7 +195,7 @@
         // Jiran Firebase Auth ya farfaɗo session kafin a yi query
         let authReadyResolve;
         const authReadyPromise = new Promise((resolve) => { authReadyResolve = resolve; });
-        firebase.auth().onAuthStateChanged((user) => { authReadyResolve(user); });
+        chatsAuth.onAuthStateChanged((user) => { authReadyResolve(user); });
 
         let selectedNodes = [];
         let identifiedContacts = new Set(); 
@@ -290,7 +299,7 @@ let refreshChatTimesInterval = setInterval(refreshAllChatTimes, 30000);
             container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
 
             await authReadyPromise;
-            if (!firebase.auth().currentUser) {
+            if (!chatsAuth.currentUser) {
                 container.innerHTML = '<p style="text-align:center; padding:30px; color:#ff4444; font-size:13px;">Ba a tabbatar da shiga ba. Sake login.</p>';
                 return;
             }
@@ -1836,7 +1845,7 @@ if (window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
             container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
 
             await authReadyPromise;
-            if (!firebase.auth().currentUser) return;
+            if (!chatsAuth.currentUser) return;
 
             try {
                 const [snapshot, myUserDoc] = await Promise.all([
