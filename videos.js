@@ -38,6 +38,8 @@ function _videosPopstateHijack(event) {
 }
 
 function _videosClickBackHijack(event) {
+    if (!event.target || typeof event.target.closest !== 'function') return;
+
     const backBtn = event.target.closest('.immersive-back-btn') ||
                     event.target.closest('[class*="back-btn"]') ||
                     event.target.closest('.fa-arrow-left') ||
@@ -147,7 +149,9 @@ async function _fetchPersonalized() {
             .orderBy('timestamp','desc').limit(FETCH_SIZE).get());
     }
 
-    const snaps = await Promise.all(promises);
+    const settled = await Promise.allSettled(promises);
+    const snaps = settled.map(r => r.status === 'fulfilled' ? r.value : null);
+    settled.forEach(r => { if (r.status === 'rejected') console.warn('[videos] query failed:', r.reason?.message || r.reason); });
     const seen = new Set(); const all = [];
     snaps.forEach(snap => {
         if (!snap?.docs) return;
@@ -166,7 +170,16 @@ async function loadVideos(reset = false) {
     try {
         if (reset) {
             feedEl.innerHTML = ''; _cacheOffset = 0; _scoredCache = [];
-            const raw = await _fetchPersonalized();
+            let raw = [];
+            try {
+                raw = await _fetchPersonalized();
+            } catch (fetchErr) {
+                console.error('[videos] fetch failed:', fetchErr);
+                feedEl.innerHTML = `<div class="empty-videos"><i class="fa-solid fa-wifi"></i><p>Connection issue.<br><span style="text-decoration:underline;cursor:pointer;" onclick="loadVideos(true)">Tap to retry</span></p></div>`;
+                feedEl.classList.add('ready');
+                loadMoreTrigger.style.display = 'none';
+                isLoading = false; return;
+            }
             if (raw.length === 0) {
                 feedEl.innerHTML = `<div class="empty-videos"><i class="fa-solid fa-video-slash"></i><p>No videos yet.<br>Be the first!</p></div>`;
                 feedEl.classList.add('ready');
@@ -325,7 +338,8 @@ window.openVideosOverlay = async function() {
     document.body.style.overflow = 'hidden';
     const footer = document.getElementById('instaFooter');
     if (footer) footer.style.display = 'none';
-
+    const header = document.querySelector('#page-content > header');
+    if (header) header.style.display = 'none';
     feedEl          = document.getElementById('videoFeed');
     loadMoreTrigger = document.getElementById('loadMoreTrigger');
 
@@ -353,7 +367,8 @@ window.closeVideosOverlay = function() {
     document.body.style.overflow = '';
     const footer = document.getElementById('instaFooter');
     if (footer) footer.style.display = '';
-
+    const header = document.querySelector('#page-content > header');
+    if (header) header.style.display = '';
     window.removeEventListener('popstate', _videosPopstateHijack, true);
     document.removeEventListener('click', _videosClickBackHijack, true);
     if (overlay) overlay.removeEventListener('scroll', _videosScrollPriorityHandler);
