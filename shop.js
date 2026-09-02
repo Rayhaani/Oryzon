@@ -3,6 +3,7 @@
    so the SPA router (router.js) can load and (re)run it whenever
    someone navigates to shop.html without a full page reload.
    ============================================================ */
+(function(){
 
 /* ---------- Compat SDK init (Realtime Database, used by the
    My Business dashboard below). Runs once — firebase.apps stays
@@ -4381,6 +4382,28 @@ function closeVendorChatOverlay() {
 window.openVendorChatOverlay = openVendorChatOverlay;
 window.closeVendorChatOverlay = closeVendorChatOverlay;
 
+window.ctxCopy = ctxCopy;
+window.ctxDelete = ctxDelete;
+window.ctxEdit = ctxEdit;
+window.ctxReply = ctxReply;
+window.ctxShare = ctxShare;
+window.expandVisualProof = expandVisualProof;
+window.mbDeleteCategoryAction = mbDeleteCategoryAction;
+window.mbDeleteGalleryPhoto = mbDeleteGalleryPhoto;
+window.mbFilterCategory = mbFilterCategory;
+window.mbOpenEditItem = mbOpenEditItem;
+window.mbOpenUpgradeModal = mbOpenUpgradeModal;
+window.mbRenameCategoryAction = mbRenameCategoryAction;
+window.mbSelectPlan = mbSelectPlan;
+window.mbSelectThemeColor = mbSelectThemeColor;
+window.mbToggleFaq = mbToggleFaq;
+window.mbUpdateOrderStatus = mbUpdateOrderStatus;
+window.openHeroFS = openHeroFS;
+window.openVisualProofFS = openVisualProofFS;
+window.pick = pick;
+window.setMcActive = setMcActive;
+window.toggleBubbleAudio = toggleBubbleAudio;
+window.bootShopMarketplace = bootShopMarketplace;
 /* ---------- SPA registration ---------- */
 if (window.NexusRouter) {
     NexusRouter.registerPage('shop.html', {
@@ -4404,3 +4427,5 @@ if (window.NexusRouter) {
 if (document.readyState !== 'complete') {
     bootShopMarketplace();
 }
+
+})();
