@@ -8165,6 +8165,7 @@ const gallerySection = document.getElementById('nxh-gallery-section');
 })();
     
   function setOrderMethod(method) {
+    window.setOrderMethod = setOrderMethod;
     const deliveryBtn = document.getElementById('po-method-delivery');
     const pickupBtn = document.getElementById('po-method-pickup');
     const addressWrap = document.getElementById('po-address-wrap');
