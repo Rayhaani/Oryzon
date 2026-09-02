@@ -3123,8 +3123,12 @@ runOnServicesInit(() => {
 runOnServicesInit(() => {
    populateCurrencyDropdowns();
    initAppElements();
-   if (!window._nexusProvidersLoadedOnce) {
-   Promise.all([loadContentFromFirebase(), loadRealProvidersFromFirebase()]).then(() => {
+    if (!window._nexusProvidersLoadedOnce) {
+   const _loadTimeout = new Promise(resolve => setTimeout(resolve, 8000));
+   Promise.race([
+       Promise.all([loadContentFromFirebase(), loadRealProvidersFromFirebase()]),
+       _loadTimeout
+   ]).then(() => {
         window._nexusProvidersLoadedOnce = true;
         initAppElements();
 
