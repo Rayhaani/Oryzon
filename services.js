@@ -768,7 +768,6 @@ function closeStoryDeck() {
             `<span style="background:#ffffff;color:#be185d;border:1px solid rgba(236,72,153,0.2);padding:4px 10px;border-radius:10px;font-size:11px;font-weight:700;">${day}</span>`).join('');
     } else if (scheduleCard) { scheduleCard.style.display = "none"; }
  const targetGallery = pro.gallery || [];
- console.log("GALLERY DEBUG:", JSON.stringify(targetGallery));
 
     // ── Gallery tab: real photo/video grid ──
     const nxhGalleryGrid = document.getElementById("nxh-gallery-grid");
@@ -781,8 +780,8 @@ function closeStoryDeck() {
                 if (isMediaObj) {
                     const isVideo = item.type === 'video' || /\.(mp4|mov|webm)$/i.test(item.url);
                     return isVideo
-                   ? `<div class="nxh-gallery-card nxh-gallery-has-img" style="padding:0;position:relative;overflow:hidden;" onclick="openGalleryLightbox('${item.url}', true)"><video src="${item.url}" autoplay loop muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video><span style="position:absolute;top:8px;right:8px;z-index:2;width:19px;height:19px;border-radius:5px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,0.35);"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-left:1px;"><path d="M8 5v14l11-7z" fill="#111" stroke="#111" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg></span></div>`                         
-    : `<div class="nxh-gallery-card nxh-gallery-has-img" style="background-image:url('${item.url}');" onclick="openGalleryLightbox('${item.url}', false)"></div>`;
+                   ? `<div class="nxh-gallery-card nxh-gallery-has-img" style="padding:0;position:relative;overflow:hidden;" onclick="openGalleryLightbox('${item.url}', true, event)"><video src="${item.url}" autoplay loop muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video><span style="position:absolute;top:8px;right:8px;z-index:2;width:19px;height:19px;border-radius:5px;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,0.35);"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-left:1px;"><path d="M8 5v14l11-7z" fill="#111" stroke="#111" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg></span></div>`                  
+    : `<div class="nxh-gallery-card nxh-gallery-has-img" style="background-image:url('${item.url}');background-size:cover;background-position:center;background-repeat:no-repeat;" onclick="openGalleryLightbox('${item.url}', false, event)"></div>`;
                 }
                 return `<div class="nxh-gallery-card">📷 ${item}</div>`;
             }).join('');
@@ -9143,8 +9142,8 @@ function switchSeg(tab) {
     if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
   });
 })();
-function openGalleryLightbox(url, isVideo) {
-    event.stopPropagation();
+function openGalleryLightbox(url, isVideo, evt) {
+    if (evt) evt.stopPropagation();
     const overlay = document.getElementById('nxh-gallery-lightbox');
     const imgEl = document.getElementById('nxh-gallery-lightbox-img');
     const videoWrap = document.getElementById('nxh-gallery-lightbox-video-wrap');
@@ -9159,7 +9158,7 @@ function openGalleryLightbox(url, isVideo) {
         iconsEl.style.display = 'none';
         imgEl.style.display = 'none'; imgEl.src = '';
     } else {
-        imgEl.src = url; imgEl.style.display = 'block';
+        imgEl.style.display = 'block'; imgEl.src = url;
         videoWrap.style.display = 'none'; videoEl.pause(); videoEl.src = '';
     }
     overlay.style.display = 'flex';
