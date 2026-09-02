@@ -10,6 +10,7 @@
    storage, analytics, BACKEND_URL, firebase (app+database+
    messaging compat SDKs). Kada a sake ayyana su a nan.
    ============================================================ */
+(function(){
 const __servicesInitCallbacks = [];
 function runOnServicesInit(fn) { __servicesInitCallbacks.push(fn); }
        // Core Static Local Data Context Stores Verbatim
@@ -9262,6 +9263,81 @@ function destroyServicesPage() {
     }
 }
 
+window.acceptOrderRequest = acceptOrderRequest;
+window.addDailyUploadBlock = addDailyUploadBlock;
+window.cancelBeveragesMenuItemForm = cancelBeveragesMenuItemForm;
+window.cancelChefMenuItemForm = cancelChefMenuItemForm;
+window.cancelSnacksMenuItemForm = cancelSnacksMenuItemForm;
+window.closeReviewModal = closeReviewModal;
+window.confirmBeveragesMenuItemForm = confirmBeveragesMenuItemForm;
+window.confirmChefMenuItemForm = confirmChefMenuItemForm;
+window.confirmSnacksMenuItemForm = confirmSnacksMenuItemForm;
+window.deleteBeveragesMenuOverlayItem = deleteBeveragesMenuOverlayItem;
+window.deleteChefMenuOverlayItem = deleteChefMenuOverlayItem;
+window.deleteSnacksMenuOverlayItem = deleteSnacksMenuOverlayItem;
+window.emergencyContactPro = emergencyContactPro;
+window.handleCategorySelect = handleCategorySelect;
+window.handleDailyUploadBlockPhoto = handleDailyUploadBlockPhoto;
+window.handleNPHelpful = handleNPHelpful;
+window.handleNotifClick = handleNotifClick;
+window.handleReportProof = handleReportProof;
+window.handleVerificationFile = handleVerificationFile;
+window.mbDeleteCategoryAction = mbDeleteCategoryAction;
+window.mbDeleteGalleryPhoto = mbDeleteGalleryPhoto;
+window.mbFilterCategory = mbFilterCategory;
+window.mbOpenEditItem = mbOpenEditItem;
+window.mbOpenUpgradeModal = mbOpenUpgradeModal;
+window.mbRenameCategoryAction = mbRenameCategoryAction;
+window.mbSelectPlan = mbSelectPlan;
+window.mbSelectThemeColor = mbSelectThemeColor;
+window.mbToggleFaq = mbToggleFaq;
+window.mbUpdateOrderStatus = mbUpdateOrderStatus;
+window.nxfmCartQtyChange = nxfmCartQtyChange;
+window.nxfmSelectTab = nxfmSelectTab;
+window.openActiveOrderDetail = openActiveOrderDetail;
+window.openBeveragesMenuItemForm = openBeveragesMenuItemForm;
+window.openBeveragesOrderConfirm = openBeveragesOrderConfirm;
+window.openChefMenuItemForm = openChefMenuItemForm;
+window.openGalleryLightbox = openGalleryLightbox;
+window.openIdentityOverlay = openIdentityOverlay;
+window.openItemDetail = openItemDetail;
+window.openRatingsFilterPage = openRatingsFilterPage;
+window.openRejectReasonModal = openRejectReasonModal;
+window.openReportModal = openReportModal;
+window.openReviewModal = openReviewModal;
+window.openSnacksMenuItemForm = openSnacksMenuItemForm;
+window.openSnacksOrderConfirm = openSnacksOrderConfirm;
+window.openStoryDeck = openStoryDeck;
+window.openStoryFromAllStories = openStoryFromAllStories;
+window.openTiersSheet = openTiersSheet;
+window.removeBeveragesItem = removeBeveragesItem;
+window.removeBeveragesPhoto = removeBeveragesPhoto;
+window.removeChefFoodPhoto = removeChefFoodPhoto;
+window.removeChefMenuItem = removeChefMenuItem;
+window.removeDailyUploadBlock = removeDailyUploadBlock;
+window.removeDailyUploadBlockPhoto = removeDailyUploadBlockPhoto;
+window.removePortfolioSlotInline = removePortfolioSlotInline;
+window.removeReportProof = removeReportProof;
+window.removeServiceFromEditList = removeServiceFromEditList;
+window.removeSnacksItem = removeSnacksItem;
+window.removeSnacksPhoto = removeSnacksPhoto;
+window.rfFilterDim = rfFilterDim;
+window.saveBeveragesMenuChanges = saveBeveragesMenuChanges;
+window.saveChefMenuChanges = saveChefMenuChanges;
+window.saveSnacksMenuChanges = saveSnacksMenuChanges;
+window.selectEmgSub = selectEmgSub;
+window.selectPSSub = selectPSSub;
+window.setDailyUploadBlockDish = setDailyUploadBlockDish;
+window.setDimStar = setDimStar;
+window.startNewUpload = startNewUpload;
+window.submitDailyUploads = submitDailyUploads;
+window.submitReview = submitReview;
+window.tiersSheetSelect = tiersSheetSelect;
+window.toggleEmgSub = toggleEmgSub;
+window.togglePSCat = togglePSCat;
+window.updateOrderStatus = updateOrderStatus;
+window.usePreviousUploads = usePreviousUploads;
+
 if (window.NexusRouter) {
     NexusRouter.registerPage('services.html', { init: initServicesPage, destroy: destroyServicesPage });
 }
@@ -9274,3 +9350,5 @@ if (window.NexusRouter) {
 // DOMContentLoaded (native load) — babu 'else' immediate-call, daidai
 // da yadda social.js ya yi.
 window.addEventListener('DOMContentLoaded', initServicesPage);
+   
+})();
