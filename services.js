@@ -5449,7 +5449,7 @@ async function mbRenderGalleryTab() {
     try {
         const snap = await firebase.database().ref('providers/' + username + '/portfolio').once('value');
         const data = snap.val() || [];
-        const photos = Array.isArray(data) ? data : Object.values(data);
+        const photos = (Array.isArray(data) ? data : Object.values(data)).filter(Boolean);
 
         if (photos.length === 0) {
             grid.innerHTML = `
@@ -5487,10 +5487,11 @@ async function mbUploadGalleryPhoto(event) {
         formData.append('username', username);
         const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', { method: 'POST', body: formData });
         const uploadData = await res.json();
+        if (!uploadData || !uploadData.url) throw new Error('Server bai dawo da url na hoto ba');
 
         const snap = await firebase.database().ref('providers/' + username + '/portfolio').once('value');
         const existing = snap.val() || [];
-        const photos = Array.isArray(existing) ? existing : Object.values(existing);
+        const photos = (Array.isArray(existing) ? existing : Object.values(existing)).filter(Boolean);
         photos.push(uploadData.url);
         await firebase.database().ref('providers/' + username + '/portfolio').set(photos);
 
