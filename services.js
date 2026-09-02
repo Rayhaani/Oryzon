@@ -768,6 +768,7 @@ function closeStoryDeck() {
             `<span style="background:#ffffff;color:#be185d;border:1px solid rgba(236,72,153,0.2);padding:4px 10px;border-radius:10px;font-size:11px;font-weight:700;">${day}</span>`).join('');
     } else if (scheduleCard) { scheduleCard.style.display = "none"; }
  const targetGallery = pro.gallery || [];
+ console.log("GALLERY DEBUG:", JSON.stringify(targetGallery));
 
     // ── Gallery tab: real photo/video grid ──
     const nxhGalleryGrid = document.getElementById("nxh-gallery-grid");
