@@ -806,6 +806,7 @@ function closeStoryDeck() {
         switchSeg('menu');
         }
 
+  window.__npProfileOverlay = true;
   history.pushState({ npOverlay: "profile" }, "", "");
   document.getElementById("profile-sheet-overlay").style.display = "block";
         }
