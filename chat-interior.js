@@ -714,15 +714,40 @@ function compressImageFile(file, maxDim = 1600, quality = 0.75) {
 // ── Matsa girman bidiyo kafin upload (ffmpeg.wasm) ──
 // An lazy-load ffmpeg.wasm ne kawai idan an fara tura bidiyo — domin kada mu dora
 // nauyin ~30MB na wasm a duk lokacin da mutum ya bude chat idan ba ya tura bidiyo.
+// ffmpeg.js/util UMD wrappers dinsu ma yanzu ana lazy-load su nan, ba a
+// PAGE_SCRIPTS/native <script> ba, domin kada su toshe chat-interior.js
+// daga gudana da wuri (shi ke haddasa "delay" kafin chat history ya bayyana).
 let ffmpegInstance = null;
 let ffmpegLoadPromise = null;
+let ffmpegLibsPromise = null;
+function loadFFmpegLibs() {
+    if (window.FFmpegWASM && window.FFmpegUtil) return Promise.resolve();
+    if (!ffmpegLibsPromise) {
+        ffmpegLibsPromise = Promise.all([
+            loadExternalScriptOnce('https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js'),
+            loadExternalScriptOnce('https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js')
+        ]);
+    }
+    return ffmpegLibsPromise;
+}
+function loadExternalScriptOnce(src) {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Failed to load: ' + src));
+        document.body.appendChild(s);
+    });
+}
 async function getFFmpeg() {
     if (ffmpegInstance) return ffmpegInstance;
     if (!ffmpegLoadPromise) {
         ffmpegLoadPromise = (async () => {
+            await loadFFmpegLibs();
             const { FFmpeg } = FFmpegWASM;
             const { toBlobURL } = FFmpegUtil;
-            const ffmpeg = new FFmpeg();
+const ffmpeg = new FFmpeg();
             const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
             await ffmpeg.load({
                 coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
