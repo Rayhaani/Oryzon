@@ -34,9 +34,12 @@ async function bootShopMarketplace() {
     shopPageUnsubscribes = [];
     try {
 
-        const { initializeApp, getApps, getApp } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js");
-        const { getFirestore, collection, query, orderBy, onSnapshot, where, getDocs, limit } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
-
+        const _withTimeout = (p, ms) => Promise.race([
+            p,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), ms))
+        ]);
+        const { initializeApp, getApps, getApp } = await _withTimeout(import("https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js"), 8000);
+        const { getFirestore, collection, query, orderBy, onSnapshot, where, getDocs, limit } = await _withTimeout(import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"), 8000);
         const firebaseConfig = {
             apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
             authDomain: "oryzon-50ea4.firebaseapp.com",
