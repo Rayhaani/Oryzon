@@ -744,9 +744,8 @@ function closeStoryDeck() {
  // ── PROFILE SHEET ──
 // ── PROFILE SHEET ──
  function openProfileSheet(proId) {
-    window.openProfileSheet = openProfileSheet;
-    const pro = PROS.find(p => String(p.id) === String(proId)); 
-    if (!pro) return;
+    const pro = PROS.find(p => String(p.id) === String(proId));
+   if (!pro) return;
     mbTrackProfileView(proId);
      
     // Hero banner: real portfolio photo idan yana akwai, in ba haka ba, gradient default
