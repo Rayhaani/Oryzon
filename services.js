@@ -742,8 +742,10 @@ function closeStoryDeck() {
         }
 
  // ── PROFILE SHEET ──
+// ── PROFILE SHEET ──
  function openProfileSheet(proId) {
-    const pro = PROS.find(p => String(p.id) === String(proId));
+    window.openProfileSheet = openProfileSheet;
+    const pro = PROS.find(p => String(p.id) === String(proId)); 
     if (!pro) return;
     mbTrackProfileView(proId);
      
