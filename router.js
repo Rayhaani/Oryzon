@@ -655,6 +655,7 @@
     // 6) Back/forward button support.
     // ------------------------------------------------------------
     window.addEventListener('popstate', function (e) {
+        if (e.state && e.state.npOverlay) return;
         const path = (e.state && e.state.nexusRoute) || normalizePath(window.location.pathname);
         navigateTo(path, { pushHistory: false });
     });
