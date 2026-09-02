@@ -5487,8 +5487,7 @@ async function mbUploadGalleryPhoto(event) {
         formData.append('username', username);
         const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', { method: 'POST', body: formData });
         const uploadData = await res.json();
-        if (!uploadData || !uploadData.url) throw new Error('Server bai dawo da url na hoto ba');
-
+        if (!res.ok || !uploadData || !uploadData.url) throw new Error(uploadData?.error || `Server ya ki karba (status ${res.status})`);
         const snap = await firebase.database().ref('providers/' + username + '/portfolio').once('value');
         const existing = snap.val() || [];
         const photos = (Array.isArray(existing) ? existing : Object.values(existing)).filter(Boolean);
