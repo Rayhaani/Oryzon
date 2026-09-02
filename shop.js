@@ -2756,7 +2756,7 @@ function renderVisualProof(images) {
     const extra = images.slice(3);
     const hasMore = extra.length > 0;
 
-    let html = visible.slice(0, Math.min(2, visible.length - 1 > 0 ? 2 : visible.length)).map((u, i) =>
+    let html = visible.slice(0, visible.length - 1).map((u, i) =>
         `<img src="${u}" class="stack-img vp-stack-img" onclick="openVisualProofFS(${i})">`
     ).join('');
 
