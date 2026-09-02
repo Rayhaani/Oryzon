@@ -3310,6 +3310,8 @@ let selectedReportReason = null;
 let selectedReviewStars = 0;
 const reportProofFiles = {};
 
+window.openProfileSheet = openProfileSheet;
+
 // ── PATCH openProfileSheet to track currentProfileProId ──
 // NOTE: Nemo wannan layi a cikin openProfileSheet function ɗinka:
 //   const pro = PROS.find(p => p.id === proId);
