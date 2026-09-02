@@ -5465,7 +5465,7 @@ async function mbRenderGalleryTab() {
             const url = typeof p === 'string' ? p : (p && p.url) || '';
             return `
             <div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:#262626;">
-                <img src="${url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+                <img src="${url}" alt="${url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="console.warn('GALLERY IMG FAILED:', this.src); this.style.outline='2px solid red';">
                 <button onclick="mbDeleteGalleryPhoto(${i})" style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;border:none;font-size:12px;cursor:pointer;">✕</button>
             </div>`;
         }).join('');
