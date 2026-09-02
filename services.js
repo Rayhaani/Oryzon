@@ -5480,13 +5480,18 @@ async function mbUploadGalleryPhoto(event) {
     const username = localStorage.getItem("nexus_user_session");
     showGlobalToast('⏳ Uploading photo...');
     try {
-        if (typeof guaranteeAuth === 'function') await guaranteeAuth();
+      if (typeof guaranteeAuth === 'function') await guaranteeAuth();
+        const idToken = firebase.auth().currentUser ? await firebase.auth().currentUser.getIdToken() : null;
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', 'portfolio');
         formData.append('username', username);
-        const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', { method: 'POST', body: formData });
-        const uploadData = await res.json();
+        const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', {
+            method: 'POST',
+            headers: idToken ? { "Authorization": `Bearer ${idToken}` } : {},
+            body: formData
+        });
+       const uploadData = await res.json();
         if (!res.ok || !uploadData || !uploadData.url) throw new Error(uploadData?.error || `Server ya ki karba (status ${res.status})`);
         const snap = await firebase.database().ref('providers/' + username + '/portfolio').once('value');
         const existing = snap.val() || [];
