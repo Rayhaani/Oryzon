@@ -352,6 +352,8 @@ window.openNexusFeedOverlay = function() {
 
     const footer = document.getElementById('instaFooter');
     if (footer) footer.style.display = 'none';
+    const header = document.querySelector('#page-content > header');
+    if (header) header.style.display = 'none';
 
     allPosts = [];
     loadPersonalizedGrid();
@@ -371,4 +373,6 @@ window.closeNexusFeedOverlay = function() {
 
     const footer = document.getElementById('instaFooter');
     if (footer) footer.style.display = '';
+    const header = document.querySelector('#page-content > header');
+    if (header) header.style.display = '';
 };
