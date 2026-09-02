@@ -3179,7 +3179,7 @@ runOnServicesInit(() => {
                 }
             } catch (err) {
                 locator.style.display = "none";
-                alert("📍 " + err.message);
+                showGlobalToast("📍 " + err.message);
             }
         })();
     });
@@ -6136,16 +6136,13 @@ async function checkProviderApprovalStatus() {
     try {
         const snap = await firebase.database().ref('providers/' + username).once('value');
         const data = snap.val();
-        const btnIcon = document.getElementById('post-service-btn-icon');
         const btnLabel = document.getElementById('post-service-btn-label');
         if (data && data.status === 'approved') {
             mbApprovedProviderData = data;
-            btnIcon.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
             btnLabel.textContent = 'My Business';
         } else {
             mbApprovedProviderData = null;
-            btnIcon.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 8a5 5 0 0 1 0 8"/><path d="M18 5a9 9 0 0 1 0 14"/></svg>';   
-           btnLabel.textContent = 'Post Your Service';
+            btnLabel.textContent = 'Post Your Service';
         }
     } catch (err) {
         console.warn('Could not check provider status:', err.message);
