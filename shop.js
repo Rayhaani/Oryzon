@@ -3137,7 +3137,7 @@ function destroyStoreFront() {
     // instead — every other reference to these variables below this point
     // is unchanged.
     let params, vendorId, isAdmin, storeName, myUsername, chatDocId;
-    let authReadyResolve, authReady, vc_authUnsub = null;
+    let vc_authReadyResolve, vc_authReady, vc_authUnsub = null;
 
     // Real Oryzon account identity — same pattern as chat-interior.html.
     // A customer must be logged into their real Oryzon account to chat, exactly like
@@ -3156,12 +3156,12 @@ function destroyStoreFront() {
         // every Firestore read/write below must wait for this to resolve, or request.auth
         // will be null even though the person is really logged in.
         if (vc_authUnsub) { try { vc_authUnsub(); } catch (e) {} }
-        authReady = new Promise(res => { authReadyResolve = res; });
+        vc_authReady = new Promise(res => { vc_authReadyResolve = res; });
         vc_authUnsub = auth.onAuthStateChanged(user => {
             if (!user) {
                 console.warn('No active Firebase Auth session — Firestore writes will fail permission checks.');
             }
-            authReadyResolve(user);
+            vc_authReadyResolve(user);
         });
     }
 
@@ -4291,7 +4291,7 @@ ${vendorInfo}${learningExamples}`;
         bindAvatarUploadListener();
         bindPreviewAudioListeners();
         startVendorStatusPolling();
-        await authReady;
+        await vc_authReady;
         loadFirestoreProducts();
         makeDraggable(document.getElementById('floatingAvatar'));
         restoreAvatarPosition();
