@@ -202,8 +202,11 @@ async function loadVideos(reset = false) {
         batch.forEach(v => { if (typeof generatePostHTML==='function') html += generatePostHTML(v); });
         feedEl.insertAdjacentHTML('beforeend', html);
 
-        setTimeout(() => { if (typeof postCard_restoreLikes==='function') postCard_restoreLikes(feedEl); }, 400);
+        if (reset) {
+            requestAnimationFrame(() => startFirstImmersive());
+        }
 
+        setTimeout(() => { if (typeof postCard_restoreLikes==='function') postCard_restoreLikes(feedEl); }, 400);
         batch.forEach(v => {
             if (!v.username) return;
             db.collection('users').doc(v.username).get().then(uDoc => {
@@ -306,25 +309,6 @@ function startFirstImmersive() {
     }
     feedEl.classList.add('ready');
 }
-
-if (!HTMLElement.prototype.__nexusVideosInsertAdjPatched) {
-    const _origInsertAdj = HTMLElement.prototype.insertAdjacentHTML;
-    HTMLElement.prototype.insertAdjacentHTML = function(pos, html) {
-        _origInsertAdj.call(this, pos, html);
-        if (this.id === 'videoFeed') {
-            clearTimeout(window._reelStartTimer);
-            window._reelStartTimer = setTimeout(() => {
-                if (!document.querySelector('.post-card.immersive-mode')) {
-                    if (typeof window.__videosStartFirstImmersive === 'function') {
-                        window.__videosStartFirstImmersive();
-                    }
-                }
-            }, 700);
-        }
-    };
-    HTMLElement.prototype.__nexusVideosInsertAdjPatched = true;
-}
-window.__videosStartFirstImmersive = startFirstImmersive;
 
 // ============================================================
 // OVERLAY OPEN / CLOSE (maimakon router pageInit/pageDestroy)
