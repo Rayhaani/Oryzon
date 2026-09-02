@@ -94,8 +94,6 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
-            'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js',
-            'https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js',
             'call.js',
             'video-call.js',
             'chat-interior.js'
