@@ -376,3 +376,7 @@ window.closeNexusFeedOverlay = function() {
     const header = document.querySelector('#page-content > header');
     if (header) header.style.display = '';
 };
+document.getElementById('nfeedSearchInput')?.addEventListener('input', function () {
+    const icon = document.getElementById('nfeedSearchIcon');
+    if (icon) icon.style.display = this.value.trim() ? 'block' : 'none';
+});
