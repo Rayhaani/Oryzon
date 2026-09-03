@@ -366,10 +366,14 @@ window.openNexusFeedOverlay = function() {
     const header = document.querySelector('#page-content > header');
     if (header) header.style.display = 'none';
 
-    allPosts = [];
-    loadPersonalizedGrid();
+    if (allPosts.length > 0) {
+        // An riga an pre-fetch - nuna NAN TAKE, sannan sabunta a asirce
+        renderGrid();
+        loadPersonalizedGrid();
+    } else {
+        loadPersonalizedGrid();
+    }
 };
-
 window.closeNexusFeedOverlay = function() {
     if (videoObserver) { videoObserver.disconnect(); videoObserver = null; }
 
@@ -387,6 +391,19 @@ window.closeNexusFeedOverlay = function() {
     const header = document.querySelector('#page-content > header');
     if (header) header.style.display = '';
 };
+
+/* ============================================================
+   PREFETCH — jira dan kadan bayan page ta gama load, sannan mu
+   fara loda nexus-feed data a ASIRCE (babu UI, babu overlay),
+   domin da zaran an danna icon din, content ya riga ya kasance
+   a shirye, kamar yadda Instagram Explore ke yi.
+   ============================================================ */
+setTimeout(() => {
+    if (typeof currentUser !== 'undefined' && currentUser && allPosts.length === 0) {
+        loadPersonalizedGrid();
+    }
+}, 2500);
+
 (function () {
     const input = document.getElementById('nfeedSearchInput');
     const icon = document.getElementById('nfeedSearchIcon');
