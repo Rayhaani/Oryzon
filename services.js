@@ -3164,14 +3164,23 @@ runOnServicesInit(() => {
         });
    }
    
-    document.getElementById("near-me-btn").addEventListener("click", () => {
-        const locator = document.getElementById("locating-status");
-        locator.style.display = "block";
+   document.getElementById("near-me-btn").addEventListener("click", () => {
         if (!navigator.geolocation) {
-            locator.style.display = "none";
             showGlobalToast("Your browser does not support location services.");
             return;
         }
+        document.getElementById("location-permission-overlay").style.display = "flex";
+    });
+
+    function closeLocationPermissionModal() {
+        document.getElementById("location-permission-overlay").style.display = "none";
+    }
+    window.closeLocationPermissionModal = closeLocationPermissionModal;
+
+    function confirmLocationPermission() {
+        document.getElementById("location-permission-overlay").style.display = "none";
+        const locator = document.getElementById("locating-status");
+        locator.style.display = "block";
         navigator.geolocation.getCurrentPosition(
             () => {
                 locator.style.display = "none";
@@ -3189,7 +3198,8 @@ runOnServicesInit(() => {
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
         );
-    });
+    }
+    window.confirmLocationPermission = confirmLocationPermission; 
    
     document.getElementById("view-all-traders-btn").addEventListener("click", () => { state.selectedCat = null; switchView("results"); });
     document.getElementById("close-profile-sheet-btn").addEventListener("click", closeProfileSheet);
