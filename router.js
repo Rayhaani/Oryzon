@@ -58,7 +58,7 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js',
-            'nexus-core.js', 'post-card-template.js', 'social.js', 'nexus-algorithm.js'
+            'nexus-core.js', 'post-card-template.js', 'videos.js', 'social.js', 'nexus-algorithm.js'
         ],
         // services.html yana bukatar firebase compat SDKs + nexus-core.js
         // (domin db/firebase/currentUser/storage/analytics globals) +
