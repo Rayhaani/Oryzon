@@ -433,16 +433,21 @@ function switchView(viewName) {
     const resultsView = document.getElementById("results-view");
     const actionsBlock = document.getElementById("header-actions");
     const footerEl = document.getElementById("footer-placeholder");
+    const ordersBanner = document.getElementById("active-orders-banner");
+    const backBtn = document.getElementById("results-back-btn");
     if (viewName === "main") {
         mainView.style.display = "block";
         resultsView.style.display = "none";
         actionsBlock.style.display = "grid";
         if (footerEl) footerEl.style.display = "block";
+        if (backBtn) backBtn.style.display = "none";
     } else {
         mainView.style.display = "none";
         resultsView.style.display = "block";
         actionsBlock.style.display = "none";
         if (footerEl) footerEl.style.display = "none";
+        if (ordersBanner) ordersBanner.style.display = "none";
+        if (backBtn) backBtn.style.display = "flex";
         renderResultsPage();
     }
 }
@@ -520,10 +525,11 @@ function renderResultsPage() {
     if (filtered.length > 0) {
         list.innerHTML = filtered.map((pro,idx) => `<div class="slide-up" style="animation-delay:${idx*40}ms">${createProCardHtml(pro)}</div>`).join('');
     } else {
-        list.innerHTML = `<div style="text-align:center;padding:80px 20px;">
+        list.innerHTML = `<div style="text-align:center;padding:60px 20px;">
             <div style="font-size:36px;">📍</div>
-            <div style="font-weight:700;font-size:15px;color:#111827;margin-top:12px;">No Matches Near You</div>
-            <div style="color:#64748b;font-size:12px;margin-top:4px;">Zero results found within your immediate physical radar constraint.</div>
+            <div style="font-weight:700;font-size:15px;color:#111827;margin-top:12px;">No Providers Found Near You</div>
+            <div style="color:#64748b;font-size:12px;margin-top:4px;max-width:280px;margin-left:auto;margin-right:auto;">We couldn't find anyone offering this service in your area right now. If you know a skilled professional, let them know we're looking — and if you offer this service yourself, you can register below.</div>
+            <button onclick="openRequestServiceOverlay()" style="margin-top:16px;background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);color:#fff;border:none;border-radius:12px;padding:11px 20px;font-size:13px;font-weight:700;cursor:pointer;">+ Request or Recommend</button>
         </div>`;
     }
 }
