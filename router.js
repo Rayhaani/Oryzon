@@ -393,7 +393,8 @@
                 resolve();
             };
             script.onerror = function () {
-                reject(new Error('Failed to load script: ' + src));
+                console.error('Script ya kasa loda (an tsallake, sauran ba za su tsaya ba):', src);
+                resolve();
             };
             document.body.appendChild(script);
         });
