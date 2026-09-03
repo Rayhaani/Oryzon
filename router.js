@@ -548,12 +548,12 @@
             }
 
             runDestroy(currentPath);
+           unloadPageOwnCss(currentPath);
             await Promise.all([
                 loadStylesheetsAll(PAGE_STYLES[targetPath]),
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
             ]).catch(e => console.error(e));
             currentContentEl.innerHTML = newContent.innerHTML;
-            unloadPageOwnCss(currentPath);
             window.scrollTo(0, 0);
             if (newDoc.title) document.title = newDoc.title;
 
