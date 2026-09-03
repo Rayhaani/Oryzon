@@ -3177,30 +3177,44 @@ runOnServicesInit(() => {
     }
     window.closeLocationPermissionModal = closeLocationPermissionModal;
 
-    function confirmLocationPermission() {
+     function confirmLocationPermission() {
         document.getElementById("location-permission-overlay").style.display = "none";
-        const locator = document.getElementById("locating-status");
-        locator.style.display = "block";
+        document.getElementById("nearme-scan-overlay").style.display = "flex";
+        attemptNearMeGPSFix(true);
+    }
+    window.confirmLocationPermission = confirmLocationPermission;
+
+    function attemptNearMeGPSFix(isFirstAttempt) {
+        if (isFirstAttempt) {
+            document.getElementById("nearme-scan-status").textContent = "Finding pros near you...";
+            document.getElementById("nearme-scan-sub").textContent = "This will only take a moment";
+        }
         navigator.geolocation.getCurrentPosition(
             () => {
-                locator.style.display = "none";
+                document.getElementById("nearme-scan-overlay").style.display = "none";
                 state.nearMeActive = true;
                 switchView("results");
             },
             (err) => {
-                locator.style.display = "none";
-                const msgs = {
-                    1: "Location access denied. Enable it in your browser settings to see pros near you.",
-                    2: "Could not determine your location. Please try again outdoors.",
-                    3: "Location request timed out. Please try again."
-                };
-                showGlobalToast(msgs[err.code] || "Location error.");
+                if (isFirstAttempt) {
+                    document.getElementById("nearme-scan-sub").textContent = "Retrying a different way...";
+                    attemptNearMeGPSFix(false);
+                } else {
+                    document.getElementById("nearme-scan-overlay").style.display = "none";
+                    const msgs = {
+                        1: "Location access denied. Enable it in your browser settings to see pros near you.",
+                        2: "Could not determine your location. Please try again outdoors.",
+                        3: "Location request timed out. Please try again."
+                    };
+                    showGlobalToast(msgs[err.code] || "Location error.");
+                }
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+            isFirstAttempt
+                ? { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+                : { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
         );
     }
-    window.confirmLocationPermission = confirmLocationPermission; 
-   
+    window.attemptNearMeGPSFix = attemptNearMeGPSFix;   
     document.getElementById("view-all-traders-btn").addEventListener("click", () => { state.selectedCat = null; switchView("results"); });
     document.getElementById("close-profile-sheet-btn").addEventListener("click", closeProfileSheet);
 
