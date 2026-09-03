@@ -29,14 +29,31 @@
 let shopPageUnsubscribes = [];
 let _shopFbApp = null, _shopDb = null;
 
+// Ajiye import() a MODULE SCOPE — kada a sake yin import a duk SPA visit.
+// Kafin haka, kowace SPA nav zuwa shop.html tana sake yin import() a
+// layi daya da HTML/CSS/script fetches na navigation din kanta — idan
+// wannan import ya kasa (network contention/timeout), duk bootShopMarketplace()
+// yana fadowa shiru (catch a kasa yana kama shi, console.error kadai) —
+// shi ne ainihin dalilin "empty page har sai refresh".
+let _shopEsmPromise = null;
+function _loadShopEsm() {
+    if (!_shopEsmPromise) {
+        _shopEsmPromise = Promise.all([
+            import("https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js"),
+            import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js")
+        ]).catch(function (err) { _shopEsmPromise = null; throw err; });
+    }
+    return _shopEsmPromise;
+}
+
 async function bootShopMarketplace() {
     shopPageUnsubscribes.forEach(fn => { try { fn(); } catch (e) {} });
     shopPageUnsubscribes = [];
     try {
 
-        const { initializeApp, getApps, getApp } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js");
-        const { getFirestore, collection, query, orderBy, onSnapshot, where, getDocs, limit } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
-
+        const [_appMod, _fsMod] = await _loadShopEsm();
+        const { initializeApp, getApps, getApp } = _appMod;
+        const { getFirestore, collection, query, orderBy, onSnapshot, where, getDocs, limit } = _fsMod;
         const firebaseConfig = {
             apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
             authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -4448,16 +4465,16 @@ window.openVendorChatOverlay = openVendorChatOverlay;
 window.closeVendorChatOverlay = closeVendorChatOverlay;
 
 /* ---------- SPA registration ---------- */
-if (window.NexusRouter) {
-    NexusRouter.registerPage('shop.html', {
-        init: function () {
-            bootShopMarketplace();
-        },
-        destroy: function () {
-            destroyShopMarketplace();
-        }
-    });
-}
+(function _nxRegisterShopPage() {
+    if (window.NexusRouter) {
+        NexusRouter.registerPage('shop.html', {
+            init: function () { bootShopMarketplace(); },
+            destroy: function () { destroyShopMarketplace(); }
+        });
+    } else {
+        window.addEventListener('DOMContentLoaded', _nxRegisterShopPage, { once: true });
+    }
+})();
 
 /* Boot once for this script's own load. On a normal (non-SPA) full page
    load, shop.html's own <script src="shop.js"> tag runs before the page
