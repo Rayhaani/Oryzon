@@ -280,17 +280,16 @@ function destroySocialPage() {
     _socialNavScrollReset();
 }
 
-if (window.NexusRouter) {
-    NexusRouter.registerPage('social.html', { init: initSocialPage, destroy: destroySocialPage });
+function _nxRegisterSocialPage() {
+    if (window.NexusRouter) {
+        NexusRouter.registerPage('social.html', { init: initSocialPage, destroy: destroySocialPage });
+    }
 }
-
-// SPA: router.js din shine kadai ke da alhakin kiran initSocialPage()
-// bayan wannan file ya gama loda (ta runInit()). Idan an sake kiranta
-// a nan MA lokacin da readyState='complete' (SPA), za a kira ta SAU
-// BIYU. Saboda haka a NAN kadai muke jiran DOMContentLoaded (native
-// load) — babu 'else' immediate-call.
-window.addEventListener('DOMContentLoaded', initSocialPage);
-
+_nxRegisterSocialPage();
+window.addEventListener('DOMContentLoaded', function () {
+    _nxRegisterSocialPage();
+    initSocialPage();
+});
 
       // ============================================================
       // OPTIMIZED FEED RENDERING
