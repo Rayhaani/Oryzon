@@ -670,10 +670,26 @@ currentContentEl.innerHTML = newContent.innerHTML;
    document.addEventListener('click', onDocumentClick);
   // Register initial page's history state so popstate works from the start.
     window.history.replaceState({ nexusRoute: currentPath }, '', window.location.href);
+ // Proactively warm manyan pages (social, shop, videos) tun farko,
+    // STAGGERED (400ms tazara) don kaucewa cunkoson bandwidth —
+    // zero-second nav ga dukkansu, ba social kadai ba.
+    ['social.html', 'shop.html', 'videos.html']
+        .filter(function (p) { return p !== currentPath; })
+        .forEach(function (p, i) {
+            setTimeout(function () { prefetchPage(p); }, i * 400);
+        });
  })();
 
-// Proactively warm social.html (main feed) assets tun farko, don
-    // kada a jira hover/touch kafin a fara download — zero-second nav.
-    if (currentPath !== 'social.html') {
-        prefetchPage('social.html');
+// shop.js yana amfani da dynamic import() na firebase 11 (ESM) wanda
+    // PAGE_SCRIPTS/prefetchPage BA SU SANI BA — sa modulepreload domin
+    // wadannan ma su fara download tun farko, ba jiran click ba.
+    if (currentPath !== 'shop.html') {
+        ['https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js',
+         'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js'
+        ].forEach(function (u) {
+            const link = document.createElement('link');
+            link.rel = 'modulepreload';
+            link.href = u;
+            document.head.appendChild(link);
+        });
     }
