@@ -55,10 +55,14 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
+
 var db = firebase.firestore();
+db.settings({
+    experimentalAutoDetectLongPolling: true,
+    merge: true
+});
 var storage = firebase.storage();
 var analytics = firebase.analytics();
-
 // GYARA: an nade wannan a cikin guard domin kada listener din ya
 // taru (kowace sake-gudana za ta kara wani sabon onAuthStateChanged
 // listener, wanda ke haifar da "Auth ready" log da yawa da kuma
