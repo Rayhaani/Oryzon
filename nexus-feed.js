@@ -129,16 +129,24 @@ let allPosts = [];
 let activeVideoTiles = new Map();
 
 async function loadPersonalizedGrid() {
+    const grid = document.getElementById('quantumGrid');
+    const TIMEOUT_MS = 9000;
+    const withTimeout = (p) => Promise.race([
+        p,
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), TIMEOUT_MS))
+    ]);
+
     try {
-        const [userSnap, followSnap, behaviorSnap] = await Promise.all([
+        const ctxSettled = await Promise.allSettled([
             db.collection('users').doc(currentUser).get(),
             db.collection('users').doc(currentUser).collection('following').get(),
             db.collection('users').doc(currentUser).collection('behavior').doc('summary').get()
         ]);
+        const [userSnapR, followSnapR, behaviorSnapR] = ctxSettled;
 
-        const userData    = userSnap.exists ? userSnap.data() : {};
-        const following   = followSnap.docs.map(d => d.id);
-        const behavior     = behaviorSnap.exists ? behaviorSnap.data() : {};
+        const userData   = (userSnapR.status === 'fulfilled' && userSnapR.value.exists) ? userSnapR.value.data() : {};
+        const following  = (followSnapR.status === 'fulfilled') ? followSnapR.value.docs.map(d => d.id) : [];
+        const behavior    = (behaviorSnapR.status === 'fulfilled' && behaviorSnapR.value.exists) ? behaviorSnapR.value.data() : {};
 
         const interests   = userData.interests || [];
         const catScores   = behavior.categoryScores || {};
@@ -149,7 +157,7 @@ async function loadPersonalizedGrid() {
         const topCats = Object.entries(profile)
             .sort((a,b) => b[1]-a[1]).slice(0,10).map(([c])=>c);
 
-        const [interestSnap, trendingSnap, recentSnap] = await Promise.all([
+        const postsSettled = await withTimeout(Promise.allSettled([
             topCats.length > 0
                 ? db.collection('posts')
                     .where('category','in', topCats.slice(0,10))
@@ -159,23 +167,20 @@ async function loadPersonalizedGrid() {
                 .orderBy('engagementScore','desc').limit(30).get(),
             db.collection('posts')
                 .orderBy('timestamp','desc').limit(30).get()
-        ]);
+        ]));
 
         const seen = new Set();
         const candidates = [];
-        [interestSnap, trendingSnap, recentSnap].forEach(snap => {
-            if (!snap.docs) return;
-            snap.docs.forEach(doc => {
+        postsSettled.forEach(r => {
+            if (r.status !== 'fulfilled' || !r.value.docs) return;
+            r.value.docs.forEach(doc => {
                 const d = doc.data();
-                if (!seen.has(doc.id) &&
-                    d.username !== currentUser &&
-                    !following.includes(d.username)) {
+                if (!seen.has(doc.id)) {
                     seen.add(doc.id);
                     candidates.push({ id: doc.id, ...d });
                 }
             });
         });
-
         const now = Date.now();
         allPosts = candidates.map(post => {
             const ageHrs  = post.timestamp ? (now - post.timestamp.toMillis())/3600000 : 999;
@@ -204,13 +209,15 @@ async function loadPersonalizedGrid() {
 
         renderGrid();
 
-    } catch(err) {
+   } catch(err) {
         console.error('[NexusExplore] Error:', err);
-        db.collection('posts').orderBy('timestamp','desc').limit(30).get().then(snap => {
-            allPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            renderGrid();
-        });
-    }
+        if (grid) {
+            grid.innerHTML = `<div class="empty-state">
+                <i class="fa-solid fa-wifi"></i>
+                <p>Connection issue.<br><span style="text-decoration:underline;cursor:pointer;" onclick="loadPersonalizedGrid()">Tap to retry</span></p>
+            </div>`;
+        }
+    } 
 }
 
 // -- RENDER GRID --
@@ -376,7 +383,10 @@ window.closeNexusFeedOverlay = function() {
     const header = document.querySelector('#page-content > header');
     if (header) header.style.display = '';
 };
-document.getElementById('nfeedSearchInput')?.addEventListener('input', function () {
+(function () {
+    const input = document.getElementById('nfeedSearchInput');
     const icon = document.getElementById('nfeedSearchIcon');
-    if (icon) icon.style.display = this.value.trim() ? 'block' : 'none';
-});
+    if (!input || !icon) return;
+    input.addEventListener('focus', () => { icon.style.display = 'block'; });
+    input.addEventListener('blur', () => { if (!input.value.trim()) icon.style.display = 'none'; });
+})();
