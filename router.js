@@ -157,7 +157,7 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js',
-            'nexus-core.js', 'videos.js'
+            'nexus-core.js', 'post-card-template.js', 'videos.js'
         ],
         'me.html': [
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
