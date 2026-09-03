@@ -671,4 +671,9 @@
   // Register initial page's history state so popstate works from the start.
     window.history.replaceState({ nexusRoute: currentPath }, '', window.location.href);
  })();
-    
+
+// Proactively warm social.html (main feed) assets tun farko, don
+    // kada a jira hover/touch kafin a fara download — zero-second nav.
+    if (currentPath !== 'social.html') {
+        prefetchPage('social.html');
+    }
