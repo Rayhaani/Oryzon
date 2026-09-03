@@ -432,14 +432,17 @@ function switchView(viewName) {
     const mainView = document.getElementById("main-view");
     const resultsView = document.getElementById("results-view");
     const actionsBlock = document.getElementById("header-actions");
+    const footerEl = document.getElementById("footer-placeholder");
     if (viewName === "main") {
         mainView.style.display = "block";
         resultsView.style.display = "none";
         actionsBlock.style.display = "grid";
+        if (footerEl) footerEl.style.display = "block";
     } else {
         mainView.style.display = "none";
         resultsView.style.display = "block";
         actionsBlock.style.display = "none";
+        if (footerEl) footerEl.style.display = "none";
         renderResultsPage();
     }
 }
@@ -3164,24 +3167,28 @@ runOnServicesInit(() => {
     document.getElementById("near-me-btn").addEventListener("click", () => {
         const locator = document.getElementById("locating-status");
         locator.style.display = "block";
-        (async () => {
-            try {
-                if (typeof initNearMe !== "function") await nxLazyLoadScript('nearme-engine.js');
-                if (typeof initNearMe === "function") {
-                    await initNearMe('skilled_pro', null, 'results-list-container');
-                    locator.style.display = "none";
-                    state.nearMeActive = true;
-                    switchView("results");
-                } else {
-                    locator.style.display = "none";
-                    state.nearMeActive = true;
-                    switchView("results");
-                }
-            } catch (err) {
+        if (!navigator.geolocation) {
+            locator.style.display = "none";
+            showGlobalToast("Your browser does not support location services.");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            () => {
                 locator.style.display = "none";
-                showGlobalToast("📍 " + err.message);
-            }
-        })();
+                state.nearMeActive = true;
+                switchView("results");
+            },
+            (err) => {
+                locator.style.display = "none";
+                const msgs = {
+                    1: "Location access denied. Enable it in your browser settings to see pros near you.",
+                    2: "Could not determine your location. Please try again outdoors.",
+                    3: "Location request timed out. Please try again."
+                };
+                showGlobalToast(msgs[err.code] || "Location error.");
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+        );
     });
    
     document.getElementById("view-all-traders-btn").addEventListener("click", () => { state.selectedCat = null; switchView("results"); });
