@@ -91,17 +91,19 @@
             if (!myId || typeof db === 'undefined') return;
             try {
                 const groupIds = await getMyMembershipIds('members');
-                const container = document.getElementById('groups');
+               const container = document.getElementById('groups');
                 if (!container || !groupIds.length) return;
-                const groupDocs = await Promise.all(groupIds.map(id => db.collection('groups').doc(id).get()));
+                container.querySelectorAll('[data-rendered-group]').forEach(el => el.remove());                 
+               const groupDocs = await Promise.all(groupIds.map(id => db.collection('groups').doc(id).get()));
                 groupDocs.filter(g => g.exists).forEach(g => {
                     const data = g.data();
                     const gid = g.id;
-                    const row = document.createElement('a');
+                  const row = document.createElement('a');
                     row.href = `group.html?group=${encodeURIComponent(gid)}`;
                     row.setAttribute('data-spa-link', `group.html?group=${encodeURIComponent(gid)}`);
-                    row.className = 'chat-item';
-                    row.innerHTML = `
+                    row.setAttribute('data-rendered-group', 'true');
+                    row.className = 'chat-item';  
+                   row.innerHTML = `
                         <div class="profile-stack" data-avatar-kind="group" data-avatar-key="${gid}" data-chat-href="group.html?group=${gid}" data-info-href="group.html?group=${gid}" onclick="handleAvatarTap(event)">
                             <img src="${data.avatarUrl || 'https://via.placeholder.com/46/00F2FF/000?text=' + encodeURIComponent((data.name || 'G')[0])}" class="user-img" style="border-radius: 12px;">
                         </div>
@@ -4096,14 +4098,18 @@ window.__chatsStoryMatrixDestroy = function () {
    da intervals da module din suka bude, domin kada su ci gaba da
    gudana a boye bayan mutum ya bar chats.html zuwa wata page.
    ============================================================ */
+let __chatsPageIsInitialized = false;
 function initChatsPage() {
+    if (__chatsPageIsInitialized) return; // router.js + chats.js kansa suna iya kiran wannan sau biyu a shigowa daya
+    __chatsPageIsInitialized = true;
     __chatsInitCallbacks.forEach(fn => {
         try { fn(); } catch (e) { console.error('chats.js init callback error:', e); }
     });
 }
 
 function destroyChatsPage() {
-    if (typeof unsubPersonalChatsMain !== 'undefined' && unsubPersonalChatsMain) { unsubPersonalChatsMain(); unsubPersonalChatsMain = null; }
+    __chatsPageIsInitialized = false; // domin shigowa ta gaba ta iya sake gudana yadda ya kamata
+    if (typeof unsubPersonalChatsMain !== 'undefined' && unsubPersonalChatsMain) { unsubPersonalChatsMain(); unsubPersonalChatsMain = null; } 
     if (typeof unsubFriendsMain !== 'undefined' && unsubFriendsMain) { unsubFriendsMain(); unsubFriendsMain = null; }
     if (typeof refreshChatTimesInterval !== 'undefined' && refreshChatTimesInterval) { clearInterval(refreshChatTimesInterval); refreshChatTimesInterval = null; }
     if (window.__chatsStatusModuleDestroy) window.__chatsStatusModuleDestroy();
