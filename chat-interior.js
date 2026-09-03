@@ -199,7 +199,7 @@ function populateChatHeaderInfo() {
     db.collection('users').doc(chatWith).get().then(doc => {
         if (doc.exists) {
             const d = doc.data();
-            document.getElementById('chat-header-name').textContent = d.fullName || d.username || chatWith;
+            document.getElementById('chat-header-name').textContent = d.username || chatWith;
             if (d.userProfilePic) document.getElementById('chat-header-avatar').src = d.userProfilePic;
         }
     });
@@ -215,7 +215,92 @@ function handleVoiceCall() {
 }
 
 function openChatInfo() {
-    window.location.href = `profile.html?user=${chatWith}`;
+    document.getElementById('chatInfoName').textContent = document.getElementById('chat-header-name').textContent;
+    document.getElementById('chatInfoAvatar').src = document.getElementById('chat-header-avatar').src;
+    document.getElementById('chatInfoStatus').textContent = document.getElementById('chat-status-line').textContent;
+    db.collection('personalChats').doc(chatRoomId).get().then(doc => {
+        const d = doc.data() || {};
+        const muted = !!(d.mutedBy && d.mutedBy[myId]);
+        document.getElementById('chatInfoMuteState').textContent = muted ? 'On' : 'Off';
+    }).catch(() => {});
+    db.collection('users').doc(myId).get().then(doc => {
+        const blocked = ((doc.data() || {}).blocked || []).includes(chatWith);
+        document.getElementById('chatInfoBlockLabel').textContent = blocked ? 'Unblock' : 'Block';
+    }).catch(() => {});
+    loadRecentMediaForOverlay();
+    document.getElementById('chatInfoOverlay').style.display = 'flex';
+}
+function closeChatInfo() {
+    document.getElementById('chatInfoOverlay').style.display = 'none';
+}
+function toggleMuteChat() {
+    db.collection('personalChats').doc(chatRoomId).get().then(doc => {
+        const d = doc.data() || {};
+        const currentlyMuted = !!(d.mutedBy && d.mutedBy[myId]);
+        return db.collection('personalChats').doc(chatRoomId).set({
+            mutedBy: { [myId]: !currentlyMuted }
+        }, { merge: true }).then(() => {
+            document.getElementById('chatInfoMuteState').textContent = !currentlyMuted ? 'On' : 'Off';
+        });
+    }).catch(() => alert('An kasa canza saitin shiru: sake gwadawa.'));
+}
+function blockPeerUser() {
+    const label = document.getElementById('chatInfoBlockLabel');
+    const willBlock = label.textContent === 'Block';
+    if (!confirm(willBlock ? `Tabbatar ka toshe ${chatWith}?` : `Cire toshi daga ${chatWith}?`)) return;
+    const op = willBlock ? firebase.firestore.FieldValue.arrayUnion(chatWith) : firebase.firestore.FieldValue.arrayRemove(chatWith);
+    db.collection('users').doc(myId).set({ blocked: op }, { merge: true }).then(() => {
+        label.textContent = willBlock ? 'Unblock' : 'Block';
+    }).catch(() => alert('An kasa kammala aikin: sake gwadawa.'));
+}
+function reportPeerUser() {
+    const reason = prompt(`Me ya sa kake son ba da rahoton ${chatWith}?`);
+    if (!reason) return;
+    db.collection('reports').add({
+        reporterId: myId, reportedId: chatWith, reason, timestamp: Date.now()
+    }).then(() => alert('An turo rahoto. Na gode.'))
+      .catch(() => alert('An kasa turo rahoto: sake gwadawa.'));
+}
+let myClearedAt = null;
+function clearChatHistory() {
+    if (!confirm('Tabbatar ka goge duk tattaunawar nan a wayarka?')) return;
+    const now = Date.now();
+    db.collection('personalChats').doc(chatRoomId).set({
+        clearedAt: { [myId]: now }
+    }, { merge: true }).then(() => {
+        myClearedAt = now;
+        closeChatInfo();
+        renderChatFlow();
+    }).catch(() => alert('An kasa goge tattaunawar: sake gwadawa.'));
+}
+function loadRecentMediaForOverlay() {
+    const strip = document.getElementById('chatInfoMediaStrip');
+    strip.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:12px;">Ana lodawa...</span>';
+    db.collection('personalChats').doc(chatRoomId).collection('messages')
+      .orderBy('timestamp', 'desc').limit(20).get().then(snap => {
+          const items = [];
+          snap.forEach(doc => {
+              const d = doc.data();
+              if (d.type === 'image' || d.type === 'video') items.push({ id: doc.id, d, i: 0 });
+              else if (d.type === 'imageGroup' && Array.isArray(d.mediaArr)) {
+                  d.mediaArr.forEach((m, i) => items.push({ id: doc.id, d: m, i, group: true }));
+              }
+          });
+          const top5 = items.slice(0, 5);
+          if (!top5.length) { strip.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:12px;">Babu media tukuna</span>'; return; }
+          strip.innerHTML = top5.map(item => {
+              const itemKey = item.id + '_' + item.i;
+              const src = item.group
+                ? resolveMediaSrc(itemKey, item.d.mediaUrl, item.d.iv, item.d.mimeType, 'cim_' + itemKey)
+                : resolveMediaSrc(itemKey, item.d.mediaUrl, item.d.iv, item.d.mimeType, 'cim_' + itemKey);
+              const isVideo = item.d.type === 'video';
+              const inner = src
+                ? (isVideo ? `<video id="cim_${itemKey}" src="${src}" muted playsinline></video>` : `<img id="cim_${itemKey}" src="${src}">`)
+                : `<div id="cim_${itemKey}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);">🔒</div>`;
+              return `<div style="width:76px;height:76px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#111;">${inner}</div>`;
+          }).join('');
+          strip.querySelectorAll('img,video').forEach(el => { el.style.width = '100%'; el.style.height = '100%'; el.style.objectFit = 'cover'; });
+      }).catch(() => { strip.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:12px;">An kasa lodawa</span>'; });
 }
 
 // ══════════════════════════════════════════════
@@ -339,22 +424,92 @@ function listenToNexusMessages() {
 
     // ── Typing indicator: bibiyar filin typing.{chatWith} akan doc na dakin chat ──
     typingUnsubscribe = db.collection('personalChats').doc(chatRoomId).onSnapshot((doc) => {
-        const statusEl = document.getElementById('chat-status-line');
-        if (!statusEl) return;
         const d = doc.data();
-        if (d && d.typing && d.typing[chatWith]) {
-            statusEl.textContent = 'yana rubutu...';
-            statusEl.style.color = 'var(--cyan-neon)';
-        } else {
-            statusEl.textContent = '● Active now';
-            statusEl.style.color = 'var(--presence-live)';
-        }
+        peerIsTyping = !!(d && d.typing && d.typing[chatWith]);
+        updateStatusLine();
     });
+
+    listenToPeerPresence();
+    startMyPresenceHeartbeat();
+}
+
+// ══════════════════════════════════════════════
+//  PRESENCE (real online/typing/last-seen — ba hardcoded ba)
+// ══════════════════════════════════════════════
+let peerPresenceUnsubscribe = null;
+let peerIsTyping = false;
+let peerIsOnline = false;
+let peerLastSeen = null;
+let myPresenceInterval = null;
+const PRESENCE_STALE_MS = 60000; // idan lastSeen ya wuce minti 1 ba a sabunta ba, a nuna a matsayin offline
+
+function updateStatusLine() {
+    const statusEl = document.getElementById('chat-status-line');
+    if (!statusEl) return;
+    if (peerIsTyping) {
+        statusEl.textContent = 'yana rubutu...';
+        statusEl.style.color = 'var(--cyan-neon)';
+    } else if (peerIsOnline) {
+        statusEl.textContent = '● Active now';
+        statusEl.style.color = 'var(--presence-live)';
+    } else if (peerLastSeen) {
+        statusEl.textContent = 'last seen ' + formatLastSeen(peerLastSeen);
+        statusEl.style.color = 'rgba(255,255,255,0.45)';
+    } else {
+        statusEl.textContent = '';
+    }
+}
+function formatLastSeen(ts) {
+    const d = ts && ts.toDate ? ts.toDate() : new Date(ts);
+    const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return days + 'd ago';
+    return d.toLocaleDateString();
+}
+function listenToPeerPresence() {
+    if (peerPresenceUnsubscribe) { peerPresenceUnsubscribe(); peerPresenceUnsubscribe = null; }
+    peerPresenceUnsubscribe = db.collection('users').doc(chatWith).onSnapshot((doc) => {
+        const d = doc.data();
+        const stale = d && d.lastSeen && (Date.now() - d.lastSeen.toMillis()) > PRESENCE_STALE_MS;
+        peerIsOnline = !!(d && d.online) && !stale;
+        peerLastSeen = (d && d.lastSeen) || null;
+        updateStatusLine();
+    });
+}
+function writeMyPresence(online) {
+    if (!myId) return;
+    db.collection('users').doc(myId).set({
+        online: online,
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+}
+function startMyPresenceHeartbeat() {
+    stopMyPresenceHeartbeat();
+    writeMyPresence(true);
+    myPresenceInterval = setInterval(() => writeMyPresence(true), 15000);
+    document.addEventListener('visibilitychange', handleVisibilityForPresence);
+    window.addEventListener('pagehide', handlePageHideForPresence);
+}
+function stopMyPresenceHeartbeat() {
+    if (myPresenceInterval) { clearInterval(myPresenceInterval); myPresenceInterval = null; }
+    document.removeEventListener('visibilitychange', handleVisibilityForPresence);
+    window.removeEventListener('pagehide', handlePageHideForPresence);
+}
+function handleVisibilityForPresence() {
+    writeMyPresence(document.visibilityState === 'visible');
+}
+function handlePageHideForPresence() {
+    writeMyPresence(false);
 }
 
 function stopListeningToNexusMessages() {
     if (msgUnsubscribe) { msgUnsubscribe(); msgUnsubscribe = null; }
     if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
+    if (peerPresenceUnsubscribe) { peerPresenceUnsubscribe(); peerPresenceUnsubscribe = null; }
 }
 
 // ── Rubuta filin typing.{myId} lokacin da nake buga rubutu ──
@@ -380,6 +535,7 @@ function renderChatFlow() {
     if (latestMsgSnapshot) {
         latestMsgSnapshot.forEach((doc) => {
               const d = doc.data();
+              if (myClearedAt && d.timestamp && d.timestamp < myClearedAt) return; // an goge tattaunawar kafin wannan lokacin
               const isMe = d.senderId === myId;
               lastIsMe = isMe;
               const time = d.timestamp
@@ -424,6 +580,40 @@ function renderChatFlow() {
 } else if (d.type === 'imageGroup') {
     bubble.classList.add('media-bubble');
     bubble.innerHTML = buildImageGrid(d.mediaArr || [], time, doc.id);
+} else if (d.type === 'location') {
+                  const mapUrl = `https://maps.google.com/?q=${d.lat},${d.lng}`;
+                  bubble.innerHTML = `
+                      <a href="${mapUrl}" target="_blank" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:180px;">
+                          <div style="width:40px;height:40px;border-radius:10px;background:rgba(52,199,89,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-location-dot" style="color:#34c759;"></i></div>
+                          <div style="min-width:0;"><div style="font-weight:700;font-size:12.5px;">Wuri (Location)</div><div style="font-size:10.5px;color:rgba(255,255,255,0.5);">Danna don duba a taswira</div></div>
+                      </a>
+                      <span class="timestamp">${time}${ticks}</span>`;
+} else if (d.type === 'contact') {
+                  bubble.innerHTML = `
+                      <div style="display:flex;align-items:center;gap:10px;min-width:180px;">
+                          <div style="width:40px;height:40px;border-radius:50%;background:rgba(0,180,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-user" style="color:#0ab4ff;"></i></div>
+                          <div style="min-width:0;"><div style="font-weight:700;font-size:12.5px;">${d.contactName || 'Lambar tuntuɓa'}</div><div style="font-size:10.5px;color:rgba(255,255,255,0.5);">${d.contactPhone || ''}</div></div>
+                      </div>
+                      <span class="timestamp">${time}${ticks}</span>`;
+} else if (d.type === 'poll') {
+                  const options = (d.options || []).map((opt, i) => `<div style="padding:6px 10px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;font-size:12px;margin-top:5px;">☐ ${opt}</div>`).join('');
+                  bubble.innerHTML = `
+                      <div style="min-width:180px;"><div style="font-weight:700;font-size:12.5px;"><i class="fa-solid fa-square-poll-vertical" style="color:#ff9f0a;"></i> ${d.question || 'Zaɓe'}</div>${options}</div>
+                      <span class="timestamp">${time}${ticks}</span>`;
+} else if (d.type === 'event') {
+                  bubble.innerHTML = `
+                      <div style="display:flex;align-items:center;gap:10px;min-width:180px;">
+                          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,45,85,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-calendar-days" style="color:#ff375f;"></i></div>
+                          <div style="min-width:0;"><div style="font-weight:700;font-size:12.5px;">${d.eventTitle || 'Taro'}</div><div style="font-size:10.5px;color:rgba(255,255,255,0.5);">${d.eventDate || ''}</div></div>
+                      </div>
+                      <span class="timestamp">${time}${ticks}</span>`;
+} else if (d.type === 'document') {
+                  bubble.innerHTML = `
+                      <a href="${d.mediaUrl}" target="_blank" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:180px;">
+                          <div style="width:40px;height:40px;border-radius:10px;background:rgba(175,82,222,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-file-lines" style="color:#c17bff;"></i></div>
+                          <div style="min-width:0;overflow:hidden;"><div style="font-weight:700;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.fileName || 'Fayil'}</div><div style="font-size:10.5px;color:rgba(255,255,255,0.5);">${d.fileSize || ''}</div></div>
+                      </a>
+                      <span class="timestamp">${time}${ticks}</span>`;
 } else if (d.type === 'audio') {
                   const audioId = 'audio_' + doc.id;
                   const src = resolveMediaSrc(doc.id, d.mediaUrl, d.iv, d.mimeType, audioId);
@@ -747,7 +937,7 @@ async function getFFmpeg() {
             await loadFFmpegLibs();
             const { FFmpeg } = FFmpegWASM;
             const { toBlobURL } = FFmpegUtil;
-const ffmpeg = new FFmpeg();
+            const ffmpeg = new FFmpeg();
             const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
             await ffmpeg.load({
                 coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
@@ -1857,7 +2047,100 @@ function wireMediaInputs() {
         }
         e.target.value = '';
     });
+    document.getElementById('documentInput').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        await authReadyPromise;
+        if (!firebase.auth().currentUser) { alert('An kasa tabbatar da shiga. Sake login sannan ka gwada.'); return; }
+        try {
+            const token = await firebase.auth().currentUser.getIdToken();
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', 'chatMedia');
+            formData.append('username', chatRoomId);
+            const res = await fetch('https://oryzon-backend-ed1q.onrender.com/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+            await sendStructuredMessage('document', {
+                mediaUrl: data.url, fileName: file.name,
+                fileSize: (file.size / 1024).toFixed(0) + ' KB'
+            }, '📄 ' + file.name);
+        } catch (err) {
+            alert('An kasa tura fayil: ' + err.message);
+        }
+    });
 }
+
+// ══════════════════════════════════════════════
+//  ATTACH MENU (Location / Contact / Poll / Event / AI images) — item 7
+// ══════════════════════════════════════════════
+function toggleAttachMenu() {
+    const menu = document.getElementById('attachMenu');
+    menu.classList.toggle('open');
+}
+function closeAttachMenu() {
+    document.getElementById('attachMenu').classList.remove('open');
+}
+async function sendStructuredMessage(type, extra, previewLabel) {
+    await authReadyPromise;
+    const payload = Object.assign({ senderId: myId, receiverId: chatWith, timestamp: Date.now(), type }, extra);
+    await db.collection('personalChats').doc(chatRoomId).collection('messages').add(payload);
+    await db.collection('personalChats').doc(chatRoomId).set({
+        lastMessage: previewLabel, lastMessageTime: Date.now(), members: [myId, chatWith],
+        unreadCount: { [chatWith]: firebase.firestore.FieldValue.increment(1) }
+    }, { merge: true });
+}
+function shareLiveLocation() {
+    if (!navigator.geolocation) { alert('Wayarka ba ta goyon bayan location.'); return; }
+    navigator.geolocation.getCurrentPosition((pos) => {
+        sendStructuredMessage('location', { lat: pos.coords.latitude, lng: pos.coords.longitude }, '📍 Location');
+    }, () => alert('An kasa samun wurinka. Bincika izinin location.'));
+}
+async function shareContactCard() {
+    if ('contacts' in navigator && 'ContactsManager' in window) {
+        try {
+            const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+            if (!contacts.length) return;
+            const c = contacts[0];
+            sendStructuredMessage('contact', {
+                contactName: (c.name && c.name[0]) || 'Contact',
+                contactPhone: (c.tel && c.tel[0]) || ''
+            }, '👤 Contact');
+        } catch (e) { /* mutum ya soke */ }
+        return;
+    }
+    const name = prompt('Sunan mutumin:');
+    if (!name) return;
+    const phone = prompt('Lambar wayarsa:') || '';
+    sendStructuredMessage('contact', { contactName: name, contactPhone: phone }, '👤 Contact');
+}
+function createPollMessage() {
+    const question = prompt('Rubuta tambayar zaɓe:');
+    if (!question) return;
+    const optionsRaw = prompt('Rubuta zaɓuɓɓuka, an raba da waƙafi (,):');
+    if (!optionsRaw) return;
+    const options = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
+    if (options.length < 2) { alert('Ana bukatar akalla zaɓuɓɓuka 2.'); return; }
+    sendStructuredMessage('poll', { question, options }, '📊 ' + question);
+}
+function createEventMessage() {
+    const eventTitle = prompt('Sunan taro/event:');
+    if (!eventTitle) return;
+    const eventDate = prompt('Ranar da lokaci (misali 12 Sep, 4pm):') || '';
+    sendStructuredMessage('event', { eventTitle, eventDate }, '📅 ' + eventTitle);
+}
+function openAiImagePrompt() {
+    const prompt_ = prompt('Bayyana hoton da kake son AI ta ƙirƙira:');
+    if (!prompt_) return;
+    // Babu AI image-generation backend a wannan codebase tukuna — mun tabbatar
+    // wannan bawon "Active" ne (yana karɓar input, yana aiki), amma ainihin
+    // ƙirƙirar hoton yana bukatar backend API da ba a haɗa ba tukuna.
+    sendStructuredMessage('text', { text: `🎨 [AI Image request]: ${prompt_}` }, '🎨 AI Image request')
+        .catch(() => {});
+    alert('An karɓi bukatarka. AI image generation na bukatar backend — sai an haɗa API, ba za a iya ƙirƙirar ainihin hoto ba tukuna.');
+}
+
 
 // ══════════════════════════════════════════════
 //  VOICE RECORDING
@@ -2404,6 +2687,11 @@ async function refreshLastMessagePreview() {
         else if (d.type === 'video') label = d.encrypted ? '🔒 🎥 Video' : '🎥 Video';
         else if (d.type === 'imageGroup') label = '🖼 Photos';
         else if (d.type === 'audio') label = d.encrypted ? '🔒 🎤 Voice message' : '🎤 Voice message';
+        else if (d.type === 'location') label = '📍 Location';
+        else if (d.type === 'contact') label = '👤 Contact';
+        else if (d.type === 'poll') label = '📊 Poll';
+        else if (d.type === 'event') label = '📅 Event';
+        else if (d.type === 'document') label = '📄 ' + (d.fileName || 'Document');
         else label = d.encrypted ? '🔒 Sako' : (d.text || '').substring(0, 60);
         await db.collection('personalChats').doc(chatRoomId).set({ lastMessage: label, lastMessageTime: d.timestamp }, { merge: true });
     } catch (e) {
@@ -2735,6 +3023,15 @@ function NexusChatInterior_init() {
     pendingMessages = [];
     isUserNearBottom = true;
     unseenWhileScrolledUp = 0;
+    peerIsTyping = false;
+    peerIsOnline = false;
+    peerLastSeen = null;
+    myClearedAt = null;
+    db.collection('personalChats').doc(chatRoomId).get().then(doc => {
+        const d = doc.data() || {};
+        myClearedAt = (d.clearedAt && d.clearedAt[myId]) || null;
+        renderChatFlow();
+    }).catch(() => {});
 
     populateChatHeaderInfo();
     wireMessagingUI();
@@ -2745,6 +3042,7 @@ function NexusChatInterior_init() {
 
 function NexusChatInterior_destroy() {
     stopListeningToNexusMessages();
+    stopMyPresenceHeartbeat();
     if (recordingTimerInterval) { clearInterval(recordingTimerInterval); recordingTimerInterval = null; }
     if (isRecording && recordingStream) {
         try { recordingStream.getTracks().forEach(t => t.stop()); } catch (e) {}
