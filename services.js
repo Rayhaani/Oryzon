@@ -436,16 +436,16 @@ function switchView(viewName) {
     const ordersBanner = document.getElementById("active-orders-banner");
     const backBtn = document.getElementById("results-back-btn");
     if (viewName === "main") {
-        mainView.style.display = "block";
+    mainView.style.display = "block";
         resultsView.style.display = "none";
-        actionsBlock.style.display = "grid";
+        if (actionsBlock) actionsBlock.style.display = "grid";
         if (footerEl) footerEl.style.display = "block";
         if (backBtn) backBtn.style.display = "none";
     } else {
         mainView.style.display = "none";
         resultsView.style.display = "block";
-        actionsBlock.style.display = "none";
-        if (footerEl) footerEl.style.display = "none";
+        if (actionsBlock) actionsBlock.style.display = "none";   
+       if (footerEl) footerEl.style.display = "none";
         if (ordersBanner) ordersBanner.style.display = "none";
         if (backBtn) backBtn.style.display = "flex";
         renderResultsPage();
