@@ -14,10 +14,15 @@ function openImmersiveFromGrid(index) {
 
     if (typeof generatePostHTML !== 'function') return;
 
-    const wrapper = document.createElement('div');
+   const wrapper = document.createElement('div');
     wrapper.id = 'nexus-immersive-card';
+    wrapper.style.cssText = `
+        position: fixed; inset: 0;
+        z-index: 10600; background: #000;
+        overflow-y: auto;
+    `;
     wrapper.innerHTML = generatePostHTML(post);
-    document.body.appendChild(wrapper);
+    document.body.appendChild(wrapper); 
     setTimeout(()=>{
         enableExploreScroll(index);
     },50);
@@ -43,7 +48,7 @@ function openImmersiveFromGrid(index) {
             width: 100vw !important; height: 100vh !important;
             object-fit: cover !important;
             border-radius: 0 !important;
-            z-index: 4999 !important;
+            z-index: 10600 !important;
             margin: 0 !important;
         `;
     }
@@ -56,13 +61,12 @@ function openImmersiveFromGrid(index) {
             width: 100vw !important; height: 100vh !important;
             object-fit: cover !important;
             border-radius: 0 !important;
-            z-index: 4999 !important;
+            z-index: 10600 !important;
             margin: 0 !important;
         `;
         video.muted = false;
         video.play().catch(()=>{});
     }
-
     const backBtn = document.createElement('div');
     backBtn.className = 'immersive-back-btn';
     backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
@@ -72,7 +76,7 @@ function openImmersiveFromGrid(index) {
         background: rgba(0,0,0,0.6); border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         color: white; font-size: 16px;
-        z-index: 9999; cursor: pointer;
+        z-index: 10601; cursor: pointer;
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,0.3);
     `;
