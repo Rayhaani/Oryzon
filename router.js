@@ -219,7 +219,7 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js',
-            'health.js'
+            'health.js',
              'footer.js'
         ],
     };
