@@ -548,6 +548,17 @@
             }
 
             runDestroy(currentPath);
+
+            // Kafin canza page, tabbatar an fita daga immersive-mode (post-card-template.js)
+            // — .immersive-back-btn dinsa ana kara shi kai tsaye a <body>, kuma babu
+            // wanda ke cire shi in mutum ya SPA-navigate kai tsaye (ba tare da danna
+            // back ko exitImmersive ba) — shi ne dalilin da yasa yake rage a screen
+            // bayan an bar page din da ya bude shi.
+            const _immersiveCard = document.querySelector('.post-card.immersive-mode');
+            if (_immersiveCard && typeof window.exitImmersive === 'function') {
+                window.exitImmersive(_immersiveCard);
+            }
+
             await Promise.all([
                 loadStylesheetsAll(PAGE_STYLES[targetPath]),
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
