@@ -493,9 +493,10 @@
             // RIGA YA MATSA a hakika koda mun watsar da shi a nan), sai
             // mu ajiye shi mu aiwatar da shi nan take bayan na yanzu
             // ya gama, a cikin 'finally' block kasa.
-            pendingNav = { url: url, options: options };
-            return;
-        }
+          return new Promise(function (resolve) {
+        pendingNav = { url: url, options: options, resolve: resolve };
+    });
+          }  
 
         const targetPath = normalizePath(new URL(url, window.location.href).pathname);
 
@@ -592,9 +593,9 @@ currentContentEl.innerHTML = newContent.innerHTML;
             isNavigating = false;
             hideNavProgress();
             if (pendingNav) {
-                const next = pendingNav;
-                pendingNav = null;
-                navigateTo(next.url, next.options);
+    const next = pendingNav;
+    pendingNav = null;
+    navigateTo(next.url, next.options).then(next.resolve);
             }
         }
     }
