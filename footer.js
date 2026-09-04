@@ -24,7 +24,7 @@
     // ------------------------------------------------------------
     const FOOTER_CSS = `
         .nexus-footer {
-            position: fixed; bottom: 0; width: 100%;
+            position: fixed !important; bottom: 0 !important; width: 100% !important;
             height: calc(42px + env(safe-area-inset-bottom));
             display: flex; justify-content: center; align-items: center;
             z-index: 9999;
