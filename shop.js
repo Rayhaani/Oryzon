@@ -586,10 +586,11 @@ function destroyShopMarketplace() {
    so — unlike the marketplace block above — this doesn't need to be re-run
    on every SPA visit; it only springs into action when its own buttons
    (inside #page-content) are clicked. ---------- */
-        /* ===== MY BUSINESS DASHBOARD — ported verbatim from services.html =====
+       /* ===== MY BUSINESS DASHBOARD — ported verbatim from services.html =====
            Runs on the classic firebase.* (compat) API against Realtime Database
            at providers/{username}/... — same Firebase project as the rest of Nexus. */
-const CURRENCIES = [
+(function () {
+const CURRENCIES = [ 
     { code: "AED", symbol: "د.إ", label: "UAE Dirham", flag: "🇦🇪" },
     { code: "AFN", symbol: "؋", label: "Afghan Afghani", flag: "🇦🇫" },
     { code: "ALL", symbol: "L", label: "Albanian Lek", flag: "🇦🇱" },
@@ -752,7 +753,7 @@ function formatPrice(amount, currencyCode) {
     return `${symbol}${num.toLocaleString()}`;
 }
 
-(function () {
+}
 function showGlobalToast(message) {
     const existing = document.getElementById('global-toast');
     if (existing) existing.remove();
