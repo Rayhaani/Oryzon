@@ -2303,7 +2303,7 @@ let qty = 1;
 let selectedColor = null;
 let popTimer;
 let selectedStars = 0;
-let currentUser = { name: "Sadiq Developer" };
+var currentUser = window.currentUser || { name: "Sadiq Developer" };
 // Product currently shown — set by bootProductsPage(). Falls back to the
 // ?id= URL param for the standalone products-page.html; set explicitly
 // when this runs as an overlay inside shop.html (no URL change there).
