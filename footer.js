@@ -167,7 +167,7 @@
                 </svg>
             </div>
 
-           <div class="footer-icon post-capsule" data-page="videos.html" style="cursor: pointer;" onclick="if (window.openVideosOverlay) { event.preventDefault(); event.stopPropagation(); window.openVideosOverlay(); }">
+           <div class="footer-icon post-capsule" data-page="videos.html" style="cursor: pointer;" onclick="event.preventDefault(); event.stopPropagation(); if (window.openVideosOverlay) { window.openVideosOverlay(); } else { NexusRouter.navigateTo('social.html').then(function () { if (window.openVideosOverlay) window.openVideosOverlay(); }); }">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="3" width="20" height="18" rx="5" ry="5" />
                     <path d="M10 9l5 3-5 3V9z" fill="currentColor" />
