@@ -753,7 +753,6 @@ function formatPrice(amount, currencyCode) {
     return `${symbol}${num.toLocaleString()}`;
 }
 
-}
 function showGlobalToast(message) {
     const existing = document.getElementById('global-toast');
     if (existing) existing.remove();
