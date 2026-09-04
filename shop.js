@@ -2888,9 +2888,10 @@ function destroyProductsPage() {
 }
 
 
+(function () {
 /* ============================================================
    STORE FRONT OVERLAY LOGIC (merged from store-front.js)
-   ============================================================ */
+============================================================ */
 /* ============================================================
    store-front.js — page logic for store-front.html, extracted
    out of the page so the SPA router (router.js) can load and
@@ -4463,9 +4464,10 @@ function closeVendorChatOverlay() {
 }
 window.openVendorChatOverlay = openVendorChatOverlay;
 window.closeVendorChatOverlay = closeVendorChatOverlay;
+})();
 
 /* ---------- SPA registration ---------- */
-(function _nxRegisterShopPage() {
+   (function _nxRegisterShopPage() {
     if (window.NexusRouter) {
         NexusRouter.registerPage('shop.html', {
             init: function () { bootShopMarketplace(); },
