@@ -558,7 +558,11 @@
             if (_immersiveCard && typeof window.exitImmersive === 'function') {
                 window.exitImmersive(_immersiveCard);
             }
-
+            const _storyDeck = document.getElementById('story-overlay-deck');
+            if (_storyDeck && _storyDeck.style.display !== 'none' && typeof window.closeStoryDeck === 'function') {
+                window.closeStoryDeck();
+            }
+           
             await Promise.all([
                 loadStylesheetsAll(PAGE_STYLES[targetPath]),
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
