@@ -751,6 +751,8 @@ function formatPrice(amount, currencyCode) {
     const num = typeof amount === "number" ? amount : parseInt(amount) || 0;
     return `${symbol}${num.toLocaleString()}`;
 }
+
+(function () {
 function showGlobalToast(message) {
     const existing = document.getElementById('global-toast');
     if (existing) existing.remove();
@@ -2288,9 +2290,48 @@ function mbSaveNewCategory() {
     document.getElementById('mb-inp-category').value = name;
     }
 
+window.openMyBusinessDashboard = openMyBusinessDashboard;
+window.closeMyBusinessDashboard = closeMyBusinessDashboard;
+window.mbActionsDelete = mbActionsDelete;
+window.mbAddTierRow = mbAddTierRow;
+window.mbCloseAddCategory = mbCloseAddCategory;
+window.mbCloseBusinessSettings = mbCloseBusinessSettings;
+window.mbCloseCategoryManager = mbCloseCategoryManager;
+window.mbCloseCustomizeModal = mbCloseCustomizeModal;
+window.mbCloseItemActions = mbCloseItemActions;
+window.mbCloseItemForm = mbCloseItemForm;
+window.mbCloseUpgradeModal = mbCloseUpgradeModal;
+window.mbDeleteCategoryAction = mbDeleteCategoryAction;
+window.mbDeleteGalleryPhoto = mbDeleteGalleryPhoto;
+window.mbFilterCategory = mbFilterCategory;
+window.mbFilterOrders = mbFilterOrders;
+window.mbOpenAddCategory = mbOpenAddCategory;
+window.mbOpenAddItem = mbOpenAddItem;
+window.mbOpenBusinessSettings = mbOpenBusinessSettings;
+window.mbOpenCategoryManager = mbOpenCategoryManager;
+window.mbOpenCustomizeModal = mbOpenCustomizeModal;
+window.mbOpenEditItem = mbOpenEditItem;
+window.mbOpenHelpModal = mbOpenHelpModal;
+window.mbOpenItemMenu = mbOpenItemMenu;
+window.mbOpenUpgradeModal = mbOpenUpgradeModal;
+window.mbOpenWhatsNewModal = mbOpenWhatsNewModal;
+window.mbPublish = mbPublish;
+window.mbRenameCategoryAction = mbRenameCategoryAction;
+window.mbSaveBusinessSettings = mbSaveBusinessSettings;
+window.mbSaveItem = mbSaveItem;
+window.mbSaveNewCategory = mbSaveNewCategory;
+window.mbSelectPlan = mbSelectPlan;
+window.mbSelectThemeColor = mbSelectThemeColor;
+window.mbSetBillingPeriod = mbSetBillingPeriod;
+window.mbSetPricingType = mbSetPricingType;
+window.mbShareMenuLink = mbShareMenuLink;
+window.mbSwitchTab = mbSwitchTab;
+window.mbToggleFaq = mbToggleFaq;
+window.mbUpdateOrderStatus = mbUpdateOrderStatus;
+})();
+
 /* ============================================================
    PRODUCTS PAGE OVERLAY LOGIC (merged from products-page.js)
-   ============================================================ */
 /* ============================================================
    products-page.js — page logic for products-page.html,
    extracted out of the page so the SPA router (router.js) can
