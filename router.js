@@ -160,6 +160,7 @@
             'nexus-core.js', 'post-card-template.js', 'videos.js'
         ],
         'me.html': [
+            'https://cdn.tailwindcss.com',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
