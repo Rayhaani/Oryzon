@@ -844,11 +844,11 @@ function startProfileOnce() {
 // me.html ta hanyar SPA navigation.
                    
 // ============================================================
-// SAKA WANNAN A CIKIN <script> TAG ɗinka a me.html
-// Ka canza BACKEND_URL zuwa URL ɗinka na Render.com
+// BACKEND_URL an rigaya an ayyana ta a nexus-core.js (var BACKEND_URL,
+// global). Kada a sake ayyana ta a nan — zai haifar da
+// "SyntaxError: Identifier 'BACKEND_URL' has already been declared"
+// wanda ke kashe DUK me.js daga gudana ko layi daya.
 // ============================================================
-
-const BACKEND_URL = 'https://oryzon-backend-ed1q.onrender.com';
 
 // ============================================================
 // UPDATE PHOTO - Profile da Cover
