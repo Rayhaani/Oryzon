@@ -75,6 +75,15 @@ function _socialNavScrollReset() {
           document.getElementById('fileUpload').value = '';
       }
 
+      window.openNexusFeedOverlay = function() {
+          const ov = document.getElementById('nexusFeedOverlay');
+          if (ov) ov.style.display = 'block';
+      };
+      window.closeNexusFeedOverlay = function() {
+          const ov = document.getElementById('nexusFeedOverlay');
+          if (ov) ov.style.display = 'none';
+      };
+
       // NEW — holds every file the user has picked for THIS post (supports
       // picking more than one image/video, and picking again to add more).
       let nxSelectedMediaFiles = [];
