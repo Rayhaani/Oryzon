@@ -829,6 +829,12 @@ try { loadHighlights(); } catch(e) { console.error("Highlights error:", e); }
 
     } catch (e) {
         console.error("Profile init error:", e);
+        // Idan Firestore ya kasa isa (misali "unavailable"), kar mu
+        // bar "Loading..." har abada — mu sake gwada nan take sau daya.
+        if (e && e.code === 'unavailable' && !window.__meProfileRetried) {
+            window.__meProfileRetried = true;
+            setTimeout(() => { initProfile(); }, 1500);
+        }
     }
 }
 
