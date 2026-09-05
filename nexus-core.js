@@ -58,8 +58,12 @@ if (!firebase.apps.length) {
 
 var db = firebase.firestore();
 db.settings({
-    experimentalAutoDetectLongPolling: true,
+    experimentalForceLongPolling: true,
+    useFetchStreams: false,
     merge: true
+});
+db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+    console.warn('[Firestore Persistence]', err.code);
 });
 var storage = firebase.storage();
 var analytics = firebase.analytics();
