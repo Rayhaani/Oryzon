@@ -212,6 +212,12 @@
         // ne ke dauke da firebase.initializeApp + pdfjsLib worker
         // config, wadanda a da suke a <head> a matsayin inline script
         // kuma BA SU TABA gudana ba lokacin SPA navigation).
+        'notifications.html': [
+            'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
+            'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
+            'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
+            'nexus-core.js', 'notifications.js'
+        ],
         'health.html': [
             'https://cdn.tailwindcss.com',
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
@@ -298,6 +304,10 @@
     'nexus-feed.html': [
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
         'nexus-feed.css'
+    ],
+   'notifications.html': [
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css',
+            'notifications.css'
     ],
     'health.html': [
         'https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Outfit:wght@100;300;400;600&family=Orbitron:wght@400;900&family=Space+Grotesk:wght@300;700&family=Inter:wght@300;400;700&display=swap',
