@@ -134,67 +134,76 @@ let activeVideoTiles = new Map();
 
 async function loadPersonalizedGrid() {
     const grid = document.getElementById('quantumGrid');
-    const TIMEOUT_MS = 9000;
-    const withTimeout = (p) => Promise.race([
-        p,
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), TIMEOUT_MS))
-    ]);
 
+    // ===== PHASE A: SAURI — babu jiran user profile, nuna NAN TAKE =====
     try {
-        const ctxSettled = await Promise.allSettled([
-            db.collection('users').doc(currentUser).get(),
-            db.collection('users').doc(currentUser).collection('following').get(),
-            db.collection('users').doc(currentUser).collection('behavior').doc('summary').get()
+        const fastSettled = await Promise.allSettled([
+            db.collection('posts').orderBy('engagementScore','desc').limit(30).get(),
+            db.collection('posts').orderBy('timestamp','desc').limit(30).get()
         ]);
-        const [userSnapR, followSnapR, behaviorSnapR] = ctxSettled;
 
-        const userData   = (userSnapR.status === 'fulfilled' && userSnapR.value.exists) ? userSnapR.value.data() : {};
-        const following  = (followSnapR.status === 'fulfilled') ? followSnapR.value.docs.map(d => d.id) : [];
-        const behavior    = (behaviorSnapR.status === 'fulfilled' && behaviorSnapR.value.exists) ? behaviorSnapR.value.data() : {};
-
-        const interests   = userData.interests || [];
-        const catScores   = behavior.categoryScores || {};
-        const profile     = {};
-        interests.forEach(c => { profile[c] = (profile[c]||0) + 50; });
-        Object.entries(catScores).forEach(([c,s]) => { profile[c] = (profile[c]||0) + Math.min(s,50); });
-
-        const topCats = Object.entries(profile)
-            .sort((a,b) => b[1]-a[1]).slice(0,10).map(([c])=>c);
-
-        const postsSettled = await withTimeout(Promise.allSettled([
-            topCats.length > 0
-                ? db.collection('posts')
-                    .where('category','in', topCats.slice(0,10))
-                    .orderBy('timestamp','desc').limit(40).get()
-                : Promise.resolve({docs:[]}),
-            db.collection('posts')
-                .orderBy('engagementScore','desc').limit(30).get(),
-            db.collection('posts')
-                .orderBy('timestamp','desc').limit(30).get()
-        ]));
-
-        const seen = new Set();
-        const candidates = [];
-        postsSettled.forEach(r => {
+        const seenFast = new Set();
+        const fastCandidates = [];
+        fastSettled.forEach(r => {
             if (r.status !== 'fulfilled' || !r.value.docs) return;
             r.value.docs.forEach(doc => {
-                const d = doc.data();
-                if (!seen.has(doc.id)) {
-                    seen.add(doc.id);
-                    candidates.push({ id: doc.id, ...d });
+                if (!seenFast.has(doc.id)) {
+                    seenFast.add(doc.id);
+                    fastCandidates.push({ id: doc.id, ...doc.data() });
                 }
             });
         });
+
+        if (fastCandidates.length > 0) {
+            allPosts = fastCandidates;
+            renderGrid();
+        }
+    } catch (err) {
+        console.error('[NexusExplore] Fast phase error:', err);
+    }
+
+    // ===== PHASE B: ASIRCE — personalization + sake-tsari a bango =====
+    try {
+        const ctxSettled = await Promise.allSettled([
+            db.collection('users').doc(currentUser).get(),
+            db.collection('users').doc(currentUser).collection('behavior').doc('summary').get()
+        ]);
+        const [userSnapR, behaviorSnapR] = ctxSettled;
+
+        const userData = (userSnapR.status === 'fulfilled' && userSnapR.value.exists) ? userSnapR.value.data() : {};
+        const behavior  = (behaviorSnapR.status === 'fulfilled' && behaviorSnapR.value.exists) ? behaviorSnapR.value.data() : {};
+
+        const interests = userData.interests || [];
+        const catScores = behavior.categoryScores || {};
+        const profile   = {};
+        interests.forEach(c => { profile[c] = (profile[c]||0) + 50; });
+        Object.entries(catScores).forEach(([c,s]) => { profile[c] = (profile[c]||0) + Math.min(s,50); });
+
+        const topCats = Object.entries(profile).sort((a,b) => b[1]-a[1]).slice(0,10).map(([c]) => c);
+        const seen = new Set(allPosts.map(p => p.id));
+
+        if (topCats.length > 0) {
+            const catSnap = await db.collection('posts')
+                .where('category','in', topCats.slice(0,10))
+                .orderBy('timestamp','desc').limit(40).get();
+            catSnap.docs.forEach(doc => {
+                if (!seen.has(doc.id)) {
+                    seen.add(doc.id);
+                    allPosts.push({ id: doc.id, ...doc.data() });
+                }
+            });
+        }
+
         const now = Date.now();
-        allPosts = candidates.map(post => {
-            const ageHrs  = post.timestamp ? (now - post.timestamp.toMillis())/3600000 : 999;
-            const catScore= profile[post.category] || 0;
-            const likes   = post.likes || 0;
-            const comments= post.commentsCount || 0;
-            const shares  = post.sharesCount || 0;
-            const views   = Math.max(post.viewsCount||1, 1);
-            const engRate = ((likes + comments*2 + shares*3) / views) * 100;
-            const recency = Math.pow(0.5, ageHrs/24);
+        allPosts = allPosts.map(post => {
+            const ageHrs   = post.timestamp ? (now - post.timestamp.toMillis())/3600000 : 999;
+            const catScore = profile[post.category] || 0;
+            const likes    = post.likes || 0;
+            const comments = post.commentsCount || 0;
+            const shares   = post.sharesCount || 0;
+            const views    = Math.max(post.viewsCount||1, 1);
+            const engRate  = ((likes + comments*2 + shares*3) / views) * 100;
+            const recency  = Math.pow(0.5, ageHrs/24);
 
             const score =
                 (catScore/100) * 50 +
@@ -213,15 +222,15 @@ async function loadPersonalizedGrid() {
 
         renderGrid();
 
-   } catch(err) {
-        console.error('[NexusExplore] Error:', err);
-        if (grid) {
+    } catch (err) {
+        console.error('[NexusExplore] Personalization phase error:', err);
+        if (allPosts.length === 0 && grid) {
             grid.innerHTML = `<div class="empty-state">
                 <i class="fa-solid fa-wifi"></i>
                 <p>Connection issue.<br><span style="text-decoration:underline;cursor:pointer;" onclick="loadPersonalizedGrid()">Tap to retry</span></p>
             </div>`;
         }
-    } 
+    }
 }
 
 // -- RENDER GRID --
