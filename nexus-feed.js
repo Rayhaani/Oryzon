@@ -142,10 +142,11 @@ async function loadPersonalizedGrid() {
             db.collection('posts').orderBy('timestamp','desc').limit(30).get()
         ]);
 
-        const seenFast = new Set();
+      const seenFast = new Set();
         const fastCandidates = [];
+        let anyRejected = false;
         fastSettled.forEach(r => {
-            if (r.status !== 'fulfilled' || !r.value.docs) return;
+            if (r.status !== 'fulfilled' || !r.value.docs) { anyRejected = true; return; }
             r.value.docs.forEach(doc => {
                 if (!seenFast.has(doc.id)) {
                     seenFast.add(doc.id);
@@ -157,7 +158,14 @@ async function loadPersonalizedGrid() {
         if (fastCandidates.length > 0) {
             allPosts = fastCandidates;
             renderGrid();
-        }
+        } else if (anyRejected && grid) {
+            // Babu candidates AMMA akwai query da ya fadi — kar mu ce
+            // "No posts yet", domin ba mu tabbatar da hakan ba tukuna.
+            grid.innerHTML = `<div class="empty-state">
+                <i class="fa-solid fa-wifi"></i>
+                <p>Connection issue.<br><span style="text-decoration:underline;cursor:pointer;" onclick="loadPersonalizedGrid()">Tap to retry</span></p>
+            </div>`;
+        }  
     } catch (err) {
         console.error('[NexusExplore] Fast phase error:', err);
     }
