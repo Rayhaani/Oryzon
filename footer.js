@@ -402,4 +402,16 @@
     // loda a health.html, injectFooter() zai koma da wuri sama, amma
     // listener din routechange dole ya kasance nan ko ta yaya.)
     document.addEventListener('nexus:routechange', setActiveIcon);
+
+    // me.html baya bukatar footer (yana da nasa Showcase/Timeline
+    // navigation) — boye ta idan mun kasance a wannan page.
+    function toggleFooterOnMe() {
+        const footer = document.getElementById('instaFooter');
+        if (!footer) return;
+        const currentPage = (window.NexusRouter && window.NexusRouter.getCurrentPath())
+            || window.location.pathname.split('/').pop();
+        footer.style.display = (currentPage === 'me.html') ? 'none' : '';
+    }
+    document.addEventListener('nexus:routechange', toggleFooterOnMe);
+    toggleFooterOnMe();
 })();
