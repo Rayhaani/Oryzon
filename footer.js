@@ -223,6 +223,33 @@
     }
 
     // ------------------------------------------------------------
+    // 5b) Pin footer to the TRUE visible viewport bottom.
+    // Wasu Android Chrome/WebView suna da bug inda position:fixed
+    // baya bin sabon girman "layout viewport" da sauri lokacin da
+    // address-bar ke boyewa/bayyana yayin scroll — sanadin da footer
+    // ke "nutsewa" kwatsam sannan ta "gyaru" da zaran an sake scroll.
+    // Wannan yana amfani da visualViewport API (idan browser din
+    // yana da ita) domin sanya footer a ainihin kasan allo KO TA
+    // YAYA, ba tare da dogaro da native position:fixed kadai ba.
+    // ------------------------------------------------------------
+    function pinFooterToVisualViewport() {
+        if (!window.visualViewport) return;
+        const footer = document.getElementById('instaFooter');
+        if (!footer || footer.__vvPinned) return;
+        footer.__vvPinned = true;
+
+        const vv = window.visualViewport;
+        function update() {
+            const gap = window.innerHeight - (vv.height + vv.offsetTop);
+            footer.style.transform = gap > 0.5 ? `translateY(-${gap}px)` : '';
+        }
+        vv.addEventListener('resize', update);
+        vv.addEventListener('scroll', update);
+        window.addEventListener('scroll', update, { passive: true });
+        update();
+    }
+
+    // ------------------------------------------------------------
     // 6) Services badge.
     // ------------------------------------------------------------
     function listenServicesBadgeCount() {
@@ -297,6 +324,7 @@
             // kada a sake yin injection, sai a sabunta active icon kawai.
             setActiveIcon();
             loadFooterProfile();
+            pinFooterToVisualViewport();
             return;
         }
 
@@ -319,6 +347,7 @@
         setActiveIcon();
         loadFooterProfile();
         setupScrollBehavior();
+        pinFooterToVisualViewport();
         listenServicesBadgeCount();
         listenPersonalChatsBadge();
     }
