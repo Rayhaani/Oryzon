@@ -266,6 +266,16 @@ function initSocialPage() {
                 if (document.getElementById("dropUsername")) {
                     document.getElementById("dropUsername").innerText = "@" + (data.username || currentUser);
                 }
+                const headerAvatar = document.querySelector('.header-avatar-placeholder');
+                if (headerAvatar) {
+                    const photo = data.userProfilePic || localStorage.getItem('userProfilePic');
+                    if (photo) {
+                        headerAvatar.innerHTML = `<img src="${photo}" alt="avatar">`;
+                    } else {
+                        const initial = (data.fullName || currentUser || '?').trim().charAt(0).toUpperCase();
+                        headerAvatar.innerHTML = `<span>${initial}</span>`;
+                    }
+                }
             }
         }).catch((err) => { console.error("Error fetching user data:", err); });
     }
