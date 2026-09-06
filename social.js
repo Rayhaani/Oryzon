@@ -270,10 +270,10 @@ function initSocialPage() {
                 if (headerAvatar) {
                     const photo = data.userProfilePic || localStorage.getItem('userProfilePic');
                     if (photo) {
-                        headerAvatar.innerHTML = `<img src="${photo}" alt="avatar">`;
+                        headerAvatar.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
                     } else {
                         const initial = (data.fullName || currentUser || '?').trim().charAt(0).toUpperCase();
-                        headerAvatar.innerHTML = `<span>${initial}</span>`;
+                        headerAvatar.innerText = initial;
                     }
                 }
             }
