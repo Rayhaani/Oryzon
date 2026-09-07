@@ -3236,7 +3236,8 @@ runOnServicesInit(() => {
             document.getElementById("nearme-scan-sub").textContent = "This will only take a moment";
         }
         navigator.geolocation.getCurrentPosition(
-            () => {
+              () => {
+                if (!document.getElementById("nearme-scan-overlay")) return;
                 document.getElementById("nearme-scan-overlay").style.display = "none";
                 state.nearMeActive = true;
                 switchView("results");
