@@ -432,7 +432,7 @@ function switchView(viewName) {
     const mainView = document.getElementById("main-view");
     const resultsView = document.getElementById("results-view");
     const actionsBlock = document.getElementById("header-actions");
-    const footerEl = document.getElementById("footer-placeholder");
+    const footerEl = document.getElementById("instaFooter");
     const ordersBanner = document.getElementById("active-orders-banner");
     const backBtn = document.getElementById("results-back-btn");
     if (viewName === "main") {
@@ -3176,13 +3176,13 @@ runOnServicesInit(() => {
             return;
         }
         document.getElementById("location-permission-overlay").style.display = "flex";
-        const footerEl0 = document.getElementById("footer-placeholder");
+        const footerEl0 = document.getElementById("instaFooter");
         if (footerEl0) footerEl0.style.display = "none";
     });
 
     function closeLocationPermissionModal() {
         document.getElementById("location-permission-overlay").style.display = "none";
-        const footerEl3 = document.getElementById("footer-placeholder");
+        const footerEl3 = document.getElementById("instaFooter");
         if (footerEl3) footerEl3.style.display = "block";
     }
     window.closeLocationPermissionModal = closeLocationPermissionModal;
@@ -3190,7 +3190,7 @@ runOnServicesInit(() => {
      function confirmLocationPermission() {
         document.getElementById("location-permission-overlay").style.display = "none";
         document.getElementById("nearme-scan-overlay").style.display = "flex";
-        const footerEl1 = document.getElementById("footer-placeholder");
+        const footerEl1 = document.getElementById("instaFooter");
         if (footerEl1) footerEl1.style.display = "none";
         attemptNearMeGPSFix(true);
     }
@@ -3213,7 +3213,7 @@ runOnServicesInit(() => {
                     attemptNearMeGPSFix(false);
                 } else {
                     document.getElementById("nearme-scan-overlay").style.display = "none";
-                    const footerEl2 = document.getElementById("footer-placeholder");
+                      const footerEl2 = document.getElementById("instaFooter");
                     if (footerEl2) footerEl2.style.display = "block";
                     const msgs = {
                         1: "Location access denied. Enable it in your browser settings to see pros near you.",
