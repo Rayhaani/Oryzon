@@ -3176,10 +3176,14 @@ runOnServicesInit(() => {
             return;
         }
         document.getElementById("location-permission-overlay").style.display = "flex";
+        const footerEl0 = document.getElementById("footer-placeholder");
+        if (footerEl0) footerEl0.style.display = "none";
     });
 
     function closeLocationPermissionModal() {
         document.getElementById("location-permission-overlay").style.display = "none";
+        const footerEl3 = document.getElementById("footer-placeholder");
+        if (footerEl3) footerEl3.style.display = "block";
     }
     window.closeLocationPermissionModal = closeLocationPermissionModal;
 
