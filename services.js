@@ -3207,7 +3207,7 @@ runOnServicesInit(() => {
                 if (isFirstAttempt) {
                     document.getElementById("nearme-scan-sub").textContent = "Retrying a different way...";
                     attemptNearMeGPSFix(false);
-                else {
+                } else {
                     document.getElementById("nearme-scan-overlay").style.display = "none";
                     const footerEl2 = document.getElementById("footer-placeholder");
                     if (footerEl2) footerEl2.style.display = "block";
