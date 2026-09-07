@@ -3186,6 +3186,8 @@ runOnServicesInit(() => {
      function confirmLocationPermission() {
         document.getElementById("location-permission-overlay").style.display = "none";
         document.getElementById("nearme-scan-overlay").style.display = "flex";
+        const footerEl1 = document.getElementById("footer-placeholder");
+        if (footerEl1) footerEl1.style.display = "none";
         attemptNearMeGPSFix(true);
     }
     window.confirmLocationPermission = confirmLocationPermission;
@@ -3205,8 +3207,10 @@ runOnServicesInit(() => {
                 if (isFirstAttempt) {
                     document.getElementById("nearme-scan-sub").textContent = "Retrying a different way...";
                     attemptNearMeGPSFix(false);
-                } else {
+                else {
                     document.getElementById("nearme-scan-overlay").style.display = "none";
+                    const footerEl2 = document.getElementById("footer-placeholder");
+                    if (footerEl2) footerEl2.style.display = "block";
                     const msgs = {
                         1: "Location access denied. Enable it in your browser settings to see pros near you.",
                         2: "Could not determine your location. Please try again outdoors.",
