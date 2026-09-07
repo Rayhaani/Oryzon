@@ -428,10 +428,11 @@ function createProCardHtml(pro) {
         }
 
 function switchView(viewName) {
-    state.view = viewName;
     const mainView = document.getElementById("main-view");
     const resultsView = document.getElementById("results-view");
-    const actionsBlock = document.getElementById("header-actions");
+    if (!mainView || !resultsView) return;
+    state.view = viewName;
+   const actionsBlock = document.getElementById("header-actions");
     const footerEl = document.getElementById("instaFooter");
     const ordersBanner = document.getElementById("active-orders-banner");
     const backBtn = document.getElementById("results-back-btn");
