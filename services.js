@@ -3170,6 +3170,13 @@ runOnServicesInit(() => {
         });
    }
    
+   document.addEventListener("nexus:routechange", function () {
+        const scanOv = document.getElementById("nearme-scan-overlay");
+        const permOv = document.getElementById("location-permission-overlay");
+        if (scanOv) scanOv.style.display = "none";
+        if (permOv) permOv.style.display = "none";
+    });
+
    document.getElementById("near-me-btn").addEventListener("click", () => {
         if (!navigator.geolocation) {
             showGlobalToast("Your browser does not support location services.");
