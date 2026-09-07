@@ -3208,7 +3208,6 @@ runOnServicesInit(() => {
             inServicesSubView = true;
             history.pushState({ servicesTrap: true }, "", location.href);
         }
-</br> 
    const footerEl1 = document.getElementById("instaFooter");
         if (footerEl1) footerEl1.style.display = "none";
         attemptNearMeGPSFix(true);
