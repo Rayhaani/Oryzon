@@ -427,6 +427,7 @@ function createProCardHtml(pro) {
         </div>`;
         }
 
+let inServicesSubView = false;
 function switchView(viewName) {
     state.view = viewName;
     const mainView = document.getElementById("main-view");
@@ -448,10 +449,13 @@ function switchView(viewName) {
        if (footerEl) footerEl.style.display = "none";
         if (ordersBanner) ordersBanner.style.display = "none";
         if (backBtn) backBtn.style.display = "flex";
+        if (!inServicesSubView) {
+            inServicesSubView = true;
+            history.pushState({ servicesTrap: true }, "", location.href);
+        }
         renderResultsPage();
     }
 }
-
 let storyMarqueeResumeTimer = null;
 function pauseStoryMarquee() {
     const track = document.getElementById('stories-track-container');
@@ -3170,6 +3174,16 @@ runOnServicesInit(() => {
         });
    }
    
+   window.addEventListener("popstate", function (e) {
+        if (inServicesSubView) {
+            inServicesSubView = false;
+            document.getElementById("nearme-scan-overlay").style.display = "none";
+            document.getElementById("location-permission-overlay").style.display = "none";
+            switchView("main");
+            e.stopImmediatePropagation();
+        }
+    }, true);
+
    document.getElementById("near-me-btn").addEventListener("click", () => {
         if (!navigator.geolocation) {
             showGlobalToast("Your browser does not support location services.");
@@ -3187,10 +3201,15 @@ runOnServicesInit(() => {
     }
     window.closeLocationPermissionModal = closeLocationPermissionModal;
 
-     function confirmLocationPermission() {
+    function confirmLocationPermission() {
         document.getElementById("location-permission-overlay").style.display = "none";
         document.getElementById("nearme-scan-overlay").style.display = "flex";
-        const footerEl1 = document.getElementById("instaFooter");
+        if (!inServicesSubView) {
+            inServicesSubView = true;
+            history.pushState({ servicesTrap: true }, "", location.href);
+        }
+</br> 
+   const footerEl1 = document.getElementById("instaFooter");
         if (footerEl1) footerEl1.style.display = "none";
         attemptNearMeGPSFix(true);
     }
