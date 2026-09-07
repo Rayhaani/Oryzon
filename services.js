@@ -9728,4 +9728,9 @@ if (window.NexusRouter) {
 // da yadda social.js ya yi.
 window.addEventListener('DOMContentLoaded', initServicesPage);
    
+window.addEventListener("pageshow", function (e) {
+    if (e.persisted) {
+        window.location.reload();
+    }
+});
 })();
