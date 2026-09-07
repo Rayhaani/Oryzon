@@ -3177,6 +3177,32 @@ runOnServicesInit(() => {
         if (permOv) permOv.style.display = "none";
     });
 
+   (function () {
+        let box = null;
+        function showOnScreenError(text) {
+            if (!box) {
+                box = document.createElement("div");
+                box.style.cssText = "position:fixed;bottom:0;left:0;right:0;max-height:50vh;overflow-y:auto;background:#3a0000;color:#ffb3b3;font-family:monospace;font-size:11px;padding:10px;z-index:999999;border-top:3px solid red;white-space:pre-wrap;word-break:break-all;";
+                const closeBtn = document.createElement("button");
+                closeBtn.textContent = "✕ Close Errors";
+                closeBtn.style.cssText = "display:block;margin-bottom:8px;background:red;color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:11px;";
+                closeBtn.onclick = function () { box.remove(); box = null; };
+                box.appendChild(closeBtn);
+                document.body.appendChild(box);
+            }
+            const line = document.createElement("div");
+            line.style.cssText = "margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:8px;";
+            line.textContent = text;
+            box.appendChild(line);
+        }
+        window.addEventListener("error", function (e) {
+            showOnScreenError("ERROR: " + e.message + "\nFile: " + (e.filename || "?").split("/").pop() + "\nLine: " + e.lineno + ":" + e.colno);
+        });
+        window.addEventListener("unhandledrejection", function (e) {
+            showOnScreenError("PROMISE REJECTION: " + (e.reason && e.reason.message ? e.reason.message : e.reason));
+        });
+    })();
+
    document.getElementById("near-me-btn").addEventListener("click", () => {
         if (!navigator.geolocation) {
             showGlobalToast("Your browser does not support location services.");
