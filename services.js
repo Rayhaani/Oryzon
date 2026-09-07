@@ -432,7 +432,7 @@ function switchView(viewName) {
     const resultsView = document.getElementById("results-view");
     if (!mainView || !resultsView) return;
     state.view = viewName;
-   const actionsBlock = document.getElementById("header-actions");
+   const actionsBlock = document.getElementById("market-nav-row");
     const footerEl = document.getElementById("instaFooter");
     const ordersBanner = document.getElementById("active-orders-banner");
     const backBtn = document.getElementById("results-back-btn");
