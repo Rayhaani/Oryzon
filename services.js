@@ -439,7 +439,7 @@ function switchView(viewName) {
     if (viewName === "main") {
     mainView.style.display = "block";
         resultsView.style.display = "none";
-        if (actionsBlock) actionsBlock.style.display = "grid";
+        if (actionsBlock) actionsBlock.style.display = "flex";
         if (footerEl) footerEl.style.display = "block";
         if (backBtn) backBtn.style.display = "none";
     } else {
