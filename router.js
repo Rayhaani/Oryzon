@@ -321,6 +321,7 @@
     const loadedScripts = new Set();
     const registeredPages = {}; // path -> { init, destroy }
     let currentPath = normalizePath(window.location.pathname);
+    let currentFullPath = window.location.pathname + window.location.search;
     let isNavigating = false;
     const pageCache = new Map();
 
@@ -511,10 +512,15 @@
         }
 
         const targetPath = normalizePath(new URL(url, window.location.href).pathname);
+        const absUrl = new URL(url, window.location.href);
+        const targetFullPath = absUrl.pathname + absUrl.search;
 
-        // Same page tapped again — do nothing.
-        if (targetPath === currentPath && pushHistory) return;
-
+        // Babu ainihin canji (koda page daya ne da query daya) — kada a sake
+        // fetch/render, ko ta popstate ne (misali caption editor's back-trap)
+        // ko ta click ne. Wannan ne ke gyara bug din da history.pushState/
+        // back() na ciki ke haddasa full re-render na page din da ake CIKINSA
+        // TUKUNA, wanda ke lalata duk wani modal/typing-bar state da ke bude.
+        if (targetFullPath === currentFullPath) return;
         isNavigating = true;
         showNavProgress();
 
@@ -587,10 +593,10 @@ currentContentEl.innerHTML = newContent.innerHTML;
 
             // Update history + internal state.
             if (pushHistory) {
-                window.history.pushState({ nexusRoute: targetPath }, '', url);
+                window.history.pushState({ nexusRoute: targetPath, nexusFullPath: targetFullPath }, '', url);
             }
             currentPath = targetPath;
-
+            currentFullPath = targetFullPath;
             // Load the page's script bundle (once), then init it.
             await loadScriptsInOrder(scriptList.length ? scriptList : null);
 
@@ -688,7 +694,7 @@ currentContentEl.innerHTML = newContent.innerHTML;
     // 6) Back/forward button support.
     // ------------------------------------------------------------
     window.addEventListener('popstate', function (e) {
-        const path = (e.state && e.state.nexusRoute) || normalizePath(window.location.pathname);
+        const path = (e.state && e.state.nexusFullPath) || (window.location.pathname + window.location.search);
         navigateTo(path, { pushHistory: false });
     });
     // ------------------------------------------------------------
@@ -699,7 +705,7 @@ currentContentEl.innerHTML = newContent.innerHTML;
     window.history.replaceState({ nexusRoute: currentPath }, '', window.location.href);
 // Proactively warm manyan pages (social, shop) tun farko, STAGGERED
     // (400ms tazara) don kaucewa cunkoson bandwidth — zero-second nav.
-    ['social.html', 'shop.html', 'videos.html']
+    ['social.html', 'shop.html', 'videos.html'] road 
         .filter(function (p) { return p !== currentPath; })
         .forEach(function (p, i) {
             setTimeout(function () { prefetchPage(p); }, i * 400);
