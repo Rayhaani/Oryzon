@@ -2435,6 +2435,8 @@ function wireMediaInputs() {
 // ══════════════════════════════════════════════
 function toggleAttachMenu() {
     const menu = document.getElementById('attachMenu');
+    const bar = document.querySelector('.composer-bar');
+    if (bar) menu.style.bottom = bar.offsetHeight + 'px';
     menu.classList.toggle('open');
 }
 function closeAttachMenu() {
