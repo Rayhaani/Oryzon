@@ -362,9 +362,12 @@
             registeredPages[normalizePath(path)] = handlers || {};
         },
         navigateTo: navigateTo,
-        getCurrentPath: function () { return currentPath; }
+        getCurrentPath: function () { return currentPath; },
+        loadScriptOnce: loadScriptOnce,
+        loadStylesheetOnce: loadStylesheetOnce,
+        runPageInit: runInit,
+        runPageDestroy: runDestroy
     };
-
     // ------------------------------------------------------------
     // 3) Helpers
     // ------------------------------------------------------------
