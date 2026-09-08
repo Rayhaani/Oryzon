@@ -705,7 +705,7 @@ currentContentEl.innerHTML = newContent.innerHTML;
     window.history.replaceState({ nexusRoute: currentPath }, '', window.location.href);
 // Proactively warm manyan pages (social, shop) tun farko, STAGGERED
     // (400ms tazara) don kaucewa cunkoson bandwidth — zero-second nav.
-    ['social.html', 'shop.html', 'videos.html'] road 
+    ['social.html', 'shop.html', 'videos.html']
         .filter(function (p) { return p !== currentPath; })
         .forEach(function (p, i) {
             setTimeout(function () { prefetchPage(p); }, i * 400);
