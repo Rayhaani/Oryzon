@@ -321,7 +321,8 @@
     const loadedScripts = new Set();
     const registeredPages = {}; // path -> { init, destroy }
     let currentPath = normalizePath(window.location.pathname);
-    let isNavigating = false;
+    let currentFullPath = normalizePath(window.location.pathname) + window.location.search;
+   let isNavigating = false;
     const pageCache = new Map();
 
     // A page's own <script src="social.js"> tag (native full load) already
@@ -509,12 +510,13 @@
             pendingNav = { url: url, options: options };
             return;
         }
-
-        const targetPath = normalizePath(new URL(url, window.location.href).pathname);
+        const targetUrlObj = new URL(url, window.location.href);
+        const targetPath = normalizePath(targetUrlObj.pathname);
+        const targetFullPath = targetPath + targetUrlObj.search;
 
         // Same page tapped again — do nothing.
-        if (targetPath === currentPath && pushHistory) return;
-
+        if (targetFullPath === currentFullPath && pushHistory) return;
+       
         isNavigating = true;
         showNavProgress();
 
@@ -590,6 +592,7 @@ currentContentEl.innerHTML = newContent.innerHTML;
                 window.history.pushState({ nexusRoute: targetPath }, '', url);
             }
             currentPath = targetPath;
+            currentFullPath = targetFullPath;
 
             // Load the page's script bundle (once), then init it.
             await loadScriptsInOrder(scriptList.length ? scriptList : null);
@@ -689,8 +692,7 @@ currentContentEl.innerHTML = newContent.innerHTML;
     // ------------------------------------------------------------
     window.addEventListener('popstate', function (e) {
         if (window.__npProfileOverlay) { window.__npProfileOverlay = false; return; }
-        const path = (e.state && e.state.nexusRoute) || normalizePath(window.location.pathname);
-        navigateTo(path, { pushHistory: false });
+        navigateTo(window.location.pathname + window.location.search, { pushHistory: false });
     });
     // ------------------------------------------------------------
     // 7) Init.
