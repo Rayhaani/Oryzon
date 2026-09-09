@@ -3423,8 +3423,8 @@ function NexusChatInterior_destroy() {
 
 if (window.NexusRouter && typeof NexusRouter.registerPage === 'function') {
     NexusRouter.registerPage('chat-interior.html', { init: NexusChatInterior_init, destroy: NexusChatInterior_destroy });
+} else {
+    // Native/farko load (ba SPA ba) — babu wanda zai kira init() saboda mu ba
+    // mun shigo ta router.navigateTo() ba, don haka mu kira shi da kanmu nan.
+    NexusChatInterior_init();
 }
-
-// Native/farko load (ba SPA ba) — babu wanda zai kira init() saboda mu ba
-// mun shigo ta router.navigateTo() ba, don haka mu kira shi da kanmu nan.
-NexusChatInterior_init();
