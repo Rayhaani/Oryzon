@@ -340,7 +340,7 @@ let refreshChatTimesInterval = setInterval(refreshAllChatTimes, 30000);
 
                     const personalChatHref = `chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}`;
                     container.insertAdjacentHTML('beforeend', `
-                        <a href="${personalChatHref}" data-spa-link="${personalChatHref}" class="chat-item" id="chat-link-${rawUser}">
+                        <a href="${personalChatHref}" class="chat-item" id="chat-link-${rawUser}">
                             <div class="profile-stack" id="stack-${rawUser}" data-online="false"
                                  data-avatar-kind="personal" data-avatar-key="${rawUser}"
                                  data-chat-href="${personalChatHref}"
