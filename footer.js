@@ -410,8 +410,21 @@
         if (!footer) return;
         const currentPage = (window.NexusRouter && window.NexusRouter.getCurrentPath())
             || window.location.pathname.split('/').pop();
-        footer.style.display = (currentPage === 'me.html') ? 'none' : '';
+        const HIDE_FOOTER_ON = ['me.html', 'pages.html'];
+        footer.style.display = HIDE_FOOTER_ON.includes(currentPage) ? 'none' : '';
     }
     document.addEventListener('nexus:routechange', toggleFooterOnMe);
     toggleFooterOnMe();
+
+   // ------------------------------------------------------------
+    // 8) Boye footer NAN TAKE (kafin page ta bude) idan an danna
+    // link zuwa pages.html — capture:true domin ya gudana KAFIN
+    // router.js ya kama click din ya yi navigateTo().
+    // ------------------------------------------------------------
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('[data-page="pages.html"], [data-spa-link][href*="pages.html"]');
+        if (!link) return;
+        const footer = document.getElementById('instaFooter');
+        if (footer) footer.style.display = 'none';
+    }, true);
 })();
