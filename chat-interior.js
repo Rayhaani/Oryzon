@@ -101,6 +101,7 @@ async function fetchPeerPublicKey(peerId) {
     return crypto.subtle.importKey('jwk', d.e2ePublicKey, { name: 'ECDH', namedCurve: 'P-256' }, true, []);
 }
 async function initE2E() {
+    return; // E2E an kashe shi na dan lokaci — duba dalili a sama; sabbin sakonni za su tafi plaintext
     try {
         myE2EKeyPair = await getOrCreateMyKeyPair();
         // Idan chatWith din bai buga public key dinsa ba tukuna (misali har yanzu yana
