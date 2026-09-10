@@ -117,7 +117,8 @@
         style.textContent =
             '#nexus-overlay-root{position:fixed;inset:0;z-index:2147483647;pointer-events:none;}' +
             '.nexus-overlay-view{position:fixed;inset:0;z-index:2147483647;background:#000;overflow:hidden;pointer-events:auto;}' +
-            'body.nexus-overlay-open{overflow:hidden;}';
+            'body.nexus-overlay-open{overflow:hidden;}' +
+            'body.nexus-overlay-open #footer-placeholder,body.nexus-overlay-open #footer-placeholder *{display:none!important;visibility:hidden!important;}';
        document.head.appendChild(style);
     })();
 
