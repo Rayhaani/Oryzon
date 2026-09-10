@@ -114,11 +114,12 @@
 
     (function injectBaseStyles() {
         const style = document.createElement('style');
-        style.textContent =
+       style.textContent =
             '#nexus-overlay-root{position:fixed;inset:0;z-index:2147483647;pointer-events:none;}' +
             '.nexus-overlay-view{position:fixed;inset:0;z-index:2147483647;background:#000;overflow:hidden;pointer-events:auto;}' +
-            'body.nexus-overlay-open{overflow:hidden;}';
-        document.head.appendChild(style);
+            'body.nexus-overlay-open{overflow:hidden;}' +
+            'body.nexus-overlay-open #footer-placeholder,body.nexus-overlay-open #footer-placeholder *{display:none!important;visibility:hidden!important;}';
+       document.head.appendChild(style);
     })();
 
     function ensureRoot() {
@@ -256,17 +257,18 @@ function hideHostChrome() {
             entry = await buildOverlay(filename, url, key);
             cache.set(key, entry);
         }
-        ensureRoot().appendChild(entry.el);
+      ensureRoot().appendChild(entry.el);
         entry.el.style.display = 'block';
         entry.lastHidden = null;
         activeKey = key;
         document.body.classList.add('nexus-overlay-open');
         hideHostChrome();
 
-        if (window.NexusRouter && window.NexusRouter.runPageInit) window.NexusRouter.runPageInit(filename);
-
         window.history.pushState({ nexusOverlayKey: key }, '', url);
-        scheduleSweep();
+
+        if (window.NexusRouter && window.NexusRouter.runPageInit) window.NexusRouter.runPageInit(filename);
+       
+       scheduleSweep();
         return true;
     }
 
