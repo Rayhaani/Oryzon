@@ -227,6 +227,7 @@ function handleVideoCall() {
     if (typeof NexusVideo !== 'undefined') {
         NexusVideo.startVideoCall(chatWith);
     }
+   }
 
 function openChatInfo() {
     document.getElementById('chatInfoName').textContent = document.getElementById('chat-header-name').textContent;
