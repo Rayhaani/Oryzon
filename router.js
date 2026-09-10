@@ -677,8 +677,9 @@ currentContentEl.innerHTML = newContent.innerHTML;
     // 5) Link interception — any element with [data-spa-link]
     //    or [data-page] (footer icons already use data-page).
     // ------------------------------------------------------------
-    function onDocumentClick(e) {
-        if (!e.target || typeof e.target.closest !== 'function') return;
+  function onDocumentClick(e) {
+    console.log('[DEBUG] onDocumentClick fired, target:', e.target);
+    if (!e.target || typeof e.target.closest !== 'function') return;
         const el = e.target.closest('[data-spa-link], [data-page]');
         if (!el) return;
 
@@ -693,7 +694,8 @@ currentContentEl.innerHTML = newContent.innerHTML;
     // 6) Back/forward button support.
     // ------------------------------------------------------------
     window.addEventListener('popstate', function (e) {
-        if (window.__npProfileOverlay) { window.__npProfileOverlay = false; return; }
+    console.log('[DEBUG] router popstate fired, state:', e.state);
+    if (window.__npProfileOverlay) { window.__npProfileOverlay = false; return; }
         const path = (e.state && e.state.nexusRoute) || normalizePath(window.location.pathname);
         navigateTo(path, { pushHistory: false });
     });
