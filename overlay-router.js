@@ -264,10 +264,9 @@ function hideHostChrome() {
         document.body.classList.add('nexus-overlay-open');
         hideHostChrome();
 
-        window.history.pushState({ nexusOverlayKey: key }, '', url);
-
         if (window.NexusRouter && window.NexusRouter.runPageInit) window.NexusRouter.runPageInit(filename);
-       
+
+        window.history.pushState({ nexusOverlayKey: key }, '', url);       
        scheduleSweep();
         return true;
     }
