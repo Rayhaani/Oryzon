@@ -1626,7 +1626,6 @@ function confirmDiscardPhoto() {
 // danna crop/draw/text sai ya "fitar" mu daga page din: babu abin da ke toshe
 // popstate, don haka router.js ya rinjaye ya yi cikakken SPA navigation.)
 window.addEventListener('popstate', () => {
-    console.log('[DEBUG] chat-interior popstate fired');
     if (!captionHistoryPushed || !document.getElementById('captionOverlay').classList.contains('show')) return;
     history.pushState({ captionOpen: true }, ''); // sake "toshe" back din, mu yanke shawara a nan
     if (capCropMode) { cancelCropMode(); return; }
