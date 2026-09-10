@@ -1633,14 +1633,13 @@ window.addEventListener('popstate', () => {
     if (document.getElementById('textToolOverlay')) { cancelTextTool(); return; }
     confirmDiscardPhoto();
 });
-// Tsaro: hana wani listener na waje (misali router.js) daga kama
-// danna-din icons na caption editor kafin su isa function dinsu.
-document.addEventListener('click', (e) => {
-    if (e.target.closest('#captionOverlay .cap-icon-btn, #captionOverlay .crop-text-btn')) {
+// Tsaro: hana router.js (onDocumentClick / data-page delegation) daga
+// kama danna-din icons na caption editor — amma bayan sun gama aiki nasu.
+document.getElementById('captionOverlay').addEventListener('click', (e) => {
+    if (e.target.closest('.cap-icon-btn, .crop-text-btn')) {
         e.stopPropagation();
     }
-}, true); // capture:true — mu kama shi TUN KAFIN sauran listeners na document
-
+});
 let captionHistoryPushed = false;
 function hideDiscardDialog() {
     document.getElementById('discardDialogBackdrop').classList.remove('show');
