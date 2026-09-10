@@ -114,11 +114,12 @@
 
     (function injectBaseStyles() {
         const style = document.createElement('style');
-        style.textContent =
+         style.textContent =
             '#nexus-overlay-root{position:fixed;inset:0;z-index:2147483647;pointer-events:none;}' +
             '.nexus-overlay-view{position:fixed;inset:0;z-index:2147483647;background:#000;overflow:hidden;pointer-events:auto;}' +
             'body.nexus-overlay-open{overflow:hidden;}' +
-            'body.nexus-overlay-open #footer-placeholder,body.nexus-overlay-open #footer-placeholder *{display:none!important;visibility:hidden!important;}';
+            'body.nexus-overlay-open #footer-placeholder,body.nexus-overlay-open #footer-placeholder *{display:none!important;visibility:hidden!important;}' +
+            'body:not(.nexus-overlay-open) main#page-content>header{display:block!important;position:sticky!important;top:0!important;z-index:100!important;background:transparent!important;backdrop-filter:blur(15px)!important;-webkit-backdrop-filter:blur(15px)!important;padding:0 15px!important;height:auto!important;align-items:initial!important;gap:initial!important;}';     
        document.head.appendChild(style);
     })();
 
@@ -160,48 +161,6 @@
         });
     }
 
-    const loadedScopedStyles = new Set();
-    function scopeSelector(sel) {
-        sel = sel.trim();
-        const m = sel.match(/^(html|body|:root)\b([^\s]*)(\s+(.*))?$/i);
-        if (m) return m[1] + m[2] + ' .nexus-overlay-view' + (m[4] ? ' ' + m[4] : '');
-        return '.nexus-overlay-view ' + sel;
-    }
-    function scopeCss(css) {
-        let out = '', i = 0, n = css.length;
-        while (i < n) {
-            const start = i;
-            while (i < n && css[i] !== '{' && css[i] !== '}') i++;
-            const header = css.slice(start, i);
-            if (i >= n) { out += header; break; }
-            if (css[i] === '}') { out += header + '}'; i++; continue; }
-            const trimmed = header.trim();
-            if (trimmed.charAt(0) === '@') {
-                let depth = 0, j = i;
-                do {
-                    if (css[j] === '{') depth++;
-                    else if (css[j] === '}') depth--;
-                    j++;
-                } while (depth > 0 && j < n);
-                out += header + css.slice(i, j);
-                i = j;
-            } else {
-                out += (trimmed === '' ? header : trimmed.split(',').map(scopeSelector).join(', ') + ' ') + '{';
-                i++;
-            }
-        }
-        return out;
-    }
-    async function loadScopedStyle(href) {
-        if (loadedScopedStyles.has(href)) return;
-        loadedScopedStyles.add(href);
-        const res = await fetch(href, { credentials: 'same-origin' });
-        const css = await res.text();
-        const styleEl = document.createElement('style');
-        styleEl.textContent = scopeCss(css);
-        document.head.appendChild(styleEl);
-                        }
-
     const loadedRenamedScripts = new Set();
     async function loadRenamedScript(src, renameMap) {
         if (loadedRenamedScripts.has(src)) return;
@@ -232,10 +191,7 @@
 
         ensureRoot().appendChild(wrap);
 
-        const _externalStyles = cfg.styles.filter(function (s) { return /^https?:\/\//.test(s); });
-        const _localStyles = cfg.styles.filter(function (s) { return !/^https?:\/\//.test(s); });
-        await Promise.all(_externalStyles.map(loadStyle).concat(_localStyles.map(loadScopedStyle)));
-
+        await Promise.all(cfg.styles.map(loadStyle));
         const firebaseScripts = window.firebase ? [] : (cfg.firebaseScripts || []);
         const orderedPlain = firebaseScripts.concat(cfg.scripts || []);
         await orderedPlain.reduce(function (p, src) {
