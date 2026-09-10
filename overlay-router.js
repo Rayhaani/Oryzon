@@ -150,7 +150,7 @@
             document.body.appendChild(s);
         });
     }
-    function loadStyle(href) {
+   function loadStyle(href) {
         if (window.NexusRouter && window.NexusRouter.loadStylesheetOnce) return window.NexusRouter.loadStylesheetOnce(href);
         return new Promise(function (resolve) {
             const l = document.createElement('link');
@@ -159,7 +159,20 @@
             document.head.appendChild(l);
         });
     }
-
+    const loadedScopedStyles = new Set();
+    async function loadScopedStyle(href) {
+        if (loadedScopedStyles.has(href)) return;
+        loadedScopedStyles.add(href);
+        const res = await fetch(href, { credentials: 'same-origin' });
+        let css = await res.text();
+        css = css.replace(/([^{}]+)\{/g, function (m, sel) {
+            if (sel.trim().charAt(0) === '@') return m;
+            return sel.split(',').map(function (s) { return '.nexus-overlay-view ' + s.trim(); }).join(', ') + ' {';
+        });
+        const styleEl = document.createElement('style');
+        styleEl.textContent = css;
+        document.head.appendChild(styleEl);
+    } 
     const loadedRenamedScripts = new Set();
     async function loadRenamedScript(src, renameMap) {
         if (loadedRenamedScripts.has(src)) return;
@@ -190,7 +203,9 @@
 
         ensureRoot().appendChild(wrap);
 
-        await Promise.all(cfg.styles.map(loadStyle));
+        const _externalStyles = cfg.styles.filter(function (s) { return /^https?:\/\//.test(s); });
+        const _localStyles = cfg.styles.filter(function (s) { return !/^https?:\/\//.test(s); });
+        await Promise.all(_externalStyles.map(loadStyle).concat(_localStyles.map(loadScopedStyle)));
 
         const firebaseScripts = window.firebase ? [] : (cfg.firebaseScripts || []);
         const orderedPlain = firebaseScripts.concat(cfg.scripts || []);
