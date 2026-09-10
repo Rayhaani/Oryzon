@@ -581,17 +581,14 @@ function wireMessagingUI() {
     // bayyana ba a farko" da "tsalle zuwa hoto na sama" — yana fafitika da resize na
     // browser din kansa, yana sanya double-offset.
 
-    listenToNexusMessages();
+   listenToNexusMessages();
     ensureE2EReady();
-
-    // Start listening for incoming calls
-    if (typeof NexusCall !== 'undefined') {
-        NexusCall.init();
-    }
-    if (typeof NexusVideo !== 'undefined') {
-        NexusVideo.init();
-    }
-}
+    // NexusCall.init()/NexusVideo.init() BA A SAKE kiran su a nan — call.js
+    // da video-call.js sun rigaya suna kiran wannan KANSU sau daya kadai a
+    // duk zangon SPA (duba bootNexusCall/bootNexusVideo a karshen su). Sake
+    // kiransu duk lokacin da aka bude chat yana ninka listeners din
+    // (nan ne dalilin call din yake lalacewa bayan yin amfani da app na wani lokaci).
+} 
 
 // Muna bibiyar ko mai amfani YANA a kasan chat din da kansa (ta hanyar scroll na gaskiya),
 // maimakon mu auna scrollHeight bayan kowane render — domin hotuna/bidiyo da basu
