@@ -207,8 +207,7 @@
     function currentEntry() {
         return activeKey ? cache.get(activeKey) : null;
     }
-
-    function hideHostChrome() {
+function hideHostChrome() {
         if (hiddenChrome) return;
         const headerEl = document.querySelector('main#page-content > header');
         const footerEl = document.getElementById('footer-placeholder');
@@ -221,8 +220,15 @@
         if (headerEl) headerEl.style.display = 'none';
         if (footerEl) footerEl.style.display = 'none';
         if (pageContentEl) pageContentEl.style.pointerEvents = 'none';
-    }
 
+        const addFriends = document.getElementById('addFriendsOverlay');
+        const newMsg = document.getElementById('newMessageOverlay');
+        if (addFriends) addFriends.classList.remove('nmo-open');
+        if (newMsg) newMsg.classList.remove('nmo-open');
+        document.querySelectorAll('.friend-status-filter-menu.open, .nmo-filter-menu.open')
+            .forEach(el => el.classList.remove('open'));
+}
+    
     function restoreHostChrome() {
         if (!hiddenChrome) return;
         if (hiddenChrome.headerEl) hiddenChrome.headerEl.style.display = hiddenChrome.headerPrevDisplay;
