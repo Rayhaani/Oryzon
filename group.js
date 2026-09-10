@@ -357,6 +357,7 @@
 
         function renderChatFlow() {
             const flow = document.getElementById('chat-flow');
+            if (!flow) return;
             let html = '';
             let lastDay = null;
             let lastSender = null;
@@ -776,6 +777,7 @@
         }
 
         let recTimer = null, recSeconds = 0;
+        let demoTypingTimeout = null, demoMsgTimeout = null;
         function startVoiceRecording() {
             recSeconds = 0;
             document.getElementById('recordBar').classList.add('active');
@@ -1560,11 +1562,13 @@
             initRealGroup();
             // one realistic "is typing…" demo cycle so the indicator is visibly wired up
             // — only in local preview (no ?group=); a real group shouldn't get a fake message injected.
-            if (!groupSlug) {
-                setTimeout(() => {
-                    if (document.getElementById('chat-flow').style.display !== 'none') {
+            
+     if (!groupSlug) {
+                demoTypingTimeout = setTimeout(() => {
+                    const cf = document.getElementById('chat-flow');
+                    if (cf && cf.style.display !== 'none') {
                         simulateIncomingTyping();
-                        setTimeout(() => {
+                        demoMsgTimeout = setTimeout(() => {
                             stopIncomingTyping();
                             chatMessages.push({ id: 'c' + Date.now(), from: 'them', name: 'Zainab_TrustID', role: 'Member', roleClass: 'role-member', verified: false,
                                 avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&auto=format&fit=crop&q=80',
@@ -1573,8 +1577,7 @@
                         }, 2600);
                     }
                 }, 4000);
-            }
-
+     }
             const savedMode = localStorage.getItem('nexus_group_mode');
             if (savedMode === 'feed') {
                 switchMode('feed');
@@ -1592,13 +1595,14 @@
                 });
             }
         }
-
-        function destroyPage() {
+         function destroyPage() {
             if (groupUnsub) { groupUnsub(); groupUnsub = null; }
             if (groupPostsUnsub) { groupPostsUnsub(); groupPostsUnsub = null; }
             if (groupMessagesUnsub) { groupMessagesUnsub(); groupMessagesUnsub = null; }
             if (recTimer) { clearInterval(recTimer); recTimer = null; }
-
+            if (demoTypingTimeout) { clearTimeout(demoTypingTimeout); demoTypingTimeout = null; }
+            if (demoMsgTimeout) { clearTimeout(demoMsgTimeout); demoMsgTimeout = null; }
+        
             const feedView = document.getElementById('feedView');
             if (feedView) feedView.removeEventListener('scroll', onFeedScrollNX);
             window.removeEventListener('scroll', onWindowScrollNX);
