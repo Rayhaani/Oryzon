@@ -137,12 +137,18 @@ async function decryptFromPeer(d) {
     catch (e) { return { text: jsonStr, replySnippet: null }; } // tsohon tsari (kafin a fara boye reply snippet)
 }
 let decryptedCache = {};
+let _renderChatFlowScheduled = false;
+function scheduleRenderChatFlow() {
+    if (_renderChatFlowScheduled) return;
+    _renderChatFlowScheduled = true;
+    setTimeout(() => { _renderChatFlowScheduled = false; renderChatFlow(); }, 0);
+}
 function ensureDecrypted(doc, d) {
     if (!d.encrypted || decryptedCache[doc.id] !== undefined) return;
     if (!e2eSharedKey) return; // tukuna ana initializing / peer bai buga public key ba
     decryptedCache[doc.id] = null; // sanya alama "ana aiki" domin kada mu sake fara decryption sau biyu
-    decryptFromPeer(d).then(parsed => { decryptedCache[doc.id] = parsed; renderChatFlow(); })
-      .catch(() => { decryptedCache[doc.id] = { text: '🔒 [Could not decrypt this message]', replySnippet: null }; renderChatFlow(); });
+    decryptFromPeer(d).then(parsed => { decryptedCache[doc.id] = parsed; scheduleRenderChatFlow(); })
+      .catch(() => { decryptedCache[doc.id] = { text: '🔒 [Could not decrypt this message]', replySnippet: null }; scheduleRenderChatFlow(); });
 }
 
 // ── Ɓoye MEDIA (hoto/bidiyo/murya): ana ɓoye ainihin bytes ɗin fayil kafin ya bar
@@ -184,7 +190,7 @@ function ensureMediaDecrypted(cacheKey, mediaUrl, iv, mimeType, onReady) {
     }).catch(err => {
         console.error('Media decrypt error:', err);
         decryptedMediaCache[cacheKey] = 'error';
-        renderChatFlow();
+        scheduleRenderChatFlow();
     });
 }
 // Dawo da URL da za a yi amfani da ita YANZU (cached blob idan an riga an buɗe, ko d.mediaUrl
