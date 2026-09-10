@@ -516,7 +516,7 @@
         const targetPath = normalizePath(new URL(url, window.location.href).pathname);
 
         // Same page tapped again — do nothing.
-        if (targetPath === currentPath && pushHistory) return;
+        if (targetPath === currentPath) return;
 
         isNavigating = true;
         showNavProgress();
