@@ -115,10 +115,10 @@
     (function injectBaseStyles() {
         const style = document.createElement('style');
         style.textContent =
-            '#nexus-overlay-root{position:fixed;inset:0;z-index:2147483647;pointer-events:none;}' +
-            '.nexus-overlay-view{position:fixed;inset:0;z-index:2147483647;background:#000;overflow:hidden;pointer-events:auto;}' +
-            'body.nexus-overlay-open{overflow:hidden;}' +
-            'body.nexus-overlay-open #footer-placeholder,body.nexus-overlay-open #footer-placeholder *{display:none!important;visibility:hidden!important;}';
+         '#nexus-overlay-root{position:fixed;inset:0;z-index:2147483647;pointer-events:none;}' +
+'.nexus-overlay-view{position:fixed;inset:0;z-index:2147483647;background:#000;overflow:hidden;pointer-events:auto;}' +
+'body.nexus-overlay-open{overflow:hidden;}' +
+'body.nexus-overlay-open #footer-placeholder,body.nexus-overlay-open #footer-placeholder *{visibility:hidden!important;pointer-events:none!important;}';      
        document.head.appendChild(style);
     })();
 
@@ -214,12 +214,16 @@ function hideHostChrome() {
         const footerEl = document.getElementById('footer-placeholder');
         const pageContentEl = document.getElementById('page-content');
         hiddenChrome = {
-            headerEl: headerEl, headerPrevDisplay: headerEl ? headerEl.style.display : '',
-            footerEl: footerEl, footerPrevDisplay: footerEl ? footerEl.style.display : '',
+            headerEl: headerEl, headerPrevVisibility: headerEl ? headerEl.style.visibility : '',
+            footerEl: footerEl, footerPrevVisibility: footerEl ? footerEl.style.visibility : '',
             pageContentEl: pageContentEl, pageContentPrevPointerEvents: pageContentEl ? pageContentEl.style.pointerEvents : ''
         };
-        if (headerEl) headerEl.style.display = 'none';
-        if (footerEl) footerEl.style.display = 'none';
+        // visibility:hidden a maimakon display:none — header/footer suna
+        // 'position:sticky', don haka display:none yana tura content sama
+        // (layout reflow), shi ne ke haddasa tsalle/hargitsi. visibility
+        // baya taba layout, sai dai ya boye ganuwa + toshe taba.
+        if (headerEl) { headerEl.style.visibility = 'hidden'; headerEl.style.pointerEvents = 'none'; }
+        if (footerEl) { footerEl.style.visibility = 'hidden'; footerEl.style.pointerEvents = 'none'; }
         if (pageContentEl) pageContentEl.style.pointerEvents = 'none';
 
         const addFriends = document.getElementById('addFriendsOverlay');
@@ -232,8 +236,8 @@ function hideHostChrome() {
     
     function restoreHostChrome() {
         if (!hiddenChrome) return;
-        if (hiddenChrome.headerEl) hiddenChrome.headerEl.style.display = hiddenChrome.headerPrevDisplay;
-        if (hiddenChrome.footerEl) hiddenChrome.footerEl.style.display = hiddenChrome.footerPrevDisplay;
+        if (hiddenChrome.headerEl) { hiddenChrome.headerEl.style.visibility = hiddenChrome.headerPrevVisibility; hiddenChrome.headerEl.style.pointerEvents = ''; }
+        if (hiddenChrome.footerEl) { hiddenChrome.footerEl.style.visibility = hiddenChrome.footerPrevVisibility; hiddenChrome.footerEl.style.pointerEvents = ''; }
         if (hiddenChrome.pageContentEl) hiddenChrome.pageContentEl.style.pointerEvents = hiddenChrome.pageContentPrevPointerEvents;
         hiddenChrome = null;
     }
