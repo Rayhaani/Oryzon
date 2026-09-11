@@ -303,7 +303,7 @@ function hideHostChrome() {
         if (!url || !OVERLAY_PAGES[filenameOf(url)]) return;
 
         e.preventDefault();
-        e.stopPropagation();
+        e.stopImmediatePropagation();
         open(url);
     }, true);
 
