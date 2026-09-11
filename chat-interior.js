@@ -1633,12 +1633,7 @@ window.addEventListener('popstate', () => {
     if (document.getElementById('textToolOverlay')) { cancelTextTool(); return; }
     confirmDiscardPhoto();
 });
-// Tsaro: hana router.js daga kama KOWANE click da ke faruwa a cikin
-// caption editor — ba tare da la'akari da wace aji ba, domin babu
-// wani dalili da wani click a nan zai kai ga router.
-document.getElementById('captionOverlay').addEventListener('click', (e) => {
-    e.stopPropagation();
-});
+
 let captionHistoryPushed = false;
 function hideDiscardDialog() {
     document.getElementById('discardDialogBackdrop').classList.remove('show');
@@ -3440,6 +3435,14 @@ function NexusChatInterior_init() {
     wireMediaInputs();
 }
 
+// Dole ne wannan ya kasance A CIKIN init() — #captionOverlay yana
+    // sake-halitta a kowane shigowa ta SPA (innerHTML swap), don haka
+    // sai an sake daure listener din a KOWANE shigowa, ba sau daya kawai
+    // a saman fayil ba (wanda ke daure wa tsohon, element din da ya bace).
+    document.getElementById('captionOverlay').addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+}
 function NexusChatInterior_destroy() {
     stopListeningToNexusMessages();
     stopMyPresenceHeartbeat();
