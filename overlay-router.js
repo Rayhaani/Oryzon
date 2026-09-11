@@ -314,5 +314,5 @@ function hideHostChrome() {
         }
     }, true);
 
-    window.NexusOverlay = { open: open, close: close };
+    window.NexusOverlay = { open: open, close: close, isOpen: function () { return !!activeKey; } };
 })();
