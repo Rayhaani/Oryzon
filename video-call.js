@@ -17,6 +17,9 @@ const NexusVideo = (() => {
     let callRole = null;
     let controlsTimeout = null;
     let controlsVisible = true;
+    let effectsLoaded = false;
+    let filterPanelOpen = false;
+    let activeFilterId = 'none';
 
     const iceConfig = {
         iceServers: [
@@ -571,10 +574,29 @@ const NexusVideo = (() => {
                                 <path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.362a1 1 0 0 1-1.447.894L15 14M3 8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/>
                             </svg>
                         </div>
-                        <div style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;">Camera</div>
+                      <div style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;">Camera</div>
                     </div>
 
-                    <!-- Flip Camera -->
+                    <!-- Filters -->
+                    <div style="text-align:center;">
+                        <div id="nexus-vid-filter-btn" onclick="event.stopPropagation();NexusVideo.toggleFilterPanel()" style="
+                            width:58px;height:58px;border-radius:50%;
+                            background:rgba(255,255,255,0.2);
+                            backdrop-filter:blur(10px);
+                            display:flex;align-items:center;justify-content:center;
+                            cursor:pointer;margin:0 auto 8px;
+                            border:1px solid rgba(255,255,255,0.2);
+                            transition:background 0.2s;
+                        ">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="4"/>
+                                <path d="M2 12h2M20 12h2M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+                            </svg>
+                        </div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;">Filters</div>
+                    </div>
+
+                    <!-- Flip Camera -->  
                     <div style="text-align:center;">
                         <div onclick="event.stopPropagation();NexusVideo.flipCamera()" style="
                             width:58px;height:58px;border-radius:50%;
