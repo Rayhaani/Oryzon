@@ -620,20 +620,18 @@ const NexusVideo = (() => {
                     </div>
                 </div>
 
-                <!-- Filter Panel (bottom sheet) -->
+                <!-- Filter Panel (yana bayyana a MAZAUNIN Bottom Controls, ba wani sheet daban ba) -->
                 <div id="nexus-filter-panel" style="
-                    position:absolute;left:0;right:0;bottom:0;
-                    background:rgba(20,20,20,0.85);
-                    backdrop-filter:blur(20px);
-                    -webkit-backdrop-filter:blur(20px);
-                    border-top:1px solid rgba(255,255,255,0.12);
-                    border-radius:20px 20px 0 0;
-                    padding:16px 14px calc(env(safe-area-inset-bottom, 0px) + 130px);
-                    transform:translateY(100%);
-                    transition:transform 0.3s ease;
-                    z-index:15;
+                    position:absolute;bottom:0;left:0;right:0;
+                    padding:14px 20px 50px;
+                    background:linear-gradient(0deg,rgba(0,0,0,0.85) 0%,transparent 100%);
+                    display:none;
+                    flex-direction:column;
+                    opacity:0;
+                    transition:opacity 0.25s ease;
+                    z-index:10;
                 " onclick="event.stopPropagation()">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
                         <div style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;">Filters</div>
                         <div onclick="event.stopPropagation();NexusVideo.toggleFilterPanel()" style="
                             color:#fff;font-size:13px;font-weight:600;
@@ -705,14 +703,16 @@ const NexusVideo = (() => {
         filterPanelOpen = !filterPanelOpen;
         if (filterPanelOpen) {
             buildFilterPanel();
-            panel.style.transform = 'translateY(0)';
-            if (controls) { controls.style.opacity = '0'; controls.style.pointerEvents = 'none'; }
+            if (controls) controls.style.display = 'none';
+            panel.style.display = 'flex';
+            requestAnimationFrame(() => { panel.style.opacity = '1'; });
             if (controlsTimeout) clearTimeout(controlsTimeout);
             const localVideoEl = document.getElementById('nexus-local-video');
             if (localVideoEl && localStream) NexusVideoEffects.startProcessing(localVideoEl);
         } else {
-            panel.style.transform = 'translateY(100%)';
-            if (controls) { controls.style.opacity = '1'; controls.style.pointerEvents = 'auto'; }
+            panel.style.opacity = '0';
+            setTimeout(() => { panel.style.display = 'none'; }, 250);
+            if (controls) controls.style.display = 'flex';
             scheduleHideControls();
         }
    }
