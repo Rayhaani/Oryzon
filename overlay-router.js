@@ -160,6 +160,36 @@
         });
     }
 
+   function loadOverlayStyle(href, overlayKey) {
+    return new Promise(function (resolve) {
+        const existing = document.querySelector(
+            'link[data-nexus-overlay-style="' + overlayKey + '"][href="' + href + '"]'
+        );
+
+        if (existing) {
+            resolve();
+            return;
+        }
+
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.dataset.nexusOverlayStyle = overlayKey;
+
+        link.onload = resolve;
+        link.onerror = resolve;
+
+        document.head.appendChild(link);
+    });
+}
+
+function removeOverlayStyles(overlayKey) {
+    document.querySelectorAll(
+        'link[data-nexus-overlay-style="' + overlayKey + '"]'
+    ).forEach(function (link) {
+        link.remove();
+    });
+}
     const loadedRenamedScripts = new Set();
     async function loadRenamedScript(src, renameMap) {
         if (loadedRenamedScripts.has(src)) return;
@@ -190,8 +220,12 @@
 
         ensureRoot().appendChild(wrap);
 
-        await Promise.all(cfg.styles.map(loadStyle));
-
+        await Promise.all(
+    cfg.styles.map(function (href) {
+        return loadOverlayStyle(href, key);
+    })
+);
+       
         const firebaseScripts = window.firebase ? [] : (cfg.firebaseScripts || []);
         const orderedPlain = firebaseScripts.concat(cfg.scripts || []);
         await orderedPlain.reduce(function (p, src) {
@@ -250,23 +284,47 @@ function hideHostChrome() {
         if (key === activeKey) return true;
 
         const prev = currentEntry();
-        if (prev) {
-            if (window.NexusRouter && window.NexusRouter.runPageDestroy) window.NexusRouter.runPageDestroy(prev.filename);
-            prev.el.remove();
-            prev.lastHidden = Date.now();
-        }
 
+if (prev) {
+    if (
+        window.NexusRouter &&
+        window.NexusRouter.runPageDestroy
+    ) {
+        window.NexusRouter.runPageDestroy(prev.filename);
+    }
+
+    prev.el.remove();
+
+    // Remove CSS belonging to the previous overlay.
+    removeOverlayStyles(prev.key);
+
+    prev.lastHidden = Date.now();
+}
+       
         let entry = cache.get(key);
-        if (!entry) {
-            entry = await buildOverlay(filename, url, key);
-            cache.set(key, entry);
-        }
+
+if (!entry) {
+    entry = await buildOverlay(filename, url, key);
+    cache.set(key, entry);
+} else {
+    await Promise.all(
+        OVERLAY_PAGES[filename].styles.map(function (href) {
+            return loadOverlayStyle(href, key);
+        })
+    );
+}
       ensureRoot().appendChild(entry.el);
-        entry.el.style.display = 'block';
-        entry.lastHidden = null;
-        activeKey = key;
-        document.body.classList.add('nexus-overlay-open');
-        hideHostChrome();
+
+entry.lastHidden = null;
+activeKey = key;
+
+document.body.classList.add('nexus-overlay-open');
+
+hideHostChrome();
+
+requestAnimationFrame(function () {
+    entry.el.style.display = 'block';
+});
 
         window.history.pushState({ nexusOverlayKey: key }, '', url);
 
@@ -276,14 +334,32 @@ function hideHostChrome() {
     }
 
     function close() {
-        const entry = currentEntry();
-        if (!entry) return;
-        if (window.NexusRouter && window.NexusRouter.runPageDestroy) window.NexusRouter.runPageDestroy(entry.filename);
-        entry.el.remove();
-        entry.lastHidden = Date.now();
-        activeKey = null;
-        document.body.classList.remove('nexus-overlay-open');
-        restoreHostChrome();
+    const entry = currentEntry();
+    if (!entry) return;
+
+    if (
+        window.NexusRouter &&
+        window.NexusRouter.runPageDestroy
+    ) {
+        window.NexusRouter.runPageDestroy(entry.filename);
+    }
+
+    entry.el.remove();
+
+    // IMPORTANT:
+    // Remove all styles owned by this overlay.
+    removeOverlayStyles(entry.key);
+
+    entry.lastHidden = Date.now();
+    activeKey = null;
+
+    document.body.classList.remove('nexus-overlay-open');
+
+    restoreHostChrome();
+
+    // Return host page scrolling/layout to normal.
+    document.documentElement.style.removeProperty('overflow');
+    document.body.style.removeProperty('overflow');
     }
 
     function scheduleSweep() {
