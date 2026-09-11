@@ -685,10 +685,15 @@ const NexusVideo = (() => {
         });
     }
 
-    async function toggleFilterPanel() {
-        await loadEffectsEngine();
-        const panel = document.getElementById('nexus-filter-panel');
-        if (!panel) return;
+   async function toggleFilterPanel() {
+        try {
+            await loadEffectsEngine();
+        } catch (err) {
+            alert('Filter engine ta kasa loda: ' + err.message);
+            return;
+        }
+        const panel = document.getElementById('nexus-filter-panel'); 
+    if (!panel) return;
         filterPanelOpen = !filterPanelOpen;
         if (filterPanelOpen) {
             buildFilterPanel();
