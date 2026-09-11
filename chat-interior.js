@@ -3432,10 +3432,9 @@ function NexusChatInterior_init() {
     wireMessagingUI();
     wireScrollTracking();
     wireOfflineHandling();
-    wireMediaInputs();
-}
+ wireMediaInputs();
 
-// Dole ne wannan ya kasance A CIKIN init() — #captionOverlay yana
+    // Dole ne wannan ya kasance A CIKIN init() — #captionOverlay yana
     // sake-halitta a kowane shigowa ta SPA (innerHTML swap), don haka
     // sai an sake daure listener din a KOWANE shigowa, ba sau daya kawai
     // a saman fayil ba (wanda ke daure wa tsohon, element din da ya bace).
