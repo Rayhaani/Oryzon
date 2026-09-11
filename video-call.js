@@ -256,6 +256,10 @@ const NexusVideo = (() => {
         if (pc) { pc.close(); pc = null; }
         stopCallTimer();
         if (controlsTimeout) clearTimeout(controlsTimeout);
+        if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
+        filterPanelOpen = false; activeFilterId = 'none';
+        const filterTrack = document.getElementById('nexus-filter-track');
+        if (filterTrack) filterTrack.dataset.built = '';
         callDocRef = null; callRole = null;
         isMuted = false; isCameraOff = false; isFrontCamera = true;
         if (msg) {
@@ -615,10 +619,26 @@ const NexusVideo = (() => {
                         <div style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;">Flip</div>
                     </div>
                 </div>
+
+                <!-- Filter Panel (bottom sheet) -->
+                <div id="nexus-filter-panel" style="
+                    position:absolute;left:0;right:0;bottom:0;
+                    background:rgba(20,20,20,0.85);
+                    backdrop-filter:blur(20px);
+                    -webkit-backdrop-filter:blur(20px);
+                    border-top:1px solid rgba(255,255,255,0.12);
+                    border-radius:20px 20px 0 0;
+                    padding:16px 14px calc(env(safe-area-inset-bottom, 0px) + 130px);
+                    transform:translateY(100%);
+                    transition:transform 0.3s ease;
+                    z-index:15;
+                " onclick="event.stopPropagation()">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:12px;font-weight:600;">Filters</div>
+                    <div id="nexus-filter-track" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
+                </div>
             </div>
         `;
         document.body.appendChild(el);
-
         // Auto-hide controls after 4s
         scheduleHideControls();
 
@@ -650,8 +670,79 @@ const NexusVideo = (() => {
         }
     }
 
+    // ══════════════════════════════════════════════
+    //  FILTERS / EFFECTS (lazy-loaded engine)
+    // ══════════════════════════════════════════════
+    function loadEffectsEngine() {
+        if (effectsLoaded && typeof NexusVideoEffects !== 'undefined') return Promise.resolve();
+        return new Promise((resolve, reject) => {
+            if (document.querySelector('script[src="video-call-effects.js"]')) { effectsLoaded = true; resolve(); return; }
+            const s = document.createElement('script');
+            s.src = 'video-call-effects.js';
+            s.onload = () => { effectsLoaded = true; resolve(); };
+            s.onerror = () => reject(new Error('Failed to load video-call-effects.js'));
+            document.body.appendChild(s);
+        });
+    }
+
+    async function toggleFilterPanel() {
+        await loadEffectsEngine();
+        const panel = document.getElementById('nexus-filter-panel');
+        if (!panel) return;
+        filterPanelOpen = !filterPanelOpen;
+        if (filterPanelOpen) {
+            buildFilterPanel();
+            panel.style.transform = 'translateY(0)';
+            const localVideoEl = document.getElementById('nexus-local-video');
+            if (localVideoEl && localStream) NexusVideoEffects.startProcessing(localVideoEl);
+        } else {
+            panel.style.transform = 'translateY(100%)';
+        }
+    }
+
+    function buildFilterPanel() {
+        const track = document.getElementById('nexus-filter-track');
+        if (!track || track.dataset.built) return;
+        track.dataset.built = '1';
+        const filters = NexusVideoEffects.getFilters();
+        const isPrem = NexusVideoEffects.isPremium();
+        track.innerHTML = filters.map(f => `
+            <div class="nexus-filter-chip" data-filter="${f.id}" onclick="NexusVideo.selectFilter('${f.id}')" style="text-align:center;flex-shrink:0;">
+                <div style="
+                    width:56px;height:56px;border-radius:50%;
+                    background:linear-gradient(135deg,rgba(255,255,255,0.3),rgba(255,255,255,0.05));
+                    filter:${f.css};
+                    border:2px solid ${f.id === activeFilterId ? '#fff' : 'transparent'};
+                    display:flex;align-items:center;justify-content:center;
+                    margin:0 auto 6px;position:relative;
+                ">
+                    ${f.premium && !isPrem ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 1a5 5 0 0 0-5 5v3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg>' : ''}
+                </div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.75);">${f.label}</div>
+            </div>
+        `).join('');
+    }
+
+    async function selectFilter(filterId) {
+        const localVideoEl = document.getElementById('nexus-local-video');
+        const result = await NexusVideoEffects.applyFilter(filterId, pc, localVideoEl);
+        if (result === 'premium_locked') {
+            if (typeof NexusPremium !== 'undefined' && NexusPremium.showUpgradePrompt) {
+                NexusPremium.showUpgradePrompt('video_filters');
+            } else {
+                alert('Wannan filter Premium ne kadai — ka yi upgrade domin amfani da shi.');
+            }
+            return;
+        }
+        activeFilterId = filterId;
+        document.querySelectorAll('.nexus-filter-chip').forEach(chip => {
+            const inner = chip.querySelector('div');
+            inner.style.border = chip.dataset.filter === activeFilterId ? '2px solid #fff' : '2px solid transparent';
+        });
+    }
+
     // ── Draggable PiP ─────────────────────────────
-    function makeDraggable(el) {
+        function makeDraggable(el) {
         if (!el) return;
         let startX, startY, startLeft, startTop;
 
@@ -837,7 +928,9 @@ const NexusVideo = (() => {
         toggleVideoMute,
         toggleCamera,
         flipCamera,
-        toggleControls
+        toggleControls,
+        toggleFilterPanel,
+        selectFilter
     };
 
 })();
