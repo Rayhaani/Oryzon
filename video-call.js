@@ -633,7 +633,14 @@ const NexusVideo = (() => {
                     transition:transform 0.3s ease;
                     z-index:15;
                 " onclick="event.stopPropagation()">
-                    <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:12px;font-weight:600;">Filters</div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <div style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;">Filters</div>
+                        <div onclick="event.stopPropagation();NexusVideo.toggleFilterPanel()" style="
+                            color:#fff;font-size:13px;font-weight:600;
+                            background:rgba(255,255,255,0.15);
+                            padding:6px 16px;border-radius:16px;cursor:pointer;
+                        ">Done</div>
+                    </div>
                     <div id="nexus-filter-track" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
                 </div>
             </div>
@@ -692,18 +699,23 @@ const NexusVideo = (() => {
             alert('Filter engine ta kasa loda: ' + err.message);
             return;
         }
-        const panel = document.getElementById('nexus-filter-panel'); 
-    if (!panel) return;
+        const panel = document.getElementById('nexus-filter-panel');
+        const controls = document.getElementById('nexus-video-controls');
+        if (!panel) return;
         filterPanelOpen = !filterPanelOpen;
         if (filterPanelOpen) {
             buildFilterPanel();
             panel.style.transform = 'translateY(0)';
+            if (controls) { controls.style.opacity = '0'; controls.style.pointerEvents = 'none'; }
+            if (controlsTimeout) clearTimeout(controlsTimeout);
             const localVideoEl = document.getElementById('nexus-local-video');
             if (localVideoEl && localStream) NexusVideoEffects.startProcessing(localVideoEl);
         } else {
             panel.style.transform = 'translateY(100%)';
+            if (controls) { controls.style.opacity = '1'; controls.style.pointerEvents = 'auto'; }
+            scheduleHideControls();
         }
-    }
+   }
 
     function buildFilterPanel() {
         const track = document.getElementById('nexus-filter-track');
@@ -723,15 +735,15 @@ const NexusVideo = (() => {
         track.dataset.built = '1';
         track.innerHTML = filters.map(f => `
     <div class="nexus-filter-chip" data-filter="${f.id}" onclick="NexusVideo.selectFilter('${f.id}')" style="text-align:center;flex-shrink:0;">
-                <div style="
+                  <div style="
                     width:56px;height:56px;border-radius:50%;
-                    background:linear-gradient(135deg,rgba(255,255,255,0.3),rgba(255,255,255,0.05));
-                    filter:${f.css};
+                    background:${f.swatch};
+                    box-shadow:0 4px 14px rgba(0,0,0,0.35);
                     border:2px solid ${f.id === activeFilterId ? '#fff' : 'transparent'};
                     display:flex;align-items:center;justify-content:center;
                     margin:0 auto 6px;position:relative;
                 ">
-                    ${f.premium && !isPrem ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 1a5 5 0 0 0-5 5v3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg>' : ''}
+                    ${f.premium && !isPrem ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="white" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><path d="M12 1a5 5 0 0 0-5 5v3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg>' : ''}
                 </div>
                 <div style="font-size:10px;color:rgba(255,255,255,0.75);">${f.label}</div>
             </div>
