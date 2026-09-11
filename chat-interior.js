@@ -1639,7 +1639,6 @@ window.addEventListener('popstate', () => {
 document.getElementById('captionOverlay').addEventListener('click', (e) => {
     e.stopPropagation();
 });
-});
 let captionHistoryPushed = false;
 function hideDiscardDialog() {
     document.getElementById('discardDialogBackdrop').classList.remove('show');
