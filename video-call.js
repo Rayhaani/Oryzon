@@ -18,6 +18,9 @@ const NexusVideo = (() => {
     let controlsTimeout = null;
     let controlsVisible = true;
     let effectsLoaded = false;
+    let bgLoaded = false;
+    let bgPanelOpen = false;
+    let activeBgId = 'none';
     let filterPanelOpen = false;
     let activeFilterId = 'none';
 
@@ -260,6 +263,10 @@ const NexusVideo = (() => {
         filterPanelOpen = false; activeFilterId = 'none';
         const filterTrack = document.getElementById('nexus-filter-track');
         if (filterTrack) filterTrack.dataset.built = '';
+        if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
+        bgPanelOpen = false; activeBgId = 'none';
+        const bgTrack = document.getElementById('nexus-bg-track');
+        if (bgTrack) bgTrack.dataset.built = '';       
         callDocRef = null; callRole = null;
         isMuted = false; isCameraOff = false; isFrontCamera = true;
         if (msg) {
@@ -600,6 +607,26 @@ const NexusVideo = (() => {
                         <div style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;">Filters</div>
                     </div>
 
+                    <!-- Background -->
+                    <div style="text-align:center;">
+                        <div id="nexus-vid-bg-btn" onclick="event.stopPropagation();NexusVideo.toggleBgPanel()" style="
+                            width:58px;height:58px;border-radius:50%;
+                            background:rgba(255,255,255,0.2);
+                            backdrop-filter:blur(10px);
+                            display:flex;align-items:center;justify-content:center;
+                            cursor:pointer;margin:0 auto 8px;
+                            border:1px solid rgba(255,255,255,0.2);
+                            transition:background 0.2s;
+                        ">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <path d="M21 15l-5-5L5 21"/>
+                            </svg>
+                        </div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;">Background</div>
+                    </div>
+
                     <!-- Flip Camera -->  
                     <div style="text-align:center;">
                         <div onclick="event.stopPropagation();NexusVideo.flipCamera()" style="
@@ -639,10 +666,33 @@ const NexusVideo = (() => {
                             padding:6px 16px;border-radius:16px;cursor:pointer;
                         ">Done</div>
                     </div>
-                    <div id="nexus-filter-track" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
+                   <div id="nexus-filter-track" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
+                </div>
+
+                <!-- Background Panel (yana bayyana a MAZAUNIN Bottom Controls, kamar Filters) -->
+                <div id="nexus-bg-panel" style="
+                    position:absolute;bottom:0;left:0;right:0;
+                    padding:14px 20px 50px;
+                    background:linear-gradient(0deg,rgba(0,0,0,0.85) 0%,transparent 100%);
+                    display:none;
+                    flex-direction:column;
+                    opacity:0;
+                    transition:opacity 0.25s ease;
+                    z-index:10;
+                " onclick="event.stopPropagation()">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <div style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;">Background</div>
+                        <div onclick="event.stopPropagation();NexusVideo.toggleBgPanel()" style="
+                            color:#fff;font-size:13px;font-weight:600;
+                            background:rgba(255,255,255,0.15);
+                            padding:6px 16px;border-radius:16px;cursor:pointer;
+                        ">Done</div>
+                    </div>
+                    <div id="nexus-bg-track" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
+                    <input type="file" id="nexus-bg-file-input" accept="image/*" style="display:none;" onchange="NexusVideo.handleCustomBgUpload(this)">
                 </div>
             </div>
-        `;
+        `; 
         document.body.appendChild(el);
         // Auto-hide controls after 4s
         scheduleHideControls();
@@ -703,6 +753,7 @@ const NexusVideo = (() => {
         filterPanelOpen = !filterPanelOpen;
         if (filterPanelOpen) {
             buildFilterPanel();
+            if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
             if (controls) controls.style.display = 'none';
             panel.style.display = 'flex';
             requestAnimationFrame(() => { panel.style.opacity = '1'; });
@@ -761,14 +812,147 @@ const NexusVideo = (() => {
             }
             return;
         }
-        activeFilterId = filterId;
+       activeFilterId = filterId;
         document.querySelectorAll('.nexus-filter-chip').forEach(chip => {
             const inner = chip.querySelector('div');
             inner.style.border = chip.dataset.filter === activeFilterId ? '2px solid #fff' : '2px solid transparent';
         });
     }
 
-    // ── Draggable PiP ─────────────────────────────
+    // ══════════════════════════════════════════════
+    //  BACKGROUND (lazy-loaded engine)
+    // ══════════════════════════════════════════════
+    function loadBgEngine() {
+        if (bgLoaded && typeof NexusVideoBackground !== 'undefined') return Promise.resolve();
+        return new Promise((resolve, reject) => {
+            if (document.querySelector('script[src="video-call-bg.js"]')) { bgLoaded = true; resolve(); return; }
+            const s = document.createElement('script');
+            s.src = 'video-call-bg.js';
+            s.onload = () => { bgLoaded = true; resolve(); };
+            s.onerror = () => reject(new Error('Failed to load video-call-bg.js'));
+            document.body.appendChild(s);
+        });
+    }
+
+    async function toggleBgPanel() {
+        try {
+            await loadBgEngine();
+        } catch (err) {
+            alert('Background engine ta kasa loda: ' + err.message);
+            return;
+        }
+        const panel = document.getElementById('nexus-bg-panel');
+        const controls = document.getElementById('nexus-video-controls');
+        if (!panel) return;
+        bgPanelOpen = !bgPanelOpen;
+        if (bgPanelOpen) {
+            buildBgPanel();
+            if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
+            if (controls) controls.style.display = 'none';
+            panel.style.display = 'flex';
+            requestAnimationFrame(() => { panel.style.opacity = '1'; });
+            if (controlsTimeout) clearTimeout(controlsTimeout);
+            const localVideoEl = document.getElementById('nexus-local-video');
+            if (localVideoEl && localStream) NexusVideoBackground.startProcessing(localVideoEl);
+        } else {
+            panel.style.opacity = '0';
+            setTimeout(() => { panel.style.display = 'none'; }, 250);
+            if (controls) controls.style.display = 'flex';
+            scheduleHideControls();
+        }
+    }
+
+    function buildBgPanel() {
+        const track = document.getElementById('nexus-bg-track');
+        if (!track || track.dataset.built) return;
+        let bgs, isPrem;
+        try {
+            bgs = NexusVideoBackground.getBackgrounds();
+            isPrem = NexusVideoBackground.isPremium();
+        } catch (err) {
+            alert('buildBgPanel error: ' + err.message);
+            return;
+        }
+        if (!Array.isArray(bgs) || !bgs.length) {
+            alert('NexusVideoBackground.getBackgrounds() babu abinda ta dawo — duba video-call-bg.js');
+            return;
+        }
+        track.dataset.built = '1';
+        track.innerHTML = bgs.map(b => {
+            const swatch = b.type === 'gradient' ? `linear-gradient(135deg,${b.colors.join(',')})`
+                : b.type === 'blur' ? 'rgba(255,255,255,0.15)'
+                : 'rgba(255,255,255,0.1)';
+            const icon = b.type === 'blur'
+                ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 3"/></svg>'
+                : b.type === 'custom'
+                ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+                : '';
+            return `
+                <div class="nexus-bg-chip" data-bg="${b.id}" onclick="NexusVideo.selectBackground('${b.id}')" style="text-align:center;flex-shrink:0;">
+                    <div style="
+                        width:56px;height:56px;border-radius:14px;
+                        background:${swatch};
+                        box-shadow:0 4px 14px rgba(0,0,0,0.35);
+                        border:2px solid ${b.id === activeBgId ? '#fff' : 'transparent'};
+                        display:flex;align-items:center;justify-content:center;
+                        margin:0 auto 6px;position:relative;
+                    ">
+                        ${icon}
+                        ${b.premium && !isPrem ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="white" style="position:absolute;bottom:-4px;right:-4px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><path d="M12 1a5 5 0 0 0-5 5v3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg>' : ''}
+                    </div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.75);">${b.label}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function refreshBgSelection() {
+        document.querySelectorAll('.nexus-bg-chip').forEach(chip => {
+            const inner = chip.querySelector('div');
+            inner.style.border = chip.dataset.bg === activeBgId ? '2px solid #fff' : '2px solid transparent';
+        });
+    }
+
+    async function selectBackground(bgId) {
+        if (bgId === 'custom') {
+            if (!NexusVideoBackground.isPremium()) {
+                if (typeof NexusPremium !== 'undefined' && NexusPremium.showUpgradePrompt) {
+                    NexusPremium.showUpgradePrompt('video_background');
+                } else {
+                    alert('Wannan fasali Premium ne kadai — ka yi upgrade domin amfani da shi.');
+                }
+                return;
+            }
+            const input = document.getElementById('nexus-bg-file-input');
+            if (input) input.click();
+            return;
+        }
+        const result = await NexusVideoBackground.applyBackground(bgId, pc);
+        if (result === 'premium_locked') {
+            if (typeof NexusPremium !== 'undefined' && NexusPremium.showUpgradePrompt) {
+                NexusPremium.showUpgradePrompt('video_background');
+            } else {
+                alert('Wannan background Premium ne kadai — ka yi upgrade domin amfani da shi.');
+            }
+            return;
+        }
+        if (result === 'load_failed') { alert('Ba a iya loda background din ba, ka sake gwadawa.'); return; }
+        activeBgId = bgId;
+        refreshBgSelection();
+    }
+
+    async function handleCustomBgUpload(fileInput) {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        const result = await NexusVideoBackground.applyCustomImage(file, pc);
+        if (result === 'premium_locked') { alert('Wannan fasali Premium ne kadai — ka yi upgrade domin amfani da shi.'); return; }
+        if (result === 'load_failed') { alert('Ba a iya loda hoton ba, ka sake gwadawa.'); return; }
+        activeBgId = 'custom';
+        refreshBgSelection();
+        fileInput.value = '';
+    }
+
+    // ── Draggable PiP ───────────────────────────── 
         function makeDraggable(el) {
         if (!el) return;
         let startX, startY, startLeft, startTop;
@@ -957,9 +1141,11 @@ const NexusVideo = (() => {
         flipCamera,
         toggleControls,
         toggleFilterPanel,
-        selectFilter
+        selectFilter,
+        toggleBgPanel,
+        selectBackground,
+        handleCustomBgUpload
     };
-
 })();
 
 (function bootNexusVideo() {
