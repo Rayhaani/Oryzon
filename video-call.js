@@ -708,11 +708,21 @@ const NexusVideo = (() => {
     function buildFilterPanel() {
         const track = document.getElementById('nexus-filter-track');
         if (!track || track.dataset.built) return;
+        let filters, isPrem;
+        try {
+            filters = NexusVideoEffects.getFilters();
+            isPrem = NexusVideoEffects.isPremium();
+        } catch (err) {
+            alert('buildFilterPanel error: ' + err.message);
+            return;
+        }
+        if (!Array.isArray(filters) || !filters.length) {
+            alert('NexusVideoEffects.getFilters() babu abinda ta dawo — duba video-call-effects.js');
+            return;
+        }
         track.dataset.built = '1';
-        const filters = NexusVideoEffects.getFilters();
-        const isPrem = NexusVideoEffects.isPremium();
         track.innerHTML = filters.map(f => `
-            <div class="nexus-filter-chip" data-filter="${f.id}" onclick="NexusVideo.selectFilter('${f.id}')" style="text-align:center;flex-shrink:0;">
+    <div class="nexus-filter-chip" data-filter="${f.id}" onclick="NexusVideo.selectFilter('${f.id}')" style="text-align:center;flex-shrink:0;">
                 <div style="
                     width:56px;height:56px;border-radius:50%;
                     background:linear-gradient(135deg,rgba(255,255,255,0.3),rgba(255,255,255,0.05));
