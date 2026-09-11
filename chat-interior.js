@@ -1633,12 +1633,12 @@ window.addEventListener('popstate', () => {
     if (document.getElementById('textToolOverlay')) { cancelTextTool(); return; }
     confirmDiscardPhoto();
 });
-// Tsaro: hana router.js (onDocumentClick / data-page delegation) daga
-// kama danna-din icons na caption editor — amma bayan sun gama aiki nasu.
+// Tsaro: hana router.js daga kama KOWANE click da ke faruwa a cikin
+// caption editor — ba tare da la'akari da wace aji ba, domin babu
+// wani dalili da wani click a nan zai kai ga router.
 document.getElementById('captionOverlay').addEventListener('click', (e) => {
-    if (e.target.closest('.cap-icon-btn, .crop-text-btn')) {
-        e.stopPropagation();
-    }
+    e.stopPropagation();
+});
 });
 let captionHistoryPushed = false;
 function hideDiscardDialog() {
