@@ -294,10 +294,23 @@ function hideHostChrome() {
         const filename = filenameOf(url);
         if (!OVERLAY_PAGES[filename]) return false;
 
-        const key = fullPathOf(url);
-        if (key === activeKey) return true;
-
-        const prev = currentEntry();
+      const key = fullPathOf(url);
+      if (key === activeKey) return true;	
+	   const prev = currentEntry();
+       
+       // Baƙar fage NAN TAKE — yana boye chats.html kai tsaye don kada ya
+        // yi flash yayin da muke loda/gina overlay ɗin (jinkiri na farko kawai).
+        let loadingEl = document.getElementById('nexus-overlay-loading');
+        if (!loadingEl) {
+            loadingEl = document.createElement('div');
+            loadingEl.id = 'nexus-overlay-loading';
+            loadingEl.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#000;';
+            ensureRoot().appendChild(loadingEl);
+        } else {
+            loadingEl.style.display = 'block';
+        }
+        document.body.classList.add('nexus-overlay-open');
+        hideHostChrome();
 
 if (prev) {
     if (
@@ -332,12 +345,9 @@ if (!entry) {
 entry.lastHidden = null;
 activeKey = key;
 
-document.body.classList.add('nexus-overlay-open');
-
-hideHostChrome();
-
 requestAnimationFrame(function () {
     entry.el.style.display = 'block';
+    if (loadingEl) loadingEl.style.display = 'none';
 });
 
         window.history.pushState({ nexusOverlayKey: key }, '', url);
