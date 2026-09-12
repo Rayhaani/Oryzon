@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Anti-flash: if this is a real group (?group=slug), set a class on
+        // <html> IMMEDIATELY, before the browser even starts parsing <body>.
+        // The CSS below hides the hardcoded demo name/count until real
+        // Firestore data arrives — so "Northern Innovators Hub 2026" or
+        // "12.4K" never get a chance to flash on screen, even briefly.
+        if (new URLSearchParams(location.search).get('group')) {
+            document.documentElement.classList.add('gi-loading');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus - Next-Gen Super Community Protocol</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS din wannan page an fitar da shi zuwa group.css domin SPA
+         navigation (router.js) tana canza #page-content kadai — <style>
+         a cikin <head> na wata page ba ya tafiya tare da ita idan an
+         bude ta ta hanyar fetch + innerHTML swap daga wata page. -->
+    <link rel="stylesheet" href="group.css">
+</head>
+<body>
+<script>
+        if (localStorage.getItem('nexus_group_mode') === 'feed') {
+            document.documentElement.classList.add('preload-feed');
+        }
+</script>
+<div id="page-content">
+    <!-- ================= HEADER (mode-aware, tap-to-open Group Info) ================= -->
+    <header>
+        <!-- CHAT MODE HEADER CONTENT -->
+        <div class="header-left-dock" id="headerLeftChat" onclick="openGroupInfo()">
+            <div class="avatar-frame">
+                <img class="group-avatar" id="groupAvatarChat" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="Group">
+                <div class="pulse-ring"></div>
+            </div>
+
+            <div class="header-details">
+                <div class="group-title-row">
+                    <span class="group-title" id="groupTitleChat">Northern Innovators Hub 2026</span>
+                </div>
+                <div class="group-subtitle" id="groupSubtitleChat">● 12.4K members</div>
+            </div>
+        </div>
+
+       <!-- FEED MODE HEADER CONTENT -->
+        <div class="header-left-feed" id="headerLeftFeed">
+            <div class="new-post-bubble" onclick="openComposer()">
+                <svg width="34" height="34" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 4 C11.6 4 4 11.6 4 21 C4 30.4 11.6 38 21 38 L33.5 38 C35.5 38 37 36.5 37 34.5 C37 33 36.3 31.7 35 30.8 C36.9 28.1 38 24.7 38 21 C38 11.6 30.4 4 21 4 Z" fill="#fde08d"/>
+                    <path d="M30.8 30 C32.5 31.5 34.5 33.5 37 38 L31 38 C29.3 38 28 36.7 28 35 C28 33.2 29 31.5 30.8 30 Z" fill="#fde08d"/>
+                    <path d="M21 14V26" stroke="#1E1E1E" stroke-width="3.4" stroke-linecap="round"/>
+                    <path d="M15 20H27" stroke="#1E1E1E" stroke-width="3.4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <span class="fb-header-title" id="groupTitleFeed" onclick="openGroupInfo()">Northern Innovators Hub 2026</span>
+        </div>
+           <div class="header-actions">
+            <div class="mode-toggle-switch" id="modeSwitcher">
+                <div class="mode-toggle-thumb" id="modeThumb"></div>
+                <div class="mode-toggle-btn" id="toggleFeedBtn" onclick="switchMode('feed')">Feed</div>
+                <div class="mode-toggle-btn active" id="toggleChatBtn" onclick="switchMode('chat')">Chat</div>
+            </div>
+          <div class="header-icon-btn" onclick="toggleDotsMenu()" style="display:flex; align-items:center; gap:3px; background:none; border:none; width:auto; height:auto; padding:0 4px;">
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.3s;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.6s;">•</span>
+          </div>
+        </div>
+    </header>
+
+    <!-- TELEGRAM-STYLE HEADER DROPDOWN MENU -->
+    <div class="dots-menu-backdrop" id="dotsMenuBackdrop" onclick="toggleDotsMenu(false)"></div>
+    <div class="dots-dropdown-menu" id="dotsDropdownMenu">
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); openChatSearch();"><i class="fa-solid fa-magnifying-glass"></i> Search</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); boostGroup();"><i class="fa-solid fa-bolt"></i> Boost Group</div>
+        <div class="dots-menu-item" id="muteMenuItem" onclick="toggleDotsMenu(false); toggleMuteGroup();"><i class="fa-solid fa-volume-high" id="muteMenuIcon"></i> <span id="muteMenuLabel">Mute</span></div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); cycleChatTheme();"><i class="fa-solid fa-palette"></i> Chat Theme</div>
+        <div class="dots-menu-divider"></div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); toggleMembersModal(true);"><i class="fa-solid fa-users-gear"></i> Manage Members</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); showToast('Opening Market Directory', 'fa-store');"><i class="fa-solid fa-store"></i> Market Directory</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); openPaySheet();"><i class="fa-solid fa-vault"></i> Escrow Pay</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); openAjoTracker();"><i class="fa-solid fa-sack-dollar"></i> Contribution Tracker</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); openComposer('fund');"><i class="fa-solid fa-hand-holding-heart"></i> Start Fundraiser</div>
+        <div class="dots-menu-item" onclick="toggleDotsMenu(false); showToast('An offline queue is now active — your messages will send automatically once you reconnect.', 'fa-wifi');"><i class="fa-solid fa-cloud-arrow-up"></i> Offline Queue</div>
+        <div class="dots-menu-divider"></div>
+        <div class="dots-menu-item danger" onclick="toggleDotsMenu(false); clearGroupHistory();"><i class="fa-solid fa-broom"></i> Clear History</div>
+    </div>
+
+    <!-- PINNED MESSAGE BAR (chat mode) -->
+    <div class="pinned-bar" id="pinnedBar" onclick="scrollToPinned()">
+        <i class="fa-solid fa-thumbtack"></i>
+        <span class="pb-text" id="pinnedBarText"></span>
+        <i class="fa-solid fa-xmark pb-close" onclick="event.stopPropagation(); unpinMessage()"></i>
+    </div>
+    <div id="toastStack"></div>
+
+    <!-- ================= GROUP INFO OVERLAY — opens on header tap (WhatsApp-style, expanded) ================= -->
+    <div class="group-info-overlay" id="groupInfoOverlay">
+        <div class="gi-topbar">
+            <i class="fa-solid fa-arrow-left" onclick="closeGroupInfo()"></i>
+            <span style="flex:1;"></span>
+            <i class="fa-solid fa-pen" onclick="renameGroupPrompt()" style="font-size:15px;"></i>
+            <i class="fa-solid fa-ellipsis-vertical" onclick="toggleGiOptionsMenu()"></i>
+        </div>
+        <div class="gi-hero">
+            <img id="giAvatarImg" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80">
+            <div class="gi-name" id="giGroupNameLabel">Northern Innovators Hub 2026</div>
+            <div class="gi-meta" id="giMetaText">12.4K members</div>
+        </div>
+        <div class="gi-action-row">
+            <div class="gi-action" onclick="showToast('Starting voice chat...', 'fa-phone')"><div class="gia-icon"><i class="fa-solid fa-phone"></i></div><span>Voice chat</span></div>
+            <div class="gi-action" onclick="showToast('Starting video chat...', 'fa-video')"><div class="gia-icon"><i class="fa-solid fa-video"></i></div><span>Video chat</span></div>
+            <div class="gi-action" onclick="openInviteOverlay()"><div class="gia-icon"><i class="fa-solid fa-user-plus"></i></div><span>Invite</span></div>
+            <div class="gi-action" onclick="closeGroupInfo(); openChatSearch();"><div class="gia-icon"><i class="fa-solid fa-magnifying-glass"></i></div><span>Search</span></div>
+        </div>
+
+        <div class="gi-add-members-btn" onclick="openInviteOverlay()">
+            <i class="fa-solid fa-user-plus"></i> Add Members
+        </div>
+
+        <div class="gi-tabs-bar">
+            <div class="gi-tab active" data-tab="members" onclick="switchGiTab('members')">Members</div>
+            <div class="gi-tab" data-tab="media" onclick="switchGiTab('media')">Media</div>
+            <div class="gi-tab" data-tab="links" onclick="switchGiTab('links')">Links</div>
+            <div class="gi-tab" data-tab="docs" onclick="switchGiTab('docs')">Docs</div>
+        </div>
+
+        <div class="gi-tab-panel active" id="giPanelMembers"></div>
+
+        <div class="gi-tab-panel" id="giPanelMedia">
+            <div class="gi-media-tab-grid">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=300&auto=format&fit=crop&q=80">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80">
+            </div>
+        </div>
+
+        <div class="gi-tab-panel" id="giPanelLinks">
+            <div class="gi-empty-tab"><i class="fa-solid fa-link" style="font-size:22px; display:block; margin-bottom:10px; opacity:0.5;"></i>No links shared in this group yet.</div>
+        </div>
+
+        <div class="gi-tab-panel" id="giPanelDocs">
+            <div class="gi-empty-tab"><i class="fa-solid fa-file" style="font-size:22px; display:block; margin-bottom:10px; opacity:0.5;"></i>No documents shared in this group yet.</div>
+        </div>
+        <div style="height:30px;"></div>
+    </div>
+
+    <!-- GROUP INFO — OWN DROPDOWN MENU (separate from the chat header's dots menu) -->
+    <div class="dots-menu-backdrop" id="giOptionsBackdrop" onclick="toggleGiOptionsMenu(false)" style="z-index:23600;"></div>
+    <div class="dots-dropdown-menu gi-options-menu" id="giOptionsMenu" style="top:54px; z-index:23700;">
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); toggleMembersModal(true);"><i class="fa-solid fa-folder-open"></i> Manage storage <span class="dmi-chevron">1.6 MB</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Notification settings opened', 'fa-bell')"><i class="fa-solid fa-bell"></i> Notifications <span class="dmi-chevron">All</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Media visibility settings opened', 'fa-image')"><i class="fa-solid fa-image"></i> Media visibility</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('End-to-end encryption is active for this group', 'fa-lock')"><i class="fa-solid fa-lock"></i> Encryption</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Disappearing messages settings opened', 'fa-clock-rotate-left')"><i class="fa-solid fa-clock-rotate-left"></i> Disappearing messages <span class="dmi-chevron">Off</span></div>
+        <div class="dots-menu-item" id="chatLockMenuItem" onclick="toggleChatLockMenu()"><i class="fa-solid fa-lock" id="chatLockMenuIcon"></i> <span id="chatLockMenuLabel">Chat lock: Off</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Advanced chat privacy settings opened', 'fa-shield')"><i class="fa-solid fa-shield"></i> Advanced chat privacy <span class="dmi-chevron">Off</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Group permission settings opened', 'fa-gear')"><i class="fa-solid fa-gear"></i> Group permissions</div>
+        <div class="dots-menu-item" id="autoTranslateMenuItem" onclick="toggleAutoTranslateMenu()"><i class="fa-solid fa-globe" id="autoTranslateMenuIcon"></i> <span id="autoTranslateMenuLabel">Auto-translate: Off</span></div>
+        <div class="dots-menu-item" id="lowDataMenuItem" onclick="toggleLowDataMenu()"><i class="fa-solid fa-wifi" id="lowDataMenuIcon"></i> <span id="lowDataMenuLabel">Low-data mode: Off</span></div>
+        <div class="dots-menu-item" id="voiceA11yMenuItem" onclick="toggleVoiceA11yMenu()"><i class="fa-solid fa-microphone-lines" id="voiceA11yMenuIcon"></i> <span id="voiceA11yMenuLabel">Voice accessibility: Off</span></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); closeGroupInfo(); toggleEcosystem(true);"><i class="fa-solid fa-users-rectangle"></i> Add group to a community</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('New group created with the same members', 'fa-people-group')"><i class="fa-solid fa-people-group"></i> Create a similar group</div>
+        <div class="dots-menu-divider"></div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Auto-delete timer opened', 'fa-hourglass-half')"><i class="fa-solid fa-hourglass-half"></i> Auto-Delete</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Starting group video chat...', 'fa-video')"><i class="fa-solid fa-video"></i> Start Video chat</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); openGroupStatistics();"><i class="fa-solid fa-chart-line"></i> Statistics</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); switchGiTab('members'); showToast('Search within members', 'fa-magnifying-glass')"><i class="fa-solid fa-magnifying-glass"></i> Search Members</div>
+        <div class="dots-menu-item" onclick="toggleGiOptionsMenu(false); showToast('Added to Home Screen', 'fa-square-plus')"><i class="fa-solid fa-square-plus"></i> Add to Home Screen</div>
+        <div class="dots-menu-divider"></div>
+        <div class="dots-menu-item danger" onclick="toggleGiOptionsMenu(false); if(confirm('Leave this group?')){showToast('You have left the group', 'fa-right-from-bracket');}"><i class="fa-solid fa-right-from-bracket"></i> Leave Group</div>
+        <div class="dots-menu-item danger" onclick="toggleGiOptionsMenu(false); if(confirm('Delete this group for everyone? This cannot be undone.')){showToast('Group deleted', 'fa-trash');}"><i class="fa-solid fa-trash"></i> Delete Group</div>
+    </div>
+    <!-- INVITE MEMBERS OVERLAY -->
+    <div class="invite-overlay" id="inviteMembersOverlay">
+        <div class="invite-topbar" style="position:relative;">
+            <i class="fa-solid fa-arrow-left" onclick="closeInviteOverlay()"></i>
+            <img class="invite-group-avatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80">
+            <div>
+                <div class="invite-title">Invite members</div>
+                <div class="invite-subtitle">Northern Innovators Hub 2026</div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="toggleInviteSearchBar()" style="cursor:pointer; color:#fff; margin-left:auto;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+
+            <div class="search-bar-container" id="inviteSearchBarContainer">
+                <input type="text" id="inviteSearchInput" class="search-input" placeholder="Search for friends..." oninput="runInviteSearch(this.value)">
+                <div onclick="toggleInviteSearchBar()" style="cursor:pointer; color: var(--neon-cyan); display:flex; align-items:center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="invite-tabs-row" id="inviteTabsRow">
+            <div class="invite-tab active" data-tab="friends" onclick="switchInviteTab('friends')">Friends</div>
+            <div class="invite-tab" data-tab="suggested" onclick="switchInviteTab('suggested')">Suggested Friends</div>
+            <div class="invite-tab" data-tab="followers" onclick="switchInviteTab('followers')">Followers</div>
+            <div class="invite-tab" data-tab="groups" onclick="switchInviteTab('groups')">Groups</div>
+    </div>
+        <div class="invite-list" id="inviteListBody"></div>
+    </div>
+
+</parameter>
+    <!-- ================= CHAT MODE — MAIN CHAT FLOW AREA ================= -->
+    <div id="chat-flow"></div>
+
+    <!-- MESSAGE LONG-PRESS ACTION TRAY -->
+    <div class="msg-action-backdrop" id="msgActionBackdrop" onclick="closeMsgTray()"></div>
+    <div class="msg-action-tray" id="msgActionTray">
+        <div class="tray-emoji-row" id="trayEmojiRow"></div>
+        <div class="tray-action" onclick="trayReply()"><i class="fa-solid fa-reply"></i> Reply</div>
+        <div class="tray-action" onclick="trayForward()"><i class="fa-solid fa-share"></i> Forward</div>
+        <div class="tray-action" onclick="trayCopy()"><i class="fa-solid fa-copy"></i> Copy</div>
+        <div class="tray-action" onclick="trayStar()"><i class="fa-solid fa-star"></i> <span id="trayStarLabel">Star</span></div>
+        <div class="tray-action" onclick="trayPin()"><i class="fa-solid fa-thumbtack"></i> <span id="trayPinLabel">Pin</span></div>
+        <div class="tray-action danger" onclick="trayDelete()"><i class="fa-solid fa-trash"></i> Delete</div>
+    </div>
+
+    <!-- CHAT SEARCH OVERLAY -->
+    <div class="chat-search-overlay" id="chatSearchOverlay">
+        <div class="chat-search-head">
+            <i class="fa-solid fa-arrow-left" onclick="closeChatSearch()"></i>
+            <input type="text" id="chatSearchInput" placeholder="Search messages..." oninput="runChatSearch(this.value)" autofocus>
+        </div>
+        <div class="chat-search-results" id="chatSearchResults"></div>
+    </div>
+
+    <!-- ================= FEED MODE — FACEBOOK-GROUP STYLE VIEW ================= -->
+    <div id="feedView">
+        <div class="group-cover-wrap">
+            <img class="group-cover-img" id="groupCoverFeed" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80" alt="Group cover">
+            <div class="group-cover-fade"></div>
+        </div>
+
+        <div class="group-info-block">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div class="group-info-title" id="groupNameFeed">Northern Innovators Hub 2026</div>
+                <button class="invite-btn-fb" onclick="openInviteOverlay()" style="margin-top:0; flex-shrink:0;">
+                    <i class="fa-solid fa-user-plus"></i> Invite
+                </button>
+            </div>
+
+            <div class="group-meta-row">
+                <i class="fa-solid fa-earth-africa"></i>
+                <span id="groupMetaFeed">Public group · 12.4K members</span>
+            </div>
+
+            <div class="group-avatar-stack">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&auto=format&fit=crop&q=80" alt="">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&auto=format&fit=crop&q=80" alt="">
+                <span class="stack-count">+12.4K</span>
+            </div>
+
+            <div class="smart-box-highlights">
+                <div class="highlights-scroll">
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(0)"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Launch</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(1)"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Deals</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(2)"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Events</p>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-ring" onclick="viewGroupHighlight(3)"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=80" loading="lazy"></div>
+                        <p class="highlight-label">Tech</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="timeline-area"></div>
+    </div>
+    <!-- CREATE POST — FULL-SCREEN COMPOSER PAGE -->
+    <div class="composer-page" id="composerPage">
+        <i class="fa-solid fa-xmark composer-close-float" onclick="closeComposer()"></i>
+        <div class="composer-page-body" id="composerPageBody">
+            <div class="composer-user-row">
+                <img id="composerAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80" alt="You">
+                <div>
+                    <div class="cu-name" id="composerUserName">You</div>
+                    <div class="composer-audience"><i class="fa-solid fa-earth-africa"></i> <span id="composerAudienceLabel">Northern Innovators Hub 2026 · Everyone</span></div>
+                </div>
+            </div>
+            <div class="composer-pill-row">
+                <div class="composer-pill"><i class="fa-regular fa-clock"></i> Schedule</div>
+                <div class="composer-pill"><i class="fa-solid fa-earth-africa"></i> Public group</div>
+                <div class="composer-pill" id="composerAddGroupsPill" onclick="openAddGroupsOverlay()"><i class="fa-solid fa-plus"></i> Add groups<span class="cp-count-badge" id="cpGroupCountBadge">0</span></div>
+            </div>
+            <textarea id="composerText" placeholder="Create a public post..." oninput="validateComposer()"></textarea>
+
+            <div class="composer-media-preview" id="composerMediaPreview">
+                <img id="composerMediaImg" style="display:none;">
+                <video id="composerMediaVideo" style="display:none;" controls></video>
+                <i class="fa-solid fa-xmark cmp-remove" onclick="removeComposerMedia()"></i>
+                <div class="cmp-uploading" id="cmpUploadingBar" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i> Uploading...</div>
+            </div>
+            <input type="file" id="composerFileInput" accept="image/*,video/*" style="display:none" onchange="handleComposerFileSelect(event)">
+
+            <div class="composer-bg-row-wrap">
+                <i class="fa-solid fa-chevron-left cbb-back" id="composerBgBackBtn" onclick="scrollBgRowToStart()"></i>
+                <div class="composer-bg-row" id="composerBgRow">
+                    <div class="composer-bg-swatch bg-default active" data-bg="default" onclick="selectBgSwatch('default', this)"><i class="fa-solid fa-font"></i></div>
+                    <div class="composer-bg-swatch" data-bg="grad1" style="background:linear-gradient(135deg,#7b2ff7,#f107a3);" onclick="selectBgSwatch('grad1', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad2" style="background:linear-gradient(135deg,#ff416c,#ff4b2b);" onclick="selectBgSwatch('grad2', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad3" style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);" onclick="selectBgSwatch('grad3', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad4" style="background:linear-gradient(135deg,#4b1248,#f0729b);" onclick="selectBgSwatch('grad4', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad5" style="background:linear-gradient(135deg,#8e2de2,#4a00e0);" onclick="selectBgSwatch('grad5', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad6" style="background:linear-gradient(135deg,#f7971e,#ffd200);" onclick="selectBgSwatch('grad6', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad7" style="background:linear-gradient(135deg,#00c6ff,#0072ff);" onclick="selectBgSwatch('grad7', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad8" style="background:linear-gradient(180deg,#1a1006,#7a5210,#ffd76a);" onclick="selectBgSwatch('grad8', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad9" style="background:linear-gradient(135deg,#11998e,#38ef7d);" onclick="selectBgSwatch('grad9', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad10" style="background:linear-gradient(135deg,#ee0979,#ff6a00);" onclick="selectBgSwatch('grad10', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad11" style="background:linear-gradient(135deg,#360033,#0b8793);" onclick="selectBgSwatch('grad11', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad12" style="background:linear-gradient(135deg,#1e3c72,#2a5298);" onclick="selectBgSwatch('grad12', this)"></div>
+                    <div class="composer-bg-swatch" data-bg="grad13" style="background:linear-gradient(135deg,#e53935,#e35d5b);" onclick="selectBgSwatch('grad13', this)"></div>
+                    <div class="composer-bg-swatch premium" data-bg="prem1" style="background:linear-gradient(135deg,#ffd700,#ff8c00,#8b0000);" onclick="selectBgSwatch('prem1', this, true)"><i class="fa-solid fa-crown premium-lock"></i></div>
+                    <div class="composer-bg-swatch premium" data-bg="prem2" style="background:linear-gradient(135deg,#c0c0c0,#8a2be2,#000000);" onclick="selectBgSwatch('prem2', this, true)"><i class="fa-solid fa-crown premium-lock"></i></div>
+                    <div class="composer-bg-swatch premium" data-bg="prem3" style="background:linear-gradient(135deg,#00f5a0,#00d9f5,#7000ff);" onclick="selectBgSwatch('prem3', this, true)"><i class="fa-solid fa-crown premium-lock"></i></div>
+                </div>
+            </div>
+
+            <div class="composer-meta-chip-row" id="composerMetaChipRow"></div>
+
+            <div class="composer-extra-fields" id="composerPollField">
+                <input type="text" id="pollOpt1" placeholder="Option 1">
+                <input type="text" id="pollOpt2" placeholder="Option 2">
+                <input type="text" id="pollOpt3" placeholder="Option 3 (optional)">
+            </div>
+            <div class="composer-extra-fields" id="composerDealField">
+                <input type="text" id="dealTitle" placeholder="Product/service name">
+                <input type="text" id="dealPrice" placeholder="Price (e.g. $250)">
+            </div>
+            <div class="composer-extra-fields" id="composerEventField">
+                <input type="text" id="eventTitle" placeholder="Event name">
+                <input type="text" id="eventDate" placeholder="Date and time">
+            </div>
+            <div class="composer-extra-fields" id="composerLocationField">
+                <input type="text" id="composerLocationInput" placeholder="Type a location..." oninput="updateLocationChip()">
+            </div>
+
+            <div class="composer-action-list">
+                <div class="cal-item" onclick="triggerGalleryPicker()">
+                    <div class="cal-icon" style="color:#22c55e;"><i class="fa-solid fa-image"></i></div><span>Photo/Video</span>
+                </div>
+                <div class="cal-item" onclick="openTagPicker()">
+                    <div class="cal-icon" style="color:#3b82f6;"><i class="fa-solid fa-user-tag"></i></div><span>Tag people</span>
+                </div>
+                <div class="cal-item" onclick="toggleLocationField()">
+                    <div class="cal-icon" style="color:#ef4444;"><i class="fa-solid fa-location-dot"></i></div><span>Add location</span>
+                </div>
+                <div class="cal-item" onclick="openFeelingPicker()">
+                    <div class="cal-icon" style="color:#f59e0b;"><i class="fa-solid fa-face-smile"></i></div><span>Feeling/activity</span>
+                </div>
+                <div class="cal-item" onclick="setComposerType('poll')">
+                    <div class="cal-icon" style="color:var(--neon-cyan);"><i class="fa-solid fa-square-poll-vertical"></i></div><span>Create poll</span>
+                </div>
+                <div class="cal-item" onclick="setComposerType('event')">
+                    <div class="cal-icon" style="color:#60a5fa;"><i class="fa-solid fa-calendar-days"></i></div><span>Create Event</span>
+                </div>
+                <div class="cal-item" onclick="setComposerType('deal')">
+                    <div class="cal-icon" style="color:#f59e0b;"><i class="fa-solid fa-tags"></i></div><span>Deal Post</span>
+                </div>
+            </div>
+            <button class="composer-post-btn" id="composerPostBtn" onclick="submitComposer()" disabled>Post</button>
+        </div>
+    </div>
+    <!-- ADD GROUPS OVERLAY — real data from users/{me}/myGroups -->
+    <div class="composer-groups-overlay" id="addGroupsOverlay">
+        <i class="fa-solid fa-xmark cgo-close" onclick="closeAddGroupsOverlay()"></i>
+        <div class="cgo-header">
+            <span>Add groups</span>
+            <button class="cgo-save-btn" onclick="saveGroupSelection()">Save</button>
+        </div>
+        <div class="cgo-sub">
+            <strong>Post in more of your groups.</strong>
+            You can only post to additional groups that you are a member of.
+        </div>
+        <div class="cgo-list" id="addGroupsListBody">
+            <p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:40px 0;">Loading your groups...</p>
+        </div>
+    </div>
+
+    <!-- TAG PEOPLE SHEET — real data from group members -->
+    <div class="nx-sheet-backdrop" id="tagPickerSheet" onclick="closeSheet('tagPickerSheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span>Tag people</span><i class="fa-solid fa-xmark" onclick="closeSheet('tagPickerSheet')"></i></div>
+            <div class="nx-sheet-body" id="tagPickerBody"></div>
+        </div>
+    </div>
+
+    <!-- FEELING / ACTIVITY SHEET -->
+    <div class="nx-sheet-backdrop" id="feelingPickerSheet" onclick="closeSheet('feelingPickerSheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span>How are you feeling?</span><i class="fa-solid fa-xmark" onclick="closeSheet('feelingPickerSheet')"></i></div>
+            <div class="nx-sheet-body">
+                <div class="feeling-grid" id="feelingGrid"></div>
+            </div>
+        </div>
+    </div>
+    <!-- ESCROW SEND-MONEY SHEET (high-impact chat feature) -->
+    <div class="nx-sheet-backdrop" id="paySheet" onclick="closeSheet('paySheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span><i class="fa-solid fa-vault" style="color:var(--neon-green);"></i> Send Escrow-Protected Payment</span><i class="fa-solid fa-xmark" onclick="closeSheet('paySheet')"></i></div>
+            <div class="nx-sheet-body">
+                <div class="pay-row"><select id="payRecipient"></select></div>
+                <div class="pay-row"><input type="text" id="payAmount" placeholder="Amount (e.g. $50 or 5,000 Pts)"></div>
+                <div class="pay-row"><input type="text" id="payNote" placeholder="What is this for?"></div>
+                <div class="pay-summary"><i class="fa-solid fa-circle-info"></i> Funds are held in Nexus Escrow and only released to the recipient once you confirm the goods/service were received. Full refund if anything goes wrong.</div>
+                <button class="composer-post-btn" style="background:linear-gradient(135deg, var(--neon-green), #059669); color:#04140d;" onclick="submitEscrowPayment()">Lock Funds in Escrow</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GROUP CONTRIBUTION / AJO TRACKER SHEET (high-impact — matches real payment-group use case) -->
+    <div class="nx-sheet-backdrop" id="ajoSheet" onclick="closeSheet('ajoSheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span><i class="fa-solid fa-sack-dollar" style="color:var(--neon-cyan);"></i> Group Contribution Tracker</span><i class="fa-solid fa-xmark" onclick="closeSheet('ajoSheet')"></i></div>
+            <div class="nx-sheet-body">
+                <div class="pay-summary" style="margin-top:0;">Round <span id="ajoRoundLabel">3 of 6</span> · Next payout: <span id="ajoNextPayout"></span></div>
+                <div id="ajoListBody"></div>
+                <button class="composer-post-btn" style="margin-top:14px;" onclick="markMyContributionPaid()">Mark My Contribution as Paid</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FRAUD/SCAM SAFETY SCAN RESULT SHEET -->
+    <div class="nx-sheet-backdrop" id="safetySheet" onclick="closeSheet('safetySheet')">
+        <div class="nx-sheet" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head"><span><i class="fa-solid fa-shield-halved" style="color:var(--neon-green);"></i> Nexus Safety Scan</span><i class="fa-solid fa-xmark" onclick="closeSheet('safetySheet')"></i></div>
+            <div class="nx-sheet-body" id="safetySheetBody"></div>
+        </div>
+    </div>
+    <!-- ================= FLOATING COMMAND DOCK — chat mode only (slim redesign) ================= -->
+    <div class="dock-container" id="dockContainer">
+        <div class="reply-composer-bar" id="replyComposerBar">
+            <i class="fa-solid fa-reply" style="color:var(--neon-cyan);"></i>
+            <div class="rc-body">
+                <div class="rc-name" id="rcName"></div>
+                <div class="rc-text" id="rcText"></div>
+            </div>
+            <i class="fa-solid fa-xmark rc-close" onclick="cancelReply()"></i>
+        </div>
+
+        <div class="quick-tools-row" id="quickToolsRow">
+            <div class="qtool" onclick="triggerAttach('image')"><i class="fa-solid fa-image"></i> Photo</div>
+            <div class="qtool" onclick="triggerAttach('camera')"><i class="fa-solid fa-camera"></i> Camera</div>
+            <div class="qtool" onclick="triggerAttach('document')"><i class="fa-solid fa-file"></i> File</div>
+            <div class="qtool" onclick="triggerAttach('location')"><i class="fa-solid fa-location-dot"></i> Location</div>
+            <div class="qtool" onclick="triggerAttach('pay')" style="color:var(--neon-green); border-color:rgba(16,185,129,0.3);"><i class="fa-solid fa-vault" style="color:var(--neon-green);"></i> Send Money</div>
+            <div class="qtool" onclick="triggerAttach('sos')" style="color:#ef4444; border-color:rgba(239,68,68,0.3);"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> SOS</div>
+            <div class="qtool suggest" id="smartSuggestChip" style="display:none;" onclick="useSmartSuggestion()"><i class="fa-solid fa-wand-magic-sparkles"></i> <span id="smartSuggestText"></span></div>
+        </div>
+
+        <div class="neural-dock">
+            <div class="dock-add-btn" onclick="toggleEcosystem(true)"><i class="fa-solid fa-plus"></i></div>
+            <div class="dock-add-btn" onclick="openEmojiPicker()" style="font-size:15px;">🙂</div>
+            <textarea id="dockInput" rows="1" placeholder="Message..." oninput="handleDockInput(this)"></textarea>
+
+            <div class="record-bar" id="recordBar">
+                <div class="record-dot"></div>
+                <span class="record-time" id="recordTime">00:00</span>
+                <span class="record-hint">Slide left to cancel ⟵</span>
+                <span class="record-cancel" onclick="cancelVoiceRecording()">Cancel</span>
+            </div>
+
+            <div class="dock-actions">
+                <div class="dock-trigger-btn" id="micTrigger" onmousedown="startVoiceRecording()" onmouseup="stopVoiceRecording(true)" ontouchstart="startVoiceRecording()" ontouchend="stopVoiceRecording(true)"><i class="fa-solid fa-microphone"></i></div>
+                <button class="dock-trigger-btn send-trigger" id="sendTrigger" onclick="sendDockMessage()"><i class="fa-solid fa-arrow-up"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPREHENSIVE EMOJI PICKER — categorized like a global comprehensive pack -->
+    <div class="nx-sheet-backdrop" id="emojiBackdrop" onclick="closeSheet('emojiBackdrop')">
+        <div class="emoji-picker-sheet active" onclick="event.stopPropagation()">
+            <div class="nx-sheet-head" style="padding:0 0 4px;"><span>Emoji</span><i class="fa-solid fa-xmark" onclick="closeSheet('emojiBackdrop')"></i></div>
+            <div class="emoji-cat-tabs" id="emojiCatTabs"></div>
+            <div class="emoji-grid-scroll"><div class="emoji-grid" id="emojiGrid"></div></div>
+        </div>
+    </div>
+
+    <!-- SUPER-APP ECOSYSTEM MINI-TOOLS MODAL -->
+    <div class="ecosystem-drawer" id="ecosystemModal" onclick="toggleEcosystem(false)">
+        <div class="drawer-card" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; color:#fff; font-weight:800; font-size:14px; margin-bottom:10px;">
+                <span>Nexus Super-App Mini Tools</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleEcosystem(false)"></i>
+            </div>
+            <div class="drawer-grid">
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('Opening Market Directory', 'fa-store');">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Market Directory</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); triggerAttach('pay');">
+                    <i class="fa-solid fa-vault"></i>
+                    <span>Escrow Pay</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('TrustID Audit: this group is verified', 'fa-certificate');">
+                    <i class="fa-solid fa-certificate"></i>
+                    <span>TrustID Audit</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); toggleMembersModal(true);">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Manage Members</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openChatSearch();">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Search Group</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openAjoTracker();">
+                    <span class="hot-tag">HOT</span>
+                    <i class="fa-solid fa-sack-dollar"></i>
+                    <span>Contribution Tracker</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); triggerAttach('sos');">
+                    <span class="hot-tag">HOT</span>
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i>
+                    <span>Emergency SOS</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openComposer('job');">
+                    <span class="hot-tag">HOT</span>
+                    <i class="fa-solid fa-briefcase"></i>
+                    <span>Post a Job</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); openComposer('fund');">
+                    <span class="hot-tag">HOT</span>
+                    <i class="fa-solid fa-hand-holding-heart"></i>
+                    <span>Start Fundraiser</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); showToast('An offline queue is now active — your messages will send automatically once you reconnect.', 'fa-wifi');">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Offline Queue</span>
+                </div>
+                <div class="app-tool-item" onclick="toggleEcosystem(false); copyGroupLink();">
+                    <i class="fa-solid fa-link"></i>
+                    <span>Group Link</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEMBER MANAGEMENT & MODERATION DRAWER -->
+    <div class="ecosystem-drawer" id="membersModal" onclick="toggleMembersModal(false)">
+        <div class="drawer-card" onclick="event.stopPropagation()" style="max-height:78vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; color:#fff; font-weight:800; font-size:14px; margin-bottom:10px;">
+                <span>Members &amp; Administration</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleMembersModal(false)"></i>
+            </div>
+            <div class="member-tabs">
+                <div class="member-tab active" id="tabAll" onclick="switchMemberTab('all')">All Members (12.4K)</div>
+                <div class="member-tab" id="tabPending" onclick="switchMemberTab('pending')">Join Requests <span class="pending-count-badge" id="pendingCountBadge">3</span></div>
+            </div>
+            <div id="memberListPanel"></div>
+            <div id="pendingListPanel" style="display:none;"></div>
+        </div>
+    </div>
+    <!-- STORY / HIGHLIGHT VIEWER -->
+    <div class="story-viewer-overlay" id="storyViewerOverlay">
+        <div class="story-header">
+            <img id="storyUserAvatar" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80">
+            <div class="story-user-info">
+                <span class="story-username" id="storyUsername">Northern Innovators Hub 2026</span>
+                <span class="story-time" id="storyTime"></span>
+            </div>
+            <i class="fa-solid fa-xmark story-close" onclick="closeGroupStoryViewer()"></i>
+        </div>
+        <div class="story-media-wrap" id="storyMediaWrap">
+            <div class="story-tap-zone story-tap-left" onclick="prevGroupStory()"></div>
+            <div class="story-tap-zone story-tap-right" onclick="nextGroupStory()"></div>
+        </div>
+        <div class="story-footer" id="storyFooter">
+            <input type="text" class="story-reply-input" placeholder="Send message">
+            <i class="fa-regular fa-paper-plane"></i>
+        </div>
+    </div>
+
+</div>
+
+    <!-- SHARED POST CARD TEMPLATE — single source of truth for generatePostHTML().
+         The group pulls its post cards directly from this file — nothing custom. -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="post-card-template.js"></script>
+    <script src="router.js"></script>
+    <script src="group.js"></script>
+</body>
+</html>
