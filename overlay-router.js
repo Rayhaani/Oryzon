@@ -94,7 +94,8 @@
                     authReadyResolve: 'authReadyResolve_group',
                     authReadyPromise: 'authReadyPromise_group',
                     firebaseConfig: 'firebaseConfig_group',
-                    pressTimer: 'pressTimer_group'
+                    pressTimer: 'pressTimer_group',
+                    db: 'db_group'
                 }
             },
             styles: [
