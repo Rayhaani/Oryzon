@@ -91,10 +91,12 @@
             isolatedScript: {
                 src: 'group.js',
                 renameMap: {
-                    authReadyResolve: 'authReadyResolve_group',
-                    authReadyPromise: 'authReadyPromise_group',
-                    firebaseConfig: 'firebaseConfig_group',
-                    pressTimer: 'pressTimer_group'
+    authReadyResolve: 'authReadyResolve_group',
+    authReadyPromise: 'authReadyPromise_group',
+    firebaseConfig: 'firebaseConfig_group',
+    pressTimer: 'pressTimer_group',
+    db: 'db_group',
+    auth: 'auth_group'
                 }
             },
             styles: [
