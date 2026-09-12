@@ -190,19 +190,27 @@ function removeOverlayStyles(overlayKey) {
         link.remove();
     });
 }
-    const loadedRenamedScripts = new Set();
-    async function loadRenamedScript(src, renameMap) {
-        if (loadedRenamedScripts.has(src)) return;
-        const res = await fetch(src, { credentials: 'same-origin' });
-        let text = await res.text();
-        Object.keys(renameMap).forEach(function (from) {
-            const to = renameMap[from];
-            text = text.replace(new RegExp('\\b' + from + '\\b', 'g'), to);
-        });
-        const s = document.createElement('script');
-        s.textContent = text;
-        document.body.appendChild(s);
-        loadedRenamedScripts.add(src);
+    async function loadRenamedScript(src, renameMap, instanceKey) {
+    const res = await fetch(src, { credentials: 'same-origin' });
+    let text = await res.text();
+
+    Object.keys(renameMap).forEach(function (from) {
+        const to = renameMap[from] + '_' + instanceKey;
+
+        text = text.replace(
+            new RegExp('\\b' + from + '\\b', 'g'),
+            to
+        );
+    });
+
+    const s = document.createElement('script');
+
+    s.dataset.nexusGroupScript = instanceKey;
+    s.textContent = text;
+
+    document.body.appendChild(s);
+
+    return s;
     }
 
     async function buildOverlay(filename, url, key) {
@@ -233,9 +241,18 @@ function removeOverlayStyles(overlayKey) {
         }, Promise.resolve());
 
         if (cfg.isolatedScript) {
-            await loadRenamedScript(cfg.isolatedScript.src, cfg.isolatedScript.renameMap);
-        }
+            await loadRenamedScript(
+    cfg.isolatedScript.src,
+    cfg.isolatedScript.renameMap,
+    key.replace(/[^a-zA-Z0-9_$]/g, '_')
+);
 
+// Give group.js one frame to finish its DOM initialization,
+// Firestore listeners and tab/button wiring before the overlay is shown.
+await new Promise(function (resolve) {
+    requestAnimationFrame(resolve);
+});
+           
         return { key: key, filename: filename, el: wrap, lastHidden: null };
     }
 
@@ -301,7 +318,13 @@ if (prev) {
     prev.lastHidden = Date.now();
 }
        
-        let entry = cache.get(key);
+        let entry = null;
+
+// Always create a fresh Group instance.
+// group.js contains live Firestore listeners and DOM wiring,
+// so reusing an old detached DOM can leave the group with
+// hardcoded HTML and dead controls.
+entry = await buildOverlay(filename, url, key);
 
 if (!entry) {
     entry = await buildOverlay(filename, url, key);
