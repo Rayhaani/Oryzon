@@ -322,16 +322,18 @@ document.body.classList.add('nexus-overlay-open');
 
 hideHostChrome();
 
+window.history.pushState({ nexusOverlayKey: key }, '', url);
+
+if (window.NexusRouter && window.NexusRouter.runPageInit) {
+    window.NexusRouter.runPageInit(filename);
+}
+
 requestAnimationFrame(function () {
     entry.el.style.display = 'block';
 });
 
-        window.history.pushState({ nexusOverlayKey: key }, '', url);
-
-        if (window.NexusRouter && window.NexusRouter.runPageInit) window.NexusRouter.runPageInit(filename); 
-       scheduleSweep();
-        return true;
-    }
+scheduleSweep();
+return true;
 
     function close() {
     const entry = currentEntry();
