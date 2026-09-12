@@ -107,6 +107,7 @@
 
     const IDLE_DESTROY_MS = 10 * 60 * 1000;
     const cache = new Map();
+    const pageLifecycles = new Map(); // filename -> {init, destroy} captured from registerPage
     let overlayRoot = null;
     let activeKey = null;
     let sweepTimer = null;
@@ -233,7 +234,19 @@ function removeOverlayStyles(overlayKey) {
         }, Promise.resolve());
 
         if (cfg.isolatedScript) {
+            const originalRegisterPage = window.NexusRouter && window.NexusRouter.registerPage;
+            if (window.NexusRouter && !pageLifecycles.has(filename)) {
+                window.NexusRouter.registerPage = function (name, handlers) {
+                    if (name === filename) pageLifecycles.set(filename, handlers);
+                    if (originalRegisterPage) return originalRegisterPage.call(window.NexusRouter, name, handlers);
+                };
+            }
+
             await loadRenamedScript(cfg.isolatedScript.src, cfg.isolatedScript.renameMap);
+
+            if (window.NexusRouter && originalRegisterPage) {
+                window.NexusRouter.registerPage = originalRegisterPage;
+            }
         }
 
         return { key: key, filename: filename, el: wrap, lastHidden: null };
