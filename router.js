@@ -567,23 +567,12 @@
 
             runDestroy(currentPath);
 
-            // Kafin canza page, tabbatar an fita daga immersive-mode (post-card-template.js)
-            // — .immersive-back-btn dinsa ana kara shi kai tsaye a <body>, kuma babu
-            // wanda ke cire shi in mutum ya SPA-navigate kai tsaye (ba tare da danna
-            // back ko exitImmersive ba) — shi ne dalilin da yasa yake rage a screen
-            // bayan an bar page din da ya bude shi.
+            // Ajiye reference din immersive card (idan akwai) YANZU, amma
+            // KADA A KIRA exitImmersive() nan take — mun jinkirta shi zuwa
+            // BAYAN innerHTML swap kasa, domin kaucewa "flash" na gani
+            // (card ya koma post-card mode, ya bar space) kafin mu bar page.
             const _immersiveCard = document.querySelector('.post-card.immersive-mode');
-            if (_immersiveCard && typeof window.exitImmersive === 'function') {
-                // Kashe duk transition akan card din da yaransa KAFIN mu kira
-        // exitImmersive(), domin state cleanup dinsa yayi NAN TAKE ba
-        // tare da animated collapse ba — mun riga mun bar page din
-        // gaba daya ta hanyar SPA swap 'yan milliseconds bayan haka,
-        // don haka babu bukatar a nuna wannan transition ga user.
-        _immersiveCard.style.transition = 'none';
-        _immersiveCard.querySelectorAll('*').forEach(function (el) { el.style.transition = 'none'; });
-        void _immersiveCard.offsetHeight; // force reflow — tabbatar transition:none ya kama kafin exitImmersive
-        window.exitImmersive(_immersiveCard);
-            }
+
             const _storyDeck = document.getElementById('story-overlay-deck');
             if (_storyDeck && _storyDeck.style.display !== 'none' && typeof window.closeStoryDeck === 'function') {
                 window.closeStoryDeck();
@@ -595,6 +584,19 @@
             ]).catch(e => console.error(e));
            unloadPageOwnCss(currentPath);
 currentContentEl.innerHTML = newContent.innerHTML; 
+
+            // YANZU ne muke fita daga immersive-mode — card/video na
+            // immersive-mode YA RIGA YA BACE daga DOM (an maye gurbinsa da
+            // sabon content a layin sama) kafin exitImmersive() ya taba
+            // gudana, don haka BABU wani flash na gani. exitImmersive()
+            // har yanzu dole ya gudana domin cleanup dinsa (cire
+            // .immersive-back-btn daga <body>, dakatar da bidiyo/
+            // observers/listeners) — babu ko daya daga cikinsu da yake
+            // bukatar card din ya kasance a DOM domin ya yi aiki daidai.
+            if (_immersiveCard && typeof window.exitImmersive === 'function') {
+                window.exitImmersive(_immersiveCard);
+            }
+
            window.scrollTo(0, 0);
             if (newDoc.title) document.title = newDoc.title;
 
