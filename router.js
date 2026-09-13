@@ -567,11 +567,9 @@
 
             runDestroy(currentPath);
 
-            // Ajiye reference din immersive card (idan akwai) YANZU, amma
-            // KADA A KIRA exitImmersive() nan take — mun jinkirta shi zuwa
-            // BAYAN innerHTML swap kasa, domin kaucewa "flash" na gani
-            // (card ya koma post-card mode, ya bar space) kafin mu bar page.
-            const _immersiveCard = document.querySelector('.post-card.immersive-mode');
+                        // Cire immersive button kai tsaye ba tare da dawo da card din zuwa normal post-card ba
+            const _immersiveBtn = document.querySelector('.immersive-back-btn');
+            if (_immersiveBtn) _immersiveBtn.remove();
 
             const _storyDeck = document.getElementById('story-overlay-deck');
             if (_storyDeck && _storyDeck.style.display !== 'none' && typeof window.closeStoryDeck === 'function') {
@@ -583,19 +581,10 @@
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
             ]).catch(e => console.error(e));
            unloadPageOwnCss(currentPath);
-currentContentEl.innerHTML = newContent.innerHTML; 
 
-            // YANZU ne muke fita daga immersive-mode — card/video na
-            // immersive-mode YA RIGA YA BACE daga DOM (an maye gurbinsa da
-            // sabon content a layin sama) kafin exitImmersive() ya taba
-            // gudana, don haka BABU wani flash na gani. exitImmersive()
-            // har yanzu dole ya gudana domin cleanup dinsa (cire
-            // .immersive-back-btn daga <body>, dakatar da bidiyo/
-            // observers/listeners) — babu ko daya daga cikinsu da yake
-            // bukatar card din ya kasance a DOM domin ya yi aiki daidai.
-            if (_immersiveCard && typeof window.exitImmersive === 'function') {
-                window.exitImmersive(_immersiveCard);
-            }
+            // Tsakar sauya shafi - DOM din bidiyo da card zasu bace gaba daya a nan
+            currentContentEl.innerHTML = newContent.innerHTML; 
+           
 
            window.scrollTo(0, 0);
             // Update history + internal state.
