@@ -597,7 +597,11 @@ currentContentEl.innerHTML = newContent.innerHTML;
                 window.exitImmersive(_immersiveCard);
             }
 
-           window.scrollTo(0, 0);
+           // Force INSTANT scroll — kada mu bari ko wace CSS
+           // "scroll-behavior: smooth" a wani global stylesheet ta
+           // sanya wannan ya yi animate/pulling-down effect lokacin
+           // da muke fita daga babban scroll offset na immersive video.
+           window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
             if (newDoc.title) document.title = newDoc.title;
 
             // Update history + internal state.
