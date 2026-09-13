@@ -582,9 +582,8 @@
                 loadStylesheetsAll(PAGE_STYLES[targetPath]),
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
             ]).catch(e => console.error(e));
+           currentContentEl.innerHTML = newContent.innerHTML; 
            unloadPageOwnCss(currentPath);
-currentContentEl.innerHTML = newContent.innerHTML; 
-
             // YANZU ne muke fita daga immersive-mode — card/video na
             // immersive-mode YA RIGA YA BACE daga DOM (an maye gurbinsa da
             // sabon content a layin sama) kafin exitImmersive() ya taba
