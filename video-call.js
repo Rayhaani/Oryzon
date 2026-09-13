@@ -469,7 +469,7 @@ const NexusVideo = (() => {
                 <!-- Local Video (PiP - Picture in Picture) -->
                 <div id="nexus-pip-container" style="
                     position:absolute;
-                    top:16px;right:16px;
+                    top:100px;right:16px;
                     width:110px;height:160px;
                     border-radius:18px;
                     overflow:hidden;
