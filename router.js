@@ -574,7 +574,15 @@
             // bayan an bar page din da ya bude shi.
             const _immersiveCard = document.querySelector('.post-card.immersive-mode');
             if (_immersiveCard && typeof window.exitImmersive === 'function') {
-                window.exitImmersive(_immersiveCard);
+                // Kashe duk transition akan card din da yaransa KAFIN mu kira
+        // exitImmersive(), domin state cleanup dinsa yayi NAN TAKE ba
+        // tare da animated collapse ba — mun riga mun bar page din
+        // gaba daya ta hanyar SPA swap 'yan milliseconds bayan haka,
+        // don haka babu bukatar a nuna wannan transition ga user.
+        _immersiveCard.style.transition = 'none';
+        _immersiveCard.querySelectorAll('*').forEach(function (el) { el.style.transition = 'none'; });
+        void _immersiveCard.offsetHeight; // force reflow — tabbatar transition:none ya kama kafin exitImmersive
+        window.exitImmersive(_immersiveCard);
             }
             const _storyDeck = document.getElementById('story-overlay-deck');
             if (_storyDeck && _storyDeck.style.display !== 'none' && typeof window.closeStoryDeck === 'function') {
