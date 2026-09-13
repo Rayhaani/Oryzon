@@ -505,8 +505,7 @@ const NexusVideo = (() => {
                     z-index:10;
                     transition:opacity 0.3s;
                 ">
-                    <div>
-                       <div style="position:absolute;left:0;right:0;top:50px;text-align:center;pointer-events:none;">
+                    <div style="position:absolute;left:0;right:0;top:50px;text-align:center;pointer-events:none;">
                         <div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:0.2px;">${name}</div>
                         <div id="nexus-video-timer" style="font-size:14px;color:rgba(255,255,255,0.75);margin-top:2px;display:none;">00:00</div>
                     </div>
