@@ -521,7 +521,14 @@
         if (targetPath === currentPath && pushHistory) return;
 
         isNavigating = true;
-        showNavProgress();
+showNavProgress();
+
+// Hide the OLD page immediately while the new SPA page is loading.
+// This prevents the previous page from flashing during navigation.
+const _spaOldContent = document.querySelector(CONTENT_SELECTOR);
+if (_spaOldContent) {
+    _spaOldContent.style.visibility = 'hidden';
+}
 
         try {
             let html = pageCache.get(targetPath);
@@ -586,9 +593,14 @@
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
             ]).catch(e => console.error(e));
            unloadPageOwnCss(currentPath);
-currentContentEl.innerHTML = newContent.innerHTML; 
-           window.scrollTo(0, 0);
-            if (newDoc.title) document.title = newDoc.title;
+          currentContentEl.innerHTML = newContent.innerHTML;
+
+// Show the NEW page only after its HTML has replaced the old page.
+currentContentEl.style.visibility = 'visible';
+
+window.scrollTo(0, 0);
+            
+           if (newDoc.title) document.title = newDoc.title;
 
             // Update history + internal state.
             if (pushHistory) {
@@ -618,10 +630,18 @@ currentContentEl.innerHTML = newContent.innerHTML;
         } catch (err) {
             console.error('Router navigation error, falling back to full reload:', err);
             fullReload(url);
-        } finally {
-            isNavigating = false;
-            hideNavProgress();
-            if (pendingNav) {
+           } finally {
+    isNavigating = false;
+
+    // Safety: never leave the page hidden after navigation finishes.
+    const _spaContentFinal = document.querySelector(CONTENT_SELECTOR);
+    if (_spaContentFinal) {
+        _spaContentFinal.style.visibility = 'visible';
+    }
+
+    hideNavProgress();
+            
+           if (pendingNav) {
                 const next = pendingNav;
                 pendingNav = null;
                 navigateTo(next.url, next.options);
