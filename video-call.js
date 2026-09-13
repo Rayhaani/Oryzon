@@ -19,10 +19,10 @@ const NexusVideo = (() => {
     let controlsVisible = true;
     let effectsLoaded = false;
     let bgLoaded = false;
-    let bgPanelOpen = false;
     let activeBgId = 'none';
-    let filterPanelOpen = false;
     let activeFilterId = 'none';
+    let fxPanelOpen = false;
+    let activeFxTab = 'filters';
 
     const iceConfig = {
         iceServers: [
@@ -260,13 +260,14 @@ const NexusVideo = (() => {
         stopCallTimer();
         if (controlsTimeout) clearTimeout(controlsTimeout);
         if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
-        filterPanelOpen = false; activeFilterId = 'none';
+        activeFilterId = 'none';
         const filterTrack = document.getElementById('nexus-filter-track');
         if (filterTrack) filterTrack.dataset.built = '';
         if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
-        bgPanelOpen = false; activeBgId = 'none';
+        activeBgId = 'none';
         const bgTrack = document.getElementById('nexus-bg-track');
-        if (bgTrack) bgTrack.dataset.built = '';       
+        if (bgTrack) bgTrack.dataset.built = '';
+        fxPanelOpen = false; activeFxTab = 'filters';
         callDocRef = null; callRole = null;
         isMuted = false; isCameraOff = false; isFrontCamera = true;
         if (msg) {
@@ -509,16 +510,31 @@ const NexusVideo = (() => {
                         <div style="font-size:17px;font-weight:600;color:#fff;">${name}</div>
                         <div id="nexus-video-timer" style="font-size:13px;color:rgba(255,255,255,0.7);display:none;">00:00</div>
                     </div>
-                    <div style="
-                        background:rgba(255,255,255,0.15);
-                        backdrop-filter:blur(10px);
-                        border-radius:20px;
-                        padding:6px 12px;
-                        font-size:12px;color:#fff;
-                        display:flex;align-items:center;gap:5px;
-                    ">
-                        <div style="width:6px;height:6px;border-radius:50%;background:#34c759;animation:blink 1.5s infinite;"></div>
-                        Live
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div id="nexus-vid-fx-btn" onclick="event.stopPropagation();NexusVideo.toggleFxPanel()" style="
+                            width:38px;height:38px;border-radius:50%;
+                            background:rgba(255,255,255,0.15);
+                            backdrop-filter:blur(10px);
+                            display:flex;align-items:center;justify-content:center;
+                            cursor:pointer;
+                            border:1px solid rgba(255,255,255,0.2);
+                        ">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="white" stroke="none">
+                                <path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6L12 2z"/>
+                                <path d="M19 13l.9 2.7L22.5 17l-2.6.8L19 20.5l-.9-2.7L15.5 17l2.6-.8L19 13z"/>
+                            </svg>
+                        </div>
+                        <div style="
+                            background:rgba(255,255,255,0.15);
+                            backdrop-filter:blur(10px);
+                            border-radius:20px;
+                            padding:6px 12px;
+                            font-size:12px;color:#fff;
+                            display:flex;align-items:center;gap:5px;
+                        ">
+                            <div style="width:6px;height:6px;border-radius:50%;background:#34c759;animation:blink 1.5s infinite;"></div>
+                            Live
+                        </div>
                     </div>
                 </div>
 
@@ -588,46 +604,7 @@ const NexusVideo = (() => {
                       <div style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;">Camera</div>
                     </div>
 
-                    <!-- Filters -->
-                    <div style="text-align:center;">
-                        <div id="nexus-vid-filter-btn" onclick="event.stopPropagation();NexusVideo.toggleFilterPanel()" style="
-                            width:58px;height:58px;border-radius:50%;
-                            background:rgba(255,255,255,0.2);
-                            backdrop-filter:blur(10px);
-                            display:flex;align-items:center;justify-content:center;
-                            cursor:pointer;margin:0 auto 8px;
-                            border:1px solid rgba(255,255,255,0.2);
-                            transition:background 0.2s;
-                        ">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="4"/>
-                                <path d="M2 12h2M20 12h2M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
-                            </svg>
-                        </div>
-                        <div style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;">Filters</div>
-                    </div>
-
-                    <!-- Background -->
-                    <div style="text-align:center;">
-                        <div id="nexus-vid-bg-btn" onclick="event.stopPropagation();NexusVideo.toggleBgPanel()" style="
-                            width:58px;height:58px;border-radius:50%;
-                            background:rgba(255,255,255,0.2);
-                            backdrop-filter:blur(10px);
-                            display:flex;align-items:center;justify-content:center;
-                            cursor:pointer;margin:0 auto 8px;
-                            border:1px solid rgba(255,255,255,0.2);
-                            transition:background 0.2s;
-                        ">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                <circle cx="8.5" cy="8.5" r="1.5"/>
-                                <path d="M21 15l-5-5L5 21"/>
-                            </svg>
-                        </div>
-                        <div style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;">Background</div>
-                    </div>
-
-                    <!-- Flip Camera -->  
+                    <!-- Flip Camera -->
                     <div style="text-align:center;">
                         <div onclick="event.stopPropagation();NexusVideo.flipCamera()" style="
                             width:58px;height:58px;border-radius:50%;
@@ -647,30 +624,8 @@ const NexusVideo = (() => {
                     </div>
                 </div>
 
-                <!-- Filter Panel (yana bayyana a MAZAUNIN Bottom Controls, ba wani sheet daban ba) -->
-                <div id="nexus-filter-panel" style="
-                    position:absolute;bottom:0;left:0;right:0;
-                    padding:14px 20px 50px;
-                    background:linear-gradient(0deg,rgba(0,0,0,0.85) 0%,transparent 100%);
-                    display:none;
-                    flex-direction:column;
-                    opacity:0;
-                    transition:opacity 0.25s ease;
-                    z-index:10;
-                " onclick="event.stopPropagation()">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                        <div style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;">Filters</div>
-                        <div onclick="event.stopPropagation();NexusVideo.toggleFilterPanel()" style="
-                            color:#fff;font-size:13px;font-weight:600;
-                            background:rgba(255,255,255,0.15);
-                            padding:6px 16px;border-radius:16px;cursor:pointer;
-                        ">Done</div>
-                    </div>
-                   <div id="nexus-filter-track" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
-                </div>
-
-                <!-- Background Panel (yana bayyana a MAZAUNIN Bottom Controls, kamar Filters) -->
-                <div id="nexus-bg-panel" style="
+                <!-- Unified FX Panel: Filters | Background (tabs, kamar WhatsApp) -->
+                <div id="nexus-fx-panel" style="
                     position:absolute;bottom:0;left:0;right:0;
                     padding:14px 20px 50px;
                     background:linear-gradient(0deg,rgba(0,0,0,0.85) 0%,transparent 100%);
@@ -681,14 +636,18 @@ const NexusVideo = (() => {
                     z-index:10;
                 " onclick="event.stopPropagation()">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                        <div style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;">Background</div>
-                        <div onclick="event.stopPropagation();NexusVideo.toggleBgPanel()" style="
+                        <div style="display:flex;gap:20px;">
+                            <div id="nexus-fx-tab-filters" onclick="event.stopPropagation();NexusVideo.switchFxTab('filters')" style="color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid #fff;">Filters</div>
+                            <div id="nexus-fx-tab-bg" onclick="event.stopPropagation();NexusVideo.switchFxTab('bg')" style="color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid transparent;">Background</div>
+                        </div>
+                        <div onclick="event.stopPropagation();NexusVideo.toggleFxPanel()" style="
                             color:#fff;font-size:13px;font-weight:600;
                             background:rgba(255,255,255,0.15);
                             padding:6px 16px;border-radius:16px;cursor:pointer;
                         ">Done</div>
                     </div>
-                    <div id="nexus-bg-track" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
+                    <div id="nexus-filter-track" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
+                    <div id="nexus-bg-track" style="display:none;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
                     <input type="file" id="nexus-bg-file-input" accept="image/*" style="display:none;" onchange="NexusVideo.handleCustomBgUpload(this)">
                 </div>
             </div>
@@ -740,33 +699,56 @@ const NexusVideo = (() => {
         });
     }
 
-   async function toggleFilterPanel() {
-        try {
-            await loadEffectsEngine();
-        } catch (err) {
-            alert('Filter engine ta kasa loda: ' + err.message);
-            return;
-        }
-        const panel = document.getElementById('nexus-filter-panel');
+   async function toggleFxPanel() {
+        const panel = document.getElementById('nexus-fx-panel');
         const controls = document.getElementById('nexus-video-controls');
         if (!panel) return;
-        filterPanelOpen = !filterPanelOpen;
-        if (filterPanelOpen) {
-            buildFilterPanel();
-            if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
+        fxPanelOpen = !fxPanelOpen;
+        if (fxPanelOpen) {
             if (controls) controls.style.display = 'none';
             panel.style.display = 'flex';
             requestAnimationFrame(() => { panel.style.opacity = '1'; });
             if (controlsTimeout) clearTimeout(controlsTimeout);
-            const localVideoEl = document.getElementById('nexus-local-video');
-            if (localVideoEl && localStream) NexusVideoEffects.startProcessing(localVideoEl);
+            await switchFxTab(activeFxTab, true);
         } else {
             panel.style.opacity = '0';
             setTimeout(() => { panel.style.display = 'none'; }, 250);
             if (controls) controls.style.display = 'flex';
+            if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
+            if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
             scheduleHideControls();
         }
-   }
+    }
+
+    async function switchFxTab(tab, forceReload) {
+        if (!forceReload && tab === activeFxTab) return;
+        activeFxTab = tab;
+        const tabFilters = document.getElementById('nexus-fx-tab-filters');
+        const tabBg = document.getElementById('nexus-fx-tab-bg');
+        const filterTrack = document.getElementById('nexus-filter-track');
+        const bgTrack = document.getElementById('nexus-bg-track');
+        const localVideoEl = document.getElementById('nexus-local-video');
+
+        if (tab === 'filters') {
+            if (tabFilters) tabFilters.style.cssText = 'color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid #fff;';
+            if (tabBg) tabBg.style.cssText = 'color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid transparent;';
+            if (filterTrack) filterTrack.style.display = 'flex';
+            if (bgTrack) bgTrack.style.display = 'none';
+            if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
+            try { await loadEffectsEngine(); } catch (err) { alert('Filter engine ta kasa loda: ' + err.message); return; }
+            buildFilterPanel();
+            if (localVideoEl && localStream) NexusVideoEffects.startProcessing(localVideoEl);
+        } else {
+            if (tabBg) tabBg.style.cssText = 'color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid #fff;';
+            if (tabFilters) tabFilters.style.cssText = 'color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid transparent;';
+            if (bgTrack) bgTrack.style.display = 'flex';
+            if (filterTrack) filterTrack.style.display = 'none';
+            if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
+            try { await loadBgEngine(); } catch (err) { alert('Background engine ta kasa loda: ' + err.message); return; }
+            buildBgPanel();
+            if (localVideoEl && localStream) NexusVideoBackground.startProcessing(localVideoEl);
+        }
+    }
 
     function buildFilterPanel() {
         const track = document.getElementById('nexus-filter-track');
@@ -832,34 +814,6 @@ const NexusVideo = (() => {
             s.onerror = () => reject(new Error('Failed to load video-call-bg.js'));
             document.body.appendChild(s);
         });
-    }
-
-    async function toggleBgPanel() {
-        try {
-            await loadBgEngine();
-        } catch (err) {
-            alert('Background engine ta kasa loda: ' + err.message);
-            return;
-        }
-        const panel = document.getElementById('nexus-bg-panel');
-        const controls = document.getElementById('nexus-video-controls');
-        if (!panel) return;
-        bgPanelOpen = !bgPanelOpen;
-        if (bgPanelOpen) {
-            buildBgPanel();
-            if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
-            if (controls) controls.style.display = 'none';
-            panel.style.display = 'flex';
-            requestAnimationFrame(() => { panel.style.opacity = '1'; });
-            if (controlsTimeout) clearTimeout(controlsTimeout);
-            const localVideoEl = document.getElementById('nexus-local-video');
-            if (localVideoEl && localStream) NexusVideoBackground.startProcessing(localVideoEl);
-        } else {
-            panel.style.opacity = '0';
-            setTimeout(() => { panel.style.display = 'none'; }, 250);
-            if (controls) controls.style.display = 'flex';
-            scheduleHideControls();
-        }
     }
 
     function buildBgPanel() {
@@ -1140,9 +1094,9 @@ const NexusVideo = (() => {
         toggleCamera,
         flipCamera,
         toggleControls,
-        toggleFilterPanel,
+        toggleFxPanel,
+        switchFxTab,
         selectFilter,
-        toggleBgPanel,
         selectBackground,
         handleCustomBgUpload
     };
