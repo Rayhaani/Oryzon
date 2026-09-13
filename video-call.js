@@ -469,7 +469,7 @@ const NexusVideo = (() => {
                 <!-- Local Video (PiP - Picture in Picture) -->
                 <div id="nexus-pip-container" style="
                     position:absolute;
-                    top:100px;right:16px;
+                    top:150px;right:16px;
                     width:110px;height:160px;
                     border-radius:18px;
                     overflow:hidden;
@@ -500,18 +500,18 @@ const NexusVideo = (() => {
                 <!-- Top Bar -->
                 <div id="nexus-video-topbar" style="
                     position:absolute;top:0;left:0;right:0;
-                    padding:50px 20px 20px;
+                    min-height:110px;
                     background:linear-gradient(180deg,rgba(0,0,0,0.7) 0%,transparent 100%);
-                    display:flex;align-items:center;justify-content:space-between;
                     z-index:10;
                     transition:opacity 0.3s;
                 ">
                     <div>
-                        <div style="font-size:17px;font-weight:600;color:#fff;">${name}</div>
-                        <div id="nexus-video-timer" style="font-size:13px;color:rgba(255,255,255,0.7);display:none;">00:00</div>
+                       <div style="position:absolute;left:0;right:0;top:50px;text-align:center;pointer-events:none;">
+                        <div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:0.2px;">${name}</div>
+                        <div id="nexus-video-timer" style="font-size:14px;color:rgba(255,255,255,0.75);margin-top:2px;display:none;">00:00</div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <div id="nexus-vid-fx-btn" onclick="event.stopPropagation();NexusVideo.toggleFxPanel()" style="
+                    <div style="position:absolute;top:50px;right:20px;display:flex;flex-direction:column;align-items:center;gap:12px;"> 
+                            <div id="nexus-vid-fx-btn" onclick="event.stopPropagation();NexusVideo.toggleFxPanel()" style="
                             width:38px;height:38px;border-radius:50%;
                             background:rgba(255,255,255,0.15);
                             backdrop-filter:blur(10px);
