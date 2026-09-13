@@ -565,8 +565,6 @@
                 preloadScript = scriptList.shift();
             }
 
-            runDestroy(currentPath);
-
             // Ajiye reference din immersive card (idan akwai) YANZU, amma
             // KADA A KIRA exitImmersive() nan take — mun jinkirta shi zuwa
             // BAYAN innerHTML swap kasa, domin kaucewa "flash" na gani
@@ -584,6 +582,12 @@
             ]).catch(e => console.error(e));
            unloadPageOwnCss(currentPath);
 currentContentEl.innerHTML = newContent.innerHTML; 
+
+         // Jinkirta destroy() shima zuwa BAYAN swap — dalili guda
+            // daya da exitImmersive() kasa: kada wata visual cleanup
+            // (misali cire immersive-mode class, dakatar da video UI)
+            // da destroy() ke yi ta bayyana KAFIN mu bar page din.
+            runDestroy(currentPath);
 
             // YANZU ne muke fita daga immersive-mode — card/video na
             // immersive-mode YA RIGA YA BACE daga DOM (an maye gurbinsa da
