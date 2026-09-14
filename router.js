@@ -499,11 +499,21 @@
     // ------------------------------------------------------------
     let pendingNav = null;
 
-    async function navigateTo(url, options) {
+   async function navigateTo(url, options) {
         options = options || {};
         const pushHistory = options.pushHistory !== false;
 
-        if (isNavigating) {
+        // GYARA FLASH: nan take, KAFIN ko wane fetch/await ya fara, mu boye
+        // (visibility:hidden) duk wani immersive-mode card/back-btn da ke
+        // nan take a DOM — domin ko wane irin jinkiri/paint tsakanin nan da
+        // innerHTML swap kasa (fetch na page HTML, ko stylesheet loading),
+        // BABU wani frame da zai nuna card ya koma post-card mode/ya bar
+        // space, domin an riga an boye shi tun farko, kafin a taba shafa
+        // immersive-mode class dinsa ko wani abu.
+        document.querySelectorAll('.post-card.immersive-mode, .immersive-back-btn')
+            .forEach(function (el) { el.style.visibility = 'hidden'; });
+
+        if (isNavigating) { 
             // Wani navigation yana ci gaba a yanzu (misali health.html
             // yana loda scripts dinsa). Maimakon a WATSAR da wannan
             // request kai tsaye (wanda ke haddasa history desync idan
