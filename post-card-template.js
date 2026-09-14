@@ -349,7 +349,7 @@
 .post-card.immersive-mode {
     position: fixed !important;
     top: 0 !important; left: 0 !important;
-    width: 100vw !important; height: 100vh !important; height: 100dvh !important;
+    width: 100vw !important; height: 100vh !important; height: var(--real-vh, 100dvh) !important;
     z-index: 5000 !important;
     border-radius: 0 !important;
     margin: 0 !important;
@@ -363,7 +363,7 @@
         .immersive-mode .post-media {
             position: absolute !important;
             top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100vh !important; height: 100dvh !important;
+            width: 100vw !important; height: 100vh !important; height: var(--real-vh, 100dvh) !important;
             max-height: none !important;
             object-fit: cover !important;
             border-radius: 0 !important;
@@ -448,12 +448,12 @@
 
         /* ===== HAKKUNAN MAGANCE MATSALAR BLACK SPACE ===== */
         body.nx-video-immersive-active {
-            overflow: hidden !important;
-            height: 100vh !important;
-            height: 100dvh !important;
-            max-height: 100vh !important;
-            max-height: 100dvh !important;
-        }
+    overflow: hidden !important;
+    height: 100vh !important;
+    height: var(--real-vh, 100dvh) !important;
+    max-height: 100vh !important;
+    max-height: var(--real-vh, 100dvh) !important;
+}
 
            /* ===== CAPSULE BUTTONS — Clean inside pill ===== */
 .post-capsule, .capsule {
@@ -1144,6 +1144,20 @@ const icon = event.currentTarget.querySelector('i');
     if (navigator.vibrate) navigator.vibrate(10);
 };
 
+// ===== REAL VIEWPORT HEIGHT — daidaita bambancin toolbar tsakanin browsers =====
+(function() {
+    function nxSetRealVh() {
+        const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+        document.documentElement.style.setProperty('--real-vh', h + 'px');
+    }
+    nxSetRealVh();
+    window.addEventListener('resize', nxSetRealVh);
+    window.addEventListener('orientationchange', nxSetRealVh);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', nxSetRealVh);
+        window.visualViewport.addEventListener('scroll', nxSetRealVh);
+    }
+})();
 
 // ============================================================
 // 5. MASTER generatePostHTML() — SINGLE SOURCE OF TRUTH
@@ -1534,7 +1548,7 @@ window.toggleImmersive = function(card) {
             video.style.cssText = `
                 position: fixed !important;
                 top: 0 !important; left: 0 !important;
-                width: 100vw !important; height: 100vh !important; height: 100dvh !important;
+                width: 100vw !important; height: 100vh !important; height: var(--real-vh, 100dvh) !important;
                 max-height: none !important; min-height: unset !important;
                 object-fit: cover !important; border-radius: 0 !important;
                 z-index: 4999 !important; background: #000 !important; margin: 0 !important;
