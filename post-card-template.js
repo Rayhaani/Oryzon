@@ -1582,9 +1582,16 @@ window.toggleImmersive = function(card) {
     }
 };
 
-
 window.exitImmersive = function(card) {
+
+    if (window.__nexusSpaNavigating === true) {
+        return;
+    }
+
     const video = card.querySelector('video');
+    const footer = document.getElementById('instaFooter');
+
+    card.classList.remove('immersive-mode');
     const footer = document.getElementById('instaFooter');
 
     card.classList.remove('immersive-mode');
