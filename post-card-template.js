@@ -3,6 +3,20 @@
    Ko'ina da aka canja wannan fayil, duka homepage da
    profile timeline za su karba canjin kai tsaye.
    ============================================================ */
+// ===== REAL VIEWPORT HEIGHT — daidaita bambancin toolbar tsakanin browsers =====
+(function() {
+    function nxSetRealVh() {
+        const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+        document.documentElement.style.setProperty('--real-vh', h + 'px');
+    }
+    nxSetRealVh();
+    window.addEventListener('resize', nxSetRealVh);
+    window.addEventListener('orientationchange', nxSetRealVh);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', nxSetRealVh);
+        window.visualViewport.addEventListener('scroll', nxSetRealVh);
+    }
+})();
 
 // 1. INJECT SHARED CSS - Duk CSS na post card yana nan kadai
 (function injectPostCardStyles() {
@@ -865,7 +879,7 @@
            immersive mode, ta soke inline 0px din JS ta hanyar !important. */
         .immersive-mode .post-media-carousel.grid-mode {
             height: 100vh !important;
-            height: 100dvh !important;
+            height: var(--real-vh, 100dvh) !important;
         }
     `;
     document.head.appendChild(style);
@@ -1143,21 +1157,6 @@ const icon = event.currentTarget.querySelector('i');
     });
     if (navigator.vibrate) navigator.vibrate(10);
 };
-
-// ===== REAL VIEWPORT HEIGHT — daidaita bambancin toolbar tsakanin browsers =====
-(function() {
-    function nxSetRealVh() {
-        const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
-        document.documentElement.style.setProperty('--real-vh', h + 'px');
-    }
-    nxSetRealVh();
-    window.addEventListener('resize', nxSetRealVh);
-    window.addEventListener('orientationchange', nxSetRealVh);
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', nxSetRealVh);
-        window.visualViewport.addEventListener('scroll', nxSetRealVh);
-    }
-})();
 
 // ============================================================
 // 5. MASTER generatePostHTML() — SINGLE SOURCE OF TRUTH
