@@ -447,9 +447,11 @@
         video::-webkit-media-controls-start-playback-button { display: none !important; }
 
         /* ===== HAKKUNAN MAGANCE MATSALAR BLACK SPACE ===== */
-        body:has(video[style*="position: fixed"]) {
+        body.nx-video-immersive-active {
             overflow: hidden !important;
+            height: 100vh !important;
             height: 100dvh !important;
+            max-height: 100vh !important;
             max-height: 100dvh !important;
         }
 
@@ -862,6 +864,7 @@
            rule tana bayar da tsayi na gaskiya ga grid view musamman a
            immersive mode, ta soke inline 0px din JS ta hanyar !important. */
         .immersive-mode .post-media-carousel.grid-mode {
+            height: 100vh !important;
             height: 100dvh !important;
         }
     `;
@@ -1523,6 +1526,7 @@ window.toggleImmersive = function(card) {
         card.style.minHeight = card.offsetHeight + 'px';
         card._savedScrollTop = window.scrollY || window.pageYOffset;
         card.classList.add('immersive-mode');
+       document.body.classList.add('nx-video-immersive-active');
 
         // if (footer) footer.classList.add('footer-hidden');
 
@@ -1570,6 +1574,7 @@ window.exitImmersive = function(card) {
     const footer = document.getElementById('instaFooter');
 
     card.classList.remove('immersive-mode');
+   document.body.classList.remove('nx-video-immersive-active');
     if (footer) footer.classList.remove('footer-hidden');
 
     if (typeof window.nexusImmersiveStop === 'function') {
