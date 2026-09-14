@@ -510,9 +510,17 @@
         // BABU wani frame da zai nuna card ya koma post-card mode/ya bar
         // space, domin an riga an boye shi tun farko, kafin a taba shafa
         // immersive-mode class dinsa ko wani abu.
+        // GYARA FLASH v2: visibility:hidden bai isa ba — video/card din suna
+        // da position:fixed + babban z-index (nasu GPU compositing layer
+        // daban), kuma wasu mobile WebView basu tabbatar da cewa irin
+        // wadannan layers sun amsa visibility change na ancestor nan take
+        // cikin wannan frame din ba. opacity yana tilasta compositing-level
+        // transparency wanda babu layer da zai iya watsi da shi.
         document.querySelectorAll('.post-card.immersive-mode, .immersive-back-btn')
-            .forEach(function (el) { el.style.visibility = 'hidden'; });
-
+            .forEach(function (el) {
+                el.style.setProperty('opacity', '0', 'important');
+                el.style.setProperty('pointer-events', 'none', 'important');
+            });
         if (isNavigating) { 
             // Wani navigation yana ci gaba a yanzu (misali health.html
             // yana loda scripts dinsa). Maimakon a WATSAR da wannan
