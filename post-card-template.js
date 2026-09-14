@@ -363,7 +363,7 @@
         .immersive-mode .post-media {
             position: absolute !important;
             top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100vh !important;
+            width: 100vw !important; height: 100dvh !important;
             max-height: none !important;
             object-fit: cover !important;
             border-radius: 0 !important;
@@ -449,8 +449,8 @@
         /* ===== HAKKUNAN MAGANCE MATSALAR BLACK SPACE ===== */
         body:has(video[style*="position: fixed"]) {
             overflow: hidden !important;
-            height: 100vh !important;
-            max-height: 100vh !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
         }
 
            /* ===== CAPSULE BUTTONS — Clean inside pill ===== */
@@ -1530,7 +1530,7 @@ window.toggleImmersive = function(card) {
             video.style.cssText = `
                 position: fixed !important;
                 top: 0 !important; left: 0 !important;
-                width: 100vw !important; height: 100vh !important;
+                width: 100vw !important; height: 100dvh !important;
                 max-height: none !important; min-height: unset !important;
                 object-fit: cover !important; border-radius: 0 !important;
                 z-index: 4999 !important; background: #000 !important; margin: 0 !important;
@@ -1540,24 +1540,6 @@ window.toggleImmersive = function(card) {
                 e.stopPropagation();
                 if (video.paused) { video.play(); } else { video.pause(); }
             };
-        }
-
-        if (!card.querySelector('.immersive-back-btn')) {
-            const backBtn = document.createElement('div');
-            backBtn.className = 'immersive-back-btn';
-            backBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
-            backBtn.style.cssText = `
-                position: fixed; top: 15px; left: 15px;
-                width: 36px; height: 36px;
-                background: rgba(0,0,0,0.6); border-radius: 50%;
-                display: flex; align-items: center; justify-content: center;
-                color: white; font-size: 16px;
-                z-index: 9999; cursor: pointer;
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255,255,255,0.3);
-            `;
-            backBtn.onclick = function(e) { e.stopPropagation(); window.exitImmersive(card); };
-            document.body.appendChild(backBtn);
         }
 
         // ← WANNAN NE AKA ƘARA — Fara immersive scroll idan video ne
