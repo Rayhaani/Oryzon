@@ -565,26 +565,89 @@
                 preloadScript = scriptList.shift();
             }
 
-            runDestroy(currentPath);
+            // ============================================================
+// PREPARE OLD PAGE
+// ============================================================
 
-                        // Cire immersive button kai tsaye ba tare da dawo da card din zuwa normal post-card ba
-            const _immersiveBtn = document.querySelector('.immersive-back-btn');
-            if (_immersiveBtn) _immersiveBtn.remove();
+// Ajiye current page saboda bayan swap currentPath zai iya canzawa.
+const leavingPath = currentPath;
 
-            const _storyDeck = document.getElementById('story-overlay-deck');
-            if (_storyDeck && _storyDeck.style.display !== 'none' && typeof window.closeStoryDeck === 'function') {
-                window.closeStoryDeck();
-            }
-           
-            await Promise.all([
-                loadStylesheetsAll(PAGE_STYLES[targetPath]),
-                preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
-            ]).catch(e => console.error(e));
-           unloadPageOwnCss(currentPath);
 
-            // Tsakar sauya shafi - DOM din bidiyo da card zasu bace gaba daya a nan
-            currentContentEl.innerHTML = newContent.innerHTML; 
-           
+// Ajiye immersive card reference kafin old page ya bace.
+const _immersiveCard =
+    document.querySelector('.post-card.immersive-mode');
+
+
+// Ajiye story overlay reference.
+const _storyDeck =
+    document.getElementById('story-overlay-deck');
+
+
+// ============================================================
+// LOAD TARGET PAGE ASSETS FIRST
+// ============================================================
+
+// Sabuwar page CSS ta gama loda kafin content swap.
+await Promise.all([
+    loadStylesheetsAll(PAGE_STYLES[targetPath]),
+    preloadScript
+        ? loadScriptOnce(preloadScript)
+        : Promise.resolve()
+]).catch(e => console.error(e));
+
+
+// ============================================================
+// INSTANT DOM SWAP
+// ============================================================
+//
+// MUHIMMI:
+// OLD videos.html DOM ZA TA BACE FARKO.
+//
+// KADA a cire videos.css kafin wannan layin.
+// Idan an cire videos.css yayin video tana screen,
+// immersive styling zai bace kuma card zai koma
+// normal post-card mode na dan lokaci.
+
+currentContentEl.innerHTML = newContent.innerHTML;
+
+
+// ============================================================
+// CLEAN UP OLD PAGE AFTER IT IS NO LONGER VISIBLE
+// ============================================================
+
+// Yanzu old page ta riga ta bace daga DOM.
+runDestroy(leavingPath);
+
+
+// Immersive cleanup yanzu ba zai iya haifar da visible flash ba,
+// saboda immersive card ta riga ta bace daga screen.
+if (
+    _immersiveCard &&
+    typeof window.exitImmersive === 'function'
+) {
+    window.exitImmersive(_immersiveCard);
+}
+
+
+// Story cleanup.
+if (
+    _storyDeck &&
+    _storyDeck.style.display !== 'none' &&
+    typeof window.closeStoryDeck === 'function'
+) {
+    window.closeStoryDeck();
+}
+
+
+// ============================================================
+// REMOVE OLD PAGE CSS LAST
+// ============================================================
+//
+// Yanzu videos.html ba ta screen kuma ba ta DOM.
+// Saboda haka cire videos.css ba zai sake mayar da
+// video zuwa post-card mode a idon user ba.
+
+unloadPageOwnCss(leavingPath);
 
            window.scrollTo(0, 0);
             // Update history + internal state.
