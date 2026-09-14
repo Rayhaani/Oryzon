@@ -349,7 +349,7 @@
 .post-card.immersive-mode {
     position: fixed !important;
     top: 0 !important; left: 0 !important;
-    width: 100vw !important; height: 100dvh !important;
+    width: 100vw !important; height: 100vh !important; height: 100dvh !important;
     z-index: 5000 !important;
     border-radius: 0 !important;
     margin: 0 !important;
@@ -363,7 +363,7 @@
         .immersive-mode .post-media {
             position: absolute !important;
             top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100dvh !important;
+            width: 100vw !important; height: 100vh !important; height: 100dvh !important;
             max-height: none !important;
             object-fit: cover !important;
             border-radius: 0 !important;
@@ -1530,7 +1530,7 @@ window.toggleImmersive = function(card) {
             video.style.cssText = `
                 position: fixed !important;
                 top: 0 !important; left: 0 !important;
-                width: 100vw !important; height: 100dvh !important;
+                width: 100vw !important; height: 100vh !important; height: 100dvh !important;
                 max-height: none !important; min-height: unset !important;
                 object-fit: cover !important; border-radius: 0 !important;
                 z-index: 4999 !important; background: #000 !important; margin: 0 !important;
