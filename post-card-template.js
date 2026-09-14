@@ -349,7 +349,7 @@
 .post-card.immersive-mode {
     position: fixed !important;
     top: 0 !important; left: 0 !important;
-    width: 100vw !important; height: 100dvh !important;
+    width: 100vw !important; height: var(--real-vh, 100dvh) !important;
     z-index: 5000 !important;
     border-radius: 0 !important;
     margin: 0 !important;
@@ -363,7 +363,7 @@
         .immersive-mode .post-media {
             position: absolute !important;
             top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100dvh !important;
+            width: 100vw !important; height: var(--real-vh, 100dvh) !important;
             max-height: none !important;
             object-fit: cover !important;
             border-radius: 0 !important;
@@ -449,8 +449,8 @@
         /* ===== HAKKUNAN MAGANCE MATSALAR BLACK SPACE ===== */
         body:has(video[style*="position: fixed"]) {
             overflow: hidden !important;
-            height: 100dvh !important;
-            max-height: 100dvh !important;
+            height: var(--real-vh, 100dvh) !important;
+            max-height: var(--real-vh, 100dvh) !important;
         }
 
            /* ===== CAPSULE BUTTONS — Clean inside pill ===== */
@@ -867,7 +867,24 @@
     `;
     document.head.appendChild(style);
 })();
-
+// ============================================================
+// REAL VIEWPORT HEIGHT — mafi tabbas fiye da 100vh/100dvh domin
+// ba ya dogara ga ko wane CSS feature-support na browser. Manyan
+// platforms suna auna ainihin tsayin allo ta JS su ajiye a matsayin
+// CSS custom property, domin window.innerHeight yana aiki DAIDAI a
+// KOWANE browser, tun asali, babu banbanci.
+// ============================================================
+(function () {
+    function setRealVH() {
+        const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+        document.documentElement.style.setProperty('--real-vh', h + 'px');
+    }
+    setRealVH();
+    window.addEventListener('resize', setRealVH);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setRealVH);
+    }
+})();
 
 // 2. SHARED HELPER - Toggle video sound
 window.postCard_toggleVideoSound = function(event, element) {
