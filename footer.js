@@ -245,9 +245,10 @@
 
         function apply() {
             rafId = null;
-            const onHealth = /(^|\/)health\.html(\?|#|$)/.test(location.pathname + location.search + location.hash)
-                || location.pathname.endsWith('health.html');
-            if (!onHealth) {
+            const onHealth = /(^|\/)(health|videos)\.html(\?|#|$)/.test(location.pathname + location.search + location.hash)
+                || location.pathname.endsWith('health.html')
+                || location.pathname.endsWith('videos.html');            
+           if (!onHealth) {
                 // Ba mu kan health.html ba — tabbatar babu wani transform
                 // da ya rage daga baya, komawa yadda take na asali.
                 // MUHIMMI: idan akwai transform da ya rage daga health.html
