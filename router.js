@@ -607,9 +607,8 @@ await Promise.all([
 // Idan an cire videos.css yayin video tana screen,
 // immersive styling zai bace kuma card zai koma
 // normal post-card mode na dan lokaci.
-
+window.__nexusSpaNavigating = true;
 currentContentEl.innerHTML = newContent.innerHTML;
-
 
 // ============================================================
 // CLEAN UP OLD PAGE AFTER IT IS NO LONGER VISIBLE
@@ -617,17 +616,6 @@ currentContentEl.innerHTML = newContent.innerHTML;
 
 // Yanzu old page ta riga ta bace daga DOM.
 runDestroy(leavingPath);
-
-
-// Immersive cleanup yanzu ba zai iya haifar da visible flash ba,
-// saboda immersive card ta riga ta bace daga screen.
-if (
-    _immersiveCard &&
-    typeof window.exitImmersive === 'function'
-) {
-    window.exitImmersive(_immersiveCard);
-}
-
 
 // Story cleanup.
 if (
@@ -648,7 +636,7 @@ if (
 // video zuwa post-card mode a idon user ba.
 
 unloadPageOwnCss(leavingPath);
-
+window.__nexusSpaNavigating = false;
            window.scrollTo(0, 0);
             // Update history + internal state.
             if (pushHistory) {
