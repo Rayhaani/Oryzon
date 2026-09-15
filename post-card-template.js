@@ -208,11 +208,11 @@
 
         /* ===== TIMESTAMP ===== */
         .post-time {
-            font-size: 10px !important;
+            font-size: 13px !important;
             color: rgba(255, 255, 255, 0.45) !important;
             display: block !important;
             margin-top: 1px !important;
-            font-family: 'Inter', sans-serif !important;
+            font-family: inherit !important;
         }
 
         /* ===== POST CONTENT TEXT ===== */
@@ -234,7 +234,7 @@
             border-radius: 0 !important;
             border: none !important;
             margin: 0 !important;
-            background: #1a1a1a !important;
+            background: var(--bg) !important;
             min-height: 150px !important;
             transition: all 0.3s ease !important;
             box-shadow: inset 0 14px 16px -12px rgba(5, 5, 5, 0.9) !important;
@@ -662,10 +662,20 @@
 
         .gift-btn-nexus span { white-space: nowrap; }
         .post-username {
-    font-size: 16px !important;
-    font-weight: 700 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    margin-top: 0 !important;
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+        }
+
+        .post-fullname {
+    font-size: 14px !important;
+    font-weight: 800 !important;
     color: #fff !important;
-    margin-top: 4px !important;
     display: inline-block !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -1341,19 +1351,20 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                      alt="${post.username}">
             </a>
 
-                       <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 0 0 2px !important;">
+      <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 0 0 2px !important;">
                 <div>
-                    <!-- Username an kara masa girma da 2px (Ya koma 18px) -->
+                    <!-- Full name a sama, tare da verified badge, style irin na X/Twitter -->
                     <div style="display:flex; align-items:center; gap:5px; line-height:1.2; min-width:0;">
-                     <span class="post-username" style="font-size:16px !important; font-weight:800; color:#fff; display:inline-block; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.username || 'unknown'}</span>           
-                       
+                     <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:800; color:#fff; display:inline-block; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.fullName || post.username || 'unknown'}</span>
+
 <span class="post-verified-badge" style="margin-left: 5px; display: inline-flex; align-items: center; vertical-align: middle; flex-shrink: 0;">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="#00F2FF"><path d="M12 2l2.4 2.4 3.4-.5.5 3.4L21 9.6 18.7 12 21 14.4l-2.7 1.7-.5 3.4-3.4-.5L12 22l-2.4-2.4-3.4.5-.5-3.4L3 14.4 5.3 12 3 9.6l2.7-1.7.5-3.4 3.4.5z"/><path d="M9 12l2 2 4-4" stroke="#050505" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </span>
-                    
                     </div>
-                    
-                    
+
+                    <!-- Username (handle) a kasan fullname -->
+                    <span class="post-username" style="font-family: inherit; font-size:13px !important; font-weight:500; color:rgba(255,255,255,0.5); display:block; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${post.username || 'unknown'}</span>
+
                                         ${timeStr ? (() => {
                         // 1. Goge th, nd, st, rd da alamun sassaƙi
                         let cleanTime = timeStr.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1').replace(/,/g, '');
@@ -1362,17 +1373,11 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                         cleanTime = cleanTime.toLowerCase();
                         
                         // 3. Raba salon CSS text-transform ya danganta da 'ago'
-                        // Idan babu 'ago', muna so harafin farko na Month ya zama babban harafi (Capitalize)
-                        // Idan da 'ago', muna so ya zama completely small letters (lowercase)
                         let transformStyle = !cleanTime.includes('ago') ? 'capitalize' : 'lowercase';
-                        return `<span class="post-time" style="font-size:13px !important; font-weight: 700 !important; color:rgba(255,255,255,0.45); margin-top:5px; display:block; line-height:1; white-space: nowrap !important; text-transform: ${transformStyle} !important;">${cleanTime}</span>`;                      
+                        return `<span class="post-time" style="font-family: inherit; font-size:13px !important; font-weight: 500 !important; color:rgba(255,255,255,0.45); margin-top:2px; display:block; line-height:1; white-space: nowrap !important; text-transform: ${transformStyle} !important;">${cleanTime}</span>`;                      
                                         })() : ''}
-                    
-                    
                 </div>
             </div>
-            
-            
                         
                 <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 8px;">
     ${followButtonHTML}
