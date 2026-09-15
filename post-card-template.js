@@ -150,7 +150,7 @@
             position: relative !important;
             
             /* === Kawai wannan biyu aka canza === */
-            background: rgba(255, 255, 255, 0.16) !important;
+            background: rgba(255, 255, 255, 0.28) !important;
             backdrop-filter: blur(14px) saturate(160%) !important;
             -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.22) !important;
