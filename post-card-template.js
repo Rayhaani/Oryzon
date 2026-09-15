@@ -371,7 +371,7 @@
     flex-direction: column !important;
     justify-content: flex-end !important;
     background: #000 !important;
-    padding-bottom: calc(50px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(var(--nx-footer-h, 50px) + 6px) !important;
 }
 
         .immersive-mode .post-media {
@@ -401,7 +401,7 @@
         .immersive-mode .interaction-bar {
             position: fixed !important;
             right: 10px !important;
-            bottom: calc(150px + env(safe-area-inset-bottom)) !important;
+            bottom: calc(var(--nx-footer-h, 50px) + 100px) !important;
             left: auto !important;
             top: auto !important;
             width: auto !important;
