@@ -312,6 +312,7 @@
         window.visualViewport.addEventListener('resize', nxSyncFooterOffset);
         window.visualViewport.addEventListener('scroll', nxSyncFooterOffset);
     }
+   setInterval(nxSyncFooterOffset, 400);
     // ------------------------------------------------------------
     // 6) Services badge.
     // ------------------------------------------------------------
