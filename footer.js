@@ -297,12 +297,13 @@
         const footer = document.getElementById('instaFooter');
         if (!footer) return;
         const rect = footer.getBoundingClientRect();
-        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      const isBrave = !!navigator.brave;
+        const vv = window.visualViewport;
+        const visibleBottom = vv ? (vv.height + vv.offsetTop) : window.innerHeight;
+        const isBrave = !!navigator.brave;
         const isOpera = /OPR\/|OPT\//.test(navigator.userAgent);
         const extraBuffer = (isBrave || isOpera) ? 54 : 0;
         const visibleH = Math.max(0, visibleBottom - rect.top) + extraBuffer;
-        document.documentElement.style.setProperty('--nx-footer-h', visibleH + 'px'); 
+        document.documentElement.style.setProperty('--nx-footer-h', visibleH + 'px');
     }
     window.nxSyncFooterOffset = nxSyncFooterOffset;
     window.addEventListener('resize', nxSyncFooterOffset);
