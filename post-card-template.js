@@ -1104,13 +1104,46 @@ window.postCard_handleCarouselScroll = function(event, postId) {
 
     carousel.dataset.index = index;
 };
+// Yana bincika duk post-time da ke da location data, sannan yana
+// juya (rotate) tsakanin timestamp da location kai-tsaye, kamar Instagram.
+// Idan post bashi da location, ba a taba shi — timestamp yana kwance kamar yadda yake.
+(function nxStartTimeLocationRotation() {
+    setInterval(() => {
+        document.querySelectorAll('.post-time[data-location]').forEach(el => {
+            const loc = el.dataset.location;
+            if (!loc) return; // babu location — kar a canza komai
 
+            if (el.dataset.showing === 'time') {
+                el.textContent = loc;
+                el.dataset.showing = 'location';
+            } else {
+                el.textContent = el.dataset.time;
+                el.dataset.showing = 'time';
+            }
+        });
+    }, 4000); // kowace dakika 4 ake juyawa — kwatankwacin saurin Instagram
+})();
 // Swaps the single-slide swipe view for the "all images/videos at once"
 // grid view, and back again — icon flips to reflect the current mode.
 // Uses a FLIP-style height animation (lock current height → measure the
 // new layer's natural height → animate to it) so the card never just
 // jump-cuts to a shorter/taller size; it eases there smoothly while the
 // outgoing layer fades+shrinks slightly and the incoming one pops in.
+// Yana canza timestamp din zuwa location idan post din yana da location data,
+// sannan ya koma time idan aka sake danna shi (kamar Instagram).
+window.postCard_toggleTimeLocation = function(el) {
+    const loc = el.dataset.location;
+    if (!loc) return; // babu location data har yanzu — kar a canza komai
+
+    if (el.dataset.showing === 'time') {
+        el.textContent = loc;
+        el.dataset.showing = 'location';
+    } else {
+        el.textContent = el.dataset.time;
+        el.dataset.showing = 'time';
+    }
+};
+
 window.postCard_toggleGridView = function(event, postId) {
     event.stopPropagation();
 
@@ -1351,33 +1384,34 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                      alt="${post.username}">
             </a>
 
-      <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; background: none !important; border: none !important; padding: 0 !important; margin: 0 0 0 2px !important;">
-                <div>
-                    <!-- Full name a sama, tare da verified badge, style irin na X/Twitter -->
-                    <div style="display:flex; align-items:center; gap:5px; line-height:1.2; min-width:0;">
-                     <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:800; color:#fff; display:inline-block; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.fullName || post.username || 'unknown'}</span>
+<div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; margin: 0 0 0 2px !important;">
 
-<span class="post-verified-badge" style="margin-left: 5px; display: inline-flex; align-items: center; vertical-align: middle; flex-shrink: 0;">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="#00F2FF"><path d="M12 2l2.4 2.4 3.4-.5.5 3.4L21 9.6 18.7 12 21 14.4l-2.7 1.7-.5 3.4-3.4-.5L12 22l-2.4-2.4-3.4.5-.5-3.4L3 14.4 5.3 12 3 9.6l2.7-1.7.5-3.4 3.4.5z"/><path d="M9 12l2 2 4-4" stroke="#050505" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-</span>
-                    </div>
+    <!-- Full name a sama, tare da verified badge -->
+    <div style="display:flex; align-items:center; gap:5px; line-height:1.2; min-width:0;">
+        <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:800; color:#fff; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.fullName || post.username || 'unknown'}</span>
 
-                    <!-- Username (handle) a kasan fullname -->
-                    <span class="post-username" style="font-family: inherit; font-size:13px !important; font-weight:500; color:rgba(255,255,255,0.5); display:block; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${post.username || 'unknown'}</span>
+        <span class="post-verified-badge" style="margin-left: 5px; display: inline-flex; align-items: center; flex-shrink: 0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#00F2FF"><path d="M12 2l2.4 2.4 3.4-.5.5 3.4L21 9.6 18.7 12 21 14.4l-2.7 1.7-.5 3.4-3.4-.5L12 22l-2.4-2.4-3.4.5-.5-3.4L3 14.4 5.3 12 3 9.6l2.7-1.7.5-3.4 3.4.5z"/><path d="M9 12l2 2 4-4" stroke="#050505" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+    </div>
 
-                                        ${timeStr ? (() => {
-                        // 1. Goge th, nd, st, rd da alamun sassaƙi
-                        let cleanTime = timeStr.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1').replace(/,/g, '');
-                        
-                        // 2. Mayar da komai zuwa small letters gaba ɗaya da farko
-                        cleanTime = cleanTime.toLowerCase();
-                        
-                        // 3. Raba salon CSS text-transform ya danganta da 'ago'
-                        let transformStyle = !cleanTime.includes('ago') ? 'capitalize' : 'lowercase';
-                        return `<span class="post-time" style="font-family: inherit; font-size:13px !important; font-weight: 500 !important; color:rgba(255,255,255,0.45); margin-top:2px; display:block; line-height:1; white-space: nowrap !important; text-transform: ${transformStyle} !important;">${cleanTime}</span>`;                      
-                                        })() : ''}
-                </div>
-            </div>
+    <!-- Username + timestamp a layi daya, a kasan fullname -->
+    <div class="post-meta-row" style="display:flex !important; align-items:center !important; gap:4px !important; min-width:0 !important; margin-top:1px !important;">
+        <span class="post-username" style="font-family: inherit; font-size:12.5px !important; font-weight:500; color:rgba(255,255,255,0.5); flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;">@${post.username || 'unknown'}</span>
+
+        ${timeStr ? (() => {
+            let cleanTime = timeStr.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1').replace(/,/g, '');
+            cleanTime = cleanTime.toLowerCase();
+            let transformStyle = !cleanTime.includes('ago') ? 'capitalize' : 'lowercase';
+            return `<span class="post-meta-dot" style="color:rgba(255,255,255,0.35); font-size:11px; flex-shrink:0;">·</span>
+            <span class="post-time"
+                  data-time="${cleanTime}"
+                  data-location="${post.location || ''}"
+                  data-showing="time"
+                  style="font-family: inherit; font-size:12.5px !important; font-weight: 500 !important; color:rgba(255,255,255,0.45); flex-shrink:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-transform: ${transformStyle} !important; cursor:pointer;">${cleanTime}</span>`;
+        })() : ''}
+    </div>
+</div>
                         
                 <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 8px;">
     ${followButtonHTML}
