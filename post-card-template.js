@@ -208,10 +208,10 @@
 
         /* ===== TIMESTAMP ===== */
         .post-time {
-            font-size: 13px !important;
+            font-size: 12.5px !important;
             color: rgba(255, 255, 255, 0.45) !important;
             display: block !important;
-            margin-top: 1px !important;
+            margin-top: 0 !important;
             font-family: inherit !important;
         }
 
@@ -662,7 +662,7 @@
 
         .gift-btn-nexus span { white-space: nowrap; }
         .post-username {
-    font-size: 13px !important;
+    font-size: 12.5px !important;
     font-weight: 500 !important;
     color: rgba(255, 255, 255, 0.5) !important;
     margin-top: 0 !important;
