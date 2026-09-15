@@ -237,8 +237,8 @@
             background: #1a1a1a !important;
             min-height: 150px !important;
             transition: all 0.3s ease !important;
+            box-shadow: inset 0 14px 16px -12px rgba(5, 5, 5, 0.9) !important;
         }
-
         /* ===== MUTE TOGGLE ===== */
         .post-mute-toggle {
             position: absolute !important;
