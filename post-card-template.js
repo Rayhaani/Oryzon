@@ -150,12 +150,13 @@
             position: relative !important;
             
             /* === Kawai wannan biyu aka canza === */
-            background: rgba(245, 245, 247, 0.22) !important;
-            backdrop-filter: blur(10px) !important;
-            -webkit-backdrop-filter: blur(10px) !important;          
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;          
+            background: rgba(255, 255, 255, 0.16) !important;
+            backdrop-filter: blur(14px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.22) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
             margin-bottom: 0 !important;
-        }
+            }
         
         /* ===== AVATAR ===== */
         .post-avatar {
