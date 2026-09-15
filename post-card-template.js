@@ -208,7 +208,7 @@
 
         /* ===== TIMESTAMP ===== */
         .post-time {
-            font-size: 11.5px !important;
+            font-size: 10.5px !important;
             color: rgba(255, 255, 255, 0.45) !important;
             display: block !important;
             margin-top: 0 !important;
