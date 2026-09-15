@@ -286,7 +286,28 @@
         document.addEventListener('nexus:routechange', schedule);
         schedule();
     }
-
+// ------------------------------------------------------------
+    // 5c) Auna ainihin girman footer da ake GANI a wannan lokaci
+    // (bayan duk toolbar da Opera/Brave ya tura), a saka a cikin
+    // --nx-footer-h domin post-header/caption na immersive video
+    // su bi motsinta daidai — ba tare da dogaro da lamba mai
+    // kayyadewa da hannu ba.
+    // ------------------------------------------------------------
+    function nxSyncFooterOffset() {
+        const footer = document.getElementById('instaFooter');
+        if (!footer) return;
+        const rect = footer.getBoundingClientRect();
+        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const visibleH = Math.max(0, vh - rect.top);
+        document.documentElement.style.setProperty('--nx-footer-h', visibleH + 'px');
+    }
+    window.nxSyncFooterOffset = nxSyncFooterOffset;
+    window.addEventListener('resize', nxSyncFooterOffset);
+    window.addEventListener('orientationchange', nxSyncFooterOffset);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', nxSyncFooterOffset);
+        window.visualViewport.addEventListener('scroll', nxSyncFooterOffset);
+    }
     // ------------------------------------------------------------
     // 6) Services badge.
     // ------------------------------------------------------------
@@ -363,6 +384,7 @@
             setActiveIcon();
             loadFooterProfile();
             pinFooterToVisualViewport();
+            nxSyncFooterOffset();
             return;
         }
 
@@ -386,6 +408,7 @@
         loadFooterProfile();
         setupScrollBehavior();
         pinFooterToVisualViewport();
+        nxSyncFooterOffset();
         listenServicesBadgeCount();
         listenPersonalChatsBadge();
     }
