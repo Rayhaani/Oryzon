@@ -1390,9 +1390,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
     <div style="display:flex; align-items:center; gap:5px; line-height:1.2; min-width:0; margin-top:2px;">
         <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:800; color:#fff; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.fullName || post.username || 'unknown'}</span>
 
-        <span class="post-verified-badge-svg" style="margin-left: 5px; display: inline-flex; align-items: center; flex-shrink: 0;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#00F2FF"><path d="M12 2l2.4 2.4 3.4-.5.5 3.4L21 9.6 18.7 12 21 14.4l-2.7 1.7-.5 3.4-3.4-.5L12 22l-2.4-2.4-3.4.5-.5-3.4L3 14.4 5.3 12 3 9.6l2.7-1.7.5-3.4 3.4.5z"/><path d="M9 12l2 2 4-4" stroke="#050505" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fde08d" style="flex-shrink: 0;"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.97-.81-4.08s-2.49-1.46-4.08-1.27c-.66-1.1-1.91-1.81-3.17-1.81s-2.51.71-3.17 1.81c-1.58-.19-3.07.16-4.08 1.27s-1.27 2.69-.81 4.08c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.97.81 4.08s2.49 1.46 4.08 1.27c.66 1.1 1.91 1.81 3.17 1.81s2.51-.71 3.17-1.81c1.58.19 3.07-.16 4.08-1.27s1.27-2.69.81-4.08c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.25L6.85 12.5l1.44-1.44 2.25 2.25 5.27-5.27 1.44 1.44-6.71 6.77z"/></svg>
     </div>
 
     <!-- Username + timestamp a layi daya, a kasan fullname -->
