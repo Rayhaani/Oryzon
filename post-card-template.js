@@ -208,10 +208,10 @@
 
         /* ===== TIMESTAMP ===== */
         .post-time {
-            font-size: 10.5px !important;
+            font-size: 7.5px !important;
             color: rgba(255, 255, 255, 0.45) !important;
             display: block !important;
-            margin-top: 0 !important;
+            margin-top: 2 !important;
             font-family: inherit !important;
         }
 
