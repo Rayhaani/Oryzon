@@ -1396,7 +1396,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
     </div>
 
     <!-- Username + timestamp a layi daya, a kasan fullname -->
-    <div class="post-meta-row" style="display:flex !important; align-items:center !important; gap:4px !important; min-width:0 !important; margin-top:1px !important;">
+    <div class="post-meta-row" style="display:flex !important; align-items:center !important; gap:4px !important; min-width:0 !important; margin-top:5px !important;">
         <span class="post-username" style="font-family: inherit; font-size:12.5px !important; font-weight:500; color:rgba(255,255,255,0.5); flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;">@${post.username || 'unknown'}</span>
 
         ${timeStr ? (() => {
@@ -1408,7 +1408,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                   data-time="${cleanTime}"
                   data-location="${post.location || ''}"
                   data-showing="time"
-                  style="font-family: inherit; font-size:12.5px !important; font-weight: 500 !important; color:rgba(255,255,255,0.45); flex-shrink:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-transform: ${transformStyle} !important; cursor:pointer;">${cleanTime}</span>`;
+                  style="font-family: inherit; font-size:11.5px !important; font-weight: 500 !important; color:rgba(255,255,255,0.45); flex-shrink:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-transform: ${transformStyle} !important;">${cleanTime}</span>`;
         })() : ''}
     </div>
 </div>
