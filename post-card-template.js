@@ -1387,16 +1387,16 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
 <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; margin: 0 0 0 2px !important;">
 
     <!-- Full name a sama, tare da verified badge -->
-    <div style="display:flex; align-items:center; gap:5px; line-height:1.2; min-width:0;">
+    <div style="display:flex; align-items:center; gap:5px; line-height:1.2; min-width:0; margin-top:2px;">
         <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:800; color:#fff; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.fullName || post.username || 'unknown'}</span>
 
-        <span class="post-verified-badge" style="margin-left: 5px; display: inline-flex; align-items: center; flex-shrink: 0;">
+        <span class="post-verified-badge-svg" style="margin-left: 5px; display: inline-flex; align-items: center; flex-shrink: 0;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="#00F2FF"><path d="M12 2l2.4 2.4 3.4-.5.5 3.4L21 9.6 18.7 12 21 14.4l-2.7 1.7-.5 3.4-3.4-.5L12 22l-2.4-2.4-3.4.5-.5-3.4L3 14.4 5.3 12 3 9.6l2.7-1.7.5-3.4 3.4.5z"/><path d="M9 12l2 2 4-4" stroke="#050505" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
     </div>
 
     <!-- Username + timestamp a layi daya, a kasan fullname -->
-    <div class="post-meta-row" style="display:flex !important; align-items:center !important; gap:4px !important; min-width:0 !important; margin-top:5px !important;">
+    <div class="post-meta-row" style="display:flex !important; align-items:center !important; gap:4px !important; min-width:0 !important; margin-top:6px !important;">
         <span class="post-username" style="font-family: inherit; font-size:12.5px !important; font-weight:500; color:rgba(255,255,255,0.5); flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;">@${post.username || 'unknown'}</span>
 
         ${timeStr ? (() => {
