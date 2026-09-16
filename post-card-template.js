@@ -1398,7 +1398,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
 
     <!-- Username + timestamp a layi daya, a kasan fullname -->
     <div class="post-meta-row" style="display:flex !important; align-items:center !important; gap:4px !important; min-width:0 !important; margin-top:6px !important;">
-        <span class="post-username" style="font-family: inherit; font-size:12.5px !important; font-weight:500; color:rgba(255,255,255,0.5); flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;"><span style="font-size:0.8px;">@</span>${post.username || 'unknown'}</span>
+        <span class="post-username" style="font-family: inherit; font-size:12.5px !important; font-weight:500; color:rgba(255,255,255,0.5); flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;"><span style="font-size:0.8em;">@</span>${post.username || 'unknown'}</span>
         ${timeStr ? (() => {
             let cleanTime = timeStr.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1').replace(/,/g, '');
             cleanTime = cleanTime.toLowerCase();
