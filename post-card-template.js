@@ -645,7 +645,7 @@
             display: flex; align-items: center; gap: 4px;
             background: linear-gradient(145deg, #1a1a1a, #0d0d0d); 
             border: 1px solid rgba(253, 224, 141, 0.2); 
-            padding: 0 8px; height: 26px; border-radius: 8px; cursor: pointer;
+            padding: 0 8px; height: 38px; border-radius: 8px; cursor: pointer;
             transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
@@ -1387,7 +1387,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
 <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; margin: 0 0 0 2px !important;">
 
     <!-- Full name a sama, tare da verified badge -->
-    <div style="display:flex; align-items:center; gap:2px; line-height:1.2; min-width:0; margin-top:2px;">
+    <div style="display:flex; align-items:center; gap:2px; line-height:1.2; min-width:0; margin-top:3px;">
         <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:800; color:#fff; position:relative; top:1px; flex:0 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.fullName || post.username || 'unknown'}</span>
 
         <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink: 0;">
@@ -1397,7 +1397,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
     </div>
 
     <!-- Username + timestamp a layi daya, a kasan fullname -->
-    <div class="post-meta-row" style="display:flex !important; align-items:center !important; gap:4px !important; min-width:0 !important; margin-top:6px !important;">
+    <div class="post-meta-row" style="display:flex !important; align-items:center !important; gap:4px !important; min-width:0 !important; margin-top:4px !important;">
          <span class="post-username" style="font-family: inherit; font-size:12.5px !important; font-weight:500; color:rgba(255,255,255,0.5); flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;"><span style="font-size:0.8em; position:relative; top:-1px;">@</span>${post.username || 'unknown'}</span>       
         ${timeStr ? (() => {
             let cleanTime = timeStr.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1').replace(/,/g, '');
