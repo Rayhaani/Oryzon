@@ -146,7 +146,7 @@
             align-items: center !important;
             justify-content: space-between !important;
             padding: 0 15px 0 40px !important;
-            height: 46px !important;
+            height: 43px !important;
             position: relative !important;
             
             /* === Kawai wannan biyu aka canza === */
@@ -164,8 +164,8 @@
             left: 0px !important;
             top: 0px !important;
             transform: none !important;
-            width: 36px !important;
-            height: 36px !important;
+            width: 40px !important;
+            height: 40px !important;
             border-radius: 50% !important;
             border: 1px solid var(--premium-gold) !important;
             object-fit: cover !important;
