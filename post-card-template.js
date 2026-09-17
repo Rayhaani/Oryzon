@@ -145,8 +145,8 @@
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            padding: 0 15px 0 48px !important;
-            height: 40px !important;
+            padding: 0 15px 0 40px !important;
+            height: 46px !important;
             position: relative !important;
             
             /* === Kawai wannan biyu aka canza === */
