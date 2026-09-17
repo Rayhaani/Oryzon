@@ -645,7 +645,7 @@
             display: flex; align-items: center; gap: 4px;
             background: linear-gradient(145deg, #1a1a1a, #0d0d0d); 
             border: 1px solid rgba(253, 224, 141, 0.2); 
-            padding: 0 8px; height: 38px; border-radius: 8px; cursor: pointer;
+            padding: 0 8px; height: 30px; border-radius: 8px; cursor: pointer;
             transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
