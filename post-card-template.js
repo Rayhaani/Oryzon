@@ -145,7 +145,7 @@
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            padding: 0 15px 0 40px !important;
+            padding: 0 15px 0 43px !important;
             height: 43px !important;
             position: relative !important;
             
