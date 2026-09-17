@@ -164,8 +164,8 @@
             left: 0px !important;
             top: 0px !important;
             transform: none !important;
-            width: 36px !important;
-            height: 36px !important;
+            width: 32px !important;
+            height: 32px !important;
             border-radius: 50% !important;
             border: 1px solid var(--premium-gold) !important;
             object-fit: cover !important;
