@@ -1387,7 +1387,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
 <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; margin: 0 0 0 2px !important;">
 
     <!-- Full name a sama, tare da verified badge -->
-    <div style="display:flex; align-items:center; gap:2px; line-height:1.2; min-width:0; margin-top:3px;">
+    <div style="display:flex; align-items:center; gap:1px; line-height:1.2; min-width:0; margin-top:3px;">
         <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:800; color:#fff; position:relative; top:1px; flex:0 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.fullName || post.username || 'unknown'}</span>
 
         <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink: 0;">
