@@ -43,7 +43,6 @@
             backdrop-filter: none !important;
             border: 1px solid var(--post-border) !important;
             border-radius: var(--post-radius) !important;
-            border-top-left-radius: 0 !important;
             margin-bottom: 0 !important;
             padding-bottom: 0 !important;
             position: relative !important;
