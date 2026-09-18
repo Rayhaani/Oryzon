@@ -171,8 +171,8 @@ background-blend-mode: overlay, normal, normal !important;
         /* ===== AVATAR ===== */
         .post-avatar {
             position: absolute !important;
-            left: 0px !important;
-            top: 0px !important;
+            left: 3px !important;
+            top: 3px !important;
             transform: none !important;
             width: 40px !important;
             height: 40px !important;
