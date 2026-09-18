@@ -150,7 +150,7 @@
             position: relative !important;
             
             /* === Kawai wannan biyu aka canza === */
-            background: rgba(255, 255, 255, 0.28) !important;
+            background: rgba(216, 169, 106, 0.08) !important;
             backdrop-filter: blur(14px) saturate(160%) !important;
             -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.22) !important;
@@ -158,6 +158,12 @@
             margin-bottom: 0 !important;
             }
         
+        /* Post-header na Verified/Premium — cikakken metallic gold, kamar hoton MTN card */
+        .post-header-premium {
+            background: linear-gradient(135deg, #D8A96A 0%, #F0D9A8 30%, #B8763A 60%, #F0D9A8 100%) !important;
+            border-bottom: 1px solid rgba(184, 118, 58, 0.4) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+        }
         /* ===== AVATAR ===== */
         .post-avatar {
             position: absolute !important;
@@ -1375,7 +1381,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
         if(media && media.tagName === 'VIDEO' && typeof toggleImmersive === 'function') toggleImmersive(this);
     ">
         ${pinnedTagHTML}
-                  <div class="post-header">
+                  <div class="post-header ${post.isVerified ? 'post-header-premium' : ''}">
             <a href="me.html?user=${encodeURIComponent(post.username || '')}"
                style="position:absolute; left:0; top:0; width:54px; height:54px; display:block; z-index:20; text-decoration:none;">
                 <img src="${avatarUrl}"
