@@ -43,6 +43,7 @@
             backdrop-filter: none !important;
             border: 1px solid var(--post-border) !important;
             border-radius: var(--post-radius) !important;
+            border-top-left-radius: 0 !important;
             margin-bottom: 0 !important;
             padding-bottom: 0 !important;
             position: relative !important;
@@ -171,8 +172,8 @@ background-blend-mode: overlay, normal, normal !important;
         /* ===== AVATAR ===== */
         .post-avatar {
             position: absolute !important;
-            left: 3px !important;
-            top: 3px !important;
+            left: 0px !important;
+            top: 0px !important;
             transform: none !important;
             width: 40px !important;
             height: 40px !important;
