@@ -700,9 +700,9 @@ async function refreshViewerVerification() {
     return currentUserIsVerified;
 }
 
-function nodeItem(icon, text, onclickCode, accent, premium, subtitle, chevron) {
+function nodeItem(icon, text, onclickCode, accent, premium, subtitle, chevron, plain) {
     return `<a href="#" class="sheet-item ${premium ? 'premium-item' : ''}" style="--accent:${accent};" onclick="event.preventDefault(); ${onclickCode}">
-        <div class="sheet-icon-box" style="position:relative;">
+        <div class="${plain ? 'sheet-icon-plain' : 'sheet-icon-box'}" style="position:relative;">
             <i class="fa-solid ${icon}"></i>
             ${premium ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;color:#fde08d;">★</span>' : ''}
         </div>
@@ -739,42 +739,41 @@ function renderNodeActionsMenu(postId, isOwnPost, postData) {
     const grid = document.getElementById('nodeActionsGrid');
     if (!grid) return;
     let html = '';
+    const uname = (postData.username || '').replace(/'/g, "\\'");
 
     if (isOwnPost) {
+        html += `<div class="sheet-group">`;
         html += nodeItem('fa-thumbtack', postData.pinned ? 'Unpin Post' : 'Pin Post',
             `togglePinFromMenu('${postId}', ${!!postData.pinned})`, '#FFD700', false);
-
         html += nodeItem('fa-pen', 'Edit Post',
             `editPostFromMenu('${postId}')`, '#00f2fe', false);
+        html += `</div>`;
 
-        html += nodeItem('fa-share-nodes', 'Share Node',
-            `sharePostFromMenu('${postId}')`, '#00f2fe', false);
-
+        html += `<div class="sheet-group">`;
+        html += nodeItem('fa-share', 'Share',
+            `sharePostFromMenu('${postId}')`, '', false, null, true, true);
         html += nodeItem('fa-link', 'Copy Link',
-            `copyLinkFromMenu('${postId}')`, '#00f2fe', false);
-
+            `copyLinkFromMenu('${postId}')`, '', false, null, false, true);
         html += nodeItem('fa-box-archive', 'Move to Archive',
             `archivePostFromMenu('${postId}')`, '#a78bfa', false);
-
         html += nodeItem('fa-trash-can', 'Delete Post',
             `deletePostFromMenu()`, '#ff4d6d', false);
+        html += `</div>`;
 
+        html += `<div class="sheet-group">`;
         html += nodeItem('fa-comment-slash', postData.commentsDisabled ? 'Turn On Comments' : 'Turn Off Comments',
             `toggleCommentsFromMenu('${postId}', ${!!postData.commentsDisabled})`, '#50FA7B', true);
-
         html += nodeItem('fa-chart-line', 'View Insights',
             `viewInsightsFromMenu('${postId}')`, '#00f2fe', true);
-
         html += nodeItem('fa-rocket', postData.boosted ? 'Remove Boost' : 'Boost Post',
             `toggleBoostFromMenu('${postId}', ${!!postData.boosted})`, '#fde08d', true);
-
         html += nodeItem('fa-clock', postData.locked ? 'Edit Time-Capsule' : 'Lock as Time-Capsule',
             `lockAsTimeCapsuleFromMenu('${postId}')`, '#a78bfa', true);
-
         html += nodeItem('fa-user-group', 'Edit Privacy',
             `editPrivacyFromMenu('${postId}')`, '#00f2fe', true);
+        html += `</div>`;
 
-  } else {
+    } else {
         html += `<div class="sheet-group">`;
         html += nodeItem('fa-circle-plus', 'Interested',
             `interestedFromMenu('${postId}')`, '#50FA7B', false, 'More of your posts will be like this.');
@@ -785,29 +784,32 @@ function renderNodeActionsMenu(postId, isOwnPost, postData) {
         html += `<div class="sheet-group">`;
         html += nodeItem('fa-bookmark', 'Save Post',
             `postCard_toggleSave(event, '${postId}')`, '#FFD700', false, 'Add this to your saved items.');
-        html += nodeItem('fa-share-nodes', 'Share Node',
-            `sharePostFromMenu('${postId}')`, '#00f2fe', false, null, true);
+        html += nodeItem('fa-star', 'Add to Favourites',
+            `favouriteFromMenu('${postId}')`, '#fde08d', false);
+        html += nodeItem('fa-user-plus', 'Follow',
+            `followToggleFromMenu('${postId}')`, '#1d9bf0', false);
+        html += nodeItem('fa-share', 'Share',
+            `sharePostFromMenu('${postId}')`, '', false, null, true, true);
         html += nodeItem('fa-circle-info', "Why You're Seeing This",
             `whySeeingFromMenu()`, '#aaaaaa', false, null, true);
-        html += nodeItem('fa-triangle-exclamation', 'Report',
+        html += nodeItem('fa-flag', 'Report',
             `reportFromMenu('${postId}')`, '#ff4d6d', false, null, true);
         html += nodeItem('fa-bell', 'Turn On Notifications',
-            `turnOnNotificationsFromMenu('${(postData.username || '').replace(/'/g, "\\'")}')`, '#50FA7B', false);
+            `turnOnNotificationsFromMenu('${uname}')`, '', false, null, false, true);
         html += nodeItem('fa-link', 'Copy Link',
-            `copyLinkFromMenu('${postId}')`, '#00f2fe', false);
+            `copyLinkFromMenu('${postId}')`, '', false, null, false, true);
         html += `</div>`;
 
         html += `<div class="sheet-group">`;
-        html += nodeItem('fa-bell-slash', 'Mute Node',
-            `muteNodeFromMenu('${(postData.username || '').replace(/'/g, "\\'")}')`, '#50FA7B', false);
+        html += nodeItem('fa-bell-slash', 'Mute',
+            `muteNodeFromMenu('${uname}')`, '#50FA7B', false);
         html += nodeItem('fa-shuffle', 'Remix This Post',
-            `remixPostFromMenu('${postId}', '${(postData.username || '').replace(/'/g, "\\'")}')`, '#fde08d', true);
+            `remixPostFromMenu('${postId}', '${uname}')`, '#fde08d', true);
         html += `</div>`;
-    }  
+    }
 
     grid.innerHTML = html;
 
-    // Cire duk premium-item idan viewer din ba verified ba ne
     if (!currentUserIsVerified) {
         grid.querySelectorAll('.premium-item').forEach(el => el.remove());
     }
@@ -964,6 +966,42 @@ function reportFromMenu(postId) {
         }).catch(() => {});
     }
     alert("Thanks — we won't let anyone know who reported this.");
+    closeNeuralMenu();
+}
+
+function interestedFromMenu(postId) {
+    if (typeof db !== 'undefined' && currentUser) {
+        db.collection('signals').add({
+            user: currentUser, postId, type: 'interested',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(() => {});
+    }
+    closeNeuralMenu();
+}
+
+function turnOnNotificationsFromMenu(username) {
+    if (!username || typeof db === 'undefined' || !currentUser) { closeNeuralMenu(); return; }
+
+    db.collection('post_notifications').doc(`${currentUser}_${username}`).set({
+        subscribedBy: currentUser, subscribedTo: username,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => alert(`You'll be notified about new posts from ${username}.`)).catch(() => {});
+    closeNeuralMenu();
+}
+
+function favouriteFromMenu(postId) {
+    if (typeof db !== 'undefined' && currentUser) {
+        db.collection('favourites').doc(`${currentUser}_${postId}`).set({
+            user: currentUser, postId,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(() => {});
+    }
+    closeNeuralMenu();
+}
+
+function followToggleFromMenu(postId) {
+    const btn = document.querySelector(`.post-card[data-post-id="${postId}"] .follow-btn-nexus`);
+    if (btn) handleFollowBtn(btn);
     closeNeuralMenu();
 }
 
