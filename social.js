@@ -700,13 +700,17 @@ async function refreshViewerVerification() {
     return currentUserIsVerified;
 }
 
-function nodeItem(icon, text, onclickCode, accent, premium) {
+function nodeItem(icon, text, onclickCode, accent, premium, subtitle, chevron) {
     return `<a href="#" class="sheet-item ${premium ? 'premium-item' : ''}" style="--accent:${accent};" onclick="event.preventDefault(); ${onclickCode}">
         <div class="sheet-icon-box" style="position:relative;">
             <i class="fa-solid ${icon}"></i>
             ${premium ? '<span style="position:absolute;top:-4px;right:-4px;font-size:10px;color:#fde08d;">★</span>' : ''}
         </div>
-        <span class="sheet-text">${text}</span>
+        <div class="sheet-text-wrap">
+            <span class="sheet-text">${text}</span>
+            ${subtitle ? `<span class="sheet-subtext">${subtitle}</span>` : ''}
+        </div>
+        ${chevron ? '<i class="fa-solid fa-chevron-right sheet-chevron"></i>' : ''}
     </a>`;
 }
 
@@ -770,31 +774,36 @@ function renderNodeActionsMenu(postId, isOwnPost, postData) {
         html += nodeItem('fa-user-group', 'Edit Privacy',
             `editPrivacyFromMenu('${postId}')`, '#00f2fe', true);
 
-    } else {
+  } else {
+        html += `<div class="sheet-group">`;
+        html += nodeItem('fa-circle-plus', 'Interested',
+            `interestedFromMenu('${postId}')`, '#50FA7B', false, 'More of your posts will be like this.');
+        html += nodeItem('fa-circle-minus', 'Not Interested',
+            `notInterestedFromMenu('${postId}')`, '#aaaaaa', false, 'Fewer of your posts will be like this.');
+        html += `</div>`;
+
+        html += `<div class="sheet-group">`;
         html += nodeItem('fa-bookmark', 'Save Post',
-            `postCard_toggleSave(event, '${postId}')`, '#FFD700', false);
-
+            `postCard_toggleSave(event, '${postId}')`, '#FFD700', false, 'Add this to your saved items.');
         html += nodeItem('fa-share-nodes', 'Share Node',
-            `sharePostFromMenu('${postId}')`, '#00f2fe', false);
-
+            `sharePostFromMenu('${postId}')`, '#00f2fe', false, null, true);
+        html += nodeItem('fa-circle-info', "Why You're Seeing This",
+            `whySeeingFromMenu()`, '#aaaaaa', false, null, true);
+        html += nodeItem('fa-triangle-exclamation', 'Report',
+            `reportFromMenu('${postId}')`, '#ff4d6d', false, null, true);
+        html += nodeItem('fa-bell', 'Turn On Notifications',
+            `turnOnNotificationsFromMenu('${(postData.username || '').replace(/'/g, "\\'")}')`, '#50FA7B', false);
         html += nodeItem('fa-link', 'Copy Link',
             `copyLinkFromMenu('${postId}')`, '#00f2fe', false);
+        html += `</div>`;
 
-        html += nodeItem('fa-circle-minus', 'Not Interested',
-            `notInterestedFromMenu('${postId}')`, '#aaaaaa', false);
-
-        html += nodeItem('fa-circle-info', "Why You're Seeing This",
-            `whySeeingFromMenu()`, '#aaaaaa', false);
-
+        html += `<div class="sheet-group">`;
         html += nodeItem('fa-bell-slash', 'Mute Node',
             `muteNodeFromMenu('${(postData.username || '').replace(/'/g, "\\'")}')`, '#50FA7B', false);
-
-        html += nodeItem('fa-triangle-exclamation', 'Report',
-            `reportFromMenu('${postId}')`, '#ff4d6d', false);
-
         html += nodeItem('fa-shuffle', 'Remix This Post',
             `remixPostFromMenu('${postId}', '${(postData.username || '').replace(/'/g, "\\'")}')`, '#fde08d', true);
-    }
+        html += `</div>`;
+    }  
 
     grid.innerHTML = html;
 
@@ -955,6 +964,26 @@ function reportFromMenu(postId) {
         }).catch(() => {});
     }
     alert("Thanks — we won't let anyone know who reported this.");
+    closeNeuralMenu();
+}
+
+function interestedFromMenu(postId) {
+    if (typeof db !== 'undefined' && currentUser) {
+        db.collection('signals').add({
+            user: currentUser, postId, type: 'interested',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(() => {});
+    }
+    closeNeuralMenu();
+}
+
+function turnOnNotificationsFromMenu(username) {
+    if (!username || typeof db === 'undefined' || !currentUser) { closeNeuralMenu(); return; }
+
+    db.collection('post_notifications').doc(`${currentUser}_${username}`).set({
+        subscribedBy: currentUser, subscribedTo: username,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => alert(`You'll be notified about new posts from ${username}.`)).catch(() => {});
     closeNeuralMenu();
 }
 
