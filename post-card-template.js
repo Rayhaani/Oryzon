@@ -150,7 +150,11 @@
             position: relative !important;
             
             /* === Kawai wannan biyu aka canza === */
-            background: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), linear-gradient(135deg, #D8A96A 0%, #F0D9A8 30%, #B8763A 60%, #F0D9A8 100%) !important;
+            background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/></svg>"),
+    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
+    linear-gradient(135deg, #B8763A 0%, #D8A96A 25%, #F0D9A8 55%, #D8A96A 80%, #B8763A 100%) !important;
+background-blend-mode: overlay, normal, normal !important;
             backdrop-filter: blur(14px) saturate(160%) !important;
             -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.22) !important;
