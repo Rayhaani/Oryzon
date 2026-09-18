@@ -679,6 +679,7 @@ document.addEventListener('click', function(event) {
 // NODE ACTIONS — PREMIUM MENU (dynamic owner/viewer + verified-only gating)
 // ============================================================
 let neuralMenuPostId = null;
+let neuralMenuOpening = false;
 let currentUserIsVerified = false;
 let nexusRemixTarget = null;
 
@@ -708,6 +709,9 @@ function nodeItem(icon, text, onclickCode, accent, premium) {
 }
 
 async function openNeuralMenu(postId, postUsername) {
+    if (neuralMenuOpening) return;
+    neuralMenuOpening = true;
+
     const sheet = document.getElementById('neuralBottomMenu');
     neuralMenuPostId = postId || null;
     const isOwnPost = !!(postUsername && postUsername === currentUser);
@@ -717,34 +721,38 @@ async function openNeuralMenu(postId, postUsername) {
     const triggerEvt = window.event;
     const triggerEl = triggerEvt ? (triggerEvt.currentTarget || triggerEvt.target) : null;
 
-    await refreshViewerVerification();
-
-    let postData = { username: postUsername };
     try {
-        if (postId && typeof db !== 'undefined') {
-            const doc = await db.collection('posts').doc(postId).get();
-            if (doc.exists) postData = { ...doc.data(), username: postUsername };
+        await refreshViewerVerification();
+
+        let postData = { username: postUsername };
+        try {
+            if (postId && typeof db !== 'undefined') {
+                const doc = await db.collection('posts').doc(postId).get();
+                if (doc.exists) postData = { ...doc.data(), username: postUsername };
+            }
+        } catch (e) { /* ignore, ci gaba da default */ }
+
+        renderNodeActionsMenu(postId, isOwnPost, postData);
+
+        // Sanya dropdown din kai tsaye a kasan maballin da aka danna, kamar Cyber-Dropdown
+        const menuWidth = sheet.offsetWidth || 230;
+        if (triggerEl && triggerEl.getBoundingClientRect) {
+            const rect = triggerEl.getBoundingClientRect();
+            let left = rect.right - menuWidth;
+            if (left < 8) left = 8;
+            if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8;
+            sheet.style.top = (rect.bottom + 6) + 'px';
+            sheet.style.left = left + 'px';
+        } else {
+            sheet.style.top = '55px';
+            sheet.style.left = (window.innerWidth - menuWidth - 12) + 'px';
         }
-    } catch (e) { /* ignore, ci gaba da default */ }
 
-    renderNodeActionsMenu(postId, isOwnPost, postData);
-
-    // Sanya dropdown din kai tsaye a kasan maballin da aka danna, kamar Cyber-Dropdown
-    const menuWidth = sheet.offsetWidth || 230;
-    if (triggerEl && triggerEl.getBoundingClientRect) {
-        const rect = triggerEl.getBoundingClientRect();
-        let left = rect.right - menuWidth;
-        if (left < 8) left = 8;
-        if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8;
-        sheet.style.top = (rect.bottom + 6) + 'px';
-        sheet.style.left = left + 'px';
-    } else {
-        sheet.style.top = '55px';
-        sheet.style.left = (window.innerWidth - menuWidth - 12) + 'px';
+        sheet.classList.add('is-open');
+        if (navigator.vibrate) navigator.vibrate(20);
+    } finally {
+        neuralMenuOpening = false;
     }
-
-    sheet.classList.add('is-open');
-    if (navigator.vibrate) navigator.vibrate(20);
 }
 
 function renderNodeActionsMenu(postId, isOwnPost, postData) {
