@@ -266,10 +266,14 @@ const NexusVideo = (() => {
         activeFilterId = 'none';
         const filterTrack = document.getElementById('nexus-filter-track');
         if (filterTrack) filterTrack.dataset.built = '';
-        if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
+       if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
         activeBgId = 'none';
         const bgTrack = document.getElementById('nexus-bg-track');
         if (bgTrack) bgTrack.dataset.built = '';
+        if (typeof NexusVideoAR !== 'undefined') NexusVideoAR.stopProcessing();
+        activeArId = 'none';
+        const arTrack = document.getElementById('nexus-ar-track');
+        if (arTrack) arTrack.dataset.built = ''; 
         fxPanelOpen = false; activeFxTab = 'filters';
         callDocRef = null; callRole = null;
         isMuted = false; isCameraOff = false; isFrontCamera = true;
