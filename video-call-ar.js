@@ -51,7 +51,7 @@ const NexusVideoAR = (() => {
             `;
             document.body.appendChild(s);
             window.addEventListener('nexus-ar-mp-ready', () => { mediapipeLoaded = true; resolve(); }, { once: true });
-            setTimeout(() => { if (!mediapipeLoaded) reject(new Error('MediaPipe FaceLandmarker timeout')); }, 10000);
+            setTimeout(() => { if (!mediapipeLoaded) reject(new Error('MediaPipe FaceLandmarker timeout')); }, 30000);
         });
     }
 
