@@ -37,18 +37,20 @@ const NexusVideoBackground = (() => {
     }
     function getBackgrounds() { return BACKGROUNDS; }
 
+ let mediapipeLoadPromise = null;
     function loadMediapipe() {
-        if (mediapipeLoaded && typeof SelfieSegmentation !== 'undefined') return Promise.resolve();
-        return new Promise((resolve, reject) => {
-            if (document.querySelector('script[data-nexus-mp]')) { mediapipeLoaded = true; resolve(); return; }
+        if (typeof SelfieSegmentation !== 'undefined') { mediapipeLoaded = true; return Promise.resolve(); }
+        if (mediapipeLoadPromise) return mediapipeLoadPromise;
+        mediapipeLoadPromise = new Promise((resolve, reject) => {
             const s = document.createElement('script');
             s.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js';
             s.dataset.nexusMp = '1';
             s.onload = () => { mediapipeLoaded = true; resolve(); };
-            s.onerror = () => reject(new Error('MediaPipe ta kasa loda — duba internet dinka'));
+            s.onerror = () => { mediapipeLoadPromise = null; reject(new Error('MediaPipe ta kasa loda — duba internet dinka')); };
             document.body.appendChild(s);
         });
-    }
+        return mediapipeLoadPromise;
+    }   
 
     async function startProcessing(videoEl) {
         await loadMediapipe();
