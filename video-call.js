@@ -718,6 +718,13 @@ const NexusVideo = (() => {
         return effectsLoadPromise;
     }
 
+    async function restoreRawTrack() {
+    if (!pc || !localStream) return;
+    const raw = localStream.getVideoTracks()[0];
+    const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+    if (raw && sender && sender.track !== raw) { try { await sender.replaceTrack(raw); } catch (e) {} }
+    }
+    
    async function toggleFxPanel() {
         const panel = document.getElementById('nexus-fx-panel');
         const controls = document.getElementById('nexus-video-controls');
@@ -737,6 +744,7 @@ const NexusVideo = (() => {
             if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
             if (typeof NexusVideoAR !== 'undefined') NexusVideoAR.stopProcessing();
             if (localStream) { const lv = document.getElementById('nexus-local-video'); if (lv) lv.srcObject = localStream; }
+            restoreRawTrack();
             scheduleHideControls();
         }
     }
@@ -744,6 +752,7 @@ const NexusVideo = (() => {
     async function switchFxTab(tab, forceReload) {
         if (!forceReload && tab === activeFxTab) return;
         activeFxTab = tab;
+        restoreRawTrack();
         const tabFilters = document.getElementById('nexus-fx-tab-filters');
         const tabBg = document.getElementById('nexus-fx-tab-bg');
         const tabAr = document.getElementById('nexus-fx-tab-ar');
@@ -780,7 +789,7 @@ const NexusVideo = (() => {
             buildBgPanel();
             if (localVideoEl && localStream) {
                 try {
-                    const bgStream = await NexusVideoBackground.startProcessing(localVideoEl);
+                    const bgStream = await NexusVideoBackground.startProcessing(localVideoEl, localStream);
                     if (bgStream) localVideoEl.srcObject = bgStream; // nuna processed canvas a LOCAL preview ma
                 } catch (err) {
                     alert('Background ta kasa farawa: ' + err.message);
@@ -800,7 +809,7 @@ const NexusVideo = (() => {
             buildArPanel();
             if (localVideoEl && localStream) {
                 try {
-                    const arStream = await NexusVideoAR.startProcessing(localVideoEl);
+                    const arStream = await NexusVideoAR.startProcessing(localVideoEl, localStream);
                     if (arStream) localVideoEl.srcObject = arStream; // nuna processed canvas (kunnuwan zaki, dss) a LOCAL preview ma
                 } catch (err) {
                     alert('Effects ta kasa farawa: ' + err.message);
