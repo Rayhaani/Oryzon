@@ -52,39 +52,58 @@ const NexusVideoBackground = (() => {
         return mediapipeLoadPromise;
     }   
 
-    async function startProcessing(videoEl) {
-        await loadMediapipe();
-        sourceVideoEl = videoEl;
-        canvas = document.createElement('canvas');
-        canvas.width = 640; canvas.height = 480;
-        ctx = canvas.getContext('2d');
+    let hiddenVideo = null, startToken = 0, loopId = 0;
 
+async function startProcessing(videoEl, rawStream) {
+    const token = ++startToken;
+    const src = rawStream || videoEl.srcObject; // kamera ta asali, ba canvas ba
+    await loadMediapipe();
+    if (token !== startToken) return null;
+
+    const hv = document.createElement('video');
+    hv.muted = true; hv.playsInline = true;
+    hv.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;';
+    hv.srcObject = src;
+    document.body.appendChild(hv);
+    hiddenVideo = hv;
+    await hv.play().catch(() => {});
+    if (token !== startToken) { hv.remove(); return null; }
+    sourceVideoEl = hv;
+
+    canvas = document.createElement('canvas');
+    canvas.width = hv.videoWidth || 640;
+    canvas.height = hv.videoHeight || 480;
+    ctx = canvas.getContext('2d');
+
+    if (!segmenter) {
         segmenter = new SelfieSegmentation({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
         });
         segmenter.setOptions({ modelSelection: 1 });
         segmenter.onResults(onSegmentationResults);
-
-        outputStream = canvas.captureStream(30);
-        running = true;
-        sendFrameLoop();
-        return outputStream;
+        await segmenter.initialize();
+        if (token !== startToken) return null;
     }
 
-    async function sendFrameLoop() {
-        if (!running || !sourceVideoEl) return;
-        if (sourceVideoEl.readyState >= 2) {
-            await segmenter.send({ image: sourceVideoEl });
-        }
-        requestAnimationFrame(sendFrameLoop);
+    outputStream = canvas.captureStream(30);
+    running = true;
+    loopId++;
+    sendFrameLoop(loopId);
+    return outputStream;
+}
+
+async function sendFrameLoop(id) {
+    if (!running || id !== loopId || !sourceVideoEl) return;
+    if (sourceVideoEl.readyState >= 2) {
+        try { await segmenter.send({ image: sourceVideoEl }); } catch (e) {}
     }
+    requestAnimationFrame(() => sendFrameLoop(id));
+}
 
     function onSegmentationResults(results) {
         if (!canvas) return;
-        if (results.image.videoWidth && canvas.width !== results.image.videoWidth) {
-            canvas.width = results.image.videoWidth;
-            canvas.height = results.image.videoHeight;
-        }
+        const vw = sourceVideoEl && sourceVideoEl.videoWidth, vh = sourceVideoEl && sourceVideoEl.videoHeight;
+if (vw && (canvas.width !== vw || canvas.height !== vh)) { canvas.width = vw; canvas.height = vh; }
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -165,8 +184,10 @@ const NexusVideoBackground = (() => {
     }
 
     function stopProcessing() {
-        running = false; sourceVideoEl = null; canvas = null; ctx = null;
-        outputStream = null; currentMode = 'none'; currentBgImage = null;
+    startToken++; running = false; loopId++;
+    if (hiddenVideo) { hiddenVideo.srcObject = null; hiddenVideo.remove(); hiddenVideo = null; }
+    sourceVideoEl = null; canvas = null; ctx = null;
+    outputStream = null; currentMode = 'none'; currentBgImage = null;
     }
 
     return { getBackgrounds, startProcessing, stopProcessing, applyBackground, applyCustomImage, isPremium };
