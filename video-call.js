@@ -639,10 +639,11 @@ const NexusVideo = (() => {
                     transition:opacity 0.25s ease;
                     z-index:10;
                 " onclick="event.stopPropagation()">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
                         <div style="display:flex;gap:20px;">
                             <div id="nexus-fx-tab-filters" onclick="event.stopPropagation();NexusVideo.switchFxTab('filters')" style="color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid #fff;">Filters</div>
                             <div id="nexus-fx-tab-bg" onclick="event.stopPropagation();NexusVideo.switchFxTab('bg')" style="color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid transparent;">Background</div>
+                            <div id="nexus-fx-tab-ar" onclick="event.stopPropagation();NexusVideo.switchFxTab('ar')" style="color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid transparent;">Effects</div>
                         </div>
                         <div onclick="event.stopPropagation();NexusVideo.toggleFxPanel()" style="
                             color:#fff;font-size:13px;font-weight:600;
@@ -652,8 +653,9 @@ const NexusVideo = (() => {
                     </div>
                     <div id="nexus-filter-track" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
                     <div id="nexus-bg-track" style="display:none;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
+                    <div id="nexus-ar-track" style="display:none;gap:14px;overflow-x:auto;padding-bottom:4px;"></div>
                     <input type="file" id="nexus-bg-file-input" accept="image/*" style="display:none;" onchange="NexusVideo.handleCustomBgUpload(this)">
-                </div>
+                </div> 
             </div>
         `; 
         document.body.appendChild(el);
@@ -727,6 +729,7 @@ const NexusVideo = (() => {
             if (controls) controls.style.display = 'flex';
             if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
             if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
+            if (typeof NexusVideoAR !== 'undefined') NexusVideoAR.stopProcessing();
             scheduleHideControls();
         }
     }
@@ -736,28 +739,50 @@ const NexusVideo = (() => {
         activeFxTab = tab;
         const tabFilters = document.getElementById('nexus-fx-tab-filters');
         const tabBg = document.getElementById('nexus-fx-tab-bg');
+        const tabAr = document.getElementById('nexus-fx-tab-ar');
         const filterTrack = document.getElementById('nexus-filter-track');
         const bgTrack = document.getElementById('nexus-bg-track');
+        const arTrack = document.getElementById('nexus-ar-track');
         const localVideoEl = document.getElementById('nexus-local-video');
+        const activeCss = 'color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid #fff;';
+        const inactiveCss = 'color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid transparent;';
 
         if (tab === 'filters') {
-            if (tabFilters) tabFilters.style.cssText = 'color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid #fff;';
-            if (tabBg) tabBg.style.cssText = 'color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid transparent;';
+            if (tabFilters) tabFilters.style.cssText = activeCss;
+            if (tabBg) tabBg.style.cssText = inactiveCss;
+            if (tabAr) tabAr.style.cssText = inactiveCss;
             if (filterTrack) filterTrack.style.display = 'flex';
             if (bgTrack) bgTrack.style.display = 'none';
+            if (arTrack) arTrack.style.display = 'none';
             if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
+            if (typeof NexusVideoAR !== 'undefined') NexusVideoAR.stopProcessing();
             try { await loadEffectsEngine(); } catch (err) { alert('Filter engine ta kasa loda: ' + err.message); return; }
             buildFilterPanel();
             if (localVideoEl && localStream) NexusVideoEffects.startProcessing(localVideoEl);
-        } else {
-            if (tabBg) tabBg.style.cssText = 'color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid #fff;';
-            if (tabFilters) tabFilters.style.cssText = 'color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid transparent;';
+        } else if (tab === 'bg') {
+            if (tabBg) tabBg.style.cssText = activeCss;
+            if (tabFilters) tabFilters.style.cssText = inactiveCss;
+            if (tabAr) tabAr.style.cssText = inactiveCss;
             if (bgTrack) bgTrack.style.display = 'flex';
             if (filterTrack) filterTrack.style.display = 'none';
+            if (arTrack) arTrack.style.display = 'none';
             if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
+            if (typeof NexusVideoAR !== 'undefined') NexusVideoAR.stopProcessing();
             try { await loadBgEngine(); } catch (err) { alert('Background engine ta kasa loda: ' + err.message); return; }
             buildBgPanel();
             if (localVideoEl && localStream) NexusVideoBackground.startProcessing(localVideoEl);
+        } else {
+            if (tabAr) tabAr.style.cssText = activeCss;
+            if (tabFilters) tabFilters.style.cssText = inactiveCss;
+            if (tabBg) tabBg.style.cssText = inactiveCss;
+            if (arTrack) arTrack.style.display = 'flex';
+            if (filterTrack) filterTrack.style.display = 'none';
+            if (bgTrack) bgTrack.style.display = 'none';
+            if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
+            if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
+            try { await loadArEngine(); } catch (err) { alert('AR engine ta kasa loda: ' + err.message); return; }
+            buildArPanel();
+            if (localVideoEl && localStream) NexusVideoAR.startProcessing(localVideoEl);
         }
     }
 
@@ -914,11 +939,81 @@ const NexusVideo = (() => {
         if (result === 'load_failed') { alert('Ba a iya loda hoton ba, ka sake gwadawa.'); return; }
         activeBgId = 'custom';
         refreshBgSelection();
-        fileInput.value = '';
+       fileInput.value = '';
+    }
+
+    // ══════════════════════════════════════════════
+    //  AR EFFECTS (lazy-loaded engine)
+    // ══════════════════════════════════════════════
+    let arLoaded = false;
+    let activeArId = 'none';
+
+    function loadArEngine() {
+        if (arLoaded && typeof NexusVideoAR !== 'undefined') return Promise.resolve();
+        return new Promise((resolve, reject) => {
+            if (document.querySelector('script[src="video-call-ar.js"]')) { arLoaded = true; resolve(); return; }
+            const s = document.createElement('script');
+            s.src = 'video-call-ar.js';
+            s.onload = () => { arLoaded = true; resolve(); };
+            s.onerror = () => reject(new Error('Failed to load video-call-ar.js'));
+            document.body.appendChild(s);
+        });
+    }
+
+    function buildArPanel() {
+        const track = document.getElementById('nexus-ar-track');
+        if (!track || track.dataset.built) return;
+        let effects, isPrem;
+        try {
+            effects = NexusVideoAR.getEffects();
+            isPrem = NexusVideoAR.isPremium();
+        } catch (err) {
+            alert('buildArPanel error: ' + err.message);
+            return;
+        }
+        if (!Array.isArray(effects) || !effects.length) {
+            alert('NexusVideoAR.getEffects() babu abinda ta dawo — duba video-call-ar.js');
+            return;
+        }
+        track.dataset.built = '1';
+        track.innerHTML = effects.map(e => `
+            <div class="nexus-ar-chip" data-ar="${e.id}" onclick="NexusVideo.selectAREffect('${e.id}')" style="text-align:center;flex-shrink:0;">
+                <div style="
+                    width:56px;height:56px;border-radius:50%;
+                    background:rgba(255,255,255,0.12);
+                    box-shadow:0 4px 14px rgba(0,0,0,0.35);
+                    border:2px solid ${e.id === activeArId ? '#fff' : 'transparent'};
+                    display:flex;align-items:center;justify-content:center;
+                    margin:0 auto 6px;position:relative;
+                    font-size:24px;
+                ">
+                    ${e.id === 'none' ? '🚫' : e.id === 'catears' ? '🐱' : e.id === 'glasses' ? '😎' : e.id === 'hearts' ? '💕' : e.id === 'halo' ? '😇' : e.id === 'fireflies' ? '✨' : e.id === 'confetti' ? '🎉' : '🤖'}
+                    ${e.premium && !isPrem ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="white" style="position:absolute;bottom:-4px;right:-4px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><path d="M12 1a5 5 0 0 0-5 5v3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg>' : ''}
+                </div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.75);">${e.label}</div>
+            </div>
+        `).join('');
+    }
+
+    async function selectAREffect(effectId) {
+        const result = await NexusVideoAR.applyEffect(effectId, pc);
+        if (result === 'premium_locked') {
+            if (typeof NexusPremium !== 'undefined' && NexusPremium.showUpgradePrompt) {
+                NexusPremium.showUpgradePrompt('video_ar');
+            } else {
+                alert('Wannan effect Premium ne kadai — ka yi upgrade domin amfani da shi.');
+            }
+            return;
+        }
+        activeArId = effectId;
+        document.querySelectorAll('.nexus-ar-chip').forEach(chip => {
+            const inner = chip.querySelector('div');
+            inner.style.border = chip.dataset.ar === activeArId ? '2px solid #fff' : '2px solid transparent';
+        });
     }
 
     // ── Draggable PiP ───────────────────────────── 
-       function makeDraggable(el) {
+        function makeDraggable(el) {
         if (!el) return;
         let startX, startY, startLeft, startTop;
 
@@ -1199,7 +1294,8 @@ const NexusVideo = (() => {
         switchFxTab,
         selectFilter,
         selectBackground,
-        handleCustomBgUpload
+        handleCustomBgUpload,
+        selectAREffect
     };
 })();
 
