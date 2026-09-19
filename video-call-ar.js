@@ -55,54 +55,68 @@ const NexusVideoAR = (() => {
         });
     }
 
-    async function startProcessing(videoEl) {
-        await loadMediapipe();
+  let hiddenVideo = null, startToken = 0, lastLandmarks = null;
 
-        if (!faceLandmarker) {
-            const { FaceLandmarker, FilesetResolver } = window.__NexusFaceLandmarkerLib;
-            const filesetResolver = await FilesetResolver.forVisionTasks(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
-            );
-            faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
-                baseOptions: {
-                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-                    delegate: "GPU"
-                },
-                outputFaceBlendshapes: false,
-                runningMode: "VIDEO",
-                numFaces: 1
-            });
-        }
+async function startProcessing(videoEl, rawStream) {
+    const token = ++startToken;
+    const src = rawStream || videoEl.srcObject;
+    await loadMediapipe();
+    if (token !== startToken) return null;
 
-        sourceVideoEl = videoEl;
-        canvas = document.createElement('canvas');
-        canvas.width = 640; canvas.height = 480;
-        ctx = canvas.getContext('2d');
-
-        outputStream = canvas.captureStream(30);
-        drawLoop();
-        return outputStream;
+    if (!faceLandmarker) {
+        const { FaceLandmarker, FilesetResolver } = window.__NexusFaceLandmarkerLib;
+        const fs = await FilesetResolver.forVisionTasks(
+            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+        );
+        const make = (delegate) => FaceLandmarker.createFromOptions(fs, {
+            baseOptions: {
+                modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+                delegate
+            },
+            outputFaceBlendshapes: false, runningMode: "VIDEO", numFaces: 1
+        });
+        try { faceLandmarker = await make("GPU"); } catch (e) { faceLandmarker = await make("CPU"); }
+        if (token !== startToken) return null;
     }
 
-    function drawLoop() {
-        if (!canvas || !sourceVideoEl) return;
-        if (sourceVideoEl.readyState < 2) { rafId = requestAnimationFrame(drawLoop); return; }
-        if (sourceVideoEl.videoWidth && canvas.width !== sourceVideoEl.videoWidth) {
-            canvas.width = sourceVideoEl.videoWidth;
-            canvas.height = sourceVideoEl.videoHeight;
-        }
-        ctx.drawImage(sourceVideoEl, 0, 0, canvas.width, canvas.height);
+    const hv = document.createElement('video');
+    hv.muted = true; hv.playsInline = true;
+    hv.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;';
+    hv.srcObject = src;
+    document.body.appendChild(hv);
+    hiddenVideo = hv;
+    await hv.play().catch(() => {});
+    if (token !== startToken) { hv.remove(); return null; }
 
-        if (currentEffectId !== 'none' && faceLandmarker && sourceVideoEl.currentTime !== lastVideoTime) {
+    sourceVideoEl = hv; lastLandmarks = null; lastVideoTime = -1;
+    canvas = document.createElement('canvas');
+    canvas.width = hv.videoWidth || 640; canvas.height = hv.videoHeight || 480;
+    ctx = canvas.getContext('2d');
+    outputStream = canvas.captureStream(30);
+    drawLoop();
+    return outputStream;
+}
+
+function drawLoop() {
+    if (!canvas || !sourceVideoEl) return;
+    if (sourceVideoEl.readyState < 2) { rafId = requestAnimationFrame(drawLoop); return; }
+    const vw = sourceVideoEl.videoWidth, vh = sourceVideoEl.videoHeight;
+    if (vw && (canvas.width !== vw || canvas.height !== vh)) { canvas.width = vw; canvas.height = vh; }
+    ctx.drawImage(sourceVideoEl, 0, 0, canvas.width, canvas.height);
+
+    if (currentEffectId !== 'none' && faceLandmarker) {
+        if (sourceVideoEl.currentTime !== lastVideoTime) {
             lastVideoTime = sourceVideoEl.currentTime;
-            const result = faceLandmarker.detectForVideo(sourceVideoEl, performance.now());
-            if (result.faceLandmarks && result.faceLandmarks.length) {
-                drawEffect(result.faceLandmarks[0]);
-            }
+            try {
+                const r = faceLandmarker.detectForVideo(sourceVideoEl, performance.now());
+                lastLandmarks = (r.faceLandmarks && r.faceLandmarks.length) ? r.faceLandmarks[0] : null;
+            } catch (e) { lastLandmarks = null; }
         }
-        particleTick++;
-        rafId = requestAnimationFrame(drawLoop);
+        if (lastLandmarks) drawEffect(lastLandmarks); // ana zana a kowane frame — babu kiftawa
     }
+    particleTick++;
+    rafId = requestAnimationFrame(drawLoop);
+}  
 
     // Landmark indices masu amfani: 10=goshi/sama, 234=kunnen hagu,
     // 454=kunnen dama, 168=tsakiyar idanu (glasses bridge), 4=hanci
@@ -146,11 +160,10 @@ const NexusVideoAR = (() => {
             drawBlush(leftCheek.x + faceWidth * 0.15, leftCheek.y + faceWidth * 0.15, faceWidth * 0.12);
             drawBlush(rightCheek.x - faceWidth * 0.15, rightCheek.y + faceWidth * 0.15, faceWidth * 0.12);
         } else if (currentEffectId === 'stareyes') {
-            drawFloatingShapes('⭐', faceWidth * 0.7, lm(landmarks, 234), false, 2);
-            drawFloatingShapes('⭐', faceWidth * 0.7, lm(landmarks, 454), false, 2);
-        } else if (currentEffectId === 'crown') {
-            const top = lm(landmarks, 10);
-            drawFloatingShapes('👑', faceWidth * 0.5, { x: top.x, y: top.y - faceWidth * 0.35 + wobble }, false, 1);
+    [468, 473].forEach(i => drawEmojiAt('⭐', lm(landmarks, i), faceWidth * 0.22));
+} else if (currentEffectId === 'crown') {
+    const top = lm(landmarks, 10);
+    drawEmojiAt('👑', { x: top.x, y: top.y - faceWidth * 0.3 + wobble }, faceWidth * 0.5);       
         } else if (currentEffectId === 'mustache') {
             const nose = lm(landmarks, 4);
             drawMustache(nose.x, nose.y + faceWidth * 0.12, faceWidth * 0.4);
@@ -244,11 +257,20 @@ const NexusVideoAR = (() => {
         }
         ctx.restore();
     }
-
+function drawEmojiAt(emoji, p, size) {
+    ctx.save();
+    ctx.font = `${size}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, p.x, p.y);
+    ctx.restore();
+}
     function stopProcessing() {
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = null; sourceVideoEl = null; canvas = null; ctx = null;
-        outputStream = null; currentEffectId = 'none'; lastVideoTime = -1;
+    startToken++;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    if (hiddenVideo) { hiddenVideo.srcObject = null; hiddenVideo.remove(); hiddenVideo = null; }
+    sourceVideoEl = null; canvas = null; ctx = null;
+    outputStream = null; currentEffectId = 'none'; lastVideoTime = -1; lastLandmarks = null;
     }
 
     async function applyEffect(effectId, pc) {
