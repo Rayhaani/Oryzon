@@ -734,6 +734,7 @@ const NexusVideo = (() => {
             if (typeof NexusVideoEffects !== 'undefined') NexusVideoEffects.stopProcessing();
             if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
             if (typeof NexusVideoAR !== 'undefined') NexusVideoAR.stopProcessing();
+            if (localStream) { const lv = document.getElementById('nexus-local-video'); if (lv) lv.srcObject = localStream; }
             scheduleHideControls();
         }
     }
@@ -1306,7 +1307,7 @@ const NexusVideo = (() => {
         selectFilter,
         selectBackground,
         handleCustomBgUpload,
-        selectAREffect
+        selectAREffect,
     };
 })();
 
