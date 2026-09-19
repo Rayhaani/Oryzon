@@ -17,6 +17,7 @@ const NexusVideo = (() => {
     let callRole = null;
     let controlsTimeout = null;
     let controlsVisible = true;
+    let topbarStatusTimeout = null;
     let effectsLoaded = false;
     let bgLoaded = false;
     let activeBgId = 'none';
@@ -466,18 +467,18 @@ const NexusVideo = (() => {
                     </div>
                 </div>
 
-                <!-- Local Video (PiP - Picture in Picture) -->
+                <!-- Local Video: FULL SCREEN yayin Calling/Connecting, sai ya koma karamin PiP (dama) bayan an hada call -->
                 <div id="nexus-pip-container" style="
                     position:absolute;
-                    top:150px;right:16px;
-                    width:110px;height:160px;
-                    border-radius:18px;
+                    inset:0;
+                    width:100%;height:100%;
+                    border-radius:0;
                     overflow:hidden;
-                    border:2.5px solid rgba(255,255,255,0.25);
-                    box-shadow:0 8px 32px rgba(0,0,0,0.6);
-                    z-index:10;
+                    border:none;
+                    box-shadow:none;
+                    z-index:1;
                     cursor:move;
-                    transition:box-shadow 0.2s;
+                    transition:all 0.4s ease;
                 ">
                     <video id="nexus-local-video"
                         autoplay playsinline muted
@@ -506,8 +507,12 @@ const NexusVideo = (() => {
                     transition:opacity 0.3s;
                 ">
                     <div style="position:absolute;left:0;right:0;top:50px;text-align:center;pointer-events:none;">
-                        <div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:0.2px;">${name}</div>
-                        <div id="nexus-video-timer" style="font-size:14px;color:rgba(255,255,255,0.75);margin-top:2px;display:none;">00:00</div>
+                        <div style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:21px;font-weight:700;color:#fff;letter-spacing:0.1px;">${name}</div>
+                        <div id="nexus-video-topbar-status" style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:13.5px;color:rgba(255,255,255,0.82);margin-top:4px;display:flex;align-items:center;justify-content:center;gap:5px;">
+                            <svg id="nexus-video-topbar-lock" width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.82)"><path d="M12 1a5 5 0 0 0-5 5v3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg>
+                            <span id="nexus-video-topbar-status-text">End-to-end encrypted</span>
+                        </div>
+                        <div id="nexus-video-timer" style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;color:rgba(255,255,255,0.75);margin-top:2px;display:none;">00:00</div>
                     </div>
                     <div style="position:absolute;top:50px;right:20px;display:flex;flex-direction:column;align-items:center;gap:12px;"> 
                             <div id="nexus-vid-fx-btn" onclick="event.stopPropagation();NexusVideo.toggleFxPanel()" style="
@@ -657,8 +662,15 @@ const NexusVideo = (() => {
 
         // Draggable PiP
         makeDraggable(document.getElementById('nexus-pip-container'));
-    }
 
+        // Bayan 3.5s, "End-to-end encrypted" ya koma Calling/Connecting (kamar WhatsApp)
+        topbarStatusTimeout = setTimeout(() => {
+            const txt = document.getElementById('nexus-video-topbar-status-text');
+            const lock = document.getElementById('nexus-video-topbar-lock');
+            if (txt) txt.textContent = isCaller ? 'Calling...' : 'Connecting...';
+            if (lock) lock.style.display = 'none';
+        }, 3500);
+    }
     // ── Controls auto-hide ────────────────────────
     function scheduleHideControls() {
         if (controlsTimeout) clearTimeout(controlsTimeout);
@@ -985,10 +997,11 @@ const NexusVideo = (() => {
         scheduleHideControls();
     }
 
-    function updateVideoStatus(text, showTimer = false) {
+   function updateVideoStatus(text, showTimer = false) {
         const statusEl = document.getElementById('nexus-video-status');
         const connectingEl = document.getElementById('nexus-video-connecting');
         const timerEl = document.getElementById('nexus-video-timer');
+        const topbarStatus = document.getElementById('nexus-video-topbar-status');
 
         if (statusEl) statusEl.textContent = text;
         if (showTimer && connectingEl) {
@@ -996,7 +1009,24 @@ const NexusVideo = (() => {
             setTimeout(() => { if(connectingEl) connectingEl.style.display = 'none'; }, 500);
         }
         if (timerEl) timerEl.style.display = showTimer ? 'block' : 'none';
-    }
+        if (showTimer) {
+            if (topbarStatusTimeout) { clearTimeout(topbarStatusTimeout); topbarStatusTimeout = null; }
+            if (topbarStatus) topbarStatus.style.display = 'none';
+            const pip = document.getElementById('nexus-pip-container');
+            if (pip && !pip.dataset.corner) {
+                pip.dataset.corner = '1';
+                pip.style.inset = 'auto';
+                pip.style.top = '150px';
+                pip.style.right = '16px';
+                pip.style.width = '110px';
+                pip.style.height = '160px';
+                pip.style.borderRadius = '18px';
+                pip.style.border = '2.5px solid rgba(255,255,255,0.25)';
+                pip.style.boxShadow = '0 8px 32px rgba(0,0,0,0.6)';
+                pip.style.zIndex = '10';
+            }
+        }
+   } 
 
     function hideVideoCallUI() {
         const el = document.getElementById('nexus-video-call');
