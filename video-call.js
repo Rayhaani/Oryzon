@@ -450,23 +450,19 @@ const NexusVideo = (() => {
                     ">
                 </video>
 
-                <!-- Connecting overlay -->
+                
+<!-- Connecting overlay -->
                 <div id="nexus-video-connecting" style="
                     position:absolute;inset:0;
-                    background:rgba(0,0,0,0.6);
-                    display:flex;flex-direction:column;
-                    align-items:center;justify-content:center;gap:16px;
+                    display:none;
+                    flex-direction:column;
+                    align-items:center;justify-content:center;
                     z-index:2;
                 ">
-                    <div style="width:90px;height:90px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,0.3);">
-                        <img src="${avatar}" style="width:100%;height:100%;object-fit:cover;">
-                    </div>
-                    <div style="font-size:22px;font-weight:600;color:#fff;">${name}</div>
-                    <div id="nexus-video-status" style="font-size:14px;color:rgba(255,255,255,0.6);">
-                        ${isCaller ? 'Calling...' : 'Connecting...'}
+                    <div id="nexus-video-status" style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;color:#fff;background:rgba(0,0,0,0.6);padding:10px 20px;border-radius:20px;">
                     </div>
                 </div>
-
+                
                 <!-- Local Video: FULL SCREEN yayin Calling/Connecting, sai ya koma karamin PiP (dama) bayan an hada call -->
                 <div id="nexus-pip-container" style="
                     position:absolute;
@@ -507,7 +503,7 @@ const NexusVideo = (() => {
                     transition:opacity 0.3s;
                 ">
                     <div style="position:absolute;left:0;right:0;top:50px;text-align:center;pointer-events:none;">
-                        <div style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:21px;font-weight:700;color:#fff;letter-spacing:0.1px;">${name}</div>
+                        <div style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:21px;font-weight:600;color:#fff;letter-spacing:0.1px;">${name}</div>
                         <div id="nexus-video-topbar-status" style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:13.5px;color:rgba(255,255,255,0.82);margin-top:4px;display:flex;align-items:center;justify-content:center;gap:5px;">
                             <svg id="nexus-video-topbar-lock" width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.82)"><path d="M12 1a5 5 0 0 0-5 5v3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg>
                             <span id="nexus-video-topbar-status-text">End-to-end encrypted</span>
@@ -551,10 +547,12 @@ const NexusVideo = (() => {
                     z-index:10;
                     transition:opacity 0.3s;
                 ">
+                    
+
                     <!-- Mute -->
                     <div style="text-align:center;">
                         <div id="nexus-vid-mute-btn" onclick="event.stopPropagation();NexusVideo.toggleVideoMute()" style="
-                            width:58px;height:58px;border-radius:50%;
+                            width:52px;height:52px;border-radius:50%;
                             background:rgba(255,255,255,0.2);
                             backdrop-filter:blur(10px);
                             display:flex;align-items:center;justify-content:center;
@@ -562,7 +560,7 @@ const NexusVideo = (() => {
                             border:1px solid rgba(255,255,255,0.2);
                             transition:background 0.2s;
                         ">
-                            <svg class="vid-mute-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="vid-mute-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                                 <line x1="12" y1="19" x2="12" y2="23"/>
@@ -575,14 +573,14 @@ const NexusVideo = (() => {
                     <!-- End Call -->
                     <div style="text-align:center;">
                         <div onclick="event.stopPropagation();NexusVideo.hangUpVideo()" style="
-                            width:72px;height:72px;border-radius:50%;
+                            width:52px;height:52px;border-radius:50%;
                             background:#ff3b30;
                             display:flex;align-items:center;justify-content:center;
                             cursor:pointer;margin:0 auto 8px;
                             box-shadow:0 8px 30px rgba(255,59,48,0.6);
                             transition:transform 0.15s;
                         " onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
-                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
                                 <line x1="1" y1="1" x2="23" y2="23"/>
                                 <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.03 18.81a16.18 16.18 0 0 0 7.94 0"/>
                             </svg>
@@ -593,7 +591,7 @@ const NexusVideo = (() => {
                     <!-- Camera Toggle -->
                     <div style="text-align:center;">
                         <div id="nexus-vid-cam-btn" onclick="event.stopPropagation();NexusVideo.toggleCamera()" style="
-                            width:58px;height:58px;border-radius:50%;
+                            width:52px;height:52px;border-radius:50%;
                             background:rgba(255,255,255,0.2);
                             backdrop-filter:blur(10px);
                             display:flex;align-items:center;justify-content:center;
@@ -601,7 +599,7 @@ const NexusVideo = (() => {
                             border:1px solid rgba(255,255,255,0.2);
                             transition:background 0.2s;
                         ">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.362a1 1 0 0 1-1.447.894L15 14M3 8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/>
                             </svg>
                         </div>
@@ -611,7 +609,7 @@ const NexusVideo = (() => {
                     <!-- Flip Camera -->
                     <div style="text-align:center;">
                         <div onclick="event.stopPropagation();NexusVideo.flipCamera()" style="
-                            width:58px;height:58px;border-radius:50%;
+                            width:52px;height:52px;border-radius:50%;
                             background:rgba(255,255,255,0.2);
                             backdrop-filter:blur(10px);
                             display:flex;align-items:center;justify-content:center;
@@ -619,7 +617,7 @@ const NexusVideo = (() => {
                             border:1px solid rgba(255,255,255,0.2);
                             transition:background 0.2s;
                         ">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 4v6h6M23 20v-6h-6"/>
                                 <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
                             </svg>
