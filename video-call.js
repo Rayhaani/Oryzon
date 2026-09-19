@@ -799,8 +799,12 @@ const NexusVideo = (() => {
             try { await loadArEngine(); } catch (err) { alert('AR engine ta kasa loda: ' + err.message); return; }
             buildArPanel();
             if (localVideoEl && localStream) {
-                const arStream = await NexusVideoAR.startProcessing(localVideoEl);
-                if (arStream) localVideoEl.srcObject = arStream; // nuna processed canvas (kunnuwan zaki, dss) a LOCAL preview ma
+                try {
+                    const arStream = await NexusVideoAR.startProcessing(localVideoEl);
+                    if (arStream) localVideoEl.srcObject = arStream; // nuna processed canvas (kunnuwan zaki, dss) a LOCAL preview ma
+                } catch (err) {
+                    alert('Effects ta kasa farawa: ' + err.message);
+                }
             }
         }
                                                       } 
