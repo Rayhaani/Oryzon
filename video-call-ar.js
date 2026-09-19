@@ -157,9 +157,10 @@ const NexusVideoAR = (() => {
             const nose = lm(landmarks, 4);
             drawFreckles(nose.x, nose.y, faceWidth * 0.45);
         }
+    }
 
     function drawEar(x, y, r, outerColor, innerColor) {
-        ctx.save();
+            ctx.save();
         ctx.fillStyle = outerColor;
         ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = innerColor;
