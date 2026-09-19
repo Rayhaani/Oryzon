@@ -704,16 +704,18 @@ const NexusVideo = (() => {
     // ══════════════════════════════════════════════
     //  FILTERS / EFFECTS (lazy-loaded engine)
     // ══════════════════════════════════════════════
+    let effectsLoadPromise = null;
     function loadEffectsEngine() {
-        if (effectsLoaded && typeof NexusVideoEffects !== 'undefined') return Promise.resolve();
-        return new Promise((resolve, reject) => {
-            if (document.querySelector('script[src="video-call-effects.js"]')) { effectsLoaded = true; resolve(); return; }
+        if (typeof NexusVideoEffects !== 'undefined') { effectsLoaded = true; return Promise.resolve(); }
+        if (effectsLoadPromise) return effectsLoadPromise;
+        effectsLoadPromise = new Promise((resolve, reject) => {
             const s = document.createElement('script');
             s.src = 'video-call-effects.js';
             s.onload = () => { effectsLoaded = true; resolve(); };
-            s.onerror = () => reject(new Error('Failed to load video-call-effects.js'));
+            s.onerror = () => { effectsLoadPromise = null; reject(new Error('Failed to load video-call-effects.js')); };
             document.body.appendChild(s);
         });
+        return effectsLoadPromise;
     }
 
    async function toggleFxPanel() {
@@ -852,16 +854,18 @@ const NexusVideo = (() => {
     // ══════════════════════════════════════════════
     //  BACKGROUND (lazy-loaded engine)
     // ══════════════════════════════════════════════
+    let bgLoadPromise = null;
     function loadBgEngine() {
-        if (bgLoaded && typeof NexusVideoBackground !== 'undefined') return Promise.resolve();
-        return new Promise((resolve, reject) => {
-            if (document.querySelector('script[src="video-call-bg.js"]')) { bgLoaded = true; resolve(); return; }
+        if (typeof NexusVideoBackground !== 'undefined') { bgLoaded = true; return Promise.resolve(); }
+        if (bgLoadPromise) return bgLoadPromise;
+        bgLoadPromise = new Promise((resolve, reject) => {
             const s = document.createElement('script');
             s.src = 'video-call-bg.js';
             s.onload = () => { bgLoaded = true; resolve(); };
-            s.onerror = () => reject(new Error('Failed to load video-call-bg.js'));
+            s.onerror = () => { bgLoadPromise = null; reject(new Error('Failed to load video-call-bg.js')); };
             document.body.appendChild(s);
         });
+        return bgLoadPromise;
     }
 
     function buildBgPanel() {
@@ -960,16 +964,18 @@ const NexusVideo = (() => {
     let arLoaded = false;
     let activeArId = 'none';
 
+    let arLoadPromise = null;
     function loadArEngine() {
-        if (arLoaded && typeof NexusVideoAR !== 'undefined') return Promise.resolve();
-        return new Promise((resolve, reject) => {
-            if (document.querySelector('script[src="video-call-ar.js"]')) { arLoaded = true; resolve(); return; }
+        if (typeof NexusVideoAR !== 'undefined') { arLoaded = true; return Promise.resolve(); }
+        if (arLoadPromise) return arLoadPromise;
+        arLoadPromise = new Promise((resolve, reject) => {
             const s = document.createElement('script');
             s.src = 'video-call-ar.js';
             s.onload = () => { arLoaded = true; resolve(); };
-            s.onerror = () => reject(new Error('Failed to load video-call-ar.js'));
+            s.onerror = () => { arLoadPromise = null; reject(new Error('Failed to load video-call-ar.js')); };
             document.body.appendChild(s);
         });
+        return arLoadPromise;
     }
 
     function buildArPanel() {
