@@ -452,14 +452,13 @@ const NexusVideo = (() => {
 
                 
 <!-- Connecting overlay -->
-                <div id="nexus-video-connecting" style="
+               <div id="nexus-video-connecting" style="
                     position:absolute;inset:0;
                     display:none;
                     flex-direction:column;
                     align-items:center;justify-content:center;
                     z-index:2;
-                    pointer-events:none;
-                ">
+                "> 
                     <div id="nexus-video-status" style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;color:#fff;background:rgba(0,0,0,0.6);padding:10px 20px;border-radius:20px;">
                     </div>
                 </div>
