@@ -105,8 +105,8 @@ const NexusVideo = (() => {
         try {
             localStream = await getMedia('user');
             showVideoCallUI({ name, avatar, isCaller: true });
+            hideCallingUI();
             setupLocalVideo(localStream);
-
             pc = new RTCPeerConnection(iceConfig);
             localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
