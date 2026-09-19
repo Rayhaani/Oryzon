@@ -779,8 +779,13 @@ const NexusVideo = (() => {
             try { await loadBgEngine(); } catch (err) { alert('Background engine ta kasa loda: ' + err.message); return; }
             buildBgPanel();
             if (localVideoEl && localStream) {
-                const bgStream = await NexusVideoBackground.startProcessing(localVideoEl);
-                if (bgStream) localVideoEl.srcObject = bgStream; // nuna processed canvas a LOCAL preview ma
+                try {
+                    const bgStream = await NexusVideoBackground.startProcessing(localVideoEl);
+                    if (bgStream) localVideoEl.srcObject = bgStream; // nuna processed canvas a LOCAL preview ma
+                } catch (err) {
+                    alert('Background ta kasa farawa: ' + err.message);
+                }
+            }
             }
         } else {
             if (tabAr) tabAr.style.cssText = activeCss;
