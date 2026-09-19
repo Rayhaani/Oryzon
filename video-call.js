@@ -1307,7 +1307,7 @@ const NexusVideo = (() => {
         selectFilter,
         selectBackground,
         handleCustomBgUpload,
-        selectAREffect,
+        selectAREffect
     };
 })();
 
