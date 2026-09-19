@@ -296,7 +296,7 @@ filter: brightness(0.7) !important;
         .post-action-capsules, .action-capsules {
             display: flex !important;
             gap: 6px !important;
-            flex: 1 !important;
+            flex: 0 1 auto !important;
         }
 
         /* ===== CAPSULE BUTTONS ===== */
@@ -527,7 +527,7 @@ filter: brightness(0.7) !important;
 .post-action-capsules, .action-capsules {
     display: flex !important;
     gap: 4px !important;
-    flex: 1 !important;
+    flex: 0 1 auto !important;
 
     /* ✅ SOLUTION 3 — Frosted pill wraps ALL buttons together */
     background: rgba(255, 255, 255, 0.08) !important;
