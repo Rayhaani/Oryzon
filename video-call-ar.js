@@ -57,10 +57,6 @@ const NexusVideoAR = (() => {
 
     async function startProcessing(videoEl) {
         await loadMediapipe();
-        sourceVideoEl = videoEl;
-        canvas = document.createElement('canvas');
-        canvas.width = 640; canvas.height = 480;
-        ctx = canvas.getContext('2d');
 
         if (!faceLandmarker) {
             const { FaceLandmarker, FilesetResolver } = window.__NexusFaceLandmarkerLib;
@@ -77,6 +73,11 @@ const NexusVideoAR = (() => {
                 numFaces: 1
             });
         }
+
+        sourceVideoEl = videoEl;
+        canvas = document.createElement('canvas');
+        canvas.width = 640; canvas.height = 480;
+        ctx = canvas.getContext('2d');
 
         outputStream = canvas.captureStream(30);
         drawLoop();
