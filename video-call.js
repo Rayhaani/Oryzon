@@ -24,6 +24,9 @@ const NexusVideo = (() => {
     let activeFilterId = 'none';
     let fxPanelOpen = false;
     let activeFxTab = 'filters';
+    let lastCalleeId = null;
+    let lastCallName = '';
+    let lastCallAvatar = '';
 
     const iceConfig = {
         iceServers: [
@@ -97,6 +100,7 @@ const NexusVideo = (() => {
 
         const name = document.getElementById('chat-header-name')?.textContent || calleeId;
         const avatar = document.getElementById('chat-header-avatar')?.src || '';
+        lastCalleeId = calleeId; lastCallName = name; lastCallAvatar = avatar;
 
         showVideoCallUI({ name, avatar, isCaller: true });
         callDocRef.update({ status: 'ended' }).catch(() => {}); // ba mu JIRA wannan ba — yana gudana a baya, ba ya toshe camera
@@ -147,15 +151,16 @@ const NexusVideo = (() => {
                 if (data.status === 'ended') endVideoCleanup();
             });
 
-            setTimeout(() => {
+           setTimeout(() => {
                 if (callRole !== 'caller' || !callDocRef) return;
                 callDocRef.get().then(s => {
                     if (s.exists && s.data()?.status === 'ringing') {
                         callDocRef.update({ status: 'missed' });
-                        endVideoCleanup('No Answer');
+                        endVideoCleanup();
+                        showUnavailableScreen();
                     }
                 });
-            }, 45000);
+            }, 45000); 
 
         } catch(err) {
             console.error(err);
@@ -1031,6 +1036,74 @@ const NexusVideo = (() => {
         hideCallingUI();
     }
 
+    // ══════════════════════════════════════════════
+    //  UI — Unavailable (No Answer) Screen
+    // ══════════════════════════════════════════════
+    function showUnavailableScreen() {
+        if (document.getElementById('nexus-video-unavailable')) return;
+        const el = document.createElement('div');
+        el.id = 'nexus-video-unavailable';
+        el.innerHTML = `
+            <div style="
+                position:fixed;inset:0;z-index:99998;
+                background:#1a1a1a;
+                display:flex;flex-direction:column;
+                align-items:center;
+                overflow:hidden;
+            ">
+                <div style="position:absolute;top:0;left:0;right:0;padding:60px 20px 20px;text-align:center;">
+                    <div style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:24px;font-weight:600;color:#fff;">${lastCallName}</div>
+                    <div style="font-family:'Roboto','Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;color:rgba(255,255,255,0.6);margin-top:6px;">Unavailable</div>
+                </div>
+                <div style="width:110px;height:110px;border-radius:50%;overflow:hidden;margin-top:170px;border:2px solid rgba(255,255,255,0.15);">
+                    <img src="${lastCallAvatar}" style="width:100%;height:100%;object-fit:cover;">
+                </div>
+                <div style="position:absolute;bottom:0;left:0;right:0;padding:24px 30px 50px;display:flex;align-items:center;justify-content:space-around;">
+                    <div style="text-align:center;">
+                        <div onclick="NexusVideo.hideUnavailableScreen()" style="
+                            width:58px;height:58px;border-radius:50%;
+                            background:#fff;
+                            display:flex;align-items:center;justify-content:center;
+                            cursor:pointer;margin:0 auto 8px;
+                        ">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:12px;">Cancel</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div onclick="NexusVideo.hideUnavailableScreen(); if (typeof openVideoNoteRecorder === 'function') openVideoNoteRecorder();" style="
+                            width:58px;height:58px;border-radius:50%;
+                            background:rgba(255,255,255,0.15);
+                            display:flex;align-items:center;justify-content:center;
+                            cursor:pointer;margin:0 auto 8px;
+                        ">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="14" height="12" rx="2"/><path d="M22 8.5v7l-4-2.5v-2z"/></svg>
+                        </div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:12px;">Record video note</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div onclick="NexusVideo.hideUnavailableScreen(); if (lastCalleeIdForRetry) NexusVideo.startVideoCall(lastCalleeIdForRetry);" style="
+                            width:58px;height:58px;border-radius:50%;
+                            background:#34c759;
+                            display:flex;align-items:center;justify-content:center;
+                            cursor:pointer;margin:0 auto 8px;
+                        ">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                        </div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:12px;">Call again</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(el);
+        window.lastCalleeIdForRetry = lastCalleeId;
+    }
+
+    function hideUnavailableScreen() {
+        const el = document.getElementById('nexus-video-unavailable');
+        if (el) el.remove();
+    }
+
     function startCallTimer() {
         stopCallTimer();
         callSeconds = 0;
@@ -1121,6 +1194,8 @@ const NexusVideo = (() => {
         flipCamera,
         toggleControls,
         toggleFxPanel,
+        showUnavailableScreen,
+        hideUnavailableScreen,
         switchFxTab,
         selectFilter,
         selectBackground,
