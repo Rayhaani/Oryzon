@@ -95,12 +95,11 @@ const NexusVideo = (() => {
         const callId = [myId, calleeId].sort().join('__') + '_videocall';
         callDocRef = getDB().collection('nexusVideoCalls').doc(callId);
 
-        try { await callDocRef.update({ status: 'ended' }); } catch(e) {}
-
         const name = document.getElementById('chat-header-name')?.textContent || calleeId;
         const avatar = document.getElementById('chat-header-avatar')?.src || '';
 
         showVideoCallUI({ name, avatar, isCaller: true });
+        callDocRef.update({ status: 'ended' }).catch(() => {}); // ba mu JIRA wannan ba — yana gudana a baya, ba ya toshe camera
 
         try {
             localStream = await getMedia('user');
