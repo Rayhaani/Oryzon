@@ -786,7 +786,7 @@ const NexusVideo = (() => {
                     alert('Background ta kasa farawa: ' + err.message);
                 }
             }
-            }
+            
         } else {
             if (tabAr) tabAr.style.cssText = activeCss;
             if (tabFilters) tabFilters.style.cssText = inactiveCss;
