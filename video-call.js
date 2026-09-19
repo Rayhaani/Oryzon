@@ -913,11 +913,12 @@ const NexusVideo = (() => {
     }
 
     // ── Draggable PiP ───────────────────────────── 
-        function makeDraggable(el) {
+       function makeDraggable(el) {
         if (!el) return;
         let startX, startY, startLeft, startTop;
 
         el.addEventListener('touchstart', e => {
+            if (!el.dataset.corner) return; // full-screen tukuna — kar a toshe click/toggleControls
             const t = e.touches[0];
             startX = t.clientX;
             startY = t.clientY;
@@ -927,6 +928,7 @@ const NexusVideo = (() => {
         }, { passive: false });
 
         el.addEventListener('touchmove', e => {
+            if (!el.dataset.corner) return; // full-screen tukuna — kar a toshe click/toggleControls
             const t = e.touches[0];
             const dx = t.clientX - startX;
             const dy = t.clientY - startY;
@@ -937,7 +939,7 @@ const NexusVideo = (() => {
             el.style.right = 'auto';
             e.preventDefault();
         }, { passive: false });
-    }
+       } 
 
     // ══════════════════════════════════════════════
     //  CONTROLS
