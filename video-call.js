@@ -751,7 +751,7 @@ const NexusVideo = (() => {
         const activeCss = 'color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid #fff;';
         const inactiveCss = 'color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;cursor:pointer;padding-bottom:4px;border-bottom:2px solid transparent;';
 
-        if (tab === 'filters') {
+       if (tab === 'filters') {
             if (tabFilters) tabFilters.style.cssText = activeCss;
             if (tabBg) tabBg.style.cssText = inactiveCss;
             if (tabAr) tabAr.style.cssText = inactiveCss;
@@ -760,6 +760,7 @@ const NexusVideo = (() => {
             if (arTrack) arTrack.style.display = 'none';
             if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
             if (typeof NexusVideoAR !== 'undefined') NexusVideoAR.stopProcessing();
+            if (localVideoEl && localStream) localVideoEl.srcObject = localStream; // koma raw camera — Filters CSS ne kadai
             try { await loadEffectsEngine(); } catch (err) { alert('Filter engine ta kasa loda: ' + err.message); return; }
             buildFilterPanel();
             if (localVideoEl && localStream) NexusVideoEffects.startProcessing(localVideoEl);
@@ -774,7 +775,10 @@ const NexusVideo = (() => {
             if (typeof NexusVideoAR !== 'undefined') NexusVideoAR.stopProcessing();
             try { await loadBgEngine(); } catch (err) { alert('Background engine ta kasa loda: ' + err.message); return; }
             buildBgPanel();
-            if (localVideoEl && localStream) NexusVideoBackground.startProcessing(localVideoEl);
+            if (localVideoEl && localStream) {
+                const bgStream = await NexusVideoBackground.startProcessing(localVideoEl);
+                if (bgStream) localVideoEl.srcObject = bgStream; // nuna processed canvas a LOCAL preview ma
+            }
         } else {
             if (tabAr) tabAr.style.cssText = activeCss;
             if (tabFilters) tabFilters.style.cssText = inactiveCss;
@@ -786,9 +790,12 @@ const NexusVideo = (() => {
             if (typeof NexusVideoBackground !== 'undefined') NexusVideoBackground.stopProcessing();
             try { await loadArEngine(); } catch (err) { alert('AR engine ta kasa loda: ' + err.message); return; }
             buildArPanel();
-            if (localVideoEl && localStream) NexusVideoAR.startProcessing(localVideoEl);
+            if (localVideoEl && localStream) {
+                const arStream = await NexusVideoAR.startProcessing(localVideoEl);
+                if (arStream) localVideoEl.srcObject = arStream; // nuna processed canvas (kunnuwan zaki, dss) a LOCAL preview ma
+            }
         }
-    }
+                                                      } 
 
     function buildFilterPanel() {
         const track = document.getElementById('nexus-filter-track');
