@@ -998,7 +998,7 @@ const NexusVideo = (() => {
                     margin:0 auto 6px;position:relative;
                     font-size:24px;
                 ">
-                    ${e.id === 'none' ? '🚫' : e.id === 'catears' ? '🐱' : e.id === 'glasses' ? '😎' : e.id === 'hearts' ? '💕' : e.id === 'halo' ? '😇' : e.id === 'fireflies' ? '✨' : e.id === 'confetti' ? '🎉' : '🤖'}
+                    ${{none:'🚫',catears:'🐱',bunnyears:'🐰',glasses:'😎',hearts:'💕',halo:'😇',fireflies:'✨',confetti:'🎉',robot:'🤖',blush:'☺️',stareyes:'🤩',crown:'👑',mustache:'🥸',freckles:'🍯'}[e.id] || '✨'}
                     ${e.premium && !isPrem ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="white" style="position:absolute;bottom:-4px;right:-4px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><path d="M12 1a5 5 0 0 0-5 5v3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg>' : ''}
                 </div>
                 <div style="font-size:10px;color:rgba(255,255,255,0.75);">${e.label}</div>
