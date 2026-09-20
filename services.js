@@ -9386,6 +9386,7 @@ window.initAppElements = initAppElements;
 window.getFilteredPros = getFilteredPros;
 window.renderResultsPage = renderResultsPage;
 window.handleCategorySelect = handleCategorySelect;
+window.speakCategoryLabel = speakCategoryLabel;
 window.handleLikeToggle = handleLikeToggle;
 window.triggerRouterCheck = triggerRouterCheck;
 window.selectRoutePreference = selectRoutePreference;
