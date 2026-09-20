@@ -36,6 +36,17 @@ let CATEGORIES = [
 // ═══ UNIVERSAL TAP-TO-HEAR SPEECH LAYER ═══
 // Yana amfani da rikodin murya na gaske idan ya wanzu (cat.audio),
 // idan babu, ya koma browser TTS a matsayin fallback.
+function speakCategoryLabel(catId) {
+    const cat = CATEGORIES.find(c => c.id === catId);
+    if (!cat) return;
+    if (cat.audio) {
+        const player = new Audio(cat.audio);
+        player.play().catch(() => fallbackSpeakText(cat.label));
+        return;
+    }
+    fallbackSpeakText(cat.label);
+}
+
 function fallbackSpeakText(text) {
     if (!('speechSynthesis' in window)) {
         flashSpeakUnsupported();
@@ -56,29 +67,6 @@ function fallbackSpeakText(text) {
     } else {
         window.speechSynthesis.onvoiceschanged = () => { speakNow(); window.speechSynthesis.onvoiceschanged = null; };
     }
-}
-
-function flashSpeakUnsupported() {
-    if (window.showToast) { window.showToast('Sauti ba ya samuwa a wannan na\'ura'); }
-}
-   
-function fallbackSpeakText(text) {
-    if (!('speechSynthesis' in window)) {
-        flashSpeakUnsupported();
-        return;
-    }
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length === 0 && !__voicesReady) {
-        __pendingSpeakText = text;
-        return;
-    }
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    utter.rate = 0.9;
-    utter.pitch = 1;
-    utter.volume = 1;
-    window.speechSynthesis.speak(utter);
 }
 
 function flashSpeakUnsupported() {
@@ -9438,6 +9426,8 @@ function openAllStoriesOverlay() {
 function closeAllStoriesOverlay() {
     document.getElementById('all-stories-overlay').style.display = 'none';
 }
+window.openAllStoriesOverlay = openAllStoriesOverlay;
+window.closeAllStoriesOverlay = closeAllStoriesOverlay;
 
 // ============================================================
 // SERVICES PAGE — INIT / DESTROY / REGISTER (SPA-ready)
