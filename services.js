@@ -36,10 +36,9 @@ let CATEGORIES = [
 // ═══ UNIVERSAL TAP-TO-HEAR SPEECH LAYER ═══
 // Yana amfani da rikodin murya na gaske idan ya wanzu (cat.audio),
 // idan babu, ya koma browser TTS a matsayin fallback.
-function speakCategoryLabel(catId, event) {
-    if (event) event.stopPropagation();
+function speakCategoryLabel(catId) {
     const cat = CATEGORIES.find(c => c.id === catId);
-    if (!cat) return;
+   if (!cat) return;
     if (cat.audio) {
         const player = new Audio(cat.audio);
         player.play().catch(() => fallbackSpeakText(cat.label));
@@ -509,7 +508,7 @@ function initAppElements() {
     const catGrid = document.getElementById("categories-grid-container");
     catGrid.innerHTML = CATEGORIES.map(cat => `
         <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card">
-            <button onclick="speakCategoryLabel('${cat.id}', event)" class="prism-speak-btn" aria-label="Ji sunan aiki">🔊</button>
+            <button onclick="event.stopPropagation(); speakCategoryLabel('${cat.id}')" class="prism-speak-btn" aria-label="Ji sunan aiki">🔊</button>
             <div class="prism-icon-sphere"><span style="font-size:22px;">${cat.icon}</span></div>
             <span class="prism-card-label">${cat.label}</span>
         </div>`).join('');
