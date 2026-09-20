@@ -465,11 +465,25 @@ function createProCardHtml(pro) {
         </div>`;
         }
 
+function formatPriceForSpeech(priceStr) {
+    if (!priceStr) return '';
+    const currencyNames = { '₦': 'Naira', '$': 'Dollar', '£': 'Pound', '€': 'Euro', '₹': 'Rupee' };
+    const symbol = Object.keys(currencyNames).find(s => priceStr.includes(s));
+    const numberPart = priceStr.replace(/[^\d.,]/g, '').trim();
+    return symbol ? `${currencyNames[symbol]} ${numberPart}` : priceStr;
+}
+
 function speakProSummary(proId) {
     const pro = PROS.find(p => String(p.id) === String(proId));
     if (!pro) return;
     const displayName = pro.username || pro.name.split(' ')[0];
-    const text = `${displayName}, ${pro.display_cat}, ${pro.price} per hour, ${pro.distance} kilometers away`;
+    const addressLine = pro.address || pro.city || '';
+    const ratingPct = Math.round((pro.rating / 5) * 100);
+    const itemSource = (pro.menu && pro.menu.length ? pro.menu : null) || (pro.services && pro.services.length ? pro.services : null) || [];
+    const skillLabels = itemSource.length > 0 ? itemSource.slice(0, 2).map(it => it.name) : (pro.skills || []).slice(0, 2);
+    const skillsText = skillLabels.length ? `, specializing in ${skillLabels.join(' and ')}` : '';
+    const spokenPrice = formatPriceForSpeech(pro.price);
+    const text = `${displayName}, ${pro.display_cat}${skillsText}. Located at ${addressLine}, ${pro.distance} kilometers away. ${pro.jobs} completed orders, with a ${ratingPct} percent customer rating. Price: ${spokenPrice} per hour.`;
     fallbackSpeakText(text);
 }
 
