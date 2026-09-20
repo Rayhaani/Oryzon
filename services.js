@@ -423,10 +423,11 @@ function createProCardHtml(pro) {
             <div class="sentinel-screw scr-tl"></div>
             <div class="sentinel-screw scr-bl"></div><div class="sentinel-screw scr-br"></div>
 
-            <div style="position:absolute;top:6px;right:6px;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:9px;">
+           <div style="position:absolute;top:6px;right:6px;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:9px;">
                 <span style="background:${availColor.bg};border:1px solid ${availColor.border};color:${availColor.text};border-radius:20px;padding:1px 10px;font-size:9px;line-height:1.4;font-weight:700;">${availabilityLabel}</span>
                 <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);white-space:nowrap;">${pro.jobs} Orders <span style="color:#16a34a;">(${orderPct}%)</span></span>
             </div>
+            <button onclick="event.stopPropagation(); speakProSummary('${pro.id}')" class="prism-speak-btn" style="top:6px;right:auto;left:6px;z-index:3;" aria-label="Ji bayanin wannan mai bada sabis">🔊</button> 
 
             <div style="display:flex;align-items:center;gap:14px;z-index:2;position:relative;padding-right:78px;">
                 <div class="lens-viewport" onclick="event.stopPropagation();window.location.href='me.html?user=${encodeURIComponent(pro.username||'')}'" style="cursor:pointer;${pro.photoUrl ? `background-image:url('${pro.photoUrl}');background-size:cover;background-position:center;` : ''}">${pro.photoUrl ? '' : `<div class="lens-glass-reflection">${(pro.avatar||displayHandle.slice(0,2)).toUpperCase()}</div>`}</div>
@@ -448,6 +449,14 @@ function createProCardHtml(pro) {
             </div>
         </div>`;
         }
+
+function speakProSummary(proId) {
+    const pro = PROS.find(p => String(p.id) === String(proId));
+    if (!pro) return;
+    const displayName = pro.username || pro.name.split(' ')[0];
+    const text = `${displayName}, ${pro.display_cat}, ${pro.price} per hour, ${pro.distance} kilometers away`;
+    fallbackSpeakText(text);
+}
 
 function switchView(viewName) {
     const mainView = document.getElementById("main-view");
@@ -9387,6 +9396,7 @@ window.getFilteredPros = getFilteredPros;
 window.renderResultsPage = renderResultsPage;
 window.handleCategorySelect = handleCategorySelect;
 window.speakCategoryLabel = speakCategoryLabel;
+window.speakProSummary = speakProSummary;
 window.handleLikeToggle = handleLikeToggle;
 window.triggerRouterCheck = triggerRouterCheck;
 window.selectRoutePreference = selectRoutePreference;
