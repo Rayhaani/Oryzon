@@ -36,17 +36,32 @@ let CATEGORIES = [
 // ═══ UNIVERSAL TAP-TO-HEAR SPEECH LAYER ═══
 // Yana amfani da rikodin murya na gaske idan ya wanzu (cat.audio),
 // idan babu, ya koma browser TTS a matsayin fallback.
-function speakCategoryLabel(catId) {
-    const cat = CATEGORIES.find(c => c.id === catId);
-   if (!cat) return;
-    if (cat.audio) {
-        const player = new Audio(cat.audio);
-        player.play().catch(() => fallbackSpeakText(cat.label));
+function fallbackSpeakText(text) {
+    if (!('speechSynthesis' in window)) {
+        flashSpeakUnsupported();
         return;
     }
-    fallbackSpeakText(cat.label);
+    const speakNow = () => {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'en-US';
+        utter.rate = 1.05;
+        utter.pitch = 1;
+        utter.volume = 1;
+        window.speechSynthesis.speak(utter);
+    };
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+        speakNow();
+    } else {
+        window.speechSynthesis.onvoiceschanged = () => { speakNow(); window.speechSynthesis.onvoiceschanged = null; };
+    }
 }
 
+function flashSpeakUnsupported() {
+    if (window.showToast) { window.showToast('Sauti ba ya samuwa a wannan na\'ura'); }
+}
+   
 function fallbackSpeakText(text) {
     if (!('speechSynthesis' in window)) {
         flashSpeakUnsupported();
@@ -372,7 +387,8 @@ const psInlineState = {
     gpsCity: null,
     gpsAddress: null,
     gpsReady: false,
-    idType: null
+    idType: null,
+    gender: null   // ← SABON FILI (domin daidaita pronoun a speech)
 };
 
 const portfolioFiles = {};
@@ -465,12 +481,19 @@ function createProCardHtml(pro) {
         </div>`;
         }
 
+function joinListSpeech(arr) {
+    if (!arr || arr.length === 0) return '';
+    if (arr.length === 1) return arr[0];
+    if (arr.length === 2) return `${arr[0]} and ${arr[1]}`;
+    return `${arr.slice(0, -1).join(', ')}, and ${arr[arr.length - 1]}`;
+}
+
 function formatPriceForSpeech(priceStr) {
     if (!priceStr) return '';
-    const currencyNames = { '₦': 'Naira', '$': 'Dollar', '£': 'Pound', '€': 'Euro', '₹': 'Rupee' };
+    const currencyNames = { '₦': 'Naira', '$': 'Dollars', '£': 'Pounds', '€': 'Euros', '₹': 'Rupees' };
     const symbol = Object.keys(currencyNames).find(s => priceStr.includes(s));
     const numberPart = priceStr.replace(/[^\d.,]/g, '').trim();
-    return symbol ? `${currencyNames[symbol]} ${numberPart}` : priceStr;
+    return symbol ? `${numberPart} ${currencyNames[symbol]}` : priceStr;
 }
 
 function speakProSummary(proId) {
@@ -480,29 +503,33 @@ function speakProSummary(proId) {
     const addressLine = pro.address || pro.city || '';
     const ratingPct = Math.round((pro.rating / 5) * 100);
     const itemSource = (pro.menu && pro.menu.length ? pro.menu : null) || (pro.services && pro.services.length ? pro.services : null) || [];
-    const skillLabels = itemSource.length > 0 ? itemSource.slice(0, 2).map(it => it.name) : (pro.skills || []).slice(0, 2);
-    const skillsPhrase = skillLabels.length ? `, especially known for ${skillLabels.join(' and ')}` : '';
+    const skillLabels = itemSource.length > 0 ? itemSource.map(it => it.name) : (pro.skills || []);
+    const skillsPhrase = skillLabels.length ? `, offering ${joinListSpeech(skillLabels)}` : '';
     const spokenPrice = formatPriceForSpeech(pro.price);
 
-   const maleTitles = ['malam', 'alhaji', 'mal.', 'mallam'];
-    const femaleTitles = ['hajiya', 'malama'];
-    const firstWord = (pro.name || '').trim().split(' ')[0].toLowerCase();
     let pronounSubj = 'They', pronounPoss = 'Their', verbBe = "are";
-    if (maleTitles.includes(firstWord)) { pronounSubj = 'He'; pronounPoss = 'His'; verbBe = "is"; }
-    else if (femaleTitles.includes(firstWord)) { pronounSubj = 'She'; pronounPoss = 'Her'; verbBe = "is"; }
+    if (pro.gender === 'male') { pronounSubj = 'He'; pronounPoss = 'His'; verbBe = "is"; }
+    else if (pro.gender === 'female') { pronounSubj = 'She'; pronounPoss = 'Her'; verbBe = "is"; }
+    else {
+        const maleTitles = ['malam', 'alhaji', 'mal.', 'mallam'];
+        const femaleTitles = ['hajiya', 'malama'];
+        const firstWord = (pro.name || '').trim().split(' ')[0].toLowerCase();
+        if (maleTitles.includes(firstWord)) { pronounSubj = 'He'; pronounPoss = 'His'; verbBe = "is"; }
+        else if (femaleTitles.includes(firstWord)) { pronounSubj = 'She'; pronounPoss = 'Her'; verbBe = "is"; }
+    }
 
     let proximityPhrase;
     if (pro.distance <= 0.5) {
-        proximityPhrase = `${pronounSubj} ${verbBe} right in your neighborhood, at ${addressLine}`;
+        proximityPhrase = `right in your neighborhood, at ${addressLine}`;
     } else if (pro.distance <= 2) {
-        proximityPhrase = `${pronounSubj} ${verbBe} nearby, at ${addressLine}, about ${pro.distance} kilometers from you`;
+        proximityPhrase = `nearby, at ${addressLine}, about ${pro.distance} kilometers from you`;
     } else {
-        proximityPhrase = `${pronounSubj} ${verbBe} located at ${addressLine}, about ${pro.distance} kilometers from you`;
+        proximityPhrase = `at ${addressLine}, about ${pro.distance} kilometers from you`;
     }
 
-    const text = `This is ${displayName}, a trusted ${pro.display_cat}${skillsPhrase}. ${proximityPhrase}. ${pronounSubj} ${pronounSubj === 'They' ? 'have' : 'has'} completed ${pro.jobs} jobs so far, with a ${ratingPct} percent customer satisfaction rating. ${pronounPoss} price is ${spokenPrice} per hour.`;   
-   fallbackSpeakText(text);
-}
+    const text = `This is ${displayName}, a trusted ${pro.display_cat}${skillsPhrase}. ${pronounSubj} ${verbBe} ${proximityPhrase}, with ${pro.jobs} completed jobs and a ${ratingPct} percent customer rating; ${pronounPoss.toLowerCase()} price is ${spokenPrice} per hour.`;
+    fallbackSpeakText(text);
+    }
    
 function switchView(viewName) {
     const mainView = document.getElementById("main-view");
@@ -1925,6 +1952,20 @@ function captureGPSInline() {
     });
         }
         
+function psSelectGender(value) {
+    psInlineState.gender = value;
+    const maleBtn = document.getElementById("ps-gender-male-btn");
+    const femaleBtn = document.getElementById("ps-gender-female-btn");
+    if (maleBtn) {
+        maleBtn.style.background = value === 'male' ? 'rgba(29,78,216,0.25)' : 'rgba(255,255,255,0.05)';
+        maleBtn.style.border = value === 'male' ? '1px solid #1d4ed8' : '1px solid rgba(255,255,255,0.1)';
+    }
+    if (femaleBtn) {
+        femaleBtn.style.background = value === 'female' ? 'rgba(219,39,119,0.25)' : 'rgba(255,255,255,0.05)';
+        femaleBtn.style.border = value === 'female' ? '1px solid #db2777' : '1px solid rgba(255,255,255,0.1)';
+    }
+}
+
 async function uploadPortfolioFilesInline(username, onProgress) {
     const keys = Object.keys(portfolioFiles);
     let uploaded = 0;
@@ -2024,6 +2065,7 @@ function psProgressHide() {
 async function submitServiceInline() {
     if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); setTimeout(()=>window.location.href='login.html',1200); return; }
     if (!psInlineState.gpsReady) { psShowToast("⚠️ Capture your GPS location before submitting!"); return; }
+    if (!psInlineState.gender) { psShowToast("⚠️ Don Allah ka zaɓi Namiji ko Mace kafin ka ci gaba!"); return; }
     const submitBtn = document.getElementById("ps-submit-btn-inline");
     submitBtn.disabled = true;
     submitBtn.textContent = "⏳ Submitting...";
@@ -2069,6 +2111,7 @@ async function submitServiceInline() {
                 categoryLabel: psInlineState.selectedCategoryLabel,
                 pricing: { base: psInlineState.price, unit: psInlineState.priceUnit, currency: psInlineState.currency },
                 bio: psInlineState.description,
+                gender: psInlineState.gender,
                 schedule: psInlineState.availableDays,
                 location: { lat: psInlineState.gpsLat, lng: psInlineState.gpsLng, updatedAt: Date.now() },
                 city: psInlineState.gpsCity || '',
@@ -9443,6 +9486,7 @@ window.renderResultsPage = renderResultsPage;
 window.handleCategorySelect = handleCategorySelect;
 window.speakCategoryLabel = speakCategoryLabel;
 window.speakProSummary = speakProSummary;
+window.psSelectGender = psSelectGender;
 window.handleLikeToggle = handleLikeToggle;
 window.triggerRouterCheck = triggerRouterCheck;
 window.selectRoutePreference = selectRoutePreference;
