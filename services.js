@@ -48,13 +48,28 @@ function speakCategoryLabel(catId) {
 }
 
 function fallbackSpeakText(text) {
-    if (!('speechSynthesis' in window)) return;
+    if (!('speechSynthesis' in window)) {
+        flashSpeakUnsupported();
+        return;
+    }
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0 && !__voicesReady) {
+        __pendingSpeakText = text;
+        return;
+    }
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
     utter.rate = 0.9;
+    utter.pitch = 1;
+    utter.volume = 1;
     window.speechSynthesis.speak(utter);
 }
 
+function flashSpeakUnsupported() {
+    if (window.showToast) { window.showToast('Sauti ba ya samuwa a wannan na\'ura'); }
+}
+   
 // CURRENCIES, getCurrencySymbol(), formatPrice(), da currency picker
 // functions (renderCurrencyList, filterCurrencyList, openCurrencyPicker,
 // closeCurrencyPicker, selectCurrency, buildCurrencyDropdownHtml,
