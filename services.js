@@ -15,23 +15,46 @@ const __servicesInitCallbacks = [];
 function runOnServicesInit(fn) { __servicesInitCallbacks.push(fn); }
        // Core Static Local Data Context Stores Verbatim
 let CATEGORIES = [
-    { id: "plumber", label: "Plumber", icon: "🔧" },
-    { id: "electrician", label: "Electrician", icon: "⚡" },
-    { id: "carpenter", label: "Carpenter", icon: "🪚" },
-    { id: "chef", label: "Chef / Cook", icon: "🍳" },
-    { id: "snacks", label: "Snacks Vendor", icon: "🧁" },
-    { id: "beverages", label: "Drinks & Beverages", icon: "🥤" },
-    { id: "painter", label: "Painter", icon: "🎨" },
-    { id: "mason", label: "Mason / Builder", icon: "🧱" },
-    { id: "welder", label: "Welder", icon: "🔩" },
-    { id: "mechanic", label: "Auto Mechanic", icon: "🚗" },
-    { id: "ac_tech", label: "AC Technician", icon: "❄️" },
-    { id: "tailor", label: "Tailor", icon: "🧵" },
-    { id: "hvac", label: "HVAC Engineer", icon: "💨" },
-    { id: "cleaner", label: "Professional Cleaner", icon: "🧹" },
-    { id: "doctor", label: "Doctor", icon: "🩺" },
-    { id: "veterinary", label: "Veterinary Doctor", icon: "🐄" }
+    { id: "plumber", label: "Plumber", icon: "🔧", audio: null },
+    { id: "electrician", label: "Electrician", icon: "⚡", audio: null },
+    { id: "carpenter", label: "Carpenter", icon: "🪚", audio: null },
+    { id: "chef", label: "Chef / Cook", icon: "🍳", audio: null },
+    { id: "snacks", label: "Snacks Vendor", icon: "🧁", audio: null },
+    { id: "beverages", label: "Drinks & Beverages", icon: "🥤", audio: null },
+    { id: "painter", label: "Painter", icon: "🎨", audio: null },
+    { id: "mason", label: "Mason / Builder", icon: "🧱", audio: null },
+    { id: "welder", label: "Welder", icon: "🔩", audio: null },
+    { id: "mechanic", label: "Auto Mechanic", icon: "🚗", audio: null },
+    { id: "ac_tech", label: "AC Technician", icon: "❄️", audio: null },
+    { id: "tailor", label: "Tailor", icon: "🧵", audio: null },
+    { id: "hvac", label: "HVAC Engineer", icon: "💨", audio: null },
+    { id: "cleaner", label: "Professional Cleaner", icon: "🧹", audio: null },
+    { id: "doctor", label: "Doctor", icon: "🩺", audio: null },
+    { id: "veterinary", label: "Veterinary Doctor", icon: "🐄", audio: null }
 ];
+
+// ═══ UNIVERSAL TAP-TO-HEAR SPEECH LAYER ═══
+// Yana amfani da rikodin murya na gaske idan ya wanzu (cat.audio),
+// idan babu, ya koma browser TTS a matsayin fallback.
+function speakCategoryLabel(catId, event) {
+    if (event) event.stopPropagation();
+    const cat = CATEGORIES.find(c => c.id === catId);
+    if (!cat) return;
+    if (cat.audio) {
+        const player = new Audio(cat.audio);
+        player.play().catch(() => fallbackSpeakText(cat.label));
+        return;
+    }
+    fallbackSpeakText(cat.label);
+}
+
+function fallbackSpeakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
+}
 
 // CURRENCIES, getCurrencySymbol(), formatPrice(), da currency picker
 // functions (renderCurrencyList, filterCurrencyList, openCurrencyPicker,
@@ -486,6 +509,7 @@ function initAppElements() {
     const catGrid = document.getElementById("categories-grid-container");
     catGrid.innerHTML = CATEGORIES.map(cat => `
         <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card">
+            <button onclick="speakCategoryLabel('${cat.id}', event)" class="prism-speak-btn" aria-label="Ji sunan aiki">🔊</button>
             <div class="prism-icon-sphere"><span style="font-size:22px;">${cat.icon}</span></div>
             <span class="prism-card-label">${cat.label}</span>
         </div>`).join('');
