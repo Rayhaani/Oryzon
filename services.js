@@ -481,12 +481,29 @@ function speakProSummary(proId) {
     const ratingPct = Math.round((pro.rating / 5) * 100);
     const itemSource = (pro.menu && pro.menu.length ? pro.menu : null) || (pro.services && pro.services.length ? pro.services : null) || [];
     const skillLabels = itemSource.length > 0 ? itemSource.slice(0, 2).map(it => it.name) : (pro.skills || []).slice(0, 2);
-    const skillsText = skillLabels.length ? `, specializing in ${skillLabels.join(' and ')}` : '';
+    const skillsPhrase = skillLabels.length ? `, especially known for ${skillLabels.join(' and ')}` : '';
     const spokenPrice = formatPriceForSpeech(pro.price);
-    const text = `${displayName}, ${pro.display_cat}${skillsText}. Located at ${addressLine}, ${pro.distance} kilometers away. ${pro.jobs} completed orders, with a ${ratingPct} percent customer rating. Price: ${spokenPrice} per hour.`;
-    fallbackSpeakText(text);
-}
 
+   const maleTitles = ['malam', 'alhaji', 'mal.', 'mallam'];
+    const femaleTitles = ['hajiya', 'malama'];
+    const firstWord = (pro.name || '').trim().split(' ')[0].toLowerCase();
+    let pronounSubj = 'They', pronounPoss = 'Their', verbBe = "are";
+    if (maleTitles.includes(firstWord)) { pronounSubj = 'He'; pronounPoss = 'His'; verbBe = "is"; }
+    else if (femaleTitles.includes(firstWord)) { pronounSubj = 'She'; pronounPoss = 'Her'; verbBe = "is"; }
+
+    let proximityPhrase;
+    if (pro.distance <= 0.5) {
+        proximityPhrase = `${pronounSubj} ${verbBe} right in your neighborhood, at ${addressLine}`;
+    } else if (pro.distance <= 2) {
+        proximityPhrase = `${pronounSubj} ${verbBe} nearby, at ${addressLine}, about ${pro.distance} kilometers from you`;
+    } else {
+        proximityPhrase = `${pronounSubj} ${verbBe} located at ${addressLine}, about ${pro.distance} kilometers from you`;
+    }
+
+    const text = `This is ${displayName}, a trusted ${pro.display_cat}${skillsPhrase}. ${proximityPhrase}. ${pronounSubj} ${pronounSubj === 'They' ? 'have' : 'has'} completed ${pro.jobs} jobs so far, with a ${ratingPct} percent customer satisfaction rating. ${pronounPoss} price is ${spokenPrice} per hour.`;   
+   fallbackSpeakText(text);
+}
+   
 function switchView(viewName) {
     const mainView = document.getElementById("main-view");
     const resultsView = document.getElementById("results-view");
