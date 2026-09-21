@@ -15,10 +15,10 @@ const __servicesInitCallbacks = [];
 function runOnServicesInit(fn) { __servicesInitCallbacks.push(fn); }
        // Core Static Local Data Context Stores Verbatim
 let CATEGORIES = [
-    { id: "plumber", label: "Plumber", icon: "🔧", audio: null, photo: null },
-    { id: "electrician", label: "Electrician", icon: "⚡", audio: null, photo: null },
-    { id: "carpenter", label: "Carpenter", icon: "🪚", audio: null, photo: null },
-    { id: "chef", label: "Chef / Cook", icon: "🍳", audio: null, photo: null },
+    { id: "plumber", label: "Plumber", icon: "🔧", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/plumber.jpg" },
+    { id: "electrician", label: "Electrician", icon: "⚡", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/electrician.jpg" },
+    { id: "carpenter", label: "Carpenter", icon: "🪚", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/carpenter.jpg" },
+    { id: "chef", label: "Chef / Cook", icon: "🍳", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/chef.jpg" },
     { id: "snacks", label: "Snacks Vendor", icon: "🧁", audio: null, photo: null },
     { id: "beverages", label: "Drinks & Beverages", icon: "🥤", audio: null, photo: null },
     { id: "painter", label: "Painter", icon: "🎨", audio: null, photo: null },
@@ -582,19 +582,22 @@ function initAppElements() {
     return candidates[0].photoUrl || candidates[0].coverImageUrl;
    }
 
-   const catGrid = document.getElementById("categories-grid-container");
+  const catGrid = document.getElementById("categories-grid-container");
     catGrid.innerHTML = CATEGORIES.map(cat => {
         const repPhoto = getCategoryRepresentativePhoto(cat.id) || cat.photo;
-        const sphereStyle = repPhoto ? `background-image:url('${repPhoto}');background-size:cover;background-position:center;` : '';
+        const cardStyle = repPhoto
+            ? `background-image:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.3) 100%), url('${repPhoto}');background-size:cover;background-position:center;`
+            : '';
         return `
-        <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card">
+        <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card" style="${cardStyle}">
             <button onclick="event.stopPropagation(); speakCategoryLabel('${cat.id}')" class="prism-speak-btn" aria-label="Ji sunan aiki">🔊</button>
-            <div class="prism-icon-sphere" style="${sphereStyle}">
-                ${repPhoto ? `<span class="prism-photo-badge">${cat.icon}</span>` : `<span style="font-size:22px;">${cat.icon}</span>`}
+            ${!repPhoto ? `<div class="prism-icon-sphere"><span style="font-size:34px;">${cat.icon}</span></div>` : ''}
+            <div class="prism-card-footer">
+                ${repPhoto ? `<span class="prism-photo-badge-inline">${cat.icon}</span>` : ''}
+                <span class="prism-card-label">${cat.label}</span>
             </div>
-            <span class="prism-card-label">${cat.label}</span>
         </div>`;
-    }).join('');
+    }).join(''); 
 
     const highlyRatedList = document.getElementById("highly-rated-list-container");
     highlyRatedList.innerHTML = PROS.map((pro,idx) => `
