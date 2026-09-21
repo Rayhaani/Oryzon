@@ -56,7 +56,7 @@ function fallbackSpeakText(text) {
         window.speechSynthesis.cancel();
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = 'en-US';
-        utter.rate = 1.05;
+        utter.rate = 0.85;
         utter.pitch = 1;
         utter.volume = 1;
         window.speechSynthesis.speak(utter);
