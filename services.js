@@ -575,13 +575,26 @@ function initAppElements() {
     track.addEventListener('touchstart', pauseStoryMarquee, { passive: true });
     track.addEventListener('mousedown', pauseStoryMarquee);
 
-    const catGrid = document.getElementById("categories-grid-container");
-    catGrid.innerHTML = CATEGORIES.map(cat => `
+   function getCategoryRepresentativePhoto(catId) {
+    const candidates = PROS.filter(p => p.category === catId && (p.photoUrl || p.coverImageUrl));
+    if (candidates.length === 0) return null;
+    candidates.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    return candidates[0].photoUrl || candidates[0].coverImageUrl;
+   }
+
+   const catGrid = document.getElementById("categories-grid-container");
+    catGrid.innerHTML = CATEGORIES.map(cat => {
+        const repPhoto = getCategoryRepresentativePhoto(cat.id) || cat.photo;
+        const sphereStyle = repPhoto ? `background-image:url('${repPhoto}');background-size:cover;background-position:center;` : '';
+        return `
         <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card">
             <button onclick="event.stopPropagation(); speakCategoryLabel('${cat.id}')" class="prism-speak-btn" aria-label="Ji sunan aiki">🔊</button>
-            <div class="prism-icon-sphere"><span style="font-size:22px;">${cat.icon}</span></div>
+            <div class="prism-icon-sphere" style="${sphereStyle}">
+                ${repPhoto ? `<span class="prism-photo-badge">${cat.icon}</span>` : `<span style="font-size:22px;">${cat.icon}</span>`}
+            </div>
             <span class="prism-card-label">${cat.label}</span>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 
     const highlyRatedList = document.getElementById("highly-rated-list-container");
     highlyRatedList.innerHTML = PROS.map((pro,idx) => `
