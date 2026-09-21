@@ -15,22 +15,22 @@ const __servicesInitCallbacks = [];
 function runOnServicesInit(fn) { __servicesInitCallbacks.push(fn); }
        // Core Static Local Data Context Stores Verbatim
 let CATEGORIES = [
-    { id: "plumber", label: "Plumber", icon: "🔧", audio: null },
-    { id: "electrician", label: "Electrician", icon: "⚡", audio: null },
-    { id: "carpenter", label: "Carpenter", icon: "🪚", audio: null },
-    { id: "chef", label: "Chef / Cook", icon: "🍳", audio: null },
-    { id: "snacks", label: "Snacks Vendor", icon: "🧁", audio: null },
-    { id: "beverages", label: "Drinks & Beverages", icon: "🥤", audio: null },
-    { id: "painter", label: "Painter", icon: "🎨", audio: null },
-    { id: "mason", label: "Mason / Builder", icon: "🧱", audio: null },
-    { id: "welder", label: "Welder", icon: "🔩", audio: null },
-    { id: "mechanic", label: "Auto Mechanic", icon: "🚗", audio: null },
-    { id: "ac_tech", label: "AC Technician", icon: "❄️", audio: null },
-    { id: "tailor", label: "Tailor", icon: "🧵", audio: null },
-    { id: "hvac", label: "HVAC Engineer", icon: "💨", audio: null },
-    { id: "cleaner", label: "Professional Cleaner", icon: "🧹", audio: null },
-    { id: "doctor", label: "Doctor", icon: "🩺", audio: null },
-    { id: "veterinary", label: "Veterinary Doctor", icon: "🐄", audio: null }
+    { id: "plumber", label: "Plumber", icon: "🔧", audio: null, photo: null },
+    { id: "electrician", label: "Electrician", icon: "⚡", audio: null, photo: null },
+    { id: "carpenter", label: "Carpenter", icon: "🪚", audio: null, photo: null },
+    { id: "chef", label: "Chef / Cook", icon: "🍳", audio: null, photo: null },
+    { id: "snacks", label: "Snacks Vendor", icon: "🧁", audio: null, photo: null },
+    { id: "beverages", label: "Drinks & Beverages", icon: "🥤", audio: null, photo: null },
+    { id: "painter", label: "Painter", icon: "🎨", audio: null, photo: null },
+    { id: "mason", label: "Mason / Builder", icon: "🧱", audio: null, photo: null },
+    { id: "welder", label: "Welder", icon: "🔩", audio: null, photo: null },
+    { id: "mechanic", label: "Auto Mechanic", icon: "🚗", audio: null, photo: null },
+    { id: "ac_tech", label: "AC Technician", icon: "❄️", audio: null, photo: null },
+    { id: "tailor", label: "Tailor", icon: "🧵", audio: null, photo: null },
+    { id: "hvac", label: "HVAC Engineer", icon: "💨", audio: null, photo: null },
+    { id: "cleaner", label: "Professional Cleaner", icon: "🧹", audio: null, photo: null },
+    { id: "doctor", label: "Doctor", icon: "🩺", audio: null, photo: null },
+    { id: "veterinary", label: "Veterinary Doctor", icon: "🐄", audio: null, photo: null }
 ];
 
 // ═══ UNIVERSAL TAP-TO-HEAR SPEECH LAYER ═══
