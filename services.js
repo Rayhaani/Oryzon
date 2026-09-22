@@ -539,6 +539,48 @@ function speakProSummary(proId) {
         // Shiru
     }
    }
+
+let userRealCoords = null;
+
+function haversineDistanceKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+function applyRealDistancesToProviders() {
+    if (!userRealCoords) return;
+    PROS.forEach(pro => {
+        if (pro.location && typeof pro.location.lat === 'number' && typeof pro.location.lng === 'number') {
+            pro.distance = Math.round(haversineDistanceKm(userRealCoords.lat, userRealCoords.lng, pro.location.lat, pro.location.lng) * 10) / 10;
+        }
+    });
+}
+
+function captureRealUserLocation(onDone) {
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            userRealCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            applyRealDistancesToProviders();
+            if (onDone) onDone();
+        },
+        () => { if (onDone) onDone(); },
+        { enableHighAccuracy: true, timeout: 8000 }
+    );
+}
+
+async function trySilentLocationOnLoad() {
+    try {
+        if (!navigator.permissions) return;
+        const status = await navigator.permissions.query({ name: 'geolocation' });
+        if (status.state === 'granted') {
+            captureRealUserLocation();
+        }
+    } catch (e) { /* Shiru */ }
+}
    
 function switchView(viewName) {
     const mainView = document.getElementById("main-view");
@@ -620,8 +662,20 @@ function initAppElements() {
         </div>`;
     }).join(''); 
 
+function getHighlyRatedPros() {
+    let pool = PROS;
+    if (userRealCoords) {
+        pool = PROS.filter(p => {
+            if (p.location && typeof p.location.lat === 'number' && typeof p.location.lng === 'number') {
+                return haversineDistanceKm(userRealCoords.lat, userRealCoords.lng, p.location.lat, p.location.lng) <= 25;
+            }
+            return true;
+        });
+    }
+    return [...pool].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+}
     const highlyRatedList = document.getElementById("highly-rated-list-container");
-    highlyRatedList.innerHTML = PROS.map((pro,idx) => `
+    highlyRatedList.innerHTML = getHighlyRatedPros().map((pro,idx) => `
         <div class="slide-up" style="animation-delay:${idx*80}ms">${createProCardHtml(pro)}</div>`).join('');
 }
 
@@ -3384,8 +3438,10 @@ runOnServicesInit(() => {
             document.getElementById("nearme-scan-sub").textContent = "This will only take a moment";
         }
         navigator.geolocation.getCurrentPosition(
-              () => {
+              (pos) => {
                 if (!document.getElementById("nearme-scan-overlay")) return;
+                userRealCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                applyRealDistancesToProviders();
                 document.getElementById("nearme-scan-overlay").style.display = "none";
                 state.nearMeActive = true;
                 switchView("results");
