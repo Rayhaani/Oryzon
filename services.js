@@ -519,6 +519,34 @@ function speakProSummary(proId) {
     const text = `This is ${displayName}, a trusted ${pro.display_cat}${skillsPhrase}. ${pronounSubj} ${verbBe} ${proximityPhrase}, with ${pro.jobs} completed jobs and a ${ratingPct} percent customer rating; ${pronounPoss.toLowerCase()} price is ${spokenPrice} per hour.`;
     fallbackSpeakText(text);
     }
+
+   async function detectUserLocality() {
+    try {
+        const cached = localStorage.getItem('oryzon_locality');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+                applyLocalityUI(parsed.data);
+                return;
+            }
+        }
+        const res = await fetch('https://ipapi.co/json/');
+        if (!res.ok) return;
+        const data = await res.json();
+        localStorage.setItem('oryzon_locality', JSON.stringify({ data, timestamp: Date.now() }));
+        applyLocalityUI(data);
+    } catch (e) {
+        // Shiru kawai idan ya gaza — rubutu na asali ya rage kamar yadda yake
+    }
+}
+
+function applyLocalityUI(data) {
+    const heading = document.getElementById('service-categories-heading');
+    if (heading && data && data.city) {
+        heading.textContent = `Sabis Kusa Da Ku a ${data.city}`;
+    }
+    window.userLocalityData = data;
+}
    
 function switchView(viewName) {
     const mainView = document.getElementById("main-view");
@@ -3266,6 +3294,7 @@ runOnServicesInit(() => {
    const _loadTimeout = new Promise(resolve => setTimeout(resolve, 8000));
    Promise.race([
        Promise.all([loadContentFromFirebase(), loadRealProvidersFromFirebase()]),
+       detectUserLocality(),
        _loadTimeout
    ]).then(() => {
         window._nexusProvidersLoadedOnce = true;
