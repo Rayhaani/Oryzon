@@ -50,7 +50,8 @@ function fallbackSpeakText(text) {
         flashSpeakUnsupported();
         return;
     }
-    const speakNow = () => {
+
+   const speakNow = () => {
         window.speechSynthesis.cancel();
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = 'en-US';
@@ -58,7 +59,9 @@ function fallbackSpeakText(text) {
         utter.pitch = 1;
         utter.volume = 1;
         window.speechSynthesis.speak(utter);
+        window.speechSynthesis.resume();
     };
+   
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0) {
         speakNow();
