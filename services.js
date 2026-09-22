@@ -526,7 +526,7 @@ function speakProSummary(proId) {
         if (cached) {
             const parsed = JSON.parse(cached);
             if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-                applyLocalityUI(parsed.data);
+                window.userLocalityData = parsed.data;
                 return;
             }
         }
@@ -534,19 +534,11 @@ function speakProSummary(proId) {
         if (!res.ok) return;
         const data = await res.json();
         localStorage.setItem('oryzon_locality', JSON.stringify({ data, timestamp: Date.now() }));
-        applyLocalityUI(data);
+        window.userLocalityData = data;
     } catch (e) {
-        // Shiru kawai idan ya gaza — rubutu na asali ya rage kamar yadda yake
+        // Shiru
     }
-}
-
-function applyLocalityUI(data) {
-    const heading = document.getElementById('service-categories-heading');
-    if (heading && data && data.city) {
-        heading.textContent = `Sabis Kusa Da Ku a ${data.city}`;
-    }
-    window.userLocalityData = data;
-}
+   }
    
 function switchView(viewName) {
     const mainView = document.getElementById("main-view");
