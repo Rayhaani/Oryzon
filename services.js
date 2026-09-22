@@ -19,18 +19,16 @@ let CATEGORIES = [
     { id: "electrician", label: "Electrician", icon: "⚡", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/electrician.jpg" },
     { id: "carpenter", label: "Carpenter", icon: "🪚", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/carpenter.jpg" },
     { id: "chef", label: "Chef / Cook", icon: "🍳", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/chef.jpg" },
-    { id: "snacks", label: "Snacks Vendor", icon: "🧁", audio: null, photo: null },
-    { id: "beverages", label: "Drinks & Beverages", icon: "🥤", audio: null, photo: null },
-    { id: "painter", label: "Painter", icon: "🎨", audio: null, photo: null },
-    { id: "mason", label: "Mason / Builder", icon: "🧱", audio: null, photo: null },
-    { id: "welder", label: "Welder", icon: "🔩", audio: null, photo: null },
-    { id: "mechanic", label: "Auto Mechanic", icon: "🚗", audio: null, photo: null },
-    { id: "ac_tech", label: "AC Technician", icon: "❄️", audio: null, photo: null },
-    { id: "tailor", label: "Tailor", icon: "🧵", audio: null, photo: null },
-    { id: "hvac", label: "HVAC Engineer", icon: "💨", audio: null, photo: null },
-    { id: "cleaner", label: "Professional Cleaner", icon: "🧹", audio: null, photo: null },
-    { id: "doctor", label: "Doctor", icon: "🩺", audio: null, photo: null },
-    { id: "veterinary", label: "Veterinary Doctor", icon: "🐄", audio: null, photo: null }
+    { id: "snacks", label: "Snacks Vendor", icon: "🧁", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/snacks.jpg" },
+    { id: "beverages", label: "Drinks & Beverages", icon: "🥤", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/beverages.jpg" },
+    { id: "painter", label: "Painter", icon: "🎨", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/painter.jpg" },
+    { id: "mason", label: "Mason / Builder", icon: "🧱", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/mason.jpg" },
+    { id: "welder", label: "Welder", icon: "🔩", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/welder.jpg" },
+    { id: "mechanic", label: "Auto Mechanic", icon: "🚗", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/mechanic.jpg" },
+    { id: "tailor", label: "Tailor", icon: "🧵", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/tailor.jpg" },
+    { id: "hvac", label: "HVAC Engineer", icon: "💨", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/hvac.jpg" },
+    { id: "cleaner", label: "Professional Cleaner", icon: "🧹", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/cleaner.jpg" },
+    { id: "solar_installer", label: "Solar Installer", icon: "☀️", audio: null, photo: "https://f005.backblazeb2.com/file/social-media-storage/category-photos/solar.jpg" }
 ];
 
 // ═══ UNIVERSAL TAP-TO-HEAR SPEECH LAYER ═══
