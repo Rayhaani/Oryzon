@@ -1402,7 +1402,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
 
     <!-- Full name a sama, tare da verified badge -->
     <div style="display:flex; align-items:center; gap:1px; line-height:1.2; min-width:0; margin-top:3px;">
-        <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:900; color:#fff; letter-spacing:0.2px; text-shadow: 0 1px 3px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.4); position:relative; top:1px; flex:0 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:900; color:#fff; letter-spacing:0.2px; text-shadow: 0 1px 3px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.4); position:relative; top:1px; flex:0 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.fullName || post.username || 'unknown'}</span>
 
         <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink: 0;">
   <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.97-.81-4.08s-2.49-1.46-4.08-1.27c-.66-1.1-1.91-1.81-3.17-1.81s-2.51.71-3.17 1.81c-1.58-.19-3.07.16-4.08 1.27s-1.27 2.69-.81 4.08c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.97.81 4.08s2.49 1.46 4.08 1.27c.66 1.1 1.91 1.81 3.17 1.81s2.51-.71 3.17-1.81c1.58.19 3.07-.16 4.08-1.27s1.27-2.69.81-4.08c1.31-.67 2.19-1.91 2.19-3.34z" fill="#1d9bf0"/>
@@ -1412,7 +1412,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
 
     <!-- Username + timestamp a layi daya, a kasan fullname -->
     <div class="post-meta-row" style="display:flex !important; align-items:center !important; gap:4px !important; min-width:0 !important; margin-top:4px !important;">
-         <span class="post-username" style="font-family: inherit; font-size:12.5px !important; font-weight:700; color:rgba(255,255,255,0.85); text-shadow: 0 1px 2px rgba(0,0,0,0.5); flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;"> 
+         <span class="post-username" style="font-family: inherit; font-size:12.5px !important; font-weight:700; color:rgba(255,255,255,0.85); text-shadow: 0 1px 2px rgba(0,0,0,0.5); flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%;"><span style="font-size:0.8em; position:relative; top:-1px;">@</span>${post.username || 'unknown'}</span>
         ${timeStr ? (() => {
             let cleanTime = timeStr.replace(/(\d+)(st|nd|rd|th)\b/gi, '$1').replace(/,/g, '');
             cleanTime = cleanTime.toLowerCase();
