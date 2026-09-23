@@ -1402,7 +1402,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
 
     <!-- Full name a sama, tare da verified badge -->
     <div style="display:flex; align-items:center; gap:4px; line-height:1.2; min-width:0; margin-top:3px;">
-        <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:900; color:#fff !important; letter-spacing:0.3px; text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 0 1px rgba(0,0,0,0.45), 0 0 9px rgba(255,255,255,0.35); position:relative; top:1px; flex:0 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        <span class="post-fullname" style="font-family: inherit; font-size:14px !important; font-weight:900; color:#fff !important; letter-spacing:0.3px; text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 0 1px rgba(0,0,0,0.45), 0 0 9px rgba(255,255,255,0.35); position:relative; top:1px; flex:0 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${post.fullName || post.username || 'unknown'}</span>        
         <svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
   <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.97-.81-4.08s-2.49-1.46-4.08-1.27c-.66-1.1-1.91-1.81-3.17-1.81s-2.51.71-3.17 1.81c-1.58-.19-3.07.16-4.08 1.27s-1.27 2.69-.81 4.08c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.97.81 4.08s2.49 1.46 4.08 1.27c.66 1.1 1.91 1.81 3.17 1.81s2.51-.71 3.17-1.81c1.58.19 3.07-.16 4.08-1.27s1.27-2.69.81-4.08c1.31-.67 2.19-1.91 2.19-3.34z" fill="#1d9bf0"/>
   <path d="M10.54 16.25L6.85 12.5l1.44-1.44 2.25 2.25 5.27-5.27 1.44 1.44-6.71 6.77z" fill="#000"/>
