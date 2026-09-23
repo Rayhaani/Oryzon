@@ -1427,15 +1427,15 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
     </div>
 </div>
                         
-                <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 8px;">
+                <div class="header-actions" onclick="stopProp(event)" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
     ${followButtonHTML}
 
                 
                 ${giftButtonHTML}
             </div> 
             
-            <div onclick="event.stopPropagation(); openNeuralMenu('${postId}', '${(post.username||'').replace(/'/g,"\\'")}');"
-                 style="font-size: 16px; cursor: pointer; padding: 0 2px; display: flex; align-items: center; gap: 2px;">
+             <div onclick="event.stopPropagation(); openNeuralMenu('${postId}', '${(post.username||'').replace(/'/g,"\\'")}');"
+                 style="font-size: 16px; cursor: pointer; padding: 0 2px; display: flex; align-items: center; gap: 2px; flex-shrink: 0;">              
                 <span class="dot-item" style="color: #000000; font-weight: 900; display: inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
                 <span class="dot-item" style="color: #000000; font-weight: 900; display: inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay: 0.3s;">•</span>
                 <span class="dot-item" style="color: #000000; font-weight: 900; display: inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay: 0.6s;">•</span>
