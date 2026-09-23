@@ -172,7 +172,7 @@ filter: brightness(0.7) !important;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
         }
         /* ===== AVATAR ===== */
-        .post-avatar {
+       .post-avatar {
             position: absolute !important;
             left: 0px !important;
             top: 0px !important;
@@ -182,10 +182,10 @@ filter: brightness(0.7) !important;
             border-radius: 50% !important;
             border: 1px solid var(--premium-gold) !important;
             object-fit: cover !important;
+            background-color: #3a3a3c !important;
             z-index: 10 !important;
-        }
+        } 
         
-
         /* ===== USERNAME + BADGE ROW ===== */
         
         /* ===== VERIFIED BADGE ===== */
@@ -1392,11 +1392,12 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                   <div class="post-header ${post.isVerified ? 'post-header-premium' : ''}">
             <a href="me.html?user=${encodeURIComponent(post.username || '')}"
                style="position:absolute; left:0; top:0; width:54px; height:54px; display:block; z-index:20; text-decoration:none;">
-                <img src="${avatarUrl}"
+               <img src="${avatarUrl}"
                      class="post-avatar"
                      loading="lazy"
-                     alt="${post.username}">
-            </a>
+                     alt=""
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27%3E%3C/svg%3E';"> 
+                            </a>
 
 <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; margin: 0 0 0 2px !important;">
 
