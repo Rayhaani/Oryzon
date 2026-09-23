@@ -152,7 +152,7 @@
             /* === Kawai wannan biyu aka canza === */
             background:
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/></svg>"),
-    radial-gradient(ellipse 90% 140% at 48% 0%, #F8D9A2 0%, #E3C48D 22%, #C09060 50%, #A77542 72%, #8B5B2D 100%) !important;
+    #8B5B2D !important;
 background-blend-mode: overlay, normal !important;
 filter: brightness(0.7) !important;
             backdrop-filter: blur(14px) saturate(160%) !important;
