@@ -17,6 +17,14 @@
    active timer so nothing leaks or double-fires on re-entry.
    ============================================================ */
 
+(function loadEruda() {
+    if (window.eruda) return; // kada a sake shigar da shi sau biyu
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    s.onload = () => eruda.init();
+    document.body.appendChild(s);
+})();
+
         // ============================================================
         // FIREBASE + REAL GROUP IDENTITY (oryzon-50ea4)
         // ============================================================
