@@ -1063,7 +1063,9 @@
                         container.innerHTML = '<div style="padding:30px 16px;color:rgba(255,255,255,0.5);font-size:13px;text-align:center;">No posts yet — be the first to post!</div>';
                         return;
                     }
-                    const posts = snapshot.docs.map(d => Object.assign({}, d.data(), { id: d.id }));
+                    const posts = snapshot.docs
+    .map(d => Object.assign({}, d.data(), { id: d.id }))
+    .filter(post => !post.productId);
                     container.innerHTML = posts.map(post => window.generatePostHTML(post)).join('');
                     if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
                     if (typeof window.postCard_restoreLikes === 'function') window.postCard_restoreLikes(container);
