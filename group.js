@@ -1088,8 +1088,7 @@
         ];
 
         function openComposer(type) {
-    document.getElementById('composerUserName').textContent = groupSlug ? currentUsername : 'You';
-    document.getElementById('composerAvatar').removeAttribute('src');
+    document.getElementById('composerUserName').textContent = groupSlug ? currentUsername : 'You'; 
            document.getElementById('composerPage').classList.add('active');
             if (type) setComposerType(type);
             initComposerBgScroll();
@@ -1129,6 +1128,7 @@
         ringWrap.style.setProperty('--composer-progress', progress);
         ringWrap.classList.toggle('ready', !isEmpty);
     }
+        }
         }
         function initComposerBgScroll() {
             const row = document.getElementById('composerBgRow');
