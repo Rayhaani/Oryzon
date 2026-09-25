@@ -1452,7 +1452,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
             
         </div>
         ${post.locked ? lockedBoxHTML : `
-        ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
+       ${(post.content || post.text || post.caption || post.body) ? `<div class="post-content">${post.content || post.text || post.caption || post.body}</div>` : ''} 
         ${post.translatable ? `<div class="post-translate-link" onclick="postCard_toggleTranslate(event,'${postId}')"><i class="fa-solid fa-language"></i> <span>See translation</span></div>` : ''}
 
             <div style="position:relative;" ondblclick="
