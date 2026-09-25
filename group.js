@@ -1308,14 +1308,13 @@
                 formData.append('type', 'posts');
                 formData.append('username', currentUsername);
                 const res = await fetch(MEDIA_UPLOAD_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + idToken },
-                    body: formData
-                });
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
-                composerUploadedMediaUrl = data.url;
-                composerUploadedMediaType = isVideo ? 'video' : 'image';
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + idToken },
+    body: formData
+});
+const data = await res.json();
+if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+               composerUploadedMediaType = isVideo ? 'video' : 'image';
                 validateComposer();
             } catch (e) {
                 console.error('media upload error:', e);
