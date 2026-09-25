@@ -1088,11 +1088,9 @@
         ];
 
         function openComposer(type) {
-            document.getElementById('composerUserName').textContent = groupSlug ? currentUsername : 'You';
-            document.getElementById('composerAvatar').src = groupSlug
-                ? 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(currentUsername)
-                : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80';
-            document.getElementById('composerPage').classList.add('active');
+    document.getElementById('composerUserName').textContent = groupSlug ? currentUsername : 'You';
+    document.getElementById('composerAvatar').removeAttribute('src');
+           document.getElementById('composerPage').classList.add('active');
             if (type) setComposerType(type);
             initComposerBgScroll();
             setTimeout(() => document.getElementById('composerText').focus(), 150);
@@ -1120,8 +1118,10 @@
             validateComposer();
         }
         function validateComposer() {
-            const text = document.getElementById('composerText').value.trim();
-            document.getElementById('composerPostBtn').disabled = text.length === 0;
+    const text = document.getElementById('composerText').value.trim();
+    const isEmpty = text.length === 0;
+    document.getElementById('composerPostBtn').disabled = isEmpty;
+    document.getElementById('composerPostBtnTop').disabled = isEmpty;
         }
         function initComposerBgScroll() {
             const row = document.getElementById('composerBgRow');
