@@ -1122,6 +1122,13 @@
     const isEmpty = text.length === 0;
     document.getElementById('composerPostBtn').disabled = isEmpty;
     document.getElementById('composerPostBtnTop').disabled = isEmpty;
+
+    const ringWrap = document.getElementById('composerAvatarRing');
+    if (ringWrap) {
+        const progress = Math.min(100, (text.length / 220) * 100);
+        ringWrap.style.setProperty('--composer-progress', progress);
+        ringWrap.classList.toggle('ready', !isEmpty);
+    }
         }
         function initComposerBgScroll() {
             const row = document.getElementById('composerBgRow');
