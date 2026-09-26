@@ -456,7 +456,7 @@ function createProCardHtml(pro) {
                     <div class="sentinel-sub-text">${pro.display_cat}</div>
                 </div>
             </div>
-            <p class="sentinel-body-p" style="text-align:justify;">${pro.bio}</p>
+            <p class="sentinel-body-p">${pro.bio}</p>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;z-index:2;position:relative;">
                 ${badgeLabels.map(s=>`<span class="sentinel-hardware-badge">${s}</span>`).join('')}
             </div>
