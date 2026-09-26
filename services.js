@@ -1001,8 +1001,9 @@ function closeStoryDeck() {
   window.__npProfileOverlay = true;
   history.pushState({ npOverlay: "profile" }, "", "");
   document.getElementById("profile-sheet-overlay").style.display = "block";
-        }
-
+  const footerElProfile = document.getElementById("instaFooter");
+  if (footerElProfile) footerElProfile.style.display = "none";
+ }
 // ── NEXUS FOOD MENU — renders the Mama T's Kitchen-style layout for chef/snacks/beverages pro sheets ──
 let nxfmCurrentPro = null;
 function renderFoodMenuSection(pro) {
@@ -1119,9 +1120,10 @@ function nxfmCatDesc(cat) {
     return serviceMode ? "Professional services offered, priced per job." : "Freshly prepared and ready to order.";
         }
 // REPLACE: closeProfileSheet() function
-function closeProfileSheet() {
+ function closeProfileSheet() {
     document.getElementById("profile-sheet-overlay").style.display = "none";
-    
+    const footerElProfileClose = document.getElementById("instaFooter");
+    if (footerElProfileClose) footerElProfileClose.style.display = "block";   
     // Idan an shigo daga story, dawo story daidai inda ya tsaya
     if (state.storyOpenedFromProfile) {
         state.storyOpenedFromProfile = false;
