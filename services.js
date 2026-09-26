@@ -3408,20 +3408,23 @@ runOnServicesInit(() => {
             showGlobalToast("Your browser does not support location services.");
             return;
         }
-        document.getElementById("location-permission-overlay").style.display = "flex";
+        const permOv0 = document.getElementById("location-permission-overlay");
+        if (permOv0) permOv0.style.display = "flex";
         const footerEl0 = document.getElementById("instaFooter");
         if (footerEl0) footerEl0.style.display = "none";
     });
 
     function closeLocationPermissionModal() {
-        document.getElementById("location-permission-overlay").style.display = "none";
+        const permOv1 = document.getElementById("location-permission-overlay");
+        if (permOv1) permOv1.style.display = "none";
         const footerEl3 = document.getElementById("instaFooter");
         if (footerEl3) footerEl3.style.display = "block";
     }
     window.closeLocationPermissionModal = closeLocationPermissionModal;
 
     function confirmLocationPermission() {
-        document.getElementById("location-permission-overlay").style.display = "none";
+        const permOv2 = document.getElementById("location-permission-overlay");
+        if (permOv2) permOv2.style.display = "none";
         document.getElementById("nearme-scan-overlay").style.display = "flex";
         
    const footerEl1 = document.getElementById("instaFooter");
