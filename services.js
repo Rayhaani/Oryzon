@@ -451,7 +451,7 @@ function createProCardHtml(pro) {
 
             <div style="display:flex;align-items:center;gap:10px;z-index:2;position:relative;padding-right:78px;">
                 <div class="lens-viewport" onclick="event.stopPropagation();window.location.href='me.html?user=${encodeURIComponent(pro.username||'')}'" style="cursor:pointer;${pro.photoUrl ? `background-image:url('${pro.photoUrl}');background-size:cover;background-position:center;` : ''}">${pro.photoUrl ? '' : `<div class="lens-glass-reflection">${(pro.avatar||displayHandle.slice(0,2)).toUpperCase()}</div>`}</div>
-                <div style="flex:1;padding-left:2px;min-width:0;">
+                <div style="display:flex;align-items:center;gap:10px;z-index:2;position:relative;padding-right:78px;">
                     <div class="sentinel-title-text" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayHandle}</div>
                     <div class="sentinel-sub-text">${pro.display_cat}</div>
                 </div>
