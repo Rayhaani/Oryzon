@@ -465,7 +465,7 @@ function createProCardHtml(pro) {
                     <span style="flex-shrink:0;">🔴 ${pro.distance}km</span>
                     <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${addressLine}</span>
                 </div>
-                <div style="color:rgba(255,255,255,0.85);font-size:14px;font-weight:700;flex-shrink:0;">${pro.price}<span style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:500;">/hr</span></div>
+                <div style="color:rgba(255,255,255,0.7);font-size:12px;font-weight:600;flex-shrink:0;">${pro.price}<span style="font-size:10px;color:rgba(255,255,255,0.5);font-weight:500;">/hr</span></div>
             </div>
         </div>`;
         }
