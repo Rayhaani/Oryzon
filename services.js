@@ -4072,9 +4072,12 @@ window.openProfileSheet = function(proId) {
     
     // Reset edit mode
     isEditMode = false;
-    document.getElementById('edit-fields-section').style.display = 'none';
-    document.getElementById('profile-bio-edit').style.display = 'none';
-    document.getElementById('profile-expert-bio-p').style.display = 'block';
+    const editFieldsSec = document.getElementById('edit-fields-section');
+    if (editFieldsSec) editFieldsSec.style.display = 'none';
+    const bioEditEl = document.getElementById('profile-bio-edit');
+    if (bioEditEl) bioEditEl.style.display = 'none';
+    const bioPEl = document.getElementById('profile-expert-bio-p');
+    if (bioPEl) bioPEl.style.display = 'block';
 };
 
 // ── SERVICES EDIT LIST STATE (non-food pros) ──
