@@ -447,7 +447,7 @@ function createProCardHtml(pro) {
                 <span style="background:${availColor.bg};border:1px solid ${availColor.border};color:${availColor.text};border-radius:20px;padding:1px 10px;font-size:9px;line-height:1.4;font-weight:700;">${availabilityLabel}</span>
                 <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);white-space:nowrap;">${pro.jobs} Orders <span style="color:#16a34a;">(${orderPct}%)</span></span>
             </div>
-            <button onclick="event.stopPropagation(); speakProSummary('${pro.id}')" class="prism-speak-btn" style="top:-10px;right:auto;left:-10px;z-index:3;" aria-label="Ji bayanin wannan mai bada sabis">🔊</button> 
+            <button onclick="event.stopPropagation(); speakProSummary('${pro.id}')" class="prism-speak-btn" style="top:-4px;right:auto;left:-4px;z-index:3;" aria-label="Ji bayanin wannan mai bada sabis">🔊</button> 
 
             <div style="display:flex;align-items:center;gap:10px;z-index:2;position:relative;padding-right:78px;">
                 <div class="lens-viewport" onclick="event.stopPropagation();window.location.href='me.html?user=${encodeURIComponent(pro.username||'')}'" style="cursor:pointer;${pro.photoUrl ? `background-image:url('${pro.photoUrl}');background-size:cover;background-position:center;` : ''}">${pro.photoUrl ? '' : `<div class="lens-glass-reflection">${(pro.avatar||displayHandle.slice(0,2)).toUpperCase()}</div>`}</div>
