@@ -653,7 +653,6 @@ function initAppElements() {
             : `<div style="width:100%;height:140px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);"><span style="font-size:34px;">${cat.icon}</span></div>`;
         return `
         <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card">
-            <button onclick="event.stopPropagation(); speakCategoryLabel('${cat.id}')" class="prism-speak-btn" aria-label="Ji sunan aiki">🔊</button>
             ${mediaHtml}
             <div class="prism-card-footer">
                 <div class="prism-card-label">${cat.icon} ${cat.label}</div>
