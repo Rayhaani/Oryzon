@@ -427,10 +427,10 @@ async function fetchProPhoto(username) {
 
 function createProCardHtml(pro) {
     const availabilityLabel = pro.online ? 'Available' : 'Offline';
-    const availColor = pro.online
-        ? { bg: 'rgba(16,185,129,0.12)', border: '#10b981', text: '#059669' }
-        : { bg: 'rgba(239,68,68,0.1)', border: '#ef4444', text: '#dc2626' };
-    const orderPct = Math.round((pro.rating / 5) * 100);
+  const availColor = pro.online
+        ? { bg: 'transparent', border: 'transparent', text: '#10b981' }
+        : { bg: 'transparent', border: 'transparent', text: '#ef4444' };  
+   const orderPct = Math.round((pro.rating / 5) * 100);
     const displayHandle = pro.username || pro.name.split(' ')[0];
     const addressLine = pro.address || pro.city || '';
 
@@ -465,7 +465,7 @@ function createProCardHtml(pro) {
                     <span style="flex-shrink:0;">🔴 ${pro.distance}km</span>
                     <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${addressLine}</span>
                 </div>
-                <div style="color:#ffffff;font-size:16px;font-weight:800;flex-shrink:0;">${pro.price}<span style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:500;">/hr</span></div>
+                <div style="color:rgba(255,255,255,0.85);font-size:14px;font-weight:700;flex-shrink:0;">${pro.price}<span style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:500;">/hr</span></div>
             </div>
         </div>`;
         }
