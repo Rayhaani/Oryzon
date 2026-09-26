@@ -443,7 +443,7 @@ function createProCardHtml(pro) {
             <div class="sentinel-screw scr-tl"></div>
             <div class="sentinel-screw scr-bl"></div><div class="sentinel-screw scr-br"></div>
 
-           <div style="position:absolute;top:6px;right:6px;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:9px;">
+           <div style="position:absolute;top:0;right:0;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:9px;">
                 <span style="background:${availColor.bg};border:1px solid ${availColor.border};color:${availColor.text};border-radius:20px;padding:1px 10px;font-size:9px;line-height:1.4;font-weight:700;">${availabilityLabel}</span>
                 <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);white-space:nowrap;">${pro.jobs} Orders <span style="color:#16a34a;">(${orderPct}%)</span></span>
             </div>
