@@ -3405,8 +3405,9 @@ runOnServicesInit(() => {
         });
     })();
 
-   document.getElementById("near-me-btn").addEventListener("click", () => {
-        if (!navigator.geolocation) {
+   document.getElementById("near-me-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (!navigator.geolocation) {
             showGlobalToast("Your browser does not support location services.");
             return;
         }
