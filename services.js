@@ -604,7 +604,7 @@ function switchView(viewName) {
        if (footerEl) footerEl.style.display = "none";
         if (ordersBanner) ordersBanner.style.display = "none";
         if (backBtn) backBtn.style.display = "flex";
-      
+        window.scrollTo(0, 0);
         renderResultsPage();
     }
 }
