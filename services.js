@@ -3406,7 +3406,8 @@ runOnServicesInit(() => {
     })();
 
    document.getElementById("near-me-btn").addEventListener("click", (e) => {
-    e.stopPropagation();
+    e.stopImmediatePropagation();
+    e.preventDefault();
     if (!navigator.geolocation) {
             showGlobalToast("Your browser does not support location services.");
             return;
