@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ads Manager — Oryzon</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+    body { background:#050505; color:#fff; font-family:'Inter', sans-serif; padding-bottom:90px; }
+    .icon-btn { display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; flex-shrink:0; }
+    .icon-btn svg { display:block; }
+    .hidden { display:none !important; }
+
+    .am-header { position:sticky; top:0; z-index:50; background:#050505; padding:14px 14px; }
+    .am-header-row { position:relative; display:flex; align-items:center; gap:10px; min-height:24px; }
+    .am-title { position:absolute; left:0; right:0; text-align:center; font-size:18px; font-weight:700; pointer-events:none; }
+    .am-actions { display:flex; align-items:center; gap:18px; margin-left:auto; flex-shrink:0; }
+    .am-actions .icon-btn svg { width:22px; height:22px; }
+    .am-header-row > .icon-btn:first-child svg { width:21px; height:21px; }
+    .search-inline-wrap { display:none; flex:1; }
+    .search-inline-wrap.open { display:flex; }
+    .search-inline-box { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08); border-radius:10px; padding:8px 12px; width:100%; }
+    .search-inline-box svg { width:15px; height:15px; color:rgba(255,255,255,0.5); flex-shrink:0; }
+    .search-inline-box input { background:none; border:none; outline:none; color:#fff; font-family:'Inter', sans-serif; font-size:13.5px; flex:1; }
+    #cancelSearchBtn { display:none; }
+    #cancelSearchBtn svg { width:19px; height:19px; }
+
+    .currency-row { display:flex; justify-content:flex-end; padding:12px 14px 0; }
+    .currency-row select { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#fff; font-family:'Inter',sans-serif; font-size:12px; font-weight:600; padding:6px 10px; border-radius:9px; outline:none; }
+
+    .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 14px 4px; }
+    .stat-card { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:12px 14px; }
+    .stat-label { font-size:11px; color:rgba(255,255,255,0.5); font-weight:600; display:flex; align-items:center; gap:6px; }
+    .stat-label svg { width:13px; height:13px; }
+    .stat-value { font-size:19px; font-weight:800; margin-top:6px; }
+    .stat-trend { font-size:10.5px; margin-top:3px; font-weight:600; }
+    .stat-trend.up { color:#3ddc84; }
+    .stat-trend.down { color:#ff5c5c; }
+
+    .tools-row { display:flex; gap:8px; overflow-x:auto; padding:14px 14px 2px; scrollbar-width:none; }
+    .tools-row::-webkit-scrollbar { display:none; }
+    .tool-card { flex-shrink:0; width:92px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:12px 8px; text-align:center; cursor:pointer; }
+    .tool-card svg { width:20px; height:20px; color:#fde08d; margin-bottom:6px; }
+    .tool-card-label { font-size:10.5px; font-weight:700; line-height:1.25; }
+
+    .cat-scroll { display:flex; gap:6px; overflow-x:auto; margin:14px 14px 0; padding-bottom:2px; scrollbar-width:none; }
+    .cat-scroll::-webkit-scrollbar { display:none; }
+    .cat-chip { flex-shrink:0; font-size:12px; font-weight:600; padding:6px 13px; border-radius:20px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:#fff; cursor:pointer; white-space:nowrap; }
+    .cat-chip.active { background:rgba(255,255,255,0.16); border-color:transparent; }
+
+    .result-count { padding:10px 14px 2px; font-size:12px; color:rgba(255,255,255,0.4); display:none; }
+
+    .campaign-list { padding:6px 14px 0; display:flex; flex-direction:column; gap:8px; }
+    .campaign-card { background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:13px; cursor:pointer; }
+    .cc-top { display:flex; align-items:flex-start; gap:10px; }
+    .cc-obj-icon { width:36px; height:36px; border-radius:10px; background:rgba(253,224,141,0.12); display:flex; align-items:center; justify-content:center; color:#fde08d; flex-shrink:0; }
+    .cc-obj-icon svg { width:18px; height:18px; }
+    .cc-name-wrap { flex:1; min-width:0; }
+    .cc-name { font-size:14.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cc-obj-label { font-size:11.5px; color:rgba(255,255,255,0.45); margin-top:2px; }
+    .cc-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+
+    .toggle { width:38px; height:22px; border-radius:20px; background:rgba(255,255,255,0.15); position:relative; cursor:pointer; flex-shrink:0; transition:background 0.2s ease; }
+    .toggle .knob { position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left 0.2s ease; }
+    .toggle.on { background:#3ddc84; }
+    .toggle.on .knob { left:18px; }
+    .toggle.paused { background:rgba(255,193,7,0.35); }
+
+    .cc-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06); }
+    .cc-stat-label { font-size:10px; color:rgba(255,255,255,0.4); font-weight:600; text-transform:uppercase; letter-spacing:0.3px; }
+    .cc-stat-value { font-size:13.5px; font-weight:700; margin-top:2px; }
+    .status-pill { font-size:10px; font-weight:700; padding:3px 9px; border-radius:8px; text-transform:uppercase; letter-spacing:0.3px; cursor:default; }
+    .status-pill.active { background:rgba(61,220,132,0.15); color:#3ddc84; }
+    .status-pill.paused { background:rgba(255,193,7,0.15); color:#ffc107; }
+    .status-pill.draft { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.55); }
+    .status-pill.ended { background:rgba(255,92,92,0.15); color:#ff5c5c; }
+    .status-pill.inreview { background:rgba(0,242,254,0.15); color:#6fe9f5; }
+    .status-pill.rejected { background:rgba(255,92,92,0.15); color:#ff5c5c; cursor:pointer; text-decoration:underline dotted; }
+
+    .empty-state { text-align:center; padding:70px 24px; color:rgba(255,255,255,0.4); font-size:13px; }
+    .empty-cta { margin-top:14px; display:inline-block; background:#fde08d; color:#1a1200; font-weight:700; font-size:13.5px; padding:10px 22px; border-radius:22px; cursor:pointer; }
+
+    .fab { position:fixed; right:18px; bottom:24px; width:54px; height:54px; border-radius:50%; background:#fde08d; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(253,224,141,0.35); cursor:pointer; z-index:40; }
+    .fab svg { width:24px; height:24px; color:#1a1200; }
+
+    .mini-menu { position:fixed; z-index:300; background:rgba(255,255,255,0.55); backdrop-filter:blur(22px) saturate(180%); -webkit-backdrop-filter:blur(22px) saturate(180%); border:1px solid rgba(255,255,255,0.5); border-radius:14px; padding:6px; min-width:190px; box-shadow:0 8px 28px rgba(0,0,0,0.4); opacity:0; transform:scale(0.95); pointer-events:none; transition:opacity 0.15s ease, transform 0.15s ease; }
+    .mini-menu.Active { opacity:1; transform:scale(1); pointer-events:auto; }
+    .mini-menu-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:13.5px; font-weight:600; color:#0a0a0a; cursor:pointer; }
+    .mini-menu-item.danger { color:#c8113a; }
+    .mm-backdrop { position:fixed; inset:0; z-index:299; display:none; }
+    .mm-backdrop.Active { display:block; }
+
+    .subpage { display:none; }
+    .subpage-header { position:sticky; top:0; z-index:50; background:#050505; padding:14px; }
+    .subpage-header-row { display:flex; align-items:center; gap:12px; }
+    .subpage-title { font-size:16px; font-weight:700; flex:1; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .wiz-steps { display:flex; gap:5px; margin-top:14px; }
+    .wiz-step-bar { flex:1; height:4px; border-radius:3px; background:rgba(255,255,255,0.1); }
+    .wiz-step-bar.done { background:#fde08d; }
+    .subpage-body { padding:20px 16px 20px; }
+    .wiz-step-title { font-size:19px; font-weight:800; margin-bottom:4px; }
+    .wiz-step-sub { font-size:13px; color:rgba(255,255,255,0.5); margin-bottom:20px; }
+    .subpage-footer { position:fixed; left:0; right:0; bottom:0; background:#050505; border-top:1px solid rgba(255,255,255,0.08); padding:12px 16px; display:flex; gap:10px; z-index:45; }
+    .wiz-btn { flex:1; text-align:center; padding:13px; border-radius:14px; font-size:14px; font-weight:700; cursor:pointer; }
+    .wiz-btn.secondary { background:rgba(255,255,255,0.08); color:#fff; }
+    .wiz-btn.primary { background:#fde08d; color:#1a1200; }
+    .wiz-btn.disabled { opacity:0.4; pointer-events:none; }
+
+    .obj-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .obj-card { background:rgba(255,255,255,0.05); border:2px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px 12px; text-align:center; cursor:pointer; }
+    .obj-card.selected { border-color:#fde08d; background:rgba(253,224,141,0.08); }
+    .obj-card svg { width:26px; height:26px; color:#fde08d; margin-bottom:8px; }
+    .obj-card-name { font-size:13.5px; font-weight:700; }
+    .obj-card-desc { font-size:11px; color:rgba(255,255,255,0.45); margin-top:4px; line-height:1.35; }
+
+    .field-label { font-size:12.5px; font-weight:700; color:rgba(255,255,255,0.7); margin:18px 0 8px; text-transform:uppercase; letter-spacing:0.4px; }
+    .field-label:first-child { margin-top:0; }
+    .chip-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .chip-row-eq .cat-chip { flex:1; text-align:center; margin:0; }
+    .amt-input-wrap { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 14px; margin-top:10px; }
+    .amt-input-wrap span { color:rgba(255,255,255,0.5); font-weight:700; }
+    .amt-input-wrap input { flex:1; background:none; border:none; outline:none; color:#fff; font-family:'Inter', sans-serif; font-size:16px; font-weight:700; }
+    .est-box { margin-top:14px; background:rgba(0,242,254,0.07); border:1px solid rgba(0,242,254,0.2); border-radius:12px; padding:12px 14px; }
+    .est-box .est-num { font-size:15px; font-weight:800; color:#6fe9f5; }
+    .est-box .est-label { font-size:11.5px; color:rgba(255,255,255,0.55); margin-top:2px; }
+    .text-input { width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 14px; color:#fff; font-family:'Inter', sans-serif; font-size:13.5px; outline:none; }
+    .row-2 { display:flex; gap:10px; }
+    .row-2 > div { flex:1; }
+    .hint { font-size:11px; color:rgba(255,255,255,0.4); margin-top:6px; }
+
+    .interest-chip { flex-shrink:0; font-size:12px; font-weight:600; padding:7px 14px; border-radius:20px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:#fff; cursor:pointer; }
+    .interest-chip.selected { background:rgba(253,224,141,0.18); border-color:#fde08d; color:#fde08d; }
+
+    .format-chip { flex:1; text-align:center; padding:10px; border-radius:12px; border:1.5px solid rgba(255,255,255,0.12); font-size:13px; font-weight:700; cursor:pointer; }
+    .format-chip.selected { border-color:#fde08d; background:rgba(253,224,141,0.08); color:#fde08d; }
+    .upload-box { margin-top:12px; border:1.5px dashed rgba(255,255,255,0.2); border-radius:14px; padding:22px 14px; text-align:center; color:rgba(255,255,255,0.45); font-size:12.5px; cursor:pointer; overflow:hidden; position:relative; }
+    .upload-box svg { width:26px; height:26px; margin-bottom:6px; color:rgba(255,255,255,0.35); }
+    .upload-box img { max-width:100%; max-height:140px; border-radius:8px; display:block; margin:0 auto; }
+    textarea.text-input { resize:none; min-height:80px; font-family:'Inter', sans-serif; }
+    .cta-select { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
+    .ad-preview { margin-top:20px; background:#0d0d0d; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; }
+    .ap-header { display:flex; align-items:center; gap:8px; padding:10px 12px; }
+    .ap-avatar { width:28px; height:28px; border-radius:50%; background:rgba(253,224,141,0.2); }
+    .ap-name { font-size:12.5px; font-weight:700; }
+    .ap-sponsored { font-size:10px; color:rgba(255,255,255,0.4); }
+    .ap-body-img { height:150px; background:linear-gradient(135deg,#1a1a1a,#2a2a2a); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.25); font-size:11px; overflow:hidden; }
+    .ap-body-img img { width:100%; height:100%; object-fit:cover; }
+    .ap-text { padding:10px 12px 4px; font-size:12.5px; color:rgba(255,255,255,0.8); }
+    .ap-headline { padding:0 12px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .ap-headline b { font-size:13px; }
+    .ap-cta-btn { background:rgba(255,255,255,0.1); font-size:11.5px; font-weight:700; padding:7px 12px; border-radius:8px; white-space:nowrap; }
+
+    .review-row { display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:13px; }
+    .review-row span:first-child { color:rgba(255,255,255,0.5); }
+    .review-row span:last-child { font-weight:700; text-align:right; }
+
+    .product-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
+    .product-item { position:relative; border-radius:10px; overflow:hidden; aspect-ratio:1; border:2px solid transparent; cursor:pointer; }
+    .product-item img { width:100%; height:100%; object-fit:cover; display:block; }
+    .product-item .p-price { position:absolute; bottom:4px; left:4px; right:4px; background:rgba(0,0,0,0.65); font-size:9px; font-weight:700; padding:2px 4px; border-radius:5px; }
+    .product-item.selected { border-color:#fde08d; }
+
+    .placement-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .placement-row-label { display:flex; align-items:center; gap:10px; font-size:13.5px; font-weight:600; }
+    .placement-row-label svg { width:17px; height:17px; color:rgba(255,255,255,0.5); }
+    .day-grid { display:flex; gap:6px; margin-top:10px; }
+    .day-chip { flex:1; text-align:center; padding:8px 0; border-radius:9px; background:rgba(255,255,255,0.06); font-size:11.5px; font-weight:700; cursor:pointer; }
+    .day-chip.selected { background:rgba(253,224,141,0.18); color:#fde08d; }
+
+    .list-row { display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .list-row-icon { width:38px; height:38px; border-radius:10px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; color:#fde08d; flex-shrink:0; }
+    .list-row-icon svg { width:18px; height:18px; }
+    .list-row-body { flex:1; min-width:0; }
+    .list-row-title { font-size:13.5px; font-weight:700; }
+    .list-row-sub { font-size:11.5px; color:rgba(255,255,255,0.45); margin-top:2px; }
+    .badge { font-size:10px; font-weight:700; padding:3px 9px; border-radius:8px; }
+    .badge.green { background:rgba(61,220,132,0.15); color:#3ddc84; }
+    .badge.grey { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.55); }
+    .add-row-btn { display:flex; align-items:center; gap:10px; padding:14px 0; color:#fde08d; font-weight:700; font-size:13.5px; cursor:pointer; }
+    .add-row-btn svg { width:18px; height:18px; }
+
+    .bar-chart { margin-top:10px; }
+    .bar-row { margin-bottom:12px; }
+    .bar-row-top { display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; }
+    .bar-row-top span:last-child { font-weight:700; }
+    .bar-track { height:8px; background:rgba(255,255,255,0.08); border-radius:5px; overflow:hidden; }
+    .bar-fill { height:100%; background:linear-gradient(90deg,#fde08d,#f0b94a); border-radius:5px; }
+
+    .toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.95); color:#0a0a0a; font-size:13px; font-weight:700; padding:11px 20px; border-radius:30px; z-index:400; opacity:0; pointer-events:none; transition:opacity 0.25s ease, transform 0.25s ease; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(-8px); }
+
+    /* ===== CAMPAIGN DETAIL (Ad Set > Ad hierarchy) ===== */
+    .detail-summary { display:flex; gap:8px; margin-bottom:16px; }
+    .detail-summary .stat-card { flex:1; padding:10px 12px; }
+    .adset-block { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:14px; margin-bottom:10px; overflow:hidden; }
+    .adset-head { display:flex; align-items:center; gap:10px; padding:12px 13px; cursor:pointer; }
+    .adset-head-body { flex:1; min-width:0; }
+    .adset-name { font-size:13.5px; font-weight:700; }
+    .adset-meta { font-size:11px; color:rgba(255,255,255,0.45); margin-top:2px; }
+    .adset-chevron { transition:transform 0.2s ease; color:rgba(255,255,255,0.4); }
+    .adset-chevron.open { transform:rotate(90deg); }
+    .adset-ads { display:none; padding:0 13px 12px; }
+    .adset-ads.open { display:block; }
+    .ad-row-item { display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid rgba(255,255,255,0.06); }
+    .ad-row-thumb { width:38px; height:38px; border-radius:8px; background:#111; object-fit:cover; flex-shrink:0; overflow:hidden; }
+    .ad-row-thumb img { width:100%; height:100%; object-fit:cover; }
+    .ad-row-body { flex:1; min-width:0; }
+    .ad-row-title { font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ad-row-sub { font-size:10.5px; color:rgba(255,255,255,0.4); margin-top:1px; }
+    .add-adset-btn, .add-ad-btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:11px; border-radius:12px; border:1.5px dashed rgba(253,224,141,0.4); color:#fde08d; font-weight:700; font-size:12.5px; cursor:pointer; }
+    .add-ad-btn { margin-top:8px; padding:9px; font-size:11.5px; }
+
+    /* ===== DYNAMIC CREATIVE ===== */
+    .dyn-list { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+    .dyn-item { display:flex; gap:8px; }
+    .dyn-item input { flex:1; }
+    .dyn-remove { width:38px; height:38px; border-radius:10px; background:rgba(255,92,92,0.12); color:#ff5c5c; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
+    .dyn-add { margin-top:8px; }
+
+    /* ===== TEAM ===== */
+    .role-select { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); color:#fff; font-size:11.5px; font-weight:600; padding:6px 9px; border-radius:8px; outline:none; }
+
+    /* ===== CHART ===== */
+    .chart-wrap { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:14px; margin-bottom:10px; }
+    .chart-title { font-size:12px; font-weight:700; color:rgba(255,255,255,0.6); margin-bottom:10px; }
+</style>
+</head>
+<body>
+
+<!-- ===================== DASHBOARD ===================== -->
+<div id="dashboard">
+    <div class="am-header">
+        <div class="am-header-row">
+            <span class="icon-btn" id="backBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+            <span class="am-title" id="amTitleEl">Ads Manager</span>
+            <div class="am-actions" id="normalActions">
+                <span class="icon-btn" id="searchToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span>
+            </div>
+            <div class="search-inline-wrap" id="searchInlineWrap">
+                <div class="search-inline-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input type="text" id="searchInput" placeholder="Search campaigns...">
+                </div>
+            </div>
+            <span class="icon-btn" id="cancelSearchBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></span>
+        </div>
+    </div>
+
+    <div class="currency-row">
+        <select id="currencySelect">
+            <option value="USD">USD — US Dollar</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="GBP">GBP — British Pound</option>
+            <option value="NGN">NGN — Nigerian Naira</option>
+            <option value="GHS">GHS — Ghanaian Cedi</option>
+            <option value="KES">KES — Kenyan Shilling</option>
+            <option value="ZAR">ZAR — South African Rand</option>
+            <option value="AED">AED — UAE Dirham</option>
+        </select>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="tools-row" id="toolsRow">
+        <div class="tool-card" data-tool="audiences"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5"/><circle cx="17" cy="8" r="2.5"/></svg><div class="tool-card-label">Audiences</div></div>
+        <div class="tool-card" data-tool="events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg><div class="tool-card-label">Events Manager</div></div>
+        <div class="tool-card" data-tool="billing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><div class="tool-card-label">Billing</div></div>
+        <div class="tool-card" data-tool="rules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg><div class="tool-card-label">Automated Rules</div></div>
+        <div class="tool-card" data-tool="insights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 4 5-8"/></svg><div class="tool-card-label">Reporting</div></div>
+        <div class="tool-card" data-tool="team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><div class="tool-card-label">Team & Roles</div></div>
+        <div class="tool-card" data-tool="adlibrary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="4" x2="8" y2="9"/></svg><div class="tool-card-label">Ad Library</div></div>
+    </div>
+
+    <div class="cat-scroll" id="statusScroll">
+        <span class="cat-chip active" data-status="all">All</span>
+        <span class="cat-chip" data-status="Active">Active</span>
+        <span class="cat-chip" data-status="In Review">In Review</span>
+        <span class="cat-chip" data-status="Paused">Paused</span>
+        <span class="cat-chip" data-status="Draft">Draft</span>
+        <span class="cat-chip" data-status="Rejected">Rejected</span>
+        <span class="cat-chip" data-status="Ended">Ended</span>
+    </div>
+
+    <div class="result-count" id="resultCount"></div>
+    <div class="campaign-list" id="campaignList"></div>
+
+    <div class="fab" id="fabBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+</div>
+
+<!-- ===================== CAMPAIGN WIZARD (also reused for Add Ad Set / Add Ad) ===================== -->
+<div id="wizard" class="subpage">
+    <div class="subpage-header">
+        <div class="subpage-header-row">
+            <span class="icon-btn" id="wizBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+            <span class="subpage-title" id="wizStepTitle">New Campaign</span>
+            <span class="icon-btn" id="wizClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></span>
+        </div>
+        <div class="wiz-steps" id="wizStepsBar"></div>
+    </div>
+    <div class="subpage-body" id="wizBody"></div>
+    <div class="subpage-footer">
+        <span class="wiz-btn secondary hidden" id="wizPrevBtn">Baya</span>
+        <span class="wiz-btn primary" id="wizNextBtn">Ci gaba</span>
+    </div>
+</div>
+
+<!-- ===================== BOOST POST ===================== -->
+<div id="boostWizard" class="subpage">
+    <div class="subpage-header">
+        <div class="subpage-header-row">
+            <span class="icon-btn" id="boostBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+            <span class="subpage-title" id="boostStepTitle">Boost a Post</span>
+            <span class="icon-btn" id="boostClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></span>
+        </div>
+        <div class="wiz-steps" id="boostStepsBar"></div>
+    </div>
+    <div class="subpage-body" id="boostBody"></div>
+    <div class="subpage-footer">
+        <span class="wiz-btn secondary hidden" id="boostPrevBtn">Baya</span>
+        <span class="wiz-btn primary" id="boostNextBtn">Ci gaba</span>
+    </div>
+</div>
+
+<!-- ===================== CAMPAIGN DETAIL ===================== -->
+<div id="detailScreen" class="subpage">
+    <div class="subpage-header"><div class="subpage-header-row">
+        <span class="icon-btn" data-close-tool><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="subpage-title" id="detailTitle">Campaign</span>
+        <span style="width:21px;"></span>
+    </div></div>
+    <div class="subpage-body" id="detailBody"></div>
+</div>
+
+<!-- ===================== AUDIENCES ===================== -->
+<div id="audiencesScreen" class="subpage">
+    <div class="subpage-header"><div class="subpage-header-row">
+        <span class="icon-btn" data-close-tool><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="subpage-title">Audiences</span>
+        <span class="icon-btn" id="newAudienceBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+    </div></div>
+    <div class="subpage-body" id="audiencesBody"></div>
+</div>
+
+<!-- ===================== EVENTS MANAGER ===================== -->
+<div id="eventsScreen" class="subpage">
+    <div class="subpage-header"><div class="subpage-header-row">
+        <span class="icon-btn" data-close-tool><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="subpage-title">Events Manager</span>
+        <span style="width:21px;"></span>
+    </div></div>
+    <div class="subpage-body" id="eventsBody"></div>
+</div>
+
+<!-- ===================== BILLING ===================== -->
+<div id="billingScreen" class="subpage">
+    <div class="subpage-header"><div class="subpage-header-row">
+        <span class="icon-btn" data-close-tool><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="subpage-title">Billing</span>
+        <span style="width:21px;"></span>
+    </div></div>
+    <div class="subpage-body" id="billingBody"></div>
+</div>
+
+<!-- ===================== AUTOMATED RULES ===================== -->
+<div id="rulesScreen" class="subpage">
+    <div class="subpage-header"><div class="subpage-header-row">
+        <span class="icon-btn" data-close-tool><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="subpage-title">Automated Rules</span>
+        <span class="icon-btn" id="newRuleBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+    </div></div>
+    <div class="subpage-body" id="rulesBody"></div>
+</div>
+
+<!-- ===================== REPORTING / INSIGHTS ===================== -->
+<div id="insightsScreen" class="subpage">
+    <div class="subpage-header"><div class="subpage-header-row">
+        <span class="icon-btn" data-close-tool><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="subpage-title">Reporting</span>
+        <span class="icon-btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+    </div></div>
+    <div class="subpage-body" id="insightsBody"></div>
+</div>
+
+<!-- ===================== TEAM & PERMISSIONS ===================== -->
+<div id="teamScreen" class="subpage">
+    <div class="subpage-header"><div class="subpage-header-row">
+        <span class="icon-btn" data-close-tool><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="subpage-title">Team & Roles</span>
+        <span class="icon-btn" id="inviteBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+    </div></div>
+    <div class="subpage-body" id="teamBody"></div>
+</div>
+
+<!-- ===================== AD LIBRARY ===================== -->
+<div id="adlibraryScreen" class="subpage">
+    <div class="subpage-header"><div class="subpage-header-row">
+        <span class="icon-btn" data-close-tool><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="subpage-title">Ad Library</span>
+        <span style="width:21px;"></span>
+    </div></div>
+    <div class="subpage-body" id="adlibraryBody"></div>
+</div>
+
+<div class="mm-backdrop" id="mmBackdrop"></div>
+<div class="mini-menu" id="miniMenu"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept="image/*" class="hidden">
+
+<script>
+/* ===================== DATA ===================== */
+const OBJECTIVES = [
+    { id:'awareness', name:'Awareness', desc:'Kai wa mutane da yawa labarin brand ɗinka', icon:'<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M19 5a9 9 0 010 14"/>' },
+    { id:'traffic', name:'Traffic', desc:'Tura mutane zuwa page ko link', icon:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>' },
+    { id:'engagement', name:'Engagement', desc:'Ƙara likes, comments da shares', icon:'<path d="M20.8 4.6a5 5 0 00-7.1 0L12 6.3l-1.7-1.7a5 5 0 00-7.1 7.1L12 20.5l8.8-8.8a5 5 0 000-7.1z"/>' },
+    { id:'leads', name:'Leads', desc:'Tattara sunaye da lambobin waya', icon:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6"/>' },
+    { id:'app', name:'App Promotion', desc:'Kai wa mutane su download app ɗinka', icon:'<rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/>' },
+    { id:'sales', name:'Sales', desc:'Kara sayarwa a shago ko marketplace', icon:'<circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.5 3h2l2.7 12.4a2 2 0 002 1.6h8.6a2 2 0 002-1.6L22 7H6"/>' },
+    { id:'catalog', name:'Catalog Sales', desc:'Talla ta atomatik daga products na shagon ka', icon:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>' }
+];
+const INTERESTS = ['Fashion & Beauty','Food & Recipes','Islamic Content','Business & Entrepreneurship','Electronics & Gadgets','Home & Living','Automotive','Health & Fitness','Education','Travel'];
+const CTAS = ['Shop Now','Learn More','Sign Up','Contact Us','Download','Get Quote'];
+const PRODUCTS = [
+    {id:1,name:'Abaya - Rawaye',price:12000,img:'https://picsum.photos/seed/prod1/200/200'},
+    {id:2,name:'Wagamari',price:8500,img:'https://picsum.photos/seed/prod2/200/200'},
+    {id:3,name:'Hijab Set',price:4500,img:'https://picsum.photos/seed/prod3/200/200'},
+    {id:4,name:'Kwalliyar Fata',price:6200,img:'https://picsum.photos/seed/prod4/200/200'},
+    {id:5,name:'Turare',price:3800,img:'https://picsum.photos/seed/prod5/200/200'},
+    {id:6,name:'Sandal na Fata',price:9700,img:'https://picsum.photos/seed/prod6/200/200'},
+];
+const RECENT_POSTS = [
+    {id:1,cap:'Sabbin Abaya sun iso — order yanzu!',img:'https://picsum.photos/seed/post1/300/300',likes:214},
+    {id:2,cap:'Discount 20% na yau kawai a shagon mu',img:'https://picsum.photos/seed/post2/300/300',likes:89},
+    {id:3,cap:'Customer review — na gode wa dukkan ku',img:'https://picsum.photos/seed/post3/300/300',likes:312},
+];
+
+function mkAd(over){ return Object.assign({ id:Date.now()+Math.random(), name:'Ad', format:'image', headline:'', text:'', cta:'Shop Now', status:'Active', spent:0, impressions:0, clicks:0, results:0, imageDataUrl:null, dynamicHeadlines:[], dynamicImages:[] }, over); }
+function mkAdSet(over){ return Object.assign({ id:Date.now()+Math.random(), name:'Ad Set', budgetType:'daily', amount:5000, optGoal:'lowest_cost', bidCap:'', placementMode:'automatic', placements:['feed','stories','reels'], schedule:'always', days:[0,1,2,3,4,5,6], hourStart:8, hourEnd:22, freqCap:0, location:'Nigeria', ageMin:18, ageMax:45, gender:'All', interests:[], ads:[] }, over); }
+
+let campaigns = [
+    { id:1, name:'Ramadan Sale — Abaya Collection', objective:'sales', status:'Active', adSets:[
+        mkAdSet({ id:11, name:'Nigeria 18-45', amount:5000, interests:['Fashion & Beauty'], ads:[
+            mkAd({ id:111, name:'Ad A — Image', headline:'Ramadan Sale — 30% Off', text:'Shop the new Abaya collection today.', spent:20400, impressions:114000, clicks:2820, results:220 }),
+            mkAd({ id:112, name:'Ad B — Carousel', format:'carousel', headline:'New Arrivals This Ramadan', text:'Swipe to see the full collection.', spent:18000, impressions:100000, clicks:2500, results:192 })
+        ] })
+    ]},
+    { id:2, name:'New App Launch Awareness', objective:'awareness', status:'Active', adSets:[
+        mkAdSet({ id:21, name:'Broad Nigeria', amount:3000, ads:[ mkAd({ id:211, name:'Ad A', headline:'Download the Oryzon App', text:'Everything you need, one app.', spent:12100, impressions:98000, clicks:1900, results:1900 }) ] })
+    ]},
+    { id:3, name:'Vendor Signup Drive', objective:'leads', status:'Paused', adSets:[
+        mkAdSet({ id:31, name:'Business owners', amount:2000, interests:['Business & Entrepreneurship'], ads:[ mkAd({ id:311, name:'Ad A', headline:'Become a Vendor Today', text:'Start selling on Oryzon in minutes.', spent:9800, impressions:41000, clicks:870, results:63 }) ] })
+    ]},
+    { id:4, name:'Eid Collection Teaser', objective:'engagement', status:'Draft', adSets:[
+        mkAdSet({ id:41, name:'Default', amount:1500, ads:[ mkAd({ id:411, name:'Ad A', headline:'', text:'' }) ] })
+    ]},
+    { id:5, name:'Back to School Traffic', objective:'traffic', status:'Ended', adSets:[
+        mkAdSet({ id:51, name:'Parents 25-44', amount:2500, ageMin:25, ageMax:44, ads:[ mkAd({ id:511, name:'Ad A', headline:'Back to School Deals', text:'Everything your kids need.', spent:45000, impressions:302000, clicks:11200, results:11200 }) ] })
+    ]},
+    { id:6, name:'Flash Sale — Electronics', objective:'catalog', status:'In Review', adSets:[
+        mkAdSet({ id:61, name:'Default', amount:4000, ads:[ mkAd({ id:611, name:'Catalog Ad', headline:'Shop our latest collection' }) ] })
+    ]},
+    { id:7, name:'Wagamari Retarget Push', objective:'sales', status:'Rejected', rejectReason:'Ad text ɗin ya ƙunshi kalmomin "guaranteed results" wanda ya sabawa manufofin talla.', adSets:[
+        mkAdSet({ id:71, name:'Retargeting', amount:3000, ads:[ mkAd({ id:711, name:'Ad A', headline:'Guaranteed Results', text:'—' }) ] })
+    ]},
+];
+let audiences = [
+    { id:1, name:'Website Visitors — Kwanaki 30', type:'Custom', size:'42K' },
+    { id:2, name:'Customer List — Ramadan Buyers', type:'Custom', size:'8.2K' },
+    { id:3, name:'Lookalike — Top Buyers 1%', type:'Lookalike', size:'1.1M' },
+];
+let rules = [
+    { id:1, name:'Kashe idan kudin yau ya wuce budget', condition:'Daily Spend > 90% of Budget', action:'Pause Campaign', active:true },
+];
+let team = [
+    { id:1, name:'Kai (Owner)', email:'you@oryzon.com', role:'Admin' },
+    { id:2, name:'Fatima Bello', email:'fatima@oryzon.com', role:'Advertiser' },
+    { id:3, name:'Bashir Sani', email:'bashir@oryzon.com', role:'Analyst' },
+];
+
+let currentStatus = 'all';
+let searching = false;
+
+/* ---- Wizard (mode-aware: campaign / adset / ad) ---- */
+let wizMode = 'campaign';
+let wizSeq = [];
+let wizStep = 0;
+let targetCampaignId = null;
+let targetAdSetId = null;
+let draft = {};
+function freshDraft(){ return { objective:null, budgetType:'daily', amount:5000, optGoal:'lowest_cost', bidCap:'', endless:true, endDate:'', placementMode:'automatic', placements:['feed','stories','reels'], schedule:'always', days:[0,1,2,3,4,5,6], hourStart:8, hourEnd:22, freqCap:0, location:'Nigeria', ageMin:18, ageMax:45, gender:'All', interests:[], format:'image', headline:'', text:'', cta:'Shop Now', selectedProducts:[], imageDataUrl:null, dynamicOn:false, dynamicHeadlines:[], dynamicImages:[] }; }
+
+let boostStep = 0;
+const boostTitles = ['Pick a Post','Audience','Budget & Duration'];
+let boostDraft = {};
+function freshBoostDraft(){ return { postId:null, audiencePreset:'auto', amount:2000, duration:3 }; }
+
+const CURRENCIES = { USD:{symbol:'$',rate:1}, NGN:{symbol:'₦',rate:1550}, GBP:{symbol:'£',rate:0.79}, EUR:{symbol:'€',rate:0.92}, GHS:{symbol:'₵',rate:15.6}, KES:{symbol:'KSh',rate:129}, ZAR:{symbol:'R',rate:18.2}, AED:{symbol:'د.إ',rate:3.67} };
+let currentCurrency = 'USD';
+
+/* ===================== ICONS ===================== */
+const I = {
+    spend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+    imp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+    click:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51z"/></svg>',
+    campaigns:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg>',
+    ellipsis:'<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg>',
+    chevron:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    edit:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5z"/></svg>',
+    dup:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>',
+    insights:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 4 5-8"/></svg>',
+    trash:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>',
+    upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+    feed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>',
+    story:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/></svg>',
+    reel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8l6 4-6 4z"/></svg>',
+    search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>',
+    market:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><rect x="3" y="9" width="18" height="12" rx="1"/></svg>',
+    audience:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5"/><circle cx="17" cy="8" r="2.5"/></svg>',
+    lookalike:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>',
+    pixel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>',
+    card:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    bolt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>',
+    adset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M12 8v8"/></svg>'
+};
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function objOf(id){ return OBJECTIVES.find(o => o.id === id); }
+function formatCurrency(n){ const cur = CURRENCIES[currentCurrency]; return cur.symbol + Math.round(n*cur.rate).toLocaleString(); }
+function compact(n){ if(n>=1000000) return (n/1000000).toFixed(1)+'M'; if(n>=1000) return (n/1000).toFixed(1)+'K'; return String(n); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function campById(id){ return campaigns.find(c=>c.id===id); }
+function adSetAgg(as){ let s=0,i=0,c=0,r=0; as.ads.forEach(ad=>{s+=ad.spent;i+=ad.impressions;c+=ad.clicks;r+=ad.results;}); return {spent:s,impressions:i,clicks:c,results:r}; }
+function campAgg(camp){ let s=0,i=0,c=0,r=0; camp.adSets.forEach(as=>{const a=adSetAgg(as); s+=a.spent;i+=a.impressions;c+=a.clicks;r+=a.results;}); return {spent:s,impressions:i,clicks:c,results:r}; }
+
+/* ===================== DASHBOARD RENDER ===================== */
+function renderStats(){
+    const active = campaigns.filter(c => c.status==='Active').length;
+    let spend=0,imp=0,clk=0;
+    campaigns.forEach(c=>{ const a=campAgg(c); spend+=a.spent; imp+=a.impressions; clk+=a.clicks; });
+    document.getElementById('statGrid').innerHTML = `
+        <div class="stat-card"><div class="stat-label">${I.campaigns} Active Campaigns</div><div class="stat-value">${active}</div><div class="stat-trend up">+1 this week</div></div>
+        <div class="stat-card"><div class="stat-label">${I.spend} Total Spend</div><div class="stat-value">${formatCurrency(spend)}</div><div class="stat-trend up">+8.2%</div></div>
+        <div class="stat-card"><div class="stat-label">${I.imp} Impressions</div><div class="stat-value">${compact(imp)}</div><div class="stat-trend up">+12.4%</div></div>
+        <div class="stat-card"><div class="stat-label">${I.click} Clicks</div><div class="stat-value">${compact(clk)}</div><div class="stat-trend down">-2.1%</div></div>
+    `;
+}
+function filteredCampaigns(){
+    const q = searching ? document.getElementById('searchInput').value.trim().toLowerCase() : '';
+    return campaigns.filter(c => (currentStatus==='all' || c.status===currentStatus) && (!q || c.name.toLowerCase().includes(q)));
+}
+function renderList(){
+    const filtered = filteredCampaigns();
+    const q = searching ? document.getElementById('searchInput').value.trim() : '';
+    const rc = document.getElementById('resultCount');
+    rc.style.display = q ? 'block' : 'none';
+    rc.textContent = q ? `${filtered.length} result${filtered.length!==1?'s':''}` : '';
+
+    const wrap = document.getElementById('campaignList');
+    if(filtered.length === 0){
+        wrap.innerHTML = `<div class="empty-state">Babu wata campaign a nan.<br><span class="empty-cta" id="emptyCreateBtn">Fara Campaign</span></div>`;
+        document.getElementById('emptyCreateBtn')?.addEventListener('click', () => openWizard());
+        return;
+    }
+    wrap.innerHTML = filtered.map(c => {
+        const obj = objOf(c.objective);
+        const agg = campAgg(c);
+        const toggleClass = c.status==='Active' ? 'on' : (c.status==='Paused' ? 'paused' : '');
+        const pillClass = c.status.toLowerCase().replace(' ','');
+        const canToggle = c.status==='Active' || c.status==='Paused';
+        return `
+        <div class="campaign-card" data-open="${c.id}">
+            <div class="cc-top">
+                <div class="cc-obj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${obj.icon}</svg></div>
+                <div class="cc-name-wrap">
+                    <div class="cc-name">${esc(c.name)}</div>
+                    <div class="cc-obj-label">${obj.name} · ${c.adSets.length} ad set${c.adSets.length!==1?'s':''} · <span class="status-pill ${pillClass}" ${c.status==='Rejected'?'data-reason-id="'+c.id+'"':''}>${c.status}</span></div>
+                </div>
+                <div class="cc-right">
+                    ${canToggle ? `<div class="toggle ${toggleClass}" data-id="${c.id}"><div class="knob"></div></div>` : ''}
+                    <span class="icon-btn cmenu-btn" data-id="${c.id}">${I.ellipsis}</span>
+                </div>
+            </div>
+            <div class="cc-stats">
+                <div><div class="cc-stat-label">Spent</div><div class="cc-stat-value">${formatCurrency(agg.spent)}</div></div>
+                <div><div class="cc-stat-label">Impressions</div><div class="cc-stat-value">${compact(agg.impressions)}</div></div>
+                <div><div class="cc-stat-label">Results</div><div class="cc-stat-value">${compact(agg.results)}</div></div>
+            </div>
+        </div>`;
+    }).join('');
+    wrap.querySelectorAll('.toggle').forEach(t => t.addEventListener('click', e => { e.stopPropagation(); toggleCampaign(Number(t.dataset.id)); }));
+    wrap.querySelectorAll('.cmenu-btn').forEach(b => b.addEventListener('click', e => openCampaignMenu(e, Number(b.dataset.id))));
+    wrap.querySelectorAll('[data-reason-id]').forEach(p => p.addEventListener('click', e => { e.stopPropagation(); alert('Dalilin ƙi:\n\n' + campById(Number(p.dataset.reasonId)).rejectReason); }));
+    wrap.querySelectorAll('.campaign-card').forEach(card => card.addEventListener('click', () => openCampaignDetail(Number(card.dataset.open))));
+}
+function toggleCampaign(id){
+    const c = campById(id);
+    if(!c) return;
+    c.status = c.status === 'Active' ? 'Paused' : 'Active';
+    renderList(); renderStats();
+}
+function renderCurrent(){ renderList(); }
+
+/* ===================== SEARCH ===================== */
+function openSearchInline(){
+    searching = true;
+    document.getElementById('amTitleEl').style.display='none';
+    document.getElementById('normalActions').style.display='none';
+    document.getElementById('searchInlineWrap').classList.add('open');
+    document.getElementById('cancelSearchBtn').style.display='inline-flex';
+    document.getElementById('searchInput').value='';
+    document.getElementById('searchInput').focus();
+    renderCurrent();
+}
+function closeSearchInline(){
+    searching = false;
+    document.getElementById('amTitleEl').style.display='block';
+    document.getElementById('normalActions').style.display='flex';
+    document.getElementById('searchInlineWrap').classList.remove('open');
+    document.getElementById('cancelSearchBtn').style.display='none';
+    renderCurrent();
+}
+function onBackClick(){
+    if(searching){ closeSearchInline(); return; }
+    if (window.parent && window.parent !== window && typeof window.parent.closePageOverlay === 'function') window.parent.closePageOverlay();
+    else history.back();
+}
+
+/* ===================== GLASS MENU ===================== */
+function openMenu(html, rect){
+    const menu = document.getElementById('miniMenu');
+    menu.innerHTML = html;
+    menu.style.top = (rect.bottom + 6) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+    menu.classList.add('Active');
+    document.getElementById('mmBackdrop').classList.add('Active');
+}
+function closeMiniMenu(){
+    document.getElementById('miniMenu').classList.remove('Active');
+    document.getElementById('mmBackdrop').classList.remove('Active');
+}
+document.getElementById('mmBackdrop').addEventListener('click', closeMiniMenu);
+function openCampaignMenu(e, id){
+    e.stopPropagation();
+    openMenu(`
+        <div class="mini-menu-item" id="cmEdit">${I.edit} Edit campaign</div>
+        <div class="mini-menu-item" id="cmDup">${I.dup} Duplicate</div>
+        <div class="mini-menu-item" id="cmInsights">${I.insights} View insights</div>
+        <div class="mini-menu-item danger" id="cmDelete">${I.trash} Delete campaign</div>
+    `, e.currentTarget.getBoundingClientRect());
+    document.getElementById('cmEdit').addEventListener('click', () => { closeMiniMenu(); openCampaignDetail(id); });
+    document.getElementById('cmInsights').addEventListener('click', () => { closeMiniMenu(); openTool('insights'); });
+    document.getElementById('cmDup').addEventListener('click', () => {
+        closeMiniMenu();
+        const c = campById(id);
+        campaigns.unshift({...JSON.parse(JSON.stringify(c)), id:Date.now(), name:c.name+' (Copy)', status:'Draft'});
+        renderList(); renderStats();
+    });
+    document.getElementById('cmDelete').addEventListener('click', () => {
+        closeMiniMenu();
+        if(!confirm('Tabbatar kana son share wannan campaign?')) return;
+        campaigns = campaigns.filter(c => c.id !== id);
+        renderList(); renderStats();
+    });
+}
+
+/* ===================== FAB ===================== */
+document.getElementById('fabBtn').addEventListener('click', (e) => {
+    openMenu(`
+        <div class="mini-menu-item" id="fabFullCampaign">${I.campaigns} Full Campaign</div>
+        <div class="mini-menu-item" id="fabBoost">${I.bolt} Boost a Post</div>
+    `, e.currentTarget.getBoundingClientRect());
+    document.getElementById('fabFullCampaign').addEventListener('click', () => { closeMiniMenu(); openWizard(); });
+    document.getElementById('fabBoost').addEventListener('click', () => { closeMiniMenu(); openBoostWizard(); });
+});
+
+/* ===================== WIZARD (mode-aware) ===================== */
+const STEP_DEFS = {
+    objective:  { title:'Objective' },
+    budget:     { title:'Budget & Bidding' },
+    placements: { title:'Placements & Delivery' },
+    audience:   { title:'Audience' },
+    creative:   { title:'Creative' },
+    review:     { title:'Review' }
+};
+function openWizard(){
+    wizMode = 'campaign'; wizSeq = ['objective','budget','placements','audience','creative','review'];
+    draft = freshDraft(); wizStep = 0; targetCampaignId = null; targetAdSetId = null;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('detailScreen').style.display = 'none';
+    document.getElementById('wizard').style.display = 'block';
+    renderWizStep();
+}
+function openAddAdSet(campaignId){
+    wizMode = 'adset'; wizSeq = ['budget','placements','audience','creative'];
+    draft = freshDraft(); draft.objective = campById(campaignId).objective;
+    wizStep = 0; targetCampaignId = campaignId; targetAdSetId = null;
+    document.getElementById('detailScreen').style.display = 'none';
+    document.getElementById('wizard').style.display = 'block';
+    renderWizStep();
+}
+function openAddAd(campaignId, adSetId){
+    wizMode = 'ad'; wizSeq = ['creative'];
+    draft = freshDraft(); draft.objective = campById(campaignId).objective;
+    wizStep = 0; targetCampaignId = campaignId; targetAdSetId = adSetId;
+    document.getElementById('detailScreen').style.display = 'none';
+    document.getElementById('wizard').style.display = 'block';
+    renderWizStep();
+}
+function closeWizard(){
+    document.getElementById('wizard').style.display = 'none';
+    if(targetCampaignId){ document.getElementById('detailScreen').style.display='block'; }
+    else document.getElementById('dashboard').style.display = 'block';
+}
+function renderStepsBar(barId, total, current){
+    document.getElementById(barId).innerHTML = Array.from({length: total}).map((_,i)=>`<div class="wiz-step-bar ${i<=current?'done':''}"></div>`).join('');
+}
+function curType(){ return wizSeq[wizStep]; }
+function renderWizStep(){
+    renderStepsBar('wizStepsBar', wizSeq.length, wizStep);
+    document.getElementById('wizStepTitle').textContent = STEP_DEFS[curType()].title;
+    document.getElementById('wizPrevBtn').classList.toggle('hidden', wizStep===0);
+    const isLast = wizStep === wizSeq.length-1;
+    document.getElementById('wizNextBtn').textContent = isLast ? (wizMode==='campaign' ? 'Publish Campaign' : wizMode==='adset' ? 'Publish Ad Set' : 'Publish Ad') : 'Ci gaba';
+    const body = document.getElementById('wizBody');
+    const type = curType();
+
+    if(type === 'objective'){
+        body.innerHTML = `
+            <div class="wiz-step-title">Menene manufar campaign ɗinka?</div>
+            <div class="wiz-step-sub">Wannan zai taimaka mu inganta shi ga sakamakon da kake so.</div>
+            <div class="obj-grid" id="objGrid">
+                ${OBJECTIVES.map(o => `
+                    <div class="obj-card ${draft.objective===o.id?'selected':''}" data-obj="${o.id}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${o.icon}</svg>
+                        <div class="obj-card-name">${o.name}</div>
+                        <div class="obj-card-desc">${o.desc}</div>
+                    </div>`).join('')}
+            </div>`;
+        body.querySelectorAll('.obj-card').forEach(card => card.addEventListener('click', () => {
+            draft.objective = card.dataset.obj;
+            body.querySelectorAll('.obj-card').forEach(c=>c.classList.remove('selected'));
+            card.classList.add('selected');
+            updateNextEnabled();
+        }));
+    }
+
+    if(type === 'budget'){
+        body.innerHTML = `
+            <div class="wiz-step-title">Budget & Bidding</div>
+            <div class="wiz-step-sub">Sanya nawa za ka kashe da yadda za a inganta kuɗin.</div>
+            <div class="field-label">Nau'in Budget</div>
+            <div class="chip-row chip-row-eq">
+                <span class="cat-chip ${draft.budgetType==='daily'?'active':''}" data-bt="daily">Kullum (Daily)</span>
+                <span class="cat-chip ${draft.budgetType==='lifetime'?'active':''}" data-bt="lifetime">Gaba ɗaya (Lifetime)</span>
+            </div>
+            <div class="amt-input-wrap"><span>${CURRENCIES[currentCurrency].symbol}</span><input type="number" id="amtInput" value="${draft.amount}" placeholder="0"></div>
+            <div class="chip-row" style="margin-top:8px;">${[2000,5000,10000,25000].map(v=>`<span class="cat-chip" data-quick="${v}">${CURRENCIES[currentCurrency].symbol}${v.toLocaleString()}</span>`).join('')}</div>
+            <div class="est-box" id="estBox"></div>
+            <div class="field-label">Optimization Goal</div>
+            <div class="chip-row">
+                <span class="cat-chip ${draft.optGoal==='lowest_cost'?'active':''}" data-og="lowest_cost">Lowest Cost</span>
+                <span class="cat-chip ${draft.optGoal==='cost_cap'?'active':''}" data-og="cost_cap">Cost Cap</span>
+                <span class="cat-chip ${draft.optGoal==='roas'?'active':''}" data-og="roas">Target ROAS</span>
+            </div>
+            <input type="text" class="text-input ${draft.optGoal==='lowest_cost'?'hidden':''}" id="bidCapInput" placeholder="${draft.optGoal==='roas'?'Misali: 3.0x':'Misali: '+CURRENCIES[currentCurrency].symbol+'50'}" value="${esc(draft.bidCap)}" style="margin-top:10px;">
+            <div class="hint">Lowest Cost yana bada damar tsarin ya nemo sakamako mafi arha ba tare da iyaka ba.</div>
+            <div class="field-label">Kwanan Farawa</div>
+            <input type="date" class="text-input" id="startDate" value="${draft.startDate||new Date().toISOString().slice(0,10)}">
+            <div class="field-label">Ranar Ƙarewa</div>
+            <div class="chip-row chip-row-eq">
+                <span class="cat-chip ${draft.endless?'active':''}" data-end="endless">Ci gaba har abada</span>
+                <span class="cat-chip ${!draft.endless?'active':''}" data-end="fixed">Zaɓi ranar ƙarewa</span>
+            </div>
+            <input type="date" class="text-input ${draft.endless?'hidden':''}" id="endDateInput" value="${draft.endDate}" style="margin-top:10px;">
+        `;
+        const updateEstimate = () => {
+            const amt = Number(document.getElementById('amtInput').value)||0;
+            document.getElementById('estBox').innerHTML = `<div class="est-num">${compact(Math.round(amt*46))} – ${compact(Math.round(amt*68))} kowace rana</div><div class="est-label">Kimanin isar sako (estimated reach)</div>`;
+        };
+        document.getElementById('amtInput').addEventListener('input', () => { draft.amount = Number(document.getElementById('amtInput').value)||0; updateEstimate(); });
+        body.querySelectorAll('[data-quick]').forEach(q => q.addEventListener('click', () => { draft.amount = Number(q.dataset.quick); document.getElementById('amtInput').value = draft.amount; updateEstimate(); }));
+        body.querySelectorAll('[data-bt]').forEach(b => b.addEventListener('click', () => { draft.budgetType = b.dataset.bt; renderWizStep(); }));
+        body.querySelectorAll('[data-og]').forEach(b => b.addEventListener('click', () => { draft.optGoal = b.dataset.og; renderWizStep(); }));
+        body.querySelectorAll('[data-end]').forEach(b => b.addEventListener('click', () => { draft.endless = b.dataset.end==='endless'; renderWizStep(); }));
+        document.getElementById('bidCapInput')?.addEventListener('input', e => draft.bidCap = e.target.value);
+        updateEstimate(); updateNextEnabled();
+    }
+
+    if(type === 'placements'){
+        const placementList = [
+            {id:'feed', label:'Feed', icon:I.feed}, {id:'stories', label:'Stories', icon:I.story},
+            {id:'reels', label:'Reels', icon:I.reel}, {id:'search', label:'Search Results', icon:I.search},
+            {id:'marketplace', label:'Marketplace', icon:I.market}
+        ];
+        body.innerHTML = `
+            <div class="wiz-step-title">Placements & Delivery</div>
+            <div class="wiz-step-sub">Zaɓi inda ad ɗinka zai bayyana, da yaushe.</div>
+            <div class="field-label">Placements</div>
+            <div class="chip-row chip-row-eq">
+                <span class="cat-chip ${draft.placementMode==='automatic'?'active':''}" data-pm="automatic">Automatic (mafi kyau)</span>
+                <span class="cat-chip ${draft.placementMode==='manual'?'active':''}" data-pm="manual">Manual</span>
+            </div>
+            <div id="placementList" class="${draft.placementMode==='automatic'?'hidden':''}" style="margin-top:12px;">
+                ${placementList.map(p=>`<div class="placement-row"><div class="placement-row-label">${p.icon} ${p.label}</div><div class="toggle ${draft.placements.includes(p.id)?'on':''}" data-place="${p.id}"><div class="knob"></div></div></div>`).join('')}
+            </div>
+            <div class="field-label">Ad Scheduling</div>
+            <div class="chip-row chip-row-eq">
+                <span class="cat-chip ${draft.schedule==='always'?'active':''}" data-sched="always">Koyaushe</span>
+                <span class="cat-chip ${draft.schedule==='custom'?'active':''}" data-sched="custom">Zaɓi lokaci</span>
+            </div>
+            <div id="schedCustom" class="${draft.schedule==='always'?'hidden':''}" style="margin-top:10px;">
+                <div class="day-grid">${['Lah','Lit','Tal','Lar','Alh','Jum','Asa'].map((d,i)=>`<span class="day-chip ${draft.days.includes(i)?'selected':''}" data-day="${i}">${d}</span>`).join('')}</div>
+                <div class="row-2" style="margin-top:10px;">
+                    <div><div class="hint">Daga karfe</div><input type="number" class="text-input" id="hourStart" value="${draft.hourStart}" min="0" max="23"></div>
+                    <div><div class="hint">Zuwa karfe</div><input type="number" class="text-input" id="hourEnd" value="${draft.hourEnd}" min="0" max="23"></div>
+                </div>
+            </div>
+            <div class="field-label">Frequency Cap</div>
+            <input type="number" class="text-input" id="freqInput" value="${draft.freqCap}" placeholder="0 = babu iyaka">
+            <div class="hint">Adadin sau da mutum ɗaya zai iya ganin wannan ad a mako guda (0 = babu iyaka).</div>
+        `;
+        body.querySelectorAll('[data-pm]').forEach(b => b.addEventListener('click', () => { draft.placementMode = b.dataset.pm; renderWizStep(); }));
+        body.querySelectorAll('[data-place]').forEach(t => t.addEventListener('click', () => {
+            const id = t.dataset.place;
+            if(draft.placements.includes(id)) draft.placements = draft.placements.filter(p=>p!==id); else draft.placements.push(id);
+            t.classList.toggle('on');
+        }));
+        body.querySelectorAll('[data-sched]').forEach(b => b.addEventListener('click', () => { draft.schedule = b.dataset.sched; renderWizStep(); }));
+        body.querySelectorAll('[data-day]').forEach(d => d.addEventListener('click', () => {
+            const day = Number(d.dataset.day);
+            if(draft.days.includes(day)) draft.days = draft.days.filter(x=>x!==day); else draft.days.push(day);
+            d.classList.toggle('selected');
+        }));
+        document.getElementById('hourStart')?.addEventListener('input', e => draft.hourStart = Number(e.target.value));
+        document.getElementById('hourEnd')?.addEventListener('input', e => draft.hourEnd = Number(e.target.value));
+        document.getElementById('freqInput').addEventListener('input', e => draft.freqCap = Number(e.target.value)||0);
+        updateNextEnabled();
+    }
+
+    if(type === 'audience'){
+        body.innerHTML = `
+            <div class="wiz-step-title">Wa kake son ya gani?</div>
+            <div class="wiz-step-sub">Zaɓi audience ɗinka domin sakamako mafi kyau.</div>
+            <div class="field-label">Location</div>
+            <input type="text" class="text-input" id="locInput" value="${draft.location}">
+            <div class="field-label">Shekaru</div>
+            <div class="row-2"><div><input type="number" class="text-input" id="ageMin" value="${draft.ageMin}" placeholder="Min"></div><div><input type="number" class="text-input" id="ageMax" value="${draft.ageMax}" placeholder="Max"></div></div>
+            <div class="field-label">Jinsi</div>
+            <div class="chip-row">${['All','Male','Female'].map(g=>`<span class="cat-chip ${draft.gender===g?'active':''}" data-gender="${g}">${g}</span>`).join('')}</div>
+            <div class="field-label">Interests</div>
+            <div class="chip-row" id="interestRow">${INTERESTS.map(i=>`<span class="interest-chip ${draft.interests.includes(i)?'selected':''}" data-int="${esc(i)}">${i}</span>`).join('')}</div>
+            <div class="field-label">Ko Saved Audience</div>
+            <select class="text-input" id="savedAudSelect"><option value="">— Babu, gina sabo —</option>${audiences.map(a=>`<option value="${a.id}">${esc(a.name)} (${a.size})</option>`).join('')}</select>
+            <div class="est-box" id="audEstBox"></div>
+        `;
+        const updateAud = () => {
+            let base = 4200000;
+            base -= (45-draft.ageMax)*20000 + draft.ageMin*15000;
+            if(draft.gender !== 'All') base *= 0.52;
+            base -= draft.interests.length * 180000;
+            base = Math.max(base, 15000);
+            document.getElementById('audEstBox').innerHTML = `<div class="est-num">${compact(Math.round(base))} mutane</div><div class="est-label">Kimanin girman audience (estimated audience size)</div>`;
+        };
+        document.getElementById('locInput').addEventListener('input', e => draft.location = e.target.value);
+        document.getElementById('ageMin').addEventListener('input', e => { draft.ageMin = Number(e.target.value)||18; updateAud(); });
+        document.getElementById('ageMax').addEventListener('input', e => { draft.ageMax = Number(e.target.value)||65; updateAud(); });
+        body.querySelectorAll('[data-gender]').forEach(g => g.addEventListener('click', () => { draft.gender = g.dataset.gender; body.querySelectorAll('[data-gender]').forEach(x=>x.classList.remove('active')); g.classList.add('active'); updateAud(); }));
+        body.querySelectorAll('[data-int]').forEach(chip => chip.addEventListener('click', () => {
+            const v = chip.dataset.int;
+            if(draft.interests.includes(v)){ draft.interests = draft.interests.filter(x=>x!==v); chip.classList.remove('selected'); }
+            else { draft.interests.push(v); chip.classList.add('selected'); }
+            updateAud();
+        }));
+        updateAud(); updateNextEnabled();
+    }
+
+    if(type === 'creative'){
+        if(draft.objective === 'catalog'){
+            body.innerHTML = `
+                <div class="wiz-step-title">Zaɓi Products</div>
+                <div class="wiz-step-sub">Tsarin zai ƙirƙiri ad ɗin kai-tsaye daga products ɗin da ka zaɓa.</div>
+                <div class="product-grid" id="prodGrid">
+                    ${PRODUCTS.map(p=>`<div class="product-item ${draft.selectedProducts.includes(p.id)?'selected':''}" data-pid="${p.id}"><img src="${p.img}" loading="lazy" decoding="async"><div class="p-price">${formatCurrency(p.price)}</div></div>`).join('')}
+                </div>
+                <div class="field-label">Call to Action</div>
+                <div class="cta-select" id="ctaRow">${CTAS.map(c=>`<span class="cat-chip ${draft.cta===c?'active':''}" data-cta="${c}">${c}</span>`).join('')}</div>
+            `;
+            body.querySelectorAll('.product-item').forEach(pi => pi.addEventListener('click', () => {
+                const id = Number(pi.dataset.pid);
+                if(draft.selectedProducts.includes(id)){ draft.selectedProducts = draft.selectedProducts.filter(x=>x!==id); pi.classList.remove('selected'); }
+                else { draft.selectedProducts.push(id); pi.classList.add('selected'); }
+                updateNextEnabled();
+            }));
+            body.querySelectorAll('[data-cta]').forEach(c => c.addEventListener('click', () => { draft.cta = c.dataset.cta; body.querySelectorAll('[data-cta]').forEach(x=>x.classList.remove('active')); c.classList.add('active'); }));
+            updateNextEnabled();
+            return;
+        }
+        body.innerHTML = `
+            <div class="wiz-step-title">Kirkiro Ad ɗinka</div>
+            <div class="wiz-step-sub">Rubuta rubutu da hoto/video da za a nuna wa mutane.</div>
+            <div class="field-label">Format</div>
+            <div class="chip-row">
+                <span class="format-chip ${draft.format==='image'?'selected':''}" data-fmt="image">Hoto</span>
+                <span class="format-chip ${draft.format==='video'?'selected':''}" data-fmt="video">Video</span>
+                <span class="format-chip ${draft.format==='carousel'?'selected':''}" data-fmt="carousel">Carousel</span>
+            </div>
+            <div class="upload-box" id="uploadBox">${draft.imageDataUrl ? `<img src="${draft.imageDataUrl}">` : I.upload+'<div>Danna domin loda hoto na gaske</div>'}</div>
+            <div class="field-label">Headline</div>
+            <input type="text" class="text-input" id="headlineInput" maxlength="40" placeholder="Misali: 50% Off — Yau Kawai" value="${esc(draft.headline)}">
+            <div class="field-label">Primary Text</div>
+            <textarea class="text-input" id="textInput" maxlength="150" placeholder="Rubuta bayanin talla ɗinka...">${esc(draft.text)}</textarea>
+            <div class="field-label">Call to Action</div>
+            <div class="cta-select" id="ctaRow">${CTAS.map(c=>`<span class="cat-chip ${draft.cta===c?'active':''}" data-cta="${c}">${c}</span>`).join('')}</div>
+
+            <div class="placement-row" style="margin-top:18px;">
+                <div class="placement-row-label">${I.bolt} Dynamic Creative</div>
+                <div class="toggle ${draft.dynamicOn?'on':''}" id="dynToggle"><div class="knob"></div></div>
+            </div>
+            <div class="hint">Tsarin zai gina cakuda daban-daban na headlines/hotuna, ya gwada su, ya zaɓi mafi kyau da kansa.</div>
+            <div id="dynSection" class="${draft.dynamicOn?'':'hidden'}">
+                <div class="field-label">Ƙarin Headlines (na gwaji)</div>
+                <div class="dyn-list" id="dynHeadlineList"></div>
+                <div class="add-row-btn dyn-add" id="addDynHeadline">${I.plus} Ƙara headline</div>
+            </div>
+
+            <div class="ad-preview" id="adPreview"></div>
+        `;
+        const renderDynList = () => {
+            document.getElementById('dynHeadlineList').innerHTML = draft.dynamicHeadlines.map((h,idx)=>`
+                <div class="dyn-item"><input type="text" class="text-input" data-dynidx="${idx}" value="${esc(h)}" maxlength="40"><div class="dyn-remove" data-dynrm="${idx}">✕</div></div>
+            `).join('');
+            document.querySelectorAll('[data-dynidx]').forEach(inp => inp.addEventListener('input', e => draft.dynamicHeadlines[Number(e.target.dataset.dynidx)] = e.target.value));
+            document.querySelectorAll('[data-dynrm]').forEach(btn => btn.addEventListener('click', () => { draft.dynamicHeadlines.splice(Number(btn.dataset.dynrm),1); renderDynList(); }));
+        };
+        document.getElementById('dynToggle').addEventListener('click', function(){ draft.dynamicOn = !draft.dynamicOn; this.classList.toggle('on'); document.getElementById('dynSection').classList.toggle('hidden', !draft.dynamicOn); if(draft.dynamicOn && draft.dynamicHeadlines.length===0){ draft.dynamicHeadlines.push(''); renderDynList(); } });
+        document.getElementById('addDynHeadline').addEventListener('click', () => { draft.dynamicHeadlines.push(''); renderDynList(); });
+        renderDynList();
+
+        const updatePreview = () => {
+            document.getElementById('adPreview').innerHTML = `
+                <div class="ap-header"><div class="ap-avatar"></div><div><div class="ap-name">Oryzon Business</div><div class="ap-sponsored">Sponsored</div></div></div>
+                <div class="ap-body-img">${draft.imageDataUrl ? `<img src="${draft.imageDataUrl}">` : (draft.format === 'video' ? 'Video Preview' : draft.format==='carousel' ? 'Carousel Preview' : 'Image Preview')}</div>
+                <div class="ap-text">${esc(draft.text) || 'Rubutun talla ɗinka zai bayyana anan...'}</div>
+                <div class="ap-headline"><b>${esc(draft.headline) || 'Headline ɗinka'}</b><span class="ap-cta-btn">${draft.cta}</span></div>
+            `;
+        };
+        document.getElementById('headlineInput').addEventListener('input', e => { draft.headline = e.target.value; updatePreview(); updateNextEnabled(); });
+        document.getElementById('textInput').addEventListener('input', e => { draft.text = e.target.value; updatePreview(); });
+        body.querySelectorAll('[data-fmt]').forEach(f => f.addEventListener('click', () => { draft.format = f.dataset.fmt; body.querySelectorAll('[data-fmt]').forEach(x=>x.classList.remove('selected')); f.classList.add('selected'); updatePreview(); }));
+        body.querySelectorAll('[data-cta]').forEach(c => c.addEventListener('click', () => { draft.cta = c.dataset.cta; body.querySelectorAll('[data-cta]').forEach(x=>x.classList.remove('active')); c.classList.add('active'); updatePreview(); }));
+        document.getElementById('uploadBox').addEventListener('click', () => {
+            const fi = document.getElementById('fileInput');
+            fi.onchange = () => {
+                const file = fi.files[0]; if(!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => { draft.imageDataUrl = ev.target.result; document.getElementById('uploadBox').innerHTML = `<img src="${draft.imageDataUrl}">`; updatePreview(); };
+                reader.readAsDataURL(file);
+            };
+            fi.click();
+        });
+        updatePreview(); updateNextEnabled();
+    }
+
+    if(type === 'review'){
+        const obj = objOf(draft.objective);
+        body.innerHTML = `
+            <div class="wiz-step-title">Duba kafin ka fara</div>
+            <div class="wiz-step-sub">Campaign ɗinka zai fara ne a matsayin "In Review" har sai an tabbatar bai saba wa manufofin talla ba.</div>
+            <div class="review-row"><span>Objective</span><span>${obj.name}</span></div>
+            <div class="review-row"><span>Budget</span><span>${formatCurrency(draft.amount)} / ${draft.budgetType==='daily'?'rana':'gaba ɗaya'}</span></div>
+            <div class="review-row"><span>Optimization</span><span>${draft.optGoal.replace('_',' ')}</span></div>
+            <div class="review-row"><span>Placements</span><span>${draft.placementMode==='automatic'?'Automatic':draft.placements.join(', ')}</span></div>
+            <div class="review-row"><span>Location</span><span>${esc(draft.location)}</span></div>
+            <div class="review-row"><span>Age</span><span>${draft.ageMin}–${draft.ageMax}</span></div>
+            <div class="review-row"><span>Gender</span><span>${draft.gender}</span></div>
+            ${draft.objective==='catalog' ? `<div class="review-row"><span>Products</span><span>${draft.selectedProducts.length} zaɓi</span></div>` : `<div class="review-row"><span>Dynamic Creative</span><span>${draft.dynamicOn?'Yes':'No'}</span></div>`}
+            <div class="ad-preview" id="reviewPreview"></div>
+        `;
+        document.getElementById('reviewPreview').innerHTML = draft.objective==='catalog' ? `
+            <div class="ap-header"><div class="ap-avatar"></div><div><div class="ap-name">Oryzon Business</div><div class="ap-sponsored">Sponsored</div></div></div>
+            <div class="ap-body-img">Carousel: ${draft.selectedProducts.length} Products</div>
+            <div class="ap-headline"><b>Shop our latest collection</b><span class="ap-cta-btn">${draft.cta}</span></div>
+        ` : `
+            <div class="ap-header"><div class="ap-avatar"></div><div><div class="ap-name">Oryzon Business</div><div class="ap-sponsored">Sponsored</div></div></div>
+            <div class="ap-body-img">${draft.imageDataUrl ? `<img src="${draft.imageDataUrl}">` : (draft.format === 'video' ? 'Video Preview' : draft.format==='carousel' ? 'Carousel Preview' : 'Image Preview')}</div>
+            <div class="ap-text">${esc(draft.text) || '—'}</div>
+            <div class="ap-headline"><b>${esc(draft.headline) || 'Headline ɗinka'}</b><span class="ap-cta-btn">${draft.cta}</span></div>
+        `;
+        updateNextEnabled();
+    }
+}
+function updateNextEnabled(){
+    const nextBtn = document.getElementById('wizNextBtn');
+    let ok = true;
+    const type = curType();
+    if(type==='objective') ok = !!draft.objective;
+    if(type==='creative') ok = draft.objective==='catalog' ? draft.selectedProducts.length>0 : !!draft.headline.trim();
+    nextBtn.classList.toggle('disabled', !ok);
+}
+function goNextStep(){
+    if(wizStep < wizSeq.length-1){ wizStep++; renderWizStep(); }
+    else finishWizard();
+}
+function goPrevStep(){ if(wizStep>0){ wizStep--; renderWizStep(); } }
+function buildAdFromDraft(){
+    return mkAd({ format:draft.format, headline: draft.objective==='catalog' ? 'Shop our latest collection' : draft.headline, text: draft.objective==='catalog' ? '' : draft.text, cta:draft.cta, imageDataUrl:draft.imageDataUrl, dynamicHeadlines: draft.dynamicOn ? draft.dynamicHeadlines.filter(h=>h.trim()) : [], name: draft.dynamicOn ? 'Ad (Dynamic)' : 'Ad' });
+}
+function buildAdSetFromDraft(){
+    return mkAdSet({ budgetType:draft.budgetType, amount:draft.amount, optGoal:draft.optGoal, bidCap:draft.bidCap, placementMode:draft.placementMode, placements:[...draft.placements], schedule:draft.schedule, days:[...draft.days], hourStart:draft.hourStart, hourEnd:draft.hourEnd, freqCap:draft.freqCap, location:draft.location, ageMin:draft.ageMin, ageMax:draft.ageMax, gender:draft.gender, interests:[...draft.interests], ads:[ buildAdFromDraft() ] });
+}
+function finishWizard(){
+    if(wizMode === 'campaign'){
+        campaigns.unshift({ id:Date.now(), name: draft.objective==='catalog' ? 'Catalog Campaign — '+draft.selectedProducts.length+' products' : (draft.headline || 'New Campaign'), objective:draft.objective, status:'In Review', adSets:[ buildAdSetFromDraft() ] });
+        closeWizard(); document.getElementById('dashboard').style.display='block';
+        renderList(); renderStats();
+        showToast('Campaign ya tafi don bita (In Review)');
+    } else if(wizMode === 'adset'){
+        const c = campById(targetCampaignId);
+        c.adSets.push(buildAdSetFromDraft());
+        closeWizard(); openCampaignDetail(targetCampaignId);
+        showToast('Sabon Ad Set an ƙara shi');
+    } else if(wizMode === 'ad'){
+        const c = campById(targetCampaignId);
+        const as = c.adSets.find(a=>a.id===targetAdSetId);
+        as.ads.push(buildAdFromDraft());
+        closeWizard(); openCampaignDetail(targetCampaignId);
+        showToast('Sabon Ad (variant) an ƙara shi don A/B testing');
+    }
+}
+document.getElementById('wizBack').addEventListener('click', goPrevStep);
+document.getElementById('wizClose').addEventListener('click', closeWizard);
+document.getElementById('wizPrevBtn').addEventListener('click', goPrevStep);
+document.getElementById('wizNextBtn').addEventListener('click', goNextStep);
+
+/* ===================== CAMPAIGN DETAIL ===================== */
+let openAdSetIds = new Set();
+function openCampaignDetail(id){
+    targetCampaignId = id;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('detailScreen').style.display = 'block';
+    renderDetail();
+}
+function renderDetail(){
+    const c = campById(targetCampaignId);
+    document.getElementById('detailTitle').textContent = c.name;
+    const agg = campAgg(c);
+    document.getElementById('detailBody').innerHTML = `
+        <div class="detail-summary">
+            <div class="stat-card"><div class="stat-label">${I.spend} Spent</div><div class="stat-value" style="font-size:15px;">${formatCurrency(agg.spent)}</div></div>
+            <div class="stat-card"><div class="stat-label">${I.imp} Impressions</div><div class="stat-value" style="font-size:15px;">${compact(agg.impressions)}</div></div>
+            <div class="stat-card"><div class="stat-label">${I.click} Results</div><div class="stat-value" style="font-size:15px;">${compact(agg.results)}</div></div>
+        </div>
+        <div class="field-label">Ad Sets (${c.adSets.length})</div>
+        <div id="adSetsWrap">${c.adSets.map(as => renderAdSetBlock(as)).join('')}</div>
+        <div class="add-adset-btn" id="addAdSetBtn">${I.adset} Add Ad Set (sabon audience)</div>
+    `;
+    wireDetailEvents();
+}
+function renderAdSetBlock(as){
+    const agg = adSetAgg(as);
+    const open = openAdSetIds.has(as.id);
+    return `
+    <div class="adset-block">
+        <div class="adset-head" data-toggle-as="${as.id}">
+            <div class="adset-head-body">
+                <div class="adset-name">${esc(as.name)}</div>
+                <div class="adset-meta">${as.ads.length} ad${as.ads.length!==1?'s':''} · ${formatCurrency(as.amount)}/${as.budgetType==='daily'?'rana':'total'} · ${compact(agg.results)} results</div>
+            </div>
+            <span class="adset-chevron ${open?'open':''}">${I.chevron}</span>
+        </div>
+        <div class="adset-ads ${open?'open':''}">
+            ${as.ads.map(ad => `
+                <div class="ad-row-item">
+                    <div class="ad-row-thumb">${ad.imageDataUrl?`<img src="${ad.imageDataUrl}">`:''}</div>
+                    <div class="ad-row-body"><div class="ad-row-title">${esc(ad.headline||ad.name)}</div><div class="ad-row-sub">${formatCurrency(ad.spent)} spent · ${compact(ad.results)} results</div></div>
+                    <span class="status-pill ${ad.status.toLowerCase()}">${ad.status}</span>
+                </div>`).join('')}
+            <div class="add-ad-btn" data-add-ad="${as.id}">${I.plus} Add Ad (gwada wani headline/hoto — A/B test)</div>
+        </div>
+    </div>`;
+}
+function wireDetailEvents(){
+    document.querySelectorAll('[data-toggle-as]').forEach(el => el.addEventListener('click', () => {
+        const id = Number(el.dataset.toggleAs);
+        if(openAdSetIds.has(id)) openAdSetIds.delete(id); else openAdSetIds.add(id);
+        renderDetail();
+    }));
+    document.querySelectorAll('[data-add-ad]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openAddAd(targetCampaignId, Number(el.dataset.addAd)); }));
+    document.getElementById('addAdSetBtn').addEventListener('click', () => openAddAdSet(targetCampaignId));
+}
+
+/* ===================== BOOST A POST ===================== */
+function openBoostWizard(){
+    boostDraft = freshBoostDraft(); boostStep = 0;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('boostWizard').style.display = 'block';
+    renderBoostStep();
+}
+function closeBoostWizard(){ document.getElementById('boostWizard').style.display = 'none'; document.getElementById('dashboard').style.display = 'block'; }
+function renderBoostStep(){
+    renderStepsBar('boostStepsBar', boostTitles.length, boostStep);
+    document.getElementById('boostStepTitle').textContent = boostTitles[boostStep];
+    document.getElementById('boostPrevBtn').classList.toggle('hidden', boostStep===0);
+    document.getElementById('boostNextBtn').textContent = boostStep === boostTitles.length-1 ? 'Boost Post' : 'Ci gaba';
+    const body = document.getElementById('boostBody');
+    if(boostStep === 0){
+        body.innerHTML = `<div class="wiz-step-title">Zaɓi post da za ka boost</div><div class="wiz-step-sub">Hanya mai sauri, ba tare da matakai 6 ba.</div>
+            <div class="product-grid" style="grid-template-columns:1fr 1fr;">${RECENT_POSTS.map(p=>`<div class="product-item ${boostDraft.postId===p.id?'selected':''}" data-post="${p.id}" style="aspect-ratio:1/1.1;"><img src="${p.img}" loading="lazy" decoding="async"><div class="p-price">${p.likes} likes</div></div>`).join('')}</div>`;
+        body.querySelectorAll('.product-item').forEach(pi => pi.addEventListener('click', () => { boostDraft.postId = Number(pi.dataset.post); body.querySelectorAll('.product-item').forEach(x=>x.classList.remove('selected')); pi.classList.add('selected'); updateBoostNext(); }));
+    }
+    if(boostStep === 1){
+        body.innerHTML = `<div class="wiz-step-title">Wa za mu nuna wa?</div><div class="wiz-step-sub">Zaɓi audience mai sauri.</div>
+            <div class="chip-row" style="flex-direction:column; align-items:stretch;">
+                <div class="placement-row"><div class="placement-row-label">${I.audience} Automatic (mafi kyau)</div><div class="toggle ${boostDraft.audiencePreset==='auto'?'on':''}" data-aud="auto"><div class="knob"></div></div></div>
+                <div class="placement-row"><div class="placement-row-label">${I.lookalike} Mutane kamar customers ɗina</div><div class="toggle ${boostDraft.audiencePreset==='lookalike'?'on':''}" data-aud="lookalike"><div class="knob"></div></div></div>
+                <div class="placement-row"><div class="placement-row-label">${I.market} Mutane a kusa (10km)</div><div class="toggle ${boostDraft.audiencePreset==='local'?'on':''}" data-aud="local"><div class="knob"></div></div></div>
+            </div>`;
+        body.querySelectorAll('[data-aud]').forEach(t => t.addEventListener('click', () => { boostDraft.audiencePreset = t.dataset.aud; body.querySelectorAll('[data-aud]').forEach(x=>x.classList.remove('on')); t.classList.add('on'); }));
+    }
+    if(boostStep === 2){
+        body.innerHTML = `<div class="wiz-step-title">Budget & Tsawon Lokaci</div>
+            <div class="amt-input-wrap"><span>${CURRENCIES[currentCurrency].symbol}</span><input type="number" id="boostAmt" value="${boostDraft.amount}"></div>
+            <div class="chip-row" style="margin-top:8px;">${[1000,2000,5000,10000].map(v=>`<span class="cat-chip" data-bquick="${v}">${CURRENCIES[currentCurrency].symbol}${v.toLocaleString()}</span>`).join('')}</div>
+            <div class="field-label">Kwanaki</div>
+            <div class="chip-row chip-row-eq">${[1,3,5,7].map(d=>`<span class="cat-chip ${boostDraft.duration===d?'active':''}" data-bdur="${d}">${d} kwana${d>1?'ki':''}</span>`).join('')}</div>
+            <div class="est-box"><div class="est-num">${compact(Math.round(boostDraft.amount*52*boostDraft.duration))} kimanin isar sako</div><div class="est-label">A cikin kwanakin da aka zaɓa</div></div>`;
+        document.getElementById('boostAmt').addEventListener('input', e => { boostDraft.amount = Number(e.target.value)||0; renderBoostStep(); });
+        body.querySelectorAll('[data-bquick]').forEach(q => q.addEventListener('click', () => { boostDraft.amount = Number(q.dataset.bquick); renderBoostStep(); }));
+        body.querySelectorAll('[data-bdur]').forEach(d => d.addEventListener('click', () => { boostDraft.duration = Number(d.dataset.bdur); renderBoostStep(); }));
+    }
+    updateBoostNext();
+}
+function updateBoostNext(){ document.getElementById('boostNextBtn').classList.toggle('disabled', boostStep===0 && !boostDraft.postId); }
+function goBoostNext(){
+    if(boostStep < boostTitles.length-1){ boostStep++; renderBoostStep(); }
+    else {
+        const post = RECENT_POSTS.find(p=>p.id===boostDraft.postId);
+        campaigns.unshift({ id:Date.now(), name:'Boosted: '+post.cap.slice(0,30), objective:'engagement', status:'In Review', adSets:[ mkAdSet({ amount:boostDraft.amount, ads:[ mkAd({ headline:post.cap, imageDataUrl:post.img }) ] }) ] });
+        closeBoostWizard(); renderList(); renderStats();
+        showToast('Post ɗinka yana kan hanyar bita don boost');
+    }
+}
+document.getElementById('boostBack').addEventListener('click', () => { if(boostStep>0){ boostStep--; renderBoostStep(); } });
+document.getElementById('boostClose').addEventListener('click', closeBoostWizard);
+document.getElementById('boostPrevBtn').addEventListener('click', () => { if(boostStep>0){ boostStep--; renderBoostStep(); } });
+document.getElementById('boostNextBtn').addEventListener('click', goBoostNext);
+
+/* ===================== TOOL SCREENS ===================== */
+function openTool(name){
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById(name+'Screen').style.display = 'block';
+    if(name==='audiences') renderAudiences();
+    if(name==='events') renderEvents();
+    if(name==='billing') renderBilling();
+    if(name==='rules') renderRules();
+    if(name==='insights') renderInsights();
+    if(name==='team') renderTeam();
+    if(name==='adlibrary') renderAdLibrary();
+}
+function closeTools(){ document.querySelectorAll('.subpage').forEach(s => s.style.display='none'); document.getElementById('dashboard').style.display = 'block'; }
+document.querySelectorAll('[data-close-tool]').forEach(b => b.addEventListener('click', closeTools));
+document.querySelectorAll('.tool-card').forEach(t => t.addEventListener('click', () => openTool(t.dataset.tool)));
+
+function renderAudiences(){
+    document.getElementById('audiencesBody').innerHTML = `
+        <div class="wiz-step-sub">Custom da Lookalike audiences don retargeting mai inganci.</div>
+        ${audiences.map(a=>`<div class="list-row"><div class="list-row-icon">${a.type==='Lookalike'?I.lookalike:I.audience}</div><div class="list-row-body"><div class="list-row-title">${esc(a.name)}</div><div class="list-row-sub">${a.type} · ${a.size} mutane</div></div><span class="icon-btn aud-menu" data-id="${a.id}">${I.ellipsis}</span></div>`).join('')}
+    `;
+    document.querySelectorAll('.aud-menu').forEach(b => b.addEventListener('click', e => {
+        openMenu(`<div class="mini-menu-item danger" id="audDel">${I.trash} Delete audience</div>`, e.currentTarget.getBoundingClientRect());
+        document.getElementById('audDel').addEventListener('click', () => { closeMiniMenu(); audiences = audiences.filter(a=>a.id!==Number(b.dataset.id)); renderAudiences(); });
+    }));
+}
+document.getElementById('newAudienceBtn').addEventListener('click', (e) => {
+    openMenu(`<div class="mini-menu-item" id="audCustomList">${I.audience} Customer List (Custom)</div><div class="mini-menu-item" id="audRetarget">${I.pixel} Website Retargeting</div><div class="mini-menu-item" id="audLookalike">${I.lookalike} Lookalike Audience</div>`, e.currentTarget.getBoundingClientRect());
+    const add = (name,type,size) => { audiences.unshift({id:Date.now(),name,type,size}); closeMiniMenu(); renderAudiences(); showToast('An kirkiri audience'); };
+    document.getElementById('audCustomList').addEventListener('click', () => add('Sabon Customer List', 'Custom', '—'));
+    document.getElementById('audRetarget').addEventListener('click', () => add('Website Visitors — Sabo', 'Custom', '—'));
+    document.getElementById('audLookalike').addEventListener('click', () => add('Sabon Lookalike', 'Lookalike', '—'));
+});
+
+function renderEvents(){
+    const events = [ {name:'Purchase',count:412,last:'Yau'}, {name:'AddToCart',count:1830,last:'Yau'}, {name:'Lead',count:98,last:'Jiya'}, {name:'PageView',count:24500,last:'Yau'} ];
+    document.getElementById('eventsBody').innerHTML = `
+        <div class="list-row" style="border-bottom:1px solid rgba(255,255,255,0.06);"><div class="list-row-icon">${I.pixel}</div><div class="list-row-body"><div class="list-row-title">Oryzon Pixel</div><div class="list-row-sub">ID: OZ-3391-PIXEL</div></div><span class="badge green">Connected</span></div>
+        <div class="field-label">Events da ke tafiya</div>
+        ${events.map(ev=>`<div class="list-row"><div class="list-row-body"><div class="list-row-title">${ev.name}</div><div class="list-row-sub">An gani na ƙarshe: ${ev.last}</div></div><div style="font-weight:800; font-size:14px;">${ev.count.toLocaleString()}</div></div>`).join('')}
+    `;
+}
+
+function renderBilling(){
+    document.getElementById('billingBody').innerHTML = `
+        <div class="field-label">Payment Methods</div>
+        <div class="list-row"><div class="list-row-icon">${I.card}</div><div class="list-row-body"><div class="list-row-title">Visa ending in 4417</div><div class="list-row-sub">Ya ƙare 08/27</div></div><span class="badge green">Default</span></div>
+        <div class="add-row-btn" id="addCardBtn">${I.plus} Ƙara sabon katin biya</div>
+        <div class="field-label">Spending Limit</div>
+        <div class="placement-row"><div class="placement-row-label">Sanya iyakar kashewa a wata</div><div class="toggle" id="limitToggle"><div class="knob"></div></div></div>
+        <input type="text" class="text-input hidden" id="limitInput" placeholder="Misali: ${CURRENCIES[currentCurrency].symbol}50,000" style="margin-top:10px;">
+        <div class="field-label">Invoices</div>
+        ${[['1 Sep 2026','$182.40','Paid'],['1 Aug 2026','$204.10','Paid'],['1 Jul 2026','$95.60','Paid']].map(([d,a,s])=>`<div class="list-row"><div class="list-row-body"><div class="list-row-title">${d}</div><div class="list-row-sub">Invoice</div></div><div style="font-weight:700; margin-right:8px;">${a}</div><span class="badge grey">${s}</span></div>`).join('')}
+    `;
+    document.getElementById('addCardBtn').addEventListener('click', () => { const n=prompt('Shigar da lambar kati (misali: 4242 4242 4242 4242):'); if(n) showToast('An ƙara katin biya'); });
+    document.getElementById('limitToggle').addEventListener('click', function(){ this.classList.toggle('on'); document.getElementById('limitInput').classList.toggle('hidden', !this.classList.contains('on')); });
+}
+
+function renderRules(){
+    document.getElementById('rulesBody').innerHTML = `
+        <div class="wiz-step-sub">Rules suna sarrafa campaigns ɗinka atomatik.</div>
+        ${rules.length===0 ? '<div class="empty-state">Babu wata rule tukuna.</div>' : rules.map(r=>`<div class="list-row"><div class="list-row-icon">${I.bolt}</div><div class="list-row-body"><div class="list-row-title">${esc(r.name)}</div><div class="list-row-sub">${r.condition} → ${r.action}</div></div><div class="toggle ${r.active?'on':''}" data-rule="${r.id}"><div class="knob"></div></div></div>`).join('')}
+    `;
+    document.querySelectorAll('[data-rule]').forEach(t => t.addEventListener('click', () => { const r = rules.find(r=>r.id===Number(t.dataset.rule)); r.active = !r.active; t.classList.toggle('on'); }));
+}
+document.getElementById('newRuleBtn').addEventListener('click', () => {
+    const metric = prompt('Yi zaɓi: Daily Spend / CPA / CTR', 'Daily Spend'); if(!metric) return;
+    const value = prompt('Iyaka (lamba kaɗai):', '50'); if(!value) return;
+    rules.unshift({ id:Date.now(), name:`Sarrafa idan ${metric} ya wuce ${value}`, condition:`${metric} > ${value}`, action:'Pause Campaign', active:true });
+    renderRules(); showToast('An kirkiri sabuwar rule');
+});
+
+function renderInsights(){
+    const days = 7;
+    const series = Array.from({length:days}).map((_,i)=> Math.round(200 + Math.random()*300 + i*15));
+    const max = Math.max(...series);
+    const w=280,h=80;
+    const pts = series.map((v,i)=> `${(i/(days-1))*w},${h-(v/max)*h}`).join(' ');
+    document.getElementById('insightsBody').innerHTML = `
+        <div class="chip-row" style="margin-bottom:16px;"><span class="cat-chip active" data-range="7">Kwanaki 7</span><span class="cat-chip" data-range="14">Kwanaki 14</span><span class="cat-chip" data-range="30">Kwanaki 30</span></div>
+        <div class="chart-wrap"><div class="chart-title">Kudin da ake kashewa kullum (Daily Spend)</div>
+            <svg viewBox="0 0 ${w} ${h}" style="width:100%; height:90px; overflow:visible;">
+                <polyline points="${pts}" fill="none" stroke="#fde08d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                ${series.map((v,i)=>`<circle cx="${(i/(days-1))*w}" cy="${h-(v/max)*h}" r="2.5" fill="#fde08d"/>`).join('')}
+            </svg>
+        </div>
+        <div class="field-label">Breakdown bisa Shekaru</div>
+        <div class="bar-chart">${[['18-24',72],['25-34',100],['35-44',58],['45+',31]].map(([l,p])=>`<div class="bar-row"><div class="bar-row-top"><span>${l}</span><span>${p}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div></div>`).join('')}</div>
+        <div class="field-label">Breakdown bisa Jinsi</div>
+        <div class="bar-chart">${[['Namiji',54],['Mace',46]].map(([l,p])=>`<div class="bar-row"><div class="bar-row-top"><span>${l}</span><span>${p}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div></div>`).join('')}</div>
+        <div class="field-label">Breakdown bisa Placement</div>
+        <div class="bar-chart">${[['Feed',85],['Reels',64],['Stories',47],['Search',22]].map(([l,p])=>`<div class="bar-row"><div class="bar-row-top"><span>${l}</span><span>${p}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div></div>`).join('')}</div>
+        <div class="field-label">Breakdown bisa Na'ura (Device)</div>
+        <div class="bar-chart">${[['Mobile',91],['Desktop',9]].map(([l,p])=>`<div class="bar-row"><div class="bar-row-top"><span>${l}</span><span>${p}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div></div>`).join('')}</div>
+        <div class="field-label">Breakdown bisa Yanki (Region)</div>
+        <div class="bar-chart">${[['Kano',38],['Lagos',24],['Kaduna',17],['Sauran',21]].map(([l,p])=>`<div class="bar-row"><div class="bar-row-top"><span>${l}</span><span>${p}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div></div>`).join('')}</div>
+        <div class="field-label">Breakdown bisa Lokacin Rana (Hour of Day)</div>
+        <div class="bar-chart">${[['6am–12pm',22],['12pm–6pm',35],['6pm–12am',43]].map(([l,p])=>`<div class="bar-row"><div class="bar-row-top"><span>${l}</span><span>${p}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div></div>`).join('')}</div>
+    `;
+    document.querySelectorAll('[data-range]').forEach(c => c.addEventListener('click', () => { document.querySelectorAll('[data-range]').forEach(x=>x.classList.remove('active')); c.classList.add('active'); }));
+}
+document.getElementById('exportBtn').addEventListener('click', () => showToast('Report za a turo zuwa email ɗinka'));
+
+function renderTeam(){
+    document.getElementById('teamBody').innerHTML = `
+        <div class="wiz-step-sub">Sarrafa wanda zai iya ganin ko canza ads na account ɗinka.</div>
+        ${team.map(m=>`
+            <div class="list-row">
+                <div class="list-row-icon">${I.audience}</div>
+                <div class="list-row-body"><div class="list-row-title">${esc(m.name)}</div><div class="list-row-sub">${esc(m.email)}</div></div>
+                <select class="role-select" data-member="${m.id}">
+                    <option ${m.role==='Admin'?'selected':''}>Admin</option>
+                    <option ${m.role==='Advertiser'?'selected':''}>Advertiser</option>
+                    <option ${m.role==='Analyst'?'selected':''}>Analyst</option>
+                </select>
+            </div>`).join('')}
+    `;
+    document.querySelectorAll('.role-select').forEach(sel => sel.addEventListener('change', e => { team.find(m=>m.id===Number(sel.dataset.member)).role = e.target.value; showToast('An sabunta rawar da mutum yake takawa'); }));
+}
+document.getElementById('inviteBtn').addEventListener('click', () => {
+    const email = prompt('Shigar da email na wanda za a gayyata:'); if(!email) return;
+    team.push({ id:Date.now(), name:email.split('@')[0], email, role:'Analyst' });
+    renderTeam(); showToast('An turo gayyata');
+});
+
+function renderAdLibrary(){
+    const allAds = [];
+    campaigns.filter(c=>c.status==='Active'||c.status==='In Review').forEach(c => c.adSets.forEach(as => as.ads.forEach(ad => allAds.push({ad,campaign:c}))));
+    document.getElementById('adlibraryBody').innerHTML = `
+        <div class="wiz-step-sub">Jerin dukkan ads da ke gudana ko a bita a bainar jama'a — don gaskiya (transparency), daidai da yadda Meta Ad Library take aiki.</div>
+        ${allAds.length===0 ? '<div class="empty-state">Babu wani ad mai gudana yanzu.</div>' : allAds.map(({ad,campaign})=>`
+            <div class="list-row">
+                <div class="ad-row-thumb" style="width:44px;height:44px;">${ad.imageDataUrl?`<img src="${ad.imageDataUrl}">`:''}</div>
+                <div class="list-row-body"><div class="list-row-title">${esc(ad.headline||campaign.name)}</div><div class="list-row-sub">${esc(campaign.name)} · Tun ${new Date().toLocaleDateString()}</div></div>
+                <span class="status-pill ${campaign.status.toLowerCase().replace(' ','')}">${campaign.status}</span>
+            </div>`).join('')}
+    `;
+}
+
+/* ===================== INIT ===================== */
+document.getElementById('backBtn').addEventListener('click', onBackClick);
+document.getElementById('searchToggle').addEventListener('click', openSearchInline);
+document.getElementById('cancelSearchBtn').addEventListener('click', closeSearchInline);
+document.getElementById('searchInput').addEventListener('input', renderCurrent);
+document.querySelectorAll('#statusScroll .cat-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        document.querySelectorAll('#statusScroll .cat-chip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active');
+        currentStatus = chip.dataset.status;
+        renderList();
+    });
+});
+document.getElementById('currencySelect').addEventListener('change', e => { currentCurrency = e.target.value; renderStats(); renderList(); });
+
+renderStats();
+renderList();
+</script>
+</body>
+</html>
