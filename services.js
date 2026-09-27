@@ -692,11 +692,11 @@ function getFilteredPros() {
 function renderResultsPage() {
     const bar = document.getElementById("trades-filter-bar");
     const allBtnActive = !state.selectedCat;
-    let barHtml = `<button onclick="handleCategorySelect(null)" style="flex-shrink:0;height:30px;background:${allBtnActive?"linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%)":"rgba(255,255,255,0.05)"};color:#fff;border:${allBtnActive?"none":"1px solid rgba(255,255,255,0.1)"};border-radius:18px;padding:0 12px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:600;cursor:pointer;transition:border-color 0.25s, background 0.25s;">All Trades</button>`;
-    barHtml += CATEGORIES.map(cat => {
+     let barHtml = `<button onclick="handleCategorySelect(null)" style="flex-shrink:0;height:30px;background:${allBtnActive?"#fde08d":"rgba(255,255,255,0.05)"};color:${allBtnActive?"#111827":"#fff"};border:${allBtnActive?"none":"1px solid rgba(255,255,255,0.1)"};border-radius:18px;padding:0 12px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:600;cursor:pointer;transition:border-color 0.25s, background 0.25s;">All Trades</button>`;   
+   barHtml += CATEGORIES.map(cat => {
         const isActive = state.selectedCat === cat.id;
-        return `<button onclick="handleCategorySelect('${cat.id}')" style="flex-shrink:0;height:30px;background:${isActive?"linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%)":"rgba(255,255,255,0.05)"};color:#fff;border:${isActive?"none":"1px solid rgba(255,255,255,0.1)"};border-radius:18px;padding:0 12px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:600;cursor:pointer;transition:border-color 0.25s, background 0.25s;">${cat.icon} ${cat.label}</button>`;
-    }).join('');
+        return `<button onclick="handleCategorySelect('${cat.id}')" style="flex-shrink:0;height:30px;background:${isActive?"#fde08d":"rgba(255,255,255,0.05)"};color:${isActive?"#111827":"#fff"};border:${isActive?"none":"1px solid rgba(255,255,255,0.1)"};border-radius:18px;padding:0 12px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:600;cursor:pointer;transition:border-color 0.25s, background 0.25s;">${cat.icon} ${cat.label}</button>`;   
+   }).join('');
     bar.innerHTML = barHtml;
 
     document.getElementById("proximity-badge-alert").style.display = state.nearMeActive ? "flex" : "none";
