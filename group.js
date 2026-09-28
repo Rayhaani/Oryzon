@@ -16,6 +16,15 @@
    down snapshot listeners, window/document listeners, and any
    active timer so nothing leaks or double-fires on re-entry.
    ============================================================ */
+   // TEMP DEBUG: load Eruda inside group.js so it also runs on SPA navigation
+        (function () {
+            if (window.eruda || document.getElementById('nx-eruda-loader')) return;
+            var s = document.createElement('script');
+            s.id = 'nx-eruda-loader';
+            s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+            s.onload = function () { window.eruda && window.eruda.init(); };
+            document.head.appendChild(s);
+        })();
 
         // ============================================================
         // FIREBASE + REAL GROUP IDENTITY (oryzon-50ea4)
