@@ -96,13 +96,16 @@
         // group kai tsaye. Wannan yana tabbatar da duka biyun.
         // ============================================================
         function nxEnsureNeuralMenuDOM() {
+            // Sheet din ya zauna A CIKIN page din group (kamar social.html), ba a <body> ba.
+            const host = (document.getElementById('feedView') || {}).parentElement || document.body;
             let sheet = document.getElementById('neuralBottomMenu');
+            if (sheet && sheet.parentElement !== host) { sheet.remove(); sheet = null; }
             if (!sheet) {
                 sheet = document.createElement('div');
                 sheet.id = 'neuralBottomMenu';
                 sheet.className = 'neural-bottom-sheet';
                 sheet.innerHTML = '<div class="sheet-grid" id="nodeActionsGrid"></div>';
-                document.body.appendChild(sheet);
+                host.appendChild(sheet);
             } else if (!document.getElementById('nodeActionsGrid')) {
                 sheet.innerHTML = '<div class="sheet-grid" id="nodeActionsGrid"></div>';
             }
