@@ -1,3 +1,25 @@
+// TEMP DEBUG: on-screen error banner (no CDN needed)
+(function () {
+    function show(msg) {
+        var d = document.getElementById('nx-err-banner');
+        if (!d) {
+            d = document.createElement('div');
+            d.id = 'nx-err-banner';
+            d.style.cssText = 'position:fixed;top:0;left:0;right:0;max-height:40vh;overflow:auto;z-index:2147483647;background:#7f1d1d;color:#fff;font:11px/1.4 monospace;padding:6px 8px;white-space:pre-wrap;pointer-events:auto;';
+            d.onclick = function () { d.style.display = 'none'; };
+            (document.body || document.documentElement).appendChild(d);
+        }
+        d.style.display = 'block';
+        d.textContent += msg + '\n';
+    }
+    window.addEventListener('error', function (e) {
+        show('ERR: ' + e.message + ' @ ' + (e.filename || '').split('/').pop() + ':' + e.lineno);
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+        show('PROMISE: ' + (e.reason && (e.reason.message || e.reason)));
+    });
+})();
+
 // TEMP DEBUG: Eruda lives in router.js so it persists across SPA navigation
 (function () {
     if (window.eruda || document.getElementById('nx-eruda-loader')) return;
