@@ -1791,6 +1791,8 @@
             const hdr = nxGroupHeaderEl();
             if (hdr) hdr.classList.remove('header-feed-transparent');
             nxUnlockScroll();
+            const nxMenu = document.getElementById('neuralBottomMenu');
+            if (nxMenu) nxMenu.classList.remove('is-open', 'active', 'open', 'show');
             window.removeEventListener('pageshow', onPageShowNX);
             document.removeEventListener('visibilitychange', onVisibilityChangeNX);
 
