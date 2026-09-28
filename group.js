@@ -1489,7 +1489,7 @@
             const feedView = document.getElementById('feedView');
             const isChat = document.getElementById('chat-flow').style.display !== 'none';
             if (isChat) return;
-            const scrollY = feedView.scrollTop;
+            const scrollY = Math.max(feedView.scrollTop || 0, window.scrollY || 0, document.documentElement.scrollTop || 0);
             if (scrollY < 120) {
                 header.classList.add('header-feed-transparent');
             } else {
@@ -1516,6 +1516,11 @@
             // Re-derive per-navigation identity fresh every time.
             currentUsername = localStorage.getItem('nexus_user_session');
             if (!currentUsername) { window.location.href = 'login.html'; return; }
+           // Clear scroll locks left over from the previous SPA page
+            document.body.classList.remove('nx-video-immersive-active');
+            document.body.style.overflow = '';
+            document.body.style.height = '';
+            document.documentElement.style.overflow = '';
 
             authReadyPromise = new Promise(resolve => { authReadyResolve = resolve; });
             auth.onAuthStateChanged(user => { authReadyResolve(user); });
