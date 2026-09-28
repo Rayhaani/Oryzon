@@ -33,7 +33,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const MEDIA_UPLOAD_ENDPOINT = 'https://synergy-backend-1-eh93.onrender.com/upload';
+        const MEDIA_UPLOAD_ENDPOINT = 'https://oryzon-backend-ed1q.onrender.com/upload';
         const FieldValue = firebase.firestore.FieldValue;
 
         // SPA NOTE: these used to be `const`, read ONCE at native page load.
