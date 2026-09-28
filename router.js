@@ -20,6 +20,19 @@
     });
 })();
 
+// TEMP DEBUG: report which fetch() URL fails
+(function () {
+    var origFetch = window.fetch;
+    window.fetch = function (input, init) {
+        var url = (typeof input === 'string') ? input : (input && input.url) || '?';
+        var method = (init && init.method) || 'GET';
+        return origFetch.apply(this, arguments).catch(function (err) {
+            window.dispatchEvent(new ErrorEvent('error', { message: 'FETCH FAILED [' + method + '] ' + url }));
+            throw err;
+        });
+    };
+})();
+
 // TEMP DEBUG: Eruda lives in router.js so it persists across SPA navigation
 (function () {
     if (window.eruda || document.getElementById('nx-eruda-loader')) return;
