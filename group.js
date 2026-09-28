@@ -89,14 +89,100 @@
             }
         }
 
+        // ============================================================
+        // POST MENU (openNeuralMenu) — a social.html ne kadai #neuralBottomMenu ya wanzu,
+        // kuma social.js ne ke da aikin openNeuralMenu(). A group page, sheet din ba ya nan
+        // (sheet.offsetWidth => null error, shiru) kuma social.js bazai loda ba idan an bude
+        // group kai tsaye. Wannan yana tabbatar da duka biyun.
+        // ============================================================
+        function nxEnsureNeuralMenuDOM() {
+            let sheet = document.getElementById('neuralBottomMenu');
+            if (!sheet) {
+                sheet = document.createElement('div');
+                sheet.id = 'neuralBottomMenu';
+                sheet.className = 'neural-bottom-sheet';
+                sheet.innerHTML = '<div class="sheet-grid" id="nodeActionsGrid"></div>';
+                document.body.appendChild(sheet);
+            } else if (!document.getElementById('nodeActionsGrid')) {
+                sheet.innerHTML = '<div class="sheet-grid" id="nodeActionsGrid"></div>';
+            }
+            // Idan social.css bai loda a wannan page ba, sheet din bashi da salo — saka na gaggawa
+            if (getComputedStyle(sheet).position !== 'fixed' && !document.getElementById('nx-neural-fallback-style')) {
+                const st = document.createElement('style');
+                st.id = 'nx-neural-fallback-style';
+                st.textContent = `
+                    .neural-bottom-sheet { position: fixed; top: 55px; left: 8px; z-index: 10000; min-width: 230px; max-width: 86vw;
+                        max-height: 70vh; overflow-y: auto; background: rgba(18,18,20,0.98); border: 1px solid rgba(253,224,141,0.25);
+                        border-radius: 16px; padding: 6px; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+                        opacity: 0; visibility: hidden; transform: translateY(-6px) scale(0.98); transition: all 0.2s ease; }
+                    .neural-bottom-sheet.is-open { opacity: 1; visibility: visible; transform: none; }
+                    .neural-bottom-sheet .sheet-grid { display: flex; flex-direction: column; }
+                    .neural-bottom-sheet .sheet-item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; text-decoration: none; color: #fff; }
+                    .neural-bottom-sheet .sheet-item:active { background: rgba(255,255,255,0.08); }
+                    .neural-bottom-sheet .sheet-icon { width: 18px; text-align: center; font-size: 14px; }
+                    .neural-bottom-sheet .sheet-text { font-size: 13px; font-weight: 600; }`;
+                document.head.appendChild(st);
+            }
+            return sheet;
+        }
+        function nxPrepareNeuralMenu() {
+            // social.js yana amfani da global `currentUser` (daga nexus-core.js). Idan wannan
+            // page bata loda nexus-core.js ba, a bashi daraja don kada ya jefa ReferenceError.
+            if (typeof currentUser === 'undefined') window.currentUser = currentUsername;
+            nxEnsureNeuralMenuDOM();
+            if (typeof window.openNeuralMenu !== 'function' && !document.getElementById('nx-social-js-loader')) {
+                const sc = document.createElement('script');
+                sc.id = 'nx-social-js-loader';
+                sc.src = 'social.js?v=2';
+                sc.onerror = () => console.warn('social.js could not be loaded for the post menu');
+                document.head.appendChild(sc);
+            }
+        }
+
+        // ---- Bincike: idan page bai yi scrolling ba, wannan yana fada dalilin a Eruda console ----
+        function nxDiagnoseScroll(tag) {
+            try {
+                const rows = [];
+                const chain = [];
+                let el = document.getElementById('feedView') || document.body;
+                while (el) { chain.push(el); el = el.parentElement; }
+                chain.forEach(n => {
+                    const cs = getComputedStyle(n);
+                    rows.push({
+                        el: n.tagName.toLowerCase() + (n.id ? '#' + n.id : '') + (n.className && typeof n.className === 'string' ? '.' + n.className.trim().split(/\s+/).join('.') : ''),
+                        overflowY: cs.overflowY, position: cs.position, height: cs.height,
+                        scrollH: n.scrollHeight, clientH: n.clientHeight, touchAction: cs.touchAction, pointerEvents: cs.pointerEvents
+                    });
+                });
+                const top = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+                console.log('[NX-SCROLL-DIAG ' + tag + '] element at screen centre:', top && (top.tagName + '#' + top.id + '.' + top.className));
+                console.table(rows);
+            } catch (e) { console.warn('nxDiagnoseScroll failed', e); }
+        }
+
         // ---- Scroll unlock: yana share duk wani lock da page na baya ya bari ----
         function nxUnlockScroll() {
             const b = document.body, h = document.documentElement;
             ['nx-video-immersive-active', 'modal-open', 'no-scroll', 'overflow-hidden', 'scroll-locked'].forEach(c => {
                 b.classList.remove(c); h.classList.remove(c);
             });
-            ['overflow', 'overflowY', 'height', 'maxHeight', 'position', 'top', 'width', 'touchAction'].forEach(k => {
+            ['overflow', 'overflowY', 'height', 'maxHeight', 'position', 'top', 'width', 'touchAction', 'pointerEvents'].forEach(k => {
                 b.style[k] = ''; h.style[k] = '';
+            });
+            // Idan wani abu (router/CSS) ya bar `overflow:hidden` daga stylesheet (ba inline ba),
+            // inline style din ba zai isa ba — a tilasta shi kawai idan ya kulle.
+            [h, b].forEach(n => {
+                const cs = getComputedStyle(n);
+                if (cs.overflowY === 'hidden' && n.scrollHeight > n.clientHeight + 1) {
+                    n.style.setProperty('overflow-y', 'auto', 'important');
+                }
+                if (cs.touchAction === 'none') n.style.setProperty('touch-action', 'auto', 'important');
+            });
+            // Wani overlay mara ganuwa (fixed, cika screen) da ya rage daga page na baya
+            // zai iya toshe touch — cire pointer-events daga overlays da suke a rufe.
+            document.querySelectorAll('.nexcm-overlay:not(.nexcm-open), .nexus-overlay, .page-overlay:not(.Active)').forEach(o => {
+                if (getComputedStyle(o).display === 'none') return;
+                o.style.setProperty('pointer-events', 'none', 'important');
             });
         }
         function formatMemberCount(n) {
@@ -1602,6 +1688,8 @@
             requestAnimationFrame(() => { nxUnlockScroll(); updateFeedHeaderState(); });
             nxInitTimers.push(setTimeout(() => { nxUnlockScroll(); updateFeedHeaderState(); }, 350));
             nxInitTimers.push(setTimeout(updateFeedHeaderState, 900));
+            nxInitTimers.push(setTimeout(() => nxDiagnoseScroll('after-init'), 1500));
+            nxPrepareNeuralMenu();
 
             authReadyPromise = new Promise(resolve => { authReadyResolve = resolve; });
             auth.onAuthStateChanged(user => { authReadyResolve(user); });
