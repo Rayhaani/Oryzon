@@ -1,3 +1,12 @@
+// TEMP DEBUG: Eruda lives in router.js so it persists across SPA navigation
+(function () {
+    if (window.eruda || document.getElementById('nx-eruda-loader')) return;
+    var s = document.createElement('script');
+    s.id = 'nx-eruda-loader';
+    s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    s.onload = function () { window.eruda && window.eruda.init(); };
+    document.head.appendChild(s);
+})();
 /* ============================================================
    NEXUS SPA ROUTER — router.js  (v1.1)
    ------------------------------------------------------------
