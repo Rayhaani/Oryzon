@@ -1066,6 +1066,7 @@
                     const posts = snapshot.docs
     .map(d => Object.assign({}, d.data(), { id: d.id }))
     .filter(post => !post.productId);
+                   console.log('GROUP POSTS DATA', JSON.stringify(posts));
                     container.innerHTML = posts.map(post => window.generatePostHTML(post)).join('');
                     if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
                     if (typeof window.postCard_restoreLikes === 'function') window.postCard_restoreLikes(container);
@@ -1310,14 +1311,20 @@
                 formData.append('type', 'posts');
                 formData.append('username', currentUsername);
                 const res = await fetch(MEDIA_UPLOAD_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + idToken },
-    body: formData
-});
-const data = await res.json();
-if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
-               composerUploadedMediaType = isVideo ? 'video' : 'image';
-                validateComposer();
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + idToken },
+                    body: formData
+                });
+                const rawText = await res.text();
+                console.log('UPLOAD RESPONSE', res.status, rawText.slice(0, 300));
+                let data;
+                try { data = JSON.parse(rawText); }
+                catch (parseErr) { throw new Error('Server returned HTML (status ' + res.status + ')'); }
+                if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+                composerUploadedMediaUrl = data.url || data.mediaUrl || data.secure_url || null;
+                if (!composerUploadedMediaUrl) throw new Error('No URL in server response');
+                composerUploadedMediaType = isVideo ? 'video' : 'image';
+               validateComposer();
             } catch (e) {
                 console.error('media upload error:', e);
                 showToast('Upload failed: ' + e.message, 'fa-triangle-exclamation');
