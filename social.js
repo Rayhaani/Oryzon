@@ -405,7 +405,10 @@ window.refreshSocialFeed = function () {
               // Kowane post yanzu yana da fullName/userProfilePic/commentCount
               // A CIKIN kansa — babu bukatar wani query domin samo su.
               const post = { id: doc.id, ...doc.data() };
-              allPostsHTML += generatePostHTML(post);
+              // Pinning na post yana da ma'ana KAWAI a cikin group din da aka
+              // pin shi — babban feed (social.html) BA YA nuna pinned-tag,
+              // koda post din 'pinned: true' ne a Firestore.
+              allPostsHTML += generatePostHTML({ ...post, pinned: false });
           });
 
           feedContainer.innerHTML = allPostsHTML;
@@ -845,6 +848,11 @@ function deletePostFromMenu() {
 }
 
 function togglePinFromMenu(postId, currentlyPinned) {
+    const msg = currentlyPinned
+        ? 'Unpin this post?'
+        : 'Pin this post? It will show as pinned inside this group/timeline.';
+    if (!confirm(msg)) return;
+
     db.collection('posts').doc(postId).update({ pinned: !currentlyPinned }).then(() => {
         closeNeuralMenu();
         location.reload();
