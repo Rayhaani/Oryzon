@@ -712,19 +712,13 @@
             el.style.height = 'auto';
             el.style.height = (el.scrollHeight) + 'px';
 
-            const sendTrigger = document.getElementById('sendTrigger');
-            const micTrigger = document.getElementById('micTrigger');
             const suggestChip = document.getElementById('smartSuggestChip');
 
             if (el.value.trim().length > 0) {
-                sendTrigger.style.display = 'flex';
-                micTrigger.style.display = 'none';
                 const s = smartSuggestFor(el.value);
                 if (s) { document.getElementById('smartSuggestText').textContent = s; suggestChip.style.display = 'flex'; }
                 else suggestChip.style.display = 'none';
             } else {
-                sendTrigger.style.display = 'none';
-                micTrigger.style.display = 'flex';
                 suggestChip.style.display = 'none';
             }
         }
@@ -1817,4 +1811,34 @@
         // fire it once manually here if this IS the page that just loaded.
         if (window.NexusRouter.getCurrentPath() === 'group.html') {
             initPage();
+        }
+      function toggleAttachMenu() {
+            const menu = document.getElementById('attachMenu');
+            const bar = document.querySelector('.dock-container');
+            if (bar) menu.style.bottom = (bar.getBoundingClientRect().height + 12) + 'px';
+            menu.classList.toggle('open');
+        }
+        function closeAttachMenu() {
+            document.getElementById('attachMenu').classList.remove('open');
+        }
+        function createPollMessage() {
+            const question = prompt('Write the poll question:');
+            if (!question) return;
+            const optionsRaw = prompt('Write the options, separated by commas (,):');
+            if (!optionsRaw) return;
+            const options = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
+            if (options.length < 2) { alert('At least 2 options are required.'); return; }
+            pushOutgoingMessage({ text: '📊 ' + question + ' (' + options.join(' / ') + ')' });
+        }
+        function createEventMessage() {
+            const eventTitle = prompt('Event name:');
+            if (!eventTitle) return;
+            const eventDate = prompt('Date and time (e.g. 12 Sep, 4pm):') || '';
+            pushOutgoingMessage({ text: '📅 ' + eventTitle + (eventDate ? ' — ' + eventDate : '') });
+        }
+        function openAiImagePrompt() {
+            const prompt_ = prompt('Describe the image you want AI to create:');
+            if (!prompt_) return;
+            pushOutgoingMessage({ text: `🎨 [AI Image request]: ${prompt_}` });
+            alert('Your request was received. AI image generation needs a backend — until an API is connected, an actual image cannot be created yet.');
         }
