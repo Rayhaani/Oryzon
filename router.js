@@ -596,12 +596,15 @@
                 window.closeStoryDeck();
             }
            
+            currentContentEl.style.setProperty('visibility', 'hidden', 'important');
+
             await Promise.all([
                 loadStylesheetsAll(PAGE_STYLES[targetPath]),
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
             ]).catch(e => console.error(e));
            unloadPageOwnCss(currentPath);
-currentContentEl.innerHTML = newContent.innerHTML; 
+currentContentEl.innerHTML = newContent.innerHTML;
+currentContentEl.style.removeProperty('visibility'); 
 
             // YANZU ne muke fita daga immersive-mode — card/video na
             // immersive-mode YA RIGA YA BACE daga DOM (an maye gurbinsa da
