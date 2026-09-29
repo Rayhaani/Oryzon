@@ -300,6 +300,8 @@
         function openInviteOverlay() {
             document.getElementById('inviteMembersOverlay').classList.add('active');
             document.getElementById('inviteSearchBarContainer').classList.remove('active');
+            document.querySelector('#inviteMembersOverlay .invite-subtitle').textContent = groupData.name;
+            document.querySelector('#inviteMembersOverlay .invite-group-avatar').src = groupData.coverUrl || document.getElementById('groupCoverFeed').src;
             switchInviteTab('friends');
         }
         function closeInviteOverlay() {
