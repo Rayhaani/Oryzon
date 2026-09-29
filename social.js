@@ -739,12 +739,22 @@ async function openNeuralMenu(postId, postUsername) {
 
         // Sanya dropdown din kai tsaye a kasan maballin da aka danna, kamar Cyber-Dropdown
         const menuWidth = sheet.offsetWidth || 230;
+        const menuHeight = sheet.offsetHeight || 260;
         if (triggerEl && triggerEl.getBoundingClientRect) {
             const rect = triggerEl.getBoundingClientRect();
             let left = rect.right - menuWidth;
             if (left < 8) left = 8;
             if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8;
-            sheet.style.top = (rect.bottom + 6) + 'px';
+
+            // Idan babu isashen sarari a KASAN maballin domin duk menu ya
+            // bayyana, mu bude shi a SAMAN maballin maimakon — kamar
+            // yadda dropdown na dabam-dabam (Twitter/IG) suke yi.
+            let top = rect.bottom + 6;
+            if (top + menuHeight > window.innerHeight - 8) {
+                top = rect.top - menuHeight - 6;
+            }
+            if (top < 8) top = 8; // idan har haka ma bai isa ba, mu manne sama
+            sheet.style.top = top + 'px';
             sheet.style.left = left + 'px';
         } else {
             sheet.style.top = '55px';
