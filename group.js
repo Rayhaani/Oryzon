@@ -114,16 +114,20 @@
                 const st = document.createElement('style');
                 st.id = 'nx-neural-fallback-style';
                 st.textContent = `
-                    .neural-bottom-sheet { position: fixed; top: 55px; left: 8px; z-index: 10000; min-width: 230px; max-width: 86vw;
-                        max-height: 70vh; overflow-y: auto; background: rgba(18,18,20,0.98); border: 1px solid rgba(253,224,141,0.25);
-                        border-radius: 16px; padding: 6px; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-                        opacity: 0; visibility: hidden; transform: translateY(-6px) scale(0.98); transition: all 0.2s ease; }
-                    .neural-bottom-sheet.is-open { opacity: 1; visibility: visible; transform: none; }
-                    .neural-bottom-sheet .sheet-grid { display: flex; flex-direction: column; }
-                    .neural-bottom-sheet .sheet-item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; text-decoration: none; color: #fff; }
-                    .neural-bottom-sheet .sheet-item:active { background: rgba(255,255,255,0.08); }
-                    .neural-bottom-sheet .sheet-icon { width: 18px; text-align: center; font-size: 14px; }
-                    .neural-bottom-sheet .sheet-text { font-size: 13px; font-weight: 600; }`;
+                    .neural-bottom-sheet { position: fixed; top: -9999px; left: -9999px; width: max-content;
+                        min-width: 50vw; max-width: 90vw; background: rgba(245, 245, 247, 0.35);
+                        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                        border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 6px;
+                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); z-index: 999999;
+                        transition: opacity 0.2s ease; opacity: 0; pointer-events: none; }
+                    .neural-bottom-sheet.is-open { opacity: 1; pointer-events: all; }
+                    .neural-bottom-sheet .sheet-grid { display: flex; flex-direction: column; gap: 0px; }
+                    .neural-bottom-sheet .sheet-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px;
+                        border-radius: 10px; text-decoration: none; background: transparent; transition: all 0.2s ease; white-space: nowrap; }
+                    .neural-bottom-sheet .sheet-item:active { background: rgba(0, 0, 0, 0.05); border-left: 2px solid #00f2fe; padding-left: 16px; }
+                    .neural-bottom-sheet .sheet-icon { font-size: 16px; width: 20px; text-align: center; opacity: 0.8; flex-shrink: 0; color: rgba(0, 0, 0, 0.7); }
+                    .neural-bottom-sheet .sheet-text { font-family: 'Inter', sans-serif; color: rgba(0, 0, 0, 0.85); font-size: 0.875rem; font-weight: 550; white-space: nowrap; }
+                    .neural-bottom-sheet .sheet-item:active .sheet-text { color: #000000; }`;
                 document.head.appendChild(st);
             }
             return sheet;
