@@ -680,6 +680,8 @@
         function openChatSearch() {
             document.getElementById('chatSearchOverlay').classList.add('active');
             document.getElementById('chatSearchInput').value = '';
+            document.getElementById('chatSearchInput').placeholder =
+                localStorage.getItem('nexus_group_mode') === 'chat' ? 'Search messages...' : 'Search posts...';
             document.getElementById('chatSearchResults').innerHTML = '';
             setTimeout(() => document.getElementById('chatSearchInput').focus(), 150);
         }
