@@ -1814,9 +1814,11 @@
         }
       function toggleAttachMenu() {
             document.getElementById('attachMenu').classList.toggle('open');
+            document.getElementById('attachBackdrop').classList.toggle('open');
         }
         function closeAttachMenu() {
             document.getElementById('attachMenu').classList.remove('open');
+            document.getElementById('attachBackdrop').classList.remove('open');
         }
         function createPollMessage() {
             const question = prompt('Write the poll question:');
