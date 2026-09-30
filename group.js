@@ -1841,3 +1841,11 @@
             if (!track) return;
             pushOutgoingMessage({ text: '🎵 ' + track });
         }
+
+window.mediaUploadAdapter = {
+    inputEl: () => document.getElementById('dockInput'),
+    roomId: () => groupSlug || 'group',
+    recipientLabel: () => (groupData && groupData.name) || 'Group',
+    send: (payload) => pushOutgoingMessage(payload)
+};
+initMediaUpload();
