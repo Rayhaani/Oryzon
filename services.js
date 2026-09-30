@@ -2302,16 +2302,27 @@ function handleVerificationFile(input, slotKey) {
     function renderPSCatList(filteredCats) {
     const cats = filteredCats || PS_CATS;
     const list = document.getElementById("ps-cat-list");
-    list.innerHTML = cats.map((cat,idx) => `
+    if (cats.length === 0) {
+        const query = document.getElementById("ps-inline-search").value.trim();
+        list.innerHTML = `
+            <div style="text-align:center;padding:24px 12px;">
+                <div style="font-size:28px;margin-bottom:8px;">🔍</div>
+                <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);margin-bottom:12px;line-height:1.4;">No profession matches "${query}"</div>
+                <button onclick="openRequestServiceOverlay('professional', '${query.replace(/'/g,"\\'")}')" style="background:#fde08d;color:#111827;border:none;border-radius:10px;padding:9px 14px;font-size:11px;font-weight:800;cursor:pointer;">+ Register This Profession</button>
+            </div>`;
+        document.getElementById("ps-sub-empty-state").textContent = "Register your profession to join us";
+    } else {
+        list.innerHTML = cats.map((cat,idx) => `
         <div id="ps-cat-item-${idx}" onclick="togglePSCat(${idx})" style="display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.03);transition:all 0.2s ease;">
             <span style="font-size:17px;">${cat.icon}</span>
             <span style="flex:1;font-size:12px;font-weight:700;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cat.label}</span>
             <span style="font-size:10px;color:rgba(255,255,255,0.2);">➔</span>
         </div>`).join('');
+        document.getElementById("ps-sub-empty-state").textContent = "← Select your profession";
+    }
     document.getElementById("ps-sub-empty-state").style.display = "block";
     document.getElementById("ps-sub-list-content").innerHTML = "";
-}
-
+    }
 function togglePSCat(idx) {
     PS_CATS.forEach((_,i) => {
         const item = document.getElementById(`ps-cat-item-${i}`);
@@ -8518,10 +8529,28 @@ async function loadMostSearched(limit = 10) {
 }
 
 // ── REQUEST NEW SERVICE ──
-function openRequestServiceOverlay() {
-    document.getElementById('req-service-name').value = '';
+let currentServiceRequestSource = 'client';
+
+function openRequestServiceOverlay(source, prefillName) {
+    currentServiceRequestSource = source || 'client';
+    document.getElementById('req-service-name').value = prefillName || '';
     document.getElementById('req-service-reason').value = '';
     document.getElementById('req-service-contact').value = '';
+
+    const titleEl = document.getElementById('req-service-title');
+    const subtitleEl = document.getElementById('req-service-subtitle');
+    const reasonLabelEl = document.getElementById('req-service-reason-label');
+
+    if (currentServiceRequestSource === 'professional') {
+        titleEl.textContent = '🚀 Request Your Profession';
+        subtitleEl.textContent = "Can't find your profession? Register it below and we'll review it.";
+        reasonLabelEl.textContent = 'Tell us about your profession / experience';
+    } else {
+        titleEl.textContent = '🚀 Request a Service';
+        subtitleEl.textContent = "Can't find your profession? Let us know!";
+        reasonLabelEl.textContent = 'Why do you need this service?';
+    }
+
     document.getElementById('request-service-overlay').style.display = 'flex';
 }
 
@@ -8551,10 +8580,10 @@ if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); s
                 serviceName,
                 reason: reason || '—',
                 contact: contact || 'Anonymous',
+                source: currentServiceRequestSource || 'client',
                 status: 'pending',
                 createdAt: Date.now()
             });
-
             // Also track as search
             await trackSearchEvent(serviceName.toLowerCase());
         }
