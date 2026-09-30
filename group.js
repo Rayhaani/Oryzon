@@ -1813,12 +1813,10 @@
             initPage();
         }
       function toggleAttachMenu() {
-            document.getElementById('attachMenu').classList.toggle('open');
-            document.getElementById('attachBackdrop').classList.toggle('open');
+            document.getElementById('composerPill').classList.toggle('tools-open');
         }
         function closeAttachMenu() {
-            document.getElementById('attachMenu').classList.remove('open');
-            document.getElementById('attachBackdrop').classList.remove('open');
+            document.getElementById('composerPill').classList.remove('tools-open');
         }
         function createPollMessage() {
             const question = prompt('Write the poll question:');
