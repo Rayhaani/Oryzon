@@ -8528,14 +8528,57 @@ async function loadMostSearched(limit = 10) {
     }
 }
 
+// ── COUNTRY/STATE DROPDOWN DATA (dr5hn/countries-states-cities-database, ODbL — attribution required) ──
+let reqCountriesData = [];
+let reqStatesData = [];
+let reqLocationDataLoaded = false;
+
+async function loadReqLocationData() {
+    if (reqLocationDataLoaded) return;
+    try {
+        const [countriesRes, statesRes] = await Promise.all([
+            fetch('data/countries.json'),
+            fetch('data/states.json')
+        ]);
+        reqCountriesData = await countriesRes.json();
+        reqStatesData = await statesRes.json();
+        reqLocationDataLoaded = true;
+
+        const countrySelect = document.getElementById('req-service-country');
+        countrySelect.innerHTML = '<option value="">Select country...</option>' +
+            reqCountriesData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    } catch (err) {
+        console.warn('Location data load failed:', err);
+        document.getElementById('req-service-country').innerHTML = '<option value="">Failed to load — retry</option>';
+    }
+}
+
+function onReqCountryChange() {
+    const countryId = document.getElementById('req-service-country').value;
+    const stateSelect = document.getElementById('req-service-state');
+    if (!countryId) {
+        stateSelect.innerHTML = '<option value="">Select country first...</option>';
+        stateSelect.disabled = true;
+        return;
+    }
+    const states = reqStatesData.filter(s => String(s.country_id) === String(countryId));
+    stateSelect.innerHTML = states.length
+        ? '<option value="">Select state...</option>' + states.map(s => `<option value="${s.id}">${s.name}</option>`).join('')
+        : '<option value="">No states listed</option>';
+    stateSelect.disabled = false;
+}
+   
 // ── REQUEST NEW SERVICE ──
 let currentServiceRequestSource = 'client';
-
+   
 function openRequestServiceOverlay(source, prefillName) {
     currentServiceRequestSource = source || 'client';
     document.getElementById('req-service-name').value = prefillName || '';
     document.getElementById('req-service-reason').value = '';
-    document.getElementById('req-service-contact').value = '';
+    loadReqLocationData();
+    document.getElementById('req-service-country').value = '';
+    document.getElementById('req-service-state').innerHTML = '<option value="">Select country first...</option>';
+    document.getElementById('req-service-state').disabled = true;
 
     const titleEl = document.getElementById('req-service-title');
     const subtitleEl = document.getElementById('req-service-subtitle');
@@ -8562,7 +8605,10 @@ async function submitServiceRequest() {
 if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); setTimeout(()=>window.location.href='login.html',1200); return; }    
     const serviceName = document.getElementById('req-service-name').value.trim();
     const reason = document.getElementById('req-service-reason').value.trim();
-    const contact = document.getElementById('req-service-contact').value.trim();
+   const countrySelect = document.getElementById('req-service-country');
+    const stateSelect = document.getElementById('req-service-state');
+    const country = countrySelect.options[countrySelect.selectedIndex]?.text || '';
+    const state = stateSelect.options[stateSelect.selectedIndex]?.text || ''; 
 
     if (!serviceName || serviceName.length < 2) {
         showGlobalToast('⚠️ Please enter the service name!');
@@ -8576,10 +8622,12 @@ if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); s
     try {
         if (typeof firebase !== 'undefined' && firebase.database) {
             const requestId = `svc_req_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-            await firebase.database().ref(`admin/service_requests/${requestId}`).set({
+           await firebase.database().ref(`admin/service_requests/${requestId}`).set({
                 serviceName,
                 reason: reason || '—',
-                contact: contact || 'Anonymous',
+                country: country || 'Not selected',
+                state: state || 'Not selected',
+                requesterUsername: localStorage.getItem('nexus_user_session') || null,
                 source: currentServiceRequestSource || 'client',
                 status: 'pending',
                 createdAt: Date.now()
