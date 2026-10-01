@@ -10013,5 +10013,225 @@ if (window.NexusRouter) {
 // DOMContentLoaded (native load) — babu 'else' immediate-call, daidai
 // da yadda social.js ya yi.
 window.addEventListener('DOMContentLoaded', initServicesPage);
+
+// ═══════════════════════════ INBOX OVERLAY (real vendorChats data) ═══════════════════════════
+let inboxIsProviderCache = null;
+let inboxCurrentMainTab = null;
+let inboxCurrentSubFilter = 'all';
+let inboxBuyingThreads = [];
+let inboxSellingThreads = [];
+
+function inboxFormatTime(ts) {
+    if (!ts) return "";
+    const now = new Date();
+    const msgDate = new Date(ts);
+    const diffMin = (now - msgDate) / 60000;
+    if (diffMin < 1) return "Now";
+    if (now.toDateString() === msgDate.toDateString()) {
+        let hours = msgDate.getHours();
+        const minutes = msgDate.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12; hours = hours ? hours : 12;
+        return `${hours}:${minutes} ${ampm}`;
+    }
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMsgDate = new Date(msgDate.getFullYear(), msgDate.getMonth(), msgDate.getDate());
+    const daysDiff = Math.round((startOfToday - startOfMsgDate) / 86400000);
+    if (daysDiff === 1) return "Yesterday";
+    if (daysDiff >= 2 && daysDiff <= 6) return msgDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const dd = msgDate.getDate().toString().padStart(2, '0');
+    const mm = (msgDate.getMonth() + 1).toString().padStart(2, '0');
+    return `${dd}/${mm}/${msgDate.getFullYear()}`;
+}
+
+async function openInboxOverlay() {
+    document.getElementById('inbox-overlay').style.display = 'flex';
+    const myUsername = localStorage.getItem('nexus_user_session');
+    if (!myUsername) { window.location.href = 'login.html'; return; }
+
+    if (inboxIsProviderCache === null) {
+        try {
+            const snap = await firebase.firestore().collection('vendorChats').where('vendorId', '==', myUsername).limit(1).get();
+            inboxIsProviderCache = !snap.empty;
+        } catch (e) { inboxIsProviderCache = false; }
+    }
+
+    const sellingBtn = document.getElementById('inbox-tab-selling');
+    const buyingBtn = document.getElementById('inbox-tab-buying');
+    const pillGroup = document.getElementById('inbox-pill-group');
+    if (inboxIsProviderCache) {
+        pillGroup.insertBefore(sellingBtn, buyingBtn);
+    } else {
+        pillGroup.insertBefore(buyingBtn, sellingBtn);
+    }
+
+    inboxSwitchMainTab(inboxIsProviderCache ? 'selling' : 'buying');
+}
+
+function closeInboxOverlay() {
+    document.getElementById('inbox-overlay').style.display = 'none';
+}
+
+function inboxSwitchMainTab(tab) {
+    inboxCurrentMainTab = tab;
+    document.getElementById('inbox-tab-buying').classList.toggle('active', tab === 'buying');
+    document.getElementById('inbox-tab-selling').classList.toggle('active', tab === 'selling');
+    document.getElementById('inbox-selling-subfilters').style.display = tab === 'selling' ? 'flex' : 'none';
+    document.getElementById('inbox-list-buying').style.display = tab === 'buying' ? 'block' : 'none';
+    document.getElementById('inbox-list-selling').style.display = tab === 'selling' ? 'block' : 'none';
+
+    if (tab === 'buying') { inboxBuyingThreads.length ? renderInboxList('buying') : loadInboxBuying(); }
+    if (tab === 'selling') { inboxSellingThreads.length ? renderInboxList('selling') : loadInboxSelling(); }
+}
+
+function inboxSwitchSubFilter(filter, el) {
+    inboxCurrentSubFilter = filter;
+    document.querySelectorAll('#inbox-selling-subfilters .inbox-subfilter-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    renderInboxList('selling');
+}
+
+async function inboxFetchLastMessage(chatDocId) {
+    try {
+        const snap = await firebase.firestore().collection('vendorChats').doc(chatDocId).collection('messages').orderBy('time', 'desc').limit(1).get();
+        if (snap.empty) return null;
+        return { id: snap.docs[0].id, ...snap.docs[0].data() };
+    } catch (e) { return null; }
+}
+
+function inboxPreviewText(msg) {
+    if (!msg) return 'Tap to open chat';
+    if (msg.type === 'text') return msg.text || '';
+    if (msg.type === 'image' || msg.type === 'imageGroup') return msg.caption || '📷 Photo';
+    if (msg.type === 'video') return msg.caption || '🎥 Video';
+    if (msg.type === 'voice') return '🎤 Voice message';
+    return 'Tap to open chat';
+}
+
+async function loadInboxBuying() {
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const container = document.getElementById('inbox-list-buying');
+    container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
+    try {
+        const snap = await firebase.firestore().collection('vendorChats').where('customerId', '==', myUsername).get();
+        const threads = [];
+        snap.forEach(doc => threads.push({ chatDocId: doc.id, ...doc.data() }));
+        threads.sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0));
+
+        inboxBuyingThreads = await Promise.all(threads.map(async t => {
+            const lastMsg = await inboxFetchLastMessage(t.chatDocId);
+            let displayName = t.vendorId.charAt(0).toUpperCase() + t.vendorId.slice(1);
+            let avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${t.vendorId}`;
+            try {
+                const vDoc = await firebase.firestore().collection('vendors').doc(t.vendorId).get();
+                if (vDoc.exists) {
+                    const vData = vDoc.data();
+                    if (vData.businessName || vData.name || vData.storeName) displayName = vData.businessName || vData.name || vData.storeName;
+                    if (vData.photoURL) avatarUrl = vData.photoURL;
+                }
+            } catch (e) {}
+            return { ...t, lastMsg, displayName, avatarUrl, otherId: t.vendorId };
+        }));
+        renderInboxList('buying');
+    } catch (e) {
+        container.innerHTML = '<div class="inbox-empty-state">Could not load chats.</div>';
+    }
+}
+
+async function loadInboxSelling() {
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const container = document.getElementById('inbox-list-selling');
+    container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
+    try {
+        const snap = await firebase.firestore().collection('vendorChats').where('vendorId', '==', myUsername).get();
+        const threads = [];
+        snap.forEach(doc => { if (doc.data().customerId) threads.push({ chatDocId: doc.id, ...doc.data() }); });
+        threads.sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0));
+
+        inboxSellingThreads = await Promise.all(threads.map(async t => {
+            const lastMsg = await inboxFetchLastMessage(t.chatDocId);
+            let displayName = t.customerId.charAt(0).toUpperCase() + t.customerId.slice(1);
+            let avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${t.customerId}`;
+            try {
+                const uDoc = await firebase.firestore().collection('users').doc(t.customerId).get();
+                if (uDoc.exists) {
+                    const uData = uDoc.data();
+                    const fullName = uData.fullName || uData.name || uData.username;
+                    if (fullName) displayName = fullName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    if (uData.userProfilePic) avatarUrl = uData.userProfilePic;
+                }
+            } catch (e) {}
+            return { ...t, lastMsg, displayName, avatarUrl, otherId: t.customerId };
+        }));
+        renderInboxList('selling');
+    } catch (e) {
+        container.innerHTML = '<div class="inbox-empty-state">Could not load chats.</div>';
+    }
+}
+
+function renderInboxList(tab) {
+    const myUsername = localStorage.getItem('nexus_user_session');
+    const container = document.getElementById(`inbox-list-${tab}`);
+    let threads = tab === 'buying' ? inboxBuyingThreads : inboxSellingThreads;
+
+    if (tab === 'selling' && inboxCurrentSubFilter !== 'all') {
+        threads = threads.filter(t => {
+            const lastRole = t.lastMsg ? t.lastMsg.role : null;
+            const botActive = t.botActive !== false;
+            if (inboxCurrentSubFilter === 'needsReply') return lastRole === 'mine';
+            if (inboxCurrentSubFilter === 'bot') return botActive;
+            if (inboxCurrentSubFilter === 'takenOver') return !botActive;
+            return true;
+        });
+    }
+
+    if (!threads.length) {
+        container.innerHTML = `<div class="inbox-empty-state">No chats yet</div>`;
+        return;
+    }
+
+    container.innerHTML = threads.map(t => {
+        const preview = inboxPreviewText(t.lastMsg);
+        const time = inboxFormatTime(t.lastActive);
+        const href = tab === 'buying'
+            ? `vendor-chat.html?with=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`
+            : `vendor-chat.html?vendorId=${encodeURIComponent(myUsername)}&admin=1&customer=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`;
+        return `
+            <a href="${href}" class="inbox-chat-item">
+                <img src="${t.avatarUrl}" class="inbox-chat-avatar">
+                <div class="inbox-chat-details">
+                    <span class="inbox-chat-name">${t.displayName}</span>
+                    <p class="inbox-chat-preview">${preview}</p>
+                </div>
+                <div class="inbox-chat-meta">
+                    <span class="inbox-chat-time">${time}</span>
+                </div>
+            </a>`;
+    }).join('');
+}
+
+function toggleInboxSearchBar() {
+    const bar = document.getElementById('inbox-search-bar');
+    const input = document.getElementById('inbox-search-input');
+    bar.classList.toggle('active');
+    if (bar.classList.contains('active')) { input.focus(); }
+    else { input.value = ''; performInboxSearch(''); }
+}
+
+function performInboxSearch(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll(`#inbox-list-${inboxCurrentMainTab} .inbox-chat-item`).forEach(item => {
+        const nameEl = item.querySelector('.inbox-chat-name');
+        const name = nameEl ? nameEl.textContent.toLowerCase() : '';
+        item.style.display = name.includes(q) ? 'flex' : 'none';
+    });
+}
+
+window.openInboxOverlay = openInboxOverlay;
+window.closeInboxOverlay = closeInboxOverlay;
+window.inboxSwitchMainTab = inboxSwitchMainTab;
+window.inboxSwitchSubFilter = inboxSwitchSubFilter;
+window.toggleInboxSearchBar = toggleInboxSearchBar;
+window.performInboxSearch = performInboxSearch;
    
 })();
