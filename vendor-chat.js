@@ -21,6 +21,7 @@
    const vendorId = params.get('vendorId') || params.get('with') || 'default'; 
     const isAdmin = params.get('admin') === '1';
    let storeName = params.get('name') || ""; 
+    const customerParam = params.get('customer') || '';
 
     // Real Oryzon account identity — same pattern as chat-interior.html.
     // A customer must be logged into their real Oryzon account to chat, exactly like
@@ -30,9 +31,13 @@
     if (!myUsername) {
         NexusRouter.navigateTo(`login.html?next=${encodeURIComponent(window.location.href)}`);
     }
+    // Lokacin da VENDOR (admin=1) ya buɗe wannan page domin ya amsawa wani customer na
+    // musamman, dole ne mu yi amfani da `customer` URL param domin mu san wane thread
+    // ne ake nufi — ba tare da wannan ba, chatDocId zai zama iri daya ko wane customer
+    // ne, domin dukkan `vendorId` da `myUsername` za su zama sunan vendor din shi kansa.
+    const otherPartyUsername = isAdmin ? (customerParam || myUsername) : myUsername;
     function getChatRoomId(a, b) { return [a, b].sort().join('__'); }
-    const chatDocId = getChatRoomId(vendorId, myUsername);
-
+    const chatDocId = getChatRoomId(vendorId, otherPartyUsername);
     // Firebase Auth restores the persisted login session from IndexedDB asynchronously —
     // every Firestore read/write below must wait for this to resolve, or request.auth
     // will be null even though the person is really logged in.
