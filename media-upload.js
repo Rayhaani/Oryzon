@@ -231,7 +231,13 @@ function toggleCropMode() { mu_toast('Crop — coming soon', 'fa-circle-info'); 
 function startTextOverlay() { mu_toast('Add text — coming soon', 'fa-circle-info'); }
 function toggleStickerPicker() { mu_toast('Stickers — coming soon', 'fa-circle-info'); }
 function toggleDrawMode() { mu_toast('Draw — coming soon', 'fa-circle-info'); }
-function downloadCaptionMedia() { mu_toast('Download — coming soon', 'fa-circle-info'); }
+function downloadCaptionMedia() {
+    if (!pendingCaptionFile) return;
+    const a = document.createElement('a');
+    a.href = capCanvas ? capCanvas.toDataURL('image/jpeg', 0.95) : URL.createObjectURL(pendingCaptionFile);
+    a.download = pendingCaptionKind === 'video' ? 'video.mp4' : 'photo.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+}
 
 function initMediaUpload() {
     const gi = document.getElementById('galleryInput');
