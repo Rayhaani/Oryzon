@@ -1,729 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Protocol - Register</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-deep-black: #000000;
-            --nexus-cyan: #00F2FF;
-            --border-subtle: rgba(255, 255, 255, 0.05);
-            --text-secondary: rgba(255, 255, 255, 0.5);
-            --error-red: #ff3b30;
-            --success-green: #34c759;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Something Big is Coming</title>
+<style>
+  :root{
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    height:100%;
+    margin:0;
+    padding:0;
+    background:#05060a;
+    overflow:hidden;
+    font-family:'Montserrat','Segoe UI',sans-serif;
+  }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* ───────────────────────── AURORA BACKGROUND ───────────────────────── */
+  .aurora-stage{
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    z-index:0;
+  }
+  .blob{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(70px);
+    mix-blend-mode:screen;
+    opacity:0.75;
+    will-change:transform;
+  }
+  .blob-1{
+    width:60vmax;height:60vmax;
+    top:-20vmax;left:-15vmax;
+    background:radial-gradient(circle at 30% 30%, #fde08d, transparent 70%);
+    animation:drift1 22s ease-in-out infinite;
+  }
+  .blob-2{
+    width:55vmax;height:55vmax;
+    bottom:-20vmax;right:-15vmax;
+    background:radial-gradient(circle at 60% 40%, #7c3aed, transparent 70%);
+    animation:drift2 26s ease-in-out infinite;
+  }
+  .blob-3{
+    width:50vmax;height:50vmax;
+    top:20%;right:-20vmax;
+    background:radial-gradient(circle at 50% 50%, #06b6d4, transparent 70%);
+    animation:drift3 30s ease-in-out infinite;
+  }
+  .blob-4{
+    width:45vmax;height:45vmax;
+    bottom:5%;left:-15vmax;
+    background:radial-gradient(circle at 50% 50%, #ec4899, transparent 70%);
+    animation:drift4 24s ease-in-out infinite;
+  }
+  .blob-5{
+    width:35vmax;height:35vmax;
+    top:40%;left:30%;
+    background:radial-gradient(circle at 50% 50%, #22c55e, transparent 70%);
+    opacity:0.4;
+    animation:drift5 18s ease-in-out infinite;
+  }
 
-        body {
-            background-color: var(--bg-deep-black);
-            color: #ffffff;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            overflow: hidden;
-        }
+  @keyframes drift1{
+    0%,100%{transform:translate(0,0) scale(1) rotate(0deg);}
+    33%{transform:translate(10vw,8vh) scale(1.15) rotate(40deg);}
+    66%{transform:translate(-5vw,12vh) scale(0.9) rotate(-30deg);}
+  }
+  @keyframes drift2{
+    0%,100%{transform:translate(0,0) scale(1) rotate(0deg);}
+    33%{transform:translate(-12vw,-6vh) scale(1.1) rotate(-35deg);}
+    66%{transform:translate(6vw,-10vh) scale(0.95) rotate(25deg);}
+  }
+  @keyframes drift3{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(-14vw,10vh) scale(1.2);}
+  }
+  @keyframes drift4{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(12vw,-8vh) scale(1.15);}
+  }
+  @keyframes drift5{
+    0%,100%{transform:translate(-50%,-50%) scale(1);}
+    50%{transform:translate(-50%,-50%) scale(1.4);}
+  }
 
-        .nexus-auth-card {
-            width: 100%;
-            max-width: 340px;
-            background: linear-gradient(135deg, #1e1c1c 0%, #121111 100%);
-            border: 1px solid rgba(255, 255, 255, 0.02);
-            border-radius: 20px;
-            padding: 24px 20px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease, background 0.6s ease, box-shadow 0.6s ease;
-        }
+  /* fine grain texture for a premium film-like feel */
+  .grain{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    opacity:0.05;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
 
-        .nexus-auth-card.implode-active {
-            transform: scale(0.1);
-            opacity: 0;
-            background: var(--nexus-cyan);
-            box-shadow: 0 0 80px 20px var(--nexus-cyan);
-            filter: blur(4px);
-        }
+  /* vignette so edges stay dark and text stays readable */
+  .vignette{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 35%, rgba(5,6,10,0.75) 100%);
+  }
 
-        .progress-engine {
-            width: 100%;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.03);
-            margin-bottom: 20px;
-            border-radius: 2px;
-        }
-        .progress-line-fill {
-            height: 100%;
-            width: 12.5%;
-            background: var(--nexus-cyan);
-            box-shadow: 0 0 10px var(--nexus-cyan);
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+  /* ───────────────────────── SPARKLE PARTICLES ───────────────────────── */
+  .sparkle{
+    position:absolute;
+    border-radius:50%;
+    background:#ffffff;
+    opacity:0;
+    animation:twinkle linear infinite;
+  }
+  @keyframes twinkle{
+    0%{opacity:0; transform:translateY(0) scale(0.5);}
+    10%{opacity:1;}
+    90%{opacity:0.8;}
+    100%{opacity:0; transform:translateY(-40px) scale(1.2);}
+  }
 
-        .slider-window {
-            position: relative;
-            width: 100%;
-            min-height: 110px;
-        }
+  /* ───────────────────────── MAIN CONTENT ───────────────────────── */
+  .stage{
+    position:relative;
+    z-index:2;
+    height:100dvh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+  }
+  .headline{
+    font-size:clamp(28px, 7vw, 56px);
+    font-weight:800;
+    line-height:1.25;
+    margin:0;
+    letter-spacing:-0.5px;
+    background:linear-gradient(90deg,#fde08d,#f472b6,#a78bfa,#38bdf8,#fde08d);
+    background-size:300% 100%;
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    animation:shine 8s linear infinite;
+    text-shadow:0 0 60px rgba(253,224,141,0.25);
+  }
+  @keyframes shine{
+    0%{background-position:0% 50%;}
+    100%{background-position:300% 50%;}
+  }
 
-        .form-step {
-            position: absolute;
-            width: 100%;
-            top: 0; left: 0;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(40px);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease, visibility 0.5s;
-        }
+  /* ───────────────────────── FOOTER ───────────────────────── */
+  .footer{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    z-index:3;
+    padding:16px 20px calc(16px + env(safe-area-inset-bottom,0px));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    font-size:11px;
+    color:rgba(255,255,255,0.4);
+  }
+  .footer button{
+    background:none;
+    border:none;
+    color:rgba(255,255,255,0.55);
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+    text-decoration:underline;
+    text-underline-offset:2px;
+    padding:4px;
+  }
 
-        .form-step.active {
-            position: relative;
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(0);
-        }
-
-        .form-step.exit {
-            position: absolute;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(-40px);
-        }
-
-        .step-header h2 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin-bottom: 14px;
-            text-transform: capitalize;
-            color: #ffffff;
-        }
-        .step-header .step-hint {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: -10px;
-            margin-bottom: 14px;
-        }
-
-        .nexus-input-field {
-            width: 100%;
-            background: #0d0d0f;
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            padding: 12px 14px;
-            font-size: 14px;
-            color: #ffffff;
-            outline: none;
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-        }
-        .nexus-input-field:focus {
-            border-color: var(--nexus-cyan);
-            background: #111114;
-        }
-
-        .nexus-select-field {
-            width: 100%;
-            background: #0d0d0f;
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            padding: 12px 14px;
-            font-size: 14px;
-            color: #ffffff;
-            outline: none;
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-            appearance: none;
-            -webkit-appearance: none;
-            cursor: pointer;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 36px;
-        }
-        .nexus-select-field:focus {
-            border-color: var(--nexus-cyan);
-            background-color: #111114;
-        }
-        .nexus-select-field option {
-            background: #0d0d0f;
-            color: #ffffff;
-        }
-
-        .error-message {
-            color: var(--error-red);
-            font-size: 11px;
-            margin-top: 6px;
-            display: none;
-            line-height: 1.4;
-        }
-        .success-message {
-            color: var(--success-green);
-            font-size: 11px;
-            margin-top: 6px;
-            display: none;
-            line-height: 1.4;
-        }
-
-        .suggestions-box {
-            background: #0d0d0f;
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            margin-top: 6px;
-            max-height: 140px;
-            overflow-y: auto;
-            display: none;
-        }
-        .suggestion-item {
-            padding: 10px 14px;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-        }
-        .suggestion-item:last-child { border-bottom: none; }
-        .suggestion-item:hover {
-            background: rgba(0, 242, 255, 0.03);
-            color: var(--nexus-cyan);
-        }
-
-        .btn-container {
-            margin-top: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            min-height: 40px;
-            width: 100%;
-        }
-
-        .nexus-back-text {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: color 0.2s ease;
-        }
-        .nexus-back-text:hover { color: #ffffff; }
-
-        .nexus-round-next {
-            margin-left: auto;
-            background: transparent;
-            border: 1px solid rgba(0, 242, 255, 0.3);
-            border-radius: 25px;
-            padding: 8px 16px;
-            color: var(--nexus-cyan);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            animation: buttonPulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
-            transition: all 0.3s ease;
-        }
-        .nexus-round-next:disabled { opacity: 0.4; cursor: not-allowed; animation: none; }
-        .nexus-round-next span { font-size: 12px; transition: transform 0.2s ease; }
-        .nexus-round-next:hover { background: rgba(0, 242, 255, 0.05); border-color: var(--nexus-cyan); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
-        .nexus-round-next:hover span { transform: translateX(2px); }
-
-        @keyframes buttonPulse {
-            0% { box-shadow: 0 0 8px rgba(0, 242, 255, 0.05); border-color: rgba(0, 242, 255, 0.2); }
-            100% { box-shadow: 0 0 15px rgba(0, 242, 255, 0.25); border-color: rgba(0, 242, 255, 0.6); }
-        }
-
-        .auth-footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-        .auth-footer a { color: var(--nexus-cyan); text-decoration: none; }
-
-        .password-strength-row {
-            display: flex;
-            gap: 4px;
-            margin-top: 8px;
-        }
-        .strength-bar {
-            flex: 1;
-            height: 3px;
-            border-radius: 2px;
-            background: rgba(255,255,255,0.08);
-            transition: background 0.25s ease;
-        }
-        .strength-label {
-            font-size: 10px;
-            color: var(--text-secondary);
-            margin-top: 6px;
-        }
-    </style>
+  /* ───────────────────────── LEGAL BOTTOM SHEET ───────────────────────── */
+  #legal-overlay{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    background:rgba(0,0,0,0.6);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+  }
+  #legal-sheet{
+    width:100%;
+    max-width:520px;
+    max-height:80vh;
+    background:#111318;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px 20px 0 0;
+    padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));
+    overflow-y:auto;
+    animation:slideUp 0.25s ease;
+  }
+  @keyframes slideUp{
+    from{transform:translateY(100%);}
+    to{transform:translateY(0);}
+  }
+  #legal-sheet h2{
+    font-size:16px;
+    font-weight:800;
+    color:#ffffff;
+    margin:0 0 4px;
+  }
+  #legal-sheet .sub{
+    font-size:11.5px;
+    color:rgba(255,255,255,0.5);
+    margin-bottom:16px;
+  }
+  #legal-sheet h3{
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:#94a3b8;
+    margin:18px 0 8px;
+  }
+  #legal-sheet .credit-card{
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:12px;
+    color:rgba(255,255,255,0.7);
+    line-height:1.5;
+  }
+  #legal-close{
+    position:absolute;
+    top:16px;
+    right:16px;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.1);
+    color:rgba(255,255,255,0.7);
+    font-size:14px;
+    cursor:pointer;
+  }
+  #legal-sheet{position:relative;}
+</style>
 </head>
 <body>
 
-    <div class="nexus-auth-card" id="authCard">
-        <div class="progress-engine">
-            <div class="progress-line-fill" id="progressFill"></div>
-        </div>
+  <div class="aurora-stage">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <div class="blob blob-4"></div>
+    <div class="blob blob-5"></div>
+  </div>
+  <div class="grain"></div>
+  <div class="vignette"></div>
+  <div id="sparkle-field"></div>
 
-        <form id="nexusQuantumForm" onsubmit="executeSync(event)">
-            <div class="slider-window">
+  <div class="stage">
+    <h1 class="headline">Something Big is Coming 🔥</h1>
+  </div>
 
-                <!-- STEP 1: Full Name -->
-                <div class="form-step active" id="step1">
-                    <div class="step-header"><h2>Full Name</h2></div>
-                    <input type="text" id="inpName" class="nexus-input-field" required autocomplete="off">
-                    <div class="btn-container">
-                        <button type="button" class="nexus-round-next" onclick="moveForward(2)">NEXT <span>→</span></button>
-                    </div>
-                </div>
+  <div class="footer">
+    <span>© 2026</span>
+    <button onclick="document.getElementById('legal-overlay').style.display='flex'">Legal</button>
+  </div>
 
-                <!-- STEP 2: Date of Birth -->
-                <div class="form-step" id="step2">
-                    <div class="step-header"><h2>Date of Birth</h2></div>
-                    <input type="date" id="inpDOB" class="nexus-input-field" required>
-                    <div class="error-message" id="ageError">Access Denied: You must be at least 16 years old.</div>
-                    <div class="btn-container">
-                        <button type="button" class="nexus-back-text" onclick="moveBackward(1)">Back</button>
-                        <button type="button" class="nexus-round-next" onclick="moveForward(3)">NEXT <span>→</span></button>
-                    </div>
-                </div>
+  <!-- LEGAL BOTTOM SHEET -->
+  <div id="legal-overlay" onclick="if(event.target===this) this.style.display='none'">
+    <div id="legal-sheet">
+      <button id="legal-close" onclick="document.getElementById('legal-overlay').style.display='none'">✕</button>
+      <h2>Legal</h2>
+      <div class="sub">Third-party credits & licenses</div>
 
-                <!-- STEP 3: Username -->
-                <div class="form-step" id="step3">
-                    <div class="step-header"><h2>Choose Username</h2></div>
-                    <input type="text" id="inpUsername" class="nexus-input-field" required autocomplete="off">
-                    <div class="error-message" id="usernameError">Username not available. Suggestions:</div>
-                    <div class="success-message" id="usernameOkMsg">✓ Username available</div>
-                    <div class="suggestions-box" id="suggestionsBox"></div>
-                    <div class="btn-container">
-                        <button type="button" class="nexus-back-text" onclick="moveBackward(2)">Back</button>
-                        <button type="button" class="nexus-round-next" id="step3NextBtn" onclick="moveForward(4)">NEXT <span>→</span></button>
-                    </div>
-                </div>
-
-                <!-- STEP 4: Email -->
-                <div class="form-step" id="step4">
-                    <div class="step-header">
-                        <h2>Email Address</h2>
-                        <div class="step-hint">This will be used to sign in to your account.</div>
-                    </div>
-                    <input type="email" id="inpEmail" class="nexus-input-field" required autocomplete="off" placeholder="you@example.com">
-                    <div class="error-message" id="emailError">Please enter a valid email address.</div>
-                    <div class="btn-container">
-                        <button type="button" class="nexus-back-text" onclick="moveBackward(3)">Back</button>
-                        <button type="button" class="nexus-round-next" onclick="moveForward(5)">NEXT <span>→</span></button>
-                    </div>
-                </div>
-
-                <!-- STEP 5: Phone Number -->
-                <div class="form-step" id="step5">
-                    <div class="step-header">
-                        <h2>Phone Number</h2>
-                        <div class="step-hint">For order updates and verification (optional).</div>
-                    </div>
-                    <input type="tel" id="inpPhone" class="nexus-input-field" autocomplete="off" placeholder="e.g. 08012345678">
-                    <div class="btn-container">
-                        <button type="button" class="nexus-back-text" onclick="moveBackward(4)">Back</button>
-                        <button type="button" class="nexus-round-next" onclick="moveForward(6)">NEXT <span>→</span></button>
-                    </div>
-                </div>
-
-                <!-- STEP 6: Country -->
-                <div class="form-step" id="step6">
-                    <div class="step-header"><h2>Country</h2></div>
-                    <select id="inpCountry" class="nexus-select-field" required>
-                        <option value="" disabled selected>Select your country</option>
-                        <option>Afghanistan</option><option>Albania</option><option>Algeria</option>
-                        <option>Angola</option><option>Argentina</option><option>Australia</option>
-                        <option>Austria</option><option>Azerbaijan</option><option>Bahrain</option>
-                        <option>Bangladesh</option><option>Belgium</option><option>Benin</option>
-                        <option>Bolivia</option><option>Bosnia and Herzegovina</option><option>Brazil</option>
-                        <option>Burkina Faso</option><option>Cameroon</option><option>Canada</option>
-                        <option>Chad</option><option>Chile</option><option>China</option>
-                        <option>Colombia</option><option>Congo</option><option>Côte d'Ivoire</option>
-                        <option>DR Congo</option><option>Egypt</option><option>Ethiopia</option>
-                        <option>France</option><option>Gabon</option><option>Gambia</option>
-                        <option>Germany</option><option>Ghana</option><option>Guinea</option>
-                        <option>India</option><option>Indonesia</option><option>Iran</option>
-                        <option>Iraq</option><option>Italy</option><option>Japan</option>
-                        <option>Jordan</option><option>Kazakhstan</option><option>Kenya</option>
-                        <option>Kuwait</option><option>Lebanon</option><option>Libya</option>
-                        <option>Malaysia</option><option>Mali</option><option>Mauritania</option>
-                        <option>Mexico</option><option>Morocco</option><option>Mozambique</option>
-                        <option>Myanmar</option><option>Netherlands</option><option>Niger</option>
-                        <option>Nigeria</option><option>Norway</option><option>Oman</option>
-                        <option>Pakistan</option><option>Palestine</option><option>Peru</option>
-                        <option>Philippines</option><option>Poland</option><option>Portugal</option>
-                        <option>Qatar</option><option>Romania</option><option>Russia</option>
-                        <option>Saudi Arabia</option><option>Senegal</option><option>Sierra Leone</option>
-                        <option>Somalia</option><option>South Africa</option><option>South Sudan</option>
-                        <option>Spain</option><option>Sri Lanka</option><option>Sudan</option>
-                        <option>Sweden</option><option>Switzerland</option><option>Syria</option>
-                        <option>Tanzania</option><option>Thailand</option><option>Togo</option>
-                        <option>Tunisia</option><option>Turkey</option><option>Uganda</option>
-                        <option>Ukraine</option><option>United Arab Emirates</option>
-                        <option>United Kingdom</option><option>United States</option>
-                        <option>Uzbekistan</option><option>Venezuela</option><option>Vietnam</option>
-                        <option>Yemen</option><option>Zambia</option><option>Zimbabwe</option>
-                        <option>Other</option>
-                    </select>
-                    <div class="btn-container">
-                        <button type="button" class="nexus-back-text" onclick="moveBackward(5)">Back</button>
-                        <button type="button" class="nexus-round-next" onclick="moveForward(7)">NEXT <span>→</span></button>
-                    </div>
-                </div>
-
-                <!-- STEP 7: Town/State -->
-                <div class="form-step" id="step7">
-                    <div class="step-header"><h2>Town / State</h2></div>
-                    <input type="text" id="inpTown" class="nexus-input-field" required autocomplete="off">
-                    <div class="btn-container">
-                        <button type="button" class="nexus-back-text" onclick="moveBackward(6)">Back</button>
-                        <button type="button" class="nexus-round-next" onclick="moveForward(8)">NEXT <span>→</span></button>
-                    </div>
-                </div>
-
-                <!-- STEP 8: Password -->
-                <div class="form-step" id="step8">
-                    <div class="step-header">
-                        <h2>Create Password</h2>
-                        <div class="step-hint">Minimum 6 characters.</div>
-                    </div>
-                    <input type="password" id="inpPassword" class="nexus-input-field" required minlength="6" autocomplete="new-password">
-                    <div class="password-strength-row">
-                        <div class="strength-bar" id="bar1"></div>
-                        <div class="strength-bar" id="bar2"></div>
-                        <div class="strength-bar" id="bar3"></div>
-                    </div>
-                    <div class="strength-label" id="strengthLabel"></div>
-                    <div class="error-message" id="passwordError">Password must be at least 6 characters.</div>
-                    <div class="btn-container">
-                        <button type="button" class="nexus-back-text" onclick="moveBackward(7)">Back</button>
-                        <button type="submit" class="nexus-round-next" id="submitBtn">SUBMIT <span>→</span></button>
-                    </div>
-                </div>
-
-            </div>
-        </form>
-
-    <div class="auth-footer">
-            Already registered? <a href="login.html">Login Here</a>
-        </div>
+      <h3>Licenses</h3>
+      <div class="credit-card">Location data © dr5hn/countries-states-cities-database</div>
     </div>
+  </div>
 
-    <!-- VERIFY EMAIL OVERLAY -->
-    <div id="verifyEmailOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.95);backdrop-filter:blur(10px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="width:100%;max-width:340px;background:linear-gradient(135deg,#1e1c1c 0%,#121111 100%);border-radius:20px;padding:32px 24px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,0.8);">
-            <div style="font-size:48px;margin-bottom:16px;">📧</div>
-            <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:#ffffff;margin-bottom:10px;letter-spacing:0.5px;">Verify Your Email</div>
-            <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:6px;">We sent a verification link to:</div>
-            <div style="font-size:13px;color:#00F2FF;font-weight:600;margin-bottom:18px;" id="verifyEmailAddress">—</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:22px;">Click the link in that email to activate your account. Check your spam folder if you don't see it.</div>
-            <button onclick="resendVerificationEmail()" id="resendBtn" style="width:100%;background:transparent;border:1px solid rgba(0,242,255,0.3);border-radius:25px;padding:11px;color:#00F2FF;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:10px;">RESEND EMAIL</button>
-            <button onclick="window.location.href='login.html'" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:25px;padding:11px;color:rgba(255,255,255,0.7);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Continue to Login →</button>
-        </div>
-    </div>
+<script>
+  // Lightweight CSS-driven sparkle particles
+  (function(){
+    const field = document.getElementById('sparkle-field');
+    const count = 28;
+    for (let i = 0; i < count; i++){
+      const s = document.createElement('div');
+      s.className = 'sparkle';
+      const size = Math.random() * 2.5 + 1;
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.top = Math.random() * 100 + 'vh';
+      s.style.position = 'fixed';
+      s.style.zIndex = '1';
+      s.style.animationDuration = (Math.random() * 6 + 5) + 's';
+      s.style.animationDelay = (Math.random() * 8) + 's';
+      field.appendChild(s);
+    }
+  })();
+</script>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-    <script>
-        const firebaseConfig = {
-    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
-    authDomain: "oryzon-50ea4.firebaseapp.com",
-    databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
-    projectId: "oryzon-50ea4",
-    storageBucket: "oryzon-50ea4.firebasestorage.app",
-    messagingSenderId: "782106742622",
-    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
-  };
-
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        let activeStep = 1;
-        const totalSteps = 8;
-        let usernameIsValid = false;
-        let usernameCheckTimeout = null;
-
-        const blacklistedUsernames = ["rayhaani", "rayhaan", "ahmad", "nexus", "sadiq", "kanomart", "admin", "support"];
-
-        // ── USERNAME AVAILABILITY CHECK (Firestore lookup: users/{username}) ──
-        document.getElementById("inpUsername").addEventListener("input", function(e) {
-            let val = e.target.value.toLowerCase().trim().replace(/\s+/g, '');
-            e.target.value = val;
-            const errorPrompt = document.getElementById("usernameError");
-            const okMsg = document.getElementById("usernameOkMsg");
-            const sugBox = document.getElementById("suggestionsBox");
-
-            errorPrompt.style.display = "none";
-            okMsg.style.display = "none";
-            sugBox.style.display = "none";
-            usernameIsValid = false;
-
-            if (val.length < 3) return;
-
-            if (blacklistedUsernames.includes(val)) {
-                showUsernameTaken(val);
-                return;
-            }
-
-            clearTimeout(usernameCheckTimeout);
-            usernameCheckTimeout = setTimeout(() => {
-                db.collection("users").doc(val).get().then(docSnap => {
-                    if (docSnap.exists) {
-                        showUsernameTaken(val);
-                    } else {
-                        usernameIsValid = true;
-                        okMsg.style.display = "block";
-                    }
-                }).catch(err => {
-                    console.error("Username check failed:", err.message);
-                    errorPrompt.textContent = "Could not check username. Try again — " + err.message;
-                    errorPrompt.style.display = "block";
-                });
-            }, 400);
-        });
-
-        function showUsernameTaken(val) {
-            const errorPrompt = document.getElementById("usernameError");
-            const sugBox = document.getElementById("suggestionsBox");
-            errorPrompt.style.display = "block";
-            sugBox.style.display = "block";
-            sugBox.innerHTML = "";
-            let variants = [`${val}.ani`, `${val}_ani`, `${val}._`, `core_${val}`, `${val}.node`];
-            variants.forEach(variant => {
-                let div = document.createElement("div");
-                div.className = "suggestion-item";
-                div.innerText = variant;
-                div.onclick = function() {
-                    document.getElementById("inpUsername").value = variant;
-                    document.getElementById("inpUsername").dispatchEvent(new Event('input'));
-                };
-                sugBox.appendChild(div);
-            });
-        }
-
-        // ── PASSWORD STRENGTH METER ──
-        document.getElementById("inpPassword").addEventListener("input", function(e) {
-            const val = e.target.value;
-            const bars = [document.getElementById("bar1"), document.getElementById("bar2"), document.getElementById("bar3")];
-            const label = document.getElementById("strengthLabel");
-            bars.forEach(b => b.style.background = "rgba(255,255,255,0.08)");
-
-            if (val.length === 0) { label.textContent = ""; return; }
-
-            let score = 0;
-            if (val.length >= 6) score++;
-            if (val.length >= 10 && /[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
-            if (val.length >= 10 && /[!@#$%^&*]/.test(val)) score++;
-
-            const colors = ["#ff3b30", "#eab308", "#34c759"];
-            const labels = ["Weak password", "Good password", "Strong password"];
-            for (let i = 0; i < Math.max(score, val.length >= 6 ? 1 : 0); i++) {
-                if (bars[i]) bars[i].style.background = colors[Math.max(score,1)-1];
-            }
-            label.textContent = val.length >= 6 ? labels[Math.max(score,1)-1] : "Too short — minimum 6 characters";
-            label.style.color = val.length >= 6 ? colors[Math.max(score,1)-1] : "var(--error-red)";
-        });
-
-        function moveForward(target) {
-            if (activeStep === 1 && !document.getElementById("inpName").value.trim()) return;
-
-            if (activeStep === 2) {
-                let birthDate = new Date(document.getElementById("inpDOB").value);
-                if (isNaN(birthDate)) return;
-                let today = new Date();
-                let age = today.getFullYear() - birthDate.getFullYear();
-                let m = today.getMonth() - birthDate.getMonth();
-                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-                if (age < 16) {
-                    document.getElementById("ageError").style.display = "block";
-                    return;
-                } else {
-                    document.getElementById("ageError").style.display = "none";
-                }
-            }
-
-            if (activeStep === 3) {
-                const val = document.getElementById("inpUsername").value.trim();
-                if (val.length < 3 || !usernameIsValid) {
-                    document.getElementById("usernameError").style.display = "block";
-                    return;
-                }
-            }
-
-            if (activeStep === 4) {
-                const email = document.getElementById("inpEmail").value.trim();
-                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailPattern.test(email)) {
-                    document.getElementById("emailError").style.display = "block";
-                    return;
-                }
-                document.getElementById("emailError").style.display = "none";
-            }
-
-            if (activeStep === 6 && !document.getElementById("inpCountry").value) return;
-
-            if (activeStep === 7 && !document.getElementById("inpTown").value.trim()) return;
-
-            let currentForm = document.getElementById(`step${activeStep}`);
-            currentForm.classList.add("exit");
-            currentForm.classList.remove("active");
-
-            activeStep = target;
-
-            let nextForm = document.getElementById(`step${activeStep}`);
-            nextForm.classList.remove("exit");
-            nextForm.classList.add("active");
-
-            document.getElementById("progressFill").style.width = ((activeStep / totalSteps) * 100) + "%";
-        }
-
-        function moveBackward(target) {
-            let currentForm = document.getElementById(`step${activeStep}`);
-            currentForm.classList.remove("active");
-
-            activeStep = target;
-
-            let prevForm = document.getElementById(`step${activeStep}`);
-            prevForm.classList.remove("exit");
-            prevForm.classList.add("active");
-
-            document.getElementById("progressFill").style.width = ((activeStep / totalSteps) * 100) + "%";
-        }
-
-        // ── FINAL SUBMIT — FIREBASE AUTH + FIRESTORE PROFILE (users/{username}) ──
-        function executeSync(event) {
-            event.preventDefault();
-            const submitBtn = document.getElementById("submitBtn");
-            const passwordError = document.getElementById("passwordError");
-
-            const name     = document.getElementById("inpName").value.trim();
-            const dob      = document.getElementById("inpDOB").value;
-            const username = document.getElementById("inpUsername").value.trim().toLowerCase();
-            const email    = document.getElementById("inpEmail").value.trim();
-            const phone    = document.getElementById("inpPhone").value.trim();
-            const country  = document.getElementById("inpCountry").value;
-            const town     = document.getElementById("inpTown").value.trim();
-            const password = document.getElementById("inpPassword").value;
-
-            passwordError.style.display = "none";
-
-            if (password.length < 6) {
-                passwordError.style.display = "block";
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = "SUBMITTING... <span>→</span>";
-
-            let createdUser = null;
-
-            // 1) Final race-condition guard: re-check the username doc right before creating the account
-            db.collection("users").doc(username).get()
-                .then(docSnap => {
-                    if (docSnap.exists) {
-                        return Promise.reject({ code: "custom/username-taken" });
-                    }
-                    // 2) Create Firebase Auth account (email + password)
-                    return auth.createUserWithEmailAndPassword(email, password);
-                })
-                .then((userCredential) => {
-                    const uid = userCredential.user.uid;
-                    createdUser = userCredential.user;
-
-                    // 3) Save full profile under users/{username} (matches existing Firestore structure)
-                    return db.collection("users").doc(username).set({
-                        uid: uid,
-                        username: username,
-                        fullName: name,
-                        dateOfBirth: dob,
-                        email: email,
-                        phone: phone || null,
-                        country: country,
-                        town: town,
-                        isOnline: false,
-                        emailVerified: false,
-                        registrationTimestamp: Date.now()
-                    }).then(() => uid);
-                })
-                .then((uid) => {
-    // 4) Save username→uid mapping in Realtime Database for RTDB security rules
-    return firebase.database().ref('usernames/' + username).set(uid).then(() => uid);
-})
-.then((uid) => {
-    // 5) Send verification email
-    return createdUser.sendEmailVerification().then(() => uid);
-})
-                .then((uid) => {
-                    localStorage.setItem("nexus_user_session", username);
-                    localStorage.setItem("nexus_user_uid", uid);
-                    showVerifyEmailOverlay(email);
-                })
-                .catch((err) => {
-                    console.error("Registration error: ", err);
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = "SUBMIT <span>→</span>";
-
-                    if (err.code === "custom/username-taken") {
-                        moveBackward(3);
-                        usernameIsValid = false;
-                        showUsernameTaken(username);
-                    } else if (err.code === "auth/email-already-in-use") {
-                        moveBackward(4);
-                        document.getElementById("emailError").textContent = "This email is already registered. Try logging in instead.";
-                        document.getElementById("emailError").style.display = "block";
-                    } else if (err.code === "auth/weak-password") {
-                        passwordError.textContent = "Password is too weak. Use at least 6 characters.";
-                        passwordError.style.display = "block";
-                    } else {
-                        passwordError.textContent = "Registration failed: " + err.message;
-                        passwordError.style.display = "block";
-                    }
-                });
-        }
-
-        function showVerifyEmailOverlay(email) {
-            document.getElementById("authCard").style.display = "none";
-            document.getElementById("verifyEmailAddress").textContent = email;
-            document.getElementById("verifyEmailOverlay").style.display = "flex";
-        }
-
-        function resendVerificationEmail() {
-            const btn = document.getElementById("resendBtn");
-            const user = auth.currentUser;
-            if (!user) {
-                window.location.href = "login.html";
-                return;
-            }
-            btn.textContent = "SENDING...";
-            btn.disabled = true;
-            user.sendEmailVerification()
-                .then(() => {
-                    btn.textContent = "✓ EMAIL SENT";
-                    setTimeout(() => { btn.textContent = "RESEND EMAIL"; btn.disabled = false; }, 4000);
-                })
-                .catch((err) => {
-                    btn.textContent = "FAILED — TRY AGAIN";
-                    btn.disabled = false;
-                    console.error(err);
-                });
-        }
-    </script>
 </body>
 </html>
