@@ -146,6 +146,7 @@ async function uploadAndSendMedia(file, kind, caption, options) {
 }
 let pendingCaptionFile = null, pendingCaptionKind = null, captionModeActive = false, savedDraftText = '';
 let capCanvas = null, capRotation = 0, capHdMode = false;
+let capVideoEl = null, capCropMode = false, capVideoCrop = null, capDrawMode = false;
 function openCaptionModal(file, kind) {
     pendingCaptionFile = file; pendingCaptionKind = kind; capRotation = 0;
     const area = document.getElementById('captionPreviewArea');
@@ -161,11 +162,12 @@ function openCaptionModal(file, kind) {
         };
         img.src = URL.createObjectURL(file);
     } else {
-        capCanvas = null;
+    capCanvas = null;
         const video = document.createElement('video');
         video.src = URL.createObjectURL(file);
         video.muted = true; video.autoplay = true; video.loop = true; video.playsInline = true;
         area.innerHTML = ''; area.appendChild(video);
+        capVideoEl = video;    
     }
     document.getElementById('captionRecipientPill').textContent = window.mediaUploadAdapter.recipientLabel();
     const msgInput = window.mediaUploadAdapter.inputEl();
@@ -227,7 +229,206 @@ function rotateCaptionMedia() {
     document.getElementById('captionPreviewArea').appendChild(c);
     capCanvas = c;
 }
-function toggleCropMode() { mu_toast('Crop — coming soon', 'fa-circle-info'); }
+// ── Fullscreen sub-mode helper: yayin crop/draw, ana ɓoye chat chrome
+// (top icons na caption da ainihin typing bar) — suna dawowa ne kawai bayan
+// an fita daga sub-mode din. ──
+function enterFullscreenSubMode() {
+    document.querySelector('.dock-container').style.display = 'none';
+    document.getElementById('captionTopBar').style.display = 'none';
+    document.getElementById('captionRecipientPill').style.display = 'none';
+}
+function exitFullscreenSubMode() {
+    document.querySelector('.dock-container').style.display = 'flex';
+    document.getElementById('captionTopBar').style.display = 'flex';
+    document.getElementById('captionRecipientPill').style.display = 'block';
+}
+function cleanupAllSubModes() {
+    const box = document.getElementById('cropBox'); if (box) { if (box._cleanup) box._cleanup(); box.remove(); }
+    const cbar = document.getElementById('cropBottomBar'); if (cbar) cbar.remove();
+    capCropMode = false;
+    const cb = document.getElementById('cropBtnCap'); if (cb) cb.classList.remove('active');
+    exitFullscreenSubMode();
+}
+// ── CROP — fullscreen, kamar WhatsApp/native: dukkan kusurwoyi HUDU suna
+// aiki (ba guda daya kawai ba), Cancel/Rotate/Done duk a kasa. Hoto: ana
+// yankewa nan take (canvas). Bidiyo: ana ajiye rect, ffmpeg ke yankewa a
+// lokacin turawa (daban — ba a kwafo bakeVideoEdits a wannan zagayen ba). ──
+function toggleCropMode() {
+    if (capCropMode) return;
+    const mediaEl = capCanvas || capVideoEl;
+    if (!mediaEl) return;
+    capCropMode = true;
+    document.getElementById('cropBtnCap').classList.add('active');
+    enterFullscreenSubMode();
+    buildCropUI(mediaEl);
+}
+function buildCropUI(mediaEl) {
+    const area = document.getElementById('captionPreviewArea');
+    const oldBox = document.getElementById('cropBox');
+    if (oldBox) { if (oldBox._cleanup) oldBox._cleanup(); oldBox.remove(); }
+    const rect = mediaEl.getBoundingClientRect();
+    const areaRect = area.getBoundingClientRect();
+    const box = document.createElement('div');
+    box.id = 'cropBox';
+    const margin = 0;
+    const left = (rect.left - areaRect.left) + rect.width * margin;
+    const top = (rect.top - areaRect.top) + rect.height * margin;
+    const w = rect.width * (1 - margin * 2), h = rect.height * (1 - margin * 2);
+    box.style.left = left + 'px'; box.style.top = top + 'px';
+    box.style.width = w + 'px'; box.style.height = h + 'px';
+    box.innerHTML = `<div class="crop-grid"></div>
+        <div class="crop-edge ce-top"></div><div class="crop-edge ce-bottom"></div>
+        <div class="crop-edge ce-left"></div><div class="crop-edge ce-right"></div>
+        <div class="crop-handle ch-tl"></div><div class="crop-handle ch-tr"></div>
+        <div class="crop-handle ch-bl"></div><div class="crop-handle ch-br"></div>`;
+    area.appendChild(box);
+    if (!document.getElementById('cropBottomBar')) {
+        const bar = document.createElement('div');
+        bar.id = 'cropBottomBar';
+        bar.innerHTML = `
+            <span class="crop-text-btn" onclick="cancelCropMode()">Cancel</span>
+            <div class="cap-icon-btn" onclick="rotateInCropMode()"><i class="fa-solid fa-arrow-rotate-left"></i></div>
+            <span class="crop-text-btn" onclick="doneCropMode()">Done</span>`;
+        document.getElementById('captionOverlay').appendChild(bar);
+    }
+    attachCropDragHandlers(box, mediaEl);
+}
+function rotateInCropMode() {
+    rotateCaptionMedia();
+    requestAnimationFrame(() => requestAnimationFrame(() => buildCropUI(capCanvas || capVideoEl)));
+}
+function attachCropDragHandlers(box, mediaEl) {
+    let mode = null, corner = null, startX = 0, startY = 0, startBox = null;
+    let pendingGeom = null, rafScheduled = false;
+    const MIN = 40;
+    const bounds = () => mediaEl.getBoundingClientRect();
+    const areaBounds = () => document.getElementById('captionPreviewArea').getBoundingClientRect();
+    const pt = (e) => { const t = e.touches ? e.touches[0] : e; return { x: t.clientX, y: t.clientY }; };
+    const curBox = () => ({ left: parseFloat(box.style.left), top: parseFloat(box.style.top), w: parseFloat(box.style.width), h: parseFloat(box.style.height) });
+    const scheduleApply = () => {
+        if (rafScheduled) return;
+        rafScheduled = true;
+        requestAnimationFrame(() => {
+            rafScheduled = false;
+            if (!pendingGeom) return;
+            box.style.left = pendingGeom.left + 'px'; box.style.top = pendingGeom.top + 'px';
+            box.style.width = pendingGeom.w + 'px'; box.style.height = pendingGeom.h + 'px';
+        });
+    };
+    const onMove = (e) => {
+        if (!mode) return;
+        e.preventDefault();
+        const p = pt(e);
+        const dx = p.x - startX, dy = p.y - startY;
+        const mb = bounds(), ab = areaBounds();
+        const minX = mb.left - ab.left, minY = mb.top - ab.top;
+        const maxX = minX + mb.width, maxY = minY + mb.height;
+        let { left, top, w, h } = startBox;
+        if (mode === 'move') {
+            left = Math.max(minX, Math.min(startBox.left + dx, maxX - w));
+            top = Math.max(minY, Math.min(startBox.top + dy, maxY - h));
+        } else if (mode === 'resize') {
+            if (corner === 'br') {
+                w = Math.max(MIN, Math.min(startBox.w + dx, maxX - left));
+                h = Math.max(MIN, Math.min(startBox.h + dy, maxY - top));
+            } else if (corner === 'tl') {
+                const nl = Math.max(minX, startBox.left + dx), nt = Math.max(minY, startBox.top + dy);
+                const rw = startBox.left + startBox.w - nl, rh = startBox.top + startBox.h - nt;
+                if (rw >= MIN) { left = nl; w = rw; } else { w = MIN; left = startBox.left + startBox.w - MIN; }
+                if (rh >= MIN) { top = nt; h = rh; } else { h = MIN; top = startBox.top + startBox.h - MIN; }
+            } else if (corner === 'tr') {
+                const nt = Math.max(minY, startBox.top + dy);
+                w = Math.max(MIN, Math.min(startBox.w + dx, maxX - left));
+                const rh = startBox.top + startBox.h - nt;
+                if (rh >= MIN) { top = nt; h = rh; } else { h = MIN; top = startBox.top + startBox.h - MIN; }
+            } else if (corner === 'bl') {
+                const nl = Math.max(minX, startBox.left + dx);
+                h = Math.max(MIN, Math.min(startBox.h + dy, maxY - top));
+                const rw = startBox.left + startBox.w - nl;
+                if (rw >= MIN) { left = nl; w = rw; } else { w = MIN; left = startBox.left + startBox.w - MIN; }
+            }
+        } else if (mode === 'edge') {
+            if (corner === 'top') {
+                const nt = Math.max(minY, startBox.top + dy);
+                const rh = startBox.top + startBox.h - nt;
+                if (rh >= MIN) { top = nt; h = rh; } else { h = MIN; top = startBox.top + startBox.h - MIN; }
+            } else if (corner === 'bottom') {
+                h = Math.max(MIN, Math.min(startBox.h + dy, maxY - top));
+            } else if (corner === 'left') {
+                const nl = Math.max(minX, startBox.left + dx);
+                const rw = startBox.left + startBox.w - nl;
+                if (rw >= MIN) { left = nl; w = rw; } else { w = MIN; left = startBox.left + startBox.w - MIN; }
+            } else if (corner === 'right') {
+                w = Math.max(MIN, Math.min(startBox.w + dx, maxX - left));
+            }
+        }
+        pendingGeom = { left, top, w, h };
+        scheduleApply();
+    };
+    const onEnd = () => { mode = null; corner = null; };
+    const startMove = (e) => { mode = 'move'; const p = pt(e); startX = p.x; startY = p.y; startBox = curBox(); };
+    const startResize = (c) => (e) => { e.stopPropagation(); mode = 'resize'; corner = c; const p = pt(e); startX = p.x; startY = p.y; startBox = curBox(); };
+    const startEdge = (edgeName) => (e) => { e.stopPropagation(); mode = 'edge'; corner = edgeName; const p = pt(e); startX = p.x; startY = p.y; startBox = curBox(); };
+    box.addEventListener('mousedown', startMove);
+    box.addEventListener('touchstart', startMove, { passive: true });
+    ['tl', 'tr', 'bl', 'br'].forEach(c => {
+        const h = box.querySelector('.ch-' + c);
+        h.addEventListener('mousedown', startResize(c));
+        h.addEventListener('touchstart', startResize(c), { passive: false });
+    });
+    [['top', 'ce-top'], ['bottom', 'ce-bottom'], ['left', 'ce-left'], ['right', 'ce-right']].forEach(([name, cls]) => {
+        const el = box.querySelector('.' + cls);
+        el.addEventListener('mousedown', startEdge(name));
+        el.addEventListener('touchstart', startEdge(name), { passive: false });
+    });
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchend', onEnd);
+    box._cleanup = () => {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('touchmove', onMove);
+        window.removeEventListener('mouseup', onEnd);
+        window.removeEventListener('touchend', onEnd);
+    };
+}
+function cancelCropMode() {
+    capCropMode = false;
+    document.getElementById('cropBtnCap').classList.remove('active');
+    const box = document.getElementById('cropBox');
+    if (box) { if (box._cleanup) box._cleanup(); box.remove(); }
+    const bar = document.getElementById('cropBottomBar');
+    if (bar) bar.remove();
+    exitFullscreenSubMode();
+}
+function doneCropMode() {
+    const box = document.getElementById('cropBox');
+    const mediaEl = capCanvas || capVideoEl;
+    if (!box || !mediaEl) { cancelCropMode(); return; }
+    const mb = mediaEl.getBoundingClientRect();
+    const bb = box.getBoundingClientRect();
+    const nativeW = capCanvas ? capCanvas.width : capVideoEl.videoWidth;
+    const nativeH = capCanvas ? capCanvas.height : capVideoEl.videoHeight;
+    const scaleX = nativeW / mb.width, scaleY = nativeH / mb.height;
+    const cx = Math.max(0, (bb.left - mb.left) * scaleX);
+    const cy = Math.max(0, (bb.top - mb.top) * scaleY);
+    const cw = Math.min(bb.width * scaleX, nativeW - cx);
+    const ch = Math.min(bb.height * scaleY, nativeH - cy);
+    if (capCanvas) {
+        const cropped = document.createElement('canvas');
+        cropped.width = cw; cropped.height = ch;
+        cropped.getContext('2d').drawImage(capCanvas, cx, cy, cw, ch, 0, 0, cw, ch);
+        capCanvas = cropped;
+        const area = document.getElementById('captionPreviewArea');
+        cancelCropMode();
+        area.innerHTML = '';
+        area.appendChild(capCanvas);
+        if (typeof attachCapDrawHandlers === 'function') attachCapDrawHandlers(capCanvas, () => capCanvas);
+        return;
+    }
+    capVideoCrop = { x: cx, y: cy, w: cw, h: ch };
+    cancelCropMode();
+}
 function startTextOverlay() { mu_toast('Add text — coming soon', 'fa-circle-info'); }
 function toggleStickerPicker() { mu_toast('Stickers — coming soon', 'fa-circle-info'); }
 function toggleDrawMode() { mu_toast('Draw — coming soon', 'fa-circle-info'); }
