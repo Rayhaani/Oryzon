@@ -10111,13 +10111,12 @@ function inboxPreviewText(msg) {
 async function loadInboxBuying() {
     const myUsername = localStorage.getItem('nexus_user_session');
     const container = document.getElementById('inbox-list-buying');
-   if (!inboxBuyingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
+    if (!inboxBuyingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
     try {
-        await ensureAuthReady(); 
-    try {
+        await ensureAuthReady();
         const snap = await firebase.firestore().collection('vendorChats').where('customerId', '==', myUsername).get();
         const threads = [];
-        snap.forEach(doc => threads.push({ chatDocId: doc.id, ...doc.data() }));
+        snap.forEach(doc => { if (doc.data().vendorId) threads.push({ chatDocId: doc.id, ...doc.data() }); });
         threads.sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0));
 
         inboxBuyingThreads = await Promise.all(threads.map(async t => {
@@ -10172,7 +10171,7 @@ async function loadInboxSelling() {
         console.error('Inbox selling load error:', e);
         if (!inboxSellingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Could not load chats. (' + (e.code || e.message || 'error') + ')</div>';
     }
-}
+   }
 
 function renderInboxList(tab) {
     const myUsername = localStorage.getItem('nexus_user_session');
