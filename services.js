@@ -10050,6 +10050,7 @@ async function openInboxOverlay() {
     if (!myUsername) { window.location.href = 'login.html'; return; }
 
     if (inboxIsProviderCache === null) {
+       await inboxWaitForAuth();
         try {
             const snap = await firebase.firestore().collection('vendorChats').where('vendorId', '==', myUsername).limit(1).get();
             inboxIsProviderCache = !snap.empty;
@@ -10073,13 +10074,22 @@ function closeInboxOverlay() {
 }
 
 function inboxSwitchMainTab(tab) {
-    inboxCurrentMainTab = tab;
+    const isUpdates = tab === 'updates';
+    if (!isUpdates) inboxCurrentMainTab = tab;
     document.getElementById('inbox-tab-buying').classList.toggle('active', tab === 'buying');
     document.getElementById('inbox-tab-selling').classList.toggle('active', tab === 'selling');
+    document.getElementById('inbox-tab-updates').classList.toggle('active', isUpdates);
     document.getElementById('inbox-selling-subfilters').style.display = tab === 'selling' ? 'flex' : 'none';
+    document.getElementById('inbox-list-wrap').style.display = isUpdates ? 'none' : 'block';
+    document.getElementById('inbox-updates-pane').style.display = isUpdates ? 'flex' : 'none';
     document.getElementById('inbox-list-buying').style.display = tab === 'buying' ? 'block' : 'none';
     document.getElementById('inbox-list-selling').style.display = tab === 'selling' ? 'block' : 'none';
 
+    if (isUpdates) {
+        const fr = document.getElementById('inbox-updates-frame');
+        if (!fr.getAttribute('src')) fr.src = 'updates.html?embed=1';
+        return;
+    }
     if (tab === 'buying') { inboxBuyingThreads.length ? renderInboxList('buying') : loadInboxBuying(); }
     if (tab === 'selling') { inboxSellingThreads.length ? renderInboxList('selling') : loadInboxSelling(); }
 }
@@ -10113,7 +10123,7 @@ async function loadInboxBuying() {
     const container = document.getElementById('inbox-list-buying');
     if (!inboxBuyingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
     try {
-        await ensureAuthReady();
+        await inboxWaitForAuth();
         const snap = await firebase.firestore().collection('vendorChats').where('customerId', '==', myUsername).get();
         const threads = [];
         snap.forEach(doc => { if (doc.data().vendorId) threads.push({ chatDocId: doc.id, ...doc.data() }); });
@@ -10145,7 +10155,7 @@ async function loadInboxSelling() {
     const container = document.getElementById('inbox-list-selling');
     if (!inboxSellingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
     try {
-        await ensureAuthReady();
+        await inboxWaitForAuth();
         const snap = await firebase.firestore().collection('vendorChats').where('vendorId', '==', myUsername).get();
         const threads = [];
         snap.forEach(doc => { if (doc.data().customerId) threads.push({ chatDocId: doc.id, ...doc.data() }); });
@@ -10201,7 +10211,7 @@ function renderInboxList(tab) {
             ? `vendor-chat.html?with=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`
             : `vendor-chat.html?vendorId=${encodeURIComponent(myUsername)}&admin=1&customer=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`;
         return `
-          <a href="${href}" class="inbox-chat-item" onclick="inboxRememberState('${tab}')">
+          <a href="${href}" class="inbox-chat-item" onclick="return inboxOpenChat(this.getAttribute('href'))">
                 ${t.avatarUrl ? `<img src="${t.avatarUrl}" class="inbox-chat-avatar">` : `<div class="inbox-chat-avatar inbox-chat-avatar-empty"></div>`}
                 <div class="inbox-chat-details">  
                      <span class="inbox-chat-name">${t.displayName}</span>
@@ -10237,60 +10247,37 @@ window.inboxSwitchMainTab = inboxSwitchMainTab;
 window.inboxSwitchSubFilter = inboxSwitchSubFilter;
 window.toggleInboxSearchBar = toggleInboxSearchBar;
 window.performInboxSearch = performInboxSearch;
-
-function inboxRememberState(tab) {
-    try {
-        const sc = document.getElementById('inbox-list-' + tab).parentElement;
-        sessionStorage.setItem('inboxReturn', JSON.stringify({
-            tab: tab, sub: inboxCurrentSubFilter, scroll: sc.scrollTop, ts: Date.now(),
-            provider: inboxIsProviderCache, buying: inboxBuyingThreads, selling: inboxSellingThreads
-        }));
-    } catch (e) {}
-}
-
-function inboxRestoreIfReturning() {
-    let s = null;
-    try { s = JSON.parse(sessionStorage.getItem('inboxReturn') || 'null'); } catch (e) {}
-    sessionStorage.removeItem('inboxReturn');
-    if (!s || Date.now() - s.ts > 30 * 60 * 1000) return;
-    inboxBuyingThreads = s.buying || [];
-    inboxSellingThreads = s.selling || [];
-    inboxCurrentSubFilter = s.sub || 'all';
-    inboxIsProviderCache = s.provider;
-    const pg = document.getElementById('inbox-pill-group');
-    const sb = document.getElementById('inbox-tab-selling');
-    const bb = document.getElementById('inbox-tab-buying');
-    if (s.provider) pg.insertBefore(sb, bb); else pg.insertBefore(bb, sb);
-    const order = ['all', 'needsReply', 'bot', 'takenOver'];
-    document.querySelectorAll('#inbox-selling-subfilters .inbox-subfilter-pill').forEach((p, i) => {
-        p.classList.toggle('active', order[i] === inboxCurrentSubFilter);
+function inboxWaitForAuth() {
+    return new Promise(res => {
+        const a = firebase.auth();
+        if (a.currentUser) return res(true);
+        const un = a.onAuthStateChanged(async u => {
+            un();
+            if (u) return res(true);
+            try { if (await guaranteeAuth()) return res(true); } catch (e) {}
+            try { await a.signInAnonymously(); res(true); } catch (e) { res(false); }
+        });
     });
-    document.getElementById('inbox-overlay').style.display = 'flex';
-    const had = (s.tab === 'buying' ? inboxBuyingThreads : inboxSellingThreads).length;
-    inboxSwitchMainTab(s.tab);
-    const sc = document.getElementById('inbox-list-' + s.tab).parentElement;
-    requestAnimationFrame(() => { sc.scrollTop = s.scroll || 0; });
-    if (had) { s.tab === 'buying' ? loadInboxBuying() : loadInboxSelling(); }
 }
-runOnServicesInit(inboxRestoreIfReturning);
 
-let updatesFrameLoaded = false;
-function openUpdatesOverlay() {
-    const fr = document.getElementById('updates-frame');
-    if (!updatesFrameLoaded) { fr.src = 'updates.html'; updatesFrameLoaded = true; }
-    document.getElementById('updates-overlay').style.display = 'flex';
-    history.pushState({ npOverlay: 'updates' }, '', '');
-}
-function closeUpdatesOverlay() {
-    document.getElementById('updates-overlay').style.display = 'none';
-    if (history.state && history.state.npOverlay === 'updates') history.back();
+let vchatOpen = false;
+function inboxOpenChat(url) {
+    sessionStorage.setItem('vcClickAt', Date.now());
+    const fr = document.getElementById('vchat-frame');
+    try { fr.contentWindow.location.replace(url); } catch (e) { fr.src = url; }
+    document.getElementById('vchat-overlay').style.display = 'block';
+    if (!vchatOpen) { history.pushState({ npOverlay: 'vchat' }, '', ''); vchatOpen = true; }
+    return false;
 }
 window.addEventListener('popstate', function () {
-    const ov = document.getElementById('updates-overlay');
-    if (ov && ov.style.display === 'flex') ov.style.display = 'none';
+    if (!vchatOpen) return;
+    vchatOpen = false;
+    document.getElementById('vchat-overlay').style.display = 'none';
+    try { document.getElementById('vchat-frame').contentWindow.location.replace('about:blank'); } catch (e) {}
+    if (inboxCurrentMainTab === 'buying') loadInboxBuying();
+    else if (inboxCurrentMainTab === 'selling') loadInboxSelling();
 });
 
-window.inboxRememberState = inboxRememberState;
-window.openUpdatesOverlay = openUpdatesOverlay;
-window.closeUpdatesOverlay = closeUpdatesOverlay;
+window.inboxWaitForAuth = inboxWaitForAuth;
+window.inboxOpenChat = inboxOpenChat;
 })();
