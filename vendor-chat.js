@@ -187,9 +187,10 @@
     // ================= FIRESTORE CHAT =================
     async function loadMessagesFromFirestore() {
         try {
-            const snap = await db.collection('vendorChats').doc(chatDocId).collection('messages').orderBy('time','asc').get();
+            const snap = await db.collection('vendorChats').doc(chatDocId).collection('messages').orderBy('time','desc').limit(40).get();
             const msgs = [];
             snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+            msgs.reverse();
             return msgs;
         } catch (e) { console.error('Firestore load error', e); return []; }
     }
@@ -227,9 +228,8 @@ async function clearChatMessages() {
         } catch(e) { console.warn('clear chat failed', e); }
 }
     async function beginSession() {
-        playWelcomeSplash();
         if (params.get('reset') === '1') { await clearChatMessages(); }
-        const saved = await loadMessagesFromFirestore();
+        const [saved] = await Promise.all([loadMessagesFromFirestore(), loadBotStatus()]);
         if (saved.length > 0) {
             renderedMessages = saved;
             saved.forEach(m => renderMessage(m, false));
@@ -244,8 +244,8 @@ async function clearChatMessages() {
             greeting.id = id;
             renderedMessages.push(greeting);
             renderMessage(greeting, true);
+            playWelcomeSplash();
         }
-        await loadBotStatus();
 
         // Idan aka zo daga store-front.html/products-page.html tare da wani
         // pre-filled message (misali "Is this still available?"), a tura shi
@@ -1175,7 +1175,7 @@ ${vendorInfo}${learningExamples}`;
         loadFirestoreProducts();
         makeDraggable(document.getElementById('floatingAvatar'));
         restoreAvatarPosition();
-        await loadVendorAvatarAndStatus();
+        loadVendorAvatarAndStatus();
         beginSession();
     }
 
