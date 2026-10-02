@@ -10111,7 +10111,9 @@ function inboxPreviewText(msg) {
 async function loadInboxBuying() {
     const myUsername = localStorage.getItem('nexus_user_session');
     const container = document.getElementById('inbox-list-buying');
-    container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
+   if (!inboxBuyingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
+    try {
+        await ensureAuthReady(); 
     try {
         const snap = await firebase.firestore().collection('vendorChats').where('customerId', '==', myUsername).get();
         const threads = [];
@@ -10134,15 +10136,17 @@ async function loadInboxBuying() {
         }));
         renderInboxList('buying');
     } catch (e) {
-        container.innerHTML = '<div class="inbox-empty-state">Could not load chats.</div>';
+        console.error('Inbox buying load error:', e);
+        if (!inboxBuyingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Could not load chats. (' + (e.code || e.message || 'error') + ')</div>';
     }
 }
 
 async function loadInboxSelling() {
     const myUsername = localStorage.getItem('nexus_user_session');
     const container = document.getElementById('inbox-list-selling');
-    container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
+    if (!inboxSellingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Loading...</div>';
     try {
+        await ensureAuthReady();
         const snap = await firebase.firestore().collection('vendorChats').where('vendorId', '==', myUsername).get();
         const threads = [];
         snap.forEach(doc => { if (doc.data().customerId) threads.push({ chatDocId: doc.id, ...doc.data() }); });
@@ -10165,7 +10169,8 @@ async function loadInboxSelling() {
         }));
         renderInboxList('selling');
     } catch (e) {
-        container.innerHTML = '<div class="inbox-empty-state">Could not load chats.</div>';
+        console.error('Inbox selling load error:', e);
+        if (!inboxSellingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Could not load chats. (' + (e.code || e.message || 'error') + ')</div>';
     }
 }
 
@@ -10197,7 +10202,7 @@ function renderInboxList(tab) {
             ? `vendor-chat.html?with=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`
             : `vendor-chat.html?vendorId=${encodeURIComponent(myUsername)}&admin=1&customer=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`;
         return `
-          <a href="${href}" class="inbox-chat-item">
+          <a href="${href}" class="inbox-chat-item" onclick="inboxRememberState('${tab}')">
                 ${t.avatarUrl ? `<img src="${t.avatarUrl}" class="inbox-chat-avatar">` : `<div class="inbox-chat-avatar inbox-chat-avatar-empty"></div>`}
                 <div class="inbox-chat-details">  
                      <span class="inbox-chat-name">${t.displayName}</span>
@@ -10233,5 +10238,60 @@ window.inboxSwitchMainTab = inboxSwitchMainTab;
 window.inboxSwitchSubFilter = inboxSwitchSubFilter;
 window.toggleInboxSearchBar = toggleInboxSearchBar;
 window.performInboxSearch = performInboxSearch;
-   
+
+function inboxRememberState(tab) {
+    try {
+        const sc = document.getElementById('inbox-list-' + tab).parentElement;
+        sessionStorage.setItem('inboxReturn', JSON.stringify({
+            tab: tab, sub: inboxCurrentSubFilter, scroll: sc.scrollTop, ts: Date.now(),
+            provider: inboxIsProviderCache, buying: inboxBuyingThreads, selling: inboxSellingThreads
+        }));
+    } catch (e) {}
+}
+
+function inboxRestoreIfReturning() {
+    let s = null;
+    try { s = JSON.parse(sessionStorage.getItem('inboxReturn') || 'null'); } catch (e) {}
+    sessionStorage.removeItem('inboxReturn');
+    if (!s || Date.now() - s.ts > 30 * 60 * 1000) return;
+    inboxBuyingThreads = s.buying || [];
+    inboxSellingThreads = s.selling || [];
+    inboxCurrentSubFilter = s.sub || 'all';
+    inboxIsProviderCache = s.provider;
+    const pg = document.getElementById('inbox-pill-group');
+    const sb = document.getElementById('inbox-tab-selling');
+    const bb = document.getElementById('inbox-tab-buying');
+    if (s.provider) pg.insertBefore(sb, bb); else pg.insertBefore(bb, sb);
+    const order = ['all', 'needsReply', 'bot', 'takenOver'];
+    document.querySelectorAll('#inbox-selling-subfilters .inbox-subfilter-pill').forEach((p, i) => {
+        p.classList.toggle('active', order[i] === inboxCurrentSubFilter);
+    });
+    document.getElementById('inbox-overlay').style.display = 'flex';
+    const had = (s.tab === 'buying' ? inboxBuyingThreads : inboxSellingThreads).length;
+    inboxSwitchMainTab(s.tab);
+    const sc = document.getElementById('inbox-list-' + s.tab).parentElement;
+    requestAnimationFrame(() => { sc.scrollTop = s.scroll || 0; });
+    if (had) { s.tab === 'buying' ? loadInboxBuying() : loadInboxSelling(); }
+}
+runOnServicesInit(inboxRestoreIfReturning);
+
+let updatesFrameLoaded = false;
+function openUpdatesOverlay() {
+    const fr = document.getElementById('updates-frame');
+    if (!updatesFrameLoaded) { fr.src = 'updates.html'; updatesFrameLoaded = true; }
+    document.getElementById('updates-overlay').style.display = 'flex';
+    history.pushState({ npOverlay: 'updates' }, '', '');
+}
+function closeUpdatesOverlay() {
+    document.getElementById('updates-overlay').style.display = 'none';
+    if (history.state && history.state.npOverlay === 'updates') history.back();
+}
+window.addEventListener('popstate', function () {
+    const ov = document.getElementById('updates-overlay');
+    if (ov && ov.style.display === 'flex') ov.style.display = 'none';
+});
+
+window.inboxRememberState = inboxRememberState;
+window.openUpdatesOverlay = openUpdatesOverlay;
+window.closeUpdatesOverlay = closeUpdatesOverlay;
 })();
