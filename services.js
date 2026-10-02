@@ -10121,7 +10121,7 @@ async function loadInboxBuying() {
         inboxBuyingThreads = await Promise.all(threads.map(async t => {
             const lastMsg = await inboxFetchLastMessage(t.chatDocId);
             let displayName = t.vendorId.charAt(0).toUpperCase() + t.vendorId.slice(1);
-            let avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${t.vendorId}`;
+            let avatarUrl = null;
             try {
                 const vDoc = await firebase.firestore().collection('vendors').doc(t.vendorId).get();
                 if (vDoc.exists) {
@@ -10151,7 +10151,7 @@ async function loadInboxSelling() {
         inboxSellingThreads = await Promise.all(threads.map(async t => {
             const lastMsg = await inboxFetchLastMessage(t.chatDocId);
             let displayName = t.customerId.charAt(0).toUpperCase() + t.customerId.slice(1);
-            let avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${t.customerId}`;
+            let avatarUrl = null;
             try {
                 const uDoc = await firebase.firestore().collection('users').doc(t.customerId).get();
                 if (uDoc.exists) {
@@ -10197,10 +10197,10 @@ function renderInboxList(tab) {
             ? `vendor-chat.html?with=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`
             : `vendor-chat.html?vendorId=${encodeURIComponent(myUsername)}&admin=1&customer=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`;
         return `
-            <a href="${href}" class="inbox-chat-item">
-                <img src="${t.avatarUrl}" class="inbox-chat-avatar">
-                <div class="inbox-chat-details">
-                    <span class="inbox-chat-name">${t.displayName}</span>
+          <a href="${href}" class="inbox-chat-item">
+                ${t.avatarUrl ? `<img src="${t.avatarUrl}" class="inbox-chat-avatar">` : `<div class="inbox-chat-avatar inbox-chat-avatar-empty"></div>`}
+                <div class="inbox-chat-details">  
+                     <span class="inbox-chat-name">${t.displayName}</span>
                     <p class="inbox-chat-preview">${preview}</p>
                 </div>
                 <div class="inbox-chat-meta">
