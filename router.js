@@ -109,7 +109,8 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
-            'post-card-template.js',
+           'media-upload.js',
+           'post-card-template.js',
             'group.js'
         ],
         // pages.html (na "Pages", ba na kowace group tab a chats.html ba) —
