@@ -1780,7 +1780,7 @@
                     if (dockInput) dockInput.focus();
                 });
             }
-        initMediaUpload();
+        if (typeof initMediaUpload === 'function') initMediaUpload();
         }
          function destroyPage() {
             if (groupUnsub) { groupUnsub(); groupUnsub = null; }
@@ -1804,13 +1804,18 @@
             // don't let them leak onto whichever page comes next.
             document.documentElement.classList.remove('gi-loading', 'preload-feed');
         }
-
+        window.mediaUploadAdapter = {
+            inputEl: () => document.getElementById('dockInput'),
+            roomId: () => groupSlug || 'group',
+            recipientLabel: () => (groupData && groupData.name) || 'Group',
+            send: (payload) => pushOutgoingMessage(payload)
+        };
         window.NexusRouter.registerPage('group.html', { init: initPage, destroy: destroyPage });
 
         // Native full page load (user opened group.html directly, not via
         // SPA nav) — router.js only auto-runs init() on SPA navigation, so
         // fire it once manually here if this IS the page that just loaded.
-        if (window.NexusRouter.getCurrentPath() === 'group.html') {
+        if (window.NexusRouter.getCurrentPath() === 'group.html' && document.readyState === 'loading') {
             initPage();
         }
       function toggleAttachMenu() {
@@ -1843,10 +1848,5 @@
             pushOutgoingMessage({ text: '🎵 ' + track });
         }
 
-window.mediaUploadAdapter = {
-    inputEl: () => document.getElementById('dockInput'),
-    roomId: () => groupSlug || 'group',
-    recipientLabel: () => (groupData && groupData.name) || 'Group',
-    send: (payload) => pushOutgoingMessage(payload)
-};
+
 
