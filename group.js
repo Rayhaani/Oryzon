@@ -1781,6 +1781,15 @@
                 });
             }
         }
+       if (new URLSearchParams(window.location.search).get('autofocus') === '1') {
+                switchMode('chat');
+                requestAnimationFrame(() => {
+                    const dockInput = document.getElementById('dockInput');
+                    if (dockInput) dockInput.focus();
+                });
+            }
+            initMediaUpload();
+        }
          function destroyPage() {
             if (groupUnsub) { groupUnsub(); groupUnsub = null; }
             if (groupPostsUnsub) { groupPostsUnsub(); groupPostsUnsub = null; }
@@ -1848,4 +1857,4 @@ window.mediaUploadAdapter = {
     recipientLabel: () => (groupData && groupData.name) || 'Group',
     send: (payload) => pushOutgoingMessage(payload)
 };
-initMediaUpload();
+
