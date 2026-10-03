@@ -1780,15 +1780,7 @@
                     if (dockInput) dockInput.focus();
                 });
             }
-        }
-       if (new URLSearchParams(window.location.search).get('autofocus') === '1') {
-                switchMode('chat');
-                requestAnimationFrame(() => {
-                    const dockInput = document.getElementById('dockInput');
-                    if (dockInput) dockInput.focus();
-                });
-            }
-            initMediaUpload();
+        initMediaUpload();
         }
          function destroyPage() {
             if (groupUnsub) { groupUnsub(); groupUnsub = null; }
