@@ -1,3 +1,10 @@
+window.addEventListener('error', function (e) {
+    alert('JS ERROR: ' + e.message + '\n' + (e.filename || '').split('/').pop() + ':' + e.lineno);
+});
+window.addEventListener('unhandledrejection', function (e) {
+    alert('PROMISE ERROR: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+});
+
 /* ============================================================
    GROUP.JS — extracted from group.html for SPA compatibility
    ------------------------------------------------------------
