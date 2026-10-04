@@ -1,10 +1,3 @@
-window.addEventListener('error', function (e) {
-    alert('JS ERROR: ' + e.message + '\n' + (e.filename || '').split('/').pop() + ':' + e.lineno);
-});
-window.addEventListener('unhandledrejection', function (e) {
-    alert('PROMISE ERROR: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
-});
-
 /* ============================================================
    GROUP.JS — extracted from group.html for SPA compatibility
    ------------------------------------------------------------
@@ -829,7 +822,7 @@ window.addEventListener('unhandledrejection', function (e) {
             handleDockInput(input);
             document.getElementById('smartSuggestChip').style.display = 'none';
         }
-
+        if (typeof captionModeActive !== 'undefined' && captionModeActive) { confirmCaptionSend(); return; }
         // ---- HIGH-IMPACT: in-chat Escrow payment ----
         function openPaySheet() {
             const sel = document.getElementById('payRecipient');
@@ -1689,6 +1682,24 @@ window.addEventListener('unhandledrejection', function (e) {
         function onPageShowNX() { updateFeedHeaderState(); }
         function onVisibilityChangeNX() { if (!document.hidden) updateFeedHeaderState(); }
 
+        function nxEnsureMediaUpload() {
+            const ready = () => {
+                window.mediaUploadAdapter = {
+                    inputEl: () => document.getElementById('dockInput'),
+                    roomId: () => groupSlug || 'group',
+                    recipientLabel: () => (groupData && groupData.name) || 'Group',
+                    send: (payload) => pushOutgoingMessage(payload)
+                };
+                if (typeof initMediaUpload === 'function') initMediaUpload();
+                else showToast('Photo module did not load', 'fa-triangle-exclamation');
+            };
+            if (typeof initMediaUpload === 'function') { ready(); return; }
+            const s = document.createElement('script');
+            s.src = 'media-upload.js';
+            s.onload = ready;
+            s.onerror = ready;
+            document.body.appendChild(s);
+        }
         function initPage() {
             // Re-derive per-navigation identity fresh every time.
             currentUsername = localStorage.getItem('nexus_user_session');
@@ -1787,7 +1798,7 @@ window.addEventListener('unhandledrejection', function (e) {
                     if (dockInput) dockInput.focus();
                 });
             }
-        if (typeof initMediaUpload === 'function') initMediaUpload();
+        nxEnsureMediaUpload();
         }
          function destroyPage() {
             if (groupUnsub) { groupUnsub(); groupUnsub = null; }
@@ -1811,12 +1822,6 @@ window.addEventListener('unhandledrejection', function (e) {
             // don't let them leak onto whichever page comes next.
             document.documentElement.classList.remove('gi-loading', 'preload-feed');
         }
-        window.mediaUploadAdapter = {
-            inputEl: () => document.getElementById('dockInput'),
-            roomId: () => groupSlug || 'group',
-            recipientLabel: () => (groupData && groupData.name) || 'Group',
-            send: (payload) => pushOutgoingMessage(payload)
-        };
         window.NexusRouter.registerPage('group.html', { init: initPage, destroy: destroyPage });
 
         // Native full page load (user opened group.html directly, not via
