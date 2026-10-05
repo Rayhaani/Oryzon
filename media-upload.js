@@ -151,36 +151,112 @@ async function uploadAndSendMedia(file, kind, caption, options) {
 let pendingCaptionFile = null, pendingCaptionKind = null, captionModeActive = false, savedDraftText = '';
 let capCanvas = null, capRotation = 0, capHdMode = false;
 let capVideoEl = null, capCropMode = false, capVideoCrop = null, capDrawMode = false;
-function openCaptionModal(file, kind) {
-    pendingCaptionFile = file; pendingCaptionKind = kind; capRotation = 0;
-    const area = document.getElementById('captionPreviewArea');
-    area.innerHTML = '';
-    document.getElementById('captionOverlay').classList.add('show');
-    if (kind === 'image') {
-        const img = new Image();
-        img.onload = () => {
-            capCanvas = document.createElement('canvas');
-            capCanvas.width = img.naturalWidth; capCanvas.height = img.naturalHeight;
-            capCanvas.getContext('2d').drawImage(img, 0, 0);
-            area.innerHTML = ''; area.appendChild(capCanvas);
-        };
-        img.src = URL.createObjectURL(file);
-    } else {
-    capCanvas = null;
-        const video = document.createElement('video');
-        video.src = URL.createObjectURL(file);
-        video.muted = true; video.autoplay = true; video.loop = true; video.playsInline = true;
-        area.innerHTML = ''; area.appendChild(video);
-        capVideoEl = video;    
+function openCaptionModal(file, kind) { stageMedia(file, kind); }
+let stagedPreviewUrl = null, stagedPrep = null, prepToken = 0;
+function canvasPreview(cv, max) {
+    const sc = Math.min(1, max / Math.max(cv.width, cv.height));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(cv.width * sc)); c.height = Math.max(1, Math.round(cv.height * sc));
+    c.getContext('2d').drawImage(cv, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.7);
+}
+async function imageToUploadFile(file, cv, hd) {
+    if (!cv && file.type === 'image/gif') return file;
+    const maxDim = hd ? 2560 : 1280, q = hd ? 0.9 : 0.72;
+    let drawable = cv, w, h;
+    if (cv) { w = cv.width; h = cv.height; }
+    else {
+        drawable = window.createImageBitmap ? await createImageBitmap(file) : await new Promise((res, rej) => {
+            const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file);
+        });
+        w = drawable.width || drawable.naturalWidth; h = drawable.height || drawable.naturalHeight;
     }
-    document.getElementById('captionRecipientPill').textContent = window.mediaUploadAdapter.recipientLabel();
+    const sc = Math.min(1, maxDim / Math.max(w, h));
+    const c = document.createElement('canvas');
+    c.width = Math.round(w * sc); c.height = Math.round(h * sc);
+    c.getContext('2d').drawImage(drawable, 0, 0, c.width, c.height);
+    const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', q));
+    return blob ? new File([blob], 'photo.jpg', { type: 'image/jpeg' }) : file;
+}
+function startPrep() {
+    prepToken++;
+    stagedPrep = null;
+    if (pendingCaptionKind !== 'image' || !pendingCaptionFile) return;
+    const file = pendingCaptionFile, cv = capCanvas, hd = capHdMode;
+    const p = (async () => {
+        const f = await imageToUploadFile(file, cv, hd);
+        return await xhrUploadFile(f, window.mediaUploadAdapter.roomId(), () => {});
+    })();
+    p.catch(() => {});
+    stagedPrep = { token: prepToken, hd: hd, promise: p };
+}
+function ensureStagedChip() {
+    let chip = document.getElementById('stagedChip');
+    if (chip) return chip;
+    const pill = window.mediaUploadAdapter.inputEl().closest('.composer-msg-pill');
+    chip = document.createElement('div');
+    chip.id = 'stagedChip';
+    chip.innerHTML = '<div class="staged-thumb"></div><i class="fa-solid fa-pen staged-pen"></i><span class="staged-x"><i class="fa-solid fa-xmark"></i></span>';
+    chip.addEventListener('click', openEditorOverlay);
+    chip.querySelector('.staged-x').addEventListener('click', (e) => { e.stopPropagation(); discardStaged(); });
+    pill.insertBefore(chip, pill.firstChild);
+    return chip;
+}
+function setChipThumb() {
+    const chip = ensureStagedChip();
+    const t = chip.querySelector('.staged-thumb');
+    t.innerHTML = '';
+    let el;
+    if (pendingCaptionKind === 'video') { el = document.createElement('video'); el.src = stagedPreviewUrl + '#t=0.1'; el.muted = true; el.playsInline = true; el.preload = 'metadata'; }
+    else { el = document.createElement('img'); el.src = stagedPreviewUrl; }
+    t.appendChild(el);
+    chip.closest('.composer-msg-pill').classList.add('staged');
+}
+function stageMedia(file, kind) {
+    pendingCaptionFile = file; pendingCaptionKind = kind; capRotation = 0; capCanvas = null; capVideoEl = null;
+    stagedPreviewUrl = URL.createObjectURL(file);
     const msgInput = window.mediaUploadAdapter.inputEl();
-    savedDraftText = msgInput.value;
+    if (!captionModeActive) savedDraftText = msgInput.value;
     msgInput.value = '';
     msgInput.placeholder = 'Add a caption…';
     msgInput.dispatchEvent(new Event('input', { bubbles: true }));
     captionModeActive = true;
-    setTimeout(() => msgInput.focus(), 50);
+    setChipThumb();
+    startPrep();
+}
+function openEditorOverlay() {
+    const ov = document.getElementById('captionOverlay');
+    if (!pendingCaptionFile || ov.classList.contains('show')) return;
+    prepToken++; stagedPrep = null;
+    const area = document.getElementById('captionPreviewArea');
+    area.innerHTML = '';
+    ov.classList.add('show');
+    if (pendingCaptionKind === 'image') {
+        if (capCanvas) { area.appendChild(capCanvas); }
+        else {
+            const img = new Image();
+            img.onload = () => {
+                capCanvas = document.createElement('canvas');
+                capCanvas.width = img.naturalWidth; capCanvas.height = img.naturalHeight;
+                capCanvas.getContext('2d').drawImage(img, 0, 0);
+                area.innerHTML = ''; area.appendChild(capCanvas);
+            };
+            img.src = URL.createObjectURL(pendingCaptionFile);
+        }
+    } else {
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(pendingCaptionFile);
+        video.muted = true; video.autoplay = true; video.loop = true; video.playsInline = true;
+        area.appendChild(video);
+        capVideoEl = video;
+    }
+    document.getElementById('captionRecipientPill').textContent = window.mediaUploadAdapter.recipientLabel();
+}
+function closeEditorOverlay() {
+    if (capCropMode) cleanupAllSubModes();
+    document.getElementById('captionOverlay').classList.remove('show');
+    if (capCanvas) { stagedPreviewUrl = canvasPreview(capCanvas, 480); setChipThumb(); }
+    startPrep();
 }
 function exitCaptionMode() {
     captionModeActive = false;
@@ -189,42 +265,51 @@ function exitCaptionMode() {
     msgInput.value = savedDraftText;
     msgInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
-function confirmDiscardPhoto() { document.getElementById('discardDialogBackdrop').classList.add('show'); }
-function hideDiscardDialog() { document.getElementById('discardDialogBackdrop').classList.remove('show'); }
-function closeCaptionModal() {
+function clearStaged() {
+    prepToken++; stagedPrep = null;
+    if (capCropMode) cleanupAllSubModes();
     document.getElementById('discardDialogBackdrop').classList.remove('show');
     document.getElementById('captionOverlay').classList.remove('show');
     document.getElementById('captionPreviewArea').innerHTML = '';
-    pendingCaptionFile = null; pendingCaptionKind = null; capCanvas = null;
+    const chip = document.getElementById('stagedChip');
+    if (chip) { chip.closest('.composer-msg-pill').classList.remove('staged'); chip.remove(); }
+    pendingCaptionFile = null; pendingCaptionKind = null; capCanvas = null; capVideoEl = null; capCropMode = false;
     exitCaptionMode();
-    document.getElementById('galleryInput').value = '';
+    const gi = document.getElementById('galleryInput'); if (gi) gi.value = '';
+}
+function discardStaged() { clearStaged(); }
+function confirmDiscardPhoto() { closeEditorOverlay(); }
+function hideDiscardDialog() { document.getElementById('discardDialogBackdrop').classList.remove('show'); }
+function closeCaptionModal() { discardStaged(); }
+async function sendImageFast(uploadPromise, previewUrl, caption) {
+    const ad = window.mediaUploadAdapter;
+    const pend = ad.addPending ? ad.addPending({ localUrl: previewUrl, text: caption }) : null;
+    try {
+        const uploaded = await uploadPromise;
+        const payload = { image: uploaded.url, text: caption || '' };
+        if (pend) payload.clientId = pend.id;
+        await ad.send(payload);
+        if (pend) pend.sent(); else mu_toast('Sent', 'fa-check');
+    } catch (err) {
+        console.error('Media upload error:', err);
+        if (pend) pend.fail(); else mu_toast('Upload failed — try again', 'fa-triangle-exclamation');
+    }
 }
 async function confirmCaptionSend() {
     if (!pendingCaptionFile) return;
     const caption = window.mediaUploadAdapter.inputEl().value.trim();
     const file = pendingCaptionFile, kind = pendingCaptionKind, hd = capHdMode;
-    const finish = (f, pre) => {
-        document.getElementById('captionOverlay').classList.remove('show');
-        document.getElementById('captionPreviewArea').innerHTML = '';
-        pendingCaptionFile = null; pendingCaptionKind = null; capCanvas = null;
-        exitCaptionMode();
-        uploadAndSendMedia(f, kind, caption, { hd, precompressed: !!pre });
-    };
-    if (kind === 'image' && capCanvas) {
-        const maxDim = hd ? 2560 : 1600, q = hd ? 0.9 : 0.78;
-        let src = capCanvas;
-        const sc = Math.min(1, maxDim / Math.max(src.width, src.height));
-        if (sc < 1) {
-            const c = document.createElement('canvas');
-            c.width = Math.round(src.width * sc); c.height = Math.round(src.height * sc);
-            c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
-            src = c;
-        }
-        src.toBlob((blob) => { finish(blob ? new File([blob], 'photo.jpg', { type: 'image/jpeg' }) : file, !!blob); }, 'image/jpeg', q);
+    const preview = stagedPreviewUrl;
+    if (kind === 'image') {
+        if (!stagedPrep || stagedPrep.hd !== hd) startPrep();
+        const prep = stagedPrep;
+        clearStaged();
+        sendImageFast(prep.promise, preview, caption);
         return;
     }
-    finish(file);
-}
+    clearStaged();
+    uploadAndSendMedia(file, kind, caption, { hd });
+    }
 function toggleHdMode() {
     capHdMode = !capHdMode;
     document.getElementById('hdToggleBtn').classList.toggle('active', capHdMode);
