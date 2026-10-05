@@ -492,9 +492,27 @@
         let pinnedMessageId = null;
         let activeTrayMsgId = null;
 
+        let pendingMedia = [];
+        function addPendingMedia(info) {
+            const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), localUrl: info.localUrl, text: info.text || '', state: 'sending', time: new Date() };
+            pendingMedia.push(p);
+            renderChatFlow();
+            return {
+                id: p.id,
+                sent: () => { if (!groupSlug) removePendingMedia(p.id); else setTimeout(() => removePendingMedia(p.id), 20000); },
+                fail: () => { p.state = 'failed'; renderChatFlow(); }
+            };
+        }
+        function removePendingMedia(id) {
+            const n = pendingMedia.length;
+            pendingMedia = pendingMedia.filter(p => p.id !== id);
+            if (pendingMedia.length !== n) renderChatFlow();
+        }
         function renderChatFlow() {
             const flow = document.getElementById('chat-flow');
             if (!flow) return;
+            const seenIds = new Set(chatMessages.map(x => x.clientId).filter(Boolean));
+            pendingMedia = pendingMedia.filter(p => !seenIds.has(p.id));
             let html = '';
             let lastDay = null;
             let lastSender = null;
@@ -504,6 +522,9 @@
                 const grouped = lastSender === m.from && !m.replyTo && !m.forwarded;
                 html += renderChatMessage(m, grouped);
                 lastSender = m.from;
+            });
+            pendingMedia.forEach(p => {
+                html += renderChatMessage({ id: p.id, from: 'me', image: p.localUrl, text: p.text, time: p.time, reactions: {}, status: 'sending', pendingState: p.state }, false);
             });
             flow.innerHTML = html;
             if (typingIndicatorActive) flow.insertAdjacentHTML('beforeend', typingRowHTML());
@@ -537,10 +558,10 @@
                     <div class="waveform">${[8,16,12,20,10,14,6,18,9].map(h => `<bar style="height:${h}px"></bar>`).join('')}</div>
                     <span class="speed-btn" onclick="this.textContent = this.textContent==='1x' ? '1.5x' : this.textContent==='1.5x' ? '2x' : '1x'">1x</span>
                 </div>` : '';
-            const imgHtml = m.image ? `<img src="${m.image}" style="width:100%; max-width:230px; border-radius:10px; margin-top:4px; display:block; cursor:pointer;" onclick="showToast('Opening full-size photo...', 'fa-image')">` : '';
+            const imgHtml = m.image ? `<div style="position:relative; width:230px; max-width:100%; aspect-ratio:4/5; margin-top:4px; border-radius:10px; overflow:hidden; background:#0b1220;"><img src="${m.image}" style="width:100%; height:100%; object-fit:cover; display:block; cursor:pointer;" ${m.pendingState === 'failed' ? `onclick="removePendingMedia('${m.id}')"` : `onclick="showToast('Opening full-size photo...', 'fa-image')"`}>${m.pendingState === 'sending' ? '<div class="media-sending"><div class="media-spinner"></div></div>' : ''}${m.pendingState === 'failed' ? '<div class="media-sending media-failed">Failed — tap to remove</div>' : ''}</div>` : '';
             const safetyHtml = detectLinkSafety(m.text);
             const starFlag = m.starred ? `<i class="fa-solid fa-star msg-star-flag"></i>` : '';
-            const ticks = isOut ? `<span class="msg-ticks ${m.status === 'read' ? 'read' : ''}"><i class="fa-solid fa-check-double"></i></span>` : '';
+            const ticks = isOut ? (m.status === 'sending' ? `<span class="msg-ticks"><i class="fa-regular fa-clock"></i></span>` : `<span class="msg-ticks ${m.status === 'read' ? 'read' : ''}"><i class="fa-solid fa-check-double"></i></span>`) : '';
 
             const headerHtml = (!isOut && !grouped) ? `
                 <div class="msg-header">
@@ -803,6 +824,7 @@
                         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(data.senderUsername || 'user'),
                         text: data.text || '',
                         image: data.image || null,
+                        clientId: data.clientId || null,
                         time: data.timestamp && data.timestamp.toDate ? data.timestamp.toDate() : new Date(),
                         reactions: {},
                         starred: false,
@@ -1689,7 +1711,8 @@
                     inputEl: () => document.getElementById('dockInput'),
                     roomId: () => groupSlug || 'group',
                     recipientLabel: () => (groupData && groupData.name) || 'Group',
-                    send: (payload) => pushOutgoingMessage(payload)
+                    send: (payload) => (groupSlug ? sendRealGroupMessage(payload) : Promise.resolve(pushOutgoingMessage(payload))),
+                    addPending: (info) => addPendingMedia(info)
                 };
                 if (typeof initMediaUpload === 'function') initMediaUpload();
                 else showToast('Photo module did not load', 'fa-triangle-exclamation');
