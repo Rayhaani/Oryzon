@@ -814,6 +814,7 @@
             }, err => console.error('group messages listener error:', err));
         }
         function sendDockMessage() {
+           if (typeof captionModeActive !== 'undefined' && captionModeActive) { confirmCaptionSend(); return; }
             const input = document.getElementById('dockInput');
             const text = input.value.trim();
             if (!text) return;
@@ -822,7 +823,7 @@
             handleDockInput(input);
             document.getElementById('smartSuggestChip').style.display = 'none';
         }
-        if (typeof captionModeActive !== 'undefined' && captionModeActive) { confirmCaptionSend(); return; }
+        
         // ---- HIGH-IMPACT: in-chat Escrow payment ----
         function openPaySheet() {
             const sel = document.getElementById('payRecipient');
