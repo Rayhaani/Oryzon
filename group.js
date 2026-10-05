@@ -576,7 +576,7 @@
                     ${starFlag}
                     ${headerHtml}
                     <div class="msg-body">
-                        ${fwdHtml}${replyHtml}${escapeHtml(m.text || '')}${voiceHtml}${imgHtml}${safetyHtml}
+                     ${fwdHtml}${replyHtml}${m.image ? voiceHtml + imgHtml + (m.text ? `<div style="margin-top:6px;">${escapeHtml(m.text)}</div>` : '') : escapeHtml(m.text || '') + voiceHtml}${safetyHtml}
                         <span class="msg-time-inline">${fmtClockTime(m.time)}${ticks}</span>
                     </div>
                     ${reactionsHtml}
