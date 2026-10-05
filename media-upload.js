@@ -140,6 +140,7 @@ async function uploadAndSendMedia(file, kind, caption, options) {
         else if (kind === 'video') uploadFile = await compressVideoFile(uploadFile, () => {}, hdMode);
         const uploaded = await xhrUploadFile(uploadFile, ad.roomId(), () => {});
         const payload = kind === 'video' ? { video: uploaded.url, text: caption || '' } : { image: uploaded.url, text: caption || '' };
+        if (options.viewOnce) payload.viewOnce = true;
         if (pend) payload.clientId = pend.id;
         await ad.send(payload);
         if (pend) pend.sent(); else mu_toast('Sent', 'fa-check');
@@ -152,7 +153,10 @@ let pendingCaptionFile = null, pendingCaptionKind = null, captionModeActive = fa
 let capCanvas = null, capRotation = 0, capHdMode = false;
 let capVideoEl = null, capCropMode = false, capVideoCrop = null, capDrawMode = false;
 function openCaptionModal(file, kind) { stageMedia(file, kind); }
-let stagedPreviewUrl = null, stagedPrep = null, prepToken = 0;
+let stagedPreviewUrl = null, stagedPrep = null, prepToken = 0, viewOnceOn = false;
+let voiceRec = null, voiceStream = null, voiceChunks = [], voiceHoldTimer = null, voicePressing = false, voiceActive = false, voiceReleaseAt = 0;
+const VO_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9.5" stroke-dasharray="3 3"/><text x="12" y="16.2" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor" stroke="none">1</text></svg>';
+const MIC_SVG = '<svg class="ico-mic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2.4"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
 function canvasPreview(cv, max) {
     const sc = Math.min(1, max / Math.max(cv.width, cv.height));
     const c = document.createElement('canvas');
@@ -191,9 +195,18 @@ function startPrep() {
     stagedPrep = { token: prepToken, hd: hd, promise: p };
 }
 function ensureStagedChip() {
+    const pill = window.mediaUploadAdapter.inputEl().closest('.composer-msg-pill');
+    const st = document.getElementById('sendTrigger');
+    if (st && !st.querySelector('.ico-mic')) st.insertAdjacentHTML('beforeend', MIC_SVG);
+    if (!document.getElementById('viewOnceBtn')) {
+        const vo = document.createElement('div');
+        vo.id = 'viewOnceBtn';
+        vo.innerHTML = VO_SVG;
+        vo.addEventListener('click', toggleViewOnce);
+        pill.insertBefore(vo, st);
+    }
     let chip = document.getElementById('stagedChip');
     if (chip) return chip;
-    const pill = window.mediaUploadAdapter.inputEl().closest('.composer-msg-pill');
     chip = document.createElement('div');
     chip.id = 'stagedChip';
     chip.innerHTML = '<div class="staged-thumb"></div><i class="fa-solid fa-pen staged-pen"></i><span class="staged-x"><i class="fa-solid fa-xmark"></i></span>';
@@ -201,6 +214,23 @@ function ensureStagedChip() {
     chip.querySelector('.staged-x').addEventListener('click', (e) => { e.stopPropagation(); discardStaged(); });
     pill.insertBefore(chip, pill.firstChild);
     return chip;
+}
+function toggleViewOnce() {
+    viewOnceOn = !viewOnceOn;
+    const b = document.getElementById('viewOnceBtn');
+    if (b) b.classList.toggle('on', viewOnceOn);
+    mu_toast(viewOnceOn ? 'View once: on' : 'View once: off', 'fa-eye');
+}
+function syncStagedUi() {
+    const pill = window.mediaUploadAdapter.inputEl().closest('.composer-msg-pill');
+    if (!pill || !pill.classList.contains('staged')) return;
+    pill.classList.toggle('has-text', window.mediaUploadAdapter.inputEl().value.trim().length > 0);
+    pill.classList.toggle('staged-video', pendingCaptionKind === 'video');
+}
+function stagedMicMode() {
+    const pill = window.mediaUploadAdapter.inputEl().closest('.composer-msg-pill');
+    return !!pill && pill.classList.contains('staged') && !pill.classList.contains('has-text') && !pill.classList.contains('staged-video')
+        && !document.getElementById('captionOverlay').classList.contains('show');
 }
 function setChipThumb() {
     const chip = ensureStagedChip();
@@ -221,7 +251,10 @@ function stageMedia(file, kind) {
     msgInput.placeholder = 'Add a caption…';
     msgInput.dispatchEvent(new Event('input', { bubbles: true }));
     captionModeActive = true;
+    viewOnceOn = false;
     setChipThumb();
+    const vb = document.getElementById('viewOnceBtn'); if (vb) vb.classList.remove('on');
+    syncStagedUi();
     startPrep();
 }
 function openEditorOverlay() {
@@ -266,13 +299,15 @@ function exitCaptionMode() {
     msgInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 function clearStaged() {
-    prepToken++; stagedPrep = null;
+    prepToken++; stagedPrep = null; viewOnceOn = false;
+    if (voiceActive) endStagedVoice(false);
     if (capCropMode) cleanupAllSubModes();
     document.getElementById('discardDialogBackdrop').classList.remove('show');
     document.getElementById('captionOverlay').classList.remove('show');
     document.getElementById('captionPreviewArea').innerHTML = '';
     const chip = document.getElementById('stagedChip');
-    if (chip) { chip.closest('.composer-msg-pill').classList.remove('staged'); chip.remove(); }
+    if (chip) { chip.closest('.composer-msg-pill').classList.remove('staged', 'has-text', 'staged-video'); chip.remove(); }
+    const vb2 = document.getElementById('viewOnceBtn'); if (vb2) vb2.classList.remove('on');
     pendingCaptionFile = null; pendingCaptionKind = null; capCanvas = null; capVideoEl = null; capCropMode = false;
     exitCaptionMode();
     const gi = document.getElementById('galleryInput'); if (gi) gi.value = '';
@@ -281,12 +316,15 @@ function discardStaged() { clearStaged(); }
 function confirmDiscardPhoto() { closeEditorOverlay(); }
 function hideDiscardDialog() { document.getElementById('discardDialogBackdrop').classList.remove('show'); }
 function closeCaptionModal() { discardStaged(); }
-async function sendImageFast(uploadPromise, previewUrl, caption) {
+async function sendImageFast(uploadPromise, previewUrl, caption, opts) {
+    opts = opts || {};
     const ad = window.mediaUploadAdapter;
-    const pend = ad.addPending ? ad.addPending({ localUrl: previewUrl, text: caption }) : null;
+    const pend = ad.addPending ? ad.addPending({ localUrl: previewUrl, text: caption, viewOnce: !!opts.viewOnce }) : null;
     try {
         const uploaded = await uploadPromise;
         const payload = { image: uploaded.url, text: caption || '' };
+        if (opts.voicePromise) { const v = await opts.voicePromise; payload.voice = { duration: v.duration, url: v.url }; }
+        if (opts.viewOnce) payload.viewOnce = true;
         if (pend) payload.clientId = pend.id;
         await ad.send(payload);
         if (pend) pend.sent(); else mu_toast('Sent', 'fa-check');
@@ -297,19 +335,65 @@ async function sendImageFast(uploadPromise, previewUrl, caption) {
 }
 async function confirmCaptionSend() {
     if (!pendingCaptionFile) return;
+    if (voiceReleaseAt && Date.now() - voiceReleaseAt < 700) return;
     const caption = window.mediaUploadAdapter.inputEl().value.trim();
     const file = pendingCaptionFile, kind = pendingCaptionKind, hd = capHdMode;
-    const preview = stagedPreviewUrl;
+    const preview = stagedPreviewUrl, vo = viewOnceOn;
     if (kind === 'image') {
         if (!stagedPrep || stagedPrep.hd !== hd) startPrep();
         const prep = stagedPrep;
         clearStaged();
-        sendImageFast(prep.promise, preview, caption);
+        sendImageFast(prep.promise, preview, caption, { viewOnce: vo });
         return;
     }
     clearStaged();
-    uploadAndSendMedia(file, kind, caption, { hd });
-    }
+    uploadAndSendMedia(file, kind, caption, { hd, viewOnce: vo });
+}
+async function beginStagedVoice() {
+    if (!stagedMicMode() || voiceActive) return;
+    voiceActive = true;
+    try { voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch (e) { voiceActive = false; mu_toast('Microphone permission needed', 'fa-microphone-slash'); return; }
+    if (!voicePressing) { voiceStream.getTracks().forEach((t) => t.stop()); voiceStream = null; voiceActive = false; return; }
+    const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+    const mime = (window.MediaRecorder && types.find((t) => MediaRecorder.isTypeSupported(t))) || '';
+    try { voiceRec = new MediaRecorder(voiceStream, mime ? { mimeType: mime } : undefined); }
+    catch (e) { voiceStream.getTracks().forEach((t) => t.stop()); voiceStream = null; voiceActive = false; mu_toast('Voice recording not supported here', 'fa-microphone-slash'); return; }
+    voiceChunks = [];
+    voiceRec.ondataavailable = (e) => { if (e.data && e.data.size) voiceChunks.push(e.data); };
+    voiceRec.start();
+    if (typeof startVoiceRecording === 'function') startVoiceRecording();
+}
+function endStagedVoice(send) {
+    clearTimeout(voiceHoldTimer);
+    voicePressing = false;
+    voiceReleaseAt = Date.now();
+    if (!voiceActive || !voiceRec) return;
+    const rec = voiceRec; voiceRec = null;
+    const secs = (typeof recSeconds === 'number') ? recSeconds : 0;
+    const dur = String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0');
+    rec.onstop = () => {
+        if (voiceStream) voiceStream.getTracks().forEach((t) => t.stop());
+        voiceStream = null; voiceActive = false;
+        if (typeof stopVoiceRecording === 'function') stopVoiceRecording(false);
+        if (!send) return;
+        if (secs < 1) { mu_toast('Hold to record, release to send', 'fa-microphone'); return; }
+        sendStagedWithVoice(new Blob(voiceChunks, { type: rec.mimeType || 'audio/webm' }), dur);
+    };
+    try { rec.stop(); } catch (e) { rec.onstop(); }
+}
+function sendStagedWithVoice(blob, dur) {
+    if (!pendingCaptionFile || pendingCaptionKind !== 'image') return;
+    const hd = capHdMode;
+    if (!stagedPrep || stagedPrep.hd !== hd) startPrep();
+    const prep = stagedPrep, preview = stagedPreviewUrl, vo = viewOnceOn;
+    const ext = /mp4/.test(blob.type) ? 'm4a' : 'webm';
+    const voiceP = xhrUploadFile(new File([blob], 'voice.' + ext, { type: blob.type }), window.mediaUploadAdapter.roomId(), () => {})
+        .then((r) => ({ url: r.url, duration: dur }));
+    voiceP.catch(() => {});
+    clearStaged();
+    sendImageFast(prep.promise, preview, '', { voicePromise: voiceP, viewOnce: vo });
+}
 function toggleHdMode() {
     capHdMode = !capHdMode;
     document.getElementById('hdToggleBtn').classList.toggle('active', capHdMode);
@@ -555,7 +639,7 @@ function initMediaUpload() {
     const _dock = document.querySelector('.dock-container');
     if (_ov && _dock && _dock.contains(_ov)) _dock.parentNode.insertBefore(_ov, _dock);
     const gi = document.getElementById('galleryInput');
-if (gi && !gi.dataset.wired) {
+    if (gi && !gi.dataset.wired) {
         gi.dataset.wired = '1';
         gi.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -563,4 +647,30 @@ if (gi && !gi.dataset.wired) {
             openCaptionModal(file, file.type.startsWith('video/') ? 'video' : 'image');
         });
     }
+    const di = document.getElementById('dockInput');
+    if (di && !di.dataset.muWired) {
+        di.dataset.muWired = '1';
+        di.addEventListener('input', syncStagedUi);
+    }
+    const st = document.getElementById('sendTrigger');
+    if (st && !st.dataset.micWired) {
+        st.dataset.micWired = '1';
+        let sx = 0;
+        st.addEventListener('pointerdown', (e) => {
+            if (!stagedMicMode()) return;
+            voicePressing = true; sx = e.clientX;
+            try { st.setPointerCapture(e.pointerId); } catch (err) {}
+            clearTimeout(voiceHoldTimer);
+            voiceHoldTimer = setTimeout(() => { if (voicePressing) beginStagedVoice(); }, 300);
+        });
+        const up = (e) => {
+            if (!voicePressing) return;
+            if (voiceActive) endStagedVoice(e.type !== 'pointercancel' && !(sx - e.clientX > 80));
+            else { voicePressing = false; clearTimeout(voiceHoldTimer); }
+        };
+        st.addEventListener('pointerup', up);
+        st.addEventListener('pointercancel', up);
+        st.addEventListener('contextmenu', (e) => { if (stagedMicMode() || voiceActive) e.preventDefault(); });
+    }
+                }
 }
