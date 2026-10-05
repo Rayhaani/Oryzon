@@ -259,9 +259,18 @@ function toggleCropMode() {
     if (!mediaEl) return;
     capCropMode = true;
     document.getElementById('cropBtnCap').classList.add('active');
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     enterFullscreenSubMode();
-    buildCropUI(mediaEl);
+    setTimeout(() => { if (capCropMode) buildCropUI(mediaEl); }, 350);
 }
+window.addEventListener('resize', function () {
+    if (!capCropMode) return;
+    clearTimeout(window._capCropResizeT);
+    window._capCropResizeT = setTimeout(function () {
+        const m = capCanvas || capVideoEl;
+        if (m && document.getElementById('cropBox')) buildCropUI(m);
+    }, 150);
+});
 function buildCropUI(mediaEl) {
     const area = document.getElementById('captionPreviewArea');
     const oldBox = document.getElementById('cropBox');
