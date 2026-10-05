@@ -131,17 +131,21 @@ function mu_toast(msg, icon) {
 async function uploadAndSendMedia(file, kind, caption, options) {
     options = options || {};
     const hdMode = !!options.hd;
-    mu_toast('Uploading...', 'fa-cloud-arrow-up');
+    const ad = window.mediaUploadAdapter;
+    const pend = (kind === 'image' && ad.addPending) ? ad.addPending({ localUrl: URL.createObjectURL(file), text: caption || '' }) : null;
+    if (!pend) mu_toast('Uploading...', 'fa-cloud-arrow-up');
     try {
         let uploadFile = file;
-        if (kind === 'image') uploadFile = hdMode ? await compressImageFile(uploadFile, 2560, 0.9) : await compressImageFile(uploadFile);
+        if (kind === 'image') { if (!options.precompressed) uploadFile = hdMode ? await compressImageFile(uploadFile, 2560, 0.9) : await compressImageFile(uploadFile); }
         else if (kind === 'video') uploadFile = await compressVideoFile(uploadFile, () => {}, hdMode);
-        const uploaded = await xhrUploadFile(uploadFile, window.mediaUploadAdapter.roomId(), () => {});
-        window.mediaUploadAdapter.send(kind === 'video' ? { video: uploaded.url, text: caption || '' } : { image: uploaded.url, text: caption || '' });
-        mu_toast('Sent', 'fa-check');
+        const uploaded = await xhrUploadFile(uploadFile, ad.roomId(), () => {});
+        const payload = kind === 'video' ? { video: uploaded.url, text: caption || '' } : { image: uploaded.url, text: caption || '' };
+        if (pend) payload.clientId = pend.id;
+        await ad.send(payload);
+        if (pend) pend.sent(); else mu_toast('Sent', 'fa-check');
     } catch (err) {
         console.error('Media upload error:', err);
-        mu_toast('Upload failed — try again', 'fa-triangle-exclamation');
+        if (pend) pend.fail(); else mu_toast('Upload failed — try again', 'fa-triangle-exclamation');
     }
 }
 let pendingCaptionFile = null, pendingCaptionKind = null, captionModeActive = false, savedDraftText = '';
@@ -199,15 +203,24 @@ async function confirmCaptionSend() {
     if (!pendingCaptionFile) return;
     const caption = window.mediaUploadAdapter.inputEl().value.trim();
     const file = pendingCaptionFile, kind = pendingCaptionKind, hd = capHdMode;
-    const finish = (f) => {
+    const finish = (f, pre) => {
         document.getElementById('captionOverlay').classList.remove('show');
         document.getElementById('captionPreviewArea').innerHTML = '';
         pendingCaptionFile = null; pendingCaptionKind = null; capCanvas = null;
         exitCaptionMode();
-        uploadAndSendMedia(f, kind, caption, { hd });
+        uploadAndSendMedia(f, kind, caption, { hd, precompressed: !!pre });
     };
     if (kind === 'image' && capCanvas) {
-        capCanvas.toBlob((blob) => { finish(blob ? new File([blob], 'photo.jpg', { type: 'image/jpeg' }) : file); }, 'image/jpeg', 0.95);
+        const maxDim = hd ? 2560 : 1600, q = hd ? 0.9 : 0.78;
+        let src = capCanvas;
+        const sc = Math.min(1, maxDim / Math.max(src.width, src.height));
+        if (sc < 1) {
+            const c = document.createElement('canvas');
+            c.width = Math.round(src.width * sc); c.height = Math.round(src.height * sc);
+            c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+            src = c;
+        }
+        src.toBlob((blob) => { finish(blob ? new File([blob], 'photo.jpg', { type: 'image/jpeg' }) : file, !!blob); }, 'image/jpeg', q);
         return;
     }
     finish(file);
@@ -236,11 +249,13 @@ function enterFullscreenSubMode() {
     document.querySelector('.dock-container').style.display = 'none';
     document.getElementById('captionTopBar').style.display = 'none';
     document.getElementById('captionRecipientPill').style.display = 'none';
+    document.getElementById('captionOverlay').classList.add('cropping');
 }
 function exitFullscreenSubMode() {
     document.querySelector('.dock-container').style.display = 'flex';
     document.getElementById('captionTopBar').style.display = 'flex';
     document.getElementById('captionRecipientPill').style.display = 'block';
+    document.getElementById('captionOverlay').classList.remove('cropping');
 }
 function cleanupAllSubModes() {
     const box = document.getElementById('cropBox'); if (box) { if (box._cleanup) box._cleanup(); box.remove(); }
@@ -279,10 +294,11 @@ function buildCropUI(mediaEl) {
     const areaRect = area.getBoundingClientRect();
     const box = document.createElement('div');
     box.id = 'cropBox';
-    const margin = 0;
-    const left = (rect.left - areaRect.left) + rect.width * margin;
-    const top = (rect.top - areaRect.top) + rect.height * margin;
-    const w = rect.width * (1 - margin * 2), h = rect.height * (1 - margin * 2);
+    const RATIO = 4 / 5;
+    let w = rect.width, h = rect.height;
+    if (w / h > RATIO) w = h * RATIO; else h = w / RATIO;
+    const left = (rect.left - areaRect.left) + (rect.width - w) / 2;
+    const top = (rect.top - areaRect.top) + (rect.height - h) / 2;
     box.style.left = left + 'px'; box.style.top = top + 'px';
     box.style.width = w + 'px'; box.style.height = h + 'px';
     box.innerHTML = `<div class="crop-grid"></div>
