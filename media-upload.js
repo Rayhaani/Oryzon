@@ -450,8 +450,11 @@ function downloadCaptionMedia() {
 }
 
 function initMediaUpload() {
+    const _ov = document.getElementById('captionOverlay');
+    const _dock = document.querySelector('.dock-container');
+    if (_ov && _dock && _dock.contains(_ov)) _dock.parentNode.insertBefore(_ov, _dock);
     const gi = document.getElementById('galleryInput');
-    if (gi && !gi.dataset.wired) {
+if (gi && !gi.dataset.wired) {
         gi.dataset.wired = '1';
         gi.addEventListener('change', (e) => {
             const file = e.target.files[0];
