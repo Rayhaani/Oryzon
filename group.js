@@ -713,7 +713,7 @@
             el.style.height = (el.scrollHeight) + 'px';
 
             const suggestChip = document.getElementById('smartSuggestChip');
-
+            if (!suggestChip) return;
             if (el.value.trim().length > 0) {
                 const s = smartSuggestFor(el.value);
                 if (s) { document.getElementById('smartSuggestText').textContent = s; suggestChip.style.display = 'flex'; }
@@ -821,7 +821,7 @@
             pushOutgoingMessage({ text });
             input.value = '';
             handleDockInput(input);
-            document.getElementById('smartSuggestChip').style.display = 'none';
+           const _sc = document.getElementById('smartSuggestChip'); if (_sc) _sc.style.display = 'none'; 
         }
         
         // ---- HIGH-IMPACT: in-chat Escrow payment ----
