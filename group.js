@@ -491,10 +491,35 @@
         let replyTarget = null;
         let pinnedMessageId = null;
         let activeTrayMsgId = null;
-
+        let __voiceAudio = null, __voiceBtn = null;
+        function playVoiceMsg(btn, url) {
+            const PLAY = '<i class="fa-solid fa-play"></i>', PAUSE = '<i class="fa-solid fa-pause"></i>';
+            if (__voiceAudio && __voiceBtn === btn && !__voiceAudio.paused) { __voiceAudio.pause(); btn.innerHTML = PLAY; return; }
+            if (__voiceAudio) { __voiceAudio.pause(); if (__voiceBtn) __voiceBtn.innerHTML = PLAY; }
+            __voiceAudio = new Audio(url); __voiceBtn = btn;
+            btn.innerHTML = PAUSE;
+            __voiceAudio.onended = () => { btn.innerHTML = PLAY; };
+            __voiceAudio.play().catch(() => { btn.innerHTML = PLAY; showToast('Could not play voice message', 'fa-triangle-exclamation'); });
+        }
+        function nxVoOpened(id) { try { return JSON.parse(localStorage.getItem('nx_vo_opened') || '[]').indexOf(id) !== -1; } catch (e) { return false; } }
+        function nxVoMark(id) { try { const a = JSON.parse(localStorage.getItem('nx_vo_opened') || '[]'); if (a.indexOf(id) === -1) { a.push(id); localStorage.setItem('nx_vo_opened', JSON.stringify(a.slice(-300))); } } catch (e) {} }
+        function openViewOnce(id) {
+            const m = chatMessages.find(x => x.id === id);
+            if (!m || !(m.image || m.video) || nxVoOpened(id)) return;
+            nxVoMark(id);
+            if (groupSlug) {
+                try { groupRef().collection('messages').doc(id).update({ viewedBy: FieldValue.arrayUnion(currentUsername) }).catch(e => console.error('view-once mark failed:', e)); } catch (e) {}
+            }
+            const v = document.createElement('div');
+            v.id = 'voViewer';
+            v.innerHTML = `<div class="vo-top"><span class="vo-close" id="voClose"><i class="fa-solid fa-xmark"></i></span><span class="vo-note">View once</span></div>${m.image ? `<img src="${m.image}">` : `<video src="${m.video}" controls autoplay playsinline></video>`}${m.text ? `<div class="vo-cap">${escapeHtml(m.text)}</div>` : ''}`;
+            document.body.appendChild(v);
+            v.querySelector('#voClose').onclick = () => { v.remove(); renderChatFlow(); };
+            renderChatFlow();
+        }
         let pendingMedia = [];
         function addPendingMedia(info) {
-            const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), localUrl: info.localUrl, text: info.text || '', state: 'sending', time: new Date() };
+            const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), localUrl: info.localUrl, text: info.text || '', viewOnce: !!info.viewOnce, state: 'sending', time: new Date() };
             pendingMedia.push(p);
             renderChatFlow();
             return {
@@ -524,7 +549,7 @@
                 lastSender = m.from;
             });
             pendingMedia.forEach(p => {
-                html += renderChatMessage({ id: p.id, from: 'me', image: p.localUrl, text: p.text, time: p.time, reactions: {}, status: 'sending', pendingState: p.state }, false);
+                html += renderChatMessage({ id: p.id, from: 'me', image: p.localUrl, text: p.text, time: p.time, reactions: {}, status: 'sending', pendingState: p.state, viewOnce: p.viewOnce }, false);
             });
             flow.innerHTML = html;
             if (typingIndicatorActive) flow.insertAdjacentHTML('beforeend', typingRowHTML());
@@ -554,11 +579,16 @@
             const fwdHtml = m.forwarded ? `<div class="msg-forwarded-tag"><i class="fa-solid fa-share"></i> Forwarded</div>` : '';
             const voiceHtml = m.voice ? `
                 <div class="voice-card">
-                    <button class="play-btn" onclick="showToast('Playing voice message...', 'fa-play')"><i class="fa-solid fa-play"></i></button>
+                    <button class="play-btn" onclick="${m.voice.url ? `playVoiceMsg(this, '${m.voice.url}')` : `showToast('Playing voice message...', 'fa-play')`}"><i class="fa-solid fa-play"></i></button>
                     <div class="waveform">${[8,16,12,20,10,14,6,18,9].map(h => `<bar style="height:${h}px"></bar>`).join('')}</div>
                     <span class="speed-btn" onclick="this.textContent = this.textContent==='1x' ? '1.5x' : this.textContent==='1.5x' ? '2x' : '1x'">1x</span>
                 </div>` : '';
             const imgHtml = m.image ? `<div style="position:relative; width:230px; max-width:100%; aspect-ratio:4/5; margin-top:4px; border-radius:10px; overflow:hidden; background:#0b1220;"><img src="${m.image}" style="width:100%; height:100%; object-fit:cover; display:block; cursor:pointer;" ${m.pendingState === 'failed' ? `onclick="removePendingMedia('${m.id}')"` : `onclick="showToast('Opening full-size photo...', 'fa-image')"`}>${m.pendingState === 'sending' ? '<div class="media-sending"><div class="media-spinner"></div></div>' : ''}${m.pendingState === 'failed' ? '<div class="media-sending media-failed">Failed — tap to remove</div>' : ''}</div>` : '';
+            const videoHtml = m.video ? `<div style="position:relative; width:230px; max-width:100%; aspect-ratio:4/5; margin-top:4px; border-radius:10px; overflow:hidden; background:#000;"><video src="${m.video}" controls playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover; display:block;"></video></div>` : '';
+            const isVO = !!(m.viewOnce && (m.image || m.video));
+            const voLabel = m.image ? 'Photo' : 'Video';
+            const voDone = isVO && !isOut && (((m.viewedBy || []).indexOf(currentUsername) !== -1) || nxVoOpened(m.id));
+            const voTile = isVO ? `<div class="vo-tile ${(isOut || voDone) ? 'vo-dead' : ''}" ${m.pendingState === 'failed' ? `onclick="removePendingMedia('${m.id}')"` : (!isOut && !voDone ? `onclick="openViewOnce('${m.id}')"` : '')}><span class="vo-ico">1</span><span>${m.pendingState === 'sending' ? 'Sending…' : m.pendingState === 'failed' ? 'Failed — tap to remove' : isOut ? voLabel + ' · View once' : voDone ? 'Opened' : 'Tap to view ' + voLabel.toLowerCase()}</span></div>` : '';
             const safetyHtml = detectLinkSafety(m.text);
             const starFlag = m.starred ? `<i class="fa-solid fa-star msg-star-flag"></i>` : '';
             const ticks = isOut ? (m.status === 'sending' ? `<span class="msg-ticks"><i class="fa-regular fa-clock"></i></span>` : `<span class="msg-ticks ${m.status === 'read' ? 'read' : ''}"><i class="fa-solid fa-check-double"></i></span>`) : '';
@@ -576,7 +606,7 @@
                     ${starFlag}
                     ${headerHtml}
                     <div class="msg-body">
-                     ${fwdHtml}${replyHtml}${m.image ? voiceHtml + imgHtml + (m.text ? `<div style="margin-top:6px;">${escapeHtml(m.text)}</div>` : '') : escapeHtml(m.text || '') + voiceHtml}${safetyHtml}
+                     ${fwdHtml}${replyHtml}${(m.image || m.video) ? voiceHtml + (isVO ? voTile : imgHtml + videoHtml) + (m.text ? `<div style="margin-top:6px;">${escapeHtml(m.text)}</div>` : '') : escapeHtml(m.text || '') + voiceHtml}${safetyHtml}
                         <span class="msg-time-inline">${fmtClockTime(m.time)}${ticks}</span>
                     </div>
                     ${reactionsHtml}
@@ -825,6 +855,10 @@
                         text: data.text || '',
                         image: data.image || null,
                         clientId: data.clientId || null,
+                        video: data.video || null,
+                        voice: data.voice || null,
+                        viewOnce: !!data.viewOnce,
+                        viewedBy: data.viewedBy || [],
                         time: data.timestamp && data.timestamp.toDate ? data.timestamp.toDate() : new Date(),
                         reactions: {},
                         starred: false,
