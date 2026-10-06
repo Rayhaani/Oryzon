@@ -15,6 +15,7 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+try { db.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (e) {}
     const auth = firebase.auth();
 
     const params = new URLSearchParams(window.location.search);
@@ -194,6 +195,15 @@
             return msgs;
         } catch (e) { console.error('Firestore load error', e); return []; }
     }
+async function loadMessagesFromCache() {
+        try {
+            const snap = await db.collection('vendorChats').doc(chatDocId).collection('messages').orderBy('time','desc').limit(40).get({ source: 'cache' });
+            const msgs = [];
+            snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+            msgs.reverse();
+            return msgs;
+        } catch (e) { return []; }
+}
     function localId() { return 'm' + Date.now() + Math.random().toString(36).slice(2,8); }
 
     async function saveMessageToFirestore(m) {
@@ -202,7 +212,7 @@
             // domin idan vendor ya buɗe wannan chat ɗin, myUsername nasa zai zama account
             // ɗin VENDOR, ba na customer ba — merge:true yana kiyaye tsohon customerId
             // idan wannan write ɗin bai kunshi shi ba.
-            const chatMeta = { vendorId, lastActive: Date.now() };
+            const chatMeta = { vendorId, lastActive: Date.now(), lastType: m.type || 'text', lastText: String(m.text || m.caption || '').slice(0, 120) };
             if (!isAdmin) chatMeta.customerId = myUsername;
             await db.collection('vendorChats').doc(chatDocId).set(chatMeta, { merge: true });
             const ref = await db.collection('vendorChats').doc(chatDocId).collection('messages').add(m);
@@ -229,11 +239,18 @@ async function clearChatMessages() {
 }
     async function beginSession() {
         if (params.get('reset') === '1') { await clearChatMessages(); }
-        const [saved] = await Promise.all([loadMessagesFromFirestore(), loadBotStatus()]);
+        const cached = await loadMessagesFromCache();
+        if (cached.length > 0) { renderedMessages = cached; cached.forEach(m => renderMessage(m, false)); }
+        const [fresh] = await Promise.all([loadMessagesFromFirestore(), loadBotStatus()]);
+        const saved = (fresh.length === 0 && cached.length > 0) ? cached : fresh;
         if (saved.length > 0) {
-            renderedMessages = saved;
-            saved.forEach(m => renderMessage(m, false));
-            chatHistory = saved.filter(m => m.type === 'text').map(m => ({ role: m.role === 'mine' ? 'user' : 'assistant', content: m.text }));
+            if (cached.length === 0) { saved.forEach(m => renderMessage(m, false)); }
+            else if (saved.map(m => m.id).join() !== cached.map(m => m.id).join()) {
+                document.getElementById('chat').innerHTML = '';
+                saved.forEach(m => renderMessage(m, false));
+            }
+            renderedMessages = saved;            
+           chatHistory = saved.filter(m => m.type === 'text').map(m => ({ role: m.role === 'mine' ? 'user' : 'assistant', content: m.text }));
         } else {
             const greeting = {
                 role: 'theirs', type: 'text',
