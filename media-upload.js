@@ -672,5 +672,4 @@ function initMediaUpload() {
         st.addEventListener('pointercancel', up);
         st.addEventListener('contextmenu', (e) => { if (stagedMicMode() || voiceActive) e.preventDefault(); });
     }
-                }
 }
