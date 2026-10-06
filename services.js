@@ -10058,7 +10058,8 @@ async function openInboxOverlay() {
     document.getElementById('inbox-overlay').style.display = 'flex';
     const myUsername = localStorage.getItem('nexus_user_session');
     if (!myUsername) { window.location.href = 'login.html'; return; }
-
+npPushOverlay('inbox');
+    inboxChatFrame();
    inboxLoadCache();
     if (inboxIsProviderCache === null) {
         await inboxWaitForAuth();
@@ -10090,7 +10091,7 @@ async function openInboxOverlay() {
 }
 
 function closeInboxOverlay() {
-    document.getElementById('inbox-overlay').style.display = 'none';
+    if (!npCloseOverlay('inbox')) document.getElementById('inbox-overlay').style.display = 'none';
 }
 
 function inboxSwitchMainTab(tab) {
@@ -10165,6 +10166,7 @@ async function loadInboxBuying() {
         }));
         renderInboxList('buying');
         inboxSaveCache();
+       inboxPrefetchChats(inboxBuyingThreads);
     } catch (e) {
         console.error('Inbox buying load error:', e);
         if (!inboxBuyingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Could not load chats. (' + (e.code || e.message || 'error') + ')</div>';
@@ -10199,6 +10201,7 @@ async function loadInboxSelling() {
         }));
         renderInboxList('selling');
         inboxSaveCache();
+       inboxPrefetchChats(inboxSellingThreads);
     } catch (e) {
         console.error('Inbox selling load error:', e);
         if (!inboxSellingThreads.length) container.innerHTML = '<div class="inbox-empty-state">Could not load chats. (' + (e.code || e.message || 'error') + ')</div>';
@@ -10232,9 +10235,10 @@ function renderInboxList(tab) {
         const href = tab === 'buying'
             ? `vendor-chat.html?with=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`
             : `vendor-chat.html?vendorId=${encodeURIComponent(myUsername)}&admin=1&customer=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`;
-        return `
+      const avAttr = tab === 'buying' ? ` onclick="return inboxAvatarTap(event, '${encodeURIComponent(t.otherId)}')"` : '';
+       return `
           <a href="${href}" class="inbox-chat-item" onclick="return inboxOpenChat(this.getAttribute('href'))">
-                ${t.avatarUrl ? `<img src="${t.avatarUrl}" class="inbox-chat-avatar">` : `<div class="inbox-chat-avatar inbox-chat-avatar-empty"></div>`}
+                ${t.avatarUrl ? `<img src="${t.avatarUrl}" class="inbox-chat-avatar"${avAttr}>` : `<div class="inbox-chat-avatar inbox-chat-avatar-empty"${avAttr}></div>`}
                 <div class="inbox-chat-details">  
                      <span class="inbox-chat-name">${t.displayName}</span>
                     <p class="inbox-chat-preview">${preview}</p>
@@ -10282,24 +10286,98 @@ function inboxWaitForAuth() {
     });
 }
 
-let vchatOpen = false;
-function inboxOpenChat(url) {
-    sessionStorage.setItem('vcClickAt', Date.now());
-    const fr = document.getElementById('vchat-frame');
-    const embedUrl = url + (url.indexOf('?') > -1 ? '&' : '?') + 'embed=1';
-    try { fr.contentWindow.location.replace(embedUrl); } catch (e) { fr.src = embedUrl; }
-    document.getElementById('vchat-overlay').style.display = 'block';
-    if (!vchatOpen) { history.pushState({ npOverlay: 'vchat' }, '', ''); vchatOpen = true; }
-    return false;
+const npStack = [];
+function npPushOverlay(name) {
+    if (npStack.indexOf(name) > -1) return;
+    npStack.push(name);
+    window.__npProfileOverlay = true;
+    history.pushState({ npOverlay: name, d: npStack.length }, '', '');
+}
+function npCloseOverlay(name) {
+    if (npStack[npStack.length - 1] !== name) return false;
+    window.__npProfileOverlay = true;
+    history.back();
+    return true;
+}
+function npApplyClose(name) {
+    if (name === 'vchat') {
+        document.getElementById('vchat-overlay').style.display = 'none';
+        try { document.getElementById('vchat-frame').contentWindow.vcClose(); } catch (e) {}
+        if (inboxCurrentMainTab === 'buying') loadInboxBuying();
+        else if (inboxCurrentMainTab === 'selling') loadInboxSelling();
+    } else if (name === 'sf') {
+        document.getElementById('sf-overlay').style.display = 'none';
+        try { document.getElementById('sf-frame').contentWindow.location.replace('about:blank'); } catch (e) {}
+    } else if (name === 'inbox') {
+        document.getElementById('inbox-overlay').style.display = 'none';
+    }
 }
 window.addEventListener('popstate', function () {
-    if (!vchatOpen) return;
-    vchatOpen = false;
-    document.getElementById('vchat-overlay').style.display = 'none';
-    try { document.getElementById('vchat-frame').contentWindow.location.replace('about:blank'); } catch (e) {}
-    if (inboxCurrentMainTab === 'buying') loadInboxBuying();
-    else if (inboxCurrentMainTab === 'selling') loadInboxSelling();
+    const s = history.state;
+    const landed = (s && s.npOverlay && typeof s.d === 'number') ? s.d : 0;
+    while (npStack.length > landed) npApplyClose(npStack.pop());
+    window.__npProfileOverlay = npStack.length > 0;
 });
+
+function inboxChatFrame() {
+    const fr = document.getElementById('vchat-frame');
+    if (fr && !fr.getAttribute('src')) fr.src = 'vendor-chat.html?embed=1&warm=1';
+    return fr;
+}
+function inboxOpenChat(url) {
+    const q = (url.indexOf('?') > -1 ? url.slice(url.indexOf('?')) : '?') + '&embed=1';
+    const fr = inboxChatFrame();
+    const go = function () {
+        try { fr.contentWindow.vcOpen(q); }
+        catch (e) { try { fr.contentWindow.location.replace('vendor-chat.html' + q); } catch (e2) {} }
+    };
+    if (fr.contentWindow && fr.contentWindow.__vcReady) go();
+    else fr.addEventListener('load', go, { once: true });
+    document.getElementById('vchat-overlay').style.display = 'block';
+    npPushOverlay('vchat');
+    return false;
+}
+function inboxPrefetchChats(list) {
+    try {
+        if (navigator.connection && navigator.connection.saveData) return;
+        const fr = document.getElementById('vchat-frame');
+        if (!fr) return;
+        const ids = list.slice(0, 5).map(t => t.chatDocId).filter(Boolean);
+        const run = function () { try { fr.contentWindow.vcPrefetch(ids); } catch (e) {} };
+        if (fr.contentWindow && fr.contentWindow.__vcReady) run();
+        else fr.addEventListener('load', run, { once: true });
+    } catch (e) {}
+}
+function inboxOpenStore(vendorId) {
+    const fr = document.getElementById('sf-frame');
+    const url = 'store-front.html?vendor=' + encodeURIComponent(vendorId) + '&embed=1';
+    try { fr.contentWindow.location.replace(url); } catch (e) { fr.src = url; }
+    document.getElementById('sf-overlay').style.display = 'block';
+    npPushOverlay('sf');
+}
+function inboxOpenProfile(proId) {
+    const ps = document.getElementById('profile-sheet-overlay');
+    if (ps) {
+        ps.style.zIndex = '10650';
+        if (!ps.__npZObs) {
+            ps.__npZObs = new MutationObserver(function () {
+                if (ps.style.display === 'none' && ps.style.zIndex === '10650') ps.style.zIndex = '7500';
+            });
+            ps.__npZObs.observe(ps, { attributes: true, attributeFilter: ['style'] });
+        }
+    }
+    openProfileSheet(proId);
+}
+function inboxAvatarTap(ev, encId) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const id = decodeURIComponent(encId);
+    const pro = PROS.find(p => String(p.id) === id || String(p.realUsername) === id);
+    if (pro) inboxOpenProfile(pro.id);
+    else inboxOpenStore(id);
+    return false;
+}
+window.inboxAvatarTap = inboxAvatarTap;
 function inboxCacheKey() { return 'inboxCache_' + (localStorage.getItem('nexus_user_session') || ''); }
 function inboxSlim(t) {
     const o = Object.assign({}, t);
