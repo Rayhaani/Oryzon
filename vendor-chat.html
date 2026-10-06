@@ -7,12 +7,17 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="vendor-chat.css">
     <script>
-    if (location.search.indexOf('embed=1') > -1) {
-        window.NexusRouter = { navigateTo: function (u) { window.top.location.href = u; }, registerPage: function () {} };
-    } else {
-        document.write('<script src="router.js"><\/script>');
-    }
-    </script>
+    (function () {
+        if (location.search.indexOf('embed=1') === -1) { document.write('<script src="router.js"><\/script>'); return; }
+        window.NexusRouter = {
+            navigateTo: function (u) {
+                try { if (window.parent && window.parent.NexusRouter) { window.parent.NexusRouter.navigateTo(u); return; } } catch (e) {}
+                window.top.location.href = u;
+            },
+            registerPage: function (p, h) { window.__vcHandlers = h; }
+        };
+    })();
+            </script>
 </head>
 <body>
     <div id="page-content">
@@ -112,6 +117,67 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="vendor-chat.js"></script>
+    <script>
+    (function () {
+        if (location.search.indexOf('embed=1') === -1) { document.write('<script src="vendor-chat.js"><\/script>'); return; }
+        var warm = location.search.indexOf('warm=1') > -1;
+        var pristine = document.getElementById('page-content').innerHTML;
+        var code = null;
+        var FN = ['handleMediaSelect','togglePreviewPlayback','togglePauseResume','toggleInputUI','toggleBubbleAudio','toggleBot','startScrub','startBubbleScrub','setMcActive','sendMediaCompose','rotateActiveMedia','pick','openCamera','handleAction','cycleSpeed','ctxShare','ctxReply','ctxEdit','ctxDelete','ctxCopy','closeCtxMenu','cancelRecording','cancelMediaCompose','cancelContextBar'];
+        function fb() {
+            if (!firebase.apps.length) {
+                firebase.initializeApp({
+                    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+                    authDomain: "oryzon-50ea4.firebaseapp.com",
+                    projectId: "oryzon-50ea4",
+                    storageBucket: "oryzon-50ea4.firebasestorage.app",
+                    messagingSenderId: "782106742622",
+                    appId: "1:782106742622:web:902d512bfe42dd4cf289cf"
+                });
+            }
+            var db = firebase.firestore();
+            if (!fb._p) { fb._p = 1; try { db.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (e) {} }
+            return db;
+        }
+        function run() {
+            var selfBoot = document.readyState !== 'complete';
+            var exp = FN.map(function (n) { return 'try{window.' + n + '=' + n + ';}catch(e){}'; }).join('\n');
+            var s = document.createElement('script');
+            s.text = '(function(){\n' + code + '\n' + exp + '\n})();';
+            document.body.appendChild(s);
+            document.body.removeChild(s);
+            if (!selfBoot && window.__vcHandlers && window.__vcHandlers.init) window.__vcHandlers.init();
+        }
+        function start() {
+            if (code !== null) { run(); return; }
+            fetch('vendor-chat.js').then(function (r) { return r.text(); }).then(function (t) { code = t; run(); });
+        }
+        window.vcClose = function () {
+            try { if (window.__vcHandlers && window.__vcHandlers.destroy) window.__vcHandlers.destroy(); } catch (e) {}
+            window.__vcHandlers = null;
+            document.getElementById('page-content').innerHTML = pristine;
+        };
+        window.vcOpen = function (search) {
+            window.vcClose();
+            history.replaceState(null, '', location.pathname + search);
+            start();
+        };
+        window.vcPrefetch = function (ids) {
+            try {
+                var db = fb();
+                (ids || []).forEach(function (id) {
+                    db.collection('vendorChats').doc(id).collection('messages').orderBy('time', 'desc').limit(40).get().catch(function () {});
+                });
+            } catch (e) {}
+        };
+        window.addEventListener('load', function () { window.__vcReady = true; });
+        if (warm) {
+            try { fb(); firebase.auth(); } catch (e) {}
+            fetch('vendor-chat.js').then(function (r) { return r.text(); }).then(function (t) { code = t; });
+        } else {
+            start();
+        }
+    })();
+    </script>
 </body>
 </html>
