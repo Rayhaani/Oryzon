@@ -858,6 +858,7 @@ let unsubscribeStatuses = null;
 ['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js','firebase-storage-compat.js'].forEach((f, i) => {
     const s = document.createElement('script');
     s.src = `https://www.gstatic.com/firebasejs/9.22.0/${f}`;
+    s.async = false;
     if (i === 3) s.onload = onFirebaseReady;
     document.head.appendChild(s);
 });
@@ -1557,7 +1558,17 @@ function timeAgo(ts) {
 // a lokacin da onSnapshot ke sabuntawa, don haka nan take kuma zata cire ta kanta.
 function refreshStatusTimers() { renderActiveUpdatesView(); }
 setInterval(refreshStatusTimers, 60000);
-
+try { rebuildStoryGroups(); } catch (e) {}
+if (document.documentElement.classList.contains('embed')) {
+    const __ovIds = ['globalGlassOverlay','composePreviewOverlay','myStatusListOverlay','viewersSheetOverlay','ctxMenuOverlay','slideDropdownCatcher'];
+    let __ovLast = null;
+    const __ovCheck = () => {
+        const on = __ovIds.some(id => { const el = document.getElementById(id); return el && el.classList.contains('active'); });
+        if (on !== __ovLast) { __ovLast = on; window.parent.postMessage({ type: 'np-updates-fullscreen', on: on }, location.origin); }
+    };
+    const __ovMo = new MutationObserver(__ovCheck);
+    __ovIds.forEach(id => { const el = document.getElementById(id); if (el) __ovMo.observe(el, { attributes: true, attributeFilter: ['class'] }); });
+}
 </script>
 </body>
 </html>
