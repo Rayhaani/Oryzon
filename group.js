@@ -198,64 +198,89 @@
             return (n || 0).toString();
         }
 
+       // ---- Offline cache: show the last known group + messages instantly, then refresh from Firestore ----
+        const NX_BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+        function nxCacheKey(kind) { return 'nx_grp_' + kind + '_' + groupSlug; }
+        function nxCachePut(kind, val) { try { localStorage.setItem(nxCacheKey(kind), JSON.stringify(val)); } catch (e) {} }
+        function nxCacheGet(kind) { try { return JSON.parse(localStorage.getItem(nxCacheKey(kind)) || 'null'); } catch (e) { return null; } }
+        function nxSetAvatar(img, url) {
+            if (!img) return;
+            img.alt = '';
+            img.classList.toggle('avatar-empty', !url);
+            img.src = url || NX_BLANK_IMG;
+        }
+        function nxRenderCachedMessages() {
+            const cm = nxCacheGet('m');
+            if (!cm || !cm.length) return;
+            chatMessages = cm.map(m => ({ ...m, time: new Date(m.time) }));
+            renderChatFlow();
+        }
+        function nxApplyGroup(gd) {
+            groupData = gd;
+            isGroupAdmin = !!(currentUsername && (groupData.creatorUsername === currentUsername || (groupData.adminUsernames || []).includes(currentUsername)));
+
+            const name = groupData.name;
+            const memberLabel = formatMemberCount(groupData.memberCount || 0) + ' members';
+            document.getElementById('groupTitleChat').textContent = name;
+            document.getElementById('groupSubtitleChat').textContent = '● ' + memberLabel;
+            document.getElementById('groupTitleFeed').textContent = name;
+            document.getElementById('groupNameFeed').textContent = name;
+            document.getElementById('groupMetaFeed').textContent = (groupData.privacy === 'private' ? 'Private group' : 'Public group') + ' · ' + memberLabel;
+            document.getElementById('giGroupNameLabel').textContent = name;
+            document.getElementById('giMetaText').textContent = memberLabel;
+            nxSetAvatar(document.getElementById('groupAvatarChat'), groupData.avatarUrl);
+            nxSetAvatar(document.getElementById('giAvatarImg'), groupData.avatarUrl);
+            if (groupData.coverUrl) document.getElementById('groupCoverFeed').src = groupData.coverUrl;
+
+            document.documentElement.classList.remove('gi-loading');
+            updateFeedHeaderState();
+
+            if (!groupFeedLoaded) { renderFeedPosts(); groupFeedLoaded = true; }
+            loadRealChatMessages();
+        }
+
        async function initRealGroup() {
             if (!groupSlug) return; // no ?group= — keep the built-in demo content as local preview
 
-            // Fara sauraren group doc NAN TAKE — karanta group baya bukatar
-            // auth (Firestore rule: allow read: if true), don haka ainihin
-            // suna/hoto/adadin members baya bukatar jiran auth + auto-join
-            // check da ke kasa. Wannan shi ne ke cire delay din daƙiƙa da yawa
-            // kafin sunan ya bayyana.
-            groupUnsub = groupRef().onSnapshot(doc => { 
+            // No stock photo while the real group's avatar is still unknown.
+            nxSetAvatar(document.getElementById('groupAvatarChat'), '');
+            nxSetAvatar(document.getElementById('giAvatarImg'), '');
+
+            // Last known group + messages first (works offline, no blank page).
+            const cachedGroup = nxCacheGet('g');
+            if (cachedGroup) { nxRenderCachedMessages(); nxApplyGroup(cachedGroup); }
+
+            groupUnsub = groupRef().onSnapshot(doc => {
                 if (!doc.exists) {
+                    // From cache = we are offline / not sure yet. Only a server answer means "really missing".
+                    if (doc.metadata && doc.metadata.fromCache) { document.documentElement.classList.remove('gi-loading'); return; }
+                    document.documentElement.classList.remove('gi-loading');
                     showToast('This group doesn\'t exist yet', 'fa-triangle-exclamation');
                     return;
                 }
-                groupData = doc.data();
-                isGroupAdmin = !!(currentUsername && (groupData.creatorUsername === currentUsername || (groupData.adminUsernames || []).includes(currentUsername)));
-
-                const name = groupData.name;
-                const memberLabel = formatMemberCount(groupData.memberCount || 0) + ' members';
-                document.getElementById('groupTitleChat').textContent = name;
-                document.getElementById('groupSubtitleChat').textContent = '● ' + memberLabel;
-                document.getElementById('groupTitleFeed').textContent = name;
-                document.getElementById('groupNameFeed').textContent = name;
-                document.getElementById('groupMetaFeed').textContent = (groupData.privacy === 'private' ? 'Private group' : 'Public group') + ' · ' + memberLabel;
-                document.getElementById('giGroupNameLabel').textContent = name;
-                document.getElementById('giMetaText').textContent = memberLabel;
-                if (groupData.avatarUrl) {
-                    document.getElementById('groupAvatarChat').src = groupData.avatarUrl;
-                    document.getElementById('giAvatarImg').src = groupData.avatarUrl;
-                }
-               if (groupData.coverUrl) document.getElementById('groupCoverFeed').src = groupData.coverUrl;
-
+                const gd = doc.data();
+                nxCachePut('g', { name: gd.name, memberCount: gd.memberCount || 0, privacy: gd.privacy || 'public', avatarUrl: gd.avatarUrl || '', coverUrl: gd.coverUrl || '', creatorUsername: gd.creatorUsername || '', adminUsernames: gd.adminUsernames || [] });
+                nxApplyGroup(gd);
+            }, err => {
+                console.error('group listener error:', err);
                 document.documentElement.classList.remove('gi-loading');
-                updateFeedHeaderState();
+                showToast('No connection — showing saved chats', 'fa-wifi');
+            });
 
-                if (!groupFeedLoaded) { renderFeedPosts(); groupFeedLoaded = true; }
-                loadRealChatMessages();
-            }, err => console.error('group listener error:', err));
-
-            // Auto-join: viewing a real group makes you a member (matches the
-            // "Public Group" privacy option from group-create.html). Private
-            // groups / approval requests are not built yet. Wannan yana gudana
-            // a daban, baya toshe display na sunan group.
-            const authUser = await authReadyPromise;
-            if (!authUser) return;
-
-            const memberRef = groupRef().collection('members').doc(currentUsername);
-            const memberSnap = await memberRef.get();
-            if (!memberSnap.exists) {
-                await memberRef.set({ joinedAt: FieldValue.serverTimestamp(), role: 'member' });
-                // Fan-out: rubuta index a KANSA (users/{me}/myGroups/{groupId}) —
-                // wannan shine kadai abinda chats.html zai karanta domin jera
-                // "my groups", don haka babu bukatar wata collectionGroup query
-                // mai bude membership na DUK groups a database.
-                await db.collection('users').doc(currentUsername).collection('myGroups').doc(groupSlug)
-                    .set({ joinedAt: FieldValue.serverTimestamp() });
-                await groupRef().update({ memberCount: FieldValue.increment(1) }).catch(() => {});
-            }
-       } 
+            // Auto-join: viewing a real group makes you a member. Runs separately, never blocks the display.
+            try {
+                const authUser = await authReadyPromise;
+                if (!authUser) return;
+                const memberRef = groupRef().collection('members').doc(currentUsername);
+                const memberSnap = await memberRef.get();
+                if (!memberSnap.exists) {
+                    await memberRef.set({ joinedAt: FieldValue.serverTimestamp(), role: 'member' });
+                    await db.collection('users').doc(currentUsername).collection('myGroups').doc(groupSlug)
+                        .set({ joinedAt: FieldValue.serverTimestamp() });
+                    await groupRef().update({ memberCount: FieldValue.increment(1) }).catch(() => {});
+                }
+            } catch (e) { console.warn('auto-join skipped (offline?):', e && e.message); }
+       }
 
         // ============================================================
         // 0. UTILITIES
@@ -533,7 +558,7 @@
             pendingMedia = pendingMedia.filter(p => p.id !== id);
             if (pendingMedia.length !== n) renderChatFlow();
         }
-        function renderChatFlow() {
+      function renderChatFlow() {
             const flow = document.getElementById('chat-flow');
             if (!flow) return;
             const seenIds = new Set(chatMessages.map(x => x.clientId).filter(Boolean));
@@ -541,21 +566,24 @@
             let html = '';
             let lastDay = null;
             let lastSender = null;
-            chatMessages.forEach(m => {
+            chatMessages.forEach((m, i) => {
                 const dayLbl = fmtDayLabel(m.time);
                 if (dayLbl !== lastDay) { html += `<div class="day-divider"><span>${dayLbl}</span></div>`; lastDay = dayLbl; lastSender = null; }
                 const grouped = lastSender === m.from && !m.replyTo && !m.forwarded;
-                html += renderChatMessage(m, grouped);
+                const nx = chatMessages[i + 1];
+                const nextGrouped = !!nx && nx.from === m.from && !nx.replyTo && !nx.forwarded && fmtDayLabel(nx.time) === dayLbl;
+                const pos = grouped ? (nextGrouped ? 'middle' : 'last') : (nextGrouped ? 'first' : 'single');
+                html += renderChatMessage(m, grouped, pos);
                 lastSender = m.from;
             });
             pendingMedia.forEach(p => {
-                html += renderChatMessage({ id: p.id, from: 'me', image: p.localUrl, text: p.text, time: p.time, reactions: {}, status: 'sending', pendingState: p.state, viewOnce: p.viewOnce }, false);
+                html += renderChatMessage({ id: p.id, from: 'me', image: p.localUrl, text: p.text, time: p.time, reactions: {}, status: 'sending', pendingState: p.state, viewOnce: p.viewOnce }, false, 'single');
             });
             flow.innerHTML = html;
             if (typingIndicatorActive) flow.insertAdjacentHTML('beforeend', typingRowHTML());
             flow.scrollTop = flow.scrollHeight;
             renderPinnedBar();
-        }
+      }  
 
         function detectLinkSafety(text) {
             if (!text) return '';
@@ -567,7 +595,7 @@
                 : `<div class="msg-safety-badge"><i class="fa-solid fa-shield-halved"></i> Link scanned — looks safe</div>`;
         }
 
-        function renderChatMessage(m, grouped) {
+        function renderChatMessage(m, grouped, pos) {
             const isOut = m.from === 'me';
             const reactionsHtml = Object.keys(m.reactions || {}).length
                 ? `<div class="msg-reactions">${Object.entries(m.reactions).map(([e,c]) => `<span class="msg-reaction-pill">${e} ${c}</span>`).join('')}</div>` : '';
@@ -600,8 +628,8 @@
                 </div>` : '';
 
             return `
-            <div class="msg-row ${isOut ? 'outgoing' : 'incoming'} ${grouped ? 'grouped-follow' : ''}" data-id="${m.id}" style="position:relative;" onmousedown="pressStart('${m.id}')" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchstart="pressStart('${m.id}')" ontouchend="pressEnd()">
-                ${!isOut ? `<img class="msg-avatar" src="${m.avatar}" alt="${m.name}">` : ''}
+            <div class="msg-row ${isOut ? 'outgoing' : 'incoming'} ${grouped ? 'grouped-follow' : ''}" pos-${pos || 'single'} data-id="${m.id}" style="position:relative;" onmousedown="pressStart('${m.id}')" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchstart="pressStart('${m.id}')" ontouchend="pressEnd()">
+               ${!isOut ? (m.avatar ? `<img class="msg-avatar" src="${m.avatar}" alt="">` : `<span class="msg-avatar msg-avatar-empty"></span>`) : ''}
                 <div class="msg-card">
                     ${starFlag}
                     ${headerHtml}
@@ -642,7 +670,13 @@
             const m = chatMessages.find(x => x.id === id);
             if (!m) return;
             m.reactions = m.reactions || {};
-            m.reactions[emoji] = (m.reactions[emoji] || 0) + 1;
+            const prev = m.myReaction;
+            if (prev) {
+                m.reactions[prev] = (m.reactions[prev] || 1) - 1;
+                if (m.reactions[prev] <= 0) delete m.reactions[prev];
+            }
+            if (prev === emoji) { m.myReaction = null; }
+            else { m.reactions[emoji] = (m.reactions[emoji] || 0) + 1; m.myReaction = emoji; }
             closeMsgTray();
             renderChatFlow();
         }
@@ -684,9 +718,8 @@
         function trayPin() {
             const id = activeTrayMsgId;
             closeMsgTray();
-            pinnedMessageId = (pinnedMessageId === id) ? null : id;
-            renderChatFlow();
-            showToast(pinnedMessageId ? 'Message pinned' : 'Unpinned', 'fa-thumbtack');
+            if (pinnedMessageId === id) { nxDoUnpin(); return; }
+            openPinDialog(id);
         }
         function trayDelete() {
             const id = activeTrayMsgId;
@@ -696,8 +729,10 @@
             renderChatFlow();
             showToast('Message deleted', 'fa-trash');
         }
+        let pinExpiresAt = 0, pinChosenMs = 604800000, pinTargetId = null;
         function renderPinnedBar() {
             const bar = document.getElementById('pinnedBar');
+            if (pinnedMessageId && pinExpiresAt && Date.now() > pinExpiresAt) { pinnedMessageId = null; pinExpiresAt = 0; }
             if (!pinnedMessageId) { bar.classList.remove('active'); return; }
             const m = chatMessages.find(x => x.id === pinnedMessageId);
             if (!m) { bar.classList.remove('active'); return; }
@@ -710,8 +745,72 @@
             const row = document.querySelector(`.msg-row[data-id="${pinnedMessageId}"]`);
             if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        function unpinMessage() { pinnedMessageId = null; renderPinnedBar(); }
-
+        function nxDoUnpin() {
+            pinnedMessageId = null; pinExpiresAt = 0;
+            renderChatFlow();
+            showToast('Message unpinned', 'fa-circle-check');
+        }
+        function unpinMessage() { nxDoUnpin(); }
+        function nxEnsurePinUi() {
+            const host = document.getElementById('msgActionTray').parentElement;
+            if (!document.getElementById('pinDlgBackdrop')) {
+                host.insertAdjacentHTML('beforeend', `
+                <div id="pinDlgBackdrop"><div class="pin-dlg">
+                    <div class="pin-dlg-title">Choose how long your pin lasts</div>
+                    <div class="pin-dlg-sub">You can unpin at any time.</div>
+                    <div class="pin-opt" data-ms="86400000"><span class="pin-radio"></span><span>24 hours</span></div>
+                    <div class="pin-opt on" data-ms="604800000"><span class="pin-radio"></span><span>7 days</span></div>
+                    <div class="pin-opt" data-ms="2592000000"><span class="pin-radio"></span><span>30 days</span></div>
+                    <div class="pin-dlg-actions"><span id="pinDlgCancel">Cancel</span><span id="pinDlgOk">Pin</span></div>
+                </div></div>
+                <div class="dots-menu-backdrop" id="pinMenuBackdrop"></div>
+                <div class="dots-dropdown-menu" id="pinMenu">
+                    <div class="dots-menu-item" id="pinMenuUnpin">Unpin</div>
+                    <div class="dots-menu-item" id="pinMenuGo">Go to message</div>
+                </div>`);
+                const bd = document.getElementById('pinDlgBackdrop');
+                bd.addEventListener('click', (e) => { if (e.target === bd) closePinDialog(); });
+                bd.querySelectorAll('.pin-opt').forEach(o => o.addEventListener('click', () => {
+                    bd.querySelectorAll('.pin-opt').forEach(x => x.classList.remove('on'));
+                    o.classList.add('on'); pinChosenMs = +o.dataset.ms;
+                }));
+                document.getElementById('pinDlgCancel').addEventListener('click', closePinDialog);
+                document.getElementById('pinDlgOk').addEventListener('click', confirmPin);
+                document.getElementById('pinMenuBackdrop').addEventListener('click', closePinMenu);
+                document.getElementById('pinMenuUnpin').addEventListener('click', () => { closePinMenu(); nxDoUnpin(); });
+                document.getElementById('pinMenuGo').addEventListener('click', () => { closePinMenu(); scrollToPinned(); });
+            }
+            const bar = document.getElementById('pinnedBar');
+            if (bar) bar.onclick = openPinMenu;
+        }
+        function openPinDialog(id) {
+            nxEnsurePinUi();
+            pinTargetId = id; pinChosenMs = 604800000;
+            const bd = document.getElementById('pinDlgBackdrop');
+            bd.querySelectorAll('.pin-opt').forEach(x => x.classList.toggle('on', +x.dataset.ms === pinChosenMs));
+            bd.classList.add('active');
+        }
+        function closePinDialog() { const bd = document.getElementById('pinDlgBackdrop'); if (bd) bd.classList.remove('active'); }
+        function confirmPin() {
+            const label = { 86400000: '24 hours', 604800000: '7 days', 2592000000: '30 days' }[pinChosenMs] || '7 days';
+            pinnedMessageId = pinTargetId; pinExpiresAt = Date.now() + pinChosenMs;
+            closePinDialog();
+            renderChatFlow();
+            showToast('Message pinned for ' + label, 'fa-circle-check');
+        }
+        function openPinMenu() {
+            if (!pinnedMessageId) return;
+            nxEnsurePinUi();
+            const bar = document.getElementById('pinnedBar');
+            const menu = document.getElementById('pinMenu');
+            menu.style.top = (bar.getBoundingClientRect().bottom + 6) + 'px';
+            menu.classList.add('active');
+            document.getElementById('pinMenuBackdrop').classList.add('active');
+        }
+        function closePinMenu() {
+            document.getElementById('pinMenu').classList.remove('active');
+            document.getElementById('pinMenuBackdrop').classList.remove('active');
+        }
         let typingIndicatorActive = false;
         function typingRowHTML() {
             return `<div class="typing-row" id="typingRow"><div class="typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
@@ -842,7 +941,8 @@
         function loadRealChatMessages() {
             if (groupMessagesUnsub) return; // already listening
             groupMessagesUnsub = groupRef().collection('messages').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
-                chatMessages = snapshot.docs.map(d => {
+               if (snapshot.metadata && snapshot.metadata.fromCache && snapshot.empty) return; // offline: keep what is on screen
+               chatMessages = snapshot.docs.map(d => {
                     const data = d.data();
                     return {
                         id: d.id,
@@ -851,7 +951,7 @@
                         role: (groupData && groupData.creatorUsername === data.senderUsername) ? 'Owner' : 'Member',
                         roleClass: 'role-member',
                         verified: false,
-                        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(data.senderUsername || 'user'),
+                        avatar: data.senderAvatar || '',
                         text: data.text || '',
                         image: data.image || null,
                         clientId: data.clientId || null,
@@ -866,6 +966,7 @@
                         status: 'read'
                     };
                 });
+                nxCachePut('m', chatMessages.slice(-80).map(m => ({ ...m, time: +m.time })));
                 renderChatFlow();
             }, err => console.error('group messages listener error:', err));
         }
@@ -1758,6 +1859,14 @@
             s.onerror = ready;
             document.body.appendChild(s);
         }
+       function nxPatchUi() {
+            const rb = document.getElementById('rotateBtnCap');
+            if (rb && !rb.dataset.svg) {
+                rb.dataset.svg = '1';
+                rb.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7.47 21.49C4.2 19.93 1.86 16.76 1.5 13H0c.51 6.16 5.66 11 11.95 11 .23 0 .44-.02.66-.03L8.8 20.15l-1.33 1.34zM12.05 0c-.23 0-.44.02-.66.04l3.81 3.81 1.33-1.33C19.8 4.07 22.14 7.24 22.5 11H24c-.51-6.16-5.66-11-11.95-11zM16 14h2V8c0-1.11-.9-2-2-2h-6v2h6v6zm-8 2V4H6v2H4v2h2v8c0 1.1.89 2 2 2h8v2h2v-2h2v-2H8z"/></svg>';
+            }
+            nxEnsurePinUi();
+                }
         function initPage() {
             // Re-derive per-navigation identity fresh every time.
             currentUsername = localStorage.getItem('nexus_user_session');
@@ -1771,6 +1880,7 @@
             nxInitTimers.push(setTimeout(updateFeedHeaderState, 900));
             nxInitTimers.push(setTimeout(() => nxDiagnoseScroll('after-init'), 1500));
             nxPrepareNeuralMenu();
+            nxPatchUi();
 
             authReadyPromise = new Promise(resolve => { authReadyResolve = resolve; });
             auth.onAuthStateChanged(user => { authReadyResolve(user); });
