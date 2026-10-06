@@ -215,11 +215,17 @@ function ensureStagedChip() {
     pill.insertBefore(chip, pill.firstChild);
     return chip;
 }
+function mu_centerToast(msg) {
+    let t = document.getElementById('muCenterToast');
+    if (!t) { t = document.createElement('div'); t.id = 'muCenterToast'; document.body.appendChild(t); }
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 1600);
+}
 function toggleViewOnce() {
     viewOnceOn = !viewOnceOn;
     const b = document.getElementById('viewOnceBtn');
     if (b) b.classList.toggle('on', viewOnceOn);
-    mu_toast(viewOnceOn ? 'View once: on' : 'View once: off', 'fa-eye');
+    mu_centerToast(viewOnceOn ? (pendingCaptionKind === 'video' ? 'Video' : 'Photo') + ' set to view once' : 'View once turned off');
 }
 function syncStagedUi() {
     const pill = window.mediaUploadAdapter.inputEl().closest('.composer-msg-pill');
@@ -229,8 +235,7 @@ function syncStagedUi() {
 }
 function stagedMicMode() {
     const pill = window.mediaUploadAdapter.inputEl().closest('.composer-msg-pill');
-    return !!pill && pill.classList.contains('staged') && !pill.classList.contains('has-text') && !pill.classList.contains('staged-video')
-        && !document.getElementById('captionOverlay').classList.contains('show');
+   return false; // mic-in-send-position removed: the send button always stays 
 }
 function setChipThumb() {
     const chip = ensureStagedChip();
