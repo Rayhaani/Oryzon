@@ -10264,7 +10264,8 @@ let vchatOpen = false;
 function inboxOpenChat(url) {
     sessionStorage.setItem('vcClickAt', Date.now());
     const fr = document.getElementById('vchat-frame');
-    try { fr.contentWindow.location.replace(url); } catch (e) { fr.src = url; }
+    const embedUrl = url + (url.indexOf('?') > -1 ? '&' : '?') + 'embed=1';
+    try { fr.contentWindow.location.replace(embedUrl); } catch (e) { fr.src = embedUrl; }
     document.getElementById('vchat-overlay').style.display = 'block';
     if (!vchatOpen) { history.pushState({ npOverlay: 'vchat' }, '', ''); vchatOpen = true; }
     return false;
