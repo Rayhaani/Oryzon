@@ -253,20 +253,11 @@ const PROS = [
 async function loadRealProvidersFromFirebase() {
     try {
         let viewerLat = null, viewerLng = null;
-        if (navigator.geolocation) {
-            try {
-                const pos = await new Promise((resolve, reject) =>
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000 })
-                );
-                viewerLat = pos.coords.latitude;
-                viewerLng = pos.coords.longitude;
-            } catch (gpsErr) {
-                console.warn('Ba a samu location na user ba:', gpsErr);
-            }
-        }
+        if (userRealCoords) { viewerLat = userRealCoords.lat; viewerLng = userRealCoords.lng; }
         const snap = await firebase.database().ref('providers').once('value');
         const data = snap.val();
         if (!data) return;
+       for (let i = PROS.length - 1; i >= 0; i--) { if (PROS[i].realUsername) PROS.splice(i, 1); }
         const eligibleUsernames = Object.keys(data).filter(username => {
             const p = data[username];
             return p && p.status === 'approved' && !PROS.some(existing => String(existing.id) === username);
@@ -319,6 +310,7 @@ async function loadRealProvidersFromFirebase() {
 
             PROS.push(newPro);
         });
+       try { localStorage.setItem('np_providers_cache', JSON.stringify(PROS.filter(p => p.realUsername))); } catch (e) {}
     } catch (e) {
         console.warn('Could not load real providers:', e);
     }
@@ -332,11 +324,27 @@ async function loadContentFromFirebase() {
             if (data.emergency_services) EMG_SERVICES = data.emergency_services;
             if (data.ps_categories) PS_CATS = data.ps_categories;
         }
+       try { localStorage.setItem('np_content_cache', JSON.stringify(data)); } catch (e) {}
     } catch(e) {
         console.warn('Could not load Firebase content, using defaults:', e);
     }
 }
-    
+function applyCachedServicesData() {
+    try {
+        const c = JSON.parse(localStorage.getItem('np_content_cache') || 'null');
+        if (c) {
+            if (c.categories) CATEGORIES = c.categories;
+            if (c.emergency_services) EMG_SERVICES = c.emergency_services;
+            if (c.ps_categories) PS_CATS = c.ps_categories;
+        }
+    } catch (e) {}
+    try {
+        const list = JSON.parse(localStorage.getItem('np_providers_cache') || 'null');
+        if (Array.isArray(list)) {
+            list.forEach(p => { if (!PROS.some(x => String(x.id) === String(p.id))) PROS.push(p); });
+        }
+    } catch (e) {}
+}
 // Global App State
 let state = {
     view: "main",
@@ -586,6 +594,8 @@ function switchView(viewName) {
     const mainView = document.getElementById("main-view");
     const resultsView = document.getElementById("results-view");
     if (!mainView || !resultsView) return;
+    const prevView = state.view;
+    if (prevView === 'main' && viewName !== 'main') state._mainScroll = window.scrollY;
     state.view = viewName;
    const actionsBlock = document.getElementById("market-nav-row");
     const footerEl = document.getElementById("instaFooter");
@@ -597,6 +607,8 @@ function switchView(viewName) {
         if (actionsBlock) actionsBlock.style.display = "flex";
         if (footerEl) footerEl.style.display = "block";
         if (backBtn) backBtn.style.display = "none";
+       document.body.style.paddingBottom = '';
+        if (prevView !== 'main') requestAnimationFrame(() => window.scrollTo(0, state._mainScroll || 0));
     } else {
         mainView.style.display = "none";
         resultsView.style.display = "block";
@@ -604,6 +616,7 @@ function switchView(viewName) {
        if (footerEl) footerEl.style.display = "none";
         if (ordersBanner) ordersBanner.style.display = "none";
         if (backBtn) backBtn.style.display = "flex";
+        document.body.style.paddingBottom = '0px';
         window.scrollTo(0, 0);
         renderResultsPage();
     }
@@ -631,7 +644,7 @@ function initAppElements() {
             <div class="glass-lens-ring">✦</div>
             <div class="glass-lens-body">
                 <span class="glass-lens-name">${pro?pro.name.split(' ')[0]:firstStory.name}</span>
-                <div class="glass-lens-distance">${pro?pro.distance+'km away':''}</div>
+                <div class="glass-lens-distance">${pro ? (pro.distance ? pro.distance + 'km away' : (pro.city || '')) : ''}</div>
             </div>
         </div>`;
     }).join('');
@@ -3346,14 +3359,11 @@ runOnServicesInit(() => {
 // ── DOMContentLoaded ──
 runOnServicesInit(() => {
    populateCurrencyDropdowns();
+   if (!window._nexusProvidersLoadedOnce) applyCachedServicesData();
    initAppElements();
     if (!window._nexusProvidersLoadedOnce) {
-   const _loadTimeout = new Promise(resolve => setTimeout(resolve, 8000));
-   Promise.race([
-       Promise.all([loadContentFromFirebase(), loadRealProvidersFromFirebase()]),
-       detectUserLocality(),
-       _loadTimeout
-   ]).then(() => {
+   detectUserLocality();
+        Promise.all([loadContentFromFirebase(), loadRealProvidersFromFirebase()]).then(() => {
         window._nexusProvidersLoadedOnce = true;
         initAppElements();
 
