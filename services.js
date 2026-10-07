@@ -10026,6 +10026,7 @@ window.addEventListener('DOMContentLoaded', initServicesPage);
 
 // ═══════════════════════════ INBOX OVERLAY (real vendorChats data) ═══════════════════════════
 let inboxIsProviderCache = null;
+let inboxUserPicked = false;
 let inboxCurrentMainTab = null;
 let inboxCurrentSubFilter = 'all';
 let inboxBuyingThreads = [];
@@ -10061,41 +10062,32 @@ async function openInboxOverlay() {
 npPushOverlay('inbox');
     inboxChatFrame();
    setTimeout(inboxStoreFrame, 2500);
-   inboxLoadCache();
-    if (inboxIsProviderCache === null) {
-        await inboxWaitForAuth();
-        try {
-            const snap = await firebase.firestore().collection('vendorChats').where('vendorId', '==', myUsername).limit(1).get();
-            inboxIsProviderCache = !snap.empty;
-        } catch (e) { inboxIsProviderCache = false; }
-    } else {
-        inboxWaitForAuth().then(async () => {
-            try {
-                const snap = await firebase.firestore().collection('vendorChats').where('vendorId', '==', myUsername).limit(1).get();
-                inboxIsProviderCache = !snap.empty; inboxSaveCache();
-            } catch (e) {}
-        });
-    } 
-
-    const sellingBtn = document.getElementById('inbox-tab-selling');
-    const buyingBtn = document.getElementById('inbox-tab-buying');
-    const pillGroup = document.getElementById('inbox-pill-group');
-    if (inboxIsProviderCache) {
-        pillGroup.insertBefore(sellingBtn, buyingBtn);
-    } else {
-        pillGroup.insertBefore(buyingBtn, sellingBtn);
-    }
-
-   inboxSwitchMainTab(inboxIsProviderCache ? 'selling' : 'buying');
-    const _tab = inboxIsProviderCache ? 'selling' : 'buying';
-    if ((_tab === 'buying' ? inboxBuyingThreads : inboxSellingThreads).length) { _tab === 'buying' ? loadInboxBuying() : loadInboxSelling(); }
+   
+inboxLoadCache();
+    inboxUserPicked = false;
+    const _ownPro = PROS.some(p => String(p.realUsername) === myUsername);
+    const _startTab = (inboxIsProviderCache === true || inboxSellingThreads.length > 0 || _ownPro) ? 'selling' : 'buying';
+    inboxOrderPills(_startTab === 'selling');
+    inboxSwitchMainTab(_startTab, true);
+    Promise.all([loadInboxBuying(), loadInboxSelling()]).then(function () {
+        inboxIsProviderCache = inboxSellingThreads.length > 0;
+        inboxSaveCache();
+        if (inboxUserPicked) return;
+        if (inboxSellingThreads.length > 0 && inboxCurrentMainTab !== 'selling') { inboxOrderPills(true); inboxSwitchMainTab('selling', true); }
+        else if (!inboxSellingThreads.length && inboxBuyingThreads.length && inboxCurrentMainTab === 'selling') { inboxOrderPills(false); inboxSwitchMainTab('buying', true); }
+    });
 }
-
+function inboxOrderPills(isProvider) {
+    const pg = document.getElementById('inbox-pill-group');
+    const s = document.getElementById('inbox-tab-selling'), b = document.getElementById('inbox-tab-buying');
+    if (isProvider) pg.insertBefore(s, b); else pg.insertBefore(b, s);
+}
 function closeInboxOverlay() {
     if (!npCloseOverlay('inbox')) document.getElementById('inbox-overlay').style.display = 'none';
 }
 
-function inboxSwitchMainTab(tab) {
+function inboxSwitchMainTab(tab, auto) {
+    if (!auto) inboxUserPicked = true;
     const isUpdates = tab === 'updates';
     if (!isUpdates) inboxCurrentMainTab = tab;
     document.getElementById('inbox-tab-buying').classList.toggle('active', tab === 'buying');
@@ -10112,8 +10104,8 @@ function inboxSwitchMainTab(tab) {
         if (!fr.getAttribute('src')) fr.src = 'updates.html?embed=1';
         return;
     }
-    if (tab === 'buying') { inboxBuyingThreads.length ? renderInboxList('buying') : loadInboxBuying(); }
-    if (tab === 'selling') { inboxSellingThreads.length ? renderInboxList('selling') : loadInboxSelling(); }
+  if (tab === 'buying') { if (inboxBuyingThreads.length) renderInboxList('buying'); else if (auto) document.getElementById('inbox-list-buying').innerHTML = '<div class="inbox-empty-state">Loading...</div>'; else loadInboxBuying(); }
+    if (tab === 'selling') { if (inboxSellingThreads.length) renderInboxList('selling'); else if (auto) document.getElementById('inbox-list-selling').innerHTML = '<div class="inbox-empty-state">Loading...</div>'; else loadInboxSelling(); }  
 }
 
 function inboxSwitchSubFilter(filter, el) {
@@ -10291,6 +10283,7 @@ const npStack = [];
 function npPushOverlay(name) {
     if (npStack.indexOf(name) > -1) return;
     npStack.push(name);
+    document.documentElement.classList.add('np-lock');
     window.__npProfileOverlay = true;
     history.pushState({ npOverlay: name, d: npStack.length }, '', '');
 }
@@ -10318,6 +10311,7 @@ window.addEventListener('popstate', function () {
     const landed = (s && s.npOverlay && typeof s.d === 'number') ? s.d : 0;
     while (npStack.length > landed) npApplyClose(npStack.pop());
     window.__npProfileOverlay = npStack.length > 0;
+    document.documentElement.classList.toggle('np-lock', npStack.length > 0);
 });
 
 function inboxChatFrame() {
@@ -10377,7 +10371,7 @@ function inboxOpenProfile(proId) {
             ps.__npZObs.observe(ps, { attributes: true, attributeFilter: ['style'] });
         }
     }
-    openProfileSheet(proId);
+    window.openProfileSheet(proId);
 }
 function inboxAvatarTap(ev, encId) {
     ev.preventDefault();
