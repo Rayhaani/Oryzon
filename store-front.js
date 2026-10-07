@@ -144,15 +144,16 @@ async function bootStoreFront() {
         };
 
         window.shareStore = function () {
+           const shareUrl = location.origin + location.pathname + '?vendor=' + encodeURIComponent(vendorUsername || '');
             const shareData = {
                 title: document.getElementById('storeName').textContent,
                 text: `Check out ${document.getElementById('storeName').textContent} on Nexus`,
-                url: window.location.href
+                url: shareUrl
             };
             if (navigator.share) {
                 navigator.share(shareData).catch(() => {});
             } else {
-                navigator.clipboard.writeText(window.location.href).then(() => {
+                navigator.clipboard.writeText(shareUrl).then(() => {
                     alert('Store link copied to clipboard!');
                 }).catch(() => {});
             }
