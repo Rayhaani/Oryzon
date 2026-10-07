@@ -586,17 +586,58 @@ async function clearChatMessages() {
             img.src = dataUrl;
         });
     }
+const CHAT_BACKEND = 'https://oryzon-backend-ed1q.onrender.com';
+    function shrinkImageBlob(blob) {
+        return new Promise(function (resolve) {
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = function () {
+                const max = 1600;
+                let w = img.width, h = img.height;
+                if (Math.max(w, h) > max) { const s = max / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+                const c = document.createElement('canvas');
+                c.width = w; c.height = h;
+                c.getContext('2d').drawImage(img, 0, 0, w, h);
+                URL.revokeObjectURL(url);
+                c.toBlob(function (b) { resolve(b || blob); }, 'image/jpeg', 0.82);
+            };
+            img.onerror = function () { URL.revokeObjectURL(url); resolve(blob); };
+            img.src = url;
+        });
+    }
+    // Yana tura hoto/video/voice zuwa Backblaze ya dawo da link. Idan upload ya
+    // gaza, yana mayar da dataUrl na asali domin kada a rasa sakon.
+    async function uploadChatMedia(dataUrl, kind) {
+        if (!dataUrl || String(dataUrl).indexOf('data:') !== 0) return dataUrl;
+        try {
+            let blob = await (await fetch(dataUrl)).blob();
+            if (kind === 'image' && blob.type !== 'image/gif') blob = await shrinkImageBlob(blob);
+            const ext = (blob.type.split('/')[1] || 'bin').split(';')[0];
+            const types = ['chat', 'status'];
+            for (let i = 0; i < types.length; i++) {
+                const fd = new FormData();
+                fd.append('file', blob, 'chat-' + Date.now() + '.' + ext);
+                fd.append('type', types[i]);
+                fd.append('username', myUsername || 'guest');
+                const res = await fetch(CHAT_BACKEND + '/upload', { method: 'POST', body: fd });
+                const data = await res.json().catch(function () { return {}; });
+                if (data && data.success && data.url) return data.url;
+            }
+        } catch (e) { console.error('Chat upload failed', e); }
+        return dataUrl;
+    }
     async function sendMediaCompose() {
         if (!pendingMedia.length) return;
         const caption = document.getElementById('mcCaption').value.trim();
         const items = [...pendingMedia];
         cancelMediaCompose();
+       showToast('Sending...');
 
         const finalItems = [];
         for (const it of items) {
             let finalUrl = it.dataUrl;
             if (it.type === 'image' && it.rotation) finalUrl = await rotateImageDataUrl(it.dataUrl, it.rotation);
-            finalItems.push({ type: it.type, url: finalUrl });
+            finalItems.push({ type: it.type, url: await uploadChatMedia(finalUrl, it.type) });
         }
         const imageContentParts = finalItems.filter(i => i.type === 'image').map(i => ({ type: 'image_url', image_url: { url: i.url } }));
 
@@ -832,8 +873,9 @@ async function clearChatMessages() {
 
     async function finalizeSendVoice() {
         if (!finalAudioDataUrl) return;
-        const dataUrl = finalAudioDataUrl;
+        const rawAudio = finalAudioDataUrl;
         finalAudioDataUrl = null;
+        const dataUrl = await uploadChatMedia(rawAudio, 'voice');
         const m = { role: isAdmin ? 'theirs' : 'mine', type: 'voice', media: dataUrl, time: Date.now() };
         const id = await saveMessageToFirestore(m);
         m.id = id;
