@@ -20,7 +20,7 @@
                 } catch (e) {}
                 window.top.location.href = u;
             },
-            registerPage: function () {}
+            registerPage: function (p, h) { window.__sfHandlers = h; }
         };
     })();
     </script>
@@ -84,6 +84,45 @@
 
     </div>
 
-    <script src="store-front.js"></script>
+    <script>
+    (function () {
+        if (location.search.indexOf('embed=1') === -1) { document.write('<script src="store-front.js"><\/script>'); return; }
+        var warm = location.search.indexOf('warm=1') > -1;
+        var pristine = document.getElementById('page-content').innerHTML;
+        var code = null;
+        function run() {
+            var selfBoot = document.readyState !== 'complete';
+            var s = document.createElement('script');
+            s.text = '(function(){\n' + code + '\n})();';
+            document.body.appendChild(s);
+            document.body.removeChild(s);
+            if (!selfBoot && window.__sfHandlers && window.__sfHandlers.init) window.__sfHandlers.init();
+        }
+        function start() {
+            if (code !== null) { run(); return; }
+            fetch('store-front.js').then(function (r) { return r.text(); }).then(function (t) { code = t; run(); });
+        }
+        window.sfClose = function () {
+            try { if (window.__sfHandlers && window.__sfHandlers.destroy) window.__sfHandlers.destroy(); } catch (e) {}
+            window.__sfHandlers = null;
+            document.getElementById('page-content').innerHTML = pristine;
+        };
+        window.sfOpen = function (search) {
+            window.sfClose();
+            history.replaceState(null, '', location.pathname + search);
+            start();
+        };
+        window.addEventListener('load', function () { window.__sfReady = true; });
+        if (warm) {
+            try {
+                import('https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js');
+                import('https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js');
+            } catch (e) {}
+            fetch('store-front.js').then(function (r) { return r.text(); }).then(function (t) { code = t; });
+        } else {
+            start();
+        }
+    })();
+    </script>
 </body>
 </html>
