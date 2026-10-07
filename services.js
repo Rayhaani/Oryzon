@@ -10060,6 +10060,7 @@ async function openInboxOverlay() {
     if (!myUsername) { window.location.href = 'login.html'; return; }
 npPushOverlay('inbox');
     inboxChatFrame();
+   setTimeout(inboxStoreFrame, 2500);
    inboxLoadCache();
     if (inboxIsProviderCache === null) {
         await inboxWaitForAuth();
@@ -10307,7 +10308,7 @@ function npApplyClose(name) {
         else if (inboxCurrentMainTab === 'selling') loadInboxSelling();
     } else if (name === 'sf') {
         document.getElementById('sf-overlay').style.display = 'none';
-        try { document.getElementById('sf-frame').contentWindow.location.replace('about:blank'); } catch (e) {}
+        try { document.getElementById('sf-frame').contentWindow.sfClose(); } catch (e) {}
     } else if (name === 'inbox') {
         document.getElementById('inbox-overlay').style.display = 'none';
     }
@@ -10348,10 +10349,20 @@ function inboxPrefetchChats(list) {
         else fr.addEventListener('load', run, { once: true });
     } catch (e) {}
 }
-function inboxOpenStore(vendorId) {
+function inboxStoreFrame() {
     const fr = document.getElementById('sf-frame');
-    const url = 'store-front.html?vendor=' + encodeURIComponent(vendorId) + '&embed=1';
-    try { fr.contentWindow.location.replace(url); } catch (e) { fr.src = url; }
+    if (fr && !fr.getAttribute('src')) fr.src = 'store-front.html?embed=1&warm=1';
+    return fr;
+}
+function inboxOpenStore(vendorId) {
+    const q = '?vendor=' + encodeURIComponent(vendorId) + '&embed=1';
+    const fr = inboxStoreFrame();
+    const go = function () {
+        try { fr.contentWindow.sfOpen(q); }
+        catch (e) { try { fr.contentWindow.location.replace('store-front.html' + q); } catch (e2) {} }
+    };
+    if (fr.contentWindow && fr.contentWindow.__sfReady) go();
+    else fr.addEventListener('load', go, { once: true });
     document.getElementById('sf-overlay').style.display = 'block';
     npPushOverlay('sf');
 }
