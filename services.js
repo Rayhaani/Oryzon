@@ -310,7 +310,7 @@ async function loadRealProvidersFromFirebase() {
 
             PROS.push(newPro);
         });
-       try { localStorage.setItem('np_providers_cache', JSON.stringify(PROS.filter(p => p.realUsername))); } catch (e) {}
+       try { localStorage.setItem('np_providers_cache', JSON.stringify(PROS.filter(p => p.realUsername), (k, v) => (typeof v === 'string' && v.indexOf('data:') === 0) ? null : v)); } catch (e) {}
     } catch (e) {
         console.warn('Could not load real providers:', e);
     }
@@ -458,7 +458,7 @@ function createProCardHtml(pro) {
             <button onclick="event.stopPropagation(); speakProSummary('${pro.id}')" class="prism-speak-btn" style="top:-4px;right:auto;left:-4px;z-index:3;" aria-label="Ji bayanin wannan mai bada sabis">🔊</button> 
 
             <div style="display:flex;align-items:center;gap:10px;z-index:2;position:relative;padding-right:78px;">
-                <div class="lens-viewport" onclick="event.stopPropagation();window.location.href='me.html?user=${encodeURIComponent(pro.username||'')}'" style="cursor:pointer;${pro.photoUrl ? `background-image:url('${pro.photoUrl}');background-size:cover;background-position:center;` : ''}">${pro.photoUrl ? '' : `<div class="lens-glass-reflection">${(pro.avatar||displayHandle.slice(0,2)).toUpperCase()}</div>`}</div>
+                <div class="lens-viewport" onclick="event.stopPropagation();'inboxOpenMeEnc('${encodeURIComponent(pro.username||'')}')" style="cursor:pointer;${pro.photoUrl ? `background-image:url('${pro.photoUrl}');background-size:cover;background-position:center;` : ''}">${pro.photoUrl ? '' : `<div class="lens-glass-reflection">${(pro.avatar||displayHandle.slice(0,2)).toUpperCase()}</div>`}</div>
                 <div style="flex:1;padding-left:2px;min-width:0;">
                     <div class="sentinel-title-text" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayHandle}</div>
                     <div class="sentinel-sub-text">${pro.display_cat}</div>
@@ -659,10 +659,11 @@ function initAppElements() {
    }
 
   const catGrid = document.getElementById("categories-grid-container");
-    catGrid.innerHTML = CATEGORIES.map(cat => {
+    const _dims = (function () { try { return JSON.parse(localStorage.getItem('np_img_dims') || '{}'); } catch (e) { return {}; } })();
+    const _catHtml = CATEGORIES.map(cat => {
         const repPhoto = getCategoryRepresentativePhoto(cat.id) || cat.photo;
         const mediaHtml = repPhoto
-            ? `<img src="${repPhoto}" alt="${cat.label}">`
+            ? `<img src="${repPhoto}" alt="${cat.label}" decoding="async" ${_dims[repPhoto] ? `style="aspect-ratio:${_dims[repPhoto]}"` : ''} onload="npImgDim(this)">`
             : `<div style="width:100%;height:140px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);"><span style="font-size:34px;">${cat.icon}</span></div>`;
         return `
         <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card">
@@ -671,7 +672,7 @@ function initAppElements() {
                 <div class="prism-card-label">${cat.icon} ${cat.label}</div>
             </div>
         </div>`;
-    }).join('');
+    }).join(''); if (catGrid._sig !== _catHtml) { catGrid.innerHTML = _catHtml; catGrid._sig = _catHtml; }
 
 function getHighlyRatedPros() {
     let pool = PROS;
@@ -685,8 +686,8 @@ function getHighlyRatedPros() {
     }
     return [...pool].sort((a, b) => (b.rating || 0) - (a.rating || 0));
 }
-    const highlyRatedList = document.getElementById("highly-rated-list-container");
-    highlyRatedList.innerHTML = getHighlyRatedPros().map((pro,idx) => `
+    const _hrHtml = getHighlyRatedPros().map(pro => `<div>${createProCardHtml(pro)}</div>`).join('');
+    if (highlyRatedList._sig !== _hrHtml) { highlyRatedList.innerHTML = _hrHtml; highlyRatedList._sig = _hrHtml; }
         <div class="slide-up" style="animation-delay:${idx*80}ms">${createProCardHtml(pro)}</div>`).join('');
 }
 
@@ -10228,7 +10229,7 @@ function renderInboxList(tab) {
         const href = tab === 'buying'
             ? `vendor-chat.html?with=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`
             : `vendor-chat.html?vendorId=${encodeURIComponent(myUsername)}&admin=1&customer=${encodeURIComponent(t.otherId)}&name=${encodeURIComponent(t.displayName)}`;
-      const avAttr = tab === 'buying' ? ` onclick="return inboxAvatarTap(event, '${encodeURIComponent(t.otherId)}')"` : '';
+      const avAttr = ` onclick="return inboxAvatarTap(event, '${encodeURIComponent(t.otherId)}', '${tab}')"`;
        return `
           <a href="${href}" class="inbox-chat-item" onclick="return inboxOpenChat(this.getAttribute('href'))">
                 ${t.avatarUrl ? `<img src="${t.avatarUrl}" class="inbox-chat-avatar"${avAttr}>` : `<div class="inbox-chat-avatar inbox-chat-avatar-empty"${avAttr}></div>`}
@@ -10302,6 +10303,9 @@ function npApplyClose(name) {
     } else if (name === 'sf') {
         document.getElementById('sf-overlay').style.display = 'none';
         try { document.getElementById('sf-frame').contentWindow.sfClose(); } catch (e) {}
+       } else if (name === 'me') {
+        document.getElementById('me-overlay').style.display = 'none';
+        try { document.getElementById('me-frame').contentWindow.meClose(); } catch (e) {}
     } else if (name === 'inbox') {
         document.getElementById('inbox-overlay').style.display = 'none';
     }
@@ -10373,15 +10377,48 @@ function inboxOpenProfile(proId) {
     }
     window.openProfileSheet(proId);
 }
-function inboxAvatarTap(ev, encId) {
+function inboxAvatarTap(ev, encId, tab) {
     ev.preventDefault();
     ev.stopPropagation();
     const id = decodeURIComponent(encId);
+    if (tab === 'selling') { inboxOpenMe(id); return false; }
     const pro = PROS.find(p => String(p.id) === id || String(p.realUsername) === id);
-    if (pro) inboxOpenProfile(pro.id);
+    if (pro) inboxOpenMe(pro.realUsername || pro.id);
     else inboxOpenStore(id);
     return false;
 }
+window.npCloseOverlay = npCloseOverlay;
+function inboxMeFrame() {
+    const fr = document.getElementById('me-frame');
+    if (fr && !fr.getAttribute('src')) fr.src = 'me.html?embed=1&warm=1';
+    return fr;
+}
+function inboxOpenMe(username) {
+    const q = '?user=' + encodeURIComponent(username) + '&embed=1';
+    const fr = inboxMeFrame();
+    const go = function () {
+        try { fr.contentWindow.meOpen(q); }
+        catch (e) { try { fr.contentWindow.location.replace('me.html' + q); } catch (e2) {} }
+    };
+    if (fr.contentWindow && fr.contentWindow.__meReady) go();
+    else fr.addEventListener('load', go, { once: true });
+    document.getElementById('me-overlay').style.display = 'block';
+    npPushOverlay('me');
+}
+window.inboxOpenMe = inboxOpenMe;
+window.inboxOpenMeEnc = function (u) { inboxOpenMe(decodeURIComponent(u)); };
+window.npImgDim = function (img) {
+    try {
+        if (!img.naturalWidth || img.src.indexOf('data:') === 0) return;
+        const m = JSON.parse(localStorage.getItem('np_img_dims') || '{}');
+        if (!m[img.src]) { m[img.src] = img.naturalWidth + ' / ' + img.naturalHeight; localStorage.setItem('np_img_dims', JSON.stringify(m)); }
+    } catch (e) {}
+};
+window.npToggleSpeak = function () {
+    const on = document.body.classList.toggle('np-show-speak');
+    const b = document.getElementById('np-speak-toggle');
+    if (b) b.style.opacity = on ? '1' : '0.55';
+};
 window.inboxAvatarTap = inboxAvatarTap;
 function inboxCacheKey() { return 'inboxCache_' + (localStorage.getItem('nexus_user_session') || ''); }
 function inboxSlim(t) {
