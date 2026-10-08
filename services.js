@@ -10409,11 +10409,15 @@ function inboxMeFrame() {
 function inboxOpenMe(username) {
     const q = '?user=' + encodeURIComponent(username) + '&embed=1';
     const fr = inboxMeFrame();
+    const sp = document.getElementById('me-spin');
+    const ready = !!(fr.contentWindow && fr.contentWindow.__meReady);
     const go = function () {
         try { fr.contentWindow.meOpen(q); }
         catch (e) { try { fr.contentWindow.location.replace('me.html' + q); } catch (e2) {} }
+        if (sp) setTimeout(function () { sp.style.display = 'none'; }, 700);
     };
-    if (fr.contentWindow && fr.contentWindow.__meReady) go();
+    if (sp && !ready) sp.style.display = 'flex';
+    if (ready) go();
     else fr.addEventListener('load', go, { once: true });
     document.getElementById('me-overlay').style.display = 'block';
     npPushOverlay('me');
@@ -10432,6 +10436,10 @@ window.npToggleSpeak = function () {
     const b = document.getElementById('np-speak-toggle');
     if (b) b.style.opacity = on ? '1' : '0.55';
 };
+runOnServicesInit(function () {
+    if (navigator.connection && navigator.connection.saveData) return;
+    setTimeout(inboxMeFrame, 1500);
+});
 function inboxCacheKey() { return 'inboxCache_' + (localStorage.getItem('nexus_user_session') || ''); }
 function inboxSlim(t) {
     const o = Object.assign({}, t);
