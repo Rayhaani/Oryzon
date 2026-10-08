@@ -633,21 +633,9 @@ function pauseStoryMarquee() {
 }
 
 function initAppElements() {
-    const doubleProStories = [...PRO_STORIES, ...PRO_STORIES];
     const track = document.getElementById("stories-track-container");
-    track.innerHTML = doubleProStories.map((proStory, index) => {
-        const realIndex = index % PRO_STORIES.length;
-        const pro = PROS.find(p => p.id === proStory.proId);
-        const firstStory = proStory.stories[0];
-        return `<div class="glass-lens-card" onclick="openStoryDeck(${realIndex})">
-            <div class="glass-lens-img-wrap"><img class="glass-lens-img" src="${firstStory.image}" alt="${pro?pro.name:''}"/></div>
-            <div class="glass-lens-ring">✦</div>
-            <div class="glass-lens-body">
-                <span class="glass-lens-name">${pro?pro.name.split(' ')[0]:firstStory.name}</span>
-                <div class="glass-lens-distance">${pro ? (pro.distance ? pro.distance + 'km away' : (pro.city || '')) : ''}</div>
-            </div>
-        </div>`;
-    }).join('');
+    renderDailyStoryTrack();
+    loadAndRenderDailyStories();
     track.addEventListener('touchstart', pauseStoryMarquee, { passive: true });
     track.addEventListener('mousedown', pauseStoryMarquee);
 
@@ -3363,7 +3351,7 @@ runOnServicesInit(() => {
    if (!window._nexusProvidersLoadedOnce) applyCachedServicesData();
    initAppElements();
     if (!window._nexusProvidersLoadedOnce) {
-   detectUserLocality();
+   detectUserLocality().then(function () { renderDailyStoryTrack(); });
         Promise.all([loadContentFromFirebase(), loadRealProvidersFromFirebase()]).then(() => {
         window._nexusProvidersLoadedOnce = true;
         initAppElements();
@@ -7856,52 +7844,79 @@ function startUploadWindowCountdown(timeTo) {
     countdownInterval = setInterval(updateCountdown, 60000);
     }
 
-    async function loadAndRenderDailyStories() {
-    if (typeof firebase === 'undefined' || !firebase.database) return;
-    const today = getNowNigeria().toISOString().slice(0,10);
-    
+    function npEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function npCityKey(s) { return String(s || '').toLowerCase().replace(/[^a-z]/g, ''); }
+function npTodayStr() { return getNowNigeria().toISOString().slice(0, 10); }
+function npMyCity() {
+    const loc = window.userLocalityData;
+    if (loc && loc.city) return loc.city;
+    try { const c = JSON.parse(localStorage.getItem('oryzon_locality') || 'null'); return (c && c.data && c.data.city) || ''; } catch (e) { return ''; }
+}
+function npDailyFromCache() {
     try {
-        const snap = await firebase.database().ref('daily_stories').once('value');
-        const data = snap.val() || {};
-        
-        const liveStories = [];
-        Object.entries(data).forEach(([username, days]) => {
-            const todayData = days[today];
-            if (!todayData || !todayData.active || !todayData.uploads) return;
-            liveStories.push({ username, uploads: todayData.uploads });
-        });
-
-        const track = document.getElementById("stories-track-container");
-        if (!track) return;
-
-        // Cire duk tsohon live-story nodes kafin mu sake zana sabbin
-        track.querySelectorAll('.live-daily-story').forEach(el => el.remove());
-
-        if (liveStories.length === 0) return;
-        
-        liveStories.forEach(story => {
-            const firstUpload = story.uploads[0];
-            const div = document.createElement('div');
-            div.className = 'glass-lens-card live-daily-story';
-            div.onclick = () => openLiveDailyStory(story.username, story.uploads);
-            div.innerHTML = `
-                <div class="glass-lens-img-wrap">
-                    <img class="glass-lens-img" src="${firstUpload.url}" alt="${story.username}"/>
-                </div>
-                <div class="glass-lens-ring">🔴</div>
-                <div class="glass-lens-body">
-                    <span class="glass-lens-name">${story.username}</span>
-                    <div class="glass-lens-distance" style="color:#ef4444;">● LIVE</div>
-                </div>`;
-            track.prepend(div);
-        });
-        
-    } catch(err) {
+        const c = JSON.parse(localStorage.getItem('np_daily_cache') || 'null');
+        if (c && c.date === npTodayStr() && Array.isArray(c.items)) return c.items;
+    } catch (e) {}
+    return [];
+}
+function npFilterDailyByCity(items) {
+    const my = npCityKey(npMyCity());
+    if (!my) return items;
+    const inCity = items.filter(it => npCityKey(it.city) === my);
+    return inCity.length ? inCity : items;
+}
+function renderDailyStoryTrack() {
+    const track = document.getElementById('stories-track-container');
+    if (!track) return;
+    if (!window.__npDailyItems) window.__npDailyItems = npDailyFromCache();
+    const list = npFilterDailyByCity(window.__npDailyItems);
+    const sec = track.parentElement && track.parentElement.parentElement && track.parentElement.parentElement.parentElement;
+    if (sec && sec.textContent.indexOf('Available Now') > -1) sec.style.display = list.length ? '' : 'none';
+    const one = list.map(it => `<div class="glass-lens-card live-daily-story" onclick="openLiveDailyStoryAt('${encodeURIComponent(it.username)}')">
+            <div class="glass-lens-img-wrap"><img class="glass-lens-img" src="${npEsc(it.uploads[0].url)}" alt="" decoding="async"/></div>
+            <div class="glass-lens-ring">🔴</div>
+            <div class="glass-lens-body">
+                <span class="glass-lens-name">${npEsc(it.name)}</span>
+                <div class="glass-lens-distance">${it.city ? npEsc(it.city) : '● LIVE'}</div>
+            </div>
+        </div>`).join('');
+    const html = list.length >= 4 ? one + one : one;
+    if (track._sig === html) return;
+    track._sig = html;
+    track.innerHTML = html;
+    track.style.animation = list.length >= 4 ? '' : 'none';
+}
+async function loadAndRenderDailyStories() {
+    if (typeof firebase === 'undefined' || !firebase.database || window.__npDailyBusy) return;
+    const foodPros = PROS.filter(p => p.realUsername && ['chef', 'snacks', 'beverages'].indexOf(p.category) > -1);
+    if (!foodPros.length) return;
+    window.__npDailyBusy = true;
+    const today = npTodayStr();
+    try {
+        const results = await Promise.all(foodPros.map(async p => {
+            try {
+                const snap = await firebase.database().ref('daily_stories/' + p.realUsername + '/' + today).once('value');
+                const d = snap.val();
+                if (!d || !d.active || !d.uploads || !d.uploads.length) return null;
+                return { username: p.realUsername, name: (p.name || p.realUsername).split(' ')[0], city: p.city || '', uploads: d.uploads };
+            } catch (e) { return null; }
+        }));
+        window.__npDailyItems = results.filter(Boolean);
+        try { localStorage.setItem('np_daily_cache', JSON.stringify({ date: today, items: window.__npDailyItems })); } catch (e) {}
+        renderDailyStoryTrack();
+    } catch (err) {
         console.warn('loadAndRenderDailyStories error:', err);
     }
-    }
+    window.__npDailyBusy = false;
+}
+window.openLiveDailyStoryAt = function (enc, slide) {
+    const u = decodeURIComponent(enc);
+    const it = (window.__npDailyItems || []).find(x => x.username === u);
+    if (!it) return;
+    openLiveDailyStory(it.username, it.uploads);
+    if (slide) { state.activeStorySlide = slide; state.storyProgress = 0; updateStoryOverlayUi(); }
+};
     
-
 async function submitDailyUploads() {
     if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); setTimeout(()=>window.location.href='login.html',1200); return; }
     const sessionUser = localStorage.getItem('nexus_user_session');
@@ -9553,29 +9568,21 @@ function closeGalleryLightbox() {
 function renderAllStoriesGrid(query) {
     const grid = document.getElementById('all-stories-grid');
     const q = (query || '').trim().toLowerCase();
+    const items = npFilterDailyByCity(window.__npDailyItems || npDailyFromCache());
     const flatItems = [];
-    PRO_STORIES.forEach((proStory, proIndex) => {
-        const pro = PROS.find(p => p.id === proStory.proId);
-        proStory.stories.forEach((story, slideIndex) => {
-            flatItems.push({ pro, story, proIndex, slideIndex });
-        });
-    });
-    const filtered = flatItems.filter(({ pro, story }) => {
-        if (!q) return true;
-        const haystack = `${pro ? pro.name : ''} ${story.name}`.toLowerCase();
-        return haystack.includes(q);
-    });
+    items.forEach(it => it.uploads.forEach((u, i) => flatItems.push({ it, u, i })));
+    const filtered = flatItems.filter(({ it, u }) => !q || `${it.name} ${u.dishName || ''}`.toLowerCase().includes(q));
     if (!filtered.length) {
         grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:#94a3b8;font-size:13px;font-weight:600;">No matches found</div>`;
         return;
     }
-    grid.innerHTML = filtered.map(({ pro, story, proIndex, slideIndex }, cardIndex) => {
-        return `<div onclick="openStoryFromAllStories(${cardIndex}, ${proIndex}, ${slideIndex});" style="border-radius:18px;overflow:hidden;cursor:pointer;background:#262626 !important;border:none;">
-            <div style="width:100%;aspect-ratio:1/1;background-image:url('${story.image}');background-size:cover;background-position:center;border-radius:18px;"></div>
+    grid.innerHTML = filtered.map(({ it, u, i }) => {
+        return `<div onclick="openLiveDailyStoryAt('${encodeURIComponent(it.username)}', ${i});" style="border-radius:18px;overflow:hidden;cursor:pointer;background:#262626 !important;border:none;">
+            <div style="width:100%;aspect-ratio:1/1;background-image:url('${u.url}');background-size:cover;background-position:center;border-radius:18px;"></div>
             <div style="padding:10px 12px 12px;">
-                <div style="font-weight:800;font-size:13px;color:#ffffff;">${pro?pro.name:story.name}</div>
-                <div style="font-size:11.5px;color:rgba(255,255,255,0.7);margin-top:2px;">${story.name} · ${story.price}</div>
-                <div style="font-size:11px;color:#fde08d;font-weight:700;margin-top:2px;">${pro?pro.distance+'km away':''}</div>
+                <div style="font-weight:800;font-size:13px;color:#ffffff;">${npEsc(it.name)}</div>
+                <div style="font-size:11.5px;color:rgba(255,255,255,0.7);margin-top:2px;">${npEsc(u.dishName || '')}${u.price ? ' · ' + npEsc(u.price) : ''}</div>
+                <div style="font-size:11px;color:#fde08d;font-weight:700;margin-top:2px;">${npEsc(it.city || '')}</div>
             </div>
         </div>`;
     }).join('');
