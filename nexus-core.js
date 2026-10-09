@@ -119,6 +119,43 @@ function listenNotifBadgeCount() {
     var ID = 'np-me-overlay';
     var st = { open: false, token: 0, id: 0 };
     var seen = {};
+   var SNAPK = 'np_me_snap_';
+    function snapKey(u) { return SNAPK + String(u).toLowerCase(); }
+
+    function saveSnap(u) {
+        try {
+            var fr = document.querySelector('#' + ID + ' iframe');
+            var root = fr && fr.contentDocument && fr.contentDocument.getElementById('page-content');
+            if (!root || !u) return;
+            var h = root.innerHTML;
+            if (root.textContent.trim().length < 60 || h.length > 200000) return;
+            h = h.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/\sid="[^"]*"/g, '');
+            localStorage.setItem(snapKey(u), JSON.stringify({ t: Date.now(), h: h }));
+            var idx = JSON.parse(localStorage.getItem(SNAPK + 'idx') || '[]').filter(function (x) { return x !== u; });
+            idx.push(u);
+            while (idx.length > 15) { localStorage.removeItem(snapKey(idx.shift())); }
+            localStorage.setItem(SNAPK + 'idx', JSON.stringify(idx));
+        } catch (e) {}
+    }
+
+    function showSnap(fr, u) {
+        try {
+            var raw = localStorage.getItem(snapKey(u));
+            var d = fr.contentDocument;
+            if (!raw || !d || !d.body) return;
+            var old = d.getElementById('np-snap');
+            if (old && old.parentNode) old.parentNode.removeChild(old);
+            var s = d.createElement('div');
+            s.id = 'np-snap';
+            s.style.cssText = 'position:absolute;top:0;left:0;right:0;min-height:100%;background:#050505;z-index:99999;pointer-events:none;transition:opacity .25s;';
+            s.innerHTML = JSON.parse(raw).h;
+            d.body.appendChild(s);
+            setTimeout(function () {
+                s.style.opacity = '0';
+                setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 300);
+            }, 1200);
+        } catch (e) {}
+    }
 
     function ensure() {
         var ov = document.getElementById(ID);
@@ -186,6 +223,7 @@ function listenNotifBadgeCount() {
         var ov = document.getElementById(ID);
         if (ov) {
             ov.style.display = 'none';
+           saveSnap(st.user);
             try { ov.querySelector('iframe').contentWindow.meClose(); } catch (e) {}
         }
         document.documentElement.style.overflow = '';
@@ -200,6 +238,7 @@ function listenNotifBadgeCount() {
         var sp = document.getElementById('np-me-spin');
         var ready = !!(fr.contentWindow && fr.contentWindow.__meReady);
         var go = function () {
+           showSnap(fr, username);
             try { fr.contentWindow.meOpen(q); }
             catch (e) { try { fr.contentWindow.location.replace('me.html' + q); } catch (e2) {} }
             if (sp) setTimeout(function () { sp.style.display = 'none'; }, 700);
@@ -207,6 +246,8 @@ function listenNotifBadgeCount() {
         if (sp && !ready) sp.style.display = 'flex';
         whenReady(fr, go);
         show();
+       st.user = username;
+        setTimeout(function () { if (st.open && st.user === username) saveSnap(username); }, 3000);
     }
 
     function close() {
