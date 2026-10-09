@@ -528,23 +528,71 @@
         }
         function nxVoOpened(id) { try { return JSON.parse(localStorage.getItem('nx_vo_opened') || '[]').indexOf(id) !== -1; } catch (e) { return false; } }
         function nxVoMark(id) { try { const a = JSON.parse(localStorage.getItem('nx_vo_opened') || '[]'); if (a.indexOf(id) === -1) { a.push(id); localStorage.setItem('nx_vo_opened', JSON.stringify(a.slice(-300))); } } catch (e) {} }
-        function openViewOnce(id) {
+        function closeMediaViewer() {
+            const v = document.getElementById('mediaViewer');
+            if (v) v.remove();
+        }
+        function openMediaViewer(id, idx, opts) {
+            opts = opts || {};
             const m = chatMessages.find(x => x.id === id);
-            if (!m || !(m.image || m.video) || nxVoOpened(id)) return;
-            nxVoMark(id);
-            if (groupSlug) {
-                try { groupRef().collection('messages').doc(id).update({ viewedBy: FieldValue.arrayUnion(currentUsername) }).catch(e => console.error('view-once mark failed:', e)); } catch (e) {}
+            if (!m) return;
+            const items = (m.mediaArr && m.mediaArr.length) ? m.mediaArr
+                : m.image ? [{ type: 'image', mediaUrl: m.image }] : m.video ? [{ type: 'video', mediaUrl: m.video }] : [];
+            if (!items.length) return;
+            const mine = m.from === 'me';
+            if (opts.viewOnce && !mine) {
+                if (nxVoOpened(id)) return;
+                nxVoMark(id);
+                if (groupSlug) {
+                    try { groupRef().collection('messages').doc(id).update({ viewedBy: FieldValue.arrayUnion(currentUsername) }).catch(e => console.error('view-once mark failed:', e)); } catch (e) {}
+                }
             }
+            closeMediaViewer();
+            const host = document.getElementById('page-content') || document.body;
+            const d = m.time instanceof Date ? m.time : new Date(m.time);
+            const when = d.toLocaleDateString([], { day: 'numeric', month: 'long' }) + ', ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+            const who = mine ? 'You' : (m.name || 'Member');
             const v = document.createElement('div');
-            v.id = 'voViewer';
-            v.innerHTML = `<div class="vo-top"><span class="vo-close" id="voClose"><i class="fa-solid fa-xmark"></i></span><span class="vo-note">View once</span></div>${m.image ? `<img src="${m.image}">` : `<video src="${m.video}" controls autoplay playsinline></video>`}${m.text ? `<div class="vo-cap">${escapeHtml(m.text)}</div>` : ''}`;
-            document.body.appendChild(v);
-            v.querySelector('#voClose').onclick = () => { v.remove(); renderChatFlow(); };
-            renderChatFlow();
+            v.id = 'mediaViewer';
+            v.style.cssText = 'position:fixed;inset:0;z-index:100030;background:#000;display:flex;flex-direction:column;font-family:Inter,sans-serif;';
+            const icon = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;';
+            v.innerHTML = `
+                <div id="mvBar" style="position:absolute;top:0;left:0;right:0;z-index:3;display:flex;align-items:center;gap:6px;padding:12px 10px 22px 18px;background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);color:#fff;">
+                    <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:600;">${opts.viewOnce ? 'View once' : escapeHtml(who)}</div>${opts.viewOnce ? '' : `<div style="font-size:13px;opacity:0.75;margin-top:2px;">${when}</div>`}</div>
+                    ${opts.viewOnce ? '' : `<div style="${icon}" id="mvDownload"><i class="fa-solid fa-download"></i></div><div style="${icon}" id="mvForward"><i class="fa-solid fa-share"></i></div>`}
+                </div>
+                <div id="mvStrip" style="flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+                    ${items.map(it => `<div style="flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;height:100%;">${it.type === 'video' ? `<video src="${it.mediaUrl}" controls autoplay playsinline style="max-width:100%;max-height:100%;"></video>` : `<img src="${it.mediaUrl}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">`}</div>`).join('')}
+                </div>
+                ${m.text ? `<div style="position:absolute;left:0;right:0;bottom:0;padding:22px 18px 26px;color:#fff;text-align:center;font-size:15px;background:linear-gradient(0deg,rgba(0,0,0,0.75),transparent);">${escapeHtml(m.text)}</div>` : ''}`;
+            host.appendChild(v);
+            const strip = v.querySelector('#mvStrip');
+            if (idx) strip.scrollLeft = idx * strip.clientWidth;
+            const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (strip.clientWidth || 1))));
+            const dl = v.querySelector('#mvDownload');
+            if (dl) dl.onclick = () => { const a = document.createElement('a'); const it = items[cur()]; a.href = it.mediaUrl; a.download = it.type === 'video' ? 'video.mp4' : 'photo.jpg'; a.target = '_blank'; document.body.appendChild(a); a.click(); a.remove(); };
+            const fw = v.querySelector('#mvForward');
+            if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); closeMediaViewer(); };
+            // tap on the photo toggles the top bar (like WhatsApp)
+            strip.addEventListener('click', (e) => { if (e.target.tagName === 'VIDEO') return; const bar = v.querySelector('#mvBar'); bar.style.display = bar.style.display === 'none' ? 'flex' : 'none'; });
+            // system back closes the viewer (there is no back icon)
+            history.pushState({ nxViewer: 1 }, '', location.href);
+        }
+        function openViewOnce(id) { openMediaViewer(id, 0, { viewOnce: true }); }
+        if (!window.__nxViewerBound) {
+            window.__nxViewerBound = true;
+            window.NexusOverlay = window.NexusOverlay || {};
+            const prevOpen = window.NexusOverlay.isOpen;
+            window.NexusOverlay.isOpen = function () { return !!document.getElementById('mediaViewer') || (prevOpen ? prevOpen.apply(this, arguments) : false); };
+            window.addEventListener('popstate', function () {
+                const v = document.getElementById('mediaViewer');
+                if (!v) return;
+                setTimeout(function () { closeMediaViewer(); if (typeof renderChatFlow === 'function') renderChatFlow(); }, 0);
+            });
         }
         let pendingMedia = [];
         function addPendingMedia(info) {
-            const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), localUrl: info.localUrl, text: info.text || '', viewOnce: !!info.viewOnce, state: 'sending', time: new Date() };
+            const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), localUrl: info.localUrl, localUrls: info.localUrls || null, text: info.text || '', viewOnce: !!info.viewOnce, state: 'sending', time: new Date() };
             pendingMedia.push(p);
             renderChatFlow();
             return {
@@ -577,7 +625,7 @@
                 lastSender = m.from;
             });
             pendingMedia.forEach(p => {
-                html += renderChatMessage({ id: p.id, from: 'me', image: p.localUrl, text: p.text, time: p.time, reactions: {}, status: 'sending', pendingState: p.state, viewOnce: p.viewOnce }, false, 'single');
+                html += renderChatMessage({ id: p.id, from: 'me', image: p.localUrls ? null : p.localUrl, pendingUrls: p.localUrls, text: p.text, time: p.time, reactions: {}, status: 'sending', pendingState: p.state, viewOnce: p.viewOnce }, false, 'single');
             });
             flow.innerHTML = html;
             if (typingIndicatorActive) flow.insertAdjacentHTML('beforeend', typingRowHTML());
@@ -611,15 +659,46 @@
                     <div class="waveform">${[8,16,12,20,10,14,6,18,9].map(h => `<bar style="height:${h}px"></bar>`).join('')}</div>
                     <span class="speed-btn" onclick="this.textContent = this.textContent==='1x' ? '1.5x' : this.textContent==='1.5x' ? '2x' : '1x'">1x</span>
                 </div>` : '';
-            const imgHtml = m.image ? `<div style="position:relative; width:230px; max-width:100%; aspect-ratio:4/5; margin-top:4px; border-radius:10px; overflow:hidden; background:#0b1220;"><img src="${m.image}" style="width:100%; height:100%; object-fit:cover; display:block; cursor:pointer;" ${m.pendingState === 'failed' ? `onclick="removePendingMedia('${m.id}')"` : `onclick="showToast('Opening full-size photo...', 'fa-image')"`}>${m.pendingState === 'sending' ? '<div class="media-sending"><div class="media-spinner"></div></div>' : ''}${m.pendingState === 'failed' ? '<div class="media-sending media-failed">Failed — tap to remove</div>' : ''}</div>` : '';
-            const videoHtml = m.video ? `<div style="position:relative; width:230px; max-width:100%; aspect-ratio:4/5; margin-top:4px; border-radius:10px; overflow:hidden; background:#000;"><video src="${m.video}" controls playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover; display:block;"></video></div>` : '';
-            const isVO = !!(m.viewOnce && (m.image || m.video));
-            const voLabel = m.image ? 'Photo' : 'Video';
-            const voDone = isVO && !isOut && (((m.viewedBy || []).indexOf(currentUsername) !== -1) || nxVoOpened(m.id));
-            const voTile = isVO ? `<div class="vo-tile ${(isOut || voDone) ? 'vo-dead' : ''}" ${m.pendingState === 'failed' ? `onclick="removePendingMedia('${m.id}')"` : (!isOut && !voDone ? `onclick="openViewOnce('${m.id}')"` : '')}><span class="vo-ico">1</span><span>${m.pendingState === 'sending' ? 'Sending…' : m.pendingState === 'failed' ? 'Failed — tap to remove' : isOut ? voLabel + ' · View once' : voDone ? 'Opened' : 'Tap to view ' + voLabel.toLowerCase()}</span></div>` : '';
             const safetyHtml = detectLinkSafety(m.text);
             const starFlag = m.starred ? `<i class="fa-solid fa-star msg-star-flag"></i>` : '';
             const ticks = isOut ? (m.status === 'sending' ? `<span class="msg-ticks"><i class="fa-regular fa-clock"></i></span>` : `<span class="msg-ticks ${m.status === 'read' ? 'read' : ''}"><i class="fa-solid fa-check-double"></i></span>`) : '';
+            const timeStr = fmtClockTime(m.time);
+
+            // ---- media (same structure as chat-interior: edge-to-edge media-wrap, time overlay, caption below) ----
+            const hasGrid = !!((m.mediaArr && m.mediaArr.length) || (m.pendingUrls && m.pendingUrls.length));
+            const isVO = !!(m.viewOnce && (m.image || m.video));
+            const hasMedia = hasGrid || !!(m.image || m.video);
+            const capText = m.text || '';
+            const timeOverlay = capText ? '' : `<span class="media-time-overlay">${timeStr}${ticks}</span>`;
+            const pendOverlay = m.pendingState === 'sending' ? '<div class="media-sending"><div class="media-spinner"></div></div>'
+                : (m.pendingState === 'failed' ? '<div class="media-sending media-failed">Failed — tap to remove</div>' : '');
+            const openFn = (i) => m.pendingState === 'failed' ? `removePendingMedia('${m.id}')` : `openMediaViewer('${m.id}', ${i})`;
+            let mediaHtml = '';
+            if (isVO) {
+                const label = m.image ? 'Photo' : 'Video';
+                const voDone = !isOut && (((m.viewedBy || []).indexOf(currentUsername) !== -1) || nxVoOpened(m.id));
+                const clickable = m.pendingState === 'failed' ? `onclick="removePendingMedia('${m.id}')"` : (m.pendingState === 'sending' || voDone ? '' : `onclick="openViewOnce('${m.id}')"`);
+                const text = m.pendingState === 'sending' ? 'Sending…' : m.pendingState === 'failed' ? 'Failed — tap to remove' : voDone ? 'Opened' : label;
+                mediaHtml = `<div class="vo-tile ${voDone ? 'vo-dead' : ''}" ${clickable}><span class="vo-ico">1</span><span class="vo-label">${text}</span><span class="vo-time">${timeStr}${ticks}</span></div>`;
+            } else if (hasGrid) {
+                const items = (m.mediaArr && m.mediaArr.length) ? m.mediaArr : m.pendingUrls.map(u => ({ type: 'image', mediaUrl: u }));
+                const n = items.length;
+                const cls = n === 1 ? 'n1' : n === 2 ? 'n2' : n === 3 ? 'n3' : 'n4plus';
+                const shown = cls === 'n4plus' ? items.slice(0, 4) : items;
+                const extra = n > 4 ? n - 4 : 0;
+                const cells = shown.map((it, i) => {
+                    const isVideo = it.type === 'video';
+                    const el = isVideo ? `<video src="${it.mediaUrl}#t=0.1" preload="metadata" muted playsinline style="pointer-events:none;"></video>` : `<img src="${it.mediaUrl}" alt="">`;
+                    const badge = isVideo ? '<span class="video-indicator"><i class="fa-solid fa-video"></i></span>' : '';
+                    const more = (extra > 0 && i === 3) ? `<div class="more-overlay">+${extra}</div>` : '';
+                    return `<div class="gi" onclick="${openFn(i)}">${el}${badge}${more}</div>`;
+                }).join('');
+                mediaHtml = `<div class="img-grid ${cls}">${cells}${timeOverlay}${pendOverlay}</div>`;
+            } else if (m.image) {
+                mediaHtml = `<div class="media-wrap" onclick="${openFn(0)}"><img src="${m.image}" alt="">${timeOverlay}${pendOverlay}</div>`;
+            } else if (m.video) {
+                mediaHtml = `<div class="media-wrap" onclick="${openFn(0)}"><video src="${m.video}#t=0.1" preload="metadata" muted playsinline style="pointer-events:none;"></video><span class="video-indicator"><i class="fa-solid fa-video"></i></span>${timeOverlay}${pendOverlay}</div>`;
+            }
 
             const headerHtml = (!isOut && !grouped) ? `
                 <div class="msg-header">
@@ -627,15 +706,18 @@
                     <span class="role-tag ${m.roleClass}">${m.role}</span>
                 </div>` : '';
 
+            const bodyHtml = hasMedia
+                ? `${fwdHtml}${replyHtml}${voiceHtml}${mediaHtml}${(capText && !isVO) ? `<div class="media-caption">${escapeHtml(capText)}<span class="msg-time-inline">${timeStr}${ticks}</span></div>` : ''}`
+                : `${fwdHtml}${replyHtml}${escapeHtml(m.text || '')}${voiceHtml}${safetyHtml}<span class="msg-time-inline">${timeStr}${ticks}</span>`;
+
             return `
-            <div class="msg-row ${isOut ? 'outgoing' : 'incoming'} ${grouped ? 'grouped-follow' : ''}" pos-${pos || 'single'} data-id="${m.id}" style="position:relative;" onmousedown="pressStart('${m.id}')" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchstart="pressStart('${m.id}')" ontouchend="pressEnd()">
+            <div class="msg-row ${isOut ? 'outgoing' : 'incoming'} ${grouped ? 'grouped-follow' : ''} pos-${pos || 'single'}" data-id="${m.id}" style="position:relative;" onmousedown="pressStart('${m.id}')" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchstart="pressStart('${m.id}')" ontouchend="pressEnd()">
                ${!isOut ? (m.avatar ? `<img class="msg-avatar" src="${m.avatar}" alt="">` : `<span class="msg-avatar msg-avatar-empty"></span>`) : ''}
-                <div class="msg-card">
+                <div class="msg-card ${(hasMedia && !isVO) ? 'media-card' : ''}">
                     ${starFlag}
                     ${headerHtml}
                     <div class="msg-body">
-                     ${fwdHtml}${replyHtml}${(m.image || m.video) ? voiceHtml + (isVO ? voTile : imgHtml + videoHtml) + (m.text ? `<div style="margin-top:6px;">${escapeHtml(m.text)}</div>` : '') : escapeHtml(m.text || '') + voiceHtml}${safetyHtml}
-                        <span class="msg-time-inline">${fmtClockTime(m.time)}${ticks}</span>
+                     ${bodyHtml}
                     </div>
                     ${reactionsHtml}
                 </div>
@@ -736,7 +818,15 @@
             if (!pinnedMessageId) { bar.classList.remove('active'); return; }
             const m = chatMessages.find(x => x.id === pinnedMessageId);
             if (!m) { bar.classList.remove('active'); return; }
-            document.getElementById('pinnedBarText').textContent = m.text || (m.voice ? '🎤 Voice message' : 'Media');
+            const first = (m.mediaArr && m.mediaArr[0]) || (m.image ? { type: 'image', mediaUrl: m.image } : m.video ? { type: 'video', mediaUrl: m.video } : null);
+            const title = m.text ? m.text
+                : (m.mediaArr && m.mediaArr.length > 1) ? (m.mediaArr.length + ' Photos')
+                : m.image ? 'Photo' : m.video ? 'Video' : m.voice ? 'Voice message' : 'Message';
+            document.getElementById('pinnedBarText').textContent = title;
+            let th = document.getElementById('pinnedBarThumb');
+            if (!th) { th = document.createElement('div'); th.id = 'pinnedBarThumb'; th.className = 'pb-thumb'; bar.appendChild(th); }
+            th.style.display = (first && !m.viewOnce) ? 'block' : 'none';
+            th.innerHTML = (first && !m.viewOnce) ? (first.type === 'video' ? `<video src="${first.mediaUrl}#t=0.1" preload="metadata" muted playsinline></video>` : `<img src="${first.mediaUrl}" alt="">`) : '';
             const isChatMode = document.getElementById('chat-flow').style.display !== 'none';
             bar.classList.toggle('active', isChatMode);
         }
@@ -956,6 +1046,7 @@
                         image: data.image || null,
                         clientId: data.clientId || null,
                         video: data.video || null,
+                        mediaArr: data.mediaArr || null,
                         voice: data.voice || null,
                         viewOnce: !!data.viewOnce,
                         viewedBy: data.viewedBy || [],
