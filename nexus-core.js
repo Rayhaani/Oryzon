@@ -55,7 +55,7 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-
+try {
 var db = firebase.firestore();
 db.settings({
     experimentalForceLongPolling: true,
@@ -83,7 +83,7 @@ if (!window.__nexusCoreBooted) {
         }
     });
 }
-
+} catch (e) { console.warn('[nexus-core init]', e); }
 // ============================================================
 // NOTIFICATION BELL BADGE (real-time, kamar Facebook)
 // Amfani da query mai filter guda ɗaya kawai (babu buƙatar
