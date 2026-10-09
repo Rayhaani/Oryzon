@@ -140,9 +140,23 @@ function listenNotifBadgeCount() {
         return ov;
     }
 
+   function hookFrame(fr) {
+        try {
+            var d = fr.contentDocument;
+            if (!d || d.__npHooked) return;
+            d.__npHooked = true;
+            d.addEventListener('click', function (e) {
+                var b = e.target && e.target.closest && e.target.closest('[onclick*="social.html"]');
+                if (!b) return;
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                close();
+            }, true);
+        } catch (e) {}
+   }
     function frame() {
         var fr = ensure().querySelector('iframe');
-        if (!fr.getAttribute('src')) fr.src = 'me.html?embed=1&warm=1';
+        if (!fr.getAttribute('src')) { fr.addEventListener('load', function () { hookFrame(fr); }); fr.src = 'me.html?embed=1&warm=1'; }
         return fr;
     }
 
@@ -201,13 +215,28 @@ function listenNotifBadgeCount() {
         history.back();
     }
 
+    function pre(u) {
+        if (u && typeof u === 'string' && u.indexOf('data:') !== 0) { var i = new Image(); i.src = u; }
+    }
+
+    function prefetchOne(w, n) {
+        try {
+            var d = w.db;
+            if (!d) { w.mePrefetch(n); return; }
+            d.collection('users').doc(n).get().then(function (s) { if (s.exists) pre((s.data() || {}).userProfilePic); }).catch(function () {});
+            d.collection('posts').where('username', '==', n).get().then(function (qs) {
+                var c = 0;
+                qs.forEach(function (x) { var p = x.data(); if (c < 9 && p.category === 'business' && p.mediaUrl) { c++; pre(p.mediaUrl); } });
+            }).catch(function () {});
+        } catch (e) {}
+    }
     function prefetch(names) {
         try {
             if (!names || !names.length) return;
             var fr = document.querySelector('#' + ID + ' iframe');
             if (!fr || !fr.getAttribute('src')) return;
             whenReady(fr, function () {
-                names.forEach(function (n) { try { fr.contentWindow.mePrefetch(n); } catch (e) {} });
+                names.forEach(function (n) { prefetchOne(fr.contentWindow, n); });
             });
         } catch (e) {}
     }
@@ -234,6 +263,7 @@ function listenNotifBadgeCount() {
         if (navigator.connection && navigator.connection.saveData) return;
         if (/(^|\/)me\.html$/.test(location.pathname)) return;
         frame();
+        prefetch([localStorage.getItem('nexus_user_session')]);
         setTimeout(scan, 1500);
     }
 
