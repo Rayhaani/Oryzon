@@ -57,16 +57,12 @@ if (!firebase.apps.length) {
 
 try {
 var db = firebase.firestore();
-db.settings({
-    experimentalForceLongPolling: true,
-    useFetchStreams: false,
-    merge: true
-});
+try { db.settings({ experimentalForceLongPolling: true }); } catch (e) { console.warn('[Firestore settings]', e.code || e); }
 db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
     console.warn('[Firestore Persistence]', err.code);
 });
 var storage = firebase.storage();
-var analytics = firebase.analytics();
+var analytics = null; try { analytics = firebase.analytics(); } catch (e) {}
 // GYARA: an nade wannan a cikin guard domin kada listener din ya
 // taru (kowace sake-gudana za ta kara wani sabon onAuthStateChanged
 // listener, wanda ke haifar da "Auth ready" log da yawa da kuma
@@ -79,7 +75,7 @@ if (!window.__nexusCoreBooted) {
             console.log("Auth ready, uid:", user.uid);
             listenNotifBadgeCount();
         } else {
-            window.location.href = "login.html";
+            if (!localStorage.getItem('nexus_user_session')) window.location.href = "login.html";
         }
     });
 }
