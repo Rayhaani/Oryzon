@@ -347,8 +347,8 @@ function listenNotifBadgeCount() {
         scan();
     }, { passive: true, capture: true });
 
-    if (document.readyState === 'complete') setTimeout(warm, 2500);
-    else window.addEventListener('load', function () { setTimeout(warm, 2500); });
+    if (document.readyState === 'complete') setTimeout(warm, 10000);
+    else window.addEventListener('load', function () { setTimeout(warm, 10000); });
 
     window.NPMe = {
         open: open,
