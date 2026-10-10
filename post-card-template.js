@@ -1,3 +1,10 @@
+/* Avatar na gida (ba tare da network ba) - maye gurbin dicebear */
+window.npAvatarSvg = function (seed) {
+    var s = String(seed || 'U'), h = 0, i;
+    for (i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+    var ch = (s.replace(/[^A-Za-z0-9]/g, '').charAt(0) || 'U').toUpperCase();
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="hsl(' + h + ',45%,35%)"/><text x="32" y="42" font-size="30" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle" fill="#fff">' + ch + '</text></svg>');
+};
 /* ============================================================
    POST CARD TEMPLATE - SHARED SOURCE OF TRUTH
    Ko'ina da aka canja wannan fayil, duka homepage da
@@ -1226,7 +1233,7 @@ window.generatePostHTML = function(post) {
 
     
        // --- Avatar ---
-const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?seed=" + (post.username || 'user');
+const rawPic = post.userProfilePic || npAvatarSvg(post.username || 'user');
         const avatarUrl = rawPic.includes('cloudinary.com')
         ? rawPic.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/')
         : rawPic;
@@ -1252,7 +1259,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
             const fUrl = nxFastUrl(item.url);
             if (item.type === 'video') {
                 return `<div class="post-media-slide">
-                    <video src="${fUrl}" class="post-media" loop playsinline autoplay muted preload="metadata"></video>
+                    <video src="${fUrl}" class="post-media" loop playsinline muted preload="none"></video>
                     <div class="post-mute-toggle" onclick="postCard_toggleVideoSound(event, this)">
                         <i class="fa-solid fa-volume-xmark"></i>
                     </div>
@@ -1264,7 +1271,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
         const dotsHTML = nxMediaItems.map((_, i) => `<span class="post-media-dot${i === 0 ? ' active' : ''}"></span>`).join('');
 
         const gridHTML = nxMediaItems.map(item => item.type === 'video'
-    ? `<video src="${nxFastUrl(item.url)}" muted playsinline preload="auto"></video>`
+    ? `<video src="${nxFastUrl(item.url)}" muted playsinline preload="none"></video>`
     : `<img src="${nxFastUrl(item.url)}" alt="post image">`
 ).join('');
 
@@ -1296,7 +1303,7 @@ const rawPic = post.userProfilePic || "https://api.dicebear.com/7.x/bottts/svg?s
                     ${boostTagHTML}
                     <video src="${fastUrl}"
                         class="post-media"
-                        loop playsinline autoplay muted preload="metadata">
+                        loop playsinline muted preload="none">
                     </video>
                     <div class="post-mute-toggle"
                          onclick="postCard_toggleVideoSound(event, this)">
@@ -1934,7 +1941,7 @@ window.toggleSave = async function(btn, postId) {
     }
     function nexcmCurrentAvatarUrl() {
         const u = nexcmCurrentUsername();
-        return localStorage.getItem('userProfilePic') || ('https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(u));
+        return localStorage.getItem('userProfilePic') || npAvatarSvg(u);
     }
 
     function injectNexcmStyles() {
@@ -2305,7 +2312,7 @@ window.toggleSave = async function(btn, postId) {
                         <div class="nexcm-comment-card ${sentimentClass}" id="nexcmCard-${comment.id}">
                             <div class="nexcm-core-layout">
                                 <div class="nexcm-avatar-frame">
-                                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(comment.author)}" class="nexcm-avatar">
+                                    <img src="${npAvatarSvg(comment.author)}" class="nexcm-avatar">
                                 </div>
                                 <div class="nexcm-body-cluster">
                                     <div class="nexcm-meta-layer">
@@ -2346,7 +2353,7 @@ window.toggleSave = async function(btn, postId) {
                                 <div class="nexcm-comment-card">
                                     <div class="nexcm-core-layout">
                                         <div class="nexcm-avatar-frame" style="width:26px;height:26px;">
-                                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(reply.author)}" class="nexcm-avatar">
+                                            <img src="${npAvatarSvg(reply.author)}" class="nexcm-avatar">
                                         </div>
                                         <div class="nexcm-body-cluster">
                                             <div class="nexcm-meta-layer">
