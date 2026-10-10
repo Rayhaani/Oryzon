@@ -248,6 +248,16 @@ function listenNotifBadgeCount() {
         show();
        st.user = username;
         setTimeout(function () { if (st.open && st.user === username) saveSnap(username); }, 3000);
+       var t0 = Date.now();
+        var tick = setInterval(function () {
+            try {
+                var d = fr.contentDocument, root = d && d.getElementById('page-content');
+                var imgs = root ? root.querySelectorAll('img') : [];
+                var done = [].filter.call(imgs, function (i) { return i.complete && i.naturalWidth; }).length;
+                console.log('[NPMe]', Date.now() - t0, 'ms | ready:', !!(fr.contentWindow && fr.contentWindow.__meReady), '| text:', root ? root.textContent.trim().length : 0, '| imgs:', done + '/' + imgs.length);
+            } catch (e) {}
+            if (Date.now() - t0 > 8000) clearInterval(tick);
+        }, 500);
     }
 
     function close() {
