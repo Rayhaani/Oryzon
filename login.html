@@ -232,9 +232,12 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        try { db.settings({ experimentalForceLongPolling: true }); } catch (e) {}
+        db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
         // Riƙe reference ga unverified user don resend
         let unverifiedUser = null;
+        fetch("https://oryzon-backend-ed1q.onrender.com/", { mode: "no-cors" }).catch(() => {});
 
         async function executeLogin(event) {
             event.preventDefault();
@@ -296,28 +299,29 @@
                     return;
                 }
 
-                // STEP 4: Update Firestore — isOnline + sync emailVerified
-                // Also read onboardingComplete to decide where to redirect
-                const userSnap = await db.collection("users").doc(username).get();
-                const onboardingDone = userSnap.exists && userSnap.data().onboardingComplete === true;
-                await db.collection("users").doc(username).update({
-                    isOnline: true,
-                    emailVerified: true
-                });
+                // STEP 4+5+6: duk a lokaci guda (parallel), ba jere ba
+                const onboardingDone = userDoc.data().onboardingComplete === true;
+                const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(r, ms))]);
 
-               // STEP 5: Backfill username→uid mapping in Realtime Database (for existing users)
-await firebase.database().ref('usernames/' + username).set(firebaseUser.uid);
+                const tokenTask = fetch("https://oryzon-backend-ed1q.onrender.com/get-custom-token", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: username })
+                })
+                    .then(r => r.json())
+                    .then(d => { if (d.success) localStorage.setItem("nexus_custom_token", d.token); })
+                    .catch(e => console.warn("Token fetch failed:", e));
 
-try {
-    const tokenRes = await fetch("https://oryzon-backend-ed1q.onrender.com/get-custom-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username })
-    });
-    const tokenData = await tokenRes.json();
-    if (tokenData.success) localStorage.setItem("nexus_custom_token", tokenData.token);
-} catch(e) { console.warn("Token fetch failed:", e); }
-                
+                const feedPrimeTask = onboardingDone
+                    ? db.collection("posts").orderBy("timestamp", "desc").limit(12).get().catch(() => {})
+                    : Promise.resolve();
+
+                await Promise.all([
+                    db.collection("users").doc(username).update({ isOnline: true, emailVerified: true }),
+                    firebase.database().ref('usernames/' + username).set(firebaseUser.uid),
+                    withTimeout(tokenTask, 3000),
+                    withTimeout(feedPrimeTask, 3000)
+                ]);              
 // STEP 6: Save session → redirect
 localStorage.setItem("nexus_user_session", username);
 localStorage.setItem("nexus_user_uid", firebaseUser.uid);
