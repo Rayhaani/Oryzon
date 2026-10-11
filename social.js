@@ -349,7 +349,6 @@ window.refreshSocialFeed = function () {
           const feedContainer = document.querySelector('.feed-container');
           if (!feedContainer) return;
 
-          // 1) Cache nan take (ko skeleton)
           const cachedFeedHTML = localStorage.getItem('nexus_feed_cache_html');
           if (cachedFeedHTML) {
               feedContainer.innerHTML = cachedFeedHTML;
@@ -359,7 +358,6 @@ window.refreshSocialFeed = function () {
               feedContainer.innerHTML = renderSkeletonCards(FEED_PAGE_SIZE);
           }
 
-          // 2) saved_posts a BAYA — ba ya jinkirta feed
           try { window.userSavedPosts = JSON.parse(localStorage.getItem('nexus_saved_ids') || '[]'); }
           catch (e) { window.userSavedPosts = []; }
           db.collection("saved_posts").where("userId", "==", currentUser).get()
@@ -369,7 +367,6 @@ window.refreshSocialFeed = function () {
               })
               .catch(e => console.log("Saved posts error:", e));
 
-          // 3) Listener DAYA kacal (babu get() kuma)
           if (feedUnsub) { feedUnsub(); feedUnsub = null; }
           const postsQuery = db.collection("posts").orderBy("timestamp", "desc").limit(FEED_PAGE_SIZE);
           feedUnsub = postsQuery.onSnapshot(
