@@ -91,18 +91,19 @@ if (!window.__nexusCoreBooted) {
 // ============================================================
 function listenNotifBadgeCount() {
     if (!currentUser) return;
-    db.collection('notifications')
+    if (window._nxNotifUnsub) { window._nxNotifUnsub(); window._nxNotifUnsub = null; }
+    window._nxNotifUnsub = db.collection('notifications')
         .where('to', '==', currentUser)
+        .where('read', '==', false)
+        .limit(10)
         .onSnapshot(snapshot => {
             const badge = document.getElementById('notifBadgeCount');
             if (!badge) return;
-            let count = 0;
-            snapshot.forEach(doc => { if (doc.data().read === false) count++; });
+            const count = snapshot.size;
             badge.textContent = count > 9 ? '9+' : count;
             badge.classList.toggle('show', count > 0);
         }, err => console.error('Notif badge error:', err));
-}
-
+                    }
 
 /* ============================================================
    NPMe — global pre-warmed profile overlay (me.html in an iframe).
@@ -347,8 +348,8 @@ function listenNotifBadgeCount() {
         scan();
     }, { passive: true, capture: true });
 
-    if (document.readyState === 'complete') setTimeout(warm, 10000);
-    else window.addEventListener('load', function () { setTimeout(warm, 10000); });
+    if (document.readyState === 'complete') setTimeout(warm, 20000);
+    else window.addEventListener('load', function () { setTimeout(warm, 20000); });
 
     window.NPMe = {
         open: open,
