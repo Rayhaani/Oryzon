@@ -238,19 +238,35 @@ let feedUnsub = null;
 // ta al'ada (DOMContentLoaded), DA KUMA duk lokacin da NexusRouter ya
 // shigo social.html ta hanyar SPA navigation (feed/DOM elements sabbi ne
 // a kowane visit, don haka dole a sake render su).
+function _nxPaintCachedFeed() {
+    const fc = document.querySelector('.feed-container');
+    const cache = localStorage.getItem('nexus_feed_cache_html');
+    if (fc && cache && !fc.querySelector('.post-card')) {
+        fc.innerHTML = cache;
+        window.postCard_observeVideos && window.postCard_observeVideos();
+    }
+}
+function _nxWhenUserReady(cb) {
+    if (window._nxReadyTimer) { clearInterval(window._nxReadyTimer); window._nxReadyTimer = null; }
+    if (currentUser) return cb();
+    let tries = 0;
+    window._nxReadyTimer = setInterval(() => {
+        if (currentUser) { clearInterval(window._nxReadyTimer); window._nxReadyTimer = null; cb(); }
+        else if (++tries > 600) { clearInterval(window._nxReadyTimer); window._nxReadyTimer = null; }
+    }, 50);
+}
 function initSocialPage() {
     // MUHIMMI: a nan ne kadai za mu iya kiran NexusAlgorithm.init() cikin
     // aminci, domin a wannan lokacin nexus-algorithm.js (script na karshe
-    // a page) ya riga ya gama loda kuma NexusAlgorithm ya wanzu.
-    if (currentUser && typeof NexusAlgorithm !== 'undefined') {
-        NexusAlgorithm.init(currentUser);
-    }
+    // a page) ya riga ya gama loda kuma NexusAlgorithm ya wanzu. 
     const savedProfile = localStorage.getItem('userProfilePic');
     const storyAvatar = document.getElementById('story-avatar-preview');
     if (savedProfile && storyAvatar) { storyAvatar.src = savedProfile; }
     window.postCard_observeVideos && window.postCard_observeVideos();
 
-    if (currentUser) {
+    _nxPaintCachedFeed();
+    _nxWhenUserReady(() => {
+        if (typeof NexusAlgorithm !== 'undefined') NexusAlgorithm.init(currentUser);
         renderNexusFeed();
 
         db.collection("users").doc(currentUser).get()
@@ -278,7 +294,7 @@ function initSocialPage() {
                 }
             }
         }).catch((err) => { console.error("Error fetching user data:", err); });
-    }
+    });
 
     _socialNavScrollReset();
     window.addEventListener('scroll', _socialNavScrollHandler, { passive: true });
@@ -295,6 +311,7 @@ function destroySocialPage() {
     if (liveChatUnsub) { liveChatUnsub(); liveChatUnsub = null; }
     if (watchViewersUnsub) { watchViewersUnsub(); watchViewersUnsub = null; }
     if (watchChatUnsub) { watchChatUnsub(); watchChatUnsub = null; }
+   if (window._nxReadyTimer) { clearInterval(window._nxReadyTimer); window._nxReadyTimer = null; }
     window.removeEventListener('scroll', _socialNavScrollHandler);
     _socialNavScrollReset();
 }
@@ -330,58 +347,38 @@ window.refreshSocialFeed = function () {
       // ============================================================
       async function renderNexusFeed() {
           const feedContainer = document.querySelector('.feed-container');
+          if (!feedContainer) return;
 
-          // STEP 1: Nuna wani abu NAN TAKE (cached feed ko skeleton),
-          // maimakon barin allo fari yayin da muke jiran Firebase.
+          // 1) Cache nan take (ko skeleton)
           const cachedFeedHTML = localStorage.getItem('nexus_feed_cache_html');
           if (cachedFeedHTML) {
               feedContainer.innerHTML = cachedFeedHTML;
-              setTimeout(() => postCard_restoreLikes(feedContainer), 100);
+              setTimeout(() => window.postCard_restoreLikes && postCard_restoreLikes(feedContainer), 100);
               window.postCard_observeVideos && window.postCard_observeVideos();
           } else {
               feedContainer.innerHTML = renderSkeletonCards(FEED_PAGE_SIZE);
           }
 
-          // STEP 2: saved_posts da posts suna gudu A LAYI DAYA (parallel),
-          // ba jere daya bayan daya ba, domin basu da alaka da junansu.
-          const savedPostsPromise = db.collection("saved_posts")
-              .where("userId", "==", currentUser)
-              .get()
-              .catch(e => { console.log("Saved posts error:", e); return { docs: [] }; });
+          // 2) saved_posts a BAYA — ba ya jinkirta feed
+          try { window.userSavedPosts = JSON.parse(localStorage.getItem('nexus_saved_ids') || '[]'); }
+          catch (e) { window.userSavedPosts = []; }
+          db.collection("saved_posts").where("userId", "==", currentUser).get()
+              .then(s => {
+                  window.userSavedPosts = s.docs.map(d => d.data().postId);
+                  localStorage.setItem('nexus_saved_ids', JSON.stringify(window.userSavedPosts));
+              })
+              .catch(e => console.log("Saved posts error:", e));
 
-          const postsQuery = db.collection("posts")
-              .orderBy("timestamp", "desc")
-              .limit(FEED_PAGE_SIZE);
-
-          let savedSnapshot, postsSnapshot;
-          try {
-              [savedSnapshot, postsSnapshot] = await Promise.all([savedPostsPromise, postsQuery.get()]);
-          } catch (err) {
-              // Firestore ta kasa kai wa backend (misali network blip). Mu
-              // BARI cached/skeleton feed din da ake nunawa yanzu, kada mu
-              // share ta da "No posts yet...". Real-time listener a kasa
-              // zai gyara komai da kanta idan network ta dawo.
-              console.error('renderNexusFeed: get() ya kasa (network/Firestore), an bar tsohon feed:', err);
-              feedUnsub = postsQuery.onSnapshot((snapshot) => {
+          // 3) Listener DAYA kacal (babu get() kuma)
+          if (feedUnsub) { feedUnsub(); feedUnsub = null; }
+          const postsQuery = db.collection("posts").orderBy("timestamp", "desc").limit(FEED_PAGE_SIZE);
+          feedUnsub = postsQuery.onSnapshot(
+              (snapshot) => {
                   renderPostsBatch(snapshot, feedContainer);
-              });
-              return;
-          }
-
-          window.userSavedPosts = savedSnapshot.docs.map(doc => doc.data().postId);
-
-          renderPostsBatch(postsSnapshot, feedContainer);
-
-          if (!postsSnapshot.empty) {
-              lastVisibleDoc = postsSnapshot.docs[postsSnapshot.docs.length - 1];
-          }
-
-          // STEP 3: real-time listener KAWAI akan wannan page na farko,
-          // domin sabbin posts su bayyana nan take. Ana ajiye unsubscribe
-          // a feedUnsub domin destroySocialPage() ya iya rufe ta.
-          feedUnsub = postsQuery.onSnapshot((snapshot) => {
-              renderPostsBatch(snapshot, feedContainer);
-          });
+                  if (!snapshot.empty) lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+              },
+              (err) => console.error('feed listener error:', err)
+          );
       }
 
       function renderPostsBatch(snapshot, feedContainer) {
