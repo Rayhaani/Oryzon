@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Protocol - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep-black: #000000;
+            --nexus-cyan: #00F2FF;
+            --border-subtle: rgba(255, 255, 255, 0.05);
+            --text-secondary: rgba(255, 255, 255, 0.5);
+            --error-red: #ff3b30;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep-black);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .nexus-auth-card {
+            width: 100%;
+            max-width: 340px;
+            background: linear-gradient(135deg, #1e1c1c 0%, #121111 100%);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 22px 20px 18px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease, background 0.6s ease, box-shadow 0.6s ease;
+        }
+
+        .nexus-auth-card.implode-active {
+            transform: scale(0.1);
+            opacity: 0;
+            background: var(--nexus-cyan);
+            box-shadow: 0 0 80px 20px var(--nexus-cyan);
+            filter: blur(4px);
+        }
+
+        .login-window {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .field-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .password-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .password-label-row .field-label { margin-bottom: 0; }
+        .forgot-link {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            color: var(--nexus-cyan);
+            text-decoration: none;
+            opacity: 0.85;
+            transition: opacity 0.2s ease;
+        }
+        .forgot-link:hover { opacity: 1; }
+
+        .input-block { display: flex; flex-direction: column; }
+
+        .nexus-input-field {
+            width: 100%;
+            background: #0d0d0f;
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 14px;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .nexus-input-field:focus {
+            border-color: var(--nexus-cyan);
+            background: #111114;
+        }
+
+        .error-message {
+            color: var(--error-red);
+            font-size: 11px;
+            margin-top: 5px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        /* Email not verified banner */
+        .verify-banner {
+            background: rgba(255, 59, 48, 0.08);
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            border-radius: 10px;
+            padding: 9px 12px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+            display: none;
+        }
+        .verify-banner .resend-btn {
+            color: var(--nexus-cyan);
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 11px;
+        }
+
+        .btn-container {
+            margin-top: 6px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .nexus-round-next {
+            background: transparent;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 25px;
+            padding: 8px 16px;
+            color: var(--nexus-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: buttonPulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+            transition: all 0.3s ease;
+        }
+        .nexus-round-next:disabled { opacity: 0.4; cursor: not-allowed; animation: none; }
+        .nexus-round-next span { font-size: 12px; transition: transform 0.2s ease; }
+        .nexus-round-next:hover:not(:disabled) {
+            background: rgba(0, 242, 255, 0.05);
+            border-color: var(--nexus-cyan);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+        }
+
+        @keyframes buttonPulse {
+            0% { box-shadow: 0 0 8px rgba(0, 242, 255, 0.05); border-color: rgba(0, 242, 255, 0.2); }
+            100% { box-shadow: 0 0 15px rgba(0, 242, 255, 0.25); border-color: rgba(0, 242, 255, 0.6); }
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        .auth-footer a { color: var(--nexus-cyan); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="nexus-auth-card" id="authCard">
+        <form id="nexusLoginForm" onsubmit="executeLogin(event)">
+            <div class="login-window">
+
+                <!-- USERNAME -->
+                <div class="input-block">
+                    <div class="field-label">Username</div>
+                    <input type="text" id="loginUsername" class="nexus-input-field" required autocomplete="off">
+                    <div class="error-message" id="usernameError"></div>
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="input-block">
+                    <div class="password-label-row">
+                        <div class="field-label">Password</div>
+                        <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
+                    </div>
+                    <input type="password" id="loginPassword" class="nexus-input-field" required>
+                    <div class="error-message" id="passwordError"></div>
+                </div>
+
+                <!-- Email not verified banner -->
+                <div class="verify-banner" id="verifyBanner">
+                    Your email is not verified yet. <span class="resend-btn" onclick="resendVerification()">Resend verification email</span>
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit" class="nexus-round-next" id="loginBtn">LOGIN <span>→</span></button>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="index.html">Register Here</a>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+  apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+  authDomain: "oryzon-50ea4.firebaseapp.com",
+  projectId: "oryzon-50ea4",
+  databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+  storageBucket: "oryzon-50ea4.firebasestorage.app",
+  messagingSenderId: "782106742622",
+  appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+  measurementId: "G-K5085DLL2W"
+};
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        // Same persistence as the app, so the feed prefetched below is
+        // already in the local cache when social.html opens.
+        db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+        // Wake the backend while the user is still typing (Render cold start).
+        try { fetch("https://oryzon-backend-ed1q.onrender.com/", { mode: "no-cors" }).catch(() => {}); } catch (e) {}
+
+        // Riƙe reference ga unverified user don resend
+        let unverifiedUser = null;
+
+        async function executeLogin(event) {
+            event.preventDefault();
+
+            const loginBtn      = document.getElementById("loginBtn");
+            const usernameError = document.getElementById("usernameError");
+            const passwordError = document.getElementById("passwordError");
+            const verifyBanner  = document.getElementById("verifyBanner");
+            const authCard      = document.getElementById("authCard");
+
+            const username = document.getElementById("loginUsername").value.trim().toLowerCase();
+            const password = document.getElementById("loginPassword").value;
+
+            // Reset duk messages
+            usernameError.style.display = "none";
+            passwordError.style.display = "none";
+            verifyBanner.style.display  = "none";
+            unverifiedUser = null;
+
+            if (!username || !password) return;
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = "VERIFYING... <span>→</span>";
+
+            try {
+                // STEP 1: Karɓi email daga Firestore ta username
+                const userDoc = await db.collection("users").doc(username).get();
+
+                if (!userDoc.exists) {
+                    usernameError.textContent = "Username not found.";
+                    usernameError.style.display = "block";
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = "LOGIN <span>→</span>";
+                    return;
+                }
+
+                const email = userDoc.data().email;
+
+                if (!email) {
+                    usernameError.textContent = "Account error — no email on file. Contact support.";
+                    usernameError.style.display = "block";
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = "LOGIN <span>→</span>";
+                    return;
+                }
+
+                // STEP 2: Sign in da Firebase Auth
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const firebaseUser = userCredential.user;
+
+                // STEP 3: Duba email verification
+                if (!firebaseUser.emailVerified) {
+                    // Riƙe reference kafin signOut domin resend ya yi aiki
+                    unverifiedUser = firebaseUser;
+                    verifyBanner.style.display = "block";
+                    await auth.signOut();
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = "LOGIN <span>→</span>";
+                    return;
+                }
+
+                // STEP 4+5 (parallel): update Firestore, backfill username->uid in RTDB,
+                // and prefetch the first feed page into the local cache (max 1.2s).
+                const onboardingDone = userDoc.data().onboardingComplete === true;
+                const prefetchFeed = Promise.race([
+                    db.collection("posts").orderBy("timestamp", "desc").limit(12).get().catch(() => null),
+                    new Promise(res => setTimeout(res, 1200))
+                ]);
+                await Promise.all([
+                    db.collection("users").doc(username).update({ isOnline: true, emailVerified: true }),
+                    firebase.database().ref('usernames/' + username).set(firebaseUser.uid),
+                    prefetchFeed
+                ]);
+
+                // STEP 6: Save session -> redirect NOW. The custom token is fetched
+                // in the background by nexus-core.js (never blocks login).
+                localStorage.setItem("nexus_token_pending", "1");
+                localStorage.setItem("nexus_user_session", username);
+                localStorage.setItem("nexus_user_uid", firebaseUser.uid);
+                authCard.classList.add("implode-active");
+                // First-time users → onboarding, returning users → social feed
+                const destination = onboardingDone ? "social.html" : "onboarding.html";
+                setTimeout(() => { window.location.href = destination; }, 300);
+
+            } catch (err) {
+                console.error("Login error:", err);
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = "LOGIN <span>→</span>";
+
+                if (
+                    err.code === "auth/wrong-password" ||
+                    err.code === "auth/invalid-credential" ||
+                    err.code === "auth/invalid-login-credentials"
+                ) {
+                    passwordError.textContent = "Wrong password. Try again or use Forgot password.";
+                    passwordError.style.display = "block";
+                } else if (err.code === "auth/too-many-requests") {
+                    passwordError.textContent = "Too many failed attempts. Please wait and try again.";
+                    passwordError.style.display = "block";
+                } else if (err.code === "auth/user-disabled") {
+                    usernameError.textContent = "This account has been disabled. Contact support.";
+                    usernameError.style.display = "block";
+                } else {
+                    passwordError.textContent = "Login failed: " + err.message;
+                    passwordError.style.display = "block";
+                }
+            }
+        }
+
+        function resendVerification() {
+            const btn = document.querySelector(".resend-btn");
+            if (!unverifiedUser) {
+                // Idan reference ya ɓace, nuna message mai amfani
+                document.getElementById("verifyBanner").innerHTML =
+                    "Please try logging in again first, then click Resend.";
+                return;
+            }
+            btn.textContent = "Sending...";
+            btn.disabled = true;
+            unverifiedUser.sendEmailVerification()
+                .then(() => {
+                    document.getElementById("verifyBanner").innerHTML =
+                        "✓ Verification email sent! Check your inbox.";
+                    document.getElementById("verifyBanner").style.color = "#34c759";
+                })
+                .catch(err => {
+                    btn.textContent = "Failed — try again";
+                    btn.disabled = false;
+                    console.error("Resend error:", err);
+                });
+        }
+    </script>
+</body>
+    </html>
+    
