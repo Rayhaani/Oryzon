@@ -390,3 +390,44 @@ function listenNotifBadgeCount() {
         isOpen: function () { return st.open; }
     };
 })();
+
+(function () {
+    if (window.self !== window.top || window.__npWarmPages) return;
+    window.__npWarmPages = true;
+    window.__npImgKeep = window.__npImgKeep || [];
+    var WARM_PAGES = ['services.html'];
+
+    function warmImages() {
+        try {
+            var urls = [];
+            var c = JSON.parse(localStorage.getItem('np_content_cache') || 'null');
+            ((c && c.categories) || []).forEach(function (x) { if (x && x.photo) urls.push(x.photo); });
+            var pr = JSON.parse(localStorage.getItem('np_providers_cache') || '[]');
+            pr.forEach(function (p) {
+                if (p && p.photoUrl) urls.push(p.photoUrl);
+                if (p && p.coverImageUrl) urls.push(p.coverImageUrl);
+            });
+            urls.slice(0, 60).forEach(function (u) {
+                if (typeof u !== 'string' || u.indexOf('data:') === 0) return;
+                var i = new Image();
+                i.decoding = 'async';
+                i.src = u;
+                window.__npImgKeep.push(i);
+            });
+        } catch (e) {}
+    }
+
+    function warm() {
+        if (/(^|\/)services\.html$/.test(location.pathname)) { warmImages(); return; }
+        try {
+            if (window.NexusRouter && typeof window.NexusRouter.prefetchPage === 'function') {
+                WARM_PAGES.forEach(function (p) { window.NexusRouter.prefetchPage(p); });
+            }
+        } catch (e) {}
+        warmImages();
+    }
+
+    function schedule() { setTimeout(warm, 3000); }
+    if (document.readyState === 'complete') schedule();
+    else window.addEventListener('load', schedule);
+})();
