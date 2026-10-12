@@ -651,16 +651,17 @@ function initAppElements() {
     const _catHtml = CATEGORIES.map(cat => {
         const repPhoto = getCategoryRepresentativePhoto(cat.id) || cat.photo;
         const mediaHtml = repPhoto
-            ? `<img src="${repPhoto}" alt="${cat.label}" decoding="async" ${_dims[repPhoto] ? `style="aspect-ratio:${_dims[repPhoto]}"` : ''} onload="npImgDim(this)">`
+            ? `<img src="${repPhoto}" alt="${cat.label}" decoding="async" ${_dims[repPhoto] ? `style="aspect-ratio:${_dims[repPhoto]}"` : ''} onload="npImgDone(this)">`
             : `<div style="width:100%;height:140px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);"><span style="font-size:34px;">${cat.icon}</span></div>`;
         return `
-        <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card">
+        <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card${repPhoto ? (' np-ph' + (_dims[repPhoto] ? '' : ' np-ph-guess')) : ''}">
+            ${repPhoto ? `<span class="np-ph-icon">${cat.icon}</span>` : ''}
             ${mediaHtml}
             <div class="prism-card-footer">
                 <div class="prism-card-label">${cat.icon} ${cat.label}</div>
             </div>
         </div>`;
-    }).join(''); if (catGrid._sig !== _catHtml) { catGrid.innerHTML = _catHtml; catGrid._sig = _catHtml; }
+    }).join(''); if (catGrid._sig !== _catHtml) { catGrid.innerHTML = _catHtml; catGrid._sig = _catHtml; catGrid.querySelectorAll('img').forEach(function (i) { if (i.complete && i.naturalWidth) window.npImgDone(i); }); }
 
 function getHighlyRatedPros() {
     let pool = PROS;
@@ -10443,6 +10444,9 @@ window.npImgDim = function (img) {
         const m = JSON.parse(localStorage.getItem('np_img_dims') || '{}');
         if (!m[img.src]) { m[img.src] = img.naturalWidth + ' / ' + img.naturalHeight; localStorage.setItem('np_img_dims', JSON.stringify(m)); }
     } catch (e) {}
+};
+window.npImgDone = function (img) {
+    try { window.npImgDim(img); var p = img.parentElement; if (p) p.classList.remove('np-ph', 'np-ph-guess'); } catch (e) {}
 };
 window.npToggleSpeak = function () {
     const on = document.body.classList.toggle('np-show-speak');
