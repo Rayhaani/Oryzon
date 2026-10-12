@@ -369,7 +369,8 @@
         loadScriptOnce: loadScriptOnce,
         loadStylesheetOnce: loadStylesheetOnce,
         runPageInit: runInit,
-        runPageDestroy: runDestroy
+        runPageDestroy: runDestroy,
+        prefetchPage: prefetchPage
     };
     // ------------------------------------------------------------
     // 3) Helpers
