@@ -533,7 +533,6 @@
             if (v) v.remove();
         }
         function openMediaViewer(id, idx, opts) {
-           alert('TEST 3 - openMediaViewer called, id=' + id + ' found=' + !!chatMessages.find(x => x.id === id));
             opts = opts || {};
             const m = chatMessages.find(x => x.id === id);
             if (!m) return;
@@ -568,7 +567,6 @@
                 ${(m.text && !opts.viewOnce) ? `<div style="position:absolute;left:0;right:0;bottom:0;padding:22px 18px 26px;color:#fff;text-align:center;font-size:15px;background:linear-gradient(0deg,rgba(0,0,0,0.75),transparent);">${escapeHtml(m.text)}</div>` : ''}
                 ${(opts.viewOnce && m.text) ? `<div style="position:absolute;left:0;right:0;bottom:0;padding:22px 18px 26px;color:#fff;text-align:center;font-size:15px;background:linear-gradient(0deg,rgba(0,0,0,0.75),transparent);">${escapeHtml(m.text)}</div>` : ''}`;
             host.appendChild(v);
-           alert('TEST 4 - viewer added: ' + JSON.stringify(v.getBoundingClientRect()) + ' | parent=' + v.parentElement.tagName);
             const strip = v.querySelector('#mvStrip');
             if (idx) strip.scrollLeft = idx * strip.clientWidth;
             const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (strip.clientWidth || 1))));
