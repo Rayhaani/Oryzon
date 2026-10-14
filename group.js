@@ -528,58 +528,80 @@
         }
         function nxVoOpened(id) { try { return JSON.parse(localStorage.getItem('nx_vo_opened') || '[]').indexOf(id) !== -1; } catch (e) { return false; } }
         function nxVoMark(id) { try { const a = JSON.parse(localStorage.getItem('nx_vo_opened') || '[]'); if (a.indexOf(id) === -1) { a.push(id); localStorage.setItem('nx_vo_opened', JSON.stringify(a.slice(-300))); } } catch (e) {} }
-        function closeMediaViewer() {
-            const v = document.getElementById('mediaViewer');
-            if (v) v.remove();
+        let __voAudio = null;
+function closeMediaViewer() {
+    if (__voAudio) { try { __voAudio.pause(); } catch (e) {} __voAudio = null; }
+    const v = document.getElementById('mediaViewer');
+    if (v) v.remove();
+}
+function openMediaViewer(id, idx, opts) {
+    opts = opts || {};
+    try {
+        const m = chatMessages.find(x => x.id === id);
+        if (!m) return;
+        const items = (m.mediaArr && m.mediaArr.length) ? m.mediaArr
+            : m.image ? [{ type: 'image', mediaUrl: m.image }] : m.video ? [{ type: 'video', mediaUrl: m.video }] : [];
+        if (!items.length) return;
+        const mine = m.from === 'me';
+        const isVO = !!opts.viewOnce;
+        // Receiver: sau daya kawai. Sender: koyaushe zai iya budewa.
+        if (isVO && !mine && nxVoOpened(id)) return;
+
+        closeMediaViewer();
+        const d = m.time instanceof Date ? m.time : new Date(m.time);
+        const when = d.toLocaleDateString([], { day: 'numeric', month: 'long' }) + ', ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+        const who = mine ? 'You' : (m.name || 'Member');
+        const iconCss = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;';
+        const caption = m.text ? `<div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:22px 18px 26px;color:#fff;text-align:center;font-size:15px;background:linear-gradient(0deg,rgba(0,0,0,0.75),transparent);">${escapeHtml(m.text)}</div>` : '';
+
+        const v = document.createElement('div');
+        v.id = 'mediaViewer';
+        v.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:100030;background:#000;font-family:Inter,sans-serif;overflow:hidden;';
+        v.innerHTML = `
+            <div id="mvBar" style="position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:6px;padding:12px 10px 22px 18px;background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);color:#fff;">
+                <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:600;">${isVO ? 'View once' : escapeHtml(who)}</div>${isVO ? '' : `<div style="font-size:13px;opacity:0.75;margin-top:2px;">${when}</div>`}</div>
+                ${isVO ? '' : `<div style="${iconCss}" id="mvDownload"><i class="fa-solid fa-download"></i></div><div style="${iconCss}" id="mvForward"><i class="fa-solid fa-share"></i></div>`}
+            </div>
+            <div id="mvStrip" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+                ${items.map(it => `<div style="flex:0 0 100vw;width:100vw;height:100vh;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;">${it.type === 'video'
+                    ? `<video src="${it.mediaUrl}" ${isVO ? 'controlsList="nodownload noplaybackrate" disablePictureInPicture' : ''} controls autoplay playsinline style="max-width:100vw;max-height:100vh;width:100%;height:100%;object-fit:contain;background:#000;"></video>`
+                    : `<img src="${it.mediaUrl}" alt="" style="max-width:100vw;max-height:100vh;width:100%;height:100%;object-fit:contain;">`}</div>`).join('')}
+            </div>
+            ${caption}`;
+        document.body.appendChild(v);
+
+        const strip = v.querySelector('#mvStrip');
+        if (idx) strip.scrollLeft = idx * window.innerWidth;
+        const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (window.innerWidth || 1))));
+
+        const dl = v.querySelector('#mvDownload');
+        if (dl) dl.onclick = () => { const a = document.createElement('a'); const it = items[cur()]; a.href = it.mediaUrl; a.download = it.type === 'video' ? 'video.mp4' : 'photo.jpg'; a.target = '_blank'; document.body.appendChild(a); a.click(); a.remove(); };
+        const fw = v.querySelector('#mvForward');
+        if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); closeMediaViewer(); };
+        strip.addEventListener('click', (e) => { if (e.target.tagName === 'VIDEO') return; const bar = v.querySelector('#mvBar'); bar.style.display = bar.style.display === 'none' ? 'flex' : 'none'; });
+
+        // Voice na view-once: yana yin playing kai tsaye idan viewer ya bude
+        if (isVO && m.voice && m.voice.url) {
+            __voAudio = new Audio(m.voice.url);
+            __voAudio.play().catch(() => {});
         }
-        function openMediaViewer(id, idx, opts) {
-            opts = opts || {};
-            const m = chatMessages.find(x => x.id === id);
-            if (!m) return;
-            const items = (m.mediaArr && m.mediaArr.length) ? m.mediaArr
-                : m.image ? [{ type: 'image', mediaUrl: m.image }] : m.video ? [{ type: 'video', mediaUrl: m.video }] : [];
-            if (!items.length) return;
-            const mine = m.from === 'me';
-            if (opts.viewOnce && !mine) {
-                if (nxVoOpened(id)) return;
-                nxVoMark(id);
-                if (groupSlug) {
-                    try { groupRef().collection('messages').doc(id).update({ viewedBy: FieldValue.arrayUnion(currentUsername) }).catch(e => console.error('view-once mark failed:', e)); } catch (e) {}
-                }
+
+        history.pushState({ nxViewer: 1 }, '', location.href);
+        v._opts = opts;
+
+        // Alama "Opened" ana yinta ne BAYAN viewer ya bude cikin nasara (receiver kawai)
+        if (isVO && !mine) {
+            nxVoMark(id);
+            if (groupSlug) {
+                try { groupRef().collection('messages').doc(id).update({ viewedBy: FieldValue.arrayUnion(currentUsername) }).catch(e => console.error('view-once mark failed:', e)); } catch (e) {}
             }
-            closeMediaViewer();
-            const host = document.body;
-            const d = m.time instanceof Date ? m.time : new Date(m.time);
-            const when = d.toLocaleDateString([], { day: 'numeric', month: 'long' }) + ', ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
-            const who = mine ? 'You' : (m.name || 'Member');
-            const v = document.createElement('div');
-            v.id = 'mediaViewer';
-            v.style.cssText = 'position:fixed;inset:0;z-index:100030;background:#000;display:flex;flex-direction:column;font-family:Inter,sans-serif;';
-            const icon = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;';
-            v.innerHTML = `
-                <div id="mvBar" style="position:absolute;top:0;left:0;right:0;z-index:3;display:flex;align-items:center;gap:6px;padding:12px 10px 22px 18px;background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);color:#fff;">
-                    <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:600;">${opts.viewOnce ? 'View once' : escapeHtml(who)}</div>${opts.viewOnce ? '' : `<div style="font-size:13px;opacity:0.75;margin-top:2px;">${when}</div>`}</div>
-                    ${opts.viewOnce ? '' : `<div style="${icon}" id="mvDownload"><i class="fa-solid fa-download"></i></div><div style="${icon}" id="mvForward"><i class="fa-solid fa-share"></i></div>`}
-                </div>
-                <div id="mvStrip" style="flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-                    ${items.map(it => `<div style="flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;height:100%;">${it.type === 'video' ? `<video src="${it.mediaUrl}" controls autoplay playsinline style="max-width:100%;max-height:100%;"></video>` : `<img src="${it.mediaUrl}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">`}</div>`).join('')}
-                </div>
-                ${(m.text && !opts.viewOnce) ? `<div style="position:absolute;left:0;right:0;bottom:0;padding:22px 18px 26px;color:#fff;text-align:center;font-size:15px;background:linear-gradient(0deg,rgba(0,0,0,0.75),transparent);">${escapeHtml(m.text)}</div>` : ''}
-                ${(opts.viewOnce && m.text) ? `<div style="position:absolute;left:0;right:0;bottom:0;padding:22px 18px 26px;color:#fff;text-align:center;font-size:15px;background:linear-gradient(0deg,rgba(0,0,0,0.75),transparent);">${escapeHtml(m.text)}</div>` : ''}`;
-            host.appendChild(v);
-            const strip = v.querySelector('#mvStrip');
-            if (idx) strip.scrollLeft = idx * strip.clientWidth;
-            const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (strip.clientWidth || 1))));
-            const dl = v.querySelector('#mvDownload');
-            if (dl) dl.onclick = () => { const a = document.createElement('a'); const it = items[cur()]; a.href = it.mediaUrl; a.download = it.type === 'video' ? 'video.mp4' : 'photo.jpg'; a.target = '_blank'; document.body.appendChild(a); a.click(); a.remove(); };
-            const fw = v.querySelector('#mvForward');
-            if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); closeMediaViewer(); };
-            // tap on the photo toggles the top bar (like WhatsApp)
-            strip.addEventListener('click', (e) => { if (e.target.tagName === 'VIDEO') return; const bar = v.querySelector('#mvBar'); bar.style.display = bar.style.display === 'none' ? 'flex' : 'none'; });
-            // system back closes the viewer (there is no back icon)
-            history.pushState({ nxViewer: 1 }, '', location.href);
-            v._opts = opts;
         }
+    } catch (err) {
+        console.error('openMediaViewer error:', err);
+        closeMediaViewer();
+        showToast('Could not open: ' + (err && err.message ? err.message : 'error'), 'fa-triangle-exclamation');
+    }
+}
         function openViewOnce(id) { openMediaViewer(id, 0, { viewOnce: true }); }
         if (!window.__nxViewerBound) {
             window.__nxViewerBound = true;
