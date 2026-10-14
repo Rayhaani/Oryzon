@@ -230,11 +230,13 @@ function mu_centerToast(msg) {
     pill.style.cssText = 'background:rgba(235,235,240,0.96);color:#111;font:500 15px Inter,sans-serif;padding:14px 26px;border-radius:999px;white-space:nowrap;opacity:0;transition:opacity 0.2s;box-shadow:0 4px 18px rgba(0,0,0,0.35);';
     wrap.appendChild(pill);
     document.documentElement.appendChild(wrap);
+    alert('TEST 2 - toast: ' + JSON.stringify(pill.getBoundingClientRect()) + ' | parent=' + wrap.parentElement.tagName + ' | display=' + getComputedStyle(wrap).display);
     requestAnimationFrame(() => { pill.style.opacity = '1'; });
     setTimeout(() => { pill.style.opacity = '0'; }, 1600);
     setTimeout(() => { wrap.remove(); }, 1900);
 }
 function toggleViewOnce() {
+    alert('TEST 1 - toggleViewOnce ran, on=' + viewOnceOn);
     viewOnceOn = !viewOnceOn;
     const b = document.getElementById('viewOnceBtn');
     if (b) b.classList.toggle('on', viewOnceOn);
