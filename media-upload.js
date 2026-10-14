@@ -231,7 +231,6 @@ function mu_centerToast(msg) {
     wrap.appendChild(pill);
     document.documentElement.appendChild(wrap);
     alert('TEST 2 - toast: ' + JSON.stringify(pill.getBoundingClientRect()) + ' | parent=' + wrap.parentElement.tagName + ' | display=' + getComputedStyle(wrap).display);
-    alert('TEST 2 - toast: ' + JSON.stringify(pill.getBoundingClientRect()) + ' | parent=' + wrap.parentElement.tagName + ' | display=' + getComputedStyle(wrap).display);
     requestAnimationFrame(() => { pill.style.opacity = '1'; });
     setTimeout(() => { pill.style.opacity = '0'; }, 1600);
     setTimeout(() => { wrap.remove(); }, 1900);
