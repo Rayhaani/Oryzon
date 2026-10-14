@@ -538,10 +538,10 @@ function openMediaViewer(id, idx, opts) {
     opts = opts || {};
     try {
         const m = chatMessages.find(x => x.id === id);
-        if (!m) return;
+        if (!m) { showToast('DBG: message not found', 'fa-bug'); return; }
         const items = (m.mediaArr && m.mediaArr.length) ? m.mediaArr
             : m.image ? [{ type: 'image', mediaUrl: m.image }] : m.video ? [{ type: 'video', mediaUrl: m.video }] : [];
-        if (!items.length) return;
+        if (!items.length) { showToast('DBG: no media items', 'fa-bug'); return; }
         const mine = m.from === 'me';
         const isVO = !!opts.viewOnce;
         // Receiver: sau daya kawai. Sender: koyaushe zai iya budewa.
@@ -569,6 +569,7 @@ function openMediaViewer(id, idx, opts) {
             </div>
             ${caption}`;
         document.body.appendChild(v);
+       showToast('DBG viewer ' + v.offsetWidth + 'x' + v.offsetHeight, 'fa-bug');
 
         const strip = v.querySelector('#mvStrip');
         if (idx) strip.scrollLeft = idx * window.innerWidth;
