@@ -235,7 +235,6 @@ function mu_centerToast(msg) {
     setTimeout(() => { wrap.remove(); }, 1900);
 }
 function toggleViewOnce() {
-    alert('TEST 1 - toggleViewOnce ran, on=' + viewOnceOn);
     viewOnceOn = !viewOnceOn;
     const b = document.getElementById('viewOnceBtn');
     if (b) b.classList.toggle('on', viewOnceOn);
