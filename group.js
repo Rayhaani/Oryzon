@@ -733,7 +733,7 @@ function openMediaViewer(id, idx, opts) {
                 </div>` : '';
 
             const bodyHtml = hasMedia
-                ? `${fwdHtml}${replyHtml}${voiceHtml}${mediaHtml}${(capText && !isVO) ? `<div class="media-caption">${escapeHtml(capText)}<span class="msg-time-inline">${timeStr}${ticks}</span></div>` : ''}`
+                ? `${fwdHtml}${replyHtml}${isVO ? '' : voiceHtml}${mediaHtml}{(capText && !isVO) ? `<div class="media-caption">${escapeHtml(capText)}<span class="msg-time-inline">${timeStr}${ticks}</span></div>` : ''}`
                 : `${fwdHtml}${replyHtml}${escapeHtml(m.text || '')}${voiceHtml}${safetyHtml}<span class="msg-time-inline">${timeStr}${ticks}</span>`;
 
             return `
