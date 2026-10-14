@@ -545,7 +545,7 @@ function openMediaViewer(id, idx, opts) {
         const mine = m.from === 'me';
         const isVO = !!opts.viewOnce;
         // Receiver: sau daya kawai. Sender: koyaushe zai iya budewa.
-        if (isVO && !mine && nxVoOpened(id)) return;
+        if (isVO && !mine && nxVoOpened(id)) { showToast('Already opened', 'fa-eye-slash'); return; }
 
         closeMediaViewer();
         const d = m.time instanceof Date ? m.time : new Date(m.time);
@@ -586,7 +586,6 @@ function openMediaViewer(id, idx, opts) {
             __voAudio.play().catch(() => {});
         }
 
-        history.pushState({ nxViewer: 1 }, '', location.href);
         v._opts = opts;
 
         // Alama "Opened" ana yinta ne BAYAN viewer ya bude cikin nasara (receiver kawai)
@@ -602,7 +601,7 @@ function openMediaViewer(id, idx, opts) {
         showToast('Could not open: ' + (err && err.message ? err.message : 'error'), 'fa-triangle-exclamation');
     }
 }
-        function openViewOnce(id) { openMediaViewer(id, 0, { viewOnce: true }); }
+        function openViewOnce(id) { showToast('Opening…', 'fa-eye'); openMediaViewer(id, 0, { viewOnce: true }); }
         if (!window.__nxViewerBound) {
             window.__nxViewerBound = true;
             window.NexusOverlay = window.NexusOverlay || {};
