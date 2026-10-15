@@ -764,7 +764,16 @@ function openMediaViewer(id, idx, opts) {
         if (idx) strip.scrollLeft = idx * window.innerWidth;
         const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (window.innerWidth || 1))));
 
-       const dl = v.querySelector('#mvDownload');
+       const vToast = (msg) => {
+            const old = v.querySelector('#mvToast'); if (old) old.remove();
+            const t = document.createElement('div');
+            t.id = 'mvToast';
+            t.textContent = msg;
+            t.style.cssText = 'position:absolute;left:50%;bottom:90px;transform:translateX(-50%);z-index:10;background:rgba(235,235,240,0.96);color:#111;font:500 14px Inter,sans-serif;padding:10px 20px;border-radius:999px;white-space:nowrap;pointer-events:none;';
+            v.appendChild(t);
+            setTimeout(() => t.remove(), 2200);
+        };
+        const dl = v.querySelector('#mvDownload');
         if (dl) dl.onclick = async () => {
             const it = items[cur()];
             const name = (it.type === 'video' ? 'video_' : 'photo_') + Date.now() + (it.type === 'video' ? '.mp4' : '.jpg');
@@ -774,12 +783,12 @@ function openMediaViewer(id, idx, opts) {
                 const u = URL.createObjectURL(blob);
                 trigger(u);
                 setTimeout(() => URL.revokeObjectURL(u), 4000);
-                showToast('Saved to gallery', 'fa-circle-check');
+                vToast('Saved to gallery');
             } catch (e) {
                 trigger(it.mediaUrl);
-                showToast('Download started', 'fa-download');
+                vToast('Download started');
             }
-        }; 
+        };
         const fw = v.querySelector('#mvForward');
         if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); closeMediaViewer(); };
         strip.addEventListener('click', (e) => { if (e.target.tagName === 'VIDEO') return; const bar = v.querySelector('#mvBar'); if (!bar) return; bar.style.display = bar.style.display === 'none' ? 'flex' : 'none'; });
