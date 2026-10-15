@@ -21,8 +21,9 @@
     "use strict";
 
     if (window.NexusRouter) return; // prevent double-init if included twice
-
-    if ('serviceWorker' in navigator) {
+window.addEventListener('error', function (e) { alert('ERR: ' + e.message + ' | ' + String(e.filename || '').split('/').pop() + ':' + e.lineno); });
+   
+   if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js').catch((err) => {
                 console.error('SW registration failed:', err);
