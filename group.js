@@ -1976,7 +1976,7 @@ function openMediaViewer(id, idx, opts) {
             };
             if (typeof initMediaUpload === 'function') { ready(); return; }
             const s = document.createElement('script');
-            s.src = 'media-upload.js';
+            s.src = 'media-upload.js?v=' + Date.now();
             s.onload = ready;
             s.onerror = ready;
             document.body.appendChild(s);
