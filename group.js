@@ -705,10 +705,14 @@
         function nxVoOpened(id) { try { return JSON.parse(localStorage.getItem('nx_vo_opened') || '[]').indexOf(id) !== -1; } catch (e) { return false; } }
         function nxVoMark(id) { try { const a = JSON.parse(localStorage.getItem('nx_vo_opened') || '[]'); if (a.indexOf(id) === -1) { a.push(id); localStorage.setItem('nx_vo_opened', JSON.stringify(a.slice(-300))); } } catch (e) {} }
         let __voAudio = null;
-function closeMediaViewer() {
+     function closeMediaViewer() {
     if (__voAudio) { try { __voAudio.pause(); } catch (e) {} __voAudio = null; }
     const v = document.getElementById('mediaViewer');
-    if (v) v.remove();
+    if (v) {
+        if (v._fs) document.removeEventListener('fullscreenchange', v._fs);
+        v.remove();
+    }
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
 }
 function openMediaViewer(id, idx, opts) {
     opts = opts || {};
@@ -745,13 +749,30 @@ function openMediaViewer(id, idx, opts) {
             </div>
             ${caption}`;
         document.body.appendChild(v);
+       try { if (v.requestFullscreen) v.requestFullscreen().catch(() => {}); } catch (e) {}
+        v._fs = function () { if (!document.fullscreenElement && document.getElementById('mediaViewer')) history.back(); };
+        document.addEventListener('fullscreenchange', v._fs);
 
         const strip = v.querySelector('#mvStrip');
         if (idx) strip.scrollLeft = idx * window.innerWidth;
         const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (window.innerWidth || 1))));
 
-        const dl = v.querySelector('#mvDownload');
-        if (dl) dl.onclick = () => { const a = document.createElement('a'); const it = items[cur()]; a.href = it.mediaUrl; a.download = it.type === 'video' ? 'video.mp4' : 'photo.jpg'; a.target = '_blank'; document.body.appendChild(a); a.click(); a.remove(); };
+       const dl = v.querySelector('#mvDownload');
+        if (dl) dl.onclick = async () => {
+            const it = items[cur()];
+            const name = (it.type === 'video' ? 'video_' : 'photo_') + Date.now() + (it.type === 'video' ? '.mp4' : '.jpg');
+            const trigger = (href) => { const a = document.createElement('a'); a.href = href; a.download = name; document.body.appendChild(a); a.click(); a.remove(); };
+            try {
+                const blob = await (await fetch(it.mediaUrl)).blob();
+                const u = URL.createObjectURL(blob);
+                trigger(u);
+                setTimeout(() => URL.revokeObjectURL(u), 4000);
+                showToast('Saved to gallery', 'fa-circle-check');
+            } catch (e) {
+                trigger(it.mediaUrl);
+                showToast('Download started', 'fa-download');
+            }
+        }; 
         const fw = v.querySelector('#mvForward');
         if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); closeMediaViewer(); };
         strip.addEventListener('click', (e) => { if (e.target.tagName === 'VIDEO') return; const bar = v.querySelector('#mvBar'); if (!bar) return; bar.style.display = bar.style.display === 'none' ? 'flex' : 'none'; });
