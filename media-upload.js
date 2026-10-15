@@ -1141,12 +1141,19 @@ async function bakeVideoEdits(file, rotation, overlayCanvas, cropRect) {
 }
 function downloadCaptionMedia() {
     if (!pendingCaptionFile) return;
-    const a = document.createElement('a');
-    a.href = capCanvas ? capCanvas.toDataURL('image/jpeg', 0.95) : URL.createObjectURL(pendingCaptionFile);
-    a.download = pendingCaptionKind === 'video' ? 'video.mp4' : 'photo.jpg';
-    document.body.appendChild(a); a.click(); a.remove();
+    const isVideo = pendingCaptionKind === 'video';
+    const save = (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (isVideo ? 'video_' : 'photo_') + Date.now() + (isVideo ? '.mp4' : '.jpg');
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        mu_centerToast('Saved to gallery');
+    };
+    if (capCanvas && !isVideo) capCanvas.toBlob((b) => { if (b) save(b); }, 'image/jpeg', 0.95);
+    else save(pendingCaptionFile);
 }
-
 async function uploadAndSendMediaGroup(files, caption) {
     caption = caption || '';
     const ad = window.mediaUploadAdapter;
