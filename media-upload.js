@@ -227,7 +227,7 @@ function mu_centerToast(msg) {
     wrap.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2147483000;';
     const pill = document.createElement('div');
     pill.textContent = msg;
-    pill.style.cssText = 'background:rgba(235,235,240,0.96);color:#111;font:500 15px Inter,sans-serif;padding:14px 26px;border-radius:999px;white-space:nowrap;opacity:0;transition:opacity 0.2s;box-shadow:0 4px 18px rgba(0,0,0,0.35);';
+    pill.style.cssText = 'background:rgba(235,235,240,0.96);color:#111;font:500 12.5px Inter,sans-serif;padding:8px 16px;border-radius:999px;white-space:nowrap;opacity:0;transition:opacity 0.2s;box-shadow:0 3px 12px rgba(0,0,0,0.3);';
     wrap.appendChild(pill);
     document.documentElement.appendChild(wrap);
     requestAnimationFrame(() => { pill.style.opacity = '1'; });
