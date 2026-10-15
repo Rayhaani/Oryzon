@@ -564,8 +564,8 @@ function openMediaViewer(id, idx, opts) {
             </div>`}
             <div id="mvStrip" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
                 ${items.map(it => `<div style="flex:0 0 100vw;width:100vw;height:100vh;height:100dvh;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;">${it.type === 'video'
-                 ? `<video src="${it.mediaUrl}" ${isVO ? 'controlsList="nodownload noplaybackrate" disablePictureInPicture' : ''} controls autoplay playsinline style="max-width:100vw;max-height:100dvh;width:100%;height:100%;object-fit:contain;background:#000;"></video>`
-                    : `<img src="${it.mediaUrl}" alt="" style="max-width:100vw;max-height:100dvh;width:100%;height:100%;object-fit:contain;">`}</div>`).join('')}          
+                ? `<video src="${it.mediaUrl}" ${isVO ? 'controlsList="nodownload noplaybackrate" disablePictureInPicture' : ''} controls autoplay playsinline style="max-width:100vw;max-height:100dvh;width:100%;height:100%;object-fit:${isVO ? 'cover' : 'contain'};background:#000;"></video>`
+                    : `<img src="${it.mediaUrl}" alt="" style="max-width:100vw;max-height:100dvh;width:100%;height:100%;object-fit:${isVO ? 'cover' : 'contain'};">`}</div>`).join('')}           
             </div>
             ${caption}`;
         document.body.appendChild(v);
