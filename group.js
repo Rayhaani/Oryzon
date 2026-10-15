@@ -748,11 +748,17 @@ function openMediaViewer(id, idx, opts) {
                     : `<img src="${it.mediaUrl}" alt="" style="max-width:100vw;max-height:100dvh;width:100%;height:100%;object-fit:contain;">`}</div>`).join('')}          
             </div>
             ${caption}`;
-        document.body.appendChild(v);
-       try { if (v.requestFullscreen) v.requestFullscreen().catch(() => {}); } catch (e) {}
-        v._fs = function () { if (!document.fullscreenElement && document.getElementById('mediaViewer')) history.back(); };
+       document.body.appendChild(v);
+       v.style.opacity = '0'; v.style.transition = 'opacity .12s';
+        const nxShowViewer = () => { v.style.opacity = '1'; };
+        try { if (v.requestFullscreen) v.requestFullscreen().then(() => setTimeout(nxShowViewer, 120)).catch(nxShowViewer); else nxShowViewer(); } catch (e) { nxShowViewer(); }
+        setTimeout(nxShowViewer, 600);
+        v._fs = function () {
+            if (!document.getElementById('mediaViewer')) return;
+            if (!document.fullscreenElement) { history.back(); return; }
+            const s = v.querySelector('#mvStrip'); if (s && idx) s.scrollLeft = idx * window.innerWidth;
+        };
         document.addEventListener('fullscreenchange', v._fs);
-
         const strip = v.querySelector('#mvStrip');
         if (idx) strip.scrollLeft = idx * window.innerWidth;
         const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (window.innerWidth || 1))));
