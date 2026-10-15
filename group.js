@@ -589,13 +589,16 @@ function openMediaViewer(id, idx, opts) {
         history.pushState({ nxViewer: 1 }, '', location.href);
         v._opts = opts;
 
-        // Alama "Opened" ana yinta ne BAYAN viewer ya bude cikin nasara (receiver kawai)
+        // Alama "Opened" ana yinta ne kawai idan viewer ya zauna a screen na dan lokaci (receiver kawai)
         if (isVO && !mine) {
-            nxVoMark(id);
-            try { const t = document.querySelector('.vo-tile[onclick="openViewOnce(\'' + id + '\')"]'); if (t) { t.classList.add('vo-dead'); t.removeAttribute('onclick'); } } catch (e) {}
-            if (groupSlug) {
-                try { groupRef().collection('messages').doc(id).update({ viewedBy: FieldValue.arrayUnion(currentUsername) }).catch(e => console.error('view-once mark failed:', e)); } catch (e) {}
-            }
+            setTimeout(function () {
+                if (document.getElementById('mediaViewer') !== v) { showToast('Could not display this media. Try again.', 'fa-triangle-exclamation'); return; }
+                nxVoMark(id);
+                try { const t = document.querySelector('.vo-tile[onclick="openViewOnce(\'' + id + '\')"]'); if (t) { t.classList.add('vo-dead'); t.removeAttribute('onclick'); t.querySelector('.vo-label').textContent = 'Opened'; } } catch (e) {}
+                if (groupSlug) {
+                    try { groupRef().collection('messages').doc(id).update({ viewedBy: FieldValue.arrayUnion(currentUsername) }).catch(e => console.error('view-once mark failed:', e)); } catch (e) {}
+                }
+            }, 700);
         }
     } catch (err) {
         console.error('openMediaViewer error:', err);
