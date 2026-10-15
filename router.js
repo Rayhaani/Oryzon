@@ -21,7 +21,6 @@
     "use strict";
 
     if (window.NexusRouter) return; // prevent double-init if included twice
-window.addEventListener('error', function (e) { alert('ERR: ' + e.message + ' | ' + String(e.filename || '').split('/').pop() + ':' + e.lineno); });
    
    if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
