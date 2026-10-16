@@ -713,6 +713,8 @@
         const dock = document.getElementById('dockContainer');
         if (dock && v._dockHome) {
             dock.style.zIndex = '';
+           dock.style.bottom = '';
+            if (v._vv && window.visualViewport) { window.visualViewport.removeEventListener('resize', v._vv); window.visualViewport.removeEventListener('scroll', v._vv); }
             v._dockHome.insertBefore(dock, v._dockNext && v._dockNext.parentNode === v._dockHome ? v._dockNext : null);
             const inp = document.getElementById('dockInput'); if (inp) inp.placeholder = v._ph || 'Message...';
             if (v._autoReply && replyTarget && replyTarget.id === v._autoReply) cancelReply();
@@ -817,6 +819,11 @@ function openMediaViewer(id, idx, opts) {
                 dock.style.zIndex = '6';
                 if (inp) inp.placeholder = 'Reply';
                 replyTarget = m; v._autoReply = m.id;
+               if (window.visualViewport) {
+                    v._vv = () => { const vv = window.visualViewport; dock.style.bottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop) + 'px'; };
+                    window.visualViewport.addEventListener('resize', v._vv);
+                    window.visualViewport.addEventListener('scroll', v._vv);
+               }
             }
        }
         v._opts = opts;
