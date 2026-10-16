@@ -67,6 +67,7 @@
     if (typeof trayDelete === 'function') window.trayDelete = trayDelete;
     if (typeof renderPinnedBar === 'function') window.renderPinnedBar = renderPinnedBar;
     if (typeof scrollToPinned === 'function') window.scrollToPinned = scrollToPinned;
+   if (typeof jumpToMessage === 'function') window.jumpToMessage = jumpToMessage;
     if (typeof nxDoUnpin === 'function') window.nxDoUnpin = nxDoUnpin;
     if (typeof unpinMessage === 'function') window.unpinMessage = unpinMessage;
     if (typeof nxEnsurePinUi === 'function') window.nxEnsurePinUi = nxEnsurePinUi;
@@ -741,7 +742,7 @@ function openMediaViewer(id, idx, opts) {
         const when = d.toLocaleDateString([], { day: 'numeric', month: 'long' }) + ', ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
         const who = mine ? 'You' : (m.name || 'Member');
         const iconCss = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;';
-        const caption = m.text ? `<div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:22px 18px 26px;color:#fff;text-align:center;font-size:15px;background:linear-gradient(0deg,rgba(0,0,0,0.75),transparent);">${escapeHtml(m.text)}</div>` : '';
+        const caption = m.text ? `<div id="mvCaption" style="position:absolute;left:0;right:0;bottom:${isVO ? 0 : 74}px;z-index:3;padding:36px 18px 10px;color:#fff;font-size:15px;line-height:1.35;text-align:left;background:linear-gradient(0deg,rgba(0,0,0,0.7),transparent);"><div id="mvCapText" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;white-space:pre-wrap;">${escapeHtml(m.text)}</div><span id="mvCapMore" style="display:none;position:absolute;right:18px;bottom:10px;font-weight:700;padding-left:30px;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.85) 40%);">Read more</span></div>` : '';
 
         const v = document.createElement('div');
         v.id = 'mediaViewer';
@@ -764,6 +765,7 @@ function openMediaViewer(id, idx, opts) {
         setTimeout(nxShowViewer, 600);
         v._fs = function () {
             if (!document.getElementById('mediaViewer')) return;
+           if (v._closing) return;
             if (!document.fullscreenElement) { history.back(); return; }
             const s = v.querySelector('#mvStrip'); if (s && idx) s.scrollLeft = idx * window.innerWidth;
         };
@@ -801,7 +803,14 @@ function openMediaViewer(id, idx, opts) {
         const fw = v.querySelector('#mvForward');
         if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); closeMediaViewer(); };
         strip.addEventListener('click', (e) => { if (e.target.tagName === 'VIDEO') return; const bar = v.querySelector('#mvBar'); if (!bar) return; bar.style.display = bar.style.display === 'none' ? 'flex' : 'none'; });
-
+        const capEl = v.querySelector('#mvCaption');
+        if (capEl) {
+            const ct = v.querySelector('#mvCapText'), more = v.querySelector('#mvCapMore');
+            if (ct.scrollHeight > ct.clientHeight + 1) {
+                more.style.display = 'block'; capEl.style.cursor = 'pointer';
+                capEl.onclick = () => { ct.style.webkitLineClamp = 'unset'; ct.style.display = 'block'; ct.style.maxHeight = '38vh'; ct.style.overflowY = 'auto'; more.style.display = 'none'; };
+            }
+        }
         // Voice na view-once: yana yin playing kai tsaye idan viewer ya bude
         if (isVO && m.voice && m.voice.url) {
             __voAudio = new Audio(m.voice.url);
@@ -820,7 +829,7 @@ function openMediaViewer(id, idx, opts) {
                 if (inp) inp.placeholder = 'Reply';
                 replyTarget = m; v._autoReply = m.id;
                if (window.visualViewport) {
-                    v._vv = () => { const vv = window.visualViewport; dock.style.bottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop) + 'px'; };
+                    v._vv = () => { const vv = window.visualViewport; const off = Math.max(0, window.innerHeight - vv.height - vv.offsetTop); dock.style.bottom = off + 'px'; const c = v.querySelector('#mvCaption'); if (c) c.style.bottom = (74 + off) + 'px'; };
                     window.visualViewport.addEventListener('resize', v._vv);
                     window.visualViewport.addEventListener('scroll', v._vv);
                }
@@ -855,6 +864,7 @@ function openMediaViewer(id, idx, opts) {
             window.addEventListener('popstate', function () {
                 const v = document.getElementById('mediaViewer');
                 if (!v) return;
+               v._closing = true;
                 setTimeout(function () { closeMediaViewer(); if (typeof renderChatFlow === 'function') renderChatFlow(); }, 0);
             });
         }
@@ -920,7 +930,12 @@ function openMediaViewer(id, idx, opts) {
             const replyHtml = m.replyTo ? (() => {
                 const rt = chatMessages.find(x => x.id === m.replyTo);
                 if (!rt) return '';
-                return `<div class="msg-reply-quote"><span class="rq-name">${rt.from === 'me' ? 'You' : rt.name}</span><span class="rq-text">${escapeHtml(rt.text || (rt.voice ? '🎤 Voice message' : ''))}</span></div>`;
+                const rm = (rt.mediaArr && rt.mediaArr[0]) || (rt.image ? { type: 'image', mediaUrl: rt.image } : rt.video ? { type: 'video', mediaUrl: rt.video } : null);
+                const rmCount = (rt.mediaArr && rt.mediaArr.length > 1) ? rt.mediaArr.length : 0;
+                const label = rt.text ? escapeHtml(rt.text) : rt.voice ? '🎤 Voice message' : rm ? (rm.type === 'video' ? 'Video' : (rmCount ? rmCount + ' Photos' : 'Photo')) : '';
+                const icon = rm ? `<i class="fa-solid ${rm.type === 'video' ? 'fa-video' : 'fa-camera'}"></i>` : '';
+                const thumb = (rm && !rt.viewOnce) ? `<span class="rq-thumb">${rm.type === 'video' ? `<video src="${rm.mediaUrl}#t=0.1" preload="metadata" muted playsinline></video>` : `<img src="${rm.mediaUrl}" alt="">`}</span>` : '';
+                return `<div class="msg-reply-quote" onclick="event.stopPropagation(); jumpToMessage('${rt.id}')"><span class="rq-main"><span class="rq-name">${rt.from === 'me' ? 'You' : rt.name}</span><span class="rq-text">${icon} ${label}</span></span>${thumb}</div>`;
             })() : '';
             const fwdHtml = m.forwarded ? `<div class="msg-forwarded-tag"><i class="fa-solid fa-share"></i> Forwarded</div>` : '';
             const voiceHtml = m.voice ? `
@@ -1100,7 +1115,14 @@ function openMediaViewer(id, idx, opts) {
             const isChatMode = document.getElementById('chat-flow').style.display !== 'none';
             bar.classList.toggle('active', isChatMode);
         }
-        function scrollToPinned() {
+        function jumpToMessage(id) {
+            const row = document.querySelector(`.msg-row[data-id="${id}"]`);
+            if (!row) { showToast('Original message not found', 'fa-triangle-exclamation'); return; }
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const card = row.querySelector('.msg-card');
+            if (card) { card.classList.remove('nx-flash'); void card.offsetWidth; card.classList.add('nx-flash'); setTimeout(() => card.classList.remove('nx-flash'), 1600); }
+        }
+           function scrollToPinned() {
             if (!pinnedMessageId) return;
             const row = document.querySelector(`.msg-row[data-id="${pinnedMessageId}"]`);
             if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1337,7 +1359,8 @@ function openMediaViewer(id, idx, opts) {
             const text = input.value.trim();
             if (!text) return;
             pushOutgoingMessage({ text });
-           if (document.getElementById('mediaViewer')) history.back();
+           const _mv = document.getElementById('mediaViewer');
+            if (_mv) { _mv._closing = true; history.back(); showToast('Sending reply…', 'fa-paper-plane'); }
             input.value = '';
             handleDockInput(input);
            const _sc = document.getElementById('smartSuggestChip'); if (_sc) _sc.style.display = 'none'; 
@@ -2394,8 +2417,14 @@ function openMediaViewer(id, idx, opts) {
             if (!track) return;
             pushOutgoingMessage({ text: '🎵 ' + track });
         }
-
-
-
-
 })();
+
+/* reply quote: WhatsApp-style (thumbnail on the right, one-line text) */
+.msg-reply-quote { flex-direction: row; align-items: stretch; gap: 8px; padding: 0 0 0 8px; overflow: hidden; }
+.msg-reply-quote .rq-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; padding: 4px 0; justify-content: center; }
+.msg-reply-quote .rq-text { max-width: 100%; }
+.msg-reply-quote .rq-text i { font-size: 10px; margin-right: 2px; }
+.msg-reply-quote .rq-thumb { width: 44px; flex-shrink: 0; align-self: stretch; min-height: 38px; background: #111; }
+.msg-reply-quote .rq-thumb img, .msg-reply-quote .rq-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nx-flash { animation: nxFlash 1.4s ease; }
+@keyframes nxFlash { 0%, 60% { box-shadow: 0 0 0 2px var(--neon-cyan), 0 0 18px rgba(253,224,141,0.45); } 100% { box-shadow: 0 1px 2px rgba(0,0,0,0.3); } }
