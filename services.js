@@ -649,12 +649,12 @@ function initAppElements() {
   const catGrid = document.getElementById("categories-grid-container");
     const _dims = (function () { try { return JSON.parse(localStorage.getItem('np_img_dims') || '{}'); } catch (e) { return {}; } })();
     const _catHtml = CATEGORIES.map(cat => {
-        const repPhoto = getCategoryRepresentativePhoto(cat.id) || cat.photo;
-        const mediaHtml = repPhoto
-            ? `<img src="${repPhoto}" alt="${cat.label}" decoding="async" ${_dims[repPhoto] ? `style="aspect-ratio:${_dims[repPhoto]}"` : ''} onload="npImgDone(this)">`
-            : `<div style="width:100%;height:140px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);"><span style="font-size:34px;">${cat.icon}</span></div>`;
+        const repPhoto = getCategoryRepresentativePhoto(cat.id) || cat.photo;        
+       const mediaHtml = repPhoto
+         ? `<img src="${npThumbUrl(repPhoto)}" data-orig="${repPhoto}" alt="${cat.label}" decoding="async" ${(_dims[npThumbUrl(repPhoto)] || _dims[repPhoto]) ? `style="aspect-ratio:${_dims[npThumbUrl(repPhoto)] || _dims[repPhoto]}"` : ''} onload="npImgDone(this)" onerror="npThumbFail(this)">`           
+           : `<div style="width:100%;height:140px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);"><span style="font-size:34px;">${cat.icon}</span></div>`;
         return `
-        <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card${repPhoto ? (' np-ph' + (_dims[repPhoto] ? '' : ' np-ph-guess')) : ''}">
+        <div onclick="handleCategorySelect('${cat.id}')" class="aero-prism-card${repPhoto ? (' np-ph' + ((_dims[npThumbUrl(repPhoto)] || _dims[repPhoto]) ? '' : ' np-ph-guess')) : ''}">           
             ${repPhoto ? `<span class="np-ph-icon">${cat.icon}</span>` : ''}
             ${mediaHtml}
             <div class="prism-card-footer">
