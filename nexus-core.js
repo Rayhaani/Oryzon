@@ -295,7 +295,7 @@ function listenNotifBadgeCount() {
     }
 
     function pre(u) {
-        if (u && typeof u === 'string' && u.indexOf('data:') !== 0) { var i = new Image(); i.src = u; }
+        if (u && typeof u === 'string' && u.indexOf('data:') !== 0) { var i = new Image(); i.src = window.npThumbUrl ? window.npThumbUrl(u) : u; }
     }
 
     function prefetchOne(w, n) {
@@ -411,7 +411,7 @@ function listenNotifBadgeCount() {
                 if (typeof u !== 'string' || u.indexOf('data:') === 0) return;
                 var i = new Image();
                 i.decoding = 'async';
-                i.src = u;
+                i.src = window.npThumbUrl(u);
                 window.__npImgKeep.push(i);
             });
         } catch (e) {}
