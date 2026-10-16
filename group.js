@@ -710,6 +710,13 @@
     const v = document.getElementById('mediaViewer');
     if (v) {
         if (v._fs) document.removeEventListener('fullscreenchange', v._fs);
+        const dock = document.getElementById('dockContainer');
+        if (dock && v._dockHome) {
+            dock.style.zIndex = '';
+            v._dockHome.insertBefore(dock, v._dockNext && v._dockNext.parentNode === v._dockHome ? v._dockNext : null);
+            const inp = document.getElementById('dockInput'); if (inp) inp.placeholder = v._ph || 'Message...';
+            if (v._autoReply && replyTarget && replyTarget.id === v._autoReply) cancelReply();
+        }
         v.remove();
     }
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
@@ -800,6 +807,18 @@ function openMediaViewer(id, idx, opts) {
         }
 
         history.pushState({ nxViewer: 1 }, '', location.href);
+       if (!isVO) {
+            const dock = document.getElementById('dockContainer');
+            const inp = document.getElementById('dockInput');
+            if (dock) {
+                v._dockHome = dock.parentNode; v._dockNext = dock.nextSibling;
+                v._ph = inp ? inp.placeholder : '';
+                v.appendChild(dock);
+                dock.style.zIndex = '6';
+                if (inp) inp.placeholder = 'Reply';
+                replyTarget = m; v._autoReply = m.id;
+            }
+       }
         v._opts = opts;
 
         // Alama "Opened" bayan viewer ya zauna a allo (jinkiri don kada re-render ya raba shi)
@@ -1311,6 +1330,7 @@ function openMediaViewer(id, idx, opts) {
             const text = input.value.trim();
             if (!text) return;
             pushOutgoingMessage({ text });
+           if (document.getElementById('mediaViewer')) history.back();
             input.value = '';
             handleDockInput(input);
            const _sc = document.getElementById('smartSuggestChip'); if (_sc) _sc.style.display = 'none'; 
