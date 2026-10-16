@@ -779,7 +779,7 @@ function openMediaViewer(id, idx, opts) {
             const name = (it.type === 'video' ? 'video_' : 'photo_') + Date.now() + (it.type === 'video' ? '.mp4' : '.jpg');
             const trigger = (href) => { const a = document.createElement('a'); a.href = href; a.download = name; document.body.appendChild(a); a.click(); a.remove(); };
             try {
-                const blob = await (await fetch(it.mediaUrl)).blob();
+                const blob = await (await fetch(it.mediaUrl, { cache: 'no-store', mode: 'cors' })).blob();
                 const u = URL.createObjectURL(blob);
                 trigger(u);
                 setTimeout(() => URL.revokeObjectURL(u), 4000);
