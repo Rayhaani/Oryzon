@@ -431,3 +431,21 @@ function listenNotifBadgeCount() {
     if (document.readyState === 'complete') schedule();
     else window.addEventListener('load', schedule);
 })();
+
+(function () {
+    window.npThumbUrl = function (u) {
+        try {
+            if (!u || typeof u !== 'string' || u.indexOf('data:') === 0 || /\.(gif|svg)(\?|$)/i.test(u)) return u;
+            if (u.indexOf('/thumbs/') > -1) return u;
+            var m = /^(https:\/\/[^\/]+\.backblazeb2\.com\/file\/[^\/]+\/)(.+)\.(jpe?g|png|webp)(\?.*)?$/i.exec(u)
+                 || /^(https:\/\/[^\/]+\.backblazeb2\.com\/)(.+)\.(jpe?g|png|webp)(\?.*)?$/i.exec(u);
+            if (!m) return u;
+            return m[1] + 'thumbs/' + m[2] + '.webp';
+        } catch (e) {}
+        return u;
+    };
+    window.npThumbFail = function (img) {
+        var o = img.getAttribute('data-orig');
+        if (o && img.src !== o) { img.onerror = null; img.src = o; }
+    };
+})();
