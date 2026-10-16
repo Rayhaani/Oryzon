@@ -546,7 +546,7 @@
             btn.classList.add('invited');
             showToast('Invitation sent to ' + (f ? f.name : 'friend'), 'fa-user-plus');
         }
-        function fmtClockTime(d) { return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+        function fmtClockTime(d) { return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase(); }
         function fmtRelative(d) {
             const diff = Math.floor((Date.now() - d.getTime()) / 1000);
             if (diff < 60) return 'Just now';
@@ -750,7 +750,7 @@ function openMediaViewer(id, idx, opts) {
         v.innerHTML = `
             ${isVO ? '' : `<div id="mvBar" style="position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:6px;padding:12px 10px 22px 18px;background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);color:#fff;">
                 <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:600;">${isVO ? 'View once' : escapeHtml(who)}</div>${isVO ? '' : `<div style="font-size:13px;opacity:0.75;margin-top:2px;">${when}</div>`}</div>
-                ${isVO ? '' : `<div style="${iconCss}" id="mvDownload"><i class="fa-solid fa-download"></i></div><div style="${iconCss}" id="mvForward"><i class="fa-solid fa-share"></i></div>`}
+                ${isVO ? '' : `<div style="${iconCss}" id="mvDownload"><i class="fa-solid fa-download"></i></div><div style="${iconCss}" id="mvForward"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-1a6 6 0 0 1 6-6h6"/><path d="M14 6l5 5-5 5"/><path d="M18 6l4 5-4 5"/></svg></div><div style="${iconCss}" id="mvStatus"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="13" r="8"/><circle cx="11" cy="13" r="3.5"/><path d="M20 2v6M17 5h6"/></svg></div><div style="${iconCss}" id="mvMore"><i class="fa-solid fa-ellipsis-vertical"></i></div>`}
             </div>`}
             <div id="mvStrip" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
                 ${items.map(it => `<div style="flex:0 0 100vw;width:100vw;height:100vh;height:100dvh;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;">${it.type === 'video'
@@ -802,6 +802,40 @@ function openMediaViewer(id, idx, opts) {
         };
         const fw = v.querySelector('#mvForward');
         if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); closeMediaViewer(); };
+       const stBtn = v.querySelector('#mvStatus');
+        if (stBtn) stBtn.onclick = () => vToast('Status sharing coming soon');
+        const mm = v.querySelector('#mvMore');
+        if (mm) mm.onclick = () => {
+            const oldMenu = v.querySelector('#mvMenu');
+            if (oldMenu) { oldMenu.remove(); const ob = v.querySelector('#mvMenuBg'); if (ob) ob.remove(); return; }
+            const bg = document.createElement('div');
+            bg.id = 'mvMenuBg'; bg.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;z-index:8;';
+            const menu = document.createElement('div');
+            menu.id = 'mvMenu'; menu.className = 'dots-dropdown-menu active'; menu.style.cssText = 'position:absolute;top:60px;right:8px;z-index:9;';
+            menu.innerHTML = `
+                <div class="dots-menu-item" data-act="share"><i class="fa-solid fa-share-nodes"></i> Share</div>
+                <div class="dots-menu-item" data-act="star"><i class="fa-solid fa-star"></i> ${m.starred ? 'Unstar' : 'Star'}</div>
+                <div class="dots-menu-item" data-act="show"><i class="fa-solid fa-message"></i> Show in chat</div>
+                <div class="dots-menu-divider"></div>
+                <div class="dots-menu-item danger" data-act="delete"><i class="fa-solid fa-trash"></i> Delete</div>
+                <div class="dots-menu-item danger" data-act="report"><i class="fa-solid fa-flag"></i> Report</div>`;
+            const closeMenu = () => { menu.remove(); bg.remove(); };
+            bg.onclick = closeMenu;
+            menu.onclick = (e) => {
+                const row = e.target.closest('[data-act]'); if (!row) return;
+                const act = row.dataset.act; closeMenu();
+                activeTrayMsgId = id;
+                if (act === 'share') {
+                    const cu = items[cur()].mediaUrl;
+                    if (navigator.share) navigator.share({ url: cu }).catch(() => {});
+                    else { try { navigator.clipboard.writeText(cu); } catch (e2) {} vToast('Link copied'); }
+                } else if (act === 'star') { trayStar(); vToast(m.starred ? 'Starred' : 'Removed from starred'); }
+                else if (act === 'show') { v._closing = true; history.back(); setTimeout(() => jumpToMessage(id), 350); }
+                else if (act === 'delete') { if (confirm('Delete this message?')) { trayDelete(); v._closing = true; history.back(); } }
+                else if (act === 'report') { vToast('Report sent'); }
+            };
+            v.appendChild(bg); v.appendChild(menu);
+        };
         strip.addEventListener('click', (e) => { if (e.target.tagName === 'VIDEO') return; const bar = v.querySelector('#mvBar'); if (!bar) return; bar.style.display = bar.style.display === 'none' ? 'flex' : 'none'; });
         const capEl = v.querySelector('#mvCaption');
         if (capEl) {
