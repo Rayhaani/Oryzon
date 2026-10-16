@@ -1115,13 +1115,6 @@ function openMediaViewer(id, idx, opts) {
             const isChatMode = document.getElementById('chat-flow').style.display !== 'none';
             bar.classList.toggle('active', isChatMode);
         }
-        function jumpToMessage(id) {
-            const row = document.querySelector(`.msg-row[data-id="${id}"]`);
-            if (!row) { showToast('Original message not found', 'fa-triangle-exclamation'); return; }
-            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const card = row.querySelector('.msg-card');
-            if (card) { card.classList.remove('nx-flash'); void card.offsetWidth; card.classList.add('nx-flash'); setTimeout(() => card.classList.remove('nx-flash'), 1600); }
-        }
            function scrollToPinned() {
             if (!pinnedMessageId) return;
             const row = document.querySelector(`.msg-row[data-id="${pinnedMessageId}"]`);
