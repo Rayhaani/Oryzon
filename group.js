@@ -2418,13 +2418,3 @@ function openMediaViewer(id, idx, opts) {
             pushOutgoingMessage({ text: '🎵 ' + track });
         }
 })();
-
-/* reply quote: WhatsApp-style (thumbnail on the right, one-line text) */
-.msg-reply-quote { flex-direction: row; align-items: stretch; gap: 8px; padding: 0 0 0 8px; overflow: hidden; }
-.msg-reply-quote .rq-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; padding: 4px 0; justify-content: center; }
-.msg-reply-quote .rq-text { max-width: 100%; }
-.msg-reply-quote .rq-text i { font-size: 10px; margin-right: 2px; }
-.msg-reply-quote .rq-thumb { width: 44px; flex-shrink: 0; align-self: stretch; min-height: 38px; background: #111; }
-.msg-reply-quote .rq-thumb img, .msg-reply-quote .rq-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.nx-flash { animation: nxFlash 1.4s ease; }
-@keyframes nxFlash { 0%, 60% { box-shadow: 0 0 0 2px var(--neon-cyan), 0 0 18px rgba(253,224,141,0.45); } 100% { box-shadow: 0 1px 2px rgba(0,0,0,0.3); } }
