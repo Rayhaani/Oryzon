@@ -6434,124 +6434,6 @@ function handlePostServiceBtnClick() {
     }
     }
 
-
-const MB_PLANS = [
-    {
-        id: 'free', name: 'Free', price: 0, tagline: 'Get online in minutes',
-        features: ['Unlimited menu items', 'Order management', 'Basic sales overview', 'Customer chat'],
-        locked: ['Top Selling Items', 'Recent Transactions', 'Revenue Chart']
-    },
-    {
-        id: 'pro', name: 'Pro', price: 9, badge: 'Most Popular', tagline: 'For growing businesses',
-        features: ['Everything in Free', 'Top Selling Items', 'Recent Transactions', 'Revenue Chart', 'Priority support'],
-        locked: []
-    },
-    {
-        id: 'max', name: 'Max', price: 19, badge: 'Best Value', tagline: 'For established businesses',
-        features: ['Everything in Pro', 'Multi-category dashboard', 'Advanced customer insights', 'Featured placement in search', 'Dedicated account manager'],
-        locked: []
-    },
-];
-
-let mbBillingPeriod = 'monthly';
-let mbCachedCurrentPlan = 'free';
-
-function mbPeriodPrice(monthlyPrice, period) {
-    if (monthlyPrice === 0) return { perMonth: 0, billedNote: 'Free forever' };
-    if (period === 'quarterly') {
-        const perMonth = monthlyPrice * 0.9;
-        return { perMonth, billedNote: `Billed $${(perMonth * 3).toFixed(2).replace(/\.00$/, '')} every 3 months` };
-    }
-    if (period === 'yearly') {
-        const perMonth = monthlyPrice * 0.6;
-        return { perMonth, billedNote: `Billed $${(perMonth * 12).toFixed(2).replace(/\.00$/, '')} yearly` };
-    }
-    return { perMonth: monthlyPrice, billedNote: `Billed $${monthlyPrice.toFixed(2).replace(/\.00$/, '')} monthly` };
-}
-
-function mbRenderCurrentPlanCard(currentPlan) {
-    const plan = MB_PLANS.find(p => p.id === currentPlan) || MB_PLANS[0];
-    document.getElementById('mb-current-plan-card').innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <span style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;">Current Plan</span>
-            <span style="background:rgba(16,185,129,0.12);color:var(--np-green,#10b981);font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;">● Active</span>
-        </div>
-        <div style="font-size:19px;font-weight:900;color:#ffffff;margin-bottom:8px;">${plan.name}</div>
-        <div style="height:1px;background:rgba(255,255,255,0.08);margin-bottom:8px;"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:700;">Status</span>
-            <span style="font-size:12px;color:#ffffff;font-weight:700;">${plan.id === 'free' ? 'No renewal (Free plan)' : 'Renews ' + mbBillingPeriod}</span>
-        </div>`;
-}
-
-function mbRenderPlanCards() {
-    document.querySelectorAll('.mb-billing-toggle-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.period === mbBillingPeriod));
-
-    document.getElementById('mb-plan-cards').innerHTML = MB_PLANS.map(plan => {
-        const isCurrent = plan.id === mbCachedCurrentPlan;
-        const isFree = plan.id === 'free';
-        const { perMonth, billedNote } = mbPeriodPrice(plan.price, mbBillingPeriod);
-        const priceLabel = plan.price === 0 ? 'Free' : '$' + perMonth.toFixed(2).replace(/\.00$/, '');
-        return `
-        <div class="mb-glass-card" style="border-radius:20px;padding:22px;position:relative;${plan.badge ? 'border-color:var(--np-amber,#f59e0b) !important;' : ''}">
-            ${plan.badge ? `<div style="position:absolute;top:-11px;left:20px;background:var(--np-amber,#f59e0b);color:#0f172a;font-size:10px;font-weight:900;padding:4px 12px;border-radius:20px;letter-spacing:0.3px;">${plan.badge.toUpperCase()}</div>` : ''}
-            <div style="font-size:17px;font-weight:900;color:#ffffff;">${plan.name}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:14px;">${plan.tagline}</div>
-            <div style="font-size:28px;font-weight:900;color:#ffffff;">${priceLabel}<span style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:600;"> ${plan.price === 0 ? '' : '/mo'}</span></div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:16px;">${billedNote}</div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
-                ${plan.features.map(f => `<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:rgba(255,255,255,0.8);"><span style="color:var(--np-green,#10b981);flex-shrink:0;">✓</span>${f}</div>`).join('')}
-            </div>
-            <button ${isCurrent ? 'disabled' : ''} onclick="mbSelectPlan('${plan.id}', ${perMonth})"
-                style="width:100%;padding:13px;border-radius:12px;border:none;font-weight:800;font-size:13px;cursor:${isCurrent ? 'default' : 'pointer'};background:${isCurrent ? 'rgba(255,255,255,0.1)' : (plan.badge ? 'var(--np-amber,#f59e0b)' : '#ffffff')};color:${isCurrent ? 'rgba(255,255,255,0.5)' : '#0f172a'};">
-                ${isCurrent ? 'Current Plan' : (isFree ? 'Downgrade' : 'Upgrade to ' + plan.name)}
-            </button>
-        </div>`;
-    }).join('');
-}
-
-function mbSetBillingPeriod(period) {
-    mbBillingPeriod = period;
-    mbRenderPlanCards();
-    mbRenderCurrentPlanCard(mbCachedCurrentPlan);
-}
-
-async function mbOpenUpgradeModal() {
-    const username = localStorage.getItem("nexus_user_session");
-    const snap = await firebase.database().ref('providers/' + username + '/plan').once('value');
-    mbCachedCurrentPlan = snap.val() || 'free';
-    mbBillingPeriod = 'monthly';
-
-    mbRenderCurrentPlanCard(mbCachedCurrentPlan);
-    mbRenderPlanCards();
-
-    document.getElementById('mb-upgrade-page').style.display = 'flex';
-}
-
-function mbCloseUpgradeModal() {
-    document.getElementById('mb-upgrade-page').style.display = 'none';
-    }
-
-function mbSelectPlan(planId, price) {
-    if (planId === 'free') {
-        mbConfirmPlanChange('free');
-        return;
-    }
-    showGlobalToast('⚠️ Payment gateway not connected yet.');
-}
-
-async function mbConfirmPlanChange(planId) {
-    const username = localStorage.getItem("nexus_user_session");
-    try {
-        await firebase.database().ref('providers/' + username + '/plan').set(planId);
-        showGlobalToast('✅ Plan updated to ' + planId.toUpperCase());
-        mbCloseUpgradeModal();
-        mbLoadSales();
-    } catch (err) {
-        showGlobalToast('❌ Failed: ' + err.message);
-    }
-}
-
 async function mbGenerateAndUploadFlyer(username, data) {
     const categories = data.categories || {};
     const allItems = [];
@@ -9897,14 +9779,6 @@ window.mbUpdateOrderStatus = mbUpdateOrderStatus;
 window.mbLockOverlayHTML = mbLockOverlayHTML;
 window.checkProviderApprovalStatus = checkProviderApprovalStatus;
 window.handlePostServiceBtnClick = handlePostServiceBtnClick;
-window.mbPeriodPrice = mbPeriodPrice;
-window.mbRenderCurrentPlanCard = mbRenderCurrentPlanCard;
-window.mbRenderPlanCards = mbRenderPlanCards;
-window.mbSetBillingPeriod = mbSetBillingPeriod;
-window.mbOpenUpgradeModal = mbOpenUpgradeModal;
-window.mbCloseUpgradeModal = mbCloseUpgradeModal;
-window.mbSelectPlan = mbSelectPlan;
-window.mbConfirmPlanChange = mbConfirmPlanChange;
 window.mbGenerateAndUploadFlyer = mbGenerateAndUploadFlyer;
 window.mbRefreshCategoriesData = mbRefreshCategoriesData;
 window.mbOpenCategoryManager = mbOpenCategoryManager;
