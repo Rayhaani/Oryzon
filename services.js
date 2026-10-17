@@ -6403,7 +6403,7 @@ function mbLockOverlayHTML() {
     return `
         <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(255,255,255,0.4);backdrop-filter:blur(2px);border-radius:14px;">
             <div style="width:32px;height:32px;border-radius:50%;background:#0f172a;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">🔒</div>
-            <button onclick="mbOpenUpgradeModal()" style="background:#0f172a;color:#ffffff;border:none;border-radius:20px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;">Upgrade to unlock</button>
+            <button onclick="openGetVerified()" style="background:#0f172a;color:#ffffff;border:none;border-radius:20px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;">Upgrade to unlock</button>
         </div>`;
 }
 
