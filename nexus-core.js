@@ -416,7 +416,28 @@ function listenNotifBadgeCount() {
             });
         } catch (e) {}
     }
+var SERVICES_SCRIPTS = [
+        'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
+        'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
+        'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
+        'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js',
+        'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js',
+        'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js',
+        'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js',
+        'currency-data.js', 'services.js'
+    ];
 
+    function preExecServices() {
+        try {
+            if (!window.NexusRouter || typeof window.NexusRouter.loadScriptOnce !== 'function') return;
+            if (navigator.connection && navigator.connection.saveData) return;
+            var i = 0;
+            (function next() {
+                if (i >= SERVICES_SCRIPTS.length) return;
+                window.NexusRouter.loadScriptOnce(SERVICES_SCRIPTS[i++]).then(next);
+            })();
+        } catch (e) {}
+    }
     function warm() {
         if (/(^|\/)services\.html$/.test(location.pathname)) { warmImages(); return; }
         try {
@@ -425,6 +446,7 @@ function listenNotifBadgeCount() {
             }
         } catch (e) {}
         warmImages();
+       preExecServices();
     }
 
     function schedule() { setTimeout(warm, 3000); }
