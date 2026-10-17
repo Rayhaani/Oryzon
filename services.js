@@ -10290,9 +10290,13 @@ function inboxAvatarTap(ev, encId, tab) {
 window.inboxAvatarTap = inboxAvatarTap;
 window.npCloseOverlay = npCloseOverlay;
 window.npStackDepth = function () { return npStack.length; };
-function openGetVerified() {
+function openGetVerified(entityId) {
+    entityId = entityId || 'svc';   // services.html = Service Business
     const fr = document.getElementById('gv-frame');
-    if (!fr.getAttribute('src')) fr.src = 'get-verified.html?embed=1';
+    const go = function () { try { fr.contentWindow.gvOpen(entityId); } catch (e) {} };
+    if (!fr.getAttribute('src')) fr.src = 'get-verified.html?embed=1&entity=' + encodeURIComponent(entityId);
+    else if (fr.contentWindow && fr.contentWindow.__gvReady) go();
+    else fr.addEventListener('load', go, { once: true });
     document.getElementById('gv-overlay').style.display = 'block';
     npPushOverlay('gv');
 }
