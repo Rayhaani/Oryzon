@@ -6141,7 +6141,7 @@ async function mbRenderOverview(data) {
         { label: 'Add your first menu item', done: totalItems > 0 },
         { label: 'Add payment method', done: false },
         { label: 'Publish your menu', done: isPublished },
-        { label: 'Upgrade to Premium', done: false, onClick: 'mbOpenUpgradeModal()' },
+        { label: 'Upgrade to Premium', done: false, onClick: 'openGetVerified()' },
     ];
     const healthDone = checklist.filter(s => s.done).length;
     const healthPct = Math.round((healthDone / checklist.length) * 100);
@@ -10319,6 +10319,8 @@ function npApplyClose(name) {
     } else if (name === 'me') {
         document.getElementById('me-overlay').style.display = 'none';
         try { document.getElementById('me-frame').contentWindow.meClose(); } catch (e) {}
+       } else if (name === 'gv') {
+        document.getElementById('gv-overlay').style.display = 'none';
     } else if (name === 'inbox') {
         document.getElementById('inbox-overlay').style.display = 'none';
     }
@@ -10414,6 +10416,15 @@ function inboxAvatarTap(ev, encId, tab) {
 window.inboxAvatarTap = inboxAvatarTap;
 window.npCloseOverlay = npCloseOverlay;
 window.npStackDepth = function () { return npStack.length; };
+function openGetVerified() {
+    const fr = document.getElementById('gv-frame');
+    if (!fr.getAttribute('src')) fr.src = 'get-verified.html?embed=1';
+    document.getElementById('gv-overlay').style.display = 'block';
+    npPushOverlay('gv');
+}
+window.openGetVerified = openGetVerified;
+window.openPageOverlay = openGetVerified;
+window.closePageOverlay = function () { npCloseOverlay('gv'); };
 function inboxMeFrame() {
     const fr = document.getElementById('me-frame');
     if (fr && !fr.getAttribute('src')) fr.src = 'me.html?embed=1&warm=1';
