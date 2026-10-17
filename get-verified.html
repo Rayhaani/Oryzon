@@ -186,17 +186,7 @@
     .toast { position:fixed; bottom:110px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.96); color:#0a0a0a; font-size:13px; font-weight:700; padding:11px 20px; border-radius:30px; z-index:400; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; white-space:nowrap; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(-8px); }
     input[type=file] { display:none; }
-   /* ===== ACCOUNT PICKER ===== */
-    .ent { display:flex; align-items:center; gap:13px; background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:14px; cursor:pointer; transition:border-color .15s, background .15s; }
-    .ent:active { background:rgba(253,224,141,0.07); border-color:var(--gold); }
-    .ent-main { flex:1; min-width:0; }
-    .ent-t { font-size:15px; font-weight:700; }
-    .ent-s { font-size:12px; color:var(--muted); margin-top:2px; }
-    .ent-chip { font-size:11px; font-weight:700; padding:4px 9px; border-radius:12px; background:rgba(255,255,255,0.08); color:var(--muted); white-space:nowrap; }
-    .ent-chip.ok { background:rgba(61,220,132,0.16); color:#3ddc84; }
-    .ent-chip.pend { background:rgba(0,242,254,0.1); color:#6fe9f5; }
-    .ent-chip.rej { background:rgba(255,92,92,0.12); color:#ff5c5c; }
-</style>
+   </style>
 </head>
 <body>
 
@@ -234,7 +224,8 @@ const ENTITIES = [   // TODO: read from Firebase — show only the accounts this
     { id:'channel', label:'My Channel',          sub:'Chats · Channel',                           icon:'trend',   type:'business' },
     { id:'group',   label:'My Group',            sub:'Chats · Group',                             icon:'smile',   type:'business' }
 ];
-let selEntity = ENTITIES[0];
+const qEnt = new URLSearchParams(location.search).get('entity');   // set by the page that opens this overlay
+let selEntity = ENTITIES.find(e => e.id === qEnt) || ENTITIES[0];
 /* ============================================================
    ICONS
    ============================================================ */
@@ -290,7 +281,7 @@ if(qs){
 }
 let selType = selEntity.type, selTier = 'standard', cycle = 'monthly';
 let currency = (function(){ try { return localStorage.getItem('oryzon_currency') || 'USD'; } catch(e){ return 'USD'; } })();
-let mode = ENTITIES.length > 1 ? 'pick' : 'landing';   // pick | landing | wizard | status
+let mode = 'landing';   // landing | wizard | status
 let step = 0;
 const WIZ = ['Eligibility','Identity','Payment'];
 const ID = { docType:'', legalName:'', country:'', front:null, back:null, selfie:null, bizName:'', bizCat:'', bizEmail:'', bizSite:'', bizDoc:null };
@@ -448,38 +439,12 @@ function render(){
     const steps = $('steps'), foot = $('foot');
     steps.classList.add('hidden'); foot.classList.add('hidden');
     HeroGL.stop();
-    document.querySelector('.hdr').classList.toggle('clear', mode !== 'wizard' && mode !== 'pick' && V.status === 'none');
-    if(mode === 'pick') return renderPick();
+    document.querySelector('.hdr').classList.toggle('clear', mode !== 'wizard' && V.status === 'none');   
     if(mode === 'wizard') return renderWizard();
     if(V.status !== 'none') return renderStatus();
     return renderLanding();
 }
-/* ---------- Pick account ---------- */
-function renderPick(){
-    $('hdrTitle').textContent = 'Get Verified';
-    const chip = e => {
-        const s = readStored(e.id).status;
-        if(s === 'verified') return '<span class="ent-chip ok">Verified</span>';
-        if(s === 'pending')  return '<span class="ent-chip pend">Pending</span>';
-        if(s === 'rejected') return '<span class="ent-chip rej">Rejected</span>';
-        return '<span class="ent-chip">Not verified</span>';
-    };
-    $('view').innerHTML = `
-        <div class="hero"><h1>What do you want to verify?</h1><p>Choose the account to upgrade. Each one has its own plan.</p></div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px;">
-            ${ENTITIES.map(e => `
-            <div class="ent" data-ent="${e.id}">
-                <div class="b-ico">${ICON[e.icon]}</div>
-                <div class="ent-main"><div class="ent-t">${esc(e.label)}</div><div class="ent-s">${esc(e.sub)}</div></div>
-                ${chip(e)}
-            </div>`).join('')}
-        </div>`;
-    document.querySelectorAll('.ent').forEach(el => el.addEventListener('click', () => {
-        selEntity = ENTITIES.find(e => e.id === el.dataset.ent);
-        selType = selEntity.type; selTier = 'standard';
-        V = loadStored(); mode = 'landing'; render(); window.scrollTo(0,0);
-    }));
-    }
+
 /* ---------- Landing ---------- */
 function renderLanding(){
     $('hdrTitle').textContent = 'Get Verified';
@@ -758,13 +723,19 @@ function renderStatus(){
    ============================================================ */
 $('backBtn').addEventListener('click', () => {
     if(mode==='wizard'){ wizBack(); return; }
-   if(mode !== 'pick' && ENTITIES.length > 1){ mode = 'pick'; render(); window.scrollTo(0,0); return; }
     if(window.parent && window.parent !== window && typeof window.parent.closePageOverlay === 'function') window.parent.closePageOverlay();
     else history.back();
 });
 HeroGL.init();
 window.addEventListener('resize', () => HeroGL.resize());
 render();
+window.gvOpen = function(id){
+    selEntity = ENTITIES.find(x => x.id === id) || ENTITIES[0];   // no/unknown entity = personal account
+    selType = selEntity.type; selTier = 'standard'; cycle = 'monthly'; step = 0;
+    V = loadStored(); mode = 'landing';
+    render(); window.scrollTo(0,0);
+};
+window.__gvReady = true;
 </script>
 </body>
 </html>
