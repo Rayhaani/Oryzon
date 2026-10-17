@@ -6265,14 +6265,19 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
        async function mbLoadSales() {
     const username = localStorage.getItem("nexus_user_session");
     const rangeDays = Number(document.getElementById('mb-sales-range').value);
-    const [planSnap, currencySnap] = await Promise.all([
-        firebase.database().ref('providers/' + username + '/plan').once('value'),
-        firebase.database().ref('providers/' + username + '/currency').once('value')
-    ]);
-    const currentPlan = planSnap.val() || 'free';
+    const currencySnap = await firebase.database().ref('providers/' + username + '/currency').once('value');
     const proCurrency = currencySnap.val() || '';
-    const isPaid = currentPlan === 'pro' || currentPlan === 'max';
-    const badge = document.getElementById('mb-plan-badge');
+    // Plan now comes from entitlements (written only by the server). No doc / no access = free.
+    let currentPlan = 'free';
+    try {
+        const ent = await firebase.firestore().collection('entitlements').doc('svc_' + username).get();
+        if (ent.exists) {
+            const d = ent.data();
+            if (d.status === 'active' || d.status === 'grace') currentPlan = d.tier || 'free';
+        }
+    } catch (e) { /* no entitlement yet = free */ }
+    const isPaid = currentPlan !== 'free'; 
+          const badge = document.getElementById('mb-plan-badge');
     if (badge) {
         badge.textContent = currentPlan.toUpperCase();
         badge.style.background = isPaid ? '#dcfce7' : '#e0f2fe';
