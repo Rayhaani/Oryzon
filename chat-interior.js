@@ -51,6 +51,20 @@ let chatRoomId = null;
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
 
 function getChatRoomId(a, b) { return [a, b].sort().join('__'); }
+// Every personal room carries an immutable, sorted list of the two account uids (memberUids).
+// Firestore security rules use it to decide who may read/write the room.
+async function ensureRoom(roomId, myName, peerName) {
+    await authReadyPromise;
+    const me = firebase.auth().currentUser;
+    if (!me) throw new Error('Not signed in');
+    const peerDoc = await db.collection('users').doc(peerName).get();
+    const peerUid = peerDoc.exists ? peerDoc.data().uid : null;
+    if (!peerUid) throw new Error('Peer has no account uid');
+    await db.collection('personalChats').doc(roomId).set({
+        members: [myName, peerName].sort(),
+        memberUids: [me.uid, peerUid].sort()
+    }, { merge: true });
+}
 // ══════════════════════════════════════════════
 //  END-TO-END ENCRYPTION (sakonnin rubutu kawai a wannan zangon)
 //  ECDH (P-256) key exchange + AES-GCM 256. Kowane na'ura yana da nasa
@@ -3422,7 +3436,7 @@ function NexusChatInterior_init() {
     peerIsOnline = false;
     peerLastSeen = null;
     myClearedAt = null;
-    db.collection('personalChats').doc(chatRoomId).get().then(doc => {
+    ensureRoom(chatRoomId, myId, chatWith).catch(e => console.warn('ensureRoom:', e)).then(() => db.collection('personalChats').doc(chatRoomId).get()).then(doc => {
         const d = doc.data() || {};
         myClearedAt = (d.clearedAt && d.clearedAt[myId]) || null;
         renderChatFlow();
