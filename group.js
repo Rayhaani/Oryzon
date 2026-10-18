@@ -710,6 +710,7 @@
     if (__voAudio) { try { __voAudio.pause(); } catch (e) {} __voAudio = null; }
     const v = document.getElementById('mediaViewer');
     if (v) {
+       try { showToast('closed by: ' + ((new Error().stack || '').split('\n')[2] || '').trim().slice(0, 80)); } catch (e) {}
         try { if (v._tcEl) { if (v._tcNew) v._tcEl.remove(); else v._tcEl.setAttribute('content', v._tc || ''); } } catch (e) {}
         const dock = document.getElementById('dockContainer');
         if (dock && v._dockHome) {
