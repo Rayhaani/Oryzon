@@ -3203,6 +3203,7 @@ async function doForwardTo(peerId) {
     cancelSelection();
     const key = await deriveSharedKeyFor(peerId);
     const targetRoomId = getChatRoomId(myId, peerId);
+    try { await ensureRoom(targetRoomId, myId, peerId); } catch (e) { console.error('ensureRoom (forward):', e); return; }
     for (const [docId, data] of entries) {
         try {
             if (!data.type) {
