@@ -759,12 +759,13 @@ function openMediaViewer(id, idx, opts) {
             </div>
             ${caption}`;
        document.body.appendChild(v);
-       try {
+    /*   try {
             let tc = document.querySelector('meta[name="theme-color"]');
             v._tc = tc ? tc.getAttribute('content') : null; v._tcNew = !tc;
             if (!tc) { tc = document.createElement('meta'); tc.name = 'theme-color'; document.head.appendChild(tc); }
             tc.setAttribute('content', '#000000'); v._tcEl = tc;
         } catch (e) {}
+   /*
        const strip = v.querySelector('#mvStrip');
         if (idx) strip.scrollLeft = idx * window.innerWidth;
         const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (window.innerWidth || 1))));
