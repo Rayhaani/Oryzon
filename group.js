@@ -710,7 +710,7 @@
     if (__voAudio) { try { __voAudio.pause(); } catch (e) {} __voAudio = null; }
     const v = document.getElementById('mediaViewer');
     if (v) {
-        if (v._fs) document.removeEventListener('fullscreenchange', v._fs);
+        try { if (v._tcEl) { if (v._tcNew) v._tcEl.remove(); else v._tcEl.setAttribute('content', v._tc || ''); } } catch (e) {}
         const dock = document.getElementById('dockContainer');
         if (dock && v._dockHome) {
             dock.style.zIndex = '';
@@ -759,17 +759,12 @@ function openMediaViewer(id, idx, opts) {
             </div>
             ${caption}`;
        document.body.appendChild(v);
-       v.style.opacity = '0'; v.style.transition = 'opacity .12s';
-        const nxShowViewer = () => { v.style.opacity = '1'; };
-        try { if (v.requestFullscreen) v.requestFullscreen().then(() => setTimeout(nxShowViewer, 120)).catch(nxShowViewer); else nxShowViewer(); } catch (e) { nxShowViewer(); }
-        setTimeout(nxShowViewer, 600);
-        v._fs = function () {
-            if (!document.getElementById('mediaViewer')) return;
-           if (v._closing) return;
-            if (!document.fullscreenElement) { history.back(); return; }
-            const s = v.querySelector('#mvStrip'); if (s && idx) s.scrollLeft = idx * window.innerWidth;
-        };
-        document.addEventListener('fullscreenchange', v._fs);
+       try {
+            let tc = document.querySelector('meta[name="theme-color"]');
+            v._tc = tc ? tc.getAttribute('content') : null; v._tcNew = !tc;
+            if (!tc) { tc = document.createElement('meta'); tc.name = 'theme-color'; document.head.appendChild(tc); }
+            tc.setAttribute('content', '#000000'); v._tcEl = tc;
+        } catch (e) {}
 
        const strip = v.querySelector('#mvStrip');
         if (idx) strip.scrollLeft = idx * window.innerWidth;
@@ -812,6 +807,8 @@ function openMediaViewer(id, idx, opts) {
             bg.id = 'mvMenuBg'; bg.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;z-index:8;';
             const menu = document.createElement('div');
             menu.id = 'mvMenu'; menu.className = 'dots-dropdown-menu active'; menu.style.cssText = 'position:absolute;top:60px;right:8px;z-index:9;';
+           const gm = document.getElementById('dotsDropdownMenu');
+            if (gm) { const keep = gm.style.cssText; gm.style.cssText = 'display:flex;visibility:hidden;'; const gw = gm.getBoundingClientRect().width; gm.style.cssText = keep; if (gw) menu.style.width = gw + 'px'; }
             menu.innerHTML = `
                 <div class="dots-menu-item" data-act="share"><i class="fa-solid fa-share-nodes"></i> Share</div>
                 <div class="dots-menu-item" data-act="star"><i class="fa-solid fa-star"></i> ${m.starred ? 'Unstar' : 'Star'}</div>
