@@ -6256,7 +6256,14 @@ function mbRenderOrders() {
 async function mbUpdateOrderStatus(orderId, newStatus) {
     const username = localStorage.getItem("nexus_user_session");
     try {
-        await firebase.database().ref('providers/' + username + '/orders/' + orderId + '/status').set(newStatus);
+        const orderRef = firebase.database().ref('providers/' + username + '/orders/' + orderId);
+        const orderSnap = await orderRef.once('value');
+        await orderRef.child('status').set(newStatus);
+        const custUser = (orderSnap.val() || {}).customerUsername;
+        if (custUser) {
+            await firebase.database().ref('customers/' + custUser + '/sentRequests/' + orderId)
+                .update({ status: newStatus, ...(newStatus === 'completed' ? { completedAt: Date.now() } : {}) });
+        }
         showGlobalToast(`✅ Order marked ${newStatus}`);
         mbLoadOrders();
     } catch (err) {
