@@ -8060,6 +8060,48 @@ const NP_DIMENSIONS = {
         { key: 'professionalism', label: 'Professionalism', color: '#ec4899' },
         { key: 'honesty',   label: 'Honesty & Transparency', color: '#8b5cf6' },
     ],
+   painter: [
+        { key: 'quality',     label: 'Finish Quality',   color: '#f59e0b' },
+        { key: 'accuracy',    label: 'Color Accuracy',   color: '#3b82f6' },
+        { key: 'value',       label: 'Value for Money',  color: '#10b981' },
+        { key: 'punctuality', label: 'Completion Time',  color: '#ec4899' },
+        { key: 'cleanliness', label: 'Site Cleanliness', color: '#8b5cf6' },
+    ],
+    mason: [
+        { key: 'quality',     label: 'Workmanship',            color: '#f59e0b' },
+        { key: 'materials',   label: 'Materials & Durability', color: '#3b82f6' },
+        { key: 'value',       label: 'Value for Money',        color: '#10b981' },
+        { key: 'punctuality', label: 'Completion Time',        color: '#ec4899' },
+        { key: 'safety',      label: 'Site Safety',            color: '#8b5cf6' },
+    ],
+    welder: [
+        { key: 'quality',     label: 'Weld Quality',       color: '#f59e0b' },
+        { key: 'accuracy',    label: 'Accuracy to Design', color: '#3b82f6' },
+        { key: 'value',       label: 'Value for Money',    color: '#10b981' },
+        { key: 'punctuality', label: 'Delivery Time',      color: '#ec4899' },
+        { key: 'safety',      label: 'Safety Standards',   color: '#8b5cf6' },
+    ],
+    ac_tech: [
+        { key: 'quality',         label: 'Work Quality',        color: '#f59e0b' },
+        { key: 'performance',     label: 'Cooling Performance', color: '#3b82f6' },
+        { key: 'value',           label: 'Value for Money',     color: '#10b981' },
+        { key: 'punctuality',     label: 'Punctuality',         color: '#ec4899' },
+        { key: 'professionalism', label: 'Professionalism',     color: '#8b5cf6' },
+    ],
+    hvac: [
+        { key: 'quality',         label: 'Work Quality',       color: '#f59e0b' },
+        { key: 'performance',     label: 'System Performance', color: '#3b82f6' },
+        { key: 'value',           label: 'Value for Money',    color: '#10b981' },
+        { key: 'punctuality',     label: 'Punctuality',        color: '#ec4899' },
+        { key: 'professionalism', label: 'Professionalism',    color: '#8b5cf6' },
+    ],
+    solar_installer: [
+        { key: 'quality',       label: 'Installation Quality', color: '#f59e0b' },
+        { key: 'performance',   label: 'System Performance',   color: '#3b82f6' },
+        { key: 'value',         label: 'Value for Money',      color: '#10b981' },
+        { key: 'safety',        label: 'Safety Standards',     color: '#ec4899' },
+        { key: 'communication', label: 'Communication',        color: '#8b5cf6' },
+    ],
     default: [
         { key: 'quality',   label: 'Service Quality',     color: '#f59e0b' },
         { key: 'punctuality', label: 'Punctuality',       color: '#3b82f6' },
@@ -8069,10 +8111,30 @@ const NP_DIMENSIONS = {
     ],
 };
 
-function getNPDimensions(category) {
-    return NP_DIMENSIONS[category] || NP_DIMENSIONS.default;
-}
+const NP_DIM_KEYWORDS = [
+    [/chef|cook|cater|food|kitchen|bak|restaurant/, 'chef'],
+    [/snack|pastr|cake/, 'snacks'],
+    [/drink|beverage|juice|smoothie/, 'beverages'],
+    [/plumb/, 'plumber'],
+    [/electric/, 'electrician'],
+    [/carpent|furniture/, 'carpenter'],
+    [/tailor|fashion|sew/, 'tailor'],
+    [/clean|laundry/, 'cleaner'],
+    [/mechanic|vehicle/, 'mechanic'],
+    [/paint/, 'painter'],
+    [/mason|builder|tiling/, 'mason'],
+    [/weld/, 'welder'],
+    [/hvac/, 'hvac'],
+    [/^ac(_|$)|air_?con|cooling|refrigerat/, 'ac_tech'],
+    [/solar/, 'solar_installer']
+];
 
+function getNPDimensions(category) {
+    const key = String(category || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    if (NP_DIMENSIONS[key]) return NP_DIMENSIONS[key];
+    const hit = NP_DIM_KEYWORDS.find(([re]) => re.test(key));
+    return hit ? NP_DIMENSIONS[hit[1]] : NP_DIMENSIONS.default;
+         }
 // ── DEMO REVIEWS DATA ──
 const NP_DEMO_REVIEWS = [
     {
@@ -8171,7 +8233,7 @@ function renderNPDimAverages(reviews, category) {
             : '0.0';
     });
 
-    const sortedDims = [...dims].sort((a, b) => averages[b.key] - averages[a.key]);
+    const sortedDims = dims.filter(d => parseFloat(averages[d.key]) > 0).sort((a, b) => averages[b.key] - averages[a.key]);
 
     return sortedDims.map(d => `
         <div class="np-dim-row">
