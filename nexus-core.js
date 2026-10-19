@@ -471,3 +471,23 @@ var SERVICES_SCRIPTS = [
         if (o && img.src !== o) { img.onerror = null; img.src = o; }
     };
 })();
+
+(function () {
+    if (window.self !== window.top || window.__npCatWarm) return;
+    window.__npCatWarm = true;
+    window.__npImgKeep = window.__npImgKeep || [];
+    var IDS = ['beverages', 'electrician', 'chef', 'plumber', 'carpenter', 'mason', 'snacks', 'mechanic', 'painter', 'tailor', 'solar', 'welder', 'hvac', 'cleaner'];
+    function go() {
+        if (navigator.connection && navigator.connection.saveData) return;
+        if (/(^|\/)services\.html$/.test(location.pathname)) return;
+        IDS.forEach(function (id) {
+            var i = new Image();
+            i.decoding = 'async';
+            i.src = 'https://f005.backblazeb2.com/file/social-media-storage/thumbs/category-photos/' + id + '.webp';
+            window.__npImgKeep.push(i);
+        });
+    }
+    function schedule() { setTimeout(go, 1500); }
+    if (document.readyState === 'complete') schedule();
+    else window.addEventListener('load', schedule);
+})();
