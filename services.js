@@ -8197,7 +8197,41 @@ function renderNPMiniDims(review, category) {
             </div>`;
     }).join('');
 }
+// ── RATING SUMMARY (average + distribution) ──
+function renderNPSummary(reviews) {
+    const total = reviews.length;
+    const counts = [0, 0, 0, 0, 0];
+    let sum = 0;
+    reviews.forEach(r => {
+        const v = Number(r.rating) || 0;
+        sum += v;
+        const idx = Math.round(v) - 1;
+        if (idx >= 0 && idx < 5) counts[idx]++;
+    });
+    const avg = total ? sum / total : 0;
 
+    const bars = [5, 4, 3, 2, 1].map(n => {
+        const pct = total ? (counts[n - 1] / total) * 100 : 0;
+        return `
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.75);width:10px;text-align:right;">${n}</span>
+                <div style="flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;">
+                    <div style="width:${pct}%;height:100%;background:#f59e0b;border-radius:10px;"></div>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);width:22px;text-align:right;">${counts[n - 1]}</span>
+            </div>`;
+    }).join('');
+
+    return `
+        <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.1);">
+            <div style="text-align:center;flex-shrink:0;">
+                <div class="np-rating-score">${avg.toFixed(1)}</div>
+                <div style="margin:6px 0 4px;">${renderNPStars(avg, 13)}</div>
+                <div class="np-rating-count">${total} ${total === 1 ? 'review' : 'reviews'}</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">${bars}</div>
+        </div>`;
+       }
 // ── RENDER FULL RATING SECTION ──
 function renderNPRatingSection(reviews, category) {
     if (!reviews || reviews.length === 0) {
@@ -8213,6 +8247,7 @@ function renderNPRatingSection(reviews, category) {
 
     return `
         <div class="np-rating-section">
+        ${renderNPSummary(reviews)}
             <div class="np-dimensions">
                 ${renderNPDimAverages(reviews, category)}
             </div>
