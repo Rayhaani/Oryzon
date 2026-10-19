@@ -3775,11 +3775,13 @@ async function submitReport() {
 // ═══════════════════════════
 // ⭐ REVIEW MODAL — FULL REWRITE
 // ═══════════════════════════
-function openReviewModal() {
+async function openReviewModal() {
     if (!currentProfileProId) return;
     const pro = PROS.find(p => String(p.id) === String(currentProfileProId));
     if (!pro) return;
-
+   const order = await getReviewableOrder(pro.id);
+    if (!order) return;
+    npReviewOrder = order;
     const dims = getNPDimensions(pro.category || 'default');
 
     // Reset
@@ -3851,7 +3853,8 @@ async function submitReview() {
  if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); setTimeout(()=>window.location.href='login.html',1200); return; }   
     const pro = PROS.find(p => String(p.id) === String(currentProfileProId));
     if (!pro) return;
-
+    if (!npReviewOrder) { showGlobalToast('🔒 Only customers with a completed order can leave a review.'); return; }
+    const order = npReviewOrder;
     const comment = document.getElementById('review-comment-input').value.trim();
     const customerName = document.getElementById('review-customer-name-input').value.trim() || 'Anonymous';
 
@@ -3895,10 +3898,13 @@ async function submitReview() {
         reviewerSince: `Member since ${new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}`,
         rating: overallRating,
         comment: comment,
-        dimensions: { ...npDimRatings },
-        verifiedOrder: 'Verified Purchase',
-        orderDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
-        orderStatus: 'Delivered & Confirmed',
+        dimensions: { ...npDimRatings }, 
+        verified: true,
+        orderId: order.id,
+        customerUsername: localStorage.getItem('nexus_user_session'),
+        verifiedOrder: order.itemName || order.jobDescription || 'Order',
+        orderDate: new Date(order.completedAt || order.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        orderStatus: 'Completed',
         helpfulCount: 0,
         date: new Date().toLocaleDateString('en-GB').replace(/\//g, '/'),
         createdAt: Date.now()
@@ -3910,7 +3916,7 @@ async function submitReview() {
     try {
         // Save to Firebase
         if (typeof firebase !== 'undefined' && firebase.database) {
-            const reviewId = `rev_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+            const reviewId = order.id;
             await firebase.database()
                 .ref(`reviews/${pro.id}/${reviewId}`)
                 .set(reviewPayload);
@@ -3929,7 +3935,7 @@ async function submitReview() {
 
         // Clear dim ratings
         Object.keys(npDimRatings).forEach(k => delete npDimRatings[k]);
-
+        npReviewOrder = null;
         closeReviewModal();
         showGlobalToast('✅ Review posted! Thank you for your feedback.');
 
@@ -3948,7 +3954,33 @@ function closeReviewModal() {
     document.getElementById('review-modal-overlay').style.display = 'none';
     Object.keys(npDimRatings).forEach(k => delete npDimRatings[k]);
     }
+// ── VERIFIED PURCHASE: find a completed order that has no review yet ──
+let npReviewOrder = null;
 
+async function getReviewableOrder(proId) {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) { showGlobalToast('⚠️ Please login to leave a review.'); return null; }
+    try {
+        const [ordersSnap, reviewsSnap] = await Promise.all([
+            firebase.database().ref(`customers/${sessionUser}/sentRequests`).once('value'),
+            firebase.database().ref(`reviews/${proId}`).once('value')
+        ]);
+        const reviewed = reviewsSnap.val() || {};
+        const order = Object.entries(ordersSnap.val() || {})
+            .map(([id, o]) => ({ id, ...o }))
+            .filter(o => String(o.proId) === String(proId) && o.status === 'completed' && !reviewed[o.id])
+            .sort((a, b) => (b.completedAt || b.createdAt || 0) - (a.completedAt || a.createdAt || 0))[0];
+        if (!order) {
+            showGlobalToast('🔒 Only customers with a completed order can leave a review.');
+            return null;
+        }
+        return order;
+    } catch (err) {
+        console.error('Reviewable order check failed:', err);
+        showGlobalToast('❌ Could not verify your order. Try again.');
+        return null;
+    }
+}
 // ═══════════════════════════
 // ⚠️ WARNING OVERLAY FUNCTIONS
 // ═══════════════════════════
@@ -8298,14 +8330,13 @@ function handleNPHelpful(btn, reviewId, isYes) {
 function openIdentityOverlay(reviewData) {
     const r = typeof reviewData === 'string' ? JSON.parse(reviewData) : reviewData;
 
-    document.getElementById('npIdAvatar').style.background = r.reviewerColor;
-    document.getElementById('npIdAvatar').textContent = r.reviewerInitials;
-    document.getElementById('npIdName').textContent = r.reviewerName;
-    document.getElementById('npIdSince').textContent = r.reviewerSince;
-    document.getElementById('npIdOrder').textContent = r.verifiedOrder;
-    document.getElementById('npIdDate').textContent = r.orderDate;
-    document.getElementById('npIdStatus').textContent = r.orderStatus;
-
+    document.getElementById('npIdAvatar').style.background = r.reviewerColor || '#1d4ed8';
+    document.getElementById('npIdAvatar').textContent = r.reviewerInitials || '?';
+    document.getElementById('npIdName').textContent = r.reviewerName || r.customerName || 'Anonymous';
+    document.getElementById('npIdSince').textContent = 'Verified customer · Reviewed ' + (r.date || '');
+    document.getElementById('npIdOrder').textContent = r.verifiedOrder || '—';
+    document.getElementById('npIdDate').textContent = r.orderDate || '—';
+    document.getElementById('npIdStatus').textContent = r.orderStatus || 'Completed';
     document.getElementById('npIdentityOverlay').classList.add('active');
     if (navigator.vibrate) navigator.vibrate(15);
 }
