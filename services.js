@@ -8333,10 +8333,11 @@ function openIdentityOverlay(reviewData) {
     document.getElementById('npIdAvatar').style.background = r.reviewerColor || '#1d4ed8';
     document.getElementById('npIdAvatar').textContent = r.reviewerInitials || '?';
     document.getElementById('npIdName').textContent = r.reviewerName || r.customerName || 'Anonymous';
-    document.getElementById('npIdSince').textContent = 'Verified customer · Reviewed ' + (r.date || '');
+    document.getElementById('npIdSince').textContent = r.date || '';
     document.getElementById('npIdOrder').textContent = r.verifiedOrder || '—';
     document.getElementById('npIdDate').textContent = r.orderDate || '—';
     document.getElementById('npIdStatus').textContent = r.orderStatus || 'Completed';
+   document.getElementById('npIdStars').textContent = '★'.repeat(Math.round(r.rating || 0)) + '☆'.repeat(5 - Math.round(r.rating || 0));
     document.getElementById('npIdentityOverlay').classList.add('active');
     if (navigator.vibrate) navigator.vibrate(15);
 }
