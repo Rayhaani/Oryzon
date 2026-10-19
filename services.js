@@ -317,6 +317,7 @@ async function loadRealProvidersFromFirebase() {
 }
 async function loadContentFromFirebase() {
     try {
+       await Promise.race([inboxWaitForAuth(), new Promise(function (r) { setTimeout(r, 4000); })]);
         const snap = await firebase.database().ref('admin/content').once('value');
         const data = snap.val();
         if (data) {
@@ -7782,6 +7783,7 @@ async function loadAndRenderDailyStories() {
     window.__npDailyBusy = true;
     const today = npTodayStr();
     try {
+       await Promise.race([inboxWaitForAuth(), new Promise(function (r) { setTimeout(r, 4000); })]);
         const snap = await firebase.database().ref('daily_stories').once('value');
         const data = snap.val() || {};
         const items = [];
