@@ -8241,7 +8241,7 @@ function renderNPReviewCards(reviews, category) {
                         </div>
                     </div>
                 </div>
-                <button class="np-verified-badge" onclick="openIdentityOverlay(${JSON.stringify(r).replace(/"/g, '&quot;')})">✅ Verified Purchase</button>
+                <button class="np-verified-badge" onclick="openIdentityOverlay(${JSON.stringify(r).replace(/"/g, '&quot;')})"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.4-4.2-4.2 1.4-1.4 2.8 2.8 5.2-5.2 1.4 1.4-6.6 6.6z"/></svg>Verified Purchase</button>
             </div>
 
             <div class="np-review-comment">${r.comment}</div>
@@ -8321,8 +8321,8 @@ function handleNPHelpful(btn, reviewId, isYes) {
         b.style.borderColor = 'rgba(255,255,255,0.12)';
     });
     btn.style.background = 'transparent';
-    btn.style.color = '#ffffff';
-    btn.style.borderColor = '#1d4ed8';
+    btn.style.color = '#00F2FF';
+    btn.style.borderColor = '#00F2FF';
     if (navigator.vibrate) navigator.vibrate(10);
 }
 
