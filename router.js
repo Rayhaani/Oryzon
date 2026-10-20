@@ -109,9 +109,9 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
-           'media-upload.js?v=20261015',
+           'media-upload.js?v=20261020',
            'post-card-template.js',
-            'group.js?v=20261015'
+            'group.js?v=20261020'
         ],
         // pages.html (na "Pages", ba na kowace group tab a chats.html ba) —
         // dogaro iri daya da group.html: firebase compat SDKs + post-card-
