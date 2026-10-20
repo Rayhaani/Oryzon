@@ -706,24 +706,101 @@
         function nxVoOpened(id) { try { return JSON.parse(localStorage.getItem('nx_vo_opened') || '[]').indexOf(id) !== -1; } catch (e) { return false; } }
         function nxVoMark(id) { try { const a = JSON.parse(localStorage.getItem('nx_vo_opened') || '[]'); if (a.indexOf(id) === -1) { a.push(id); localStorage.setItem('nx_vo_opened', JSON.stringify(a.slice(-300))); } } catch (e) {} }
         let __voAudio = null;
-     function closeMediaViewer() {
-    if (__voAudio) { try { __voAudio.pause(); } catch (e) {} __voAudio = null; }
-    const v = document.getElementById('mediaViewer');
-    if (v) {
-        if (v._fs) document.removeEventListener('fullscreenchange', v._fs);
-        const dock = document.getElementById('dockContainer');
-        if (dock && v._dockHome) {
-            dock.style.zIndex = '';
-           dock.style.bottom = '';
-            if (v._vv && window.visualViewport) { window.visualViewport.removeEventListener('resize', v._vv); window.visualViewport.removeEventListener('scroll', v._vv); }
-            v._dockHome.insertBefore(dock, v._dockNext && v._dockNext.parentNode === v._dockHome ? v._dockNext : null);
-            const inp = document.getElementById('dockInput'); if (inp) inp.placeholder = v._ph || 'Message...';
-            if (v._autoReply && replyTarget && replyTarget.id === v._autoReply) cancelReply();
+             // ---- starred / hidden messages: kept in localStorage so a Firestore refresh does not wipe them ----
+        function nxLsGet(k) { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } }
+        function nxLsAdd(k, id) { try { const a = nxLsGet(k); if (a.indexOf(id) === -1) { a.push(id); localStorage.setItem(k, JSON.stringify(a.slice(-500))); } } catch (e) {} }
+        function nxLsDel(k, id) { try { localStorage.setItem(k, JSON.stringify(nxLsGet(k).filter(x => x !== id))); } catch (e) {} }
+        function nxStarKey() { return 'nx_starred_' + (groupSlug || 'demo'); }
+        function nxIsStarred(id) { return nxLsGet(nxStarKey()).indexOf(id) !== -1; }
+        function nxSetStarred(id, on) { if (on) nxLsAdd(nxStarKey(), id); else nxLsDel(nxStarKey(), id); }
+        function nxIsHidden(id) { return nxLsGet('nx_hidden_' + (groupSlug || 'demo')).indexOf(id) !== -1; }
+        // Delete: own message -> removed for everyone in Firestore; someone else's -> hidden on this phone only
+        function nxDeleteMsg(id) {
+            const dm = chatMessages.find(x => x.id === id);
+            if (groupSlug && dm) {
+                if (dm.from === 'me') {
+                    try { groupRef().collection('messages').doc(id).delete().catch(e => { console.error('delete failed:', e); showToast('Could not delete for everyone', 'fa-triangle-exclamation'); }); } catch (e) {}
+                } else { nxLsAdd('nx_hidden_' + groupSlug, id); }
+            }
+            activeTrayMsgId = id; trayDelete();
         }
-        v.remove();
-    }
-    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-}
+        // Keyboard height: VirtualKeyboard API first (works even when the page is fullscreen), visualViewport as fallback
+        function nxKbHeight() {
+            let h = 0;
+            try { const vk = navigator.virtualKeyboard; if (vk && vk.boundingRect) h = Math.max(h, vk.boundingRect.height || 0); } catch (e) {}
+            try { const vv = window.visualViewport; if (vv) h = Math.max(h, window.innerHeight - vv.height - vv.offsetTop); } catch (e) {}
+            return Math.max(0, Math.round(h));
+        }
+        // Caption: max 3 lines, "... Read more" at the end of the 3rd line; tap = expand / collapse
+        function nxFitCaption(box, el, full) {
+            const lh = parseFloat(getComputedStyle(el).lineHeight) || 20;
+            const maxH = lh * 3 + 2;
+            el.textContent = full;
+            if (el.scrollHeight <= maxH) return;
+            const chars = Array.from(full);
+            const MORE = '<span style="font-weight:700;">Read more</span>';
+            const build = (n) => escapeHtml(chars.slice(0, n).join('').replace(/\s+$/, '')) + '... ' + MORE;
+            let lo = 0, hi = chars.length, best = 0;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1;
+                el.innerHTML = build(mid);
+                if (el.scrollHeight <= maxH) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
+            }
+            const shortHtml = build(best);
+            el.innerHTML = shortHtml;
+            let open = false;
+            box.style.cursor = 'pointer';
+            box.onclick = () => {
+                open = !open;
+                if (open) { el.textContent = full; el.style.maxHeight = '40vh'; el.style.overflowY = 'auto'; }
+                else { el.style.maxHeight = ''; el.style.overflowY = ''; el.innerHTML = shortHtml; }
+            };
+        }
+        // Share: the real photo/video file (falls back to the link). The file is pre-fetched when the menu opens so the share sheet still counts as a tap.
+        function nxPrefetchShare(v, it) {
+            if (!it) return;
+            v._shareBlobs = v._shareBlobs || {};
+            if (!v._shareBlobs[it.mediaUrl]) v._shareBlobs[it.mediaUrl] = fetch(it.mediaUrl, { cache: 'no-store', mode: 'cors' }).then(r => r.blob()).catch(() => null);
+        }
+        async function nxShareItem(v, it, toast) {
+            if (!it) return;
+            const isVid = it.type === 'video';
+            let blob = null;
+            try { nxPrefetchShare(v, it); blob = await v._shareBlobs[it.mediaUrl]; } catch (e) {}
+            try {
+                if (blob && navigator.canShare) {
+                    const file = new File([blob], (isVid ? 'video_' : 'photo_') + Date.now() + (isVid ? '.mp4' : '.jpg'), { type: blob.type || (isVid ? 'video/mp4' : 'image/jpeg') });
+                    if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+                }
+                if (navigator.share) { await navigator.share({ url: it.mediaUrl }); return; }
+            } catch (e) { if (e && e.name === 'AbortError') return; }
+            try { await navigator.clipboard.writeText(it.mediaUrl); toast('Link copied'); } catch (e) { toast('Could not share'); }
+        }
+        // ONE way to close the viewer from our own buttons: pops the history entry the viewer pushed (the popstate handler below closes it)
+        function nxCloseViewerNav() {
+            const v = document.getElementById('mediaViewer');
+            if (!v) return;
+            v._closing = true;
+            if (history.state && history.state.nxViewer) history.back(); else closeMediaViewer();
+            setTimeout(function () { if (document.getElementById('mediaViewer') === v) closeMediaViewer(); }, 500);
+        }
+        function closeMediaViewer() {
+            if (__voAudio) { try { __voAudio.pause(); } catch (e) {} __voAudio = null; }
+            const v = document.getElementById('mediaViewer');
+            if (v) {
+                try { if (v._kbOff) v._kbOff(); } catch (e) {}
+                if (v._fs) document.removeEventListener('fullscreenchange', v._fs);
+                const dock = document.getElementById('dockContainer');
+                if (dock && v._dockHome) {
+                    dock.style.zIndex = ''; dock.style.bottom = '';
+                    v._dockHome.insertBefore(dock, v._dockNext && v._dockNext.parentNode === v._dockHome ? v._dockNext : null);
+                    const inp = document.getElementById('dockInput'); if (inp) { inp.placeholder = v._ph || 'Message...'; inp.blur(); }
+                    if (v._autoReply && replyTarget && replyTarget.id === v._autoReply) cancelReply();
+                }
+                v.remove();
+            }
+            try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+        }
 function openMediaViewer(id, idx, opts) {
     opts = opts || {};
     try {
@@ -737,12 +814,13 @@ function openMediaViewer(id, idx, opts) {
         // Receiver: sau daya kawai. Sender: koyaushe zai iya budewa.
         if (isVO && !mine && nxVoOpened(id)) return;
 
+        nxHookOverlay();
         closeMediaViewer();
         const d = m.time instanceof Date ? m.time : new Date(m.time);
         const when = d.toLocaleDateString([], { day: 'numeric', month: 'long' }) + ', ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
         const who = mine ? 'You' : (m.name || 'Member');
         const iconCss = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;';
-        const caption = m.text ? `<div id="mvCaption" style="position:absolute;left:0;right:0;bottom:${isVO ? 0 : 74}px;z-index:3;padding:36px 18px 10px;color:#fff;font-size:15px;line-height:1.35;text-align:left;background:linear-gradient(0deg,rgba(0,0,0,0.7),transparent);"><div id="mvCapText" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;white-space:pre-wrap;">${escapeHtml(m.text)}</div><span id="mvCapMore" style="display:none;position:absolute;right:18px;bottom:10px;font-weight:700;padding-left:30px;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.85) 40%);">Read more</span></div>` : '';
+        const caption = m.text ? `<div id="mvCaption" style="position:absolute;left:0;right:0;bottom:${isVO ? 0 : 92}px;z-index:3;padding:12px 18px;color:#fff;font-size:15px;line-height:20px;text-align:left;background:rgba(0,0,0,0.55);"><div id="mvCapText" style="word-break:break-word;white-space:pre-wrap;"></div></div>` : '';
 
         const v = document.createElement('div');
         v.id = 'mediaViewer';
@@ -759,14 +837,17 @@ function openMediaViewer(id, idx, opts) {
             </div>
             ${caption}`;
        document.body.appendChild(v);
-    v.style.opacity = '0'; v.style.transition = 'opacity .12s';
+        v.style.opacity = '0'; v.style.transition = 'opacity .12s';
         const nxShowViewer = () => { v.style.opacity = '1'; };
         try { if (v.requestFullscreen) v.requestFullscreen().then(() => setTimeout(nxShowViewer, 120)).catch(nxShowViewer); else nxShowViewer(); } catch (e) { nxShowViewer(); }
         setTimeout(nxShowViewer, 600);
         v._fs = function () {
-            if (!document.getElementById('mediaViewer')) return;
-            if (v._closing) return;
-            if (!document.fullscreenElement) { history.back(); return; }
+            if (!document.getElementById('mediaViewer') || v._closing) return;
+            if (!document.fullscreenElement) {
+                // system Back left fullscreen first: close the viewer cleanly, once, after the browser has settled
+                setTimeout(function () { if (document.getElementById('mediaViewer') === v && !v._closing) nxCloseViewerNav(); }, 120);
+                return;
+            }
             const s = v.querySelector('#mvStrip'); if (s && idx) s.scrollLeft = idx * window.innerWidth;
         };
         document.addEventListener('fullscreenchange', v._fs);
@@ -800,20 +881,24 @@ function openMediaViewer(id, idx, opts) {
             }
         };
         const fw = v.querySelector('#mvForward');
-        if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); closeMediaViewer(); };
+        if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); nxCloseViewerNav(); };
        const stBtn = v.querySelector('#mvStatus');
         if (stBtn) stBtn.onclick = () => vToast('Status sharing coming soon');
         const mm = v.querySelector('#mvMore');
         if (mm) mm.onclick = () => {
             const oldMenu = v.querySelector('#mvMenu');
             if (oldMenu) { oldMenu.remove(); const ob = v.querySelector('#mvMenuBg'); if (ob) ob.remove(); return; }
+            nxPrefetchShare(v, items[cur()]);
+            const fresh = chatMessages.find(x => x.id === id) || m;
             const bg = document.createElement('div');
             bg.id = 'mvMenuBg'; bg.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;z-index:8;';
             const menu = document.createElement('div');
             menu.id = 'mvMenu'; menu.className = 'dots-dropdown-menu active'; menu.style.cssText = 'position:absolute;top:60px;right:8px;z-index:9;';
+            const gm = document.getElementById('dotsDropdownMenu');
+            if (gm) { const keep = gm.style.cssText; gm.style.cssText = 'display:flex;visibility:hidden;animation:none;'; const gw = Math.ceil(gm.getBoundingClientRect().width); gm.style.cssText = keep; if (gw) { menu.style.width = gw + 'px'; menu.style.minWidth = gw + 'px'; } }
             menu.innerHTML = `
                 <div class="dots-menu-item" data-act="share"><i class="fa-solid fa-share-nodes"></i> Share</div>
-                <div class="dots-menu-item" data-act="star"><i class="fa-solid fa-star"></i> ${m.starred ? 'Unstar' : 'Star'}</div>
+                <div class="dots-menu-item" data-act="star"><i class="fa-solid fa-star"></i> ${fresh.starred ? 'Unstar' : 'Star'}</div>
                 <div class="dots-menu-item" data-act="show"><i class="fa-solid fa-message"></i> Show in chat</div>
                 <div class="dots-menu-divider"></div>
                 <div class="dots-menu-item danger" data-act="delete"><i class="fa-solid fa-trash"></i> Delete</div>
@@ -821,37 +906,29 @@ function openMediaViewer(id, idx, opts) {
             const closeMenu = () => { menu.remove(); bg.remove(); };
             bg.onclick = closeMenu;
             menu.onclick = (e) => {
+                e.stopPropagation();
                 const row = e.target.closest('[data-act]'); if (!row) return;
                 const act = row.dataset.act; closeMenu();
                 activeTrayMsgId = id;
-                if (act === 'share') {
-                    const cu = items[cur()].mediaUrl;
-                    if (navigator.share) navigator.share({ url: cu }).catch(() => {});
-                    else { try { navigator.clipboard.writeText(cu); } catch (e2) {} vToast('Link copied'); }
-                } else if (act === 'star') { trayStar(); vToast(m.starred ? 'Starred' : 'Removed from starred'); }
-                else if (act === 'show') { v._closing = true; history.back(); setTimeout(() => jumpToMessage(id), 350); }
-                else if (act === 'delete') { if (confirm('Delete this message?')) { trayDelete(); v._closing = true; history.back(); } }
+                if (act === 'share') { nxShareItem(v, items[cur()], vToast); }
+                else if (act === 'star') { trayStar(); const f2 = chatMessages.find(x => x.id === id); vToast(f2 && f2.starred ? 'Starred' : 'Removed from starred'); }
+                else if (act === 'show') { nxCloseViewerNav(); setTimeout(() => jumpToMessage(id), 450); }
+                else if (act === 'delete') { if (confirm('Delete this message?')) { nxDeleteMsg(id); nxCloseViewerNav(); } }
                 else if (act === 'report') { vToast('Report sent'); }
             };
             v.appendChild(bg); v.appendChild(menu);
         };
         strip.addEventListener('click', (e) => { if (e.target.tagName === 'VIDEO') return; const bar = v.querySelector('#mvBar'); if (!bar) return; bar.style.display = bar.style.display === 'none' ? 'flex' : 'none'; });
         const capEl = v.querySelector('#mvCaption');
-        if (capEl) {
-            const ct = v.querySelector('#mvCapText'), more = v.querySelector('#mvCapMore');
-            if (ct.scrollHeight > ct.clientHeight + 1) {
-                more.style.display = 'block'; capEl.style.cursor = 'pointer';
-                capEl.onclick = () => { ct.style.webkitLineClamp = 'unset'; ct.style.display = 'block'; ct.style.maxHeight = '38vh'; ct.style.overflowY = 'auto'; more.style.display = 'none'; };
-            }
-        }
+        if (capEl) nxFitCaption(capEl, v.querySelector('#mvCapText'), m.text);
         // Voice na view-once: yana yin playing kai tsaye idan viewer ya bude
         if (isVO && m.voice && m.voice.url) {
             __voAudio = new Audio(m.voice.url);
             __voAudio.play().catch(() => {});
         }
 
-        history.pushState({ nxViewer: 1 }, '', location.href);
-       if (!isVO) {
+        if (!(history.state && history.state.nxViewer)) history.pushState({ nxViewer: 1 }, '', location.href);
+        if (!isVO) {
             const dock = document.getElementById('dockContainer');
             const inp = document.getElementById('dockInput');
             if (dock) {
@@ -861,13 +938,33 @@ function openMediaViewer(id, idx, opts) {
                 dock.style.zIndex = '6';
                 if (inp) inp.placeholder = 'Reply';
                 replyTarget = m; v._autoReply = m.id;
-               if (window.visualViewport) {
-                    v._vv = () => { const vv = window.visualViewport; const off = Math.max(0, window.innerHeight - vv.height - vv.offsetTop); dock.style.bottom = off + 'px'; const c = v.querySelector('#mvCaption'); if (c) c.style.bottom = (74 + off) + 'px'; };
-                    window.visualViewport.addEventListener('resize', v._vv);
-                    window.visualViewport.addEventListener('scroll', v._vv);
-               }
+                // typing bar always sits right above the keyboard; the caption always sits right above the typing bar
+                const sync = () => {
+                    if (!document.body.contains(v)) return;
+                    const kb = nxKbHeight();
+                    dock.style.bottom = kb + 'px';
+                    const c = v.querySelector('#mvCaption'); if (c) c.style.bottom = (dock.getBoundingClientRect().height + kb) + 'px';
+                };
+                const later = () => { [0, 120, 300, 600, 1000].forEach(t => setTimeout(sync, t)); };
+                let vk = null, vkPrev = false;
+                try { vk = navigator.virtualKeyboard || null; if (vk) { vkPrev = vk.overlaysContent; vk.overlaysContent = true; } } catch (e) { vk = null; }
+                const vv = window.visualViewport;
+                if (vv) { vv.addEventListener('resize', sync); vv.addEventListener('scroll', sync); }
+                if (vk && vk.addEventListener) vk.addEventListener('geometrychange', sync);
+                window.addEventListener('resize', sync);
+                if (inp) { inp.addEventListener('focus', later); inp.addEventListener('blur', later); inp.addEventListener('input', sync); }
+                let ro = null; try { ro = new ResizeObserver(sync); ro.observe(dock); } catch (e) { ro = null; }
+                v._kbOff = function () {
+                    try { if (vv) { vv.removeEventListener('resize', sync); vv.removeEventListener('scroll', sync); } } catch (e) {}
+                    try { if (vk && vk.removeEventListener) vk.removeEventListener('geometrychange', sync); } catch (e) {}
+                    try { if (vk) vk.overlaysContent = !!vkPrev; } catch (e) {}
+                    window.removeEventListener('resize', sync);
+                    if (inp) { inp.removeEventListener('focus', later); inp.removeEventListener('blur', later); inp.removeEventListener('input', sync); }
+                    try { if (ro) ro.disconnect(); } catch (e) {}
+                };
+                sync();
             }
-       }
+        }
         v._opts = opts;
 
         // Alama "Opened" bayan viewer ya zauna a allo (jinkiri don kada re-render ya raba shi)
@@ -888,19 +985,30 @@ function openMediaViewer(id, idx, opts) {
         showToast('Could not open: ' + (err && err.message ? err.message : 'error'), 'fa-triangle-exclamation');
     }
 }
-        function openViewOnce(id) { openMediaViewer(id, 0, { viewOnce: true }); }
+   function openViewOnce(id) { openMediaViewer(id, 0, { viewOnce: true }); }
+        // keep the router's "overlay is open" check pointing at the viewer even if another page script replaced NexusOverlay.isOpen
+        function nxHookOverlay() {
+            window.NexusOverlay = window.NexusOverlay || {};
+            const cur = window.NexusOverlay.isOpen;
+            if (cur && cur.__nxv) return;
+            const wrapped = function () { return !!document.getElementById('mediaViewer') || (cur ? cur.apply(this, arguments) : false); };
+            wrapped.__nxv = true;
+            window.NexusOverlay.isOpen = wrapped;
+        }
+        nxHookOverlay();
         if (!window.__nxViewerBound) {
             window.__nxViewerBound = true;
-            window.NexusOverlay = window.NexusOverlay || {};
-            const prevOpen = window.NexusOverlay.isOpen;
-            window.NexusOverlay.isOpen = function () { return !!document.getElementById('mediaViewer') || (prevOpen ? prevOpen.apply(this, arguments) : false); };
-            window.addEventListener('popstate', function () {
+            // capture phase + stopImmediatePropagation: the SPA router must never see the Back/pop that closes the viewer (otherwise it leaves the group)
+            window.addEventListener('popstate', function (e) {
                 const v = document.getElementById('mediaViewer');
                 if (!v) return;
-               v._closing = true;
-                setTimeout(function () { closeMediaViewer(); if (typeof renderChatFlow === 'function') renderChatFlow(); }, 0);
-            });
+                e.stopImmediatePropagation();
+                v._closing = true;
+                closeMediaViewer();
+                if (typeof renderChatFlow === 'function') renderChatFlow();
+            }, true);
         }
+   
         let pendingMedia = [];
         function addPendingMedia(info) {
             const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), localUrl: info.localUrl, localUrls: info.localUrls || null, text: info.text || '', viewOnce: !!info.viewOnce, state: 'sending', time: new Date() };
@@ -1112,6 +1220,7 @@ function openMediaViewer(id, idx, opts) {
             closeMsgTray();
             if (!m) return;
             m.starred = !m.starred;
+           nxSetStarred(m.id, m.starred);
             renderChatFlow();
             showToast(m.starred ? 'Message starred' : 'Removed from starred', 'fa-star');
         }
@@ -1370,11 +1479,11 @@ function openMediaViewer(id, idx, opts) {
                         viewedBy: data.viewedBy || [],
                         time: data.timestamp && data.timestamp.toDate ? data.timestamp.toDate() : new Date(),
                         reactions: {},
-                        starred: false,
+                        starred: nxIsStarred(d.id),
                         replyTo: data.replyTo || null,
                         status: 'read'
                     };
-                });
+                }).filter(m => !nxIsHidden(m.id));
                 nxCachePut('m', chatMessages.slice(-80).map(m => ({ ...m, time: +m.time })));
                 renderChatFlow();
             }, err => console.error('group messages listener error:', err));
@@ -1386,7 +1495,7 @@ function openMediaViewer(id, idx, opts) {
             if (!text) return;
             pushOutgoingMessage({ text });
            const _mv = document.getElementById('mediaViewer');
-            if (_mv) { _mv._closing = true; history.back(); showToast('Sending reply…', 'fa-paper-plane'); }
+            if (_mv) { nxCloseViewerNav(); showToast('Sending reply…', 'fa-paper-plane'); }
             input.value = '';
             handleDockInput(input);
            const _sc = document.getElementById('smartSuggestChip'); if (_sc) _sc.style.display = 'none'; 
