@@ -879,7 +879,22 @@ function openMediaViewer(id, idx, opts) {
                     if (navigator.share) navigator.share({ url: cu }).catch(() => {});
                     else { try { navigator.clipboard.writeText(cu); } catch (e2) {} vToast('Link copied'); }
                 } else if (act === 'star') { trayStar(); vToast(m.starred ? 'Starred' : 'Removed from starred'); }
-                else if (act === 'show') { v._closing = true; history.back(); setTimeout(() => jumpToMessage(id), 350); }
+                else if (act === 'show') {
+    v._closing = true;
+
+    // Keep the current group route instead of navigating away.
+    history.replaceState(
+        { nexusRoute: 'group.html' },
+        '',
+        location.href
+    );
+
+    closeMediaViewer();
+
+    setTimeout(() => {
+        jumpToMessage(id);
+    }, 150);
+                }
                 else if (act === 'delete') { if (confirm('Delete this message?')) { trayDelete(); v._closing = true; history.back(); } }
                 else if (act === 'report') { vToast('Report sent'); }
             };
@@ -1444,7 +1459,11 @@ function openMediaViewer(id, idx, opts) {
             if (!text) return;
             pushOutgoingMessage({ text });
            const _mv = document.getElementById('mediaViewer');
-            if (_mv) { _mv._closing = true; history.back(); showToast('Sending reply…', 'fa-paper-plane'); }
+if (_mv) {
+    _mv._closing = true;
+    closeMediaViewer();
+    showToast('Sending reply…', 'fa-paper-plane');
+}
             input.value = '';
             handleDockInput(input);
            const _sc = document.getElementById('smartSuggestChip'); if (_sc) _sc.style.display = 'none'; 
