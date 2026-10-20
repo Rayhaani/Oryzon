@@ -646,34 +646,46 @@
         // ============================================================
         let feedRendered = false;
 
-      function switchMode(mode) {
+              function switchMode(mode) {
             document.documentElement.classList.remove('preload-feed');
             localStorage.setItem('nexus_group_mode', mode);
             const isChat = mode === 'chat';
 
-            document.getElementById('headerLeftChat').style.display = isChat ? 'flex' : 'none';
-            document.getElementById('headerLeftFeed').style.display = isChat ? 'none' : 'flex';
+            const hlChat = document.getElementById('headerLeftChat');
+            const hlFeed = document.getElementById('headerLeftFeed');
+            const chatFlow = document.getElementById('chat-flow');
+            const dockContainer = document.getElementById('dockContainer');
+            const feedView = document.getElementById('feedView');
+            const pinnedBar = document.getElementById('pinnedBar');
+            const toggleChatBtn = document.getElementById('toggleChatBtn');
+            const toggleFeedBtn = document.getElementById('toggleFeedBtn');
+            const modeThumb = document.getElementById('modeThumb');
 
-            document.getElementById('chat-flow').style.display = isChat ? 'flex' : 'none';
-            document.getElementById('dockContainer').style.display = isChat ? 'flex' : 'none';
-            document.getElementById('feedView').style.display = isChat ? 'none' : 'flex';
-            document.getElementById('pinnedBar').classList.toggle('active', isChat && !!pinnedMessageId);
+            if (hlChat) hlChat.style.display = isChat ? 'flex' : 'none';
+            if (hlFeed) hlFeed.style.display = isChat ? 'none' : 'flex';
+
+            if (chatFlow) chatFlow.style.display = isChat ? 'flex' : 'none';
+            if (dockContainer) dockContainer.style.display = isChat ? 'flex' : 'none';
+            if (feedView) feedView.style.display = isChat ? 'none' : 'flex';
+            if (pinnedBar) pinnedBar.classList.toggle('active', isChat && !!pinnedMessageId);
+            
+            const header = document.querySelector('header');
             if (isChat) {
-                document.querySelector('header').classList.remove('header-feed-transparent');
+                if (header) header.classList.remove('header-feed-transparent');
             } else {
                 updateFeedHeaderState();
                 requestAnimationFrame(updateFeedHeaderState);
             }
-            document.getElementById('toggleChatBtn').classList.toggle('active', isChat);
-            document.getElementById('toggleFeedBtn').classList.toggle('active', !isChat);
-            document.getElementById('modeThumb').style.transform = isChat ? 'translateX(100%)' : 'translateX(0%)';
+            if (toggleChatBtn) toggleChatBtn.classList.toggle('active', isChat);
+            if (toggleFeedBtn) toggleFeedBtn.classList.toggle('active', !isChat);
+            if (modeThumb) modeThumb.style.transform = isChat ? 'translateX(100%)' : 'translateX(0%)';
 
             if (!isChat && !feedRendered) {
                 renderFeedPosts();
                 feedRendered = true;
             }
-        }
-
+              }
+   
         // ============================================================
         // 3. CHAT ENGINE — single renderer for every bubble (fixes the
         //    "different timestamp style" bug for good).
