@@ -193,15 +193,43 @@
    down snapshot listeners, window/document listeners, and any
    active timer so nothing leaks or double-fires on re-entry.
    ============================================================ */
-   // TEMP DEBUG: load Eruda inside group.js so it also runs on SPA navigation
-        (function () {
-            if (window.eruda || document.getElementById('nx-eruda-loader')) return;
-            var s = document.createElement('script');
-            s.id = 'nx-eruda-loader';
-            s.src = 'https://cdn.jsdelivr.net/npm/eruda';
-            s.onload = function () { window.eruda && window.eruda.init(); };
-            document.head.appendChild(s);
-        })();
+   // ERUDA LOADER — retry if a previous script load failed
+(function nxLoadEruda() {
+    if (window.eruda) {
+        try {
+            window.eruda.init();
+        } catch (e) {
+            console.warn('Eruda initialization failed:', e);
+        }
+        return;
+    }
+
+    // Remove an old loader that may have failed.
+    var oldLoader = document.getElementById('nx-eruda-loader');
+    if (oldLoader) oldLoader.remove();
+
+    var s = document.createElement('script');
+    s.id = 'nx-eruda-loader';
+    s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    s.async = true;
+
+    s.onload = function () {
+        if (window.eruda) {
+            try {
+                window.eruda.init();
+            } catch (e) {
+                console.error('Eruda initialization failed:', e);
+            }
+        }
+    };
+
+    s.onerror = function () {
+        console.error('Eruda failed to load. It can retry on the next page visit.');
+        s.remove();
+    };
+
+    document.head.appendChild(s);
+})();
 
         // ============================================================
         // FIREBASE + REAL GROUP IDENTITY (oryzon-50ea4)
@@ -776,11 +804,21 @@ function openMediaViewer(id, idx, opts) {
         try { if (v.requestFullscreen) v.requestFullscreen().then(() => setTimeout(nxShowViewer, 120)).catch(nxShowViewer); else nxShowViewer(); } catch (e) { nxShowViewer(); }
         setTimeout(nxShowViewer, 600);
         v._fs = function () {
-            if (!document.getElementById('mediaViewer')) return;
-            if (v._closing) return;
-            if (!document.fullscreenElement) { history.back(); return; }
-            const s = v.querySelector('#mvStrip'); if (s && idx) s.scrollLeft = idx * window.innerWidth;
-        };
+    if (!document.getElementById('mediaViewer')) return;
+    if (v._closing) return;
+
+    // Do not call history.back() again when fullscreen exits.
+    // The viewer's popstate handler already manages browser Back.
+    if (!document.fullscreenElement) {
+        closeMediaViewer();
+        return;
+    }
+
+    const s = v.querySelector('#mvStrip');
+    if (s && idx) {
+        s.scrollLeft = idx * window.innerWidth;
+    }
+};
         document.addEventListener('fullscreenchange', v._fs);
        const strip = v.querySelector('#mvStrip');
         if (idx) strip.scrollLeft = idx * window.innerWidth;
