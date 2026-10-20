@@ -779,6 +779,7 @@ currentContentEl.style.removeProperty('visibility');
     window.addEventListener('popstate', function (e) {
         if (window.__npProfileOverlay) { window.__npProfileOverlay = false; return; }
         if (window.NexusOverlay && window.NexusOverlay.isOpen && window.NexusOverlay.isOpen()) return;
+       if (document.getElementById('mediaViewer')) return;
 
         const poppedPath = (e.state && e.state.nexusRoute) || normalizePath(window.location.pathname);
         const wasOnHome = (currentPath === 'social.html');
