@@ -889,20 +889,26 @@ function openMediaViewer(id, idx, opts) {
     }
 }
         function openViewOnce(id) { openMediaViewer(id, 0, { viewOnce: true }); }
-        if (!window.__nxViewerBound) {
+                if (!window.__nxViewerBound) {
             window.__nxViewerBound = true;
             window.NexusOverlay = window.NexusOverlay || {};
             const prevOpen = window.NexusOverlay.isOpen;
             window.NexusOverlay.isOpen = function () { return !!document.getElementById('mediaViewer') || (prevOpen ? prevOpen.apply(this, arguments) : false); };
+            
             window.addEventListener('popstate', function (e) {
                 const v = document.getElementById('mediaViewer');
                 if (!v) return;
-                // Viewer's own history entry: stop router.js from treating this popstate as page navigation (it was sending us to chats.html)
+                // TSAYAR DA ROUTER DAGA FITA: Wannan yana hana router daga daukar popstate na viewer a matsayin fita daga group
                 e.stopImmediatePropagation();
-               v._closing = true;
-                setTimeout(function () { closeMediaViewer(); if (typeof renderChatFlow === 'function') renderChatFlow(); }, 0);
+                e.preventDefault();
+                v._closing = true;
+                setTimeout(function () { 
+                    closeMediaViewer(); 
+                    if (typeof renderChatFlow === 'function') renderChatFlow(); 
+                }, 0);
             }, true);
-        }
+                }
+   
         let pendingMedia = [];
         function addPendingMedia(info) {
             const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), localUrl: info.localUrl, localUrls: info.localUrls || null, text: info.text || '', viewOnce: !!info.viewOnce, state: 'sending', time: new Date() };
