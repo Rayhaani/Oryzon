@@ -781,8 +781,8 @@
             const v = document.getElementById('mediaViewer');
             if (!v) return;
             v._closing = true;
-            if (history.state && history.state.nxViewer) history.back(); else closeMediaViewer();
-            setTimeout(function () { if (document.getElementById('mediaViewer') === v) closeMediaViewer(); }, 500);
+            if (history.state && history.state.nxViewer) { window.__nxSwallow = Date.now() + 2500; history.back(); } else closeMediaViewer();
+            setTimeout(function () { if (document.getElementById('mediaViewer') === v) closeMediaViewer(); }, 1200);
         }
         function closeMediaViewer() {
             if (__voAudio) { try { __voAudio.pause(); } catch (e) {} __voAudio = null; }
@@ -1000,11 +1000,15 @@ function openMediaViewer(id, idx, opts) {
             window.__nxViewerBound = true;
             // capture phase + stopImmediatePropagation: the SPA router must never see the Back/pop that closes the viewer (otherwise it leaves the group)
             window.addEventListener('popstate', function (e) {
-                const v = document.getElementById('mediaViewer');
-                if (!v) return;
+              const v = document.getElementById('mediaViewer');
+                const swallow = window.__nxSwallow && Date.now() < window.__nxSwallow;
+                if (!v && !swallow) return;
                 e.stopImmediatePropagation();
-                v._closing = true;
-                closeMediaViewer();
+                window.__nxSwallow = 0;
+                if (!v) return;
+                v._closing = true; 
+                
+               closeMediaViewer();
                 if (typeof renderChatFlow === 'function') renderChatFlow();
             }, true);
         }
