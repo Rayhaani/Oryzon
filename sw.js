@@ -56,7 +56,7 @@ self.addEventListener('fetch', (event) => {
     // HTML navigation (buɗe/refresh wata page) — NETWORK FIRST.
     if (req.mode === 'navigate') {
         event.respondWith(
-            fetch(req)
+            fetch(req, { cache: 'reload' })
                 .then((res) => {
                     const resClone = res.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
@@ -71,7 +71,7 @@ self.addEventListener('fetch', (event) => {
     // da Google Fonts) — NETWORK FIRST, cache kawai a matsayin offline
     // fallback (haka babu bukatar bump CACHE_NAME akan kowace edit).
     event.respondWith(
-        fetch(req)
+        fetch(req, { cache: 'reload' })
             .then((res) => {
                 if (res && res.status === 200) {
                     const resClone = res.clone();
