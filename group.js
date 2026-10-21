@@ -799,11 +799,15 @@ function openMediaViewer(id, idx, opts) {
             </div>
             ${caption}`;
        document.body.appendChild(v);
-    v.style.opacity = '0'; v.style.transition = 'opacity .12s';
-        const nxShowViewer = () => { v.style.opacity = '1'; };
-        try { if (v.requestFullscreen) v.requestFullscreen().then(() => setTimeout(nxShowViewer, 120)).catch(nxShowViewer); else nxShowViewer(); } catch (e) { nxShowViewer(); }
-        setTimeout(nxShowViewer, 600);
-        v._fs = function () {
+    v.style.opacity = '1';
+v.style.transition = 'none';
+
+try {
+    if (v.requestFullscreen) {
+        v.requestFullscreen().catch(() => {});
+    }
+} catch (e) {}     
+       v._fs = function () {
     if (!document.getElementById('mediaViewer')) return;
     if (v._closing) return;
 
