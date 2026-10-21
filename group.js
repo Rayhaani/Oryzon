@@ -803,9 +803,33 @@ function openMediaViewer(id, idx, opts) {
 </div>
             
             ${caption}`;
-       document.body.appendChild(v);
-    v.style.opacity = '1';
+       // Permanent close button: visible in normal and View Once viewers.
+        const mvBack = document.createElement('button');
+        mvBack.type = 'button';
+        mvBack.id = 'mvBack';
+        mvBack.setAttribute('aria-label', 'Close media viewer');
+
+        mvBack.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6"></path>
+            </svg>
+        `;
+
+        mvBack.style.cssText =
+            'position:absolute;top:calc(env(safe-area-inset-top, 0px) + 10px);left:12px;z-index:100;width:46px;height:46px;border:0;border-radius:50%;background:rgba(25,25,25,0.72);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;';
+
+        mvBack.onclick = () => {
+            if (document.getElementById('mediaViewer')) {
+                history.back();
+            }
+        };
+
+        v.appendChild(mvBack);
+       v.style.opacity = '0';
 v.style.transition = 'none';
+document.body.appendChild(v);
 try {
     if (v.requestFullscreen) {
         v.requestFullscreen().catch(() => {});
@@ -844,6 +868,56 @@ const cur = () => Math.max(
         Math.round(strip.scrollLeft / getSlideWidth())
     )
 );
+
+// Reveal viewer only when the selected media is ready.
+        let mvHasRevealed = false;
+        let mvRevealTimer;
+
+        const revealViewer = () => {
+            if (mvHasRevealed || !v.isConnected) return;
+
+            mvHasRevealed = true;
+            clearTimeout(mvRevealTimer);
+            v.style.opacity = '1';
+        };
+
+        const selectedSlide =
+            strip.children[Math.max(0, Math.min(items.length - 1, Number(idx) || 0))];
+
+        const selectedMedia =
+            selectedSlide && selectedSlide.querySelector('img, video');
+
+        if (!selectedMedia) {
+            revealViewer();
+
+        } else if (selectedMedia.tagName === 'IMG') {
+
+            if (selectedMedia.complete && selectedMedia.naturalWidth > 0) {
+                revealViewer();
+            } else {
+                selectedMedia.addEventListener('load', revealViewer, { once: true });
+                selectedMedia.addEventListener('error', revealViewer, { once: true });
+
+                if (typeof selectedMedia.decode === 'function') {
+                    selectedMedia.decode()
+                        .then(revealViewer)
+                        .catch(() => {});
+                }
+            }
+
+        } else {
+
+            if (selectedMedia.readyState >= 2) {
+                revealViewer();
+            } else {
+                selectedMedia.addEventListener('loadeddata', revealViewer, { once: true });
+                selectedMedia.addEventListener('canplay', revealViewer, { once: true });
+                selectedMedia.addEventListener('error', revealViewer, { once: true });
+            }
+        }
+
+        // Safety fallback if the browser never fires a media-ready event.
+        mvRevealTimer = setTimeout(revealViewer, 5000);
        const vToast = (msg) => {
             const old = v.querySelector('#mvToast'); if (old) old.remove();
             const t = document.createElement('div');
