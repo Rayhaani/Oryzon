@@ -790,17 +790,18 @@ function openMediaViewer(id, idx, opts) {
 
         const v = document.createElement('div');
         v.id = 'mediaViewer';
-        v.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:100030;background:#000;font-family:Inter,sans-serif;overflow:hidden;';
+        v.style.cssText = 'position:fixed;inset:0;width:100%;z-index:100030;background:#000;font-family:Inter,sans-serif;overflow:hidden;';
         v.innerHTML = `
             ${isVO ? '' : `<div id="mvBar" style="position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:6px;padding:12px 10px 22px 18px;background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);color:#fff;">
                 <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:600;">${isVO ? 'View once' : escapeHtml(who)}</div>${isVO ? '' : `<div style="font-size:13px;opacity:0.75;margin-top:2px;">${when}</div>`}</div>
                 ${isVO ? '' : `<div style="${iconCss}" id="mvDownload"><i class="fa-solid fa-download"></i></div><div style="${iconCss}" id="mvForward"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-1a6 6 0 0 1 6-6h6"/><path d="M14 6l5 5-5 5"/><path d="M18 6l4 5-4 5"/></svg></div><div style="${iconCss}" id="mvStatus"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="13" r="8"/><circle cx="11" cy="13" r="3.5"/><path d="M20 2v6M17 5h6"/></svg></div><div style="${iconCss}" id="mvMore"><i class="fa-solid fa-ellipsis-vertical"></i></div>`}
             </div>`}
-            <div id="mvStrip" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-                ${items.map(it => `<div style="flex:0 0 100vw;width:100vw;height:100vh;height:100dvh;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;">${it.type === 'video'
-                 ? `<video src="${it.mediaUrl}" ${isVO ? 'controlsList="nodownload noplaybackrate" disablePictureInPicture' : ''} controls autoplay playsinline style="max-width:100vw;max-height:100dvh;width:100%;height:100%;object-fit:contain;background:#000;"></video>`
-                    : `<img src="${it.mediaUrl}" alt="" style="max-width:100vw;max-height:100dvh;width:100%;height:100%;object-fit:contain;">`}</div>`).join('')}          
-            </div>
+            <div id="mvStrip" style="position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+    ${items.map(it => `<div style="flex:0 0 100%;width:100%;height:100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;">${it.type === 'video'
+     ? `<video src="${it.mediaUrl}" ${isVO ? 'controlsList="nodownload noplaybackrate" disablePictureInPicture' : ''} controls autoplay playsinline style="max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;background:#000;"></video>`
+        : `<img src="${it.mediaUrl}" alt="" style="max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;">`}</div>`).join('')}
+</div>
+            
             ${caption}`;
        document.body.appendChild(v);
     v.style.opacity = '1';
@@ -828,9 +829,21 @@ v._fs = function () {
 
 document.addEventListener('fullscreenchange', v._fs);
        const strip = v.querySelector('#mvStrip');
-        if (idx) strip.scrollLeft = idx * window.innerWidth;
-        const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (window.innerWidth || 1))));
 
+const getSlideWidth = () =>
+    strip.clientWidth || window.innerWidth || 1;
+
+if (idx) {
+    strip.scrollLeft = idx * getSlideWidth();
+}
+
+const cur = () => Math.max(
+    0,
+    Math.min(
+        items.length - 1,
+        Math.round(strip.scrollLeft / getSlideWidth())
+    )
+);
        const vToast = (msg) => {
             const old = v.querySelector('#mvToast'); if (old) old.remove();
             const t = document.createElement('div');
