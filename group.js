@@ -761,6 +761,7 @@
             if (v._autoReply && replyTarget && replyTarget.id === v._autoReply) cancelReply();
         }
         v.remove();
+    } 
     }
 function openMediaViewer(id, idx, opts) {
     opts = opts || {};
