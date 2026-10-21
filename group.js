@@ -762,8 +762,6 @@
         }
         v.remove();
     }
-    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-}
 function openMediaViewer(id, idx, opts) {
     opts = opts || {};
     try {
@@ -802,28 +800,6 @@ function openMediaViewer(id, idx, opts) {
     v.style.opacity = '1';
 v.style.transition = 'none';
 
-try {
-    if (v.requestFullscreen) {
-        v.requestFullscreen().catch(() => {});
-    }
-} catch (e) {}     
-       v._fs = function () {
-    if (!document.getElementById('mediaViewer')) return;
-    if (v._closing) return;
-
-    // Do not call history.back() again when fullscreen exits.
-    // The viewer's popstate handler already manages browser Back.
-    if (!document.fullscreenElement) {
-        closeMediaViewer();
-        return;
-    }
-
-    const s = v.querySelector('#mvStrip');
-    if (s && idx) {
-        s.scrollLeft = idx * window.innerWidth;
-    }
-};
-        document.addEventListener('fullscreenchange', v._fs);
        const strip = v.querySelector('#mvStrip');
         if (idx) strip.scrollLeft = idx * window.innerWidth;
         const cur = () => Math.max(0, Math.min(items.length - 1, Math.round(strip.scrollLeft / (window.innerWidth || 1))));
