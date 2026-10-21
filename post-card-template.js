@@ -1399,11 +1399,11 @@ const rawPic = post.userProfilePic || npAvatarSvg(post.username || 'user');
                   <div class="post-header ${post.isVerified ? 'post-header-premium' : ''}">
             <a href="me.html?user=${encodeURIComponent(post.username || '')}"
                style="position:absolute; left:0; top:0; width:54px; height:54px; display:block; z-index:20; text-decoration:none;">
-               <img src="${avatarUrl}"
+               <img src="${window.npThumbUrl ? window.npThumbUrl(avatarUrl) : avatarUrl}" data-orig="${avatarUrl}"
                      class="post-avatar"
                      loading="lazy"
                      alt=""
-                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27%3E%3C/svg%3E';"> 
+                     onerror="var o=this.getAttribute('data-orig'); if (o && this.src!==o) { this.src=o; return; } this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27%3E%3C/svg%3E';"> 
                             </a>
 
 <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; margin: 0 0 0 2px !important;">
