@@ -792,10 +792,54 @@ function openMediaViewer(id, idx, opts) {
         v.id = 'mediaViewer';
         v.style.cssText = 'position:fixed;inset:0;width:100%;z-index:100030;background:#000;font-family:Inter,sans-serif;overflow:hidden;';
         v.innerHTML = `
-            ${isVO ? '' : `<div id="mvBar" style="position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:6px;padding:12px 10px 22px 18px;background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);color:#fff;">
-                <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:600;">${isVO ? 'View once' : escapeHtml(who)}</div>${isVO ? '' : `<div style="font-size:13px;opacity:0.75;margin-top:2px;">${when}</div>`}</div>
-                ${isVO ? '' : `<div style="${iconCss}" id="mvDownload"><i class="fa-solid fa-download"></i></div><div style="${iconCss}" id="mvForward"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-1a6 6 0 0 1 6-6h6"/><path d="M14 6l5 5-5 5"/><path d="M18 6l4 5-4 5"/></svg></div><div style="${iconCss}" id="mvStatus"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="13" r="8"/><circle cx="11" cy="13" r="3.5"/><path d="M20 2v6M17 5h6"/></svg></div><div style="${iconCss}" id="mvMore"><i class="fa-solid fa-ellipsis-vertical"></i></div>`}
-            </div>`}
+           <div id="mvBar" style="position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top, 0px) + 8px) 12px 22px;background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);color:#fff;">
+
+                <button id="mvBack" type="button" aria-label="Back"
+                    style="flex:0 0 32px;width:32px;height:40px;padding:0;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;">
+                    <svg width="26" height="26" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 18l-6-6 6-6"></path>
+                    </svg>
+                </button>
+
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:17px;font-weight:600;">
+                        ${escapeHtml(who)}
+                    </div>
+                    <div style="font-size:13px;opacity:0.75;margin-top:2px;">
+                        ${when}
+                    </div>
+                </div>
+
+                ${isVO ? '' : `
+                    <div style="${iconCss}" id="mvDownload">
+                        <i class="fa-solid fa-download"></i>
+                    </div>
+                    <div style="${iconCss}" id="mvForward">
+                        <svg width="24" height="24" viewBox="0 0 24 24"
+                            fill="none" stroke="#fff" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 18v-1a6 6 0 0 1 6-6h6"/>
+                            <path d="M14 6l5 5-5 5"/>
+                            <path d="M18 6l4 5-4 5"/>
+                        </svg>
+                    </div>
+                    <div style="${iconCss}" id="mvStatus">
+                        <svg width="24" height="24" viewBox="0 0 24 24"
+                            fill="none" stroke="#fff" stroke-width="2"
+                            stroke-linecap="round">
+                            <circle cx="11" cy="13" r="8"/>
+                            <circle cx="11" cy="13" r="3.5"/>
+                            <path d="M20 2v6M17 5h6"/>
+                        </svg>
+                    </div>
+                    <div style="${iconCss}" id="mvMore">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </div>
+                `}
+            </div> 
+            
             <div id="mvStrip" style="position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
     ${items.map(it => `<div style="flex:0 0 100%;width:100%;height:100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;">${it.type === 'video'
      ? `<video src="${it.mediaUrl}" ${isVO ? 'controlsList="nodownload noplaybackrate" disablePictureInPicture' : ''} controls autoplay playsinline style="max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;background:#000;"></video>`
@@ -1008,7 +1052,34 @@ const cur = () => Math.max(
             __voAudio = new Audio(m.voice.url);
             __voAudio.play().catch(() => {});
         }
+const closeViewerFromButton = () => {
+            const viewer = document.getElementById('mediaViewer');
+            if (!viewer) return;
 
+            viewer._closing = true;
+
+            // Rufe viewer kai tsaye kafin fullscreen ya canza.
+            closeMediaViewer();
+
+            // Yi amfani da tarihin viewer ba tare da barin router
+            // ya ɗauki wannan a matsayin fita daga group ba.
+            window.__nxSkipViewerPop = true;
+
+            history.back();
+
+            setTimeout(() => {
+                window.__nxSkipViewerPop = false;
+            }, 1000);
+        };
+
+        const backButton = v.querySelector('#mvBack');
+        if (backButton) {
+            backButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                closeViewerFromButton();
+            });
+        }
         history.pushState({ nxViewer: 1 }, '', location.href);
        if (!isVO) {
             const dock = document.getElementById('dockContainer');
@@ -1055,6 +1126,12 @@ const cur = () => Math.max(
             window.NexusOverlay.isOpen = function () { return !!document.getElementById('mediaViewer') || (prevOpen ? prevOpen.apply(this, arguments) : false); };
             
             window.addEventListener('popstate', function (e) {
+               if (window.__nxSkipViewerPop) {
+                    window.__nxSkipViewerPop = false;
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    return;
+               }
                 const v = document.getElementById('mediaViewer');
                 if (!v) return;
                 // TSAYAR DA ROUTER DAGA FITA: Wannan yana hana router daga daukar popstate na viewer a matsayin fita daga group
