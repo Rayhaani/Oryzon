@@ -3786,17 +3786,18 @@ async function openReviewModal() {
 
     // Reset
     selectedReviewStars = 0;
+   Object.keys(npDimRatings).forEach(k => delete npDimRatings[k]);
     document.getElementById('review-comment-input').value = '';
     document.getElementById('review-customer-name-input').value = '';
 
     // Gina dimension stars rows
-    const dimsHTML = dims.map(d => `
-        <div style="border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px 16px;margin-bottom:12px;">
-            <div style="font-size:13px;font-weight:700;color:#ffffff;margin-bottom:10px;">${d.label}</div>
-            <div class="np-dim-star-picker" data-key="${d.key}" style="display:flex;justify-content:space-between;max-width:260px;">
+   const dimsHTML = dims.map(d => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.75);">${d.label}</div>
+            <div class="np-dim-star-picker" data-key="${d.key}" style="display:flex;gap:6px;flex-shrink:0;">
                 ${[1,2,3,4,5].map(n => `
                     <span onclick="setDimStar('${d.key}', ${n}, this)" data-val="${n}"
-                        style="font-size:28px;color:rgba(255,255,255,0.25);cursor:pointer;transition:all 0.15s ease;">☆</span>
+                        style="font-size:26px;line-height:1;color:rgba(255,255,255,0.18);cursor:pointer;transition:all 0.15s ease;">★</span>
                 `).join('')}
             </div>
         </div>`).join('');
@@ -3805,30 +3806,34 @@ async function openReviewModal() {
     if (!box) return;
 
     box.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid rgba(255,255,255,0.08);">
-            <button onclick="closeReviewModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#ffffff;">✕</button>
-            <div style="text-align:center;">
-                <div style="font-size:15px;font-weight:800;color:#ffffff;">${pro.name}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.5);">Rate this provider</div>
-            </div>
-            <button onclick="submitReview()" style="background:none;border:none;font-size:14px;font-weight:800;color:#00F2FF;cursor:pointer;">Post</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="font-size:17px;font-weight:800;color:#00F2FF;">Write a review</div>
+            <button onclick="closeReviewModal()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);font-size:13px;cursor:pointer;">✕</button>
         </div>
-        <div style="padding:20px;">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Your Review *</div>
-            <textarea id="review-comment-input" maxlength="400" placeholder="Share your experience with this provider..."
-                style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;font-size:13px;color:#ffffff;outline:none;resize:none;height:80px;line-height:1.5;font-family:inherit;box-sizing:border-box;margin-bottom:20px;"></textarea>
-
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Rate Each Category *</div>
-            <div id="np-dim-stars-container">${dimsHTML}</div>
-
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin:6px 0 6px;">Your Name (Optional)</div>
-            <input type="text" id="review-customer-name-input" placeholder="Anonymous if left blank"
-                style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;font-size:13px;color:#ffffff;outline:none;box-sizing:border-box;margin-bottom:20px;">
-
-            <button onclick="submitReview()" style="width:100%;padding:14px;background:linear-gradient(135deg,#00F2FF,#0891b2);border:none;border-radius:14px;color:#000000;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Post Review ⭐</button>
+        <div id="np-rv-pro" style="font-size:13px;font-weight:700;color:#ffffff;"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin:6px 0 16px;color:#10b981;font-size:11px;font-weight:700;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.4-4.2-4.2 1.4-1.4 2.8 2.8 5.2-5.2 1.4 1.4-6.6 6.6z"/></svg>
+            <span>Verified Purchase</span>
+            <span id="np-rv-item" style="color:rgba(255,255,255,0.5);font-weight:600;"></span>
         </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid rgba(255,255,255,0.1);border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div id="np-live-avg" style="font-size:40px;font-weight:800;color:#ffffff;letter-spacing:-1.5px;line-height:1;">0.0</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;line-height:1.5;">Overall rating<br>Rate each category below</div>
+        </div>
+        <div id="np-dim-stars-container">${dimsHTML}</div>
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.75);margin:18px 0 8px;">Your review</div>
+        <textarea id="review-comment-input" maxlength="400" oninput="document.getElementById('np-rv-count').textContent = this.value.length + '/400'" placeholder="What went well? What could be better?"
+            style="width:100%;box-sizing:border-box;height:90px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.5;color:#ffffff;outline:none;resize:none;font-family:inherit;"></textarea>
+        <div id="np-rv-count" style="text-align:right;font-size:10px;color:rgba(255,255,255,0.4);margin:4px 0 14px;">0/400</div>
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.75);margin-bottom:8px;">Display name (optional)</div>
+        <input type="text" id="review-customer-name-input" placeholder="Anonymous if left blank"
+            style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 12px;font-size:13px;color:#ffffff;outline:none;font-family:inherit;">
+        <button id="review-submit-btn" onclick="submitReview()" style="width:100%;margin-top:18px;padding:14px;background:#fde08d;border:none;border-radius:14px;color:#1a1a1a;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Post Review ⭐</button>
+        <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.4);margin-top:10px;">Your review is public and linked to your completed order.</div>
     `;
 
+    document.getElementById('np-rv-pro').textContent = pro.name;
+    document.getElementById('np-rv-item').textContent = '· ' + (npReviewOrder ? (npReviewOrder.itemName || npReviewOrder.jobDescription || 'Order') : '');
     document.getElementById('review-modal-overlay').style.display = 'flex';
 }
 
@@ -3841,10 +3846,12 @@ function setDimStar(key, value, el) {
     // Light up stars
     const picker = el.closest('.np-dim-star-picker');
     picker.querySelectorAll('span').forEach(s => {
-        s.style.color = parseInt(s.dataset.val) <= value ? '#f59e0b' : '#e2e8f0';
+        s.style.color = parseInt(s.dataset.val) <= value ? '#f59e0b' : 'rgba(255,255,255,0.18)';
         s.style.transform = parseInt(s.dataset.val) <= value ? 'scale(1.15)' : 'scale(1)';
     });
-
+const vals = Object.values(npDimRatings);
+    const liveEl = document.getElementById('np-live-avg');
+    if (liveEl && vals.length) liveEl.textContent = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
     if (navigator.vibrate) navigator.vibrate(8);
 }
 
@@ -3882,9 +3889,8 @@ async function submitReview() {
     const initials = nameParts.length >= 2
         ? nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase()
         : customerName.slice(0, 2).toUpperCase();
-
-    const avatarColors = [
-        '#1d4ed8','#059669','#7c3aed','#dc2626',
+    const avatarColors = [   
+       '#1d4ed8','#059669','#7c3aed','#dc2626',
         '#d97706','#0891b2','#be185d','#065f46'
     ];
     const avatarColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
@@ -3910,7 +3916,7 @@ async function submitReview() {
         createdAt: Date.now()
     };
 
-    const btn = document.querySelector('.review-modal-box button:last-child');
+    const btn = document.getElementById('review-submit-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting...'; }
 
     try {
@@ -8135,54 +8141,22 @@ function getNPDimensions(category) {
     const hit = NP_DIM_KEYWORDS.find(([re]) => re.test(key));
     return hit ? NP_DIMENSIONS[hit[1]] : NP_DIMENSIONS.default;
          }
-// ── DEMO REVIEWS DATA ──
-const NP_DEMO_REVIEWS = [
-    {
-        id: 'rev_001',
-        reviewerName: 'Dennis W.',
-        reviewerInitials: 'DW',
-        reviewerColor: '#1d4ed8',
-        reviewerSince: 'Member since Jan 2024',
-        rating: 5,
-        comment: 'Absolutely incredible experience! The food was fresh, hot, and delivered right on time. Chef Amara truly knows her craft — the Jollof Rice was smoky and perfect. Will definitely order again.',
-        dimensions: { taste: 5, delivery: 5, value: 4, presentation: 5, freshness: 5 },
-        verifiedOrder: 'Jollof Rice',
-        orderDate: '23 Oct 2024',
-        orderStatus: 'Delivered & Confirmed',
-        helpfulCount: 47,
-        date: '23/10/2024'
-    },
-    {
-        id: 'rev_002',
-        reviewerName: 'Amina K.',
-        reviewerInitials: 'AK',
-        reviewerColor: '#059669',
-        reviewerSince: 'Member since Mar 2024',
-        rating: 4,
-        comment: 'Really good food, the presentation was top notch. Delivery was slightly delayed but Chef kept me informed throughout. The Danwake was delicious.',
-        dimensions: { taste: 5, delivery: 3, value: 4, presentation: 5, freshness: 4 },
-        verifiedOrder: 'Danwake',
-        orderDate: '09 Jun 2025',
-        orderStatus: 'Delivered & Confirmed',
-        helpfulCount: 23,
-        date: '09/06/2025'
-    },
-    {
-        id: 'rev_003',
-        reviewerName: 'Bashir M.',
-        reviewerInitials: 'BM',
-        reviewerColor: '#7c3aed',
-        reviewerSince: 'Member since Aug 2023',
-        rating: 5,
-        comment: 'Best catering service I have ever used for a corporate event. Professional, punctual, and the food quality was world class. Everyone at the office was impressed.',
-        dimensions: { taste: 5, delivery: 5, value: 5, presentation: 5, freshness: 5 },
-        verifiedOrder: 'Corporate Event Catering',
-        orderDate: '14 Mar 2025',
-        orderStatus: 'Delivered & Confirmed',
-        helpfulCount: 89,
-        date: '14/03/2025'
-    },
-];
+// ── LIVE REVIEWS (FIREBASE) ──
+let npLiveReviews = [];
+
+async function loadNPReviews(proId) {
+    try {
+        const snap = await firebase.database().ref('reviews/' + proId).once('value');
+        const data = snap.val() || {};
+        npLiveReviews = Object.entries(data)
+            .map(([id, r]) => ({ id, ...r, reviewerName: r.reviewerName || r.customerName || 'Anonymous' }))
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    } catch (err) {
+        console.warn('Reviews load failed:', err.message);
+        npLiveReviews = [];
+    }
+    return npLiveReviews;
+}
 
 // ── RENDER STARS ──
 function renderNPStars(rating, size = 14) {
@@ -8301,7 +8275,7 @@ function renderNPRatingSection(reviews, category) {
             <div class="np-rating-section">
                 <div style="text-align:center;padding:20px;">
                     <div style="font-size:28px;margin-bottom:8px;">⭐</div>
-                    <div style="font-size:13px;font-weight:700;color:#374151;">No reviews yet</div>
+                    <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.8);">No reviews yet</div>
                     <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Be the first verified customer to leave a review</div>
                 </div>
             </div>`;
@@ -8321,24 +8295,22 @@ function renderNPReviewCards(reviews, category) {
         <div class="np-review-card">
             <div class="np-review-top">
                 <div class="np-reviewer-left">
-                    <div class="np-reviewer-avatar" style="background:${r.reviewerColor};">
-                        ${r.reviewerInitials}
-                        <div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;background:#10b981;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;">
-                            <span style="font-size:7px;color:#fff;">✓</span>
-                        </div>
+                    <div class="np-reviewer-avatar" style="background:${npEsc(r.reviewerColor)};">
+                        ${npEsc(r.reviewerInitials)}
+                        ${r.verified ? '<div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;background:#10b981;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;"><span style="font-size:7px;color:#fff;">✓</span></div>' : ''}
                     </div>
                     <div>
-                        <div class="np-reviewer-name">${r.reviewerName}</div>
+                        <div class="np-reviewer-name">${npEsc(r.reviewerName)}</div>
                         <div class="np-reviewer-meta">
                             ${renderNPStars(r.rating, 12)}
-                            <span class="np-reviewer-date">${r.date}</span>
+                            <span class="np-reviewer-date">${npEsc(r.date)}</span>
                         </div>
                     </div>
                 </div>
-                <button class="np-verified-badge" onclick="openIdentityOverlay(${JSON.stringify(r).replace(/"/g, '&quot;')})"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.4-4.2-4.2 1.4-1.4 2.8 2.8 5.2-5.2 1.4 1.4-6.6 6.6z"/></svg>Verified Purchase</button>
+              ${r.verified ? `<button class="np-verified-badge" onclick="openIdentityOverlay('${npEsc(r.id)}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.4-4.2-4.2 1.4-1.4 2.8 2.8 5.2-5.2 1.4 1.4-6.6 6.6z"/></svg>Verified Purchase</button>` : ''}  
             </div>
 
-            <div class="np-review-comment">${r.comment}</div>
+            <div class="np-review-comment">${npEsc(r.comment)}</div>
 
             <div class="np-helpful-row">
                 <div class="np-helpful-text">Was this review helpful?</div>
@@ -8397,7 +8369,7 @@ negBtn.style.color = rfActiveSentiment === 'negative' ? '#111827' : '#ffffff';
 }
 
 function rfRenderReviews(pro) {
-    let reviews = NP_DEMO_REVIEWS;
+    let reviews = npLiveReviews;
     if (rfActiveDim) reviews = reviews.filter(r => (r.dimensions?.[rfActiveDim] || 0) >= 4);
     if (rfActiveSentiment === 'positive') reviews = reviews.filter(r => r.rating >= 4);
     if (rfActiveSentiment === 'negative') reviews = reviews.filter(r => r.rating <= 2);
@@ -8422,7 +8394,8 @@ function handleNPHelpful(btn, reviewId, isYes) {
 
 // ── IDENTITY OVERLAY ──
 function openIdentityOverlay(reviewData) {
-    const r = typeof reviewData === 'string' ? JSON.parse(reviewData) : reviewData;
+    const r = npLiveReviews.find(x => x.id === reviewData);
+    if (!r) return;
 
     document.getElementById('npIdAvatar').style.background = r.reviewerColor || '#1d4ed8';
     document.getElementById('npIdAvatar').textContent = r.reviewerInitials || '?';
@@ -8442,16 +8415,14 @@ function closeIdentityOverlay(event) {
 }
 
 // ── INJECT INTO PROFILE SHEET ──
-function injectNPReviewsIntoProfile(proId) {
+async function injectNPReviewsIntoProfile(proId) {
     const pro = PROS.find(p => String(p.id) === String(proId));
     if (!pro) return;
 
-    // Remove existing
+    const reviews = await loadNPReviews(proId);
     const existing = document.getElementById('np-reviews-inject');
+    const wasVisible = existing && existing.style.display !== 'none';
     if (existing) existing.remove();
-
-    // Use demo reviews — replace with Firebase fetch in production
-    const reviews = NP_DEMO_REVIEWS;
     const category = pro.category || 'default';
 
     const container = document.createElement('div');
@@ -8478,6 +8449,7 @@ function injectNPReviewsIntoProfile(proId) {
 const gallerySection = document.getElementById('nxh-gallery-section');
     if (gallerySection && gallerySection.parentNode) {
         gallerySection.insertAdjacentElement('beforebegin', container);
+       if (wasVisible) container.style.display = '';
     }
 }
 
@@ -9495,7 +9467,7 @@ function switchSeg(tab) {
     if (gallerySection) gallerySection.style.display = (tab === 'gallery') ? '' : 'none';
 
     if (tab === 'reviews' && !document.getElementById('np-reviews-inject') && currentProfileProId) {
-        injectNPReviewsIntoProfile(currentProfileProId);
+        injectNPReviewsIntoProfile(currentProfileProId).then(() => { const el = document.getElementById('np-reviews-inject'); if (el) el.style.display = ''; });
     }
     const reviewsInject = document.getElementById('np-reviews-inject');
     if (reviewsInject) reviewsInject.style.display = (tab === 'reviews') ? '' : 'none';
