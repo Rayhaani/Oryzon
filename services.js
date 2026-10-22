@@ -8285,7 +8285,7 @@ function renderNPSummary(reviews) {
     }).join('');
 
     return `
-        <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.1);">
+        <div style="display:flex;align-items:center;gap:20px;margin-bottom:8px;">
             <div style="text-align:center;flex-shrink:0;">
                 <div class="np-rating-score">${avg.toFixed(1)}</div>
                 <div style="margin:6px 0 4px;">${renderNPStars(avg, 13)}</div>
@@ -8310,9 +8310,6 @@ function renderNPRatingSection(reviews, category) {
     return `
         <div class="np-rating-section">
         ${renderNPSummary(reviews)}
-            <div class="np-dimensions">
-                ${renderNPDimAverages(reviews, category)}
-            </div>
         </div>`;
 }
 
