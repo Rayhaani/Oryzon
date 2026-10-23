@@ -3909,7 +3909,7 @@ async function submitReview() {
         orderId: order.id,
         customerUsername: localStorage.getItem('nexus_user_session'),
         verifiedOrder: order.itemName || order.jobDescription || 'Order',
-        orderDate: new Date(order.completedAt || order.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        orderDate: new Date(order.completedAt || order.providerCompletedAt || order.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
         orderStatus: 'Completed',
         helpfulCount: 0,
         date: new Date().toLocaleDateString('en-GB').replace(/\//g, '/'),
@@ -3972,12 +3972,24 @@ async function getReviewableOrder(proId) {
             firebase.database().ref(`reviews/${proId}`).once('value')
         ]);
         const reviewed = reviewsSnap.val() || {};
-        const order = Object.entries(ordersSnap.val() || {})
+        const now = Date.now();
+        const DAY = 24 * 60 * 60 * 1000;
+        const AUTO_CONFIRM = 3 * DAY;   // job auto-confirms 72h after provider marks it complete
+        const REVIEW_WINDOW = 30 * DAY; // reviews stay open 30 days after confirmation
+        const all = Object.entries(ordersSnap.val() || {})
             .map(([id, o]) => ({ id, ...o }))
-            .filter(o => String(o.proId) === String(proId) && o.status === 'completed' && !reviewed[o.id])
-            .sort((a, b) => (b.completedAt || b.createdAt || 0) - (a.completedAt || a.createdAt || 0))[0];
+            .filter(o => String(o.proId) === String(proId) && !reviewed[o.id]);
+        const confirmedAt = o => o.status === 'completed'
+            ? (o.completedAt || o.createdAt || 0)
+            : (o.status === 'awaiting_confirmation' && o.providerCompletedAt ? o.providerCompletedAt + AUTO_CONFIRM : null);
+        const order = all
+            .filter(o => { const t = confirmedAt(o); return t && t <= now && now - t <= REVIEW_WINDOW; })
+            .sort((a, b) => confirmedAt(b) - confirmedAt(a))[0];
         if (!order) {
-            showGlobalToast('🔒 Only customers with a completed order can leave a review.');
+            const waiting = all.some(o => o.status === 'awaiting_confirmation');
+            showGlobalToast(waiting
+                ? '⏳ Please confirm your completed job in My Orders first.'
+                : '🔒 Only customers with a completed order can leave a review.');
             return null;
         }
         return order;
@@ -5577,10 +5589,69 @@ function mbRenderBookingsList() {
                 <div style="font-size:12px;color:rgba(255,255,255,0.55);">👤 ${b.customerUsername || 'Customer'}</div>
                 <div style="font-size:12.5px;font-weight:800;color:#ffffff;">${budgetLabel}</div>
             </div>
+            ${mbBookingActionsHtml(b)}
         </div>`;
     }).join('');
     }
+function mbBookingActionsHtml(b) {
+    const base = 'flex:1;padding:10px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;';
+    if (b.status === 'pending') {
+        return `<div style="display:flex;gap:8px;margin-top:12px;">
+            <button onclick="mbUpdateBookingStatus('${b.id}','accepted')" style="${base}background:#16a34a;color:#fff;">✓ Accept</button>
+            <button onclick="mbUpdateBookingStatus('${b.id}','declined')" style="${base}background:#fee2e2;color:#dc2626;">✕ Decline</button>
+        </div>`;
+    }
+    if (b.status === 'accepted') {
+        return `<div style="display:flex;gap:8px;margin-top:12px;">
+            <button onclick="mbUpdateBookingStatus('${b.id}','awaiting_confirmation')" style="${base}background:#2563eb;color:#fff;">✓ Mark Completed</button>
+        </div>`;
+    }
+    if (b.status === 'awaiting_confirmation') {
+        return `<div style="margin-top:12px;font-size:12px;font-weight:800;color:#f59e0b;">⏳ Waiting for customer confirmation</div>`;
+    }
+    if (b.status === 'completed') {
+        return `<div style="margin-top:12px;font-size:12px;font-weight:800;color:#10b981;">✓ Completed</div>`;
+    }
+    return '';
+}
 
+async function mbUpdateBookingStatus(requestId, newStatus) {
+    const username = localStorage.getItem('nexus_user_session');
+    try {
+        const reqRef = firebase.database().ref('providers/' + username + '/requests/' + requestId);
+        const snap = await reqRef.once('value');
+        const req = snap.val();
+        if (!req) { showGlobalToast('❌ Booking not found.'); return; }
+        const patch = { status: newStatus };
+        if (newStatus === 'awaiting_confirmation') patch.providerCompletedAt = Date.now();
+        await reqRef.update(patch);
+        if (req.customerUsername) {
+            await firebase.database().ref('customers/' + req.customerUsername + '/sentRequests/' + requestId).update(patch);
+            const notes = {
+                accepted: ['✅ Booking Accepted', 'accepted your booking request.'],
+                declined: ['Booking Declined', 'could not take your booking request.'],
+                awaiting_confirmation: ['✅ Job Completed', 'marked your job as complete. Please confirm it to leave a review.']
+            };
+            const n = notes[newStatus];
+            if (n) {
+                await firebase.database().ref('customers/' + req.customerUsername + '/notifications').push({
+                    type: 'message',
+                    title: n[0],
+                    message: (req.proName || 'Your provider') + ' ' + n[1],
+                    requestId: requestId,
+                    read: false,
+                    createdAt: Date.now()
+                });
+            }
+        }
+        showGlobalToast('✅ Booking updated');
+        mbRenderBookingsTab();
+    } catch (err) {
+        showGlobalToast('❌ Failed to update booking: ' + err.message);
+    }
+}
+window.mbUpdateBookingStatus = mbUpdateBookingStatus;
+   
 let mbCustomersAll = [];
 
 async function mbRenderCustomersTab() {
@@ -7186,8 +7257,8 @@ async function openCustomerOrders() {
             return;
         }
 
-        const statusColor = { pending:'#d97706', confirmed:'#059669', cancelled:'#dc2626' };
-        const statusBg = { pending:'rgba(245,158,11,0.1)', confirmed:'rgba(16,185,129,0.1)', cancelled:'rgba(239,68,68,0.1)' };
+        const statusColor = { pending:'#d97706', confirmed:'#059669', accepted:'#059669', awaiting_confirmation:'#f59e0b', completed:'#10b981', declined:'#dc2626', cancelled:'#dc2626' };
+        const statusBg = { pending:'rgba(245,158,11,0.1)', confirmed:'rgba(16,185,129,0.1)', accepted:'rgba(16,185,129,0.1)', awaiting_confirmation:'rgba(245,158,11,0.15)', completed:'rgba(16,185,129,0.1)', declined:'rgba(239,68,68,0.1)', cancelled:'rgba(239,68,68,0.1)' };
 
         list.innerHTML = orders.map(o => `
             <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;">
@@ -7196,9 +7267,10 @@ async function openCustomerOrders() {
                         <div style="font-size:13px;font-weight:800;color:#ffffff;">${o.itemName || o.jobDescription || '—'}</div>
                         <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">${o.proName || '—'}</div>
                     </div>
-                    <span style="background:${statusBg[o.status]||statusBg.pending};color:${statusColor[o.status]||statusColor.pending};border-radius:8px;padding:3px 10px;font-size:10px;font-weight:800;">${(o.status||'pending').toUpperCase()}</span>
+                    <span style="background:${statusBg[o.status]||statusBg.pending};color:${statusColor[o.status]||statusColor.pending};border-radius:8px;padding:3px 10px;font-size:10px;font-weight:800;">${(o.status === 'awaiting_confirmation' ? 'CONFIRM COMPLETION' : (o.status||'pending').toUpperCase())}</span>
                 </div>
                 <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</div>
+                ${o.status === 'awaiting_confirmation' ? `<button onclick="confirmBookingCompletion('${o.proId}','${o.id}')" style="width:100%;margin-top:10px;padding:10px;background:#fde08d;border:none;border-radius:10px;color:#1a1a1a;font-size:12px;font-weight:800;cursor:pointer;">✓ Confirm job completed</button>` : ''}
             </div>`).join('');
 
     } catch(err) {
