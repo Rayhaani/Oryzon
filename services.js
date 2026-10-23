@@ -7209,10 +7209,33 @@ async function openCustomerOrders() {
 function closeCustomerOrders() {
     document.getElementById('customer-orders-overlay').style.display = 'none';
 }
-
+async function confirmBookingCompletion(proId, requestId) {
+    const sessionUser = localStorage.getItem('nexus_user_session');
+    if (!sessionUser) return;
+    try {
+        const ref = firebase.database().ref('providers/' + proId + '/requests/' + requestId);
+        const snap = await ref.once('value');
+        if ((snap.val() || {}).status !== 'awaiting_confirmation') {
+            showGlobalToast('⚠️ This job is not awaiting confirmation.');
+            return;
+        }
+        const patch = { status: 'completed', completedAt: Date.now(), confirmedBy: 'customer' };
+        await ref.update(patch);
+        await firebase.database().ref('customers/' + sessionUser + '/sentRequests/' + requestId).update(patch);
+        showGlobalToast('✅ Thank you! You can now leave a review.');
+        openCustomerOrders();
+        refreshActiveOrdersBanner();
+    } catch (err) {
+        showGlobalToast('❌ Could not confirm: ' + err.message);
+    }
+}
+window.confirmBookingCompletion = confirmBookingCompletion;
+   
 const ACTIVE_ORDER_STATUS_MAP = {
     pending:    { label: 'Pending',    color: '#fbbf24' },
     confirmed:  { label: 'Accepted',   color: '#3b82f6' },
+    accepted:   { label: 'Accepted',   color: '#3b82f6' },
+    awaiting_confirmation: { label: 'Confirm completion', color: '#f59e0b' },
     in_progress:{ label: 'In Progress',color: '#3b82f6' },
     ready:      { label: 'Ready',      color: '#22c55e' },
     completed:  { label: 'Completed',  color: '#22c55e' },
@@ -7229,7 +7252,7 @@ async function refreshActiveOrdersBanner() {
         const data = snap.val() || {};
         const activeOrders = Object.entries(data)
             .map(([id, o]) => ({ id, ...o }))
-            .filter(o => o.status !== 'cancelled' && o.status !== 'completed')
+            .filter(o => o.status !== 'cancelled' && o.status !== 'completed' && o.status !== 'declined')
             .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
         if (activeOrders.length === 0) { banner.style.display = 'none'; return; }
