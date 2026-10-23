@@ -4057,7 +4057,7 @@ function showGlobalToast(message) {
         box-sizing: border-box;
         text-align: center;
         line-height: 1.4;
-        background: rgba(15,23,42,0.97);
+        background: rgba(245, 245, 247, 0.35);
         border: 1px solid rgba(255,255,255,0.12);
         color: #fff;
         padding: 10px 22px;
@@ -4066,7 +4066,8 @@ function showGlobalToast(message) {
         font-weight: 600;
         z-index: 99999;
         backdrop-filter: blur(20px);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         pointer-events: none;
     `;
     document.body.appendChild(toast);
