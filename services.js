@@ -4042,9 +4042,21 @@ function showGlobalToast(message) {
     const toast = document.createElement('div');
     toast.id = 'global-toast';
     toast.textContent = message;
+
+    // Sit above the profile action bar when it is on screen
+    const bar = document.getElementById('pro-action-bar');
+    const barRect = bar ? bar.getBoundingClientRect() : null;
+    const toastBottom = (barRect && barRect.height > 0 && barRect.top < window.innerHeight)
+        ? Math.round(window.innerHeight - barRect.top + 14) : 30;
+
     toast.style.cssText = `
-        position: fixed; bottom: 30px; left: 50%;
+        position: fixed; bottom: ${toastBottom}px; left: 50%;
         transform: translateX(-50%);
+        width: max-content;
+        max-width: calc(100vw - 32px);
+        box-sizing: border-box;
+        text-align: center;
+        line-height: 1.4;
         background: rgba(15,23,42,0.97);
         border: 1px solid rgba(255,255,255,0.12);
         color: #fff;
@@ -4055,7 +4067,6 @@ function showGlobalToast(message) {
         z-index: 99999;
         backdrop-filter: blur(20px);
         box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-        white-space: nowrap;
         pointer-events: none;
     `;
     document.body.appendChild(toast);
