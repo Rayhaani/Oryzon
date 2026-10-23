@@ -7371,7 +7371,8 @@ function toggleActiveOrdersList() {
 }
 
 function openActiveOrderDetail(proId, requestId) {
-    if (proId && requestId) showOrderStatusOverlay(proId, requestId);
+    const id = String(requestId || '');
+    if (proId && id && !id.startsWith('req_') && !id.startsWith('order_')) showOrderStatusOverlay(proId, id);
     else openCustomerOrders();
 }
 
