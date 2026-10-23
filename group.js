@@ -1,0 +1,3303 @@
+/* group.js is wrapped in a function scope so its top-level const/let never clash with chats.js / other SPA page scripts.
+   Every function is re-exported to window below because the markup uses inline onclick="..." handlers. */
+(function () {
+    if (typeof groupRef === 'function') window.groupRef = groupRef;
+    if (typeof nxGetUserProfile === 'function') window.nxGetUserProfile = nxGetUserProfile;
+    if (typeof nxEnsureNeuralMenuDOM === 'function') window.nxEnsureNeuralMenuDOM = nxEnsureNeuralMenuDOM;
+    if (typeof nxPrepareNeuralMenu === 'function') window.nxPrepareNeuralMenu = nxPrepareNeuralMenu;
+    if (typeof nxDiagnoseScroll === 'function') window.nxDiagnoseScroll = nxDiagnoseScroll;
+    if (typeof nxUnlockScroll === 'function') window.nxUnlockScroll = nxUnlockScroll;
+    if (typeof formatMemberCount === 'function') window.formatMemberCount = formatMemberCount;
+    if (typeof nxCacheKey === 'function') window.nxCacheKey = nxCacheKey;
+    if (typeof nxCachePut === 'function') window.nxCachePut = nxCachePut;
+    if (typeof nxCacheGet === 'function') window.nxCacheGet = nxCacheGet;
+    if (typeof nxSetAvatar === 'function') window.nxSetAvatar = nxSetAvatar;
+    if (typeof nxRenderCachedMessages === 'function') window.nxRenderCachedMessages = nxRenderCachedMessages;
+    if (typeof nxApplyGroup === 'function') window.nxApplyGroup = nxApplyGroup;
+    if (typeof initRealGroup === 'function') window.initRealGroup = initRealGroup;
+    if (typeof showToast === 'function') window.showToast = showToast;
+    if (typeof copyGroupLink === 'function') window.copyGroupLink = copyGroupLink;
+    if (typeof openInviteOverlay === 'function') window.openInviteOverlay = openInviteOverlay;
+    if (typeof closeInviteOverlay === 'function') window.closeInviteOverlay = closeInviteOverlay;
+    if (typeof switchInviteTab === 'function') window.switchInviteTab = switchInviteTab;
+    if (typeof toggleInviteSearchBar === 'function') window.toggleInviteSearchBar = toggleInviteSearchBar;
+    if (typeof runInviteSearch === 'function') window.runInviteSearch = runInviteSearch;
+    if (typeof renderInviteList === 'function') window.renderInviteList = renderInviteList;
+    if (typeof sendInvite === 'function') window.sendInvite = sendInvite;
+    if (typeof fmtClockTime === 'function') window.fmtClockTime = fmtClockTime;
+    if (typeof fmtRelative === 'function') window.fmtRelative = fmtRelative;
+    if (typeof fmtDayLabel === 'function') window.fmtDayLabel = fmtDayLabel;
+    if (typeof escapeHtml === 'function') window.escapeHtml = escapeHtml;
+    if (typeof closeSheet === 'function') window.closeSheet = closeSheet;
+    if (typeof openSheetEl === 'function') window.openSheetEl = openSheetEl;
+    if (typeof openGroupInfo === 'function') window.openGroupInfo = openGroupInfo;
+    if (typeof closeGroupInfo === 'function') window.closeGroupInfo = closeGroupInfo;
+    if (typeof switchGiTab === 'function') window.switchGiTab = switchGiTab;
+    if (typeof renderGiMembersTab === 'function') window.renderGiMembersTab = renderGiMembersTab;
+    if (typeof renameGroupPrompt === 'function') window.renameGroupPrompt = renameGroupPrompt;
+    if (typeof openGroupStatistics === 'function') window.openGroupStatistics = openGroupStatistics;
+    if (typeof toggleGiOptionsMenu === 'function') window.toggleGiOptionsMenu = toggleGiOptionsMenu;
+    if (typeof toggleChatLockMenu === 'function') window.toggleChatLockMenu = toggleChatLockMenu;
+    if (typeof toggleAutoTranslateMenu === 'function') window.toggleAutoTranslateMenu = toggleAutoTranslateMenu;
+    if (typeof toggleLowDataMenu === 'function') window.toggleLowDataMenu = toggleLowDataMenu;
+    if (typeof toggleVoiceA11yMenu === 'function') window.toggleVoiceA11yMenu = toggleVoiceA11yMenu;
+    if (typeof switchMode === 'function') window.switchMode = switchMode;
+    if (typeof playVoiceMsg === 'function') window.playVoiceMsg = playVoiceMsg;
+    if (typeof nxVoOpened === 'function') window.nxVoOpened = nxVoOpened;
+    if (typeof nxVoMark === 'function') window.nxVoMark = nxVoMark;
+    if (typeof closeMediaViewer === 'function') window.closeMediaViewer = closeMediaViewer;
+    if (typeof openMediaViewer === 'function') window.openMediaViewer = openMediaViewer;
+    if (typeof openViewOnce === 'function') window.openViewOnce = openViewOnce;
+    if (typeof addPendingMedia === 'function') window.addPendingMedia = addPendingMedia;
+    if (typeof removePendingMedia === 'function') window.removePendingMedia = removePendingMedia;
+    if (typeof renderChatFlow === 'function') window.renderChatFlow = renderChatFlow;
+    if (typeof detectLinkSafety === 'function') window.detectLinkSafety = detectLinkSafety;
+    if (typeof renderChatMessage === 'function') window.renderChatMessage = renderChatMessage;
+    if (typeof pressStart === 'function') window.pressStart = pressStart;
+    if (typeof pressEnd === 'function') window.pressEnd = pressEnd;
+    if (typeof openMsgTray === 'function') window.openMsgTray = openMsgTray;
+    if (typeof closeMsgTray === 'function') window.closeMsgTray = closeMsgTray;
+    if (typeof reactToMessage === 'function') window.reactToMessage = reactToMessage;
+    if (typeof trayReply === 'function') window.trayReply = trayReply;
+    if (typeof cancelReply === 'function') window.cancelReply = cancelReply;
+    if (typeof trayForward === 'function') window.trayForward = trayForward;
+    if (typeof trayCopy === 'function') window.trayCopy = trayCopy;
+    if (typeof trayStar === 'function') window.trayStar = trayStar;
+    if (typeof trayPin === 'function') window.trayPin = trayPin;
+    if (typeof trayDelete === 'function') window.trayDelete = trayDelete;
+    if (typeof renderPinnedBar === 'function') window.renderPinnedBar = renderPinnedBar;
+    if (typeof scrollToPinned === 'function') window.scrollToPinned = scrollToPinned;
+   if (typeof jumpToMessage === 'function') window.jumpToMessage = jumpToMessage;
+    if (typeof nxDoUnpin === 'function') window.nxDoUnpin = nxDoUnpin;
+    if (typeof unpinMessage === 'function') window.unpinMessage = unpinMessage;
+    if (typeof nxEnsurePinUi === 'function') window.nxEnsurePinUi = nxEnsurePinUi;
+    if (typeof openPinDialog === 'function') window.openPinDialog = openPinDialog;
+    if (typeof closePinDialog === 'function') window.closePinDialog = closePinDialog;
+    if (typeof confirmPin === 'function') window.confirmPin = confirmPin;
+    if (typeof openPinMenu === 'function') window.openPinMenu = openPinMenu;
+    if (typeof closePinMenu === 'function') window.closePinMenu = closePinMenu;
+    if (typeof typingRowHTML === 'function') window.typingRowHTML = typingRowHTML;
+    if (typeof simulateIncomingTyping === 'function') window.simulateIncomingTyping = simulateIncomingTyping;
+    if (typeof stopIncomingTyping === 'function') window.stopIncomingTyping = stopIncomingTyping;
+    if (typeof openChatSearch === 'function') window.openChatSearch = openChatSearch;
+    if (typeof closeChatSearch === 'function') window.closeChatSearch = closeChatSearch;
+    if (typeof runChatSearch === 'function') window.runChatSearch = runChatSearch;
+    if (typeof jumpToMessage === 'function') window.jumpToMessage = jumpToMessage;
+    if (typeof handleDockInput === 'function') window.handleDockInput = handleDockInput;
+    if (typeof smartSuggestFor === 'function') window.smartSuggestFor = smartSuggestFor;
+    if (typeof useSmartSuggestion === 'function') window.useSmartSuggestion = useSmartSuggestion;
+    if (typeof triggerAttach === 'function') window.triggerAttach = triggerAttach;
+    if (typeof pushOutgoingMessage === 'function') window.pushOutgoingMessage = pushOutgoingMessage;
+    if (typeof sendRealGroupMessage === 'function') window.sendRealGroupMessage = sendRealGroupMessage;
+    if (typeof loadRealChatMessages === 'function') window.loadRealChatMessages = loadRealChatMessages;
+    if (typeof sendDockMessage === 'function') window.sendDockMessage = sendDockMessage;
+    if (typeof openPaySheet === 'function') window.openPaySheet = openPaySheet;
+    if (typeof submitEscrowPayment === 'function') window.submitEscrowPayment = submitEscrowPayment;
+    if (typeof triggerSOS === 'function') window.triggerSOS = triggerSOS;
+    if (typeof openAjoTracker === 'function') window.openAjoTracker = openAjoTracker;
+    if (typeof renderAjoList === 'function') window.renderAjoList = renderAjoList;
+    if (typeof markMyContributionPaid === 'function') window.markMyContributionPaid = markMyContributionPaid;
+    if (typeof openEmojiPicker === 'function') window.openEmojiPicker = openEmojiPicker;
+    if (typeof setEmojiCat === 'function') window.setEmojiCat = setEmojiCat;
+    if (typeof renderEmojiGrid === 'function') window.renderEmojiGrid = renderEmojiGrid;
+    if (typeof insertEmoji === 'function') window.insertEmoji = insertEmoji;
+    if (typeof startVoiceRecording === 'function') window.startVoiceRecording = startVoiceRecording;
+    if (typeof stopVoiceRecording === 'function') window.stopVoiceRecording = stopVoiceRecording;
+    if (typeof cancelVoiceRecording === 'function') window.cancelVoiceRecording = cancelVoiceRecording;
+    if (typeof toggleEcosystem === 'function') window.toggleEcosystem = toggleEcosystem;
+    if (typeof toggleDotsMenu === 'function') window.toggleDotsMenu = toggleDotsMenu;
+    if (typeof boostGroup === 'function') window.boostGroup = boostGroup;
+    if (typeof toggleMuteGroup === 'function') window.toggleMuteGroup = toggleMuteGroup;
+    if (typeof cycleChatTheme === 'function') window.cycleChatTheme = cycleChatTheme;
+    if (typeof clearGroupHistory === 'function') window.clearGroupHistory = clearGroupHistory;
+    if (typeof toggleMembersModal === 'function') window.toggleMembersModal = toggleMembersModal;
+    if (typeof switchMemberTab === 'function') window.switchMemberTab = switchMemberTab;
+    if (typeof renderMemberList === 'function') window.renderMemberList = renderMemberList;
+    if (typeof renderPendingList === 'function') window.renderPendingList = renderPendingList;
+    if (typeof promoteMember === 'function') window.promoteMember = promoteMember;
+    if (typeof removeMember === 'function') window.removeMember = removeMember;
+    if (typeof approveRequest === 'function') window.approveRequest = approveRequest;
+    if (typeof rejectRequest === 'function') window.rejectRequest = rejectRequest;
+    if (typeof buildPostContent === 'function') window.buildPostContent = buildPostContent;
+    if (typeof renderPollWidget === 'function') window.renderPollWidget = renderPollWidget;
+    if (typeof votePoll === 'function') window.votePoll = votePoll;
+    if (typeof renderDealWidget === 'function') window.renderDealWidget = renderDealWidget;
+    if (typeof buyWithEscrow === 'function') window.buyWithEscrow = buyWithEscrow;
+    if (typeof renderEventWidget === 'function') window.renderEventWidget = renderEventWidget;
+    if (typeof renderFeedPosts === 'function') window.renderFeedPosts = renderFeedPosts;
+    if (typeof renderRealGroupFeedPosts === 'function') window.renderRealGroupFeedPosts = renderRealGroupFeedPosts;
+    if (typeof openComposer === 'function') window.openComposer = openComposer;
+    if (typeof closeComposer === 'function') window.closeComposer = closeComposer;
+    if (typeof setComposerType === 'function') window.setComposerType = setComposerType;
+    if (typeof validateComposer === 'function') window.validateComposer = validateComposer;
+    if (typeof initComposerBgScroll === 'function') window.initComposerBgScroll = initComposerBgScroll;
+    if (typeof scrollBgRowToStart === 'function') window.scrollBgRowToStart = scrollBgRowToStart;
+    if (typeof selectBgSwatch === 'function') window.selectBgSwatch = selectBgSwatch;
+    if (typeof renderComposerMetaChips === 'function') window.renderComposerMetaChips = renderComposerMetaChips;
+    if (typeof openTagPicker === 'function') window.openTagPicker = openTagPicker;
+    if (typeof toggleTagUser === 'function') window.toggleTagUser = toggleTagUser;
+    if (typeof removeTagChip === 'function') window.removeTagChip = removeTagChip;
+    if (typeof openFeelingPicker === 'function') window.openFeelingPicker = openFeelingPicker;
+    if (typeof selectFeeling === 'function') window.selectFeeling = selectFeeling;
+    if (typeof removeFeelingChip === 'function') window.removeFeelingChip = removeFeelingChip;
+    if (typeof toggleLocationField === 'function') window.toggleLocationField = toggleLocationField;
+    if (typeof updateLocationChip === 'function') window.updateLocationChip = updateLocationChip;
+    if (typeof removeLocationChip === 'function') window.removeLocationChip = removeLocationChip;
+    if (typeof openAddGroupsOverlay === 'function') window.openAddGroupsOverlay = openAddGroupsOverlay;
+    if (typeof renderAddGroupsList === 'function') window.renderAddGroupsList = renderAddGroupsList;
+    if (typeof toggleGroupCheckbox === 'function') window.toggleGroupCheckbox = toggleGroupCheckbox;
+    if (typeof closeAddGroupsOverlay === 'function') window.closeAddGroupsOverlay = closeAddGroupsOverlay;
+    if (typeof saveGroupSelection === 'function') window.saveGroupSelection = saveGroupSelection;
+    if (typeof triggerGalleryPicker === 'function') window.triggerGalleryPicker = triggerGalleryPicker;
+    if (typeof handleComposerFileSelect === 'function') window.handleComposerFileSelect = handleComposerFileSelect;
+    if (typeof removeComposerMedia === 'function') window.removeComposerMedia = removeComposerMedia;
+    if (typeof submitComposer === 'function') window.submitComposer = submitComposer;
+    if (typeof submitRealGroupPost === 'function') window.submitRealGroupPost = submitRealGroupPost;
+    if (typeof viewGroupHighlight === 'function') window.viewGroupHighlight = viewGroupHighlight;
+    if (typeof renderGroupStory === 'function') window.renderGroupStory = renderGroupStory;
+    if (typeof nextGroupStory === 'function') window.nextGroupStory = nextGroupStory;
+    if (typeof prevGroupStory === 'function') window.prevGroupStory = prevGroupStory;
+    if (typeof closeGroupStoryViewer === 'function') window.closeGroupStoryViewer = closeGroupStoryViewer;
+    if (typeof nxGroupHeaderEl === 'function') window.nxGroupHeaderEl = nxGroupHeaderEl;
+    if (typeof updateFeedHeaderState === 'function') window.updateFeedHeaderState = updateFeedHeaderState;
+    if (typeof onFeedScrollNX === 'function') window.onFeedScrollNX = onFeedScrollNX;
+    if (typeof onWindowScrollNX === 'function') window.onWindowScrollNX = onWindowScrollNX;
+    if (typeof onAnyScrollCaptureNX === 'function') window.onAnyScrollCaptureNX = onAnyScrollCaptureNX;
+    if (typeof onPageShowNX === 'function') window.onPageShowNX = onPageShowNX;
+    if (typeof onVisibilityChangeNX === 'function') window.onVisibilityChangeNX = onVisibilityChangeNX;
+    if (typeof nxEnsureMediaUpload === 'function') window.nxEnsureMediaUpload = nxEnsureMediaUpload;
+    if (typeof nxPatchUi === 'function') window.nxPatchUi = nxPatchUi;
+    if (typeof initPage === 'function') window.initPage = initPage;
+    if (typeof destroyPage === 'function') window.destroyPage = destroyPage;
+    if (typeof toggleAttachMenu === 'function') window.toggleAttachMenu = toggleAttachMenu;
+    if (typeof closeAttachMenu === 'function') window.closeAttachMenu = closeAttachMenu;
+    if (typeof createPollMessage === 'function') window.createPollMessage = createPollMessage;
+    if (typeof createChecklistMessage === 'function') window.createChecklistMessage = createChecklistMessage;
+    if (typeof shareMusicMessage === 'function') window.shareMusicMessage = shareMusicMessage;
+    if (typeof nxGroupPostDiscuss === 'function') window.nxGroupPostDiscuss = nxGroupPostDiscuss;
+    if (typeof nxGroupPostPin === 'function') window.nxGroupPostPin = nxGroupPostPin;
+    if (typeof nxGroupCanPin === 'function') window.nxGroupCanPin = nxGroupCanPin;
+    if (typeof nxFocusPostInFeed === 'function') window.nxFocusPostInFeed = nxFocusPostInFeed;
+    if (typeof trayPostToFeed === 'function') window.trayPostToFeed = trayPostToFeed;
+    if (typeof nxOpenGiMedia === 'function') window.nxOpenGiMedia = nxOpenGiMedia;
+    if (typeof nxRenderGiMedia === 'function') window.nxRenderGiMedia = nxRenderGiMedia;
+    if (typeof nxThreadReply === 'function') window.nxThreadReply = nxThreadReply;
+    if (typeof nxUpdateBadges === 'function') window.nxUpdateBadges = nxUpdateBadges;
+    try { Object.defineProperty(window, 'recSeconds', { get: function () { return recSeconds; }, configurable: true }); } catch (e) {}
+/* ============================================================
+   GROUP.JS — extracted from group.html for SPA compatibility
+   ------------------------------------------------------------
+   Loaded once via router.js PAGE_SCRIPTS['group.html']. All
+   top-level function declarations stay GLOBAL on purpose (this
+   is a normal script, not a module) because the markup uses
+   ~180 onclick="..." attributes that resolve names from the
+   global scope — do NOT wrap this file in an IIFE.
+
+   Lifecycle: initPage()/destroyPage() are registered with
+   NexusRouter.registerPage('group.html', ...) at the bottom.
+   initPage() re-derives ?group=slug + the logged-in user and
+   re-subscribes Firestore listeners EVERY time this page is
+   navigated into (so switching from one group straight to
+   another works without a full reload). destroyPage() tears
+   down snapshot listeners, window/document listeners, and any
+   active timer so nothing leaks or double-fires on re-entry.
+   ============================================================ */
+   // ERUDA LOADER — retry if a previous script load failed
+(function nxLoadEruda() {
+    if (window.eruda) {
+        try {
+            window.eruda.init();
+        } catch (e) {
+            console.warn('Eruda initialization failed:', e);
+        }
+        return;
+    }
+
+    // Remove an old loader that may have failed.
+    var oldLoader = document.getElementById('nx-eruda-loader');
+    if (oldLoader) oldLoader.remove();
+
+    var s = document.createElement('script');
+    s.id = 'nx-eruda-loader';
+    s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    s.async = true;
+
+    s.onload = function () {
+        if (window.eruda) {
+            try {
+                window.eruda.init();
+            } catch (e) {
+                console.error('Eruda initialization failed:', e);
+            }
+        }
+    };
+
+    s.onerror = function () {
+        console.error('Eruda failed to load. It can retry on the next page visit.');
+        s.remove();
+    };
+
+    document.head.appendChild(s);
+})();
+
+        // ============================================================
+        // FIREBASE + REAL GROUP IDENTITY (oryzon-50ea4)
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+            authDomain: "oryzon-50ea4.firebaseapp.com",
+            databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+            projectId: "oryzon-50ea4",
+            storageBucket: "oryzon-50ea4.firebasestorage.app",
+            messagingSenderId: "782106742622",
+            appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+            measurementId: "G-K5085DLL2W"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        if (typeof window.db === 'undefined') window.db = db; // post-card-template.js comments overlay reads the global `db`
+        const MEDIA_UPLOAD_ENDPOINT = 'https://oryzon-backend-ed1q.onrender.com/upload';
+        const FieldValue = firebase.firestore.FieldValue;
+
+        // SPA NOTE: these used to be `const`, read ONCE at native page load.
+        // Under router.js, group.js loads once but init() can run again for a
+        // different ?group=slug (or a different user), so they are now `let`
+        // and re-derived fresh on every initPage() call below.
+        let currentUsername = null;
+        let nxGrpAuthResolve;
+        let nxGrpAuthPromise;
+
+        let groupSlug = null;
+        // NOTE: the "gi-loading" class already hides the demo title/count
+        // elements via CSS (added in <head>) before this script even runs —
+        // no JS-based clearing needed here anymore. Under SPA nav the class
+        // is re-applied manually in initPage() since that CSS lives in the
+        // <head>-loaded group.css, but the class itself is toggled on <html>.
+        let groupData = null;
+        let isGroupAdmin = false;
+        let groupUnsub = null;
+        let groupPostsUnsub = null;
+        let groupMessagesUnsub = null;
+        let groupFeedLoaded = false;
+
+        // ---- Chat <-> Feed unification state ----
+        const NX_POST_ACTIVITY_DAYS = 7;   // feed posts of the last N days also appear as small activity rows inside chat
+        const NX_POST_ACTIVITY_MAX = 30;   // ...but never more than this many rows
+        let nxPostIndex = {};              // postId -> { id, username, fullName, text, mediaUrl, mediaType, mediaItems, time, sourceMessageId }
+        let nxFeedPostsData = null;        // last posts snapshot (real group) — lets the feed repaint when the pin changes
+        let nxPostActivitySig = '';
+        let nxPendingPostFocus = null;
+        let nxFocusTimer = null;
+        let nxGiMediaItems = [];
+        let pendingPostRef = null;         // post being discussed — attached to the next chat message
+        let pinnedPost = null;             // { id, title, thumb, thumbType } when the group pin is a feed post
+        let nxThreads = {};                // postId -> [ { id, author, text, parentId, time } ]  (post comments = nexus_contributions)
+        let nxThreadUnsubs = [];
+        let nxThreadSig = '';
+        let pendingThreadPostId = null;    // next dock message is a COMMENT on this post, not a chat message
+
+        function groupRef() { return db.collection('groups').doc(groupSlug); }
+
+        // ---- Blank avatar (daidai da yanda social.html ke nunawa) ----
+        const NX_BLANK_AVATAR = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2740%27 height=%2740%27%3E%3C/svg%3E";
+
+        // ---- Full name lookup (users/{username}) tare da cache ----
+        const nxProfileCache = {};
+        let groupRenderToken = 0;
+        async function nxGetUserProfile(username) {
+            if (!username) return {};
+            if (nxProfileCache[username]) return nxProfileCache[username];
+            try {
+                const snap = await db.collection('users').doc(username).get();
+                const d = snap.exists ? (snap.data() || {}) : {};
+                const out = { fullName: d.fullName || d.fullname || d.full_name || d.name || d.displayName || '' };
+                nxProfileCache[username] = out;
+                return out;
+            } catch (e) {
+                console.warn('nxGetUserProfile failed for', username, e);
+                return {};
+            }
+        }
+
+        // ============================================================
+        // POST MENU (openNeuralMenu) — a social.html ne kadai #neuralBottomMenu ya wanzu,
+        // kuma social.js ne ke da aikin openNeuralMenu(). A group page, sheet din ba ya nan
+        // (sheet.offsetWidth => null error, shiru) kuma social.js bazai loda ba idan an bude
+        // group kai tsaye. Wannan yana tabbatar da duka biyun.
+        // ============================================================
+        function nxEnsureNeuralMenuDOM() {
+            // Sheet din ya zauna A CIKIN page din group (kamar social.html), ba a <body> ba.
+            const host = (document.getElementById('feedView') || {}).parentElement || document.body;
+            let sheet = document.getElementById('neuralBottomMenu');
+            if (sheet && sheet.parentElement !== host) { sheet.remove(); sheet = null; }
+            if (!sheet) {
+                sheet = document.createElement('div');
+                sheet.id = 'neuralBottomMenu';
+                sheet.className = 'neural-bottom-sheet';
+                sheet.innerHTML = '<div class="sheet-grid" id="nodeActionsGrid"></div>';
+                host.appendChild(sheet);
+            } else if (!document.getElementById('nodeActionsGrid')) {
+                sheet.innerHTML = '<div class="sheet-grid" id="nodeActionsGrid"></div>';
+            }
+            // Idan social.css bai loda a wannan page ba, sheet din bashi da salo — saka na gaggawa
+            if (getComputedStyle(sheet).position !== 'fixed' && !document.getElementById('nx-neural-fallback-style')) {
+                const st = document.createElement('style');
+                st.id = 'nx-neural-fallback-style';
+                st.textContent = `
+                    .neural-bottom-sheet { position: fixed; top: -9999px; left: -9999px; width: max-content;
+                        min-width: 50vw; max-width: 90vw; background: rgba(245, 245, 247, 0.35);
+                        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                        border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 6px;
+                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); z-index: 999999;
+                        transition: opacity 0.2s ease; opacity: 0; pointer-events: none; }
+                    .neural-bottom-sheet.is-open { opacity: 1; pointer-events: all; }
+                    .neural-bottom-sheet .sheet-grid { display: flex; flex-direction: column; gap: 0px; }
+                    .neural-bottom-sheet .sheet-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px;
+                        border-radius: 10px; text-decoration: none; background: transparent; transition: all 0.2s ease; white-space: nowrap; }
+                    .neural-bottom-sheet .sheet-item:active { background: rgba(0, 0, 0, 0.05); border-left: 2px solid #00f2fe; padding-left: 16px; }
+                    .neural-bottom-sheet .sheet-icon { font-size: 16px; width: 20px; text-align: center; opacity: 0.8; flex-shrink: 0; color: rgba(0, 0, 0, 0.7); }
+                    .neural-bottom-sheet .sheet-text { font-family: 'Inter', sans-serif; color: rgba(0, 0, 0, 0.85); font-size: 0.875rem; font-weight: 550; white-space: nowrap; }
+                    .neural-bottom-sheet .sheet-item:active .sheet-text { color: #000000; }`;
+                document.head.appendChild(st);
+            }
+            return sheet;
+        }
+        function nxPrepareNeuralMenu() {
+            // social.js yana amfani da global `currentUser` (daga nexus-core.js). Idan wannan
+            // page bata loda nexus-core.js ba, a bashi daraja don kada ya jefa ReferenceError.
+            if (typeof currentUser === 'undefined') window.currentUser = currentUsername;
+            nxEnsureNeuralMenuDOM();
+            if (typeof window.openNeuralMenu !== 'function' && !document.getElementById('nx-social-js-loader')) {
+                const sc = document.createElement('script');
+                sc.id = 'nx-social-js-loader';
+                sc.src = 'social.js?v=2';
+                sc.onerror = () => console.warn('social.js could not be loaded for the post menu');
+                document.head.appendChild(sc);
+            }
+        }
+
+        // ---- Bincike: idan page bai yi scrolling ba, wannan yana fada dalilin a Eruda console ----
+        function nxDiagnoseScroll(tag) {
+            try {
+                const rows = [];
+                const chain = [];
+                let el = document.getElementById('feedView') || document.body;
+                while (el) { chain.push(el); el = el.parentElement; }
+                chain.forEach(n => {
+                    const cs = getComputedStyle(n);
+                    rows.push({
+                        el: n.tagName.toLowerCase() + (n.id ? '#' + n.id : '') + (n.className && typeof n.className === 'string' ? '.' + n.className.trim().split(/\s+/).join('.') : ''),
+                        overflowY: cs.overflowY, position: cs.position, height: cs.height,
+                        scrollH: n.scrollHeight, clientH: n.clientHeight, touchAction: cs.touchAction, pointerEvents: cs.pointerEvents
+                    });
+                });
+                const top = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+                console.log('[NX-SCROLL-DIAG ' + tag + '] element at screen centre:', top && (top.tagName + '#' + top.id + '.' + top.className));
+                console.table(rows);
+            } catch (e) { console.warn('nxDiagnoseScroll failed', e); }
+        }
+
+        // ---- Scroll unlock: yana share duk wani lock da page na baya ya bari ----
+        function nxUnlockScroll() {
+            const b = document.body, h = document.documentElement;
+            ['nx-video-immersive-active', 'modal-open', 'no-scroll', 'overflow-hidden', 'scroll-locked'].forEach(c => {
+                b.classList.remove(c); h.classList.remove(c);
+            });
+            ['overflow', 'overflowY', 'height', 'maxHeight', 'position', 'top', 'width', 'touchAction', 'pointerEvents'].forEach(k => {
+                b.style[k] = ''; h.style[k] = '';
+            });
+            // Idan wani abu (router/CSS) ya bar `overflow:hidden` daga stylesheet (ba inline ba),
+            // inline style din ba zai isa ba — a tilasta shi kawai idan ya kulle.
+            [h, b].forEach(n => {
+                const cs = getComputedStyle(n);
+                if (cs.overflowY === 'hidden' && n.scrollHeight > n.clientHeight + 1) {
+                    n.style.setProperty('overflow-y', 'auto', 'important');
+                }
+                if (cs.touchAction === 'none') n.style.setProperty('touch-action', 'auto', 'important');
+            });
+            // Wani overlay mara ganuwa (fixed, cika screen) da ya rage daga page na baya
+            // zai iya toshe touch — cire pointer-events daga overlays da suke a rufe.
+            document.querySelectorAll('.nexcm-overlay:not(.nexcm-open), .nexus-overlay, .page-overlay:not(.Active)').forEach(o => {
+                if (getComputedStyle(o).display === 'none') return;
+                o.style.setProperty('pointer-events', 'none', 'important');
+            });
+        }
+        function formatMemberCount(n) {
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return (n || 0).toString();
+        }
+
+       // ---- Offline cache: show the last known group + messages instantly, then refresh from Firestore ----
+        const NX_BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+        function nxCacheKey(kind) { return 'nx_grp_' + kind + '_' + groupSlug; }
+        function nxCachePut(kind, val) { try { localStorage.setItem(nxCacheKey(kind), JSON.stringify(val)); } catch (e) {} }
+        function nxCacheGet(kind) { try { return JSON.parse(localStorage.getItem(nxCacheKey(kind)) || 'null'); } catch (e) { return null; } }
+        function nxSetAvatar(img, url) {
+            if (!img) return;
+            img.alt = '';
+            img.classList.toggle('avatar-empty', !url);
+            img.src = url || NX_BLANK_IMG;
+        }
+        function nxRenderCachedMessages() {
+            const cm = nxCacheGet('m');
+            if (!cm || !cm.length) return;
+            chatMessages = cm.map(m => ({ ...m, time: new Date(m.time) }));
+            renderChatFlow();
+        }
+        function nxApplyGroup(gd) {
+            groupData = gd;
+            isGroupAdmin = !!(currentUsername && (groupData.creatorUsername === currentUsername || (groupData.adminUsernames || []).includes(currentUsername)));
+
+            const name = groupData.name;
+            const memberLabel = formatMemberCount(groupData.memberCount || 0) + ' members';
+            document.getElementById('groupTitleChat').textContent = name;
+            document.getElementById('groupSubtitleChat').textContent = '● ' + memberLabel;
+            document.getElementById('groupTitleFeed').textContent = name;
+            document.getElementById('groupNameFeed').textContent = name;
+            document.getElementById('groupMetaFeed').textContent = (groupData.privacy === 'private' ? 'Private group' : 'Public group') + ' · ' + memberLabel;
+            document.getElementById('giGroupNameLabel').textContent = name;
+            document.getElementById('giMetaText').textContent = memberLabel;
+            nxSetAvatar(document.getElementById('groupAvatarChat'), groupData.avatarUrl);
+            nxSetAvatar(document.getElementById('giAvatarImg'), groupData.avatarUrl);
+            if (groupData.coverUrl) document.getElementById('groupCoverFeed').src = groupData.coverUrl;
+
+            document.documentElement.classList.remove('gi-loading');
+            updateFeedHeaderState();
+
+            if ('pinnedItem' in gd) nxApplyGroupPin(gd.pinnedItem);
+            if (!groupFeedLoaded) { renderFeedPosts(); groupFeedLoaded = true; }
+            loadRealChatMessages();
+        }
+
+       async function initRealGroup() {
+            if (!groupSlug) return; // no ?group= — keep the built-in demo content as local preview
+
+            // No stock photo while the real group's avatar is still unknown.
+            nxSetAvatar(document.getElementById('groupAvatarChat'), '');
+            nxSetAvatar(document.getElementById('giAvatarImg'), '');
+
+            // Last known group + messages first (works offline, no blank page).
+            const cachedGroup = nxCacheGet('g');
+            if (cachedGroup) { nxRenderCachedMessages(); nxApplyGroup(cachedGroup); }
+
+            groupUnsub = groupRef().onSnapshot(doc => {
+                if (!doc.exists) {
+                    // From cache = we are offline / not sure yet. Only a server answer means "really missing".
+                    if (doc.metadata && doc.metadata.fromCache) { document.documentElement.classList.remove('gi-loading'); return; }
+                    document.documentElement.classList.remove('gi-loading');
+                    showToast('This group doesn\'t exist yet', 'fa-triangle-exclamation');
+                    return;
+                }
+                const gd = doc.data();
+                nxCachePut('g', { name: gd.name, memberCount: gd.memberCount || 0, privacy: gd.privacy || 'public', avatarUrl: gd.avatarUrl || '', coverUrl: gd.coverUrl || '', creatorUsername: gd.creatorUsername || '', adminUsernames: gd.adminUsernames || [], pinnedItem: gd.pinnedItem || null });
+                nxApplyGroup(gd);
+            }, err => {
+                console.error('group listener error:', err);
+                document.documentElement.classList.remove('gi-loading');
+                showToast('No connection — showing saved chats', 'fa-wifi');
+            });
+
+            // Auto-join: viewing a real group makes you a member. Runs separately, never blocks the display.
+            try {
+                const authUser = await nxGrpAuthPromise;
+                if (!authUser) return;
+                const memberRef = groupRef().collection('members').doc(currentUsername);
+                const memberSnap = await memberRef.get();
+                if (!memberSnap.exists) {
+                    await memberRef.set({ joinedAt: FieldValue.serverTimestamp(), role: 'member' });
+                    await db.collection('users').doc(currentUsername).collection('myGroups').doc(groupSlug)
+                        .set({ joinedAt: FieldValue.serverTimestamp() });
+                    await groupRef().update({ memberCount: FieldValue.increment(1) }).catch(() => {});
+                }
+            } catch (e) { console.warn('auto-join skipped (offline?):', e && e.message); }
+       }
+
+        // ============================================================
+        // 0. UTILITIES
+        // ============================================================
+        function showToast(msg, icon = 'fa-circle-check') {
+            const stack = document.getElementById('toastStack');
+            const t = document.createElement('div');
+            t.className = 'nx-toast';
+            t.innerHTML = `<i class="fa-solid ${icon}"></i><span>${msg}</span>`;
+            stack.appendChild(t);
+            requestAnimationFrame(() => t.classList.add('show'));
+            setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2800);
+        }
+        function copyGroupLink() {
+            const link = 'https://rayhaani.github.io/Oryzon/group/northern-innovators-2026';
+            if (navigator.clipboard) navigator.clipboard.writeText(link).catch(() => {});
+            showToast('Invite link copied to clipboard', 'fa-link');
+        }
+        // ---- Invite Members overlay ----
+        let currentInviteTab = 'friends';
+        const inviteFriends = [
+            { id: 'f1', name: 'Usman Bin Sani', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'f2', name: 'Aliyu NG', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'f3', name: 'Sanusi Ashiru', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'f4', name: 'Shehu Hashimu', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', invited: false }
+        ];
+        const inviteSuggested = [
+            { id: 's1', name: 'Mubarak Lawal', pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 's2', name: 'Abubakar Sadeeq', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 's3', name: 'Amina Yusuf', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80', invited: false }
+        ];
+        const inviteFollowers = [
+            { id: 'fl1', name: 'Halima Bello', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'fl2', name: 'Tijjani Yusuf', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'fl3', name: 'Rukayya Ahmad', pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80', invited: false }
+        ];
+        const inviteGroups = [
+            { id: 'g1', name: 'Kano Traders Circle', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'g2', name: 'Abuja Business Network', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', invited: false },
+            { id: 'g3', name: 'Lagos Tech Founders', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', invited: false }
+        ];
+        function openInviteOverlay() {
+            document.getElementById('inviteMembersOverlay').classList.add('active');
+            document.getElementById('inviteSearchBarContainer').classList.remove('active');
+            document.querySelector('#inviteMembersOverlay .invite-subtitle').textContent = groupData.name;
+            document.querySelector('#inviteMembersOverlay .invite-group-avatar').src = groupData.coverUrl || document.getElementById('groupCoverFeed').src;
+            switchInviteTab('friends');
+        }
+        function closeInviteOverlay() {
+            document.getElementById('inviteMembersOverlay').classList.remove('active');
+        }
+        function switchInviteTab(tab) {
+            currentInviteTab = tab;
+            document.querySelectorAll('.invite-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            const list = tab === 'friends' ? inviteFriends : tab === 'suggested' ? inviteSuggested : tab === 'followers' ? inviteFollowers : inviteGroups;
+            renderInviteList(list);
+        }
+        function toggleInviteSearchBar() {
+            const bar = document.getElementById('inviteSearchBarContainer');
+            const input = document.getElementById('inviteSearchInput');
+            bar.classList.toggle('active');
+            if (bar.classList.contains('active')) {
+                input.focus();
+            } else {
+                input.value = '';
+                switchInviteTab(currentInviteTab);
+            }
+        }
+        function runInviteSearch(q) {
+            const all = [...inviteFriends, ...inviteSuggested, ...inviteFollowers, ...inviteGroups];
+            const filtered = q.trim() ? all.filter(f => f.name.toLowerCase().includes(q.toLowerCase())) : all;
+            renderInviteList(filtered);
+        }
+        function renderInviteList(list) {
+            document.getElementById('inviteListBody').innerHTML = list.length ? list.map(f => `
+                <div class="invite-row">
+                    <img src="${f.pic}">
+                    <div class="ir-name">${f.name}</div>
+                    <button class="ir-invite-btn ${f.invited ? 'invited' : ''}" onclick="sendInvite('${f.id}', this)">${f.invited ? 'Invited' : 'Invite'}</button>
+                </div>`).join('') : `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:40px 0;">No results found</p>`;
+        }
+        function sendInvite(id, btn) {
+            const f = [...inviteFriends, ...inviteSuggested, ...inviteFollowers, ...inviteGroups].find(x => x.id === id);
+            if (f) f.invited = true;
+            btn.textContent = 'Invited';
+            btn.classList.add('invited');
+            showToast('Invitation sent to ' + (f ? f.name : 'friend'), 'fa-user-plus');
+        }
+        function fmtClockTime(d) { return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase(); }
+        function fmtRelative(d) {
+            const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+            return Math.floor(diff / 86400) + 'd';
+        }
+        function fmtDayLabel(d) {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const y = new Date(today); y.setDate(y.getDate() - 1);
+            const dd = new Date(d); dd.setHours(0,0,0,0);
+            if (dd.getTime() === today.getTime()) return 'Today';
+            if (dd.getTime() === y.getTime()) return 'Yesterday';
+            return d.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        function escapeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+        function closeSheet(id) { document.getElementById(id).classList.remove('active'); }
+        function openSheetEl(id) { document.getElementById(id).classList.add('active'); }
+
+        // ============================================================
+        // 1. GROUP INFO OVERLAY (Telegram-style)
+        // ============================================================
+        function openGroupInfo() {
+            document.getElementById('groupInfoOverlay').classList.add('active');
+            switchGiTab('members');
+        }
+        function closeGroupInfo() {
+            document.getElementById('groupInfoOverlay').classList.remove('active');
+            toggleGiOptionsMenu(false);
+        }
+        function switchGiTab(tab) {
+            document.querySelectorAll('.gi-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.querySelectorAll('.gi-tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('giPanel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+            if (tab === 'members') renderGiMembersTab();
+            if (tab === 'media') nxRenderGiMedia();
+        }
+        function renderGiMembersTab() {
+            const roleLabel = { Admin: 'Owner', Moderator: 'Admin' };
+            document.getElementById('giPanelMembers').innerHTML = groupMembers.map(m => `
+                <div class="gi-member-row">
+                    <img src="${m.pic}">
+                    <div>
+                        <div class="gmr-name">${m.name}</div>
+                        <div class="gmr-status">${m.role === 'Admin' ? 'online' : 'last seen recently'}</div>
+                    </div>
+                    ${roleLabel[m.role] ? `<span class="gmr-role">${roleLabel[m.role]}</span>` : ''}
+                </div>`).join('');
+        }
+        function renameGroupPrompt() {
+            const current = document.getElementById('giGroupNameLabel').textContent;
+            const next = prompt('Rename group:', current);
+            if (next && next.trim()) {
+                document.getElementById('giGroupNameLabel').textContent = next.trim();
+                document.querySelectorAll('.group-title, .fb-header-title').forEach(el => el.textContent = next.trim());
+                showToast('Group renamed', 'fa-pen');
+            }
+        }
+        function openGroupStatistics() {
+            showToast('Group Statistics: 12.4K members · 318 posts this month · 92% weekly active', 'fa-chart-line');
+        }
+
+        // ---- Group Info's own "..." dropdown menu ----
+        function toggleGiOptionsMenu(show) {
+            const menu = document.getElementById('giOptionsMenu');
+            const backdrop = document.getElementById('giOptionsBackdrop');
+            const next = (show === undefined) ? !menu.classList.contains('active') : show;
+            menu.classList.toggle('active', next);
+            backdrop.classList.toggle('active', next);
+        }
+        let chatLockOn = false, autoTranslateOn = false, lowDataOn = false, voiceA11yOn = false;
+        function toggleChatLockMenu() {
+            chatLockOn = !chatLockOn;
+            document.getElementById('chatLockMenuLabel').textContent = 'Chat lock: ' + (chatLockOn ? 'On' : 'Off');
+            document.getElementById('chatLockMenuIcon').className = chatLockOn ? 'fa-solid fa-lock' : 'fa-solid fa-lock-open';
+            showToast(chatLockOn ? 'Chat locked on this device' : 'Chat unlocked', 'fa-lock');
+        }
+        function toggleAutoTranslateMenu() {
+            autoTranslateOn = !autoTranslateOn;
+            document.getElementById('autoTranslateMenuLabel').textContent = 'Auto-translate: ' + (autoTranslateOn ? 'On' : 'Off');
+            showToast(autoTranslateOn ? 'Auto-translate is now ON for this chat' : 'Auto-translate turned off', 'fa-globe');
+        }
+        function toggleLowDataMenu() {
+            lowDataOn = !lowDataOn;
+            document.getElementById('lowDataMenuLabel').textContent = 'Low-data mode: ' + (lowDataOn ? 'On' : 'Off');
+            showToast(lowDataOn ? 'Low-data mode enabled — optimized for weak networks' : 'Low-data mode disabled', 'fa-wifi');
+        }
+        function toggleVoiceA11yMenu() {
+            voiceA11yOn = !voiceA11yOn;
+            document.getElementById('voiceA11yMenuLabel').textContent = 'Voice accessibility: ' + (voiceA11yOn ? 'On' : 'Off');
+            showToast(voiceA11yOn ? 'Voice accessibility mode enabled' : 'Voice accessibility mode disabled', 'fa-microphone-lines');
+        }
+
+        // ============================================================
+        // 2. MODE SWITCHING
+        // ============================================================
+        let feedRendered = false;
+
+              function switchMode(mode) {
+            document.documentElement.classList.remove('preload-feed');
+            localStorage.setItem('nexus_group_mode', mode);
+            const isChat = mode === 'chat';
+
+            const hlChat = document.getElementById('headerLeftChat');
+            const hlFeed = document.getElementById('headerLeftFeed');
+            const chatFlow = document.getElementById('chat-flow');
+            const dockContainer = document.getElementById('dockContainer');
+            const feedView = document.getElementById('feedView');
+            const pinnedBar = document.getElementById('pinnedBar');
+            const toggleChatBtn = document.getElementById('toggleChatBtn');
+            const toggleFeedBtn = document.getElementById('toggleFeedBtn');
+            const modeThumb = document.getElementById('modeThumb');
+
+            if (hlChat) hlChat.style.display = isChat ? 'flex' : 'none';
+            if (hlFeed) hlFeed.style.display = isChat ? 'none' : 'flex';
+
+            if (chatFlow) chatFlow.style.display = isChat ? 'flex' : 'none';
+            if (dockContainer) dockContainer.style.display = isChat ? 'flex' : 'none';
+            if (feedView) feedView.style.display = isChat ? 'none' : 'flex';
+            if (pinnedBar) pinnedBar.classList.toggle('active', isChat && nxHasPin());
+            
+            const header = document.querySelector('header');
+            if (isChat) {
+                if (header) header.classList.remove('header-feed-transparent');
+            } else {
+                updateFeedHeaderState();
+                requestAnimationFrame(updateFeedHeaderState);
+            }
+            if (toggleChatBtn) toggleChatBtn.classList.toggle('active', isChat);
+            if (toggleFeedBtn) toggleFeedBtn.classList.toggle('active', !isChat);
+            if (modeThumb) modeThumb.style.transform = isChat ? 'translateX(100%)' : 'translateX(0%)';
+
+            nxUpdateBadges();
+            if (!isChat && !feedRendered) {
+                renderFeedPosts();
+                feedRendered = true;
+            }
+              }
+   
+        // ============================================================
+        // 3. CHAT ENGINE — single renderer for every bubble (fixes the
+        //    "different timestamp style" bug for good).
+        // ============================================================
+        let chatMessages = [
+            { id: 'c1', from: 'them', name: 'Ali_Developer', role: 'Chairman / CEO', roleClass: 'role-ceo', verified: true,
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80',
+              text: 'Great news — the full 2026 rollout schedule for the Super Community Platform is locked in.',
+              time: new Date(Date.now() - 1000 * 60 * 60 * 6), reactions: { '👍': 4, '🔥': 2 }, starred: false },
+            { id: 'c2', from: 'them', name: 'MmnAfrah Networker', role: 'P.R.O', roleClass: 'role-pro', verified: true,
+              avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop&q=80',
+              text: 'Here is a quick voice update from admin:', voice: { duration: '0:42' },
+              time: new Date(Date.now() - 1000 * 60 * 60 * 4), reactions: {}, starred: false },
+            { id: 'c3', from: 'me', text: 'This new header and typing bar design looks incredible — cleanest group experience I have used.',
+              time: new Date(Date.now() - 1000 * 60 * 60 * 2), reactions: {}, starred: false, status: 'read' }
+        ];
+        let replyTarget = null;
+        let pinnedMessageId = null;
+        let activeTrayMsgId = null;
+        let __voiceAudio = null, __voiceBtn = null;
+        function playVoiceMsg(btn, url) {
+            const PLAY = '<i class="fa-solid fa-play"></i>', PAUSE = '<i class="fa-solid fa-pause"></i>';
+            if (__voiceAudio && __voiceBtn === btn && !__voiceAudio.paused) { __voiceAudio.pause(); btn.innerHTML = PLAY; return; }
+            if (__voiceAudio) { __voiceAudio.pause(); if (__voiceBtn) __voiceBtn.innerHTML = PLAY; }
+            __voiceAudio = new Audio(url); __voiceBtn = btn;
+            btn.innerHTML = PAUSE;
+            __voiceAudio.onended = () => { btn.innerHTML = PLAY; };
+            __voiceAudio.play().catch(() => { btn.innerHTML = PLAY; showToast('Could not play voice message', 'fa-triangle-exclamation'); });
+        }
+        function nxVoOpened(id) { try { return JSON.parse(localStorage.getItem('nx_vo_opened') || '[]').indexOf(id) !== -1; } catch (e) { return false; } }
+        function nxVoMark(id) { try { const a = JSON.parse(localStorage.getItem('nx_vo_opened') || '[]'); if (a.indexOf(id) === -1) { a.push(id); localStorage.setItem('nx_vo_opened', JSON.stringify(a.slice(-300))); } } catch (e) {} }
+        let __voAudio = null;
+     function closeMediaViewer() {
+    if (__voAudio) { try { __voAudio.pause(); } catch (e) {} __voAudio = null; }
+    const v = document.getElementById('mediaViewer');
+    if (v) {
+        if (v._fs) document.removeEventListener('fullscreenchange', v._fs);
+        const dock = document.getElementById('dockContainer');
+        if (dock && v._dockHome) {
+            dock.style.zIndex = '';
+           dock.style.bottom = '';
+            if (v._vv && window.visualViewport) { window.visualViewport.removeEventListener('resize', v._vv); window.visualViewport.removeEventListener('scroll', v._vv); }
+            v._dockHome.insertBefore(dock, v._dockNext && v._dockNext.parentNode === v._dockHome ? v._dockNext : null);
+            const inp = document.getElementById('dockInput'); if (inp) inp.placeholder = v._ph || 'Message...';
+            if (v._autoReply && replyTarget && replyTarget.id === v._autoReply) cancelReply();
+        }
+        v.remove();
+   try {
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    }
+} catch (e) {}
+    }
+}
+function openMediaViewer(id, idx, opts) {
+    opts = opts || {};
+    try {
+        const m = chatMessages.find(x => x.id === id);
+        if (!m) return;
+        const items = (m.mediaArr && m.mediaArr.length) ? m.mediaArr
+            : m.image ? [{ type: 'image', mediaUrl: m.image }] : m.video ? [{ type: 'video', mediaUrl: m.video }] : [];
+        if (!items.length) return;
+        const mine = m.from === 'me';
+        const isVO = !!opts.viewOnce;
+        // Receiver: sau daya kawai. Sender: koyaushe zai iya budewa.
+        if (isVO && !mine && nxVoOpened(id)) return;
+
+        closeMediaViewer();
+        const d = m.time instanceof Date ? m.time : new Date(m.time);
+        const when = d.toLocaleDateString([], { day: 'numeric', month: 'long' }) + ', ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+        const who = mine ? 'You' : (m.name || 'Member');
+        const iconCss = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;';
+        const caption = m.text ? `<div id="mvCaption" style="position:absolute;left:0;right:0;bottom:${isVO ? 0 : 74}px;z-index:3;padding:36px 18px 10px;color:#fff;font-size:15px;line-height:1.35;text-align:left;background:linear-gradient(0deg,rgba(0,0,0,0.7),transparent);"><div id="mvCapText" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;white-space:pre-wrap;">${escapeHtml(m.text)}</div><span id="mvCapMore" style="display:none;position:absolute;right:18px;bottom:10px;font-weight:700;padding-left:30px;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.85) 40%);">Read more</span></div>` : '';
+
+        const v = document.createElement('div');
+        v.id = 'mediaViewer';
+        v.style.cssText = 'position:fixed;inset:0;width:100%;z-index:100030;background:#000;font-family:Inter,sans-serif;overflow:hidden;';
+        v.innerHTML = `
+           <div id="mvBar" style="position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top, 0px) + 8px) 12px 22px;background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);color:#fff;">
+
+                <button id="mvBack" type="button" aria-label="Back"
+                    style="flex:0 0 32px;width:32px;height:40px;padding:0;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;">
+                    <svg width="26" height="26" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 18l-6-6 6-6"></path>
+                    </svg>
+                </button>
+
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:17px;font-weight:600;">
+                        ${escapeHtml(who)}
+                    </div>
+                    <div style="font-size:13px;opacity:0.75;margin-top:2px;">
+                        ${when}
+                    </div>
+                </div>
+
+                ${isVO ? '' : `
+                    <div style="${iconCss}" id="mvDownload">
+                        <i class="fa-solid fa-download"></i>
+                    </div>
+                    <div style="${iconCss}" id="mvForward">
+                        <svg width="24" height="24" viewBox="0 0 24 24"
+                            fill="none" stroke="#fff" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 18v-1a6 6 0 0 1 6-6h6"/>
+                            <path d="M14 6l5 5-5 5"/>
+                            <path d="M18 6l4 5-4 5"/>
+                        </svg>
+                    </div>
+                    <div style="${iconCss}" id="mvStatus">
+                        <svg width="24" height="24" viewBox="0 0 24 24"
+                            fill="none" stroke="#fff" stroke-width="2"
+                            stroke-linecap="round">
+                            <circle cx="11" cy="13" r="8"/>
+                            <circle cx="11" cy="13" r="3.5"/>
+                            <path d="M20 2v6M17 5h6"/>
+                        </svg>
+                    </div>
+                    <div style="${iconCss}" id="mvMore">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </div>
+                `}
+            </div> 
+            
+            <div id="mvStrip" style="position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+    ${items.map(it => `<div style="flex:0 0 100%;width:100%;height:100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;">${it.type === 'video'
+     ? `<video src="${it.mediaUrl}" ${isVO ? 'controlsList="nodownload noplaybackrate" disablePictureInPicture' : ''} controls autoplay playsinline style="max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;background:#000;"></video>`
+        : `<img src="${it.mediaUrl}" alt="" style="max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;">`}</div>`).join('')}
+</div>
+            
+            ${caption}`;
+       v.style.opacity = '0';
+v.style.transition = 'none';
+document.body.appendChild(v);
+try {
+    if (v.requestFullscreen) {
+        v.requestFullscreen().catch(() => {});
+    }
+} catch (e) {}
+
+v._fs = function () {
+    if (!document.getElementById('mediaViewer')) return;
+    if (v._closing) return;
+
+    if (!document.fullscreenElement) {
+        closeMediaViewer();
+        return;
+    }
+
+    const s = v.querySelector('#mvStrip');
+    if (s && idx) {
+        s.scrollLeft = idx * window.innerWidth;
+    }
+};
+
+document.addEventListener('fullscreenchange', v._fs);
+       const strip = v.querySelector('#mvStrip');
+
+const getSlideWidth = () =>
+    strip.clientWidth || window.innerWidth || 1;
+
+if (idx) {
+    strip.scrollLeft = idx * getSlideWidth();
+}
+// Back button: close viewer without leaving the group.
+const mvBack = v.querySelector('#mvBack');
+
+if (mvBack) {
+    mvBack.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const viewer = document.getElementById('mediaViewer');
+        if (!viewer) return;
+
+        // Let the existing popstate handler close the viewer.
+        viewer._closing = true;
+        history.back();
+    });
+}
+const cur = () => Math.max(
+    0,
+    Math.min(
+        items.length - 1,
+        Math.round(strip.scrollLeft / getSlideWidth())
+    )
+);
+
+// Reveal viewer only when the selected media is ready.
+        let mvHasRevealed = false;
+        let mvRevealTimer;
+
+        const revealViewer = () => {
+            if (mvHasRevealed || !v.isConnected) return;
+
+            mvHasRevealed = true;
+            clearTimeout(mvRevealTimer);
+            v.style.opacity = '1';
+        };
+
+        const selectedSlide =
+            strip.children[Math.max(0, Math.min(items.length - 1, Number(idx) || 0))];
+
+        const selectedMedia =
+            selectedSlide && selectedSlide.querySelector('img, video');
+
+        if (!selectedMedia) {
+            revealViewer();
+
+        } else if (selectedMedia.tagName === 'IMG') {
+
+            if (selectedMedia.complete && selectedMedia.naturalWidth > 0) {
+                revealViewer();
+            } else {
+                selectedMedia.addEventListener('load', revealViewer, { once: true });
+                selectedMedia.addEventListener('error', revealViewer, { once: true });
+
+                if (typeof selectedMedia.decode === 'function') {
+                    selectedMedia.decode()
+                        .then(revealViewer)
+                        .catch(() => {});
+                }
+            }
+
+        } else {
+
+            if (selectedMedia.readyState >= 2) {
+                revealViewer();
+            } else {
+                selectedMedia.addEventListener('loadeddata', revealViewer, { once: true });
+                selectedMedia.addEventListener('canplay', revealViewer, { once: true });
+                selectedMedia.addEventListener('error', revealViewer, { once: true });
+            }
+        }
+
+        // Safety fallback if the browser never fires a media-ready event.
+        mvRevealTimer = setTimeout(revealViewer, 5000);
+       const vToast = (msg) => {
+            const old = v.querySelector('#mvToast'); if (old) old.remove();
+            const t = document.createElement('div');
+            t.id = 'mvToast';
+            t.textContent = msg;
+            t.style.cssText = 'position:absolute;left:50%;bottom:90px;transform:translateX(-50%);z-index:10;background:rgba(235,235,240,0.96);color:#111;font:500 14px Inter,sans-serif;padding:10px 20px;border-radius:999px;white-space:nowrap;pointer-events:none;';
+            v.appendChild(t);
+            setTimeout(() => t.remove(), 2200);
+        };
+        const dl = v.querySelector('#mvDownload');
+        if (dl) dl.onclick = async () => {
+            const it = items[cur()];
+            const name = (it.type === 'video' ? 'video_' : 'photo_') + Date.now() + (it.type === 'video' ? '.mp4' : '.jpg');
+            const trigger = (href) => { const a = document.createElement('a'); a.href = href; a.download = name; document.body.appendChild(a); a.click(); a.remove(); };
+            try {
+                const blob = await (await fetch(it.mediaUrl, { cache: 'no-store', mode: 'cors' })).blob();
+                const u = URL.createObjectURL(blob);
+                trigger(u);
+                setTimeout(() => URL.revokeObjectURL(u), 4000);
+                vToast('Saved to gallery');
+            } catch (e) {
+                trigger(it.mediaUrl);
+                vToast('Download started');
+            }
+        };
+        const fw = v.querySelector('#mvForward');
+        if (fw) fw.onclick = () => { activeTrayMsgId = id; trayForward(); closeMediaViewer(); };
+       const stBtn = v.querySelector('#mvStatus');
+        if (stBtn) stBtn.onclick = () => vToast('Status sharing coming soon');
+        const mm = v.querySelector('#mvMore');
+        if (mm) mm.onclick = () => {
+            const oldMenu = v.querySelector('#mvMenu');
+            if (oldMenu) { oldMenu.remove(); const ob = v.querySelector('#mvMenuBg'); if (ob) ob.remove(); return; }
+            const bg = document.createElement('div');
+            bg.id = 'mvMenuBg'; bg.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;z-index:8;';
+            const menu = document.createElement('div');
+            menu.id = 'mvMenu'; menu.className = 'dots-dropdown-menu active'; menu.style.cssText = 'position:absolute;top:60px;right:8px;z-index:9;';
+            menu.innerHTML = `
+                <div class="dots-menu-item" data-act="share"><i class="fa-solid fa-share-nodes"></i> Share</div>
+                <div class="dots-menu-item" data-act="star"><i class="fa-solid fa-star"></i> ${m.starred ? 'Unstar' : 'Star'}</div>
+                <div class="dots-menu-item" data-act="show"><i class="fa-solid fa-message"></i> Show in chat</div>
+                <div class="dots-menu-divider"></div>
+                <div class="dots-menu-item danger" data-act="delete"><i class="fa-solid fa-trash"></i> Delete</div>
+                <div class="dots-menu-item danger" data-act="report"><i class="fa-solid fa-flag"></i> Report</div>`;
+            const closeMenu = () => { menu.remove(); bg.remove(); };
+            bg.onclick = closeMenu;
+            menu.onclick = (e) => {
+                const row = e.target.closest('[data-act]'); if (!row) return;
+                const act = row.dataset.act; closeMenu();
+                activeTrayMsgId = id;
+                if (act === 'share') {
+                    const cu = items[cur()].mediaUrl;
+                    if (navigator.share) navigator.share({ url: cu }).catch(() => {});
+                    else { try { navigator.clipboard.writeText(cu); } catch (e2) {} vToast('Link copied'); }
+                } else if (act === 'star') { trayStar(); vToast(m.starred ? 'Starred' : 'Removed from starred'); }
+                else if (act === 'show') {
+    v._closing = true;
+
+    // Keep the current group route instead of navigating away.
+    history.replaceState(
+        { nexusRoute: 'group.html' },
+        '',
+        location.href
+    );
+
+    closeMediaViewer();
+
+    setTimeout(() => {
+        jumpToMessage(id);
+    }, 150);
+                }
+                else if (act === 'delete') { if (confirm('Delete this message?')) { trayDelete(); v._closing = true; history.back(); } }
+                else if (act === 'report') { vToast('Report sent'); }
+            };
+            v.appendChild(bg); v.appendChild(menu);
+        };
+        strip.addEventListener('click', (e) => { if (e.target.tagName === 'VIDEO') return; const bar = v.querySelector('#mvBar'); if (!bar) return; bar.style.display = bar.style.display === 'none' ? 'flex' : 'none'; });
+        const capEl = v.querySelector('#mvCaption');
+        if (capEl) {
+            const ct = v.querySelector('#mvCapText'), more = v.querySelector('#mvCapMore');
+            if (ct.scrollHeight > ct.clientHeight + 1) {
+                more.style.display = 'block'; capEl.style.cursor = 'pointer';
+                capEl.onclick = () => { ct.style.webkitLineClamp = 'unset'; ct.style.display = 'block'; ct.style.maxHeight = '38vh'; ct.style.overflowY = 'auto'; more.style.display = 'none'; };
+            }
+        }
+        // Voice na view-once: yana yin playing kai tsaye idan viewer ya bude
+        if (isVO && m.voice && m.voice.url) {
+            __voAudio = new Audio(m.voice.url);
+            __voAudio.play().catch(() => {});
+        }
+const closeViewerFromButton = () => {
+            const viewer = document.getElementById('mediaViewer');
+            if (!viewer) return;
+
+            viewer._closing = true;
+
+            // Rufe viewer kai tsaye kafin fullscreen ya canza.
+            closeMediaViewer();
+
+            // Yi amfani da tarihin viewer ba tare da barin router
+            // ya ɗauki wannan a matsayin fita daga group ba.
+            window.__nxSkipViewerPop = true;
+
+            history.back();
+
+            setTimeout(() => {
+                window.__nxSkipViewerPop = false;
+            }, 1000);
+        };
+
+        const backButton = v.querySelector('#mvBack');
+        if (backButton) {
+            backButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                closeViewerFromButton();
+            });
+        }
+        history.pushState({ nxViewer: 1 }, '', location.href);
+       if (!isVO) {
+            const dock = document.getElementById('dockContainer');
+            const inp = document.getElementById('dockInput');
+            if (dock) {
+                v._dockHome = dock.parentNode; v._dockNext = dock.nextSibling;
+                v._ph = inp ? inp.placeholder : '';
+                v.appendChild(dock);
+                dock.style.zIndex = '6';
+                if (inp) inp.placeholder = 'Reply';
+                replyTarget = m; v._autoReply = m.id;
+               if (window.visualViewport) {
+                    v._vv = () => { const vv = window.visualViewport; const off = Math.max(0, window.innerHeight - vv.height - vv.offsetTop); dock.style.bottom = off + 'px'; const c = v.querySelector('#mvCaption'); if (c) c.style.bottom = (74 + off) + 'px'; };
+                    window.visualViewport.addEventListener('resize', v._vv);
+                    window.visualViewport.addEventListener('scroll', v._vv);
+               }
+            }
+       }
+        v._opts = opts;
+
+        // Alama "Opened" bayan viewer ya zauna a allo (jinkiri don kada re-render ya raba shi)
+        if (isVO && !mine) {
+            setTimeout(() => {
+                if (!document.getElementById('mediaViewer')) return;
+                nxVoMark(id);
+                if (groupSlug) {
+                    groupRef().collection('messages').doc(id)
+                        .update({ viewedBy: FieldValue.arrayUnion(currentUsername) })
+                        .catch(e => console.error('view-once mark failed:', e));
+                }
+            }, 1500);
+            }
+    } catch (err) {
+        console.error('openMediaViewer error:', err);
+        closeMediaViewer();
+        showToast('Could not open: ' + (err && err.message ? err.message : 'error'), 'fa-triangle-exclamation');
+    }
+}
+        function openViewOnce(id) { openMediaViewer(id, 0, { viewOnce: true }); }
+                if (!window.__nxViewerBound) {
+            window.__nxViewerBound = true;
+            window.NexusOverlay = window.NexusOverlay || {};
+            const prevOpen = window.NexusOverlay.isOpen;
+            window.NexusOverlay.isOpen = function () { return !!document.getElementById('mediaViewer') || (prevOpen ? prevOpen.apply(this, arguments) : false); };
+            
+            window.addEventListener('popstate', function (e) {
+               if (window.__nxSkipViewerPop) {
+                    window.__nxSkipViewerPop = false;
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    return;
+               }
+                const v = document.getElementById('mediaViewer');
+                if (!v) return;
+                // TSAYAR DA ROUTER DAGA FITA: Wannan yana hana router daga daukar popstate na viewer a matsayin fita daga group
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                v._closing = true;
+                setTimeout(function () { 
+                    closeMediaViewer(); 
+                    if (typeof renderChatFlow === 'function') renderChatFlow(); 
+                }, 0);
+            }, true);
+                }
+   
+        let pendingMedia = [];
+        function addPendingMedia(info) {
+            const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), localUrl: info.localUrl, localUrls: info.localUrls || null, text: info.text || '', viewOnce: !!info.viewOnce, state: 'sending', time: new Date() };
+            pendingMedia.push(p);
+            renderChatFlow();
+            return {
+                id: p.id,
+                sent: () => { if (!groupSlug) removePendingMedia(p.id); else setTimeout(() => removePendingMedia(p.id), 20000); },
+                fail: () => { p.state = 'failed'; renderChatFlow(); }
+            };
+        }
+        function removePendingMedia(id) {
+            const n = pendingMedia.length;
+            pendingMedia = pendingMedia.filter(p => p.id !== id);
+            if (pendingMedia.length !== n) renderChatFlow();
+        }
+      function renderChatFlow() {
+            const flow = document.getElementById('chat-flow');
+            if (!flow) return;
+            const seenIds = new Set(chatMessages.map(x => x.clientId).filter(Boolean));
+            pendingMedia = pendingMedia.filter(p => !seenIds.has(p.id));
+            // chat messages + small "posted in the feed" rows, merged by time
+            const items = chatMessages.map(m => ({ kind: 'msg', m: m, t: +m.time }));
+            nxChatPostEvents().forEach(p => items.push({ kind: 'post', p: p, t: +p.time }));
+            items.sort((a, b) => a.t - b.t);
+            let html = '';
+            let lastDay = null;
+            let lastSender = null;
+            items.forEach((it, i) => {
+                const when = it.kind === 'msg' ? it.m.time : it.p.time;
+                const dayLbl = fmtDayLabel(when);
+                if (dayLbl !== lastDay) { html += `<div class="day-divider"><span>${dayLbl}</span></div>`; lastDay = dayLbl; lastSender = null; }
+                if (it.kind === 'post') { html += nxThreadCardHTML(it.p); lastSender = null; return; }
+                const m = it.m;
+                const grouped = lastSender === m.from && !m.replyTo && !m.forwarded;
+                const nxItem = items[i + 1];
+                const nx = (nxItem && nxItem.kind === 'msg') ? nxItem.m : null;
+                const nextGrouped = !!nx && nx.from === m.from && !nx.replyTo && !nx.forwarded && fmtDayLabel(nx.time) === dayLbl;
+                const pos = grouped ? (nextGrouped ? 'middle' : 'last') : (nextGrouped ? 'first' : 'single');
+                html += renderChatMessage(m, grouped, pos);
+                lastSender = m.from;
+            });
+            pendingMedia.forEach(p => {
+                html += renderChatMessage({ id: p.id, from: 'me', image: p.localUrls ? null : p.localUrl, pendingUrls: p.localUrls, text: p.text, time: p.time, reactions: {}, status: 'sending', pendingState: p.state, viewOnce: p.viewOnce }, false, 'single');
+            });
+            flow.innerHTML = html;
+            if (typingIndicatorActive) flow.insertAdjacentHTML('beforeend', typingRowHTML());
+            flow.scrollTop = flow.scrollHeight;
+            renderPinnedBar();
+      }
+
+        function detectLinkSafety(text) {
+            if (!text) return '';
+            const hasLink = /https?:\/\/|www\./i.test(text);
+            if (!hasLink) return '';
+            const suspicious = /bit\.ly|free-?money|claim.*prize|verify.*account.*now|win.*lottery/i.test(text);
+            return suspicious
+                ? `<div class="msg-safety-badge warn"><i class="fa-solid fa-triangle-exclamation"></i> Nexus Safety Scan flagged this link as risky</div>`
+                : `<div class="msg-safety-badge"><i class="fa-solid fa-shield-halved"></i> Link scanned — looks safe</div>`;
+        }
+
+        const NX_TICK_SVG = '<svg viewBox="0 0 16 10" aria-hidden="true"><path d="M1 5.2l3 3L10.3 1.4M6 7.8l1 1L14.3 1.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const NX_CLOCK_SVG = '<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.8" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M6 3.4V6l1.8 1.1" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
+        function renderChatMessage(m, grouped, pos) {
+            const isOut = m.from === 'me';
+            const reactionsHtml = Object.keys(m.reactions || {}).length
+                ? `<div class="msg-reactions">${Object.entries(m.reactions).map(([e,c]) => `<span class="msg-reaction-pill">${e} ${c}</span>`).join('')}</div>` : '';
+            const replyHtml = m.replyTo ? (() => {
+                const rt = chatMessages.find(x => x.id === m.replyTo);
+                if (!rt) return '';
+                const rm = (rt.mediaArr && rt.mediaArr[0]) || (rt.image ? { type: 'image', mediaUrl: rt.image } : rt.video ? { type: 'video', mediaUrl: rt.video } : null);
+                const rmCount = (rt.mediaArr && rt.mediaArr.length > 1) ? rt.mediaArr.length : 0;
+                const label = rt.text ? escapeHtml(rt.text) : rt.voice ? '🎤 Voice message' : rm ? (rm.type === 'video' ? 'Video' : (rmCount ? rmCount + ' Photos' : 'Photo')) : rt.postRef ? ('Post by @' + escapeHtml(rt.postRef.username || '')) : '';
+                const icon = rm ? `<i class="fa-solid ${rm.type === 'video' ? 'fa-video' : 'fa-camera'}"></i>` : '';
+                const thumb = (rm && !rt.viewOnce) ? `<span class="rq-thumb">${rm.type === 'video' ? `<video src="${rm.mediaUrl}#t=0.1" preload="metadata" muted playsinline></video>` : `<img src="${rm.mediaUrl}" alt="">`}</span>` : '';
+                return `<div class="msg-reply-quote" onclick="event.stopPropagation(); jumpToMessage('${rt.id}')"><span class="rq-main"><span class="rq-name">${rt.from === 'me' ? 'You' : rt.name}</span><span class="rq-text">${icon} ${label}</span></span>${thumb}</div>`;
+            })() : '';
+            const fwdHtml = m.forwarded ? `<div class="msg-forwarded-tag"><i class="fa-solid fa-share"></i> Forwarded</div>` : '';
+            const voiceHtml = m.voice ? `
+                <div class="voice-card">
+                    <button class="play-btn" onclick="${m.voice.url ? `playVoiceMsg(this, '${m.voice.url}')` : `showToast('Playing voice message...', 'fa-play')`}"><i class="fa-solid fa-play"></i></button>
+                    <div class="waveform">${[8,16,12,20,10,14,6,18,9].map(h => `<bar style="height:${h}px"></bar>`).join('')}</div>
+                    <span class="speed-btn" onclick="this.textContent = this.textContent==='1x' ? '1.5x' : this.textContent==='1.5x' ? '2x' : '1x'">1x</span>
+                </div>` : '';
+            const safetyHtml = detectLinkSafety(m.text);
+            const starFlag = m.starred ? `<i class="fa-solid fa-star msg-star-flag"></i>` : '';
+            const ticks = isOut ? (m.status === 'sending' ? `<span class="msg-ticks sending">${NX_CLOCK_SVG}</span>` : `<span class="msg-ticks ${m.status === 'read' ? 'read' : ''}">${NX_TICK_SVG}</span>`) : '';
+            const timeStr = fmtClockTime(m.time);
+
+            // ---- media (same structure as chat-interior: edge-to-edge media-wrap, time overlay, caption below) ----
+            const hasGrid = !!((m.mediaArr && m.mediaArr.length) || (m.pendingUrls && m.pendingUrls.length));
+            const isVO = !!(m.viewOnce && (m.image || m.video));
+            const hasMedia = hasGrid || !!(m.image || m.video);
+            const capText = m.text || '';
+            const timeOverlay = capText ? '' : `<span class="media-time-overlay">${timeStr}${ticks}</span>`;
+            const pendOverlay = m.pendingState === 'sending' ? '<div class="media-sending"><div class="media-spinner"></div></div>'
+                : (m.pendingState === 'failed' ? '<div class="media-sending media-failed">Failed — tap to remove</div>' : '');
+            const openFn = (i) => m.pendingState === 'failed' ? `removePendingMedia('${m.id}')` : `openMediaViewer('${m.id}', ${i})`;
+            let mediaHtml = '';
+            if (isVO) {
+                const label = m.image ? 'Photo' : 'Video';
+                const voDone = !isOut && (((m.viewedBy || []).indexOf(currentUsername) !== -1) || nxVoOpened(m.id));
+                const clickable = m.pendingState === 'failed' ? `onclick="removePendingMedia('${m.id}')"` : (m.pendingState === 'sending' || voDone ? '' : `onclick="openViewOnce('${m.id}')"`);
+                const text = m.pendingState === 'sending' ? 'Sending…' : m.pendingState === 'failed' ? 'Failed — tap to remove' : voDone ? 'Opened' : label;
+                mediaHtml = `<div class="vo-tile ${voDone ? 'vo-dead' : ''}" ${clickable}><span class="vo-ico">1</span><span class="vo-label">${text}</span><span class="vo-time">${timeStr}${ticks}</span></div>`;
+            } else if (hasGrid) {
+                const items = (m.mediaArr && m.mediaArr.length) ? m.mediaArr : m.pendingUrls.map(u => ({ type: 'image', mediaUrl: u }));
+                const n = items.length;
+                const cls = n === 1 ? 'n1' : n === 2 ? 'n2' : n === 3 ? 'n3' : 'n4plus';
+                const shown = cls === 'n4plus' ? items.slice(0, 4) : items;
+                const extra = n > 4 ? n - 4 : 0;
+                const cells = shown.map((it, i) => {
+                    const isVideo = it.type === 'video';
+                    const el = isVideo ? `<video src="${it.mediaUrl}#t=0.1" preload="metadata" muted playsinline style="pointer-events:none;"></video>` : `<img src="${it.mediaUrl}" alt="">`;
+                    const badge = isVideo ? '<span class="video-indicator"><i class="fa-solid fa-video"></i></span>' : '';
+                    const more = (extra > 0 && i === 3) ? `<div class="more-overlay">+${extra}</div>` : '';
+                    return `<div class="gi" onclick="${openFn(i)}">${el}${badge}${more}</div>`;
+                }).join('');
+                mediaHtml = `<div class="img-grid ${cls}">${cells}${timeOverlay}${pendOverlay}</div>`;
+            } else if (m.image) {
+                mediaHtml = `<div class="media-wrap" onclick="${openFn(0)}"><img src="${m.image}" alt="">${timeOverlay}${pendOverlay}</div>`;
+            } else if (m.video) {
+                mediaHtml = `<div class="media-wrap" onclick="${openFn(0)}"><video src="${m.video}#t=0.1" preload="metadata" muted playsinline style="pointer-events:none;"></video><span class="video-indicator"><i class="fa-solid fa-video"></i></span>${timeOverlay}${pendOverlay}</div>`;
+            }
+
+            const postRefHtml = m.postRef ? nxPostRefCardHTML(m.postRef) : '';
+            const feedTagHtml = m.feedPostId ? `<div class="msg-feed-tag" onclick="event.stopPropagation(); nxFocusPostInFeed('${escapeHtml(m.feedPostId)}')"><i class="fa-solid fa-newspaper"></i> Posted to feed</div>` : '';
+
+            const headerHtml = (!isOut && !grouped) ? `
+                <div class="msg-header">
+                    <span class="sender-name">${m.name} ${m.verified ? `<i class="fa-solid fa-circle-check" style="color:var(--neon-cyan); font-size:11px;"></i>` : ''}</span>
+                    <span class="role-tag ${m.roleClass}">${m.role}</span>
+                </div>` : '';
+
+            const bodyHtml = hasMedia
+                ? `${fwdHtml}${replyHtml}${isVO ? '' : voiceHtml}${mediaHtml}${(capText && !isVO) ? `<div class="media-caption">${escapeHtml(capText)}<span class="msg-time-inline">${timeStr}${ticks}</span></div>` : ''}${feedTagHtml}`
+                : `${fwdHtml}${replyHtml}${postRefHtml}${escapeHtml(m.text || '')}${voiceHtml}${safetyHtml}${feedTagHtml}<span class="msg-time-inline">${timeStr}${ticks}</span>`;
+
+            return `
+            <div class="msg-row ${isOut ? 'outgoing' : 'incoming'} ${grouped ? 'grouped-follow' : ''} pos-${pos || 'single'}" data-id="${m.id}" style="position:relative;" onmousedown="pressStart('${m.id}')" onmouseup="pressEnd()" onmouseleave="pressEnd()" ontouchstart="pressStart('${m.id}')" ontouchend="pressEnd()">
+               ${!isOut ? (m.avatar ? `<img class="msg-avatar" src="${m.avatar}" alt="">` : `<span class="msg-avatar msg-avatar-empty"></span>`) : ''}
+                <div class="msg-card ${(hasMedia && !isVO) ? 'media-card' : ''}">
+                    ${starFlag}
+                    ${headerHtml}
+                    <div class="msg-body">
+                     ${bodyHtml}
+                    </div>
+                    ${reactionsHtml}
+                </div>
+            </div>`;
+        }
+
+        let pressTimer = null;
+        function pressStart(id) { pressTimer = setTimeout(() => openMsgTray(id), 420); }
+        function pressEnd() { clearTimeout(pressTimer); }
+
+        function openMsgTray(id) {
+            activeTrayMsgId = id;
+            const m = chatMessages.find(x => x.id === id);
+            if (!m) return;
+            document.getElementById('trayEmojiRow').innerHTML = ['👍','❤️','😂','😮','😢','🙏'].map(e => `<span onclick="reactToMessage('${id}','${e}')">${e}</span>`).join('');
+            document.getElementById('trayStarLabel').textContent = m.starred ? 'Unstar' : 'Star';
+            document.getElementById('trayPinLabel').textContent = (pinnedMessageId === id) ? 'Unpin' : 'Pin';
+            const pfAct = document.getElementById('trayPostFeedAction');
+            if (pfAct) {
+                pfAct.style.display = nxCanPostToFeed(m) ? '' : 'none';
+                const pfLbl = document.getElementById('trayPostFeedLabel');
+                if (pfLbl) pfLbl.textContent = m.feedPostId ? 'View feed post' : 'Post to feed';
+            }
+            const tray = document.getElementById('msgActionTray');
+            const row = document.querySelector(`.msg-row[data-id="${id}"]`);
+            const rect = row.getBoundingClientRect();
+            tray.style.top = Math.min(rect.top, window.innerHeight - 340) + 'px';
+            tray.style.left = (m.from === 'me' ? Math.max(rect.right - 210, 10) : rect.left) + 'px';
+            tray.classList.add('active');
+            document.getElementById('msgActionBackdrop').classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(15);
+        }
+        function closeMsgTray() {
+            document.getElementById('msgActionTray').classList.remove('active');
+            document.getElementById('msgActionBackdrop').classList.remove('active');
+        }
+        function reactToMessage(id, emoji) {
+            const m = chatMessages.find(x => x.id === id);
+            if (!m) return;
+            m.reactions = m.reactions || {};
+            const prev = m.myReaction;
+            if (prev) {
+                m.reactions[prev] = (m.reactions[prev] || 1) - 1;
+                if (m.reactions[prev] <= 0) delete m.reactions[prev];
+            }
+            if (prev === emoji) { m.myReaction = null; }
+            else { m.reactions[emoji] = (m.reactions[emoji] || 0) + 1; m.myReaction = emoji; }
+            closeMsgTray();
+            renderChatFlow();
+        }
+        function trayReply() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            if (!m) return;
+            replyTarget = m;
+            document.getElementById('rcName').textContent = m.from === 'me' ? 'You' : m.name;
+            pendingPostRef = null; pendingThreadPostId = null;
+            document.getElementById('rcText').textContent = m.text || (m.voice ? '🎤 Voice message' : m.postRef ? ('Post by @' + (m.postRef.username || '')) : 'Media');
+            document.getElementById('replyComposerBar').classList.add('active');
+            document.getElementById('dockInput').focus();
+            closeMsgTray();
+        }
+        function cancelReply() { replyTarget = null; pendingPostRef = null; pendingThreadPostId = null; document.getElementById('replyComposerBar').classList.remove('active'); const _di = document.getElementById('dockInput'); if (_di && _di.placeholder === 'Write a comment…') _di.placeholder = 'Message...'; }
+        function trayForward() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            const fwd = { ...m, id: 'c' + Date.now(), from: 'me', time: new Date(), forwarded: true, replyTo: null, reactions: {}, status: 'sent', feedPostId: null };
+            chatMessages.push(fwd);
+            renderChatFlow();
+            showToast('Message forwarded', 'fa-share');
+        }
+        function trayCopy() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            if (navigator.clipboard && m.text) navigator.clipboard.writeText(m.text).catch(() => {});
+            showToast('Message copied', 'fa-copy');
+        }
+        function trayStar() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            m.starred = !m.starred;
+            renderChatFlow();
+            showToast(m.starred ? 'Message starred' : 'Removed from starred', 'fa-star');
+        }
+        function trayPin() {
+            const id = activeTrayMsgId;
+            closeMsgTray();
+            if (!nxCanPin()) return;
+            if (pinnedMessageId === id) { nxDoUnpin(); return; }
+            openPinDialog(id, 'message');
+        }
+        function trayDelete() {
+            const id = activeTrayMsgId;
+            closeMsgTray();
+            chatMessages = chatMessages.filter(x => x.id !== id);
+            if (pinnedMessageId === id) pinnedMessageId = null;
+            renderChatFlow();
+            showToast('Message deleted', 'fa-trash');
+        }
+        let pinExpiresAt = 0, pinChosenMs = 604800000, pinTargetId = null, pinTargetKind = 'message';
+        function nxHasPin() { return !!(pinnedMessageId || pinnedPost); }
+        function nxExpirePinIfNeeded() {
+            if (nxHasPin() && pinExpiresAt && Date.now() > pinExpiresAt) { pinnedMessageId = null; pinnedPost = null; pinExpiresAt = 0; }
+        }
+        function nxCanPin() {
+            if (groupSlug && !isGroupAdmin) { showToast('Only group admins can pin — a pin is shared with every member', 'fa-lock'); return false; }
+            return true;
+        }
+        function nxGroupCanPin() { return !groupSlug || !!isGroupAdmin; }
+        function renderPinnedBar() {
+            const bar = document.getElementById('pinnedBar');
+            nxExpirePinIfNeeded();
+            nxRenderFeedPinnedStrip();
+            if (!bar) return;
+            if (!nxHasPin()) { bar.classList.remove('active'); return; }
+            let title, first = null, viewOnce = false;
+            if (pinnedPost) {
+                title = 'Post · ' + pinnedPost.title;
+                first = pinnedPost.thumb ? { type: pinnedPost.thumbType || 'image', mediaUrl: pinnedPost.thumb } : null;
+            } else {
+                const m = chatMessages.find(x => x.id === pinnedMessageId);
+                if (!m) { bar.classList.remove('active'); return; }
+                first = (m.mediaArr && m.mediaArr[0]) || (m.image ? { type: 'image', mediaUrl: m.image } : m.video ? { type: 'video', mediaUrl: m.video } : null);
+                viewOnce = !!m.viewOnce;
+                title = m.text ? m.text
+                    : (m.mediaArr && m.mediaArr.length > 1) ? (m.mediaArr.length + ' Photos')
+                    : m.image ? 'Photo' : m.video ? 'Video' : m.voice ? 'Voice message'
+                    : m.postRef ? ('Post by @' + (m.postRef.username || '')) : 'Message';
+            }
+            document.getElementById('pinnedBarText').textContent = title;
+            let th = document.getElementById('pinnedBarThumb');
+            if (!th) { th = document.createElement('div'); th.id = 'pinnedBarThumb'; th.className = 'pb-thumb'; bar.appendChild(th); }
+            th.style.display = (first && !viewOnce) ? 'block' : 'none';
+            th.innerHTML = (first && !viewOnce) ? (first.type === 'video' ? `<video src="${first.mediaUrl}#t=0.1" preload="metadata" muted playsinline></video>` : `<img src="${first.mediaUrl}" alt="">`) : '';
+            const isChatMode = document.getElementById('chat-flow').style.display !== 'none';
+            bar.classList.toggle('active', isChatMode);
+        }
+           function scrollToPinned() {
+            if (pinnedPost) { nxFocusPostInFeed(pinnedPost.id); return; }
+            if (!pinnedMessageId) return;
+            const row = document.querySelector(`.msg-row[data-id="${pinnedMessageId}"]`);
+            if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function nxDoUnpin() {
+            if (!nxCanPin()) return;
+            const wasPost = !!pinnedPost;
+            pinnedMessageId = null; pinnedPost = null; pinExpiresAt = 0;
+            nxPersistPin();
+            renderChatFlow();
+            nxRepaintFeedPins();
+            showToast(wasPost ? 'Post unpinned' : 'Message unpinned', 'fa-circle-check');
+        }
+        function unpinMessage() { nxDoUnpin(); }
+        function nxEnsurePinUi() {
+            const host = document.getElementById('msgActionTray').parentElement;
+            if (!document.getElementById('pinDlgBackdrop')) {
+                host.insertAdjacentHTML('beforeend', `
+                <div id="pinDlgBackdrop"><div class="pin-dlg">
+                    <div class="pin-dlg-title">Choose how long your pin lasts</div>
+                    <div class="pin-dlg-sub">You can unpin at any time.</div>
+                    <div class="pin-opt" data-ms="86400000"><span class="pin-radio"></span><span>24 hours</span></div>
+                    <div class="pin-opt on" data-ms="604800000"><span class="pin-radio"></span><span>7 days</span></div>
+                    <div class="pin-opt" data-ms="2592000000"><span class="pin-radio"></span><span>30 days</span></div>
+                    <div class="pin-dlg-actions"><span id="pinDlgCancel">Cancel</span><span id="pinDlgOk">Pin</span></div>
+                </div></div>
+                <div class="dots-menu-backdrop" id="pinMenuBackdrop"></div>
+                <div class="dots-dropdown-menu" id="pinMenu">
+                    <div class="dots-menu-item" id="pinMenuUnpin">Unpin</div>
+                    <div class="dots-menu-item" id="pinMenuGo">Go to message</div>
+                </div>`);
+                const bd = document.getElementById('pinDlgBackdrop');
+                bd.addEventListener('click', (e) => { if (e.target === bd) closePinDialog(); });
+                bd.querySelectorAll('.pin-opt').forEach(o => o.addEventListener('click', () => {
+                    bd.querySelectorAll('.pin-opt').forEach(x => x.classList.remove('on'));
+                    o.classList.add('on'); pinChosenMs = +o.dataset.ms;
+                }));
+                document.getElementById('pinDlgCancel').addEventListener('click', closePinDialog);
+                document.getElementById('pinDlgOk').addEventListener('click', confirmPin);
+                document.getElementById('pinMenuBackdrop').addEventListener('click', closePinMenu);
+                document.getElementById('pinMenuUnpin').addEventListener('click', () => { closePinMenu(); nxDoUnpin(); });
+                document.getElementById('pinMenuGo').addEventListener('click', () => { closePinMenu(); scrollToPinned(); });
+            }
+            const bar = document.getElementById('pinnedBar');
+            if (bar) bar.onclick = openPinMenu;
+        }
+        function openPinDialog(id, kind) {
+            nxEnsurePinUi();
+            pinTargetId = id; pinTargetKind = kind || 'message'; pinChosenMs = 604800000;
+            const bd = document.getElementById('pinDlgBackdrop');
+            bd.querySelectorAll('.pin-opt').forEach(x => x.classList.toggle('on', +x.dataset.ms === pinChosenMs));
+            bd.classList.add('active');
+        }
+        function closePinDialog() { const bd = document.getElementById('pinDlgBackdrop'); if (bd) bd.classList.remove('active'); }
+        function confirmPin() {
+            const label = { 86400000: '24 hours', 604800000: '7 days', 2592000000: '30 days' }[pinChosenMs] || '7 days';
+            if (!nxCanPin()) { closePinDialog(); return; }
+            if (pinTargetKind === 'post') {
+                const p = nxPostIndex[pinTargetId];
+                if (!p) { closePinDialog(); showToast('That post is no longer available', 'fa-circle-info'); return; }
+                pinnedMessageId = null;
+                pinnedPost = { id: p.id, title: nxShortTitle(p), thumb: p.mediaUrl || '', thumbType: p.mediaType || 'image' };
+            } else {
+                pinnedPost = null;
+                pinnedMessageId = pinTargetId;
+            }
+            pinExpiresAt = Date.now() + pinChosenMs;
+            closePinDialog();
+            nxPersistPin();
+            renderChatFlow();
+            nxRepaintFeedPins();
+            showToast((pinnedPost ? 'Post' : 'Message') + ' pinned for ' + label, 'fa-circle-check');
+        }
+        function openPinMenu() {
+            if (!pinnedMessageId) return;
+            nxEnsurePinUi();
+            const bar = document.getElementById('pinnedBar');
+            const menu = document.getElementById('pinMenu');
+            const goItem = document.getElementById('pinMenuGo');
+            if (goItem) goItem.textContent = pinnedPost ? 'Go to post' : 'Go to message';
+            menu.style.top = (bar.getBoundingClientRect().bottom + 6) + 'px';
+            menu.classList.add('active');
+            document.getElementById('pinMenuBackdrop').classList.add('active');
+        }
+        function closePinMenu() {
+            document.getElementById('pinMenu').classList.remove('active');
+            document.getElementById('pinMenuBackdrop').classList.remove('active');
+        }
+        let typingIndicatorActive = false;
+        function typingRowHTML() {
+            return `<div class="typing-row" id="typingRow"><div class="typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+        }
+        function simulateIncomingTyping() {
+            typingIndicatorActive = true;
+            const flow = document.getElementById('chat-flow');
+            flow.insertAdjacentHTML('beforeend', typingRowHTML());
+            flow.scrollTop = flow.scrollHeight;
+        }
+        function stopIncomingTyping() {
+            typingIndicatorActive = false;
+            const row = document.getElementById('typingRow');
+            if (row) row.remove();
+        }
+
+        function openChatSearch() {
+            document.getElementById('chatSearchOverlay').classList.add('active');
+            document.getElementById('chatSearchInput').value = '';
+            document.getElementById('chatSearchInput').placeholder = 'Search chat & posts...';
+            document.getElementById('chatSearchResults').innerHTML = '';
+            setTimeout(() => document.getElementById('chatSearchInput').focus(), 150);
+        }
+        function closeChatSearch() { document.getElementById('chatSearchOverlay').classList.remove('active'); }
+        function nxHighlight(text, q) {
+            const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+            return String(text).split(re).map((part, i) => i % 2 === 1 ? '<mark>' + escapeHtml(part) + '</mark>' : escapeHtml(part)).join('');
+        }
+        function runChatSearch(q) {
+            const box = document.getElementById('chatSearchResults');
+            const term = (q || '').trim();
+            if (!term) { box.innerHTML = ''; return; }
+            const needle = term.toLowerCase();
+            const hits = [];
+            chatMessages.forEach(m => {
+                if (m.text && m.text.toLowerCase().includes(needle)) {
+                    hits.push({ kind: 'chat', id: m.id, name: m.from === 'me' ? 'You' : (m.name || 'Member'), text: m.text, time: m.time });
+                }
+            });
+            Object.keys(nxPostIndex).forEach(k => {
+                const p = nxPostIndex[k];
+                const hay = ((p.text || '') + ' ' + (p.username || '') + ' ' + (p.fullName || '')).toLowerCase();
+                if (hay.includes(needle)) {
+                    hits.push({
+                        kind: 'post', id: p.id,
+                        name: p.fullName ? (p.fullName + ' (@' + p.username + ')') : ('@' + p.username),
+                        text: p.text || (p.mediaUrl ? (p.mediaType === 'video' ? '🎥 Video post' : '📷 Photo post') : 'Post'),
+                        time: p.time
+                    });
+                }
+            });
+            hits.sort((a, b) => +b.time - +a.time);
+            box.innerHTML = hits.length ? hits.map(h => {
+                const go = h.kind === 'chat' ? `closeChatSearch(); jumpToMessage('${escapeHtml(h.id)}')` : `closeChatSearch(); nxFocusPostInFeed('${escapeHtml(h.id)}')`;
+                const snip = h.text.length > 220 ? h.text.slice(0, 220) + '…' : h.text;
+                return `
+                <div class="search-result-row" onclick="${go}">
+                    <div class="sr-name">${escapeHtml(h.name)} <span class="sr-tag ${h.kind}">${h.kind === 'chat' ? 'Chat' : 'Post'}</span></div>
+                    <div class="sr-text">${nxHighlight(snip, term)}</div>
+                </div>`;
+            }).join('') : `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:20px;">No results found</p>`;
+        }
+        function jumpToMessage(id) {
+            switchMode('chat');
+            setTimeout(() => {
+                const row = document.querySelector(`.msg-row[data-id="${id}"]`);
+                if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); row.style.background = 'rgba(253,224,141,0.12)'; setTimeout(() => row.style.background = '', 1200); }
+            }, 80);
+        }
+
+        // ============================================================
+        // 4. TYPING BAR — slim redesign + high-impact quick actions
+        // ============================================================
+        function handleDockInput(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+
+            const suggestChip = document.getElementById('smartSuggestChip');
+            if (!suggestChip) return;
+            if (el.value.trim().length > 0) {
+                const s = smartSuggestFor(el.value);
+                if (s) { document.getElementById('smartSuggestText').textContent = s; suggestChip.style.display = 'flex'; }
+                else suggestChip.style.display = 'none';
+            } else {
+                suggestChip.style.display = 'none';
+            }
+        }
+        function smartSuggestFor(draft) {
+            const t = draft.trim().toLowerCase();
+            if (t.endsWith('?')) return 'Ask & get an instant AI-suggested reply';
+            if (t.length > 2 && t.length < 40) return 'Add more detail ✍️';
+            return null;
+        }
+        function useSmartSuggestion() {
+            const input = document.getElementById('dockInput');
+            input.value += ' ';
+            handleDockInput(input);
+            input.focus();
+        }
+
+        function triggerAttach(kind) {
+            switch (kind) {
+                case 'image':
+                case 'camera': {
+                    const url = prompt('Paste an image URL (or cancel):');
+                    if (url) pushOutgoingMessage({ image: url, text: '' });
+                    break;
+                }
+                case 'document':
+                    pushOutgoingMessage({ text: '📄 Document.pdf — 1.2MB' });
+                    showToast('File sent', 'fa-file');
+                    break;
+                case 'location':
+                    pushOutgoingMessage({ text: '📍 Shared current location (Live Location)' });
+                    break;
+                case 'pay':
+                    openPaySheet();
+                    break;
+                case 'sos':
+                    triggerSOS();
+                    break;
+                case 'contact':
+                    pushOutgoingMessage({ text: '👤 Contact Card: Ali_Developer' });
+                    break;
+            }
+        }
+        function pushOutgoingMessage(extra) {
+            if (groupSlug) {
+                sendRealGroupMessage(extra);
+                return;
+            }
+            const m = { id: 'c' + Date.now(), from: 'me', time: new Date(), reactions: {}, starred: false, status: 'sent', ...extra };
+            if (replyTarget) { m.replyTo = replyTarget.id; cancelReply(); }
+            chatMessages.push(m);
+            renderChatFlow();
+            setTimeout(() => { m.status = 'read'; renderChatFlow(); }, 1400);
+        }
+        async function sendRealGroupMessage(extra) {
+            const replyToId = replyTarget ? replyTarget.id : null;
+            if (replyTarget) cancelReply();
+            try {
+                const authUser = await nxGrpAuthPromise;
+                if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
+                await groupRef().collection('messages').add(Object.assign({
+                    senderUsername: currentUsername,
+                    timestamp: FieldValue.serverTimestamp(),
+                    replyTo: replyToId
+                }, extra));
+            } catch (e) {
+                console.error('sendRealGroupMessage error:', e);
+                showToast('Could not send — try again', 'fa-triangle-exclamation');
+            }
+        }
+        function loadRealChatMessages() {
+            if (groupMessagesUnsub) return; // already listening
+            groupMessagesUnsub = groupRef().collection('messages').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
+               if (snapshot.metadata && snapshot.metadata.fromCache && snapshot.empty) return; // offline: keep what is on screen
+               chatMessages = snapshot.docs.map(d => {
+                    const data = d.data();
+                    return {
+                        id: d.id,
+                        from: data.senderUsername === currentUsername ? 'me' : 'them',
+                        name: data.senderUsername,
+                        role: (groupData && groupData.creatorUsername === data.senderUsername) ? 'Owner' : 'Member',
+                        roleClass: 'role-member',
+                        verified: false,
+                        avatar: data.senderAvatar || '',
+                        text: data.text || '',
+                        image: data.image || null,
+                        clientId: data.clientId || null,
+                        video: data.video || null,
+                        mediaArr: data.mediaArr || null,
+                        voice: data.voice || null,
+                        viewOnce: !!data.viewOnce,
+                        viewedBy: data.viewedBy || [],
+                        time: data.timestamp && data.timestamp.toDate ? data.timestamp.toDate() : new Date(),
+                        reactions: {},
+                        starred: false,
+                        replyTo: data.replyTo || null,
+                        type: data.type || null,
+                        postRef: data.postRef || null,
+                        feedPostId: data.feedPostId || null,
+                        status: 'read'
+                    };
+                });
+                nxCachePut('m', chatMessages.slice(-80).map(m => ({ ...m, time: +m.time })));
+                nxUpdateBadges();
+                nxRefreshGiMediaIfOpen();
+                renderChatFlow();
+            }, err => console.error('group messages listener error:', err));
+        }
+        function sendDockMessage() {
+           if (typeof captionModeActive !== 'undefined' && captionModeActive) { confirmCaptionSend(); return; }
+            const input = document.getElementById('dockInput');
+            const text = input.value.trim();
+            if (pendingThreadPostId) { // a COMMENT on the post (not a chat message)
+                if (!text) return;
+                const tid = pendingThreadPostId;
+                cancelReply();
+                nxSendThreadComment(tid, text);
+                input.value = '';
+                handleDockInput(input);
+                return;
+            }
+            const postRef = pendingPostRef;
+            if (!text && !postRef) return;
+            if (postRef) {
+                pendingPostRef = null;
+                document.getElementById('replyComposerBar').classList.remove('active');
+                pushOutgoingMessage({ text: text, type: 'post_ref', postRef: postRef, preview: '📰 Post by @' + (postRef.username || '') });
+            } else {
+                pushOutgoingMessage({ text });
+            }
+           const _mv = document.getElementById('mediaViewer');
+if (_mv) {
+    _mv._closing = true;
+    closeMediaViewer();
+    showToast('Sending reply…', 'fa-paper-plane');
+}
+            input.value = '';
+            handleDockInput(input);
+           const _sc = document.getElementById('smartSuggestChip'); if (_sc) _sc.style.display = 'none'; 
+        }
+        
+        // ---- HIGH-IMPACT: in-chat Escrow payment ----
+        function openPaySheet() {
+            const sel = document.getElementById('payRecipient');
+            sel.innerHTML = groupMembers.filter(m => m.name !== 'You').map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+            document.getElementById('payAmount').value = '';
+            document.getElementById('payNote').value = '';
+            openSheetEl('paySheet');
+        }
+        function submitEscrowPayment() {
+            const to = document.getElementById('payRecipient').value;
+            const amount = document.getElementById('payAmount').value.trim();
+            const note = document.getElementById('payNote').value.trim();
+            if (!amount) { showToast('Enter an amount first', 'fa-triangle-exclamation'); return; }
+            closeSheet('paySheet');
+            pushOutgoingMessage({ text: `🔒 Escrow payment of ${amount} sent to ${to}${note ? ' — ' + note : ''}. Funds released only after confirmation.` });
+            showToast('Payment locked in Escrow', 'fa-vault');
+        }
+
+        // ---- HIGH-IMPACT: Emergency SOS ----
+        function triggerSOS() {
+            if (!confirm('Send an emergency SOS alert with your live location to all group admins right now?')) return;
+            pushOutgoingMessage({ text: '🚨 EMERGENCY SOS — this member needs urgent help. Live location shared with all admins.' });
+            showToast('SOS sent to all group admins with your location', 'fa-triangle-exclamation');
+        }
+
+        // ---- HIGH-IMPACT: Group Contribution / Ajo Tracker ----
+        let ajoContributors = [
+            { name: 'Ali_Developer', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80', paid: true },
+            { name: 'MmnAfrah Networker', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80', paid: true },
+            { name: 'Zainab_TrustID', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80', paid: false },
+            { name: 'Ibrahim_Kano', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80', paid: false },
+            { name: 'You', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80', paid: false }
+        ];
+        function openAjoTracker() {
+            document.getElementById('ajoNextPayout').textContent = 'Ibrahim_Kano';
+            renderAjoList();
+            openSheetEl('ajoSheet');
+        }
+        function renderAjoList() {
+            document.getElementById('ajoListBody').innerHTML = ajoContributors.map(c => `
+                <div class="ajo-row">
+                    <img src="${c.pic}">
+                    <div class="ajo-name">${c.name}</div>
+                    <div class="ajo-status ${c.paid ? 'paid' : 'pending'}">${c.paid ? 'Paid' : 'Pending'}</div>
+                </div>`).join('');
+        }
+        function markMyContributionPaid() {
+            const me = ajoContributors.find(c => c.name === 'You');
+            if (me) me.paid = true;
+            renderAjoList();
+            showToast('Your contribution has been marked as paid', 'fa-sack-dollar');
+        }
+
+        // ---- COMPREHENSIVE EMOJI PICKER (category tabs, large sets) ----
+        const EMOJI_CATEGORIES = [
+            { key: 'smileys', icon: '😀', label: 'Smileys & People', set: '😀 😃 😄 😁 😆 😅 😂 🤣 🙂 🙃 😉 😊 😇 🥰 😍 🤩 😘 😗 😚 😙 😋 😛 😜 🤪 😝 🤑 🤗 🤭 🤫 🤔 🤐 🤨 😐 😑 😶 😏 😒 🙄 😬 🤥 😌 😔 😪 🤤 😴 😷 🤒 🤕 🤢 🤮 🤧 🥵 🥶 🥴 😵 🤯 🤠 🥳 😎 🤓 🧐 😕 😟 🙁 😮 😯 😲 😳 🥺 😦 😧 😨 😰 😥 😢 😭 😱 😖 😣 😞 😓 😩 😫 🥱 😤 😡 😠 🤬 😈 👿 💀 👻 👽 🤖 💩 😺 😸 😹 😻 😼 😽 🙀 😿 😾 👶 🧒 👦 👧 🧑 👨 👩 🧓 👴 👵'.split(' ') },
+            { key: 'gestures', icon: '👋', label: 'Gestures & Body', set: '👋 🤚 🖐️ ✋ 🖖 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 🖕 👇 ☝️ 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 👐 🤲 🤝 🙏 ✍️ 💅 🤳 💪 🦾 🦵 🦿 🦶 👂 🦻 👃 🧠 🫀 🫁 🦷 🦴 👀 👁️ 👅 👄 💋 🩸'.split(' ') },
+            { key: 'animals', icon: '🐶', label: 'Animals & Nature', set: '🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐽 🐸 🐵 🙈 🙉 🙊 🐒 🐔 🐧 🐦 🐤 🐣 🐥 🦆 🦅 🦉 🦇 🐺 🐗 🐴 🦄 🐝 🪱 🐛 🦋 🐌 🐞 🐜 🪰 🪳 🦟 🦗 🕷️ 🕸️ 🦂 🐢 🐍 🦎 🦖 🦕 🐙 🦑 🦐 🦞 🦀 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🦧 🐘 🦛 🦏 🐪 🐫 🦒 🦘 🐃 🐂 🐄 🐎 🐖 🐏 🐑 🦙 🐐 🦌 🐕 🐩 🐈 🐓 🦃 🦤 🦚 🦜 🦢 🦩 🕊️ 🐇 🦝 🦨 🦡 🦫 🦦 🦥 🐁 🐀 🐿️ 🦔 🌵 🎄 🌲 🌳 🌴 🪵 🌱 🌿 ☘️ 🍀 🎍 🪴 🎋 🍃 🍂 🍁 🍄 🌾 💐 🌷 🌹 🥀 🌺 🌸 🌼 🌻 🌞 🌝 🌛 🌜 🌚 🌕 🌖 🌗 🌘 🌑 🌒 🌓 🌔 🌙 🌎 🌍 🌏 🪐 💫 ⭐ 🌟 ✨ ⚡ ☄️ 💥 🔥 🌪️ 🌈 ☀️ 🌤️ ⛅ 🌥️ ☁️ 🌦️ 🌧️ ⛈️ 🌩️ 🌨️ ❄️ ☃️ ⛄ 🌬️ 💨 💧 💦 🌊'.split(' ') },
+            { key: 'food', icon: '🍔', label: 'Food & Drink', set: '🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🫐 🍈 🍒 🍑 🥭 🍍 🥥 🥝 🍅 🍆 🥑 🥦 🥬 🥒 🌶️ 🫑 🌽 🥕 🫒 🧄 🧅 🥔 🍠 🥐 🥯 🍞 🥖 🥨 🧀 🥚 🍳 🧈 🥞 🧇 🥓 🥩 🍗 🍖 🦴 🌭 🍔 🍟 🍕 🫓 🥪 🥙 🧆 🌮 🌯 🫔 🥗 🥘 🫕 🥫 🍝 🍜 🍲 🍛 🍣 🍱 🥟 🦪 🍤 🍙 🍚 🍘 🍥 🥠 🥮 🍢 🍡 🍧 🍨 🍦 🥧 🧁 🍰 🎂 🍮 🍭 🍬 🍫 🍿 🍩 🍪 🌰 🥜 🍯 🥛 🍼 🫖 ☕ 🍵 🧃 🥤 🧋 🍶 🍺 🍻 🥂 🍷 🥃 🍸 🍹 🧉 🍾 🧊'.split(' ') },
+            { key: 'travel', icon: '✈️', label: 'Travel & Places', set: '🚗 🚕 🚙 🚌 🚎 🏎️ 🚓 🚑 🚒 🚐 🛻 🚚 🚛 🚜 🛵 🏍️ 🛺 🚲 🛴 🚨 🚔 🚍 🚘 🚖 🚡 🚠 🚟 🚃 🚋 🚞 🚝 🚄 🚅 🚈 🚂 🚆 🚇 🚊 🚉 ✈️ 🛫 🛬 🛩️ 💺 🛰️ 🚀 🛸 🚁 🛶 ⛵ 🚤 🛥️ 🛳️ ⛴️ 🚢 ⚓ 🪝 ⛽ 🚧 🚦 🚥 🗺️ 🗿 🗽 🗼 🏰 🏯 🏟️ 🎡 🎢 🎠 ⛲ ⛱️ 🏖️ 🏝️ 🏜️ 🌋 ⛰️ 🏔️ 🗻 🏕️ ⛺ 🏠 🏡 🏘️ 🏚️ 🏗️ 🏭 🏢 🏬 🏣 🏤 🏥 🏦 🏨 🏪 🏫 🏩 💒 🏛️ ⛪ 🕌 🕍 🛕 🕋 ⛩️ 🌁 🌃 🏙️ 🌄 🌅 🌆 🌇 🌉 ♨️'.split(' ') },
+            { key: 'activities', icon: '⚽', label: 'Activities', set: '⚽ 🏀 🏈 ⚾ 🥎 🎾 🏐 🏉 🎱 🪀 🏓 🏸 🏒 🏑 🥍 🏏 🪃 🥅 ⛳ 🪁 🏹 🎣 🤿 🥊 🥋 🎽 🛹 🛼 🛷 ⛸️ 🥌 🎿 ⛷️ 🏂 🪂 🏋️ 🤼 🤸 ⛹️ 🤺 🤾 🏌️ 🏇 🧘 🏄 🏊 🤽 🚣 🧗 🚵 🚴 🏆 🥇 🥈 🥉 🏅 🎖️ 🏵️ 🎗️ 🎫 🎟️ 🎪 🤹 🎭 🩰 🎨 🎬 🎤 🎧 🎼 🎹 🥁 🪘 🎷 🎺 🪗 🎸 🪕 🎻 🎲 ♟️ 🎯 🎳 🎮 🎰 🧩'.split(' ') },
+            { key: 'objects', icon: '💡', label: 'Objects', set: '⌚ 📱 💻 ⌨️ 🖥️ 🖨️ 🖱️ 🖲️ 🕹️ 🗜️ 💽 💾 💿 📀 📼 📷 📸 📹 🎥 📽️ 🎞️ 📞 ☎️ 📟 📠 📺 📻 🎙️ 🎚️ 🎛️ 🧭 ⏱️ ⏲️ ⏰ 🕰️ ⌛ ⏳ 📡 🔋 🪫 🔌 💡 🔦 🕯️ 🪔 🧯 🛢️ 💸 💵 💴 💶 💷 🪙 💰 💳 💎 ⚖️ 🪜 🧰 🪛 🔧 🔨 ⚒️ 🛠️ ⛏️ 🪓 🪚 🔩 ⚙️ 🪤 🧱 ⛓️ 🧲 🔫 💣 🧨 🪃 🔪 🗡️ ⚔️ 🛡️ 🚬 ⚰️ 🪦 ⚱️ 🏺 🔮 📿 🧿 💈 ⚗️ 🔭 🔬 🕳️ 🩹 🩺 💊 💉 🩸 🧬 🦠 🧫 🧪 🌡️ 🧹 🪠 🧺 🧻 🚽 🚰 🚿 🛁 🛀 🧴 🪒 🧽 🧼 🪥 🧷 🧵 🪡 🧶 🪢 👓 🕶️ 🥽 🥼 🦺 👔 👕 👖 🧣 🧤 🧥 🧦 👗 👘 🥻 🩱 🩲 🩳 👙 👚 👛 👜 👝 🎒 🩴 👞 👟 🥾 🥿 👠 👡 🩰 👢 👑 👒 🎩 🎓 🧢 🪖 ⛑️ 📿 💄 💍 💼'.split(' ') },
+            { key: 'symbols', icon: '❤️', label: 'Symbols', set: '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 ☮️ ✝️ ☪️ 🕉️ ☸️ ✡️ 🔯 🕎 ☯️ ☦️ 🛐 ⛎ ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓ 🆔 ⚛️ 🉑 ☢️ ☣️ 📴 📳 🈶 🈚 🈸 🈺 🈷️ ✴️ 🆚 💮 🉐 ㊙️ ㊗️ 🈴 🈵 🈹 🈲 🅰️ 🅱️ 🆎 🆑 🅾️ 🆘 ❌ ⭕ 🛑 ⛔ 📛 🚫 💯 💢 ♨️ 🚷 🚯 🚳 🚱 🔞 📵 🚭 ❗ ❕ ❓ ❔ ‼️ ⁉️ 🔅 🔆 〽️ ⚠️ 🚸 🔱 ⚜️ 🔰 ♻️ ✅ 🈯 💹 ❇️ ✳️ ❎ 🌐 💠 Ⓜ️ 🌀 💤 🏧 🚾 ♿ 🅿️ 🈳 🈂️ 🛂 🛃 🛄 🛅'.split(' ') },
+            { key: 'flags', icon: '🏳️', label: 'Flags', set: '🏳️ 🏴 🏁 🚩 🏳️‍🌈 🏳️‍⚧️ 🇺🇳 🇳🇬 🇺🇸 🇬🇧 🇨🇦 🇫🇷 🇩🇪 🇮🇹 🇪🇸 🇵🇹 🇧🇷 🇲🇽 🇮🇳 🇨🇳 🇯🇵 🇰🇷 🇷🇺 🇿🇦 🇰🇪 🇬🇭 🇪🇬 🇸🇦 🇦🇪 🇹🇷 🇦🇺 🇳🇿 🇸🇬 🇮🇩 🇲🇾 🇹🇭 🇻🇳 🇵🇭 🇵🇰 🇧🇩 🇳🇱 🇧🇪 🇨🇭 🇸🇪 🇳🇴 🇩🇰 🇫🇮 🇵🇱 🇬🇷 🇮🇪'.split(' ') }
+        ];
+        let currentEmojiCat = 0;
+        function openEmojiPicker() {
+            document.getElementById('emojiCatTabs').innerHTML = EMOJI_CATEGORIES.map((c,i) => `<div class="emoji-cat-tab ${i===currentEmojiCat?'active':''}" onclick="setEmojiCat(${i})">${c.icon}</div>`).join('');
+            renderEmojiGrid();
+            openSheetEl('emojiBackdrop');
+        }
+        function setEmojiCat(i) {
+            currentEmojiCat = i;
+            document.querySelectorAll('.emoji-cat-tab').forEach((el, idx) => el.classList.toggle('active', idx === i));
+            renderEmojiGrid();
+        }
+        function renderEmojiGrid() {
+            const cat = EMOJI_CATEGORIES[currentEmojiCat];
+            document.getElementById('emojiGrid').innerHTML = cat.set.map(e => `<span onclick="insertEmoji('${e}')">${e}</span>`).join('');
+        }
+        function insertEmoji(e) {
+            const input = document.getElementById('dockInput');
+            input.value += e;
+            handleDockInput(input);
+        }
+
+        let recTimer = null, recSeconds = 0;
+        let demoTypingTimeout = null, demoMsgTimeout = null;
+        function startVoiceRecording() {
+            recSeconds = 0;
+            document.getElementById('recordBar').classList.add('active');
+            document.getElementById('dockInput').style.display = 'none';
+            recTimer = setInterval(() => {
+                recSeconds++;
+                const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+                const s = String(recSeconds % 60).padStart(2, '0');
+                document.getElementById('recordTime').textContent = `${m}:${s}`;
+            }, 1000);
+        }
+        function stopVoiceRecording(send) {
+            if (!document.getElementById('recordBar').classList.contains('active')) return;
+            clearInterval(recTimer);
+            document.getElementById('recordBar').classList.remove('active');
+            document.getElementById('dockInput').style.display = 'block';
+            if (send && recSeconds > 0) {
+                pushOutgoingMessage({ text: '', voice: { duration: document.getElementById('recordTime').textContent } });
+                showToast('Voice message sent', 'fa-microphone');
+            }
+        }
+        function cancelVoiceRecording() { stopVoiceRecording(false); }
+
+        function toggleEcosystem(show) {
+            const modal = document.getElementById('ecosystemModal');
+            if (show) modal.classList.add('active');
+            else modal.classList.remove('active');
+        }
+
+        // ---- Telegram-style header dropdown menu ----
+        function toggleDotsMenu(show) {
+            const menu = document.getElementById('dotsDropdownMenu');
+            const backdrop = document.getElementById('dotsMenuBackdrop');
+            const next = (show === undefined) ? !menu.classList.contains('active') : show;
+            menu.classList.toggle('active', next);
+            backdrop.classList.toggle('active', next);
+        }
+        function boostGroup() {
+            showToast('🚀 Group boosted! Northern Innovators Hub 2026 just leveled up.', 'fa-bolt');
+        }
+        let groupMuted = false;
+        function toggleMuteGroup() {
+            groupMuted = !groupMuted;
+            document.getElementById('muteMenuIcon').className = groupMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+            document.getElementById('muteMenuLabel').textContent = groupMuted ? 'Unmute' : 'Mute';
+            showToast(groupMuted ? 'Notifications muted for this group' : 'Notifications unmuted', groupMuted ? 'fa-volume-xmark' : 'fa-volume-high');
+        }
+        const CHAT_THEMES = [
+            { name: 'Gold (Default)', cyan: '#fde08d' },
+            { name: 'Ocean Blue', cyan: '#4fb0ff' },
+            { name: 'Emerald', cyan: '#34d399' }
+        ];
+        let currentThemeIndex = 0;
+        function cycleChatTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % CHAT_THEMES.length;
+            const theme = CHAT_THEMES[currentThemeIndex];
+            document.documentElement.style.setProperty('--neon-cyan', theme.cyan);
+            document.documentElement.style.setProperty('--neon-purple', theme.cyan);
+            showToast(`Chat theme changed to ${theme.name}`, 'fa-palette');
+        }
+        function clearGroupHistory() {
+            if (!confirm('Clear all message history in this group? This cannot be undone.')) return;
+            chatMessages = [];
+            pinnedMessageId = null;
+            renderChatFlow();
+            showToast('Chat history cleared', 'fa-broom');
+        }
+
+        // ============================================================
+        // 5. MEMBER MANAGEMENT & MODERATION
+        // ============================================================
+        const groupMembers = [
+            { id: 'm1', name: 'Ali_Developer', role: 'Admin', pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm2', name: 'MmnAfrah Networker', role: 'Moderator', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm3', name: 'Zainab_TrustID', role: 'Member', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm4', name: 'Ibrahim_Kano', role: 'Member', pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80' },
+            { id: 'm5', name: 'You', role: 'Member', pic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80' }
+        ];
+
+        const pendingRequests = [
+            { id: 'p1', name: 'Sadiq_Investor', pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80' },
+            { id: 'p2', name: 'Amina_Trader', pic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80' },
+            { id: 'p3', name: 'Bashir_Ops', pic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80' }
+        ];
+
+        function toggleMembersModal(show) {
+            const modal = document.getElementById('membersModal');
+            if (show) {
+                modal.classList.add('active');
+                renderMemberList();
+                renderPendingList();
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        function switchMemberTab(tab) {
+            const isAll = tab === 'all';
+            document.getElementById('tabAll').classList.toggle('active', isAll);
+            document.getElementById('tabPending').classList.toggle('active', !isAll);
+            document.getElementById('memberListPanel').style.display = isAll ? 'block' : 'none';
+            document.getElementById('pendingListPanel').style.display = isAll ? 'none' : 'block';
+        }
+
+        function renderMemberList() {
+            const roleClassMap = { Admin: 'role-ceo', Moderator: 'role-mod', Member: 'role-member' };
+            document.getElementById('memberListPanel').innerHTML = groupMembers.map(m => `
+                <div class="member-row">
+                    <img src="${m.pic}" alt="${m.name}">
+                    <div class="member-row-info">
+                        <div class="member-row-name">${m.name}</div>
+                        <div class="member-row-role role-tag ${roleClassMap[m.role]}">${m.role}</div>
+                    </div>
+                    ${m.role !== 'Admin' ? `
+                        <button class="member-action-btn" onclick="promoteMember('${m.id}')">${m.role === 'Moderator' ? 'Remove Mod' : 'Make Mod'}</button>
+                        <button class="member-action-btn danger" onclick="removeMember('${m.id}')">Remove</button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderPendingList() {
+            const panel = document.getElementById('pendingListPanel');
+            if (pendingRequests.length === 0) {
+                panel.innerHTML = `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:20px 0;">No one is waiting for approval right now.</p>`;
+                return;
+            }
+            panel.innerHTML = pendingRequests.map(p => `
+                <div class="member-row">
+                    <img src="${p.pic}" alt="${p.name}">
+                    <div class="member-row-info">
+                        <div class="member-row-name">${p.name}</div>
+                        <div class="member-row-role">Requested to join the group</div>
+                    </div>
+                    <button class="member-action-btn approve" onclick="approveRequest('${p.id}')">Approve</button>
+                    <button class="member-action-btn danger" onclick="rejectRequest('${p.id}')">Decline</button>
+                </div>
+            `).join('');
+        }
+
+        function promoteMember(id) {
+            const m = groupMembers.find(x => x.id === id);
+            if (!m) return;
+            m.role = m.role === 'Moderator' ? 'Member' : 'Moderator';
+            renderMemberList();
+        }
+
+        function removeMember(id) {
+            const idx = groupMembers.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            groupMembers.splice(idx, 1);
+            renderMemberList();
+        }
+
+        function approveRequest(id) {
+            const idx = pendingRequests.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const [approved] = pendingRequests.splice(idx, 1);
+            groupMembers.push({ id: approved.id, name: approved.name, role: 'Member', pic: approved.pic });
+            document.getElementById('pendingCountBadge').textContent = pendingRequests.length;
+            renderPendingList();
+        }
+
+        function rejectRequest(id) {
+            const idx = pendingRequests.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            pendingRequests.splice(idx, 1);
+            document.getElementById('pendingCountBadge').textContent = pendingRequests.length;
+            renderPendingList();
+        }
+
+        // ============================================================
+        // 6. FEED ENGINE — pulls every post card directly from
+        //    post-card-template.js (window.generatePostHTML). This file
+        //    only supplies post DATA in the schema that template expects
+        //    (id, username, userProfilePic, mediaUrl, mediaType, content,
+        //    timestamp, likesCount, commentsCount, pinned, isAdmin,
+        //    translatable, boosted) — the card markup itself is never
+        //    rebuilt here.
+        // ============================================================
+        let feedPosts = [
+            { id: 'p1', username: 'Ali_Developer', isAdmin: true,
+              userProfilePic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+              mediaUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80', mediaType: 'image',
+              baseText: "The full 2026 rollout schedule for the Super Community Platform is locked in. Thank you to every member who contributed to getting us here.",
+              timestamp: new Date(Date.now() - 1000 * 60 * 42), likesCount: 318, commentsCount: 47, pinned: true },
+            { id: 'p2', username: 'MmnAfrah',
+              userProfilePic: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
+              baseText: "This week's admin meeting — which time works best for you?",
+              poll: { options: [{ label: 'Morning (9AM)', votes: 62 }, { label: 'Afternoon (4PM)', votes: 91 }, { label: 'Evening (8PM)', votes: 33 }], myVote: null },
+              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), likesCount: 44, commentsCount: 19 },
+            { id: 'p3', username: 'Zainab_TrustID', translatable: true,
+              userProfilePic: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80',
+              mediaUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80', mediaType: 'image',
+              baseText: 'TrustID Audit has just been renewed for all verified sellers. Sealed iPhone 15 Pro available now —',
+              deal: { title: 'iPhone 15 Pro — Sealed', price: '$830' },
+              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26), likesCount: 89, commentsCount: 11 },
+            { id: 'p4', username: 'Ibrahim_Kano',
+              userProfilePic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+              mediaUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=900&auto=format&fit=crop&q=80', mediaType: 'image',
+              baseText: "Photos from last week's launch event. Thank you to everyone who came out!",
+              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 50), likesCount: 56, commentsCount: 6 }
+        ];
+
+        // Builds the final `content` HTML handed to window.generatePostHTML():
+        // base text + (optional) poll / deal / event widget, freshly
+        // rendered every time so poll votes and other state stay live.
+        function buildPostContent(post) {
+            let html = escapeHtml(post.baseText || '');
+            if (post.feeling) html = `<div class="post-meta-line">${post.feeling.emoji} feeling ${escapeHtml(post.feeling.label)}</div>` + html;
+            if (post.location) html += `<div class="post-meta-line"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(post.location)}</div>`;
+            if (post.taggedUsers && post.taggedUsers.length) html += `<div class="post-meta-line">with ${post.taggedUsers.map(t => escapeHtml(t.name)).join(', ')}</div>`;
+            if (post.sourceMessageId) html += `<div class="post-meta-line nx-from-chat" onclick="event.stopPropagation(); jumpToMessage('${escapeHtml(post.sourceMessageId)}')"><i class="fa-solid fa-comments"></i> From chat · view in chat</div>`;
+            if (post.poll) html += renderPollWidget(post);
+            if (post.deal) html += renderDealWidget(post);
+            if (post.event) html += renderEventWidget(post);
+            return html;
+        }
+
+        function renderPollWidget(post) {
+            const total = post.poll.options.reduce((a, o) => a + o.votes, 0) || 1;
+            return `<div class="poll-wrap">
+                ${post.poll.options.map((o, i) => {
+                    const pct = Math.round(o.votes / total * 100);
+                    const voted = post.poll.myVote === i;
+                    return `<div class="poll-option ${voted ? 'voted' : ''}" onclick="votePoll('${post.id}', ${i})">
+                        <div class="poll-fill" style="width:${post.poll.myVote !== null ? pct : 0}%"></div>
+                        <div class="poll-label-row"><span>${voted ? '✓ ' : ''}${o.label}</span><span>${post.poll.myVote !== null ? pct + '%' : ''}</span></div>
+                    </div>`;
+                }).join('')}
+                <div class="poll-total">${total} vote${total === 1 ? '' : 's'}</div>
+            </div>`;
+        }
+        function votePoll(id, idx) {
+            const post = feedPosts.find(p => p.id === id);
+            if (!post || post.poll.myVote !== null) return;
+            post.poll.options[idx].votes++;
+            post.poll.myVote = idx;
+            renderFeedPosts();
+        }
+
+        function renderDealWidget(post) {
+            return `<div class="deal-card">
+                <div><div class="dc-price">${post.deal.price}</div><div class="dc-label">${post.deal.title} · Escrow Protected</div></div>
+                <button class="deal-escrow-btn" onclick="event.stopPropagation(); buyWithEscrow('${post.id}')">Buy (Escrow)</button>
+            </div>`;
+        }
+        function buyWithEscrow(id) {
+            showToast('Escrow-protected purchase started. Your money is safe until you confirm delivery.', 'fa-vault');
+        }
+
+        function renderEventWidget(post) {
+            return `<div class="deal-card" style="background:rgba(59,130,246,0.08); border-color:rgba(59,130,246,0.3);">
+                <div><div class="dc-price" style="color:#60a5fa; font-size:13.5px;"><i class="fa-solid fa-calendar-days"></i> ${post.event.title}</div><div class="dc-label">${post.event.date}</div></div>
+                <button class="deal-escrow-btn" style="background:#3b82f6; color:#fff;" onclick="event.stopPropagation(); showToast('You are marked as interested in this event.', 'fa-calendar-check')">Interested</button>
+            </div>`;
+        }
+
+        function renderFeedPosts() {
+            if (groupSlug) {
+                renderRealGroupFeedPosts();
+                return;
+            }
+            const container = document.getElementById('timeline-area');
+            nxExpirePinIfNeeded();
+            nxIndexPosts(feedPosts);
+            nxRefreshChatActivity();
+            const nxPinId = pinnedPost ? pinnedPost.id : null;
+            const sorted = feedPosts.map(p => ({ ...p, pinned: p.pinned === true || p.id === nxPinId })).sort((a, b) => (b.pinned === true) - (a.pinned === true) || b.timestamp - a.timestamp);
+            container.innerHTML = sorted.map(post => window.generatePostHTML({ ...post, content: buildPostContent(post) })).join('');
+            if (typeof window.postCard_observeVideos === 'function') {
+                window.postCard_observeVideos();
+            }
+        }
+
+        // Real Firestore-backed Timeline — same global 'posts' collection the
+        // homepage/profile timeline and pages.html use, filtered by groupId.
+        // Scope note: poll/deal/event composer types stay local-only (not
+        // persisted) — real group posts here are plain text + optional image.
+        function renderRealGroupFeedPosts() {
+            if (groupPostsUnsub) return; // already listening
+            groupPostsUnsub = db.collection('posts')
+                .where('groupId', '==', groupSlug)
+                .orderBy('timestamp', 'desc')
+                .onSnapshot(async snapshot => {
+                    const container = document.getElementById('timeline-area');
+                    if (!container) return;
+                    const token = ++groupRenderToken;
+                    if (snapshot.empty) {
+                        nxFeedPostsData = [];
+                        nxIndexPosts([]);
+                        container.innerHTML = '<div style="padding:30px 16px;color:rgba(255,255,255,0.5);font-size:13px;text-align:center;">No posts yet — be the first to post!</div>';
+                        nxAfterPostsChanged();
+                        return;
+                    }
+                    const posts = snapshot.docs
+                        .map(d => Object.assign({}, d.data(), { id: d.id }))
+                        .filter(post => !post.productId);
+
+                    // Debo full name na kowane mai post (idan post din bai riga ya dauke shi ba)
+                    const names = [...new Set(posts.filter(p => !p.fullName).map(p => p.username))];
+                    await Promise.all(names.map(nxGetUserProfile));
+                    if (token !== groupRenderToken || !document.getElementById('timeline-area')) return; // snapshot mafi sabo ya riga ya iso
+
+                    posts.forEach(p => {
+                        const prof = nxProfileCache[p.username] || {};
+                        p.fullName = p.fullName || prof.fullName || '';
+                    });
+                    nxFeedPostsData = posts;
+                    nxIndexPosts(posts);
+                    nxPaintRealFeed();
+                    nxAfterPostsChanged();
+                }, err => console.error('group posts listener error:', err));
+        }
+
+        // ============================================================
+        // 6b. CHAT <-> FEED UNIFICATION LAYER
+        // ------------------------------------------------------------
+        // One group, two views of the same conversation:
+        //  - a feed post can be discussed in chat   (post_ref message)
+        //  - a chat message can be posted to feed   (posts doc with sourceMessageId)
+        //  - one pin for the whole group (a message OR a post), stored on the group doc
+        //  - one search and one Media tab across chat + feed
+        //  - unread badges on the Feed / Chat switch + small "posted in the feed" rows in chat
+        // ============================================================
+        function nxResetUnifiedState() {
+            nxPostIndex = {}; nxFeedPostsData = null; nxPostActivitySig = '';
+            nxPendingPostFocus = null; clearTimeout(nxFocusTimer); nxFocusTimer = null;
+            nxThreads = {}; nxThreadSig = ''; pendingThreadPostId = null; nxThreadUnsubs.forEach(u => { try { u(); } catch (e) {} }); nxThreadUnsubs = [];
+            nxGiMediaItems = []; pendingPostRef = null; pinnedPost = null; pinExpiresAt = 0; pinTargetKind = 'message';
+            window.nxGroupPageActive = true; // post-card-template.js shows the group-only buttons while this is true
+            ['badgeFeed', 'badgeChat'].forEach(id => {
+                const b = document.getElementById(id);
+                if (b) { b.textContent = ''; b.classList.remove('show'); }
+            });
+        }
+
+        function nxPlainText(html) {
+            if (!html) return '';
+            try { return (new DOMParser().parseFromString(String(html), 'text/html').body.textContent || '').replace(/\s+/g, ' ').trim(); }
+            catch (e) { return String(html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); }
+        }
+        function nxShortTitle(p) {
+            const t = p.text || (p.mediaUrl ? (p.mediaType === 'video' ? 'Video' : 'Photo') : 'Post');
+            return t.length > 80 ? t.slice(0, 80) + '…' : t;
+        }
+        function nxIndexPosts(posts) {
+            const idx = {};
+            (posts || []).forEach(p => {
+                const ts = p.timestamp && p.timestamp.toDate ? p.timestamp.toDate() : (p.timestamp ? new Date(p.timestamp) : new Date());
+                const items = typeof window.postCard_normalizeMediaItems === 'function'
+                    ? window.postCard_normalizeMediaItems(p)
+                    : (p.mediaUrl ? [{ url: p.mediaUrl, type: p.mediaType || 'image' }] : []);
+                idx[p.id] = {
+                    id: p.id,
+                    username: p.username || '',
+                    fullName: p.fullName || '',
+                    text: nxPlainText(p.content || p.text || p.baseText || ''),
+                    mediaUrl: items[0] ? items[0].url : null,
+                    mediaType: items[0] ? items[0].type : null,
+                    mediaItems: items,
+                    time: ts,
+                    sourceMessageId: p.sourceMessageId || null
+                };
+            });
+            nxPostIndex = idx;
+        }
+
+        // ---- Real feed paint (pinned post first, "from chat" link, group pin) ----
+        function nxRealPostContent(p) {
+            let html = p.content || p.text || '';
+            if (p.sourceMessageId) {
+                html += `<div class="post-meta-line nx-from-chat" onclick="event.stopPropagation(); jumpToMessage('${escapeHtml(p.sourceMessageId)}')"><i class="fa-solid fa-comments"></i> From chat${p.sourceUsername && p.sourceUsername !== p.username ? ' · @' + escapeHtml(p.sourceUsername) : ''} · view in chat</div>`;
+            }
+            return html;
+        }
+        function nxPaintRealFeed() {
+            const container = document.getElementById('timeline-area');
+            if (!container || !nxFeedPostsData || !nxFeedPostsData.length) return;
+            nxExpirePinIfNeeded();
+            const pinId = pinnedPost ? pinnedPost.id : null;
+            const ordered = nxFeedPostsData
+                .map(p => ({ p: p, pin: !!p.pinned || p.id === pinId }))
+                .sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0)); // stable: newest-first is kept inside each group
+            container.innerHTML = ordered.map(o => {
+                const post = o.p;
+                const pic = (post.userProfilePic && !/dicebear\.com/i.test(post.userProfilePic))
+                    ? post.userProfilePic : NX_BLANK_AVATAR;
+                try {
+                    return window.generatePostHTML(Object.assign({}, post, {
+                        pinned: o.pin,
+                        content: nxRealPostContent(post),
+                        userProfilePic: pic
+                    }));
+                } catch (e) {
+                    // one bad post must never blank the whole feed
+                    console.error('post render failed', post.id, e);
+                    try { return window.generatePostHTML(Object.assign({}, post, { pinned: false, content: escapeHtml(nxPlainText(post.content || post.text || '')), userProfilePic: pic })); }
+                    catch (e2) { return ''; }
+                }
+            }).join('');
+            if (typeof window.postCard_observeVideos === 'function') window.postCard_observeVideos();
+            if (typeof window.postCard_restoreLikes === 'function') window.postCard_restoreLikes(container);
+            updateFeedHeaderState();
+        }
+        function nxRepaintFeedPins() {
+            if (groupSlug) nxPaintRealFeed();
+            else renderFeedPosts();
+        }
+        function nxAfterPostsChanged() {
+            nxUpdateBadges();
+            nxRefreshChatActivity();
+            nxRefreshGiMediaIfOpen();
+            nxSyncThreadListeners();
+            if (nxPendingPostFocus) nxTryFocusPost();
+        }
+
+        // ---- Chat: "posted in the feed" activity rows ----
+        function nxChatPostEvents() {
+            const cutoff = Date.now() - NX_POST_ACTIVITY_DAYS * 86400000;
+            return Object.keys(nxPostIndex).map(k => nxPostIndex[k])
+                .sort((a, b) => +b.time - +a.time)
+                .slice(0, NX_POST_ACTIVITY_MAX)
+                .map(p => {
+                    const cs = nxThreads[p.id] || [];
+                    const lastC = cs.length ? cs[cs.length - 1].time : null;
+                    return Object.assign({}, p, { act: (lastC && +lastC > +p.time) ? lastC : p.time });
+                })
+                .filter(p => p.time && +p.act >= cutoff);
+        }
+        // A feed post + ALL of its comments, shown as one thread inside the chat.
+        // Comments written here go to the post's comments (nexus_contributions), never to chat messages.
+        function nxThreadCardHTML(p) {
+            const id = escapeHtml(p.id);
+            const cs = nxThreads[p.id] || [];
+            // The post itself is an ordinary chat bubble holding the same card as "Discuss in chat"
+            const m = {
+                id: 'post_' + p.id,
+                from: p.username === currentUsername ? 'me' : 'them',
+                name: p.username || 'unknown',
+                role: (groupData && groupData.creatorUsername === p.username) ? 'Owner' : 'Member',
+                roleClass: 'role-member',
+                avatar: '',
+                text: '',
+                time: p.time,
+                reactions: {},
+                status: 'read',
+                postRef: { postId: p.id, username: p.username, fullName: p.fullName, text: p.text, mediaUrl: p.mediaUrl, mediaType: p.mediaType, headLabel: 'Posted in feed' }
+            };
+            const bubble = renderChatMessage(m, false, 'single').replace('class="msg-row', 'class="msg-row nx-post-row');
+            const shown = cs.slice(-3);
+            const rows = shown.map(c => `<div class="ct-comment${c.parentId ? ' reply' : ''}"><b>${c.author === currentUsername ? 'You' : '@' + escapeHtml(c.author)}</b> ${escapeHtml(c.text)}<span class="ct-time">${fmtClockTime(c.time)}</span></div>`).join('');
+            const more = cs.length > 3 ? `<div class="ct-more" onclick="nxFocusPostInFeed('${id}', { comments: true })">View all ${cs.length} comments</div>` : '';
+            // bubble + its comments are ONE unit (same width, same left edge); each part keeps its own background
+            return `<div class="chat-thread ${m.from === 'me' ? 'out' : 'in'}" data-post="${id}">
+                ${bubble}
+                <div class="ct-block">
+                    ${cs.length ? `<div class="ct-comments">${more}${rows}</div>` : ''}
+                    <div class="ct-actions"><span onclick="nxThreadReply('${id}')"><i class="fa-regular fa-comment"></i> ${cs.length ? 'Reply to this post' : 'Comment on this post'}</span></div>
+                </div>
+            </div>`;
+        }
+        function nxRefreshChatActivity() {
+            const sig = nxChatPostEvents().map(p => { const cs = nxThreads[p.id] || []; return p.id + ':' + p.text.length + ':' + (p.mediaUrl ? 1 : 0) + ':' + cs.length + ':' + (cs.length ? cs[cs.length - 1].id : ''); }).join('|');
+            if (sig === nxPostActivitySig) return;
+            nxPostActivitySig = sig;
+            const flow = document.getElementById('chat-flow');
+            if (!flow) return;
+            const nearBottom = flow.scrollHeight - flow.scrollTop - flow.clientHeight < 80;
+            const prev = flow.scrollTop;
+            renderChatFlow();
+            if (!nearBottom) flow.scrollTop = prev; // do not yank someone who is reading older messages
+        }
+        function nxThreadReply(postId) {
+            const p = nxPostIndex[postId];
+            if (!p) return;
+            cancelReply();
+            pendingThreadPostId = postId;
+            document.getElementById('rcName').textContent = 'Comment on post by ' + (p.fullName || ('@' + p.username));
+            document.getElementById('rcText').textContent = p.text || (p.mediaUrl ? (p.mediaType === 'video' ? '🎥 Video' : '📷 Photo') : 'Post');
+            document.getElementById('replyComposerBar').classList.add('active');
+            const di = document.getElementById('dockInput');
+            if (di) { di.placeholder = 'Write a comment…'; di.focus(); }
+        }
+        async function nxSendThreadComment(postId, text) {
+            if (!groupSlug) {
+                (nxThreads[postId] = nxThreads[postId] || []).push({ id: 'l' + Date.now(), author: currentUsername, text: text, parentId: null, time: new Date() });
+                nxRefreshChatActivity();
+                return;
+            }
+            try {
+                const authUser = await nxGrpAuthPromise;
+                if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
+                await db.collection('nexus_contributions').add({
+                    author: currentUsername, text: text, postId: postId, parentId: null,
+                    timestamp: FieldValue.serverTimestamp(), likes: 0
+                });
+            } catch (e) {
+                console.error('comment error:', e);
+                showToast('Could not post the comment — try again', 'fa-triangle-exclamation');
+            }
+        }
+        // one listener per 10 posts (Firestore "in" limit) — keeps every post's comments live inside chat
+        function nxSyncThreadListeners() {
+            if (!groupSlug) return;
+            const ids = Object.keys(nxPostIndex).map(k => nxPostIndex[k]).sort((a, b) => +b.time - +a.time).slice(0, NX_POST_ACTIVITY_MAX).map(p => p.id);
+            const sig = ids.join('|');
+            if (sig === nxThreadSig) return;
+            nxThreadSig = sig;
+            nxThreadUnsubs.forEach(u => { try { u(); } catch (e) {} });
+            nxThreadUnsubs = [];
+            for (let i = 0; i < ids.length; i += 10) {
+                const chunk = ids.slice(i, i + 10);
+                nxThreadUnsubs.push(db.collection('nexus_contributions').where('postId', 'in', chunk).onSnapshot(snap => {
+                    chunk.forEach(id => { nxThreads[id] = []; });
+                    snap.forEach(d => {
+                        const x = d.data();
+                        const t = x.timestamp && x.timestamp.toDate ? x.timestamp.toDate() : new Date();
+                        (nxThreads[x.postId] = nxThreads[x.postId] || []).push({ id: d.id, author: x.author || '', text: x.text || '', parentId: x.parentId || null, time: t });
+                    });
+                    chunk.forEach(id => nxThreads[id].sort((a, b) => +a.time - +b.time));
+                    nxUpdateBadges();
+                    nxRefreshChatActivity();
+                }, err => console.warn('thread listener error:', err && err.message)));
+            }
+        }
+
+        // ---- Chat: post_ref card (a feed post shown inside a chat bubble) ----
+        function nxPostRefCardHTML(ref) {
+            const id = escapeHtml(ref.postId || '');
+            const name = ref.fullName ? escapeHtml(ref.fullName) : '@' + escapeHtml(ref.username || 'unknown');
+            const text = ref.text ? escapeHtml(ref.text.length > 160 ? ref.text.slice(0, 160) + '…' : ref.text) : '';
+            const url = ref.mediaUrl ? escapeHtml(ref.mediaUrl) : '';
+            const thumb = url
+                ? (ref.mediaType === 'video'
+                    ? `<div class="prc-thumb"><video src="${url}#t=0.1" preload="metadata" muted playsinline></video><span class="prc-play"><i class="fa-solid fa-play"></i></span></div>`
+                    : `<div class="prc-thumb"><img src="${url}" alt=""></div>`)
+                : '';
+            return `<div class="post-ref-card" onclick="event.stopPropagation(); nxFocusPostInFeed('${id}')">
+                ${thumb}
+                <div class="prc-body">
+                    <div class="prc-head"><i class="fa-solid fa-newspaper"></i> ${ref.headLabel ? escapeHtml(ref.headLabel) : 'Post by ' + name}</div>
+                    ${text ? `<div class="prc-text">${text}</div>` : ''}
+                    <div class="prc-actions"><span onclick="event.stopPropagation(); nxFocusPostInFeed('${id}')">View post</span><span onclick="event.stopPropagation(); nxFocusPostInFeed('${id}', { comments: true })">Comments</span></div>
+                </div>
+            </div>`;
+        }
+
+        // ---- Feed -> Chat: "Discuss in chat" ----
+        function nxGroupPostDiscuss(postId) {
+            const p = nxPostIndex[postId];
+            if (!p) { showToast('Post is still loading — try again', 'fa-circle-info'); return; }
+            cancelReply();
+            pendingPostRef = {
+                postId: p.id,
+                username: p.username || '',
+                fullName: p.fullName || '',
+                text: (p.text || '').slice(0, 280),
+                mediaUrl: p.mediaUrl || null,
+                mediaType: p.mediaType || null
+            };
+            document.getElementById('rcName').textContent = 'Discussing post by ' + (p.fullName || ('@' + p.username));
+            document.getElementById('rcText').textContent = p.text || (p.mediaUrl ? (p.mediaType === 'video' ? '🎥 Video' : '📷 Photo') : 'Post');
+            document.getElementById('replyComposerBar').classList.add('active');
+            switchMode('chat');
+            setTimeout(() => { const i = document.getElementById('dockInput'); if (i) i.focus(); }, 150);
+        }
+
+        // ---- Chat -> Feed: "Post to feed" (message tray) ----
+        function nxMessageMediaItems(m) {
+            if (m.mediaArr && m.mediaArr.length) return m.mediaArr.map(i => ({ mediaUrl: i.mediaUrl, type: i.type || 'image' })).filter(i => i.mediaUrl);
+            if (m.image) return [{ mediaUrl: m.image, type: 'image' }];
+            if (m.video) return [{ mediaUrl: m.video, type: 'video' }];
+            return [];
+        }
+        function nxCanPostToFeed(m) {
+            if (!m || m.viewOnce || m.voice || m.postRef || m.pendingState) return false;
+            if (m.feedPostId) return true;
+            if (groupSlug && m.from !== 'me' && !isGroupAdmin) return false;
+            return !!((m.text && m.text.trim()) || nxMessageMediaItems(m).length);
+        }
+        async function trayPostToFeed() {
+            const m = chatMessages.find(x => x.id === activeTrayMsgId);
+            closeMsgTray();
+            if (!m) return;
+            if (m.feedPostId) { nxFocusPostInFeed(m.feedPostId); return; }
+            if (!nxCanPostToFeed(m)) { showToast('This message cannot be posted to the feed', 'fa-circle-info'); return; }
+            const items = nxMessageMediaItems(m);
+            const first = items[0] || null;
+            const caption = (m.text || '').trim();
+
+            if (!groupSlug) { // local preview mode
+                const post = { id: 'p' + Date.now(), username: 'You', userProfilePic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80',
+                    baseText: caption, timestamp: new Date(), likesCount: 0, commentsCount: 0, sourceMessageId: m.id };
+                if (first) { post.mediaUrl = first.mediaUrl; post.mediaType = first.type; }
+                if (items.length > 1) post.mediaUrls = items.map(i => ({ url: i.mediaUrl, type: i.type }));
+                feedPosts.unshift(post);
+                m.feedPostId = post.id;
+                renderFeedPosts();
+                renderChatFlow();
+                showToast('Posted to the feed', 'fa-newspaper');
+                return;
+            }
+
+            try {
+                const authUser = await nxGrpAuthPromise;
+                if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
+                const myProfile = await nxGetUserProfile(currentUsername);
+                const doc = {
+                    groupId: groupSlug,
+                    username: currentUsername,
+                    fullName: myProfile.fullName || '',
+                    userProfilePic: NX_BLANK_AVATAR,
+                    content: escapeHtml(caption).replace(/\n/g, '<br>'),
+                    mediaUrl: first ? first.mediaUrl : null,
+                    mediaType: first ? first.type : null,
+                    background: null, taggedUsers: null, location: null, feeling: null, poll: null, deal: null, event: null,
+                    likesCount: 0, commentsCount: 0, pinned: false,
+                    authorUsername: currentUsername,
+                    sourceMessageId: m.id,
+                    sourceUsername: m.name || currentUsername,
+                    timestamp: FieldValue.serverTimestamp()
+                };
+                if (items.length > 1) doc.mediaUrls = items.map(i => ({ url: i.mediaUrl, type: i.type }));
+                const ref = await db.collection('posts').add(doc);
+                m.feedPostId = ref.id;
+                renderChatFlow();
+                groupRef().collection('messages').doc(m.id).update({ feedPostId: ref.id }).catch(e => console.warn('feedPostId link not saved:', e && e.message));
+                showToast('Posted to the feed', 'fa-newspaper');
+            } catch (e) {
+                console.error('trayPostToFeed error:', e);
+                showToast('Could not post to the feed — check Firestore rules for /posts', 'fa-triangle-exclamation');
+            }
+        }
+
+        // ---- Jump to a post in the feed (from chat card, search, pin, media tab...) ----
+        function nxFocusPostInFeed(postId, opts) {
+            if (!postId) return;
+            try { closeChatSearch(); closeGroupInfo(); } catch (e) {}
+            switchMode('feed');
+            nxPendingPostFocus = { id: String(postId), comments: !!(opts && opts.comments), tries: 0 };
+            nxTryFocusPost();
+        }
+        function nxTryFocusPost() {
+            clearTimeout(nxFocusTimer); nxFocusTimer = null;
+            const t = nxPendingPostFocus;
+            if (!t) return;
+            const area = document.getElementById('timeline-area');
+            const card = area ? area.querySelector('.post-card[data-post-id="' + t.id.replace(/"/g, '\\"') + '"]') : null;
+            if (card) {
+                nxPendingPostFocus = null;
+                requestAnimationFrame(() => {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.classList.add('nx-post-flash');
+                    setTimeout(() => card.classList.remove('nx-post-flash'), 2000);
+                    if (t.comments && typeof window.handleCommentBtn === 'function') setTimeout(() => window.handleCommentBtn(t.id), 550);
+                });
+                return;
+            }
+            if (++t.tries > 24) { nxPendingPostFocus = null; showToast('This post is no longer available', 'fa-circle-info'); return; }
+            nxFocusTimer = setTimeout(nxTryFocusPost, 250);
+        }
+
+        // ---- One group-wide pin (message OR post) ----
+        function nxGroupPostPin(postId) {
+            if (!nxCanPin()) return;
+            if (pinnedPost && pinnedPost.id === postId) { nxDoUnpin(); return; }
+            if (!nxPostIndex[postId]) { showToast('Post is still loading — try again', 'fa-circle-info'); return; }
+            openPinDialog(postId, 'post');
+        }
+        function nxApplyGroupPin(item) {
+            const before = (pinnedPost ? 'p:' + pinnedPost.id : '') + '|' + (pinnedMessageId || '');
+            if (item && item.expiresAt && Date.now() > item.expiresAt) item = null;
+            if (!item) { pinnedMessageId = null; pinnedPost = null; pinExpiresAt = 0; }
+            else if (item.kind === 'post') {
+                pinnedMessageId = null;
+                pinnedPost = { id: item.id, title: item.title || 'Post', thumb: item.thumb || '', thumbType: item.thumbType || 'image' };
+                pinExpiresAt = item.expiresAt || 0;
+            } else {
+                pinnedPost = null;
+                pinnedMessageId = item.id;
+                pinExpiresAt = item.expiresAt || 0;
+            }
+            const after = (pinnedPost ? 'p:' + pinnedPost.id : '') + '|' + (pinnedMessageId || '');
+            renderPinnedBar();
+            if (before !== after) nxRepaintFeedPins();
+        }
+        function nxPersistPin() {
+            if (!groupSlug) return; // local preview — nothing to share
+            let item = null;
+            if (pinnedPost) item = { kind: 'post', id: pinnedPost.id, title: pinnedPost.title, thumb: pinnedPost.thumb || '', thumbType: pinnedPost.thumbType || 'image', expiresAt: pinExpiresAt, by: currentUsername };
+            else if (pinnedMessageId) item = { kind: 'message', id: pinnedMessageId, expiresAt: pinExpiresAt, by: currentUsername };
+            groupRef().update({ pinnedItem: item }).catch(e => {
+                console.warn('pin not shared:', e && e.message);
+                showToast('Pinned on this device only — could not share the pin with the group', 'fa-triangle-exclamation');
+            });
+        }
+        function nxPinnedStripHTML() {
+            nxExpirePinIfNeeded();
+            if (!pinnedMessageId) return '';
+            const m = chatMessages.find(x => x.id === pinnedMessageId);
+            if (!m) return '';
+            const label = m.text ? m.text
+                : (m.mediaArr && m.mediaArr.length > 1) ? (m.mediaArr.length + ' Photos')
+                : m.image ? 'Photo' : m.video ? 'Video' : m.voice ? 'Voice message'
+                : m.postRef ? ('Post by @' + (m.postRef.username || '')) : 'Message';
+            return `<div class="feed-pinned-strip" onclick="jumpToMessage('${escapeHtml(m.id)}')">
+                <i class="fa-solid fa-thumbtack"></i>
+                <div class="fps-body"><div class="fps-title">Pinned in chat · ${escapeHtml(m.from === 'me' ? 'You' : (m.name || 'Member'))}</div><div class="fps-text">${escapeHtml(label)}</div></div>
+                <i class="fa-solid fa-comments fps-go"></i>
+            </div>`;
+        }
+        function nxRenderFeedPinnedStrip() {
+            const area = document.getElementById('feed-pin-area');
+            if (area) area.innerHTML = nxPinnedStripHTML();
+        }
+
+        // ---- Unread badges on the Feed / Chat switch ----
+        function nxSeenKey(kind) { return 'nx_grp_seen_' + kind + '_' + (groupSlug || 'demo'); }
+        function nxGetSeen(kind) { try { return +localStorage.getItem(nxSeenKey(kind)) || 0; } catch (e) { return 0; } }
+        function nxSetSeen(kind, ts) { try { localStorage.setItem(nxSeenKey(kind), String(ts || Date.now())); } catch (e) {} }
+        function nxCurrentMode() {
+            const cf = document.getElementById('chat-flow');
+            return (cf && cf.style.display === 'none') ? 'feed' : 'chat';
+        }
+        function nxSetBadge(el, n) {
+            el.textContent = n > 9 ? '9+' : (n > 0 ? String(n) : '');
+            el.classList.toggle('show', n > 0);
+        }
+        function nxUpdateBadges() {
+            const bf = document.getElementById('badgeFeed'), bc = document.getElementById('badgeChat');
+            if (!bf || !bc) return;
+            const mode = nxCurrentMode();
+            const now = Date.now();
+            let chatSeen = nxGetSeen('chat'), feedSeen = nxGetSeen('feed');
+            if (!chatSeen) { chatSeen = now; nxSetSeen('chat', now); }   // first ever visit: nothing is "new"
+            if (!feedSeen) { feedSeen = now; nxSetSeen('feed', now); }
+            let nChat = 0, nFeed = 0;
+            if (mode === 'chat') nxSetSeen('chat', now);
+            else {
+                nChat = chatMessages.filter(m => m.from === 'them' && +m.time > chatSeen).length;
+                Object.keys(nxThreads).forEach(id => nxThreads[id].forEach(c => { if (c.author !== currentUsername && +c.time > chatSeen) nChat++; }));
+            }
+            if (mode === 'feed') nxSetSeen('feed', now);
+            else nFeed = Object.keys(nxPostIndex).map(k => nxPostIndex[k]).filter(p => p.username !== currentUsername && +p.time > feedSeen).length;
+            nxSetBadge(bc, nChat);
+            nxSetBadge(bf, nFeed);
+        }
+
+        // ---- Group Info > Media: photos/videos from chat AND feed ----
+        function nxCollectGroupMedia() {
+            const out = [];
+            chatMessages.forEach(m => {
+                if (m.viewOnce) return;
+                nxMessageMediaItems(m).forEach((it, i) => out.push({ src: 'chat', id: m.id, idx: i, type: it.type, url: it.mediaUrl, time: m.time }));
+            });
+            Object.keys(nxPostIndex).forEach(k => {
+                const p = nxPostIndex[k];
+                (p.mediaItems || []).forEach((it, i) => out.push({ src: 'post', id: p.id, idx: i, type: it.type || 'image', url: it.url, time: p.time }));
+            });
+            out.sort((a, b) => +b.time - +a.time);
+            return out;
+        }
+        function nxRenderGiMedia() {
+            const grid = document.getElementById('giMediaGrid');
+            if (!grid) return;
+            const items = nxCollectGroupMedia();
+            if (!items.length && !groupSlug) return; // local preview keeps its sample photos
+            nxGiMediaItems = items;
+            if (!items.length) {
+                grid.innerHTML = '<div class="gi-empty-tab" style="grid-column:1/-1;"><i class="fa-solid fa-image" style="font-size:22px; display:block; margin-bottom:10px; opacity:0.5;"></i>No media shared in this group yet.</div>';
+                return;
+            }
+            grid.innerHTML = items.map((it, n) => `<div class="gi-media-cell" onclick="nxOpenGiMedia(${n})">${
+                it.type === 'video'
+                    ? `<video src="${escapeHtml(it.url)}#t=0.1" preload="metadata" muted playsinline></video><span class="gmc-vid"><i class="fa-solid fa-video"></i></span>`
+                    : `<img src="${escapeHtml(it.url)}" alt="" loading="lazy">`
+            }${it.src === 'post' ? '<span class="gmc-tag">POST</span>' : ''}</div>`).join('');
+        }
+        function nxRefreshGiMediaIfOpen() {
+            const panel = document.getElementById('giPanelMedia');
+            if (panel && panel.classList.contains('active')) nxRenderGiMedia();
+        }
+        function nxOpenGiMedia(n) {
+            const it = nxGiMediaItems[n];
+            if (!it) return;
+            closeGroupInfo();
+            if (it.src === 'chat') { switchMode('chat'); setTimeout(() => openMediaViewer(it.id, it.idx), 120); }
+            else nxFocusPostInFeed(it.id);
+        }
+
+        // ---- composer: creates a new post using the SAME schema above,
+        //      then hands it straight to window.generatePostHTML() ----
+       // ---- composer state ----
+        let composerType = 'text';
+        let composerSelectedBg = 'default';
+        let composerTaggedUsers = [];
+        let composerLocation = '';
+        let composerFeeling = null;
+        let composerSelectedGroups = new Set();
+        let addGroupsCache = null;
+
+        const feelingOptions = [
+            { emoji: '😊', label: 'happy' }, { emoji: '🥰', label: 'loved' }, { emoji: '😢', label: 'sad' },
+            { emoji: '🎉', label: 'celebrating' }, { emoji: '💪', label: 'motivated' }, { emoji: '😴', label: 'tired' },
+            { emoji: '🙏', label: 'grateful' }, { emoji: '🔥', label: 'excited' }, { emoji: '🤔', label: 'thoughtful' }
+        ];
+
+        function openComposer(type) {
+    document.getElementById('composerUserName').textContent = groupSlug ? currentUsername : 'You';
+    document.getElementById('composerAvatar').removeAttribute('src');
+           document.getElementById('composerPage').classList.add('active');
+            if (type) setComposerType(type);
+            initComposerBgScroll();
+            setTimeout(() => document.getElementById('composerText').focus(), 150);
+        }
+        function closeComposer() {
+            document.getElementById('composerPage').classList.remove('active');
+            document.getElementById('composerText').value = '';
+            document.getElementById('composerLocationInput').value = '';
+            document.getElementById('composerLocationField').classList.remove('active');
+            composerTaggedUsers = []; composerLocation = ''; composerFeeling = null;
+            composerSelectedGroups = new Set();
+            document.getElementById('cpGroupCountBadge').textContent = '0';
+            document.getElementById('cpGroupCountBadge').classList.remove('show');
+            selectBgSwatch('default', document.querySelector('.composer-bg-swatch[data-bg="default"]'));
+            removeComposerMedia();
+            renderComposerMetaChips();
+            setComposerType('text');
+        }
+        function setComposerType(type) {
+            composerType = type;
+            ['Poll', 'Deal', 'Event', 'Location'].forEach(f => {
+                const field = document.getElementById('composer' + f + 'Field');
+                if (field) field.classList.toggle('active', f.toLowerCase() === type);
+            });
+            validateComposer();
+        }
+        function validateComposer() {
+    const text = document.getElementById('composerText').value.trim();
+    const isEmpty = text.length === 0;
+    document.getElementById('composerPostBtn').disabled = isEmpty;
+    document.getElementById('composerPostBtnTop').disabled = isEmpty;
+        }
+        function initComposerBgScroll() {
+            const row = document.getElementById('composerBgRow');
+            const backBtn = document.getElementById('composerBgBackBtn');
+            row.onscroll = () => backBtn.classList.toggle('show', row.scrollLeft > 20);
+        }
+        function scrollBgRowToStart() {
+            document.getElementById('composerBgRow').scrollTo({ left: 0, behavior: 'smooth' });
+        }
+        window.currentUserIsPremium = window.currentUserIsPremium || false; // TODO: wire to real subscription/tier field on the user doc
+        const composerBgMap = {
+            grad1: 'linear-gradient(135deg,#7b2ff7,#f107a3)', grad2: 'linear-gradient(135deg,#ff416c,#ff4b2b)',
+            grad3: 'linear-gradient(135deg,#0f0c29,#302b63,#24243e)', grad4: 'linear-gradient(135deg,#4b1248,#f0729b)',
+            grad5: 'linear-gradient(135deg,#8e2de2,#4a00e0)', grad6: 'linear-gradient(135deg,#f7971e,#ffd200)',
+            grad7: 'linear-gradient(135deg,#00c6ff,#0072ff)', grad8: 'linear-gradient(180deg,#1a1006,#7a5210,#ffd76a)',
+            grad9: 'linear-gradient(135deg,#11998e,#38ef7d)', grad10: 'linear-gradient(135deg,#ee0979,#ff6a00)',
+            grad11: 'linear-gradient(135deg,#360033,#0b8793)', grad12: 'linear-gradient(135deg,#1e3c72,#2a5298)',
+            grad13: 'linear-gradient(135deg,#e53935,#e35d5b)',
+            prem1: 'linear-gradient(135deg,#ffd700,#ff8c00,#8b0000)', prem2: 'linear-gradient(135deg,#c0c0c0,#8a2be2,#000000)',
+            prem3: 'linear-gradient(135deg,#00f5a0,#00d9f5,#7000ff)'
+        };
+        function selectBgSwatch(id, el, isPremium) {
+            if (isPremium && !window.currentUserIsPremium) {
+                showToast('This background is for Premium members only', 'fa-crown');
+                return;
+            }
+            composerSelectedBg = id;
+            document.querySelectorAll('.composer-bg-swatch').forEach(s => s.classList.remove('active'));
+            if (el) el.classList.add('active');
+            const ta = document.getElementById('composerText');
+            if (id === 'default') {
+                ta.classList.remove('bg-mode');
+                ta.style.background = 'transparent';
+            } else {
+                ta.classList.add('bg-mode');
+                ta.style.background = composerBgMap[id] || 'transparent';
+            }
+        }
+        function renderComposerMetaChips() {
+            const row = document.getElementById('composerMetaChipRow');
+            let html = '';
+            if (composerFeeling) html += `<div class="cmc-chip">${composerFeeling.emoji} feeling ${composerFeeling.label}<i class="fa-solid fa-xmark cmc-remove" onclick="removeFeelingChip()"></i></div>`;
+            if (composerLocation) html += `<div class="cmc-chip"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(composerLocation)}<i class="fa-solid fa-xmark cmc-remove" onclick="removeLocationChip()"></i></div>`;
+            composerTaggedUsers.forEach(t => {
+                html += `<div class="cmc-chip"><i class="fa-solid fa-user-tag"></i> ${escapeHtml(t.name)}<i class="fa-solid fa-xmark cmc-remove" onclick="removeTagChip('${t.id}')"></i></div>`;
+            });
+            row.innerHTML = html;
+        }
+        // ---- Tag people ----
+        function openTagPicker() {
+            const pool = groupSlug
+                ? groupMembers.filter(m => m.name !== currentUsername)
+                : groupMembers;
+            document.getElementById('tagPickerBody').innerHTML = pool.length ? pool.map(m => {
+                const tagged = composerTaggedUsers.some(t => t.id === m.id);
+                return `<div class="invite-row">
+                    <img src="${m.pic}">
+                    <div class="ir-name">${escapeHtml(m.name)}</div>
+                    <button class="ir-invite-btn ${tagged ? 'invited' : ''}" onclick="toggleTagUser('${m.id}', '${escapeHtml(m.name).replace(/'/g, "\\'")}', '${m.pic}', this)">${tagged ? 'Tagged' : 'Tag'}</button>
+                </div>`;
+            }).join('') : `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:40px 0;">No members to tag yet</p>`;
+            openSheetEl('tagPickerSheet');
+        }
+        function toggleTagUser(id, name, pic, btn) {
+            const idx = composerTaggedUsers.findIndex(t => t.id === id);
+            if (idx > -1) {
+                composerTaggedUsers.splice(idx, 1);
+                btn.textContent = 'Tag'; btn.classList.remove('invited');
+            } else {
+                composerTaggedUsers.push({ id, name, pic });
+                btn.textContent = 'Tagged'; btn.classList.add('invited');
+            }
+            renderComposerMetaChips();
+        }
+        function removeTagChip(id) {
+            composerTaggedUsers = composerTaggedUsers.filter(t => t.id !== id);
+            renderComposerMetaChips();
+        }
+        // ---- Feeling / activity ----
+        function openFeelingPicker() {
+            document.getElementById('feelingGrid').innerHTML = feelingOptions.map(f => `
+                <div class="feeling-item ${composerFeeling && composerFeeling.label === f.label ? 'active' : ''}" onclick="selectFeeling('${f.emoji}', '${f.label}')">
+                    <span class="fi-emoji">${f.emoji}</span><span class="fi-label">${f.label}</span>
+                </div>`).join('');
+            openSheetEl('feelingPickerSheet');
+        }
+        function selectFeeling(emoji, label) {
+            composerFeeling = { emoji, label };
+            closeSheet('feelingPickerSheet');
+            renderComposerMetaChips();
+        }
+        function removeFeelingChip() { composerFeeling = null; renderComposerMetaChips(); }
+        // ---- Location ----
+        function toggleLocationField() {
+            const field = document.getElementById('composerLocationField');
+            field.classList.toggle('active');
+            if (field.classList.contains('active')) document.getElementById('composerLocationInput').focus();
+        }
+        function updateLocationChip() {
+            composerLocation = document.getElementById('composerLocationInput').value.trim();
+            renderComposerMetaChips();
+        }
+        function removeLocationChip() {
+            composerLocation = '';
+            document.getElementById('composerLocationInput').value = '';
+            document.getElementById('composerLocationField').classList.remove('active');
+            renderComposerMetaChips();
+        }
+        // ---- Add groups (real data: users/{me}/myGroups) ----
+        async function openAddGroupsOverlay() {
+            document.getElementById('addGroupsOverlay').classList.add('active');
+            if (addGroupsCache) { renderAddGroupsList(addGroupsCache); return; }
+            try {
+                const authUser = await nxGrpAuthPromise;
+                if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
+                const mySnap = await db.collection('users').doc(currentUsername).collection('myGroups').get();
+                const slugs = mySnap.docs.map(d => d.id).filter(s => s !== groupSlug);
+                const groupDocs = await Promise.all(slugs.map(s => db.collection('groups').doc(s).get()));
+                addGroupsCache = groupDocs.filter(d => d.exists).map(d => ({
+                    slug: d.id,
+                    name: d.data().name || d.id,
+                    avatarUrl: d.data().avatarUrl || 'https://api.dicebear.com/7.x/shapes/svg?seed=' + encodeURIComponent(d.id),
+                    memberCount: d.data().memberCount || 0
+                }));
+                renderAddGroupsList(addGroupsCache);
+            } catch (e) {
+                console.error('openAddGroupsOverlay error:', e);
+                document.getElementById('addGroupsListBody').innerHTML = `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:40px 0;">Could not load your groups</p>`;
+            }
+        }
+        function renderAddGroupsList(list) {
+            document.getElementById('addGroupsListBody').innerHTML = list.length ? list.map(g => `
+                <div class="cgo-row">
+                    <img src="${g.avatarUrl}">
+                    <div class="cgo-info">
+                        <div class="cgo-name">${escapeHtml(g.name)}</div>
+                        <div class="cgo-meta">${g.memberCount} member${g.memberCount === 1 ? '' : 's'}</div>
+                    </div>
+                    <input type="checkbox" ${composerSelectedGroups.has(g.slug) ? 'checked' : ''} onchange="toggleGroupCheckbox('${g.slug}')">
+                </div>`).join('') : `<p style="color:var(--text-sub); font-size:12.5px; text-align:center; padding:40px 0;">You are not a member of any other groups yet</p>`;
+        }
+        function toggleGroupCheckbox(slug) {
+            if (composerSelectedGroups.has(slug)) composerSelectedGroups.delete(slug);
+            else composerSelectedGroups.add(slug);
+        }
+        function closeAddGroupsOverlay() {
+            document.getElementById('addGroupsOverlay').classList.remove('active');
+        }
+        function saveGroupSelection() {
+            const count = composerSelectedGroups.size;
+            const badge = document.getElementById('cpGroupCountBadge');
+            badge.textContent = count;
+            badge.classList.toggle('show', count > 0);
+            closeAddGroupsOverlay();
+        }
+        // ---- submit ----
+        // ---- Photo/Video — real device gallery + Firebase Storage upload ----
+        let composerUploadedMediaUrl = null;
+        let composerUploadedMediaType = null;
+        function triggerGalleryPicker() {
+            document.getElementById('composerFileInput').click();
+        }
+        async function handleComposerFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const isVideo = file.type.startsWith('video/');
+            const preview = document.getElementById('composerMediaPreview');
+            const img = document.getElementById('composerMediaImg');
+            const vid = document.getElementById('composerMediaVideo');
+            const localUrl = URL.createObjectURL(file);
+            preview.classList.add('active');
+            if (isVideo) {
+                vid.src = localUrl; vid.style.display = 'block'; img.style.display = 'none';
+            } else {
+                img.src = localUrl; img.style.display = 'block'; vid.style.display = 'none';
+            }
+            document.getElementById('cmpUploadingBar').style.display = 'flex';
+            try {
+                const authUser = await nxGrpAuthPromise;
+                if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
+                const idToken = await authUser.getIdToken();
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('type', 'posts');
+                formData.append('username', currentUsername);
+                const res = await fetch(MEDIA_UPLOAD_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + idToken },
+                    body: formData
+                });
+                const rawText = await res.text();
+                console.log('UPLOAD RESPONSE', res.status, rawText.slice(0, 300));
+                let data;
+                try { data = JSON.parse(rawText); }
+                catch (parseErr) { throw new Error('Server returned HTML (status ' + res.status + ')'); }
+                if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+                composerUploadedMediaUrl = data.url || data.mediaUrl || data.secure_url || null;
+                if (!composerUploadedMediaUrl) throw new Error('No URL in server response');
+                composerUploadedMediaType = isVideo ? 'video' : 'image';
+               validateComposer();
+            } catch (e) {
+                console.error('media upload error:', e);
+                showToast('Upload failed: ' + e.message, 'fa-triangle-exclamation');
+                removeComposerMedia();
+            } finally {
+                document.getElementById('cmpUploadingBar').style.display = 'none';
+            }
+        }
+        function removeComposerMedia() {
+            composerUploadedMediaUrl = null;
+            composerUploadedMediaType = null;
+            document.getElementById('composerFileInput').value = '';
+            document.getElementById('composerMediaPreview').classList.remove('active');
+            document.getElementById('composerMediaImg').style.display = 'none';
+            document.getElementById('composerMediaVideo').style.display = 'none';
+        }
+        // ---- submit ----
+        function submitComposer() {
+            const text = document.getElementById('composerText').value.trim();
+            if (!text) return;
+
+            const extra = {
+                background: composerSelectedBg !== 'default' ? composerSelectedBg : null,
+                taggedUsers: composerTaggedUsers,
+                location: composerLocation || null,
+                feeling: composerFeeling
+            };
+
+            if (groupSlug && composerUploadedMediaUrl) {
+                submitRealGroupPost(text, composerUploadedMediaUrl, extra, composerUploadedMediaType);
+                return;
+            }
+            if (groupSlug && composerType === 'text') {
+                submitRealGroupPost(text, null, extra);
+                return;
+            }
+            if (groupSlug && composerType === 'poll') {
+                const opts = [document.getElementById('pollOpt1').value, document.getElementById('pollOpt2').value, document.getElementById('pollOpt3').value].filter(Boolean);
+                extra.poll = { options: (opts.length ? opts : ['Yes', 'No']).map(l => ({ label: l, votes: 0 })), voters: [] };
+                submitRealGroupPost(text, null, extra);
+                return;
+            }
+            if (groupSlug && composerType === 'deal') {
+                extra.deal = { title: document.getElementById('dealTitle').value || 'New item', price: document.getElementById('dealPrice').value || '—' };
+                submitRealGroupPost(text, null, extra);
+                return;
+            }
+            if (groupSlug && composerType === 'event') {
+                extra.event = { title: document.getElementById('eventTitle').value || 'New Event', date: document.getElementById('eventDate').value || '' };
+                submitRealGroupPost(text, null, extra);
+                return;
+            }
+
+            const post = {
+                id: 'p' + Date.now(),
+                username: 'You',
+                userProfilePic: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80',
+                baseText: text,
+                timestamp: new Date(),
+                likesCount: 0,
+                commentsCount: 0,
+                background: extra.background,
+                taggedUsers: extra.taggedUsers.length ? extra.taggedUsers : null,
+                location: extra.location,
+                feeling: extra.feeling
+            };
+            if (composerUploadedMediaUrl) {
+                post.mediaUrl = composerUploadedMediaUrl;
+                post.mediaType = composerUploadedMediaType;
+            }
+            if (composerType === 'poll') {
+                const opts = [document.getElementById('pollOpt1').value, document.getElementById('pollOpt2').value, document.getElementById('pollOpt3').value].filter(Boolean);
+                post.poll = { options: (opts.length ? opts : ['Yes', 'No']).map(l => ({ label: l, votes: 0 })), myVote: null };
+            } else if (composerType === 'deal') {
+                post.deal = { title: document.getElementById('dealTitle').value || 'New item', price: document.getElementById('dealPrice').value || '—' };
+            } else if (composerType === 'event') {
+                post.event = { title: document.getElementById('eventTitle').value || 'New Event', date: document.getElementById('eventDate').value || '' };
+            }
+            feedPosts.unshift(post);
+            closeComposer();
+            renderFeedPosts();
+            showToast('Your post is live!', 'fa-circle-check');
+        }
+        async function submitRealGroupPost(text, mediaUrl, extra = {}, mediaType) {
+            try {
+                const authUser = await nxGrpAuthPromise;
+                if (!authUser) { showToast('You need to be signed in', 'fa-triangle-exclamation'); return; }
+                const targetGroups = [groupSlug, ...composerSelectedGroups];
+                const myProfile = await nxGetUserProfile(currentUsername);
+                await Promise.all(targetGroups.map(gid => db.collection('posts').add({
+                    groupId: gid,
+                    username: currentUsername,
+                    fullName: myProfile.fullName || '',
+                    userProfilePic: NX_BLANK_AVATAR,
+                    content: text,
+                    mediaUrl: mediaUrl || null,
+                    mediaType: mediaUrl ? (mediaType || 'image') : null,
+                    background: extra.background || null,
+                    taggedUsers: extra.taggedUsers && extra.taggedUsers.length ? extra.taggedUsers : null,
+                    location: extra.location || null,
+                    feeling: extra.feeling || null,
+                    poll: extra.poll || null,
+                    deal: extra.deal || null,
+                    event: extra.event || null,
+                    likesCount: 0,
+                    commentsCount: 0,
+                    pinned: false,
+                    authorUsername: currentUsername,
+                    timestamp: FieldValue.serverTimestamp()
+                })));
+                closeComposer();
+                removeComposerMedia();
+                if (targetGroups.length > 1) showToast('Posted to ' + targetGroups.length + ' groups', 'fa-circle-check');
+            } catch (e) {
+                console.error('submitRealGroupPost error:', e);
+                showToast('Could not publish — check Firestore rules for /posts', 'fa-triangle-exclamation');
+            }
+        }
+
+        // ============================================================
+        // 7. STORY / HIGHLIGHT VIEWER
+        // ============================================================
+        const groupHighlights = [
+            { img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80', label: 'Launch' },
+            { img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=900&auto=format&fit=crop&q=80', label: 'Deals' },
+            { img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&auto=format&fit=crop&q=80', label: 'Events' },
+            { img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80', label: 'Tech' }
+        ];
+        let currentStoryIndex = 0;
+
+        function viewGroupHighlight(index) {
+            currentStoryIndex = index;
+            renderGroupStory();
+            document.getElementById('storyViewerOverlay').style.display = 'block';
+        }
+        function renderGroupStory() {
+            const story = groupHighlights[currentStoryIndex];
+            document.getElementById('storyUsername').textContent = story.label + ' — Northern Innovators Hub 2026';
+            document.getElementById('storyTime').textContent = fmtRelative(new Date(Date.now() - 1000*60*60*(currentStoryIndex+2)));
+            const wrap = document.getElementById('storyMediaWrap');
+            const existing = wrap.querySelector('.story-slide');
+            if (existing) existing.remove();
+            const slide = document.createElement('div');
+            slide.className = 'story-slide';
+            slide.innerHTML = `<img src="${story.img}">`;
+            wrap.insertBefore(slide, wrap.firstChild);
+        }
+        function nextGroupStory() {
+            if (currentStoryIndex < groupHighlights.length - 1) { currentStoryIndex++; renderGroupStory(); }
+            else closeGroupStoryViewer();
+        }
+        function prevGroupStory() {
+            if (currentStoryIndex > 0) { currentStoryIndex--; renderGroupStory(); }
+        }
+        function closeGroupStoryViewer() {
+            document.getElementById('storyViewerOverlay').style.display = 'none';
+        }
+
+        // ============================================================
+        // 8. FEED HEADER TRANSPARENCY ON SCROLL
+        // ============================================================
+        function nxGroupHeaderEl() {
+            // Yana daukar header din wannan group KAI TSAYE (ba document.querySelector('header')
+            // ba, wanda a SPA zai iya kama wani header na daban).
+            const left = document.getElementById('headerLeftFeed');
+            return (left && left.closest('header')) || document.querySelector('header');
+        }
+        function updateFeedHeaderState() {
+            const header = nxGroupHeaderEl();
+            const chatFlow = document.getElementById('chat-flow');
+            if (!header || !chatFlow) return;
+            if (chatFlow.style.display !== 'none') return; // chat mode — ba a taba header ba
+
+            // Header yana bayyana ne KAWAI idan sunan group (a cikin feed) ya kai gefen
+            // header din — ba lambar pixel ta kafaffiya ba, don haka yana aiki ko wane
+            // element ne ke scrolling (window ko feedView).
+            const nameEl = document.getElementById('groupNameFeed');
+            let pastName;
+            if (nameEl && nameEl.offsetParent !== null) {
+                pastName = nameEl.getBoundingClientRect().top <= header.offsetHeight;
+            } else {
+                const feedView = document.getElementById('feedView');
+                const y = Math.max((feedView && feedView.scrollTop) || 0, window.scrollY || 0, document.documentElement.scrollTop || 0);
+                pastName = y >= 120;
+            }
+            header.classList.toggle('header-feed-transparent', !pastName);
+        }
+
+        // ============================================================
+        // 9. INIT / DESTROY  (SPA lifecycle — router.js calls these)
+        // ------------------------------------------------------------
+        // Everything that used to run once at native <script> execution
+        // time now runs inside initPage(), so it re-runs correctly every
+        // time the router navigates INTO group.html (including switching
+        // straight from one ?group=slug to another without a full reload).
+        // destroyPage() undoes anything that would otherwise leak or go
+        // stale (Firestore listeners, window/document listeners, timers).
+        // ============================================================
+        function onFeedScrollNX() { updateFeedHeaderState(); }
+        function onWindowScrollNX() { updateFeedHeaderState(); }
+        // Capture-phase: scroll events ba sa bubbling, don haka wannan yana kama scroll
+        // na KOWANE element (window, feedView, ko wani wrapper) — ko da element din an
+        // maye gurbinsa bayan SPA navigation.
+        function onAnyScrollCaptureNX() { updateFeedHeaderState(); }
+        let nxInitTimers = [];
+        function onPageShowNX() { updateFeedHeaderState(); }
+        function onVisibilityChangeNX() { if (!document.hidden) updateFeedHeaderState(); }
+
+        function nxEnsureMediaUpload() {
+            const ready = () => {
+                window.mediaUploadAdapter = {
+                    inputEl: () => document.getElementById('dockInput'),
+                    roomId: () => groupSlug || 'group',
+                    recipientLabel: () => (groupData && groupData.name) || 'Group',
+                    send: (payload) => (groupSlug ? sendRealGroupMessage(payload) : Promise.resolve(pushOutgoingMessage(payload))),
+                    addPending: (info) => addPendingMedia(info)
+                };
+                if (typeof initMediaUpload === 'function') initMediaUpload();
+                else showToast('Photo module did not load', 'fa-triangle-exclamation');
+            };
+            if (typeof initMediaUpload === 'function') { ready(); return; }
+            const s = document.createElement('script');
+            s.src = 'media-upload.js?v=' + Date.now();
+            s.onload = ready;
+            s.onerror = ready;
+            document.body.appendChild(s);
+        }
+       function nxPatchUi() {
+            const rb = document.getElementById('rotateBtnCap');
+            if (rb && !rb.dataset.svg) {
+                rb.dataset.svg = '1';
+                rb.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7.47 21.49C4.2 19.93 1.86 16.76 1.5 13H0c.51 6.16 5.66 11 11.95 11 .23 0 .44-.02.66-.03L8.8 20.15l-1.33 1.34zM12.05 0c-.23 0-.44.02-.66.04l3.81 3.81 1.33-1.33C19.8 4.07 22.14 7.24 22.5 11H24c-.51-6.16-5.66-11-11.95-11zM16 14h2V8c0-1.11-.9-2-2-2h-6v2h6v6zm-8 2V4H6v2H4v2h2v8c0 1.1.89 2 2 2h8v2h2v-2h2v-2H8z"/></svg>';
+            }
+            nxEnsurePinUi();
+            // long-press must open OUR menu only: no browser text-selection / copy-share card
+            const fl = document.getElementById('chat-flow');
+            if (fl && !fl.dataset.noctx) { fl.dataset.noctx = '1'; fl.addEventListener('contextmenu', (e) => e.preventDefault()); }
+        }
+
+        function initPage() {
+            // Re-derive per-navigation identity fresh every time.
+            currentUsername = localStorage.getItem('nexus_user_session');
+            if (!currentUsername) { window.location.href = 'login.html'; return; }
+            // Share duk scroll lock da page na baya ya bari — yanzu, da kuma bayan
+            // router ya gama saka HTML/CSS (rAF + 350ms), don kada wani abu ya sake kulle shi.
+            nxUnlockScroll();
+            nxInitTimers.forEach(clearTimeout); nxInitTimers = [];
+            requestAnimationFrame(() => { nxUnlockScroll(); updateFeedHeaderState(); });
+            nxInitTimers.push(setTimeout(() => { nxUnlockScroll(); updateFeedHeaderState(); }, 350));
+            nxInitTimers.push(setTimeout(updateFeedHeaderState, 900));
+            nxInitTimers.push(setTimeout(() => nxDiagnoseScroll('after-init'), 1500));
+            nxPrepareNeuralMenu();
+            nxPatchUi();
+            nxResetUnifiedState();
+
+            nxGrpAuthPromise = new Promise(resolve => { nxGrpAuthResolve = resolve; });
+            auth.onAuthStateChanged(user => { nxGrpAuthResolve(user); });
+
+            groupSlug = new URLSearchParams(window.location.search).get('group');
+            document.documentElement.classList.toggle('gi-loading', !!groupSlug);
+
+            // Reset per-group/per-visit state so leftovers from a previous
+            // group (or a previous visit) can't bleed into this one.
+            groupData = null;
+            isGroupAdmin = false;
+            groupFeedLoaded = false;
+            feedRendered = false;
+            replyTarget = null;
+            pinnedMessageId = null;
+            activeTrayMsgId = null;
+            typingIndicatorActive = false;
+            currentEmojiCat = 0;
+            groupMuted = false;
+            currentThemeIndex = 0;
+            composerType = 'text';
+            composerSelectedBg = 'default';
+            composerTaggedUsers = [];
+            composerLocation = '';
+            composerFeeling = null;
+            composerSelectedGroups = new Set();
+            addGroupsCache = null;
+            composerUploadedMediaUrl = null;
+            composerUploadedMediaType = null;
+            currentStoryIndex = 0;
+            if (recTimer) { clearInterval(recTimer); recTimer = null; }
+            recSeconds = 0;
+
+            document.addEventListener('scroll', onAnyScrollCaptureNX, { passive: true, capture: true });
+            window.addEventListener('scroll', onWindowScrollNX, { passive: true });
+            // Hardening: re-check header state whenever the tab/page becomes visible
+            // again (covers browser tab-resume / back-forward-cache restores, where
+            // no scroll event fires but the header could otherwise show stale state).
+            window.addEventListener('pageshow', onPageShowNX);
+            document.addEventListener('visibilitychange', onVisibilityChangeNX);
+
+            // initial paint: chat is the default view, render it through the unified renderer.
+            // Skip the demo/hardcoded messages when this is a REAL group (?group=slug) —
+            // only show them in local preview mode so real groups don't flash demo content
+            // before Firestore data loads.
+            if (!groupSlug) {
+                renderChatFlow();
+            } else {
+                chatMessages = [];
+            }
+            if (!groupSlug) { nxIndexPosts(feedPosts); nxRefreshChatActivity(); }
+            initRealGroup();
+            // one realistic "is typing…" demo cycle so the indicator is visibly wired up
+            // — only in local preview (no ?group=); a real group shouldn't get a fake message injected.
+            
+     if (!groupSlug) {
+                demoTypingTimeout = setTimeout(() => {
+                    const cf = document.getElementById('chat-flow');
+                    if (cf && cf.style.display !== 'none') {
+                        simulateIncomingTyping();
+                        demoMsgTimeout = setTimeout(() => {
+                            stopIncomingTyping();
+                            chatMessages.push({ id: 'c' + Date.now(), from: 'them', name: 'Zainab_TrustID', role: 'Member', roleClass: 'role-member', verified: false,
+                                avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&auto=format&fit=crop&q=80',
+                                text: 'This update looks fantastic — great work everyone! 🔥', time: new Date(), reactions: {}, starred: false });
+                            renderChatFlow();
+                        }, 2600);
+                    }
+                }, 4000);
+     }
+            const savedMode = localStorage.getItem('nexus_group_mode');
+            if (savedMode === 'feed') {
+                switchMode('feed');
+            }
+
+            // Zuwa daga chats.html avatar-popup (message icon) tare da
+            // ?autofocus=1 — wannan yana doke saved 'nexus_group_mode' din
+            // (ko da an bar Feed tab a baya), yana tilasta Chat mode, sannan
+            // ya bude keyboard din kai tsaye akan typing bar (#dockInput).
+            if (new URLSearchParams(window.location.search).get('autofocus') === '1') {
+                switchMode('chat');
+                requestAnimationFrame(() => {
+                    const dockInput = document.getElementById('dockInput');
+                    if (dockInput) dockInput.focus();
+                });
+            }
+        nxEnsureMediaUpload();
+        }
+         function destroyPage() {
+            closeMediaViewer();
+            if (groupUnsub) { groupUnsub(); groupUnsub = null; }
+            if (groupPostsUnsub) { groupPostsUnsub(); groupPostsUnsub = null; }
+            if (groupMessagesUnsub) { groupMessagesUnsub(); groupMessagesUnsub = null; }
+            if (recTimer) { clearInterval(recTimer); recTimer = null; }
+            if (demoTypingTimeout) { clearTimeout(demoTypingTimeout); demoTypingTimeout = null; }
+            if (demoMsgTimeout) { clearTimeout(demoMsgTimeout); demoMsgTimeout = null; }
+        
+            nxInitTimers.forEach(clearTimeout); nxInitTimers = [];
+            document.removeEventListener('scroll', onAnyScrollCaptureNX, { capture: true });
+            window.removeEventListener('scroll', onWindowScrollNX);
+            groupRenderToken++;
+            window.nxGroupPageActive = false;
+            nxPendingPostFocus = null; clearTimeout(nxFocusTimer); nxFocusTimer = null;
+            nxThreadUnsubs.forEach(u => { try { u(); } catch (e) {} }); nxThreadUnsubs = []; nxThreadSig = '';
+            const hdr = nxGroupHeaderEl();
+            if (hdr) hdr.classList.remove('header-feed-transparent');
+            nxUnlockScroll();           
+            window.removeEventListener('pageshow', onPageShowNX);
+            document.removeEventListener('visibilitychange', onVisibilityChangeNX);
+
+            // These anti-flash helper classes are group.html-specific hacks —
+            // don't let them leak onto whichever page comes next.
+            document.documentElement.classList.remove('gi-loading', 'preload-feed');
+        }
+        window.NexusRouter.registerPage('group.html', { init: initPage, destroy: destroyPage });
+
+        // Native full page load (user opened group.html directly, not via
+        // SPA nav) — router.js only auto-runs init() on SPA navigation, so
+        // fire it once manually here if this IS the page that just loaded.
+        if (window.NexusRouter.getCurrentPath() === 'group.html' && document.readyState === 'loading') {
+            initPage();
+        }
+      function toggleAttachMenu() {
+            document.getElementById('attachMenu').classList.toggle('open');
+            document.getElementById('attachBackdrop').classList.toggle('open');
+        }
+        function closeAttachMenu() {
+            document.getElementById('attachMenu').classList.remove('open');
+            document.getElementById('attachBackdrop').classList.remove('open');
+        }
+        function createPollMessage() {
+            const question = prompt('Write the poll question:');
+            if (!question) return;
+            const optionsRaw = prompt('Write the options, separated by commas (,):');
+            if (!optionsRaw) return;
+            const options = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
+            if (options.length < 2) { alert('At least 2 options are required.'); return; }
+            pushOutgoingMessage({ text: '📊 ' + question + ' (' + options.join(' / ') + ')' });
+        }
+        function createChecklistMessage() {
+            const itemsRaw = prompt('Write checklist items, separated by commas (,):');
+            if (!itemsRaw) return;
+            const items = itemsRaw.split(',').map(s => s.trim()).filter(Boolean);
+            if (!items.length) return;
+            pushOutgoingMessage({ text: '✅ Checklist:\n' + items.map(i => '☐ ' + i).join('\n') });
+        }
+        function shareMusicMessage() {
+            const track = prompt('Track name / artist:');
+            if (!track) return;
+            pushOutgoingMessage({ text: '🎵 ' + track });
+        }
+})();
