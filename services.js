@@ -7349,7 +7349,7 @@ async function refreshActiveOrdersBanner() {
 
         document.getElementById('active-orders-list').innerHTML = activeOrders.map(o => {
             const meta = ACTIVE_ORDER_STATUS_MAP[o.status] || ACTIVE_ORDER_STATUS_MAP.pending;
-            return `<div class="active-order-row" onclick="openActiveOrderDetail('${o.proId||''}','${o.id}')">
+            return `<div class="active-order-row" onclick="openActiveOrderDetail('${o.proId||''}','${o.id}','${o.status||'pending'}')">
                 <div class="active-order-left">
                     <span class="active-order-name">${o.itemName || o.jobDescription || 'Service Request'}</span>
                     <span class="active-order-sub">${o.proName || ''}${o.eta ? ' · ' + o.eta : ''}</span>
@@ -7370,9 +7370,10 @@ function toggleActiveOrdersList() {
     chevron.style.transform = activeOrdersListExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 
-function openActiveOrderDetail(proId, requestId) {
+function openActiveOrderDetail(proId, requestId, status) {
     const id = String(requestId || '');
-    if (proId && id && !id.startsWith('req_') && !id.startsWith('order_')) showOrderStatusOverlay(proId, id);
+    const isPaidOrBooking = id.startsWith('req_') || id.startsWith('order_');
+    if (proId && id && (!isPaidOrBooking || status === 'pending')) showOrderStatusOverlay(proId, id);
     else openCustomerOrders();
 }
 
