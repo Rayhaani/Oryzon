@@ -6197,12 +6197,12 @@ async function mbRenderOverview(data) {
             const lineTotal = (Number(o.itemPrice) || 0) * (Number(o.quantity) || 1);
             if (orderDate === todayKey) {
                 ordersToday++;
-                if (o.status === 'completed') { salesToday += lineTotal; if (!salesTodayCurrency) salesTodayCurrency = o.currency || ''; }
+                if (o.status === 'completed' || o.status === 'awaiting_confirmation') { salesToday += lineTotal; if (!salesTodayCurrency) salesTodayCurrency = o.currency || ''; }
             }
             const orderDayIdx = last7Keys.indexOf(orderDate);
             if (orderDayIdx !== -1) ordersByDay[orderDayIdx]++;
           if (o.status === 'pending') pendingCount++;
-            if (o.status === 'completed') completedCount++;
+            if (o.status === 'completed' || o.status === 'awaiting_confirmation') completedCount++;
             if (o.status === 'cancelled') cancelledCount++;
             totalOrdersCount++;
         });
@@ -6322,7 +6322,7 @@ function mbFilterOrders(status) {
 function mbRenderOrders() {
     const list = document.getElementById('mb-orders-list');
    const searchTerm = (document.getElementById('mb-orders-search')?.value || '').trim().toLowerCase();
-    let orders = mbOrdersFilter === 'all' ? mbOrdersAll : mbOrdersAll.filter(o => (o.status||'pending') === mbOrdersFilter);
+    let orders = mbOrdersFilter === 'all' ? mbOrdersAll : mbOrdersAll.filter(o => { const s = o.status || 'pending'; return s === mbOrdersFilter || (mbOrdersFilter === 'completed' && s === 'awaiting_confirmation'); });
     if (searchTerm) {
         orders = orders.filter(o => (o.itemName||'').toLowerCase().includes(searchTerm) || (o.customerUsername||'').toLowerCase().includes(searchTerm));
     } 
@@ -6340,6 +6340,7 @@ function mbRenderOrders() {
         pending:   { label: 'PENDING',   bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
         confirmed: { label: 'CONFIRMED', bg: 'rgba(16,185,129,0.1)', color: '#059669' },
         completed: { label: 'COMPLETED', bg: 'rgba(59,130,246,0.1)', color: '#2563eb' },
+       awaiting_confirmation: { label: 'AWAITING CONFIRMATION', bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
         cancelled: { label: 'CANCELLED', bg: 'rgba(239,68,68,0.1)',  color: '#dc2626' },
     };
 
@@ -6352,8 +6353,10 @@ function mbRenderOrders() {
                 <button onclick="mbUpdateOrderStatus('${o.id}','confirmed')" style="flex:1;padding:10px;background:#16a34a;border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">✓ Confirm</button>
                 <button onclick="mbUpdateOrderStatus('${o.id}','cancelled')" style="flex:1;padding:10px;background:#fee2e2;border:1px solid #fecaca;border-radius:10px;color:#dc2626;font-size:12px;font-weight:800;cursor:pointer;">✕ Decline</button>`;
         } else if (o.status === 'confirmed') {
-            actions = `<button onclick="mbUpdateOrderStatus('${o.id}','completed')" style="flex:1;padding:10px;background:#2563eb;border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">✓ Mark Completed</button>`;
-        }
+      actions = `<button onclick="mbUpdateOrderStatus('${o.id}','awaiting_confirmation')" style="flex:1;padding:10px;background:#2563eb;border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">✓ Mark Completed</button>`;
+        } else if (o.status === 'awaiting_confirmation') {
+            actions = `<div style="flex:1;font-size:12px;font-weight:800;color:#d97706;">⏳ Waiting for customer confirmation</div>`;
+        }   
         return `
         <div style="background:#ffffff;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
@@ -6377,16 +6380,28 @@ function mbRenderOrders() {
 async function mbUpdateOrderStatus(orderId, newStatus) {
     const username = localStorage.getItem("nexus_user_session");
     try {
-        const orderRef = firebase.database().ref('providers/' + username + '/orders/' + orderId);
+       const orderRef = firebase.database().ref('providers/' + username + '/orders/' + orderId);
         const orderSnap = await orderRef.once('value');
-        await orderRef.child('status').set(newStatus);
-        const custUser = (orderSnap.val() || {}).customerUsername;
+        const order = orderSnap.val() || {};
+        const patch = { status: newStatus };
+        if (newStatus === 'awaiting_confirmation') patch.providerCompletedAt = Date.now();
+        await orderRef.update(patch);
+        const custUser = order.customerUsername;
         if (custUser) {
-            await firebase.database().ref('customers/' + custUser + '/sentRequests/' + orderId)
-                .update({ status: newStatus, ...(newStatus === 'completed' ? { completedAt: Date.now() } : {}) });
+            await firebase.database().ref('customers/' + custUser + '/sentRequests/' + orderId).update(patch);
+            if (newStatus === 'awaiting_confirmation') {
+                await firebase.database().ref('customers/' + custUser + '/notifications').push({
+                    type: 'message',
+                    title: '✅ Order Completed',
+                    message: (order.proName || 'Your provider') + ' marked your order as complete. Please confirm it to leave a review.',
+                    requestId: orderId,
+                    read: false,
+                    createdAt: Date.now()
+                });
+            }
         }
-        showGlobalToast(`✅ Order marked ${newStatus}`);
-        mbLoadOrders();
+        showGlobalToast(newStatus === 'awaiting_confirmation' ? '✅ Waiting for customer confirmation' : `✅ Order marked ${newStatus}`);       
+       mbLoadOrders();
     } catch (err) {
         showGlobalToast('❌ Failed to update order: ' + err.message);
     }
@@ -6420,7 +6435,7 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
         const allOrders = Object.entries(data).map(([id, o]) => ({ id, ...o }));
         const orders = allOrders.filter(o => (o.createdAt || 0) >= cutoff);
 
-        const completed = orders.filter(o => o.status === 'completed');
+        const completed = orders.filter(o => o.status === 'completed' || o.status === 'awaiting_confirmation');
         const inProgress = orders.filter(o => o.status === 'pending' || o.status === 'confirmed');
         const cancelled = orders.filter(o => o.status === 'cancelled');
 
@@ -6444,7 +6459,7 @@ async function mbUpdateOrderStatus(orderId, newStatus) {
             const dayStart = d.getTime();
             const dayEnd = dayStart + 86400000;
             const dayRevenue = allOrders
-                .filter(o => o.status === 'completed' && (o.createdAt||0) >= dayStart && (o.createdAt||0) < dayEnd)
+                .filter(o => (o.status === 'completed' || o.status === 'awaiting_confirmation') && (o.createdAt||0) >= dayStart && (o.createdAt||0) < dayEnd)
                 .reduce((sum, o) => sum + lineTotal(o), 0);
             chartDays.push({ label: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), revenue: dayRevenue });
         }
@@ -7285,7 +7300,7 @@ async function confirmBookingCompletion(proId, requestId) {
     const sessionUser = localStorage.getItem('nexus_user_session');
     if (!sessionUser) return;
     try {
-        const ref = firebase.database().ref('providers/' + proId + '/requests/' + requestId);
+        const ref = firebase.database().ref('providers/' + proId + (String(requestId).startsWith('order_') ? '/orders/' : '/requests/') + requestId);
         const snap = await ref.once('value');
         if ((snap.val() || {}).status !== 'awaiting_confirmation') {
             showGlobalToast('⚠️ This job is not awaiting confirmation.');
