@@ -105,7 +105,7 @@
                     row.className = 'chat-item';  
                    row.innerHTML = `
                         <div class="profile-stack" data-avatar-kind="group" data-avatar-key="${gid}" data-chat-href="group.html?group=${gid}" data-info-href="group.html?group=${gid}" onclick="handleAvatarTap(event)">
-                            <img src="${data.avatarUrl || 'https://via.placeholder.com/46/00F2FF/000?text=' + encodeURIComponent((data.name || 'G')[0])}" class="user-img" style="border-radius: 12px;">
+                            <img src="${data.avatarUrl || 'https://via.placeholder.com/46/00F2FF/000?text=' + encodeURIComponent((data.name || 'G')[0])}" class="user-img">
                         </div>
                         <div class="chat-details">
                             <div class="chat-header"><span class="name">${data.name || 'Group'}</span><span class="time">${formatChatTime(tsToMillis(data.createdAt))}</span></div>
