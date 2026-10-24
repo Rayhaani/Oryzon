@@ -4084,31 +4084,75 @@ window.__chatsStoryMatrixDestroy = function () {
             // friends data changes, so this list stays in sync in real time.
             window.nmoRefreshList = renderNmoContacts;
         })();
-/* ============================================================
-   BUSINESS MODE — central business inbox (Marketplace + Services)
-   Swipe left → Business, swipe right → Chats.
+
+  /* ============================================================
+   BUSINESS CHAT — central inbox (Marketplace + Services)
+   Arrow button (bottom-right) or swipe switches Chats ⇄ Business.
    ============================================================ */
 (function () {
     let mode = 'normal';
-    let filter = 'all';
+    let tab = 'buying';
+    let subFilter = 'all';
     let searchQ = '';
+    let userPicked = false;
     let unsubs = [];
     let starting = false;
     let myIsVendor = null;
     let renderTimer = null;
+    let labelTimer = null;
     const ready = { buying: false, selling: false };
     const threads = { buying: new Map(), selling: new Map() };
     const metaCache = new Map();
+    const lastCache = new Map();
+    const lastPending = new Set();
 
+    const $ = id => document.getElementById(id);
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const cap = s => String(s || '').split(/[\s_-]+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const cap = s => String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1);
     const toMs = v => (typeof v === 'number' ? v : (v && typeof v.toMillis === 'function' ? v.toMillis() : 0));
 
-    function previewOf(t) {
-        if (t.lastType === 'image' || t.lastType === 'imageGroup') return t.lastText || '📷 Photo';
-        if (t.lastType === 'video') return t.lastText || '🎥 Video';
-        if (t.lastType === 'voice') return '🎤 Voice message';
-        return t.lastText || 'Tap to open chat';
+    function formatTime(ts) {
+        if (!ts) return '';
+        const now = new Date();
+        const d = new Date(ts);
+        if ((now - d) / 60000 < 1) return 'Now';
+        if (now.toDateString() === d.toDateString()) {
+            let h = d.getHours();
+            const m = d.getMinutes().toString().padStart(2, '0');
+            const ap = h >= 12 ? 'PM' : 'AM';
+            h = h % 12; h = h ? h : 12;
+            return `${h}:${m} ${ap}`;
+        }
+        const sToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const sMsg = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const days = Math.round((sToday - sMsg) / 86400000);
+        if (days === 1) return 'Yesterday';
+        if (days >= 2 && days <= 6) return d.toLocaleDateString('en-US', { weekday: 'long' });
+        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+    }
+
+    function fetchLast(id) {
+        if (lastPending.has(id)) return;
+        lastPending.add(id);
+        db.collection('vendorChats').doc(id).collection('messages').orderBy('time', 'desc').limit(1).get()
+            .then(s => { if (!s.empty) { lastCache.set(id, s.docs[0].data()); scheduleRender(); } })
+            .catch(() => {});
+    }
+
+    function lastMsgOf(t) {
+        if (t.lastType) return { type: t.lastType, text: t.lastText, caption: t.lastText, role: t.lastRole };
+        const m = lastCache.get(t.id);
+        if (!m) fetchLast(t.id);
+        return m || null;
+    }
+
+    function previewOf(m) {
+        if (!m) return 'Tap to open chat';
+        if (m.type === 'text') return m.text || '';
+        if (m.type === 'image' || m.type === 'imageGroup') return m.caption || '📷 Photo';
+        if (m.type === 'video') return m.caption || '🎥 Video';
+        if (m.type === 'voice') return '🎤 Voice message';
+        return 'Tap to open chat';
     }
 
     function getMeta(kind, otherId) {
@@ -4120,21 +4164,20 @@ window.__chatsStoryMatrixDestroy = function () {
             try {
                 if (kind === 'buying') {
                     const v = await db.collection('vendors').doc(otherId).get();
+                    m.isMarketplace = v.exists;
                     if (v.exists) {
                         const d = v.data();
                         m.name = d.businessName || d.name || d.storeName || m.name;
                         m.avatar = d.photoURL || null;
-                        m.isMarketplace = true;
-                        scheduleRender();
-                        return;
                     }
-                    m.isMarketplace = false;
-                }
-                const u = await db.collection('users').doc(otherId).get();
-                if (u.exists) {
-                    const d = u.data();
-                    m.name = cap(d.fullName || d.name || d.username || otherId);
-                    m.avatar = d.userProfilePic || null;
+                } else {
+                    const u = await db.collection('users').doc(otherId).get();
+                    if (u.exists) {
+                        const d = u.data();
+                        const full = d.fullName || d.name || d.username;
+                        if (full) m.name = full.split(' ').map(cap).join(' ');
+                        m.avatar = d.userProfilePic || null;
+                    }
                 }
                 scheduleRender();
             } catch (e) {}
@@ -4156,48 +4199,71 @@ window.__chatsStoryMatrixDestroy = function () {
     }
 
     function renderList() {
-        const box = document.getElementById('bizList');
+        const which = tab;
+        const box = $('biz-list-' + which);
         if (!box) return;
         let rows = [];
-        threads.buying.forEach(t => { if (t.vendorId !== t.customerId) rows.push({ kind: 'buying', t }); });
-        threads.selling.forEach(t => { if (t.vendorId !== t.customerId) rows.push({ kind: 'selling', t }); });
+        threads[which].forEach(t => { if (t.vendorId !== t.customerId) rows.push({ kind: which, t }); });
         rows.forEach(r => {
-            r.otherId = r.kind === 'buying' ? r.t.vendorId : r.t.customerId;
-            r.m = getMeta(r.kind, r.otherId);
+            r.otherId = which === 'buying' ? r.t.vendorId : r.t.customerId;
+            r.m = getMeta(which, r.otherId);
             r.src = sourceOf(r);
+            r.last = lastMsgOf(r.t);
             r.ts = toMs(r.t.lastActive);
         });
-        document.querySelectorAll('#bizFilters .biz-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === filter));
-        rows = rows.filter(r => filter === 'all' || filter === r.kind || filter === r.src.toLowerCase());
+        if (which === 'selling' && subFilter !== 'all') {
+            rows = rows.filter(r => {
+                const lastRole = r.last ? r.last.role : null;
+                const botActive = r.t.botActive !== false;
+                if (subFilter === 'needsReply') return lastRole === 'mine';
+                if (subFilter === 'bot') return botActive;
+                if (subFilter === 'takenOver') return !botActive;
+                return true;
+            });
+        }
         if (searchQ) rows = rows.filter(r => r.m.name.toLowerCase().includes(searchQ));
         rows.sort((a, b) => b.ts - a.ts);
 
         if (!rows.length) {
-            box.innerHTML = (!ready.buying || !ready.selling)
-                ? '<div class="biz-empty">Loading business chats...</div>'
-                : '<div class="biz-empty"><strong>No business chats yet</strong>Chats with vendors (Marketplace) and service providers (Services) will appear here.</div>';
+            box.innerHTML = `<div class="inbox-empty-state">${ready[which] ? 'No chats yet' : 'Loading...'}</div>`;
             return;
         }
-
+        const me = window.myId;
         box.innerHTML = rows.map(r => {
-            const href = r.kind === 'buying'
+            const href = which === 'buying'
                 ? `vendor-chat.html?with=${encodeURIComponent(r.otherId)}&name=${encodeURIComponent(r.m.name)}`
-                : `vendor-chat.html?vendorId=${encodeURIComponent(window.myId)}&admin=1&customer=${encodeURIComponent(r.otherId)}&name=${encodeURIComponent(r.m.name)}`;
-            const avatar = r.m.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(r.otherId)}`;
-            const time = r.ts ? timeAgo(r.ts) : '';
+                : `vendor-chat.html?vendorId=${encodeURIComponent(me)}&admin=1&customer=${encodeURIComponent(r.otherId)}&name=${encodeURIComponent(r.m.name)}`;
             const tag = r.src ? `<span class="biz-tag biz-tag-${r.src.toLowerCase()}">${r.src}</span>` : '';
             return `
-            <a href="${esc(href)}" class="chat-item">
-                <div class="profile-stack"><img class="user-img" src="${esc(avatar)}" loading="lazy"></div>
-                <div class="chat-details">
-                    <div class="chat-header">
-                        <div class="biz-name-wrap"><span class="name">${esc(r.m.name)}</span>${tag}</div>
-                        <span class="time">${time}</span>
-                    </div>
-                    <span class="preview-text">${esc(previewOf(r.t))}</span>
+            <a href="${esc(href)}" class="inbox-chat-item">
+                ${r.m.avatar ? `<img src="${esc(r.m.avatar)}" class="inbox-chat-avatar">` : `<div class="inbox-chat-avatar inbox-chat-avatar-empty"></div>`}
+                <div class="inbox-chat-details">
+                    <div class="biz-name-line"><span class="inbox-chat-name">${esc(r.m.name)}</span>${tag}</div>
+                    <p class="inbox-chat-preview">${esc(previewOf(r.last))}</p>
+                </div>
+                <div class="inbox-chat-meta">
+                    <span class="inbox-chat-time">${formatTime(r.ts)}</span>
                 </div>
             </a>`;
         }).join('');
+    }
+
+    function switchTab(t, auto) {
+        if (!auto) userPicked = true;
+        const isUpdates = t === 'updates';
+        if (!isUpdates) tab = t;
+        ['buying', 'selling', 'updates'].forEach(n => { const b = $('biz-tab-' + n); if (b) b.classList.toggle('active', n === t); });
+        $('biz-selling-subfilters').style.display = t === 'selling' ? 'flex' : 'none';
+        $('biz-list-wrap').style.display = isUpdates ? 'none' : 'block';
+        $('biz-updates-pane').style.display = isUpdates ? 'flex' : 'none';
+        $('biz-list-buying').style.display = t === 'buying' ? 'block' : 'none';
+        $('biz-list-selling').style.display = t === 'selling' ? 'block' : 'none';
+        if (isUpdates) {
+            const fr = $('biz-updates-frame');
+            if (fr && !fr.getAttribute('src')) fr.src = 'updates.html?embed=1';
+            return;
+        }
+        renderList();
     }
 
     async function startListeners() {
@@ -4214,6 +4280,10 @@ window.__chatsStoryMatrixDestroy = function () {
             snap.forEach(doc => { const d = doc.data(); if (d.vendorId && d.customerId) map.set(doc.id, { id: doc.id, ...d }); });
             threads[kind] = map;
             ready[kind] = true;
+            if (!userPicked && ready.buying && ready.selling && tab !== 'updates') {
+                if (threads.selling.size > 0 && tab !== 'selling') { switchTab('selling', true); return; }
+                if (!threads.selling.size && threads.buying.size && tab === 'selling') { switchTab('buying', true); return; }
+            }
             scheduleRender();
         };
         const onErr = kind => e => { console.warn('Business chats listener error:', e.code || e.message); ready[kind] = true; scheduleRender(); };
@@ -4221,31 +4291,42 @@ window.__chatsStoryMatrixDestroy = function () {
         unsubs.push(db.collection('vendorChats').where('vendorId', '==', window.myId).onSnapshot(apply('selling'), onErr('selling')));
     }
 
+    function flashLabel(ms) {
+        const fab = $('bizFab'), lab = $('bizFabLabel');
+        if (!fab || !lab) return;
+        lab.textContent = mode === 'business' ? 'Chats' : 'Business';
+        fab.classList.add('expanded');
+        clearTimeout(labelTimer);
+        labelTimer = setTimeout(() => fab.classList.remove('expanded'), ms || 1800);
+    }
+
     function setMode(next, silent) {
         if (next === mode) return;
-        const sw = document.getElementById('bizModeSwitch');
-        const view = document.getElementById('businessView');
-        if (!sw || !view) return;
+        const view = $('businessView'), fab = $('bizFab');
+        if (!view || !fab) return;
         mode = next;
-        sw.dataset.mode = next;
-        sw.querySelectorAll('.biz-mode-opt').forEach(b => b.classList.toggle('active', b.dataset.mode === next));
-        document.documentElement.classList.toggle('biz-mode', next === 'business');
+        fab.dataset.mode = next;
         localStorage.setItem('nexus_chats_mode', next);
-        const title = document.getElementById('mainHeaderTitle');
+        if (!silent) flashLabel(); else $('bizFabLabel').textContent = next === 'business' ? 'Chats' : 'Business';
         if (next === 'business') {
-            if (title) title.textContent = 'Business';
-            if (!silent) { view.classList.remove('biz-enter'); void view.offsetWidth; view.classList.add('biz-enter'); }
+            document.documentElement.classList.add('biz-mode');
+            view.classList.remove('biz-out');
+            if (!silent) { view.classList.remove('biz-in'); void view.offsetWidth; view.classList.add('biz-in'); }
+            userPicked = false;
             startListeners();
-            renderList();
+            switchTab(threads.selling.size ? 'selling' : 'buying', true);
         } else {
-            const tab = localStorage.getItem('nexus_active_tab') || 'personal';
-            if (title) title.textContent = tab === 'updates' ? 'Updates' : 'Chats';
-            const nv = document.querySelector('.view-container');
-            if (nv && !silent) { nv.classList.remove('biz-enter-back'); void nv.offsetWidth; nv.classList.add('biz-enter-back'); }
+            const bar = $('biz-search-bar');
+            if (bar && bar.classList.contains('active')) window.toggleBizSearch();
+            if (silent) {
+                document.documentElement.classList.remove('biz-mode');
+            } else {
+                view.classList.add('biz-out');
+                setTimeout(() => {
+                    if (mode === 'normal') { document.documentElement.classList.remove('biz-mode'); view.classList.remove('biz-out'); }
+                }, 240);
+            }
         }
-        const si = document.getElementById('searchInput');
-        const bar = document.getElementById('searchBarContainer');
-        if (bar && bar.classList.contains('active') && si) { window.updateSearchPlaceholder(); window.performGlobalSearch(si.value); }
         if (!silent && navigator.vibrate) navigator.vibrate(8);
     }
 
@@ -4280,11 +4361,27 @@ window.__chatsStoryMatrixDestroy = function () {
     }
 
     window.setChatsMode = function (m) { setMode(m === 'business' ? 'business' : 'normal'); };
-    window.setBizFilter = function (f) { filter = f; renderList(); };
+    window.toggleChatsMode = function () { setMode(mode === 'normal' ? 'business' : 'normal'); };
+    window.bizSwitchTab = function (t) { switchTab(t, false); };
+    window.bizSubFilter = function (f, el) {
+        subFilter = f;
+        document.querySelectorAll('#biz-selling-subfilters .inbox-subfilter-pill').forEach(p => p.classList.remove('active'));
+        if (el) el.classList.add('active');
+        renderList();
+    };
+    window.toggleBizSearch = function () {
+        const bar = $('biz-search-bar'), input = $('biz-search-input');
+        if (!bar || !input) return;
+        bar.classList.toggle('active');
+        if (bar.classList.contains('active')) { input.focus(); }
+        else { input.value = ''; searchQ = ''; renderList(); }
+    };
+    window.bizSearch = function (q) { searchQ = String(q || '').toLowerCase(); renderList(); };
 
     window.__chatsBizDestroy = function () {
         unsubs.forEach(u => { try { u && u(); } catch (e) {} });
         unsubs = []; starting = false;
+        clearTimeout(renderTimer); clearTimeout(labelTimer);
         threads.buying.clear(); threads.selling.clear();
         ready.buying = false; ready.selling = false;
         document.documentElement.classList.remove('biz-mode');
@@ -4292,43 +4389,24 @@ window.__chatsStoryMatrixDestroy = function () {
     };
 
     runOnChatsInit(function () {
-        const sw = document.getElementById('bizModeSwitch');
-        const view = document.getElementById('businessView');
-        if (!sw || !view) return;
-
-        mode = 'normal'; filter = 'all'; searchQ = '';
+        const view = $('businessView'), fab = $('bizFab');
+        if (!view || !fab) return;
+        mode = 'normal'; tab = 'buying'; subFilter = 'all'; searchQ = ''; userPicked = false;
         document.documentElement.classList.remove('biz-mode');
-        sw.dataset.mode = 'normal';
-
+        fab.dataset.mode = 'normal';
         bindSwipe(document.querySelector('.view-container'));
         bindSwipe(view);
-
-        if (typeof window.performGlobalSearch === 'function' && !window.performGlobalSearch.__biz) {
-            const origSearch = window.performGlobalSearch;
-            window.performGlobalSearch = function (q) {
-                if (mode === 'business') { searchQ = String(q || '').toLowerCase(); renderList(); return; }
-                return origSearch.apply(this, arguments);
-            };
-            window.performGlobalSearch.__biz = true;
-        }
-        if (typeof window.updateSearchPlaceholder === 'function' && !window.updateSearchPlaceholder.__biz) {
-            const origPh = window.updateSearchPlaceholder;
-            window.updateSearchPlaceholder = function () {
-                if (mode === 'business') { const i = document.getElementById('searchInput'); if (i) i.placeholder = 'Search business chats...'; return; }
-                return origPh.apply(this, arguments);
-            };
-            window.updateSearchPlaceholder.__biz = true;
-        }
-
         if (window.myId && typeof db !== 'undefined') {
             db.collection('vendors').doc(window.myId).get()
                 .then(d => { myIsVendor = d.exists; scheduleRender(); })
                 .catch(() => {});
         }
-
+        const n = +localStorage.getItem('nexus_biz_hint') || 0;
+        if (n < 3) { localStorage.setItem('nexus_biz_hint', String(n + 1)); flashLabel(3200); }
+        else { $('bizFabLabel').textContent = 'Business'; }
         if (localStorage.getItem('nexus_chats_mode') === 'business') setMode('business', true);
     });
-})();
+})(); 
 /* ============================================================
    INIT / DESTROY / REGISTER — SPA lifecycle na chats.html.
    ------------------------------------------------------------
