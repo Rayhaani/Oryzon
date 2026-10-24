@@ -459,7 +459,7 @@ function createProCardHtml(pro) {
             <button onclick="event.stopPropagation(); speakProSummary('${pro.id}')" class="prism-speak-btn" style="top:-4px;right:auto;left:-4px;z-index:3;" aria-label="Ji bayanin wannan mai bada sabis">🔊</button> 
 
             <div style="display:flex;align-items:center;gap:10px;z-index:2;position:relative;padding-right:78px;">
-                <div class="lens-viewport" onclick="event.stopPropagation();inboxOpenMeEnc('${encodeURIComponent(pro.username||'')}')" style="cursor:pointer;${pro.photoUrl ? `background-image:url('${pro.photoUrl}');background-size:cover;background-position:center;` : ''}">${pro.photoUrl ? '' : `<div class="lens-glass-reflection">${(pro.avatar||displayHandle.slice(0,2)).toUpperCase()}</div>`}</div>
+                <div class="lens-viewport" onclick="event.stopPropagation();inboxOpenMeEnc('${encodeURIComponent(pro.username||'')}')" style="cursor:pointer;${pro.photoUrl ? `background-image:url('${npThumbUrl(pro.photoUrl)}');background-size:cover;background-position:center;` : ''}">${pro.photoUrl ? '' : `<div class="lens-glass-reflection">${(pro.avatar||displayHandle.slice(0,2)).toUpperCase()}</div>`}</div>
                 <div style="flex:1;padding-left:2px;min-width:0;">
                     <div class="sentinel-title-text" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayHandle}</div>
                     <div class="sentinel-sub-text">${pro.display_cat}</div>
@@ -10355,7 +10355,7 @@ function renderInboxList(tab) {
         const avAttr = ` onclick="return inboxAvatarTap(event, '${encodeURIComponent(t.otherId)}', '${tab}')"`;
        return `
           <a href="${href}" class="inbox-chat-item" onclick="return inboxOpenChat(this.getAttribute('href'))">
-                ${t.avatarUrl ? `<img src="${t.avatarUrl}" class="inbox-chat-avatar"${avAttr}>` : `<div class="inbox-chat-avatar inbox-chat-avatar-empty"${avAttr}></div>`}
+                ${t.avatarUrl ? `<img src="${npThumbUrl(t.avatarUrl)}" data-orig="${t.avatarUrl}" onerror="npThumbFail(this)" class="inbox-chat-avatar"${avAttr}>` : `<div class="inbox-chat-avatar inbox-chat-avatar-empty"${avAttr}></div>`}
                 <div class="inbox-chat-details">  
                      <span class="inbox-chat-name">${t.displayName}</span>
                     <p class="inbox-chat-preview">${preview}</p>
