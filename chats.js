@@ -4187,10 +4187,21 @@ window.__chatsStoryMatrixDestroy = function () {
 
     function sourceOf(r) {
         const s = String(r.t.source || '').toLowerCase();
-        if (s === 'marketplace') return 'Marketplace';
-        if (s === 'services') return 'Services';
-        if (r.kind === 'buying') return r.m.isMarketplace === true ? 'Marketplace' : (r.m.isMarketplace === false ? 'Services' : '');
-        return myIsVendor === true ? 'Marketplace' : (myIsVendor === false ? 'Services' : '');
+        return s === 'marketplace' ? 'Marketplace' : (s === 'services' ? 'Services' : '');
+    }
+
+    function isUnread(kind, t) {
+        const theirRole = kind === 'buying' ? 'theirs' : 'mine';
+        const readAt = toMs(t[kind === 'buying' ? 'readCustomerAt' : 'readVendorAt']);
+        return t.lastRole === theirRole && toMs(t.lastActive) > readAt;
+    }
+
+    function updateFabBadge() {
+        const fab = $('bizFab');
+        if (!fab) return;
+        let n = 0;
+        ['buying', 'selling'].forEach(k => threads[k].forEach(t => { if (t.vendorId !== t.customerId && isUnread(k, t)) n++; }));
+        fab.classList.toggle('has-unread', n > 0 && mode === 'normal');
     }
 
     function scheduleRender() {
@@ -4210,6 +4221,7 @@ window.__chatsStoryMatrixDestroy = function () {
             r.src = sourceOf(r);
             r.last = lastMsgOf(r.t);
             r.ts = toMs(r.t.lastActive);
+           r.unread = isUnread(which, r.t);
         });
         if (which === 'selling' && subFilter !== 'all') {
             rows = rows.filter(r => {
@@ -4242,7 +4254,8 @@ window.__chatsStoryMatrixDestroy = function () {
                     <p class="inbox-chat-preview">${esc(previewOf(r.last))}</p>
                 </div>
                 <div class="inbox-chat-meta">
-                    <span class="inbox-chat-time">${formatTime(r.ts)}</span>
+                    <span class="inbox-chat-time${r.unread ? ' unread' : ''}">${formatTime(r.ts)}</span>
+                    ${r.unread ? '<span class="biz-unread-dot"></span>' : ''}
                 </div>
             </a>`;
         }).join('');
@@ -4274,11 +4287,12 @@ window.__chatsStoryMatrixDestroy = function () {
             await new Promise(res => { const un = a.onAuthStateChanged(() => { un(); res(); }); setTimeout(res, 4000); });
         }
         starting = false;
-        if (unsubs.length || mode !== 'business') return;
+        if (unsubs.length) return;
         const apply = kind => snap => {
             const map = new Map();
             snap.forEach(doc => { const d = doc.data(); if (d.vendorId && d.customerId) map.set(doc.id, { id: doc.id, ...d }); });
             threads[kind] = map;
+           updateFabBadge();
             ready[kind] = true;
             if (!userPicked && ready.buying && ready.selling && tab !== 'updates') {
                 if (threads.selling.size > 0 && tab !== 'selling') { switchTab('selling', true); return; }
@@ -4307,6 +4321,7 @@ window.__chatsStoryMatrixDestroy = function () {
         mode = next;
         fab.dataset.mode = next;
         localStorage.setItem('nexus_chats_mode', next);
+       updateFabBadge();
         if (!silent) flashLabel(); else $('bizFabLabel').textContent = next === 'business' ? 'Chats' : 'Business';
         if (next === 'business') {
             document.documentElement.classList.add('biz-mode');
@@ -4401,6 +4416,7 @@ window.__chatsStoryMatrixDestroy = function () {
                 .then(d => { myIsVendor = d.exists; scheduleRender(); })
                 .catch(() => {});
         }
+       startListeners();
         const n = +localStorage.getItem('nexus_biz_hint') || 0;
         if (n < 3) { localStorage.setItem('nexus_biz_hint', String(n + 1)); flashLabel(3200); }
         else { $('bizFabLabel').textContent = 'Business'; }
