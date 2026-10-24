@@ -23,7 +23,8 @@ try { db.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } c
     const isAdmin = params.get('admin') === '1';
    let storeName = params.get('name') || ""; 
     const customerParam = params.get('customer') || '';
-
+const srcParam = ['services', 'marketplace'].indexOf(params.get('src')) > -1 ? params.get('src') : '';
+    let knownSource = '';
     // Real Oryzon account identity — same pattern as chat-interior.html.
     // A customer must be logged into their real Oryzon account to chat, exactly like
     // messaging a business on Instagram/Facebook requires being logged into your own
@@ -168,6 +169,13 @@ try { db.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } c
         try {
             const chatDoc = await db.collection('vendorChats').doc(chatDocId).get();
             botActive = !chatDoc.exists || chatDoc.data().botActive !== false;
+           if (chatDoc.exists) {
+                knownSource = chatDoc.data().source || '';
+                const readPatch = {};
+                readPatch[isAdmin ? 'readVendorAt' : 'readCustomerAt'] = Date.now();
+                if (srcParam && !knownSource) { readPatch.source = srcParam; knownSource = srcParam; }
+                db.collection('vendorChats').doc(chatDocId).update(readPatch).catch(() => {});
+           }
         } catch(e) { botActive = true; }
         updateBotToggleUI();
     }
@@ -214,6 +222,9 @@ async function loadMessagesFromCache() {
             // idan wannan write ɗin bai kunshi shi ba.
             const chatMeta = { vendorId, lastActive: Date.now(), lastType: m.type || 'text', lastText: String(m.text || m.caption || '').slice(0, 120) };
             if (!isAdmin) chatMeta.customerId = myUsername;
+           chatMeta.lastRole = m.role || 'mine';
+            chatMeta[isAdmin ? 'readVendorAt' : 'readCustomerAt'] = chatMeta.lastActive;
+            if (srcParam && !knownSource) { chatMeta.source = srcParam; knownSource = srcParam; }
             await db.collection('vendorChats').doc(chatDocId).set(chatMeta, { merge: true });
             const ref = await db.collection('vendorChats').doc(chatDocId).collection('messages').add(m);
             return ref.id;
