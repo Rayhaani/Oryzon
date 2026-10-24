@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nexus Protocol</title>
+<meta name="theme-color" content="#000000">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--cyan:#00F2FF;--muted:rgba(255,255,255,.5)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:#fff;font-family:'Inter',system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+.page{position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;overflow:hidden}
+.glow{position:absolute;width:140vmax;height:70vmax;left:50%;top:-42vmax;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(0,242,255,.16),rgba(0,242,255,.04) 55%,transparent 75%);animation:breathe 7s ease-in-out infinite alternate;pointer-events:none}
+@keyframes breathe{to{opacity:.55;transform:translateX(-50%) scale(1.08)}}
+.login{position:absolute;top:calc(env(safe-area-inset-top) + 18px);right:22px;font-size:13px;font-weight:600;color:var(--muted);padding:9px 16px;border:1px solid rgba(255,255,255,.1);border-radius:30px;text-decoration:none;transition:.25s;z-index:2}
+.login:hover{color:var(--cyan);border-color:rgba(0,242,255,.5)}
+.inner{width:100%;max-width:440px;padding:0 24px calc(env(safe-area-inset-bottom) + 26px);position:relative;z-index:1}
+.logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(20px,5.6vw,24px);letter-spacing:2px;margin-bottom:28px;display:flex;align-items:center;gap:12px}
+.logo i{width:34px;height:34px;border-radius:10px;background:conic-gradient(from 200deg,#00F2FF,#8a3ffc,#c026d3,#00F2FF);box-shadow:0 0 22px rgba(0,242,255,.45)}
+h1{font-size:clamp(34px,10vw,48px);line-height:1.13;font-weight:800;letter-spacing:-.02em}
+.rotor{position:relative;display:block;height:2.28em;overflow:hidden}
+.rotor span{position:absolute;left:0;top:0;width:100%;opacity:0;transform:translateY(55%);filter:blur(6px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.2,1),filter .55s ease}
+.rotor span.in{opacity:1;transform:none;filter:none}
+.rotor span.out{opacity:0;transform:translateY(-55%);filter:blur(6px)}
+.rotor b{background:linear-gradient(90deg,#fff,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.dots{display:flex;gap:6px;margin:4px 0 30px}
+.dots em{height:4px;width:12px;border-radius:4px;background:rgba(255,255,255,.15);transition:.4s}
+.dots em.on{width:30px;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#111;border:0;border-radius:18px;height:64px;font-size:18px;font-weight:600;font-family:inherit;cursor:pointer;transition:transform .2s,box-shadow .3s}
+.btn-google:hover{box-shadow:0 0 40px rgba(0,242,255,.3)}
+.btn-google:active{transform:scale(.98)}
+.g{width:38px;height:38px;border-radius:50%;background:#f1f3f8;display:grid;place-items:center}
+.other{display:block;width:100%;text-align:center;background:none;border:0;color:#fff;font-size:18px;font-weight:600;font-family:inherit;padding:26px 0 24px;cursor:pointer}
+.other:hover{color:var(--cyan)}
+.terms{text-align:center;font-size:12.5px;color:var(--muted);line-height:1.6}
+.terms a{color:#3d6bff;text-decoration:none}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:50;opacity:0;pointer-events:none;transition:.3s;display:flex;align-items:flex-end;justify-content:center}
+.overlay.open{opacity:1;pointer-events:auto}
+.sheet{width:100%;max-width:480px;background:linear-gradient(135deg,#1e1c1c,#121111);border:1px solid rgba(255,255,255,.06);border-radius:24px 24px 0 0;padding:14px 20px calc(env(safe-area-inset-bottom) + 24px);transform:translateY(100%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.overlay.open .sheet{transform:none}
+.grab{width:42px;height:4px;border-radius:4px;background:rgba(255,255,255,.2);margin:0 auto 20px}
+.opt{display:flex;align-items:center;gap:14px;width:100%;padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,.07);background:#0d0d0f;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:left;transition:.25s}
+.opt:hover{border-color:var(--cyan)}
+.opt small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.opt .e{font-size:22px}
+@media(min-width:700px){.page{justify-content:center}.inner{padding-bottom:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="glow"></div>
+  <a class="login" href="login.html">Log in</a>
+
+  <div class="inner">
+    <div class="logo"><i></i>NEXUS PROTOCOL</div>
+
+    <h1>
+      Sign up to
+      <span class="rotor" aria-live="polite">
+        <span>explore the <b>social feed</b></span>
+        <span>hire trusted <b>service providers</b></span>
+        <span>chat <b>personal &amp; business</b></span>
+        <span>shop the <b>marketplace</b></span>
+        <span>trade <b>poultry &amp; used items</b></span>
+        <span>look after <b>your health</b></span>
+      </span>
+    </h1>
+    <div class="dots" id="dots"></div>
+
+    <button class="btn-google" onclick="continueWithGoogle()">
+      <span class="g"><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg></span>
+      Continue with Google
+    </button>
+    <button class="other" onclick="toggleSheet(true)">Other</button>
+    <p class="terms">By signing up, you agree to our <a href="#">Terms of Use</a> as well as our <a href="#">Privacy</a> and <a href="#">Cookies Policy</a></p>
+  </div>
+</main>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)toggleSheet(false)">
+  <div class="sheet">
+    <div class="grab"></div>
+    <button class="opt" onclick="location.href='index.html'"><span class="e">✉️</span><span>Sign up with email<small>Create your Nexus account</small></span></button>
+    <button class="opt" onclick="location.href='login.html'"><span class="e">🔐</span><span>Log in<small>Already registered? Welcome back</small></span></button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const items=[...document.querySelectorAll('.rotor span')];
+  const dots=document.getElementById('dots');
+  items.forEach(()=>dots.appendChild(document.createElement('em')));
+  const d=[...dots.children];let i=0;
+  function show(n){
+    items.forEach((el,k)=>{el.classList.remove('in','out');if(k===i)el.classList.add('out')});
+    d.forEach(x=>x.classList.remove('on'));
+    i=n;items[i].classList.remove('out');void items[i].offsetWidth;
+    items[i].classList.add('in');d[i].classList.add('on');
+  }
+  show(0);setInterval(()=>show((i+1)%items.length),2600);
+})();
+function continueWithGoogle(){
+  // TODO: Firebase Google sign-in. For now -> register page.
+  location.href='index.html';
+}
+function toggleSheet(o){document.getElementById('overlay').classList.toggle('open',o)}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleSheet(false)});
+</script>
+</body>
+</html>
