@@ -4095,6 +4095,7 @@ window.__chatsStoryMatrixDestroy = function () {
     let subFilter = 'all';
     let searchQ = '';
     let userPicked = false;
+   let srcFilter = 'all';
     let unsubs = [];
     let starting = false;
     let myIsVendor = null;
@@ -4234,10 +4235,12 @@ window.__chatsStoryMatrixDestroy = function () {
             });
         }
         if (searchQ) rows = rows.filter(r => r.m.name.toLowerCase().includes(searchQ));
+       if (srcFilter === 'marketplace' || srcFilter === 'services') rows = rows.filter(r => r.src.toLowerCase() === srcFilter);
+        else if (srcFilter === 'unread') rows = rows.filter(r => r.unread);
         rows.sort((a, b) => b.ts - a.ts);
 
         if (!rows.length) {
-            box.innerHTML = `<div class="inbox-empty-state">${ready[which] ? 'No chats yet' : 'Loading...'}</div>`;
+            box.innerHTML = `<div class="inbox-empty-state">${ready[which] ? (srcFilter !== 'all' ? 'No chats match this filter' : 'No chats yet') : 'Loading...'}</div>`;
             return;
         }
         const me = window.myId;
@@ -4392,7 +4395,26 @@ window.__chatsStoryMatrixDestroy = function () {
         else { input.value = ''; searchQ = ''; renderList(); }
     };
     window.bizSearch = function (q) { searchQ = String(q || '').toLowerCase(); renderList(); };
-
+   window.toggleBizFilterMenu = function (e) {
+        e.stopPropagation();
+        const m = $('bizFilterMenu');
+        if (m) m.classList.toggle('open');
+    };
+    window.applyBizFilter = function (type, el) {
+        srcFilter = type;
+        document.querySelectorAll('#bizFilterMenu .friend-status-filter-option').forEach(o => o.classList.remove('active'));
+        if (el) el.classList.add('active');
+        const m = $('bizFilterMenu');
+        if (m) m.classList.remove('open');
+        renderList();
+    };
+    if (!window.__bizFilterOutsideBound) {
+        window.__bizFilterOutsideBound = true;
+        document.addEventListener('click', function (e) {
+            const m = $('bizFilterMenu');
+            if (m && !e.target.closest('#bizFilterWrap')) m.classList.remove('open');
+        });
+    }
     window.__chatsBizDestroy = function () {
         unsubs.forEach(u => { try { u && u(); } catch (e) {} });
         unsubs = []; starting = false;
@@ -4406,7 +4428,7 @@ window.__chatsStoryMatrixDestroy = function () {
     runOnChatsInit(function () {
         const view = $('businessView'), fab = $('bizFab');
         if (!view || !fab) return;
-        mode = 'normal'; tab = 'buying'; subFilter = 'all'; searchQ = ''; userPicked = false;
+        mode = 'normal'; tab = 'buying'; subFilter = 'all'; srcFilter = 'all'; searchQ = ''; userPicked = false;
         document.documentElement.classList.remove('biz-mode');
         fab.dataset.mode = 'normal';
         bindSwipe(document.querySelector('.view-container'));
