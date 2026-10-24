@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nexus Protocol</title>
+<meta name="theme-color" content="#000000">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#fde08d;--b2:#E3C48D;--muted:rgba(255,255,255,.55)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+.page{position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;isolation:isolate}
+
+/* ===== AURORA (WebGL) ===== */
+#aurora{position:absolute;inset:0;width:100%;height:100%;z-index:-3;display:block;
+  background:radial-gradient(60% 50% at 30% 45%,rgba(192,144,96,.28),transparent 70%),radial-gradient(55% 45% at 72% 50%,rgba(184,118,58,.25),transparent 70%),#000}
+.shade{position:absolute;inset:0;z-index:-2;pointer-events:none;
+  background:
+   linear-gradient(to bottom,rgba(0,0,0,.5) 0%,transparent 18%),
+   linear-gradient(to top,#000 0%,rgba(0,0,0,.94) 18%,rgba(0,0,0,.6) 36%,rgba(0,0,0,.15) 54%,transparent 68%)}
+.grain{position:absolute;inset:0;z-index:-1;opacity:.07;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ===== TOP ===== */
+.login{position:absolute;top:calc(env(safe-area-inset-top) + 14px);right:18px;font-size:13px;font-weight:600;color:#fff;padding:8px 16px;border:1px solid rgba(255,255,255,.22);border-radius:30px;text-decoration:none;background:rgba(0,0,0,.25);backdrop-filter:blur(8px);transition:.25s}
+.login:hover{color:var(--gold);border-color:var(--gold)}
+
+/* ===== CONTENT ===== */
+.inner{width:100%;max-width:480px;padding:0 16px calc(env(safe-area-inset-bottom) + 14px)}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Orbitron',sans-serif;font-weight:900;font-size:21px;letter-spacing:1.5px;margin-bottom:30px}
+.logo i{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 210deg,#F8D9A2,#B8763A,#8B5B2D,#E3C48D,#F8D9A2);box-shadow:0 0 18px rgba(253,224,141,.4)}
+h1{font-size:clamp(26px,8.2vw,34px);line-height:1.14;font-weight:700;letter-spacing:-.01em}
+.rotor{position:relative;display:block;height:1.25em;margin-top:2px;white-space:nowrap;overflow:hidden}
+.rotor span{position:absolute;left:0;top:0;opacity:0;transform:translateY(.45em);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.2,.8,.2,1)}
+.rotor span.in{opacity:1;transform:none}
+.rotor span.out{opacity:0;transform:translateY(-.45em)}
+.rotor b{font-weight:700;background:linear-gradient(90deg,#fff,var(--b2) 55%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.btn-google{margin-top:26px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#111;border:0;border-radius:14px;height:48px;font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;transition:transform .2s,box-shadow .3s}
+.btn-google:hover{box-shadow:0 0 30px rgba(253,224,141,.35)}
+.btn-google:active{transform:scale(.985)}
+.g{width:28px;height:28px;border-radius:50%;background:#f1f3f8;display:grid;place-items:center}
+.other{display:block;width:100%;text-align:center;background:none;border:0;color:#fff;font-size:15px;font-weight:500;font-family:inherit;padding:30px 0 34px;cursor:pointer}
+.other:hover{color:var(--gold)}
+.terms{text-align:center;font-size:11px;color:var(--muted);line-height:1.55}
+.terms a{color:var(--gold);text-decoration:none}
+
+/* ===== SHEET ===== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:50;opacity:0;pointer-events:none;transition:.3s;display:flex;align-items:flex-end;justify-content:center}
+.overlay.open{opacity:1;pointer-events:auto}
+.sheet{width:100%;max-width:480px;background:linear-gradient(135deg,#1e1c1c,#0b0b0b);border:1px solid rgba(253,224,141,.2);border-radius:22px 22px 0 0;padding:14px 16px calc(env(safe-area-inset-bottom) + 22px);transform:translateY(100%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.overlay.open .sheet{transform:none}
+.grab{width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.2);margin:0 auto 18px}
+.opt{display:flex;align-items:center;gap:14px;width:100%;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#0a0a0a;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:left;transition:.25s}
+.opt:hover{border-color:var(--gold)}
+.opt small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.opt .e{font-size:22px}
+
+@media(min-width:700px){.inner{margin-left:max(6vw,16px);padding-bottom:28px}}
+</style>
+</head>
+<body>
+<main class="page">
+  <canvas id="aurora"></canvas>
+  <div class="shade"></div>
+  <div class="grain"></div>
+
+  <a class="login" href="login.html">Log in</a>
+
+  <div class="inner">
+    <div class="logo"><i></i>NEXUS PROTOCOL</div>
+
+    <h1>
+      Sign up to
+      <span class="rotor" aria-live="polite">
+        <span><b>explore the feed</b></span>
+        <span><b>hire professionals</b></span>
+        <span><b>chat &amp; do business</b></span>
+        <span><b>shop the market</b></span>
+        <span><b>trade poultry</b></span>
+        <span><b>sell used items</b></span>
+        <span><b>manage your health</b></span>
+      </span>
+    </h1>
+
+    <button class="btn-google" onclick="continueWithGoogle()">
+      <span class="g"><svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg></span>
+      Continue with Google
+    </button>
+    <button class="other" onclick="toggleSheet(true)">Other</button>
+    <p class="terms">By signing up, you agree to our <a href="#">Terms of Use</a> as well as our <a href="#">Privacy</a> and <a href="#">Cookies Policy</a></p>
+  </div>
+</main>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)toggleSheet(false)">
+  <div class="sheet">
+    <div class="grab"></div>
+    <button class="opt" onclick="location.href='index.html'"><span class="e">✉️</span><span>Sign up with email<small>Create your Nexus account</small></span></button>
+    <button class="opt" onclick="location.href='login.html'"><span class="e">🔐</span><span>Log in<small>Already registered? Welcome back</small></span></button>
+  </div>
+</div>
+
+<script>
+/* ---------- Feature rotator ---------- */
+(function(){
+  const items=[...document.querySelectorAll('.rotor span')];
+  let i=0;
+  function show(n){
+    items.forEach((el,k)=>{el.classList.remove('in','out');if(k===i)el.classList.add('out')});
+    i=n;items[i].classList.remove('out');void items[i].offsetWidth;items[i].classList.add('in');
+  }
+  show(0);setInterval(()=>show((i+1)%items.length),2800);
+})();
+
+/* ---------- Aurora: GPU shader, soft vertical light curtains ---------- */
+(function(){
+  const cv=document.getElementById('aurora');
+  const gl=cv.getContext('webgl',{antialias:false,alpha:false,powerPreference:'low-power'});
+  if(!gl)return; // CSS gradient fallback stays visible
+
+  const vs='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const fs=`
+  precision highp float;
+  uniform vec2 R; uniform float T;
+  float h(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+  float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+    return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),mix(h(i+vec2(0.,1.)),h(i+vec2(1.,1.)),f.x),f.y);}
+  float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p=p*2.03+vec2(11.7,5.3);a*=.5;}return v;}
+  void main(){
+    vec2 uv=gl_FragCoord.xy/R;
+    float t=T*.05;
+
+    // 5 luminous curtains spread across the width; each drifts, breathes and bends on its own
+    float I=0.;
+    for(int k=0;k<5;k++){
+      float fk=float(k);
+      float c=(fk+.5)/5.+.07*sin(t*1.7+fk*2.3)+.12*(fbm(vec2(fk*7.+t*1.2,uv.y*.9))-.5)+.035*sin(uv.y*3.2+t*2.+fk*1.7);
+      float wd=.10+.035*sin(t*1.3+fk*1.9)+.03*fbm(vec2(fk*3.,uv.y*.5+t));
+      float d=(uv.x-c)/wd;
+      float col_=exp(-d*d);
+      // vertical life inside each curtain
+      float life=.55+.65*fbm(vec2(fk*4.+uv.x*2.,uv.y*1.1-t*2.2));
+      float amp=.62+.38*sin(t*1.1+fk*2.7);
+      I+=col_*life*amp;
+    }
+    float env=smoothstep(.04,.40,uv.y)*smoothstep(1.0,.40,uv.y);
+    float core=exp(-pow((uv.y-.50)*1.6,2.));
+    I*=env*(.6+.8*core)*.95;
+
+    vec3 deep=vec3(.16,.075,.03);
+    vec3 bronze=vec3(.62,.40,.19);
+    vec3 light=vec3(.97,.83,.58);
+    vec3 col=mix(vec3(0.),deep,smoothstep(0.,.25,I));
+    col=mix(col,bronze,smoothstep(.15,.65,I));
+    col=mix(col,light,smoothstep(.55,1.05,I)*.85);
+    col*=1.05;
+
+    // fine dither against banding
+    col+=(h(gl_FragCoord.xy+T)-.5)/255.;
+    gl_FragColor=vec4(col,1.);
+  }`;
+  function sh(t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);return gl.getShaderParameter(o,gl.COMPILE_STATUS)?o:null}
+  const v=sh(gl.VERTEX_SHADER,vs),f=sh(gl.FRAGMENT_SHADER,fs);
+  if(!v||!f)return;
+  const pr=gl.createProgram();gl.attachShader(pr,v);gl.attachShader(pr,f);gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS))return;
+  gl.useProgram(pr);
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const uR=gl.getUniformLocation(pr,'R'),uT=gl.getUniformLocation(pr,'T');
+
+  // render at reduced resolution: the effect is soft, so it is invisible and saves battery
+  const SCALE=.5;
+  function size(){cv.width=Math.max(2,Math.floor(innerWidth*SCALE));cv.height=Math.max(2,Math.floor(innerHeight*SCALE));gl.viewport(0,0,cv.width,cv.height)}
+  size();addEventListener('resize',size);
+
+  const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const t0=performance.now()-30000; // start mid-evolution
+  let raf;
+  function draw(now){
+    gl.uniform2f(uR,cv.width,cv.height);
+    gl.uniform1f(uT,(now-t0)/1000);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    if(!still)raf=requestAnimationFrame(draw);
+  }
+  raf=requestAnimationFrame(draw);
+  document.addEventListener('visibilitychange',()=>{
+    if(still)return;
+    if(document.hidden)cancelAnimationFrame(raf);else raf=requestAnimationFrame(draw);
+  });
+})();
+
+function continueWithGoogle(){ location.href='index.html'; } // TODO: Firebase Google sign-in
+function toggleSheet(o){document.getElementById('overlay').classList.toggle('open',o)}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleSheet(false)});
+</script>
+</body>
+</html>
