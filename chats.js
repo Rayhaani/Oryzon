@@ -4084,7 +4084,251 @@ window.__chatsStoryMatrixDestroy = function () {
             // friends data changes, so this list stays in sync in real time.
             window.nmoRefreshList = renderNmoContacts;
         })();
+/* ============================================================
+   BUSINESS MODE — central business inbox (Marketplace + Services)
+   Swipe left → Business, swipe right → Chats.
+   ============================================================ */
+(function () {
+    let mode = 'normal';
+    let filter = 'all';
+    let searchQ = '';
+    let unsubs = [];
+    let starting = false;
+    let myIsVendor = null;
+    let renderTimer = null;
+    const ready = { buying: false, selling: false };
+    const threads = { buying: new Map(), selling: new Map() };
+    const metaCache = new Map();
 
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const cap = s => String(s || '').split(/[\s_-]+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const toMs = v => (typeof v === 'number' ? v : (v && typeof v.toMillis === 'function' ? v.toMillis() : 0));
+
+    function previewOf(t) {
+        if (t.lastType === 'image' || t.lastType === 'imageGroup') return t.lastText || '📷 Photo';
+        if (t.lastType === 'video') return t.lastText || '🎥 Video';
+        if (t.lastType === 'voice') return '🎤 Voice message';
+        return t.lastText || 'Tap to open chat';
+    }
+
+    function getMeta(kind, otherId) {
+        const key = kind + ':' + otherId;
+        if (metaCache.has(key)) return metaCache.get(key);
+        const m = { name: cap(otherId), avatar: null, isMarketplace: null };
+        metaCache.set(key, m);
+        (async () => {
+            try {
+                if (kind === 'buying') {
+                    const v = await db.collection('vendors').doc(otherId).get();
+                    if (v.exists) {
+                        const d = v.data();
+                        m.name = d.businessName || d.name || d.storeName || m.name;
+                        m.avatar = d.photoURL || null;
+                        m.isMarketplace = true;
+                        scheduleRender();
+                        return;
+                    }
+                    m.isMarketplace = false;
+                }
+                const u = await db.collection('users').doc(otherId).get();
+                if (u.exists) {
+                    const d = u.data();
+                    m.name = cap(d.fullName || d.name || d.username || otherId);
+                    m.avatar = d.userProfilePic || null;
+                }
+                scheduleRender();
+            } catch (e) {}
+        })();
+        return m;
+    }
+
+    function sourceOf(r) {
+        const s = String(r.t.source || '').toLowerCase();
+        if (s === 'marketplace') return 'Marketplace';
+        if (s === 'services') return 'Services';
+        if (r.kind === 'buying') return r.m.isMarketplace === true ? 'Marketplace' : (r.m.isMarketplace === false ? 'Services' : '');
+        return myIsVendor === true ? 'Marketplace' : (myIsVendor === false ? 'Services' : '');
+    }
+
+    function scheduleRender() {
+        clearTimeout(renderTimer);
+        renderTimer = setTimeout(renderList, 60);
+    }
+
+    function renderList() {
+        const box = document.getElementById('bizList');
+        if (!box) return;
+        let rows = [];
+        threads.buying.forEach(t => { if (t.vendorId !== t.customerId) rows.push({ kind: 'buying', t }); });
+        threads.selling.forEach(t => { if (t.vendorId !== t.customerId) rows.push({ kind: 'selling', t }); });
+        rows.forEach(r => {
+            r.otherId = r.kind === 'buying' ? r.t.vendorId : r.t.customerId;
+            r.m = getMeta(r.kind, r.otherId);
+            r.src = sourceOf(r);
+            r.ts = toMs(r.t.lastActive);
+        });
+        document.querySelectorAll('#bizFilters .biz-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === filter));
+        rows = rows.filter(r => filter === 'all' || filter === r.kind || filter === r.src.toLowerCase());
+        if (searchQ) rows = rows.filter(r => r.m.name.toLowerCase().includes(searchQ));
+        rows.sort((a, b) => b.ts - a.ts);
+
+        if (!rows.length) {
+            box.innerHTML = (!ready.buying || !ready.selling)
+                ? '<div class="biz-empty">Loading business chats...</div>'
+                : '<div class="biz-empty"><strong>No business chats yet</strong>Chats with vendors (Marketplace) and service providers (Services) will appear here.</div>';
+            return;
+        }
+
+        box.innerHTML = rows.map(r => {
+            const href = r.kind === 'buying'
+                ? `vendor-chat.html?with=${encodeURIComponent(r.otherId)}&name=${encodeURIComponent(r.m.name)}`
+                : `vendor-chat.html?vendorId=${encodeURIComponent(window.myId)}&admin=1&customer=${encodeURIComponent(r.otherId)}&name=${encodeURIComponent(r.m.name)}`;
+            const avatar = r.m.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(r.otherId)}`;
+            const time = r.ts ? timeAgo(r.ts) : '';
+            const tag = r.src ? `<span class="biz-tag biz-tag-${r.src.toLowerCase()}">${r.src}</span>` : '';
+            return `
+            <a href="${esc(href)}" class="chat-item">
+                <div class="profile-stack"><img class="user-img" src="${esc(avatar)}" loading="lazy"></div>
+                <div class="chat-details">
+                    <div class="chat-header">
+                        <div class="biz-name-wrap"><span class="name">${esc(r.m.name)}</span>${tag}</div>
+                        <span class="time">${time}</span>
+                    </div>
+                    <span class="preview-text">${esc(previewOf(r.t))}</span>
+                </div>
+            </a>`;
+        }).join('');
+    }
+
+    async function startListeners() {
+        if (unsubs.length || starting || !window.myId || typeof db === 'undefined') return;
+        starting = true;
+        const a = window.chatsAuth;
+        if (a && !a.currentUser) {
+            await new Promise(res => { const un = a.onAuthStateChanged(() => { un(); res(); }); setTimeout(res, 4000); });
+        }
+        starting = false;
+        if (unsubs.length || mode !== 'business') return;
+        const apply = kind => snap => {
+            const map = new Map();
+            snap.forEach(doc => { const d = doc.data(); if (d.vendorId && d.customerId) map.set(doc.id, { id: doc.id, ...d }); });
+            threads[kind] = map;
+            ready[kind] = true;
+            scheduleRender();
+        };
+        const onErr = kind => e => { console.warn('Business chats listener error:', e.code || e.message); ready[kind] = true; scheduleRender(); };
+        unsubs.push(db.collection('vendorChats').where('customerId', '==', window.myId).onSnapshot(apply('buying'), onErr('buying')));
+        unsubs.push(db.collection('vendorChats').where('vendorId', '==', window.myId).onSnapshot(apply('selling'), onErr('selling')));
+    }
+
+    function setMode(next, silent) {
+        if (next === mode) return;
+        const sw = document.getElementById('bizModeSwitch');
+        const view = document.getElementById('businessView');
+        if (!sw || !view) return;
+        mode = next;
+        sw.dataset.mode = next;
+        sw.querySelectorAll('.biz-mode-opt').forEach(b => b.classList.toggle('active', b.dataset.mode === next));
+        document.documentElement.classList.toggle('biz-mode', next === 'business');
+        localStorage.setItem('nexus_chats_mode', next);
+        const title = document.getElementById('mainHeaderTitle');
+        if (next === 'business') {
+            if (title) title.textContent = 'Business';
+            if (!silent) { view.classList.remove('biz-enter'); void view.offsetWidth; view.classList.add('biz-enter'); }
+            startListeners();
+            renderList();
+        } else {
+            const tab = localStorage.getItem('nexus_active_tab') || 'personal';
+            if (title) title.textContent = tab === 'updates' ? 'Updates' : 'Chats';
+            const nv = document.querySelector('.view-container');
+            if (nv && !silent) { nv.classList.remove('biz-enter-back'); void nv.offsetWidth; nv.classList.add('biz-enter-back'); }
+        }
+        const si = document.getElementById('searchInput');
+        const bar = document.getElementById('searchBarContainer');
+        if (bar && bar.classList.contains('active') && si) { window.updateSearchPlaceholder(); window.performGlobalSearch(si.value); }
+        if (!silent && navigator.vibrate) navigator.vibrate(8);
+    }
+
+    function inHScroll(target, root) {
+        for (let n = target; n && n !== root && n.nodeType === 1; n = n.parentElement) {
+            const ox = getComputedStyle(n).overflowX;
+            if ((ox === 'auto' || ox === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true;
+        }
+        return false;
+    }
+
+    function bindSwipe(el) {
+        if (!el || el.dataset.bizSwipe) return;
+        el.dataset.bizSwipe = '1';
+        let sx = 0, sy = 0, st = 0, ok = false;
+        el.addEventListener('touchstart', e => {
+            const t = e.touches[0];
+            sx = t.clientX; sy = t.clientY; st = Date.now();
+            ok = e.touches.length === 1 && sx > 24 && sx < window.innerWidth - 24
+                && !e.target.closest('input, textarea, #networkViewContainer, [data-no-swipe]')
+                && !inHScroll(e.target, el);
+        }, { passive: true });
+        el.addEventListener('touchend', e => {
+            if (!ok) return;
+            ok = false;
+            const t = e.changedTouches[0];
+            const dx = t.clientX - sx, dy = t.clientY - sy;
+            if (Date.now() - st > 700 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.8) return;
+            if (mode === 'normal' && dx < 0) setMode('business');
+            else if (mode === 'business' && dx > 0) setMode('normal');
+        }, { passive: true });
+    }
+
+    window.setChatsMode = function (m) { setMode(m === 'business' ? 'business' : 'normal'); };
+    window.setBizFilter = function (f) { filter = f; renderList(); };
+
+    window.__chatsBizDestroy = function () {
+        unsubs.forEach(u => { try { u && u(); } catch (e) {} });
+        unsubs = []; starting = false;
+        threads.buying.clear(); threads.selling.clear();
+        ready.buying = false; ready.selling = false;
+        document.documentElement.classList.remove('biz-mode');
+        mode = 'normal';
+    };
+
+    runOnChatsInit(function () {
+        const sw = document.getElementById('bizModeSwitch');
+        const view = document.getElementById('businessView');
+        if (!sw || !view) return;
+
+        mode = 'normal'; filter = 'all'; searchQ = '';
+        document.documentElement.classList.remove('biz-mode');
+        sw.dataset.mode = 'normal';
+
+        bindSwipe(document.querySelector('.view-container'));
+        bindSwipe(view);
+
+        if (typeof window.performGlobalSearch === 'function' && !window.performGlobalSearch.__biz) {
+            const origSearch = window.performGlobalSearch;
+            window.performGlobalSearch = function (q) {
+                if (mode === 'business') { searchQ = String(q || '').toLowerCase(); renderList(); return; }
+                return origSearch.apply(this, arguments);
+            };
+            window.performGlobalSearch.__biz = true;
+        }
+        if (typeof window.updateSearchPlaceholder === 'function' && !window.updateSearchPlaceholder.__biz) {
+            const origPh = window.updateSearchPlaceholder;
+            window.updateSearchPlaceholder = function () {
+                if (mode === 'business') { const i = document.getElementById('searchInput'); if (i) i.placeholder = 'Search business chats...'; return; }
+                return origPh.apply(this, arguments);
+            };
+            window.updateSearchPlaceholder.__biz = true;
+        }
+
+        if (window.myId && typeof db !== 'undefined') {
+            db.collection('vendors').doc(window.myId).get()
+                .then(d => { myIsVendor = d.exists; scheduleRender(); })
+                .catch(() => {});
+        }
+
+        if (localStorage.getItem('nexus_chats_mode') === 'business') setMode('business', true);
+    });
+})();
 /* ============================================================
    INIT / DESTROY / REGISTER — SPA lifecycle na chats.html.
    ------------------------------------------------------------
@@ -4114,6 +4358,7 @@ function destroyChatsPage() {
     if (typeof refreshChatTimesInterval !== 'undefined' && refreshChatTimesInterval) { clearInterval(refreshChatTimesInterval); refreshChatTimesInterval = null; }
     if (window.__chatsStatusModuleDestroy) window.__chatsStatusModuleDestroy();
     if (window.__chatsStoryMatrixDestroy) window.__chatsStoryMatrixDestroy();
+    if (window.__chatsBizDestroy) window.__chatsBizDestroy();
 }
 
 if (window.NexusRouter) {
