@@ -636,7 +636,7 @@ function loadShowcaseImages() {
                     showcaseArea.insertAdjacentHTML('beforeend', `
                         <div class="grid-item" style="aspect-ratio: 1/1; overflow: hidden; border-radius: 8px; position: relative;">
                             ${deleteBtn}
-                            <img src="${post.mediaUrl}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
+                            <img src="${window.npThumbUrl ? npThumbUrl(post.mediaUrl) : post.mediaUrl}" data-orig="${post.mediaUrl}" onerror="npThumbFail(this)" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
                         </div>`);
                 }
             });
@@ -701,7 +701,7 @@ function applyUserToProfile(user) {
     const coverPhoto = user.userCover || 
         "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200";
     
-    document.getElementById('main-profile-img').src = profilePic;
+    (function (el, u) { el.setAttribute('data-orig', u); el.onerror = function () { var o = el.getAttribute('data-orig'); if (o && el.src !== o) { el.src = o; } else { el.onerror = null; } }; el.src = window.npThumbUrl ? window.npThumbUrl(u) : u; })(document.getElementById('main-profile-img'), profilePic);
     document.getElementById('main-cover-img').src = coverPhoto;
     
     localStorage.setItem('userProfilePic', profilePic);
@@ -722,7 +722,7 @@ function applyUserToProfile(user) {
     const coverPhoto = user.userCover || 
                        "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=1200";
     
-    document.getElementById('main-profile-img').src = profilePic;
+    (function (el, u) { el.setAttribute('data-orig', u); el.onerror = function () { var o = el.getAttribute('data-orig'); if (o && el.src !== o) { el.src = o; } else { el.onerror = null; } }; el.src = window.npThumbUrl ? window.npThumbUrl(u) : u; })(document.getElementById('main-profile-img'), profilePic);
     document.getElementById('main-cover-img').src = coverPhoto;
     
     localStorage.setItem('userProfilePic', profilePic);
