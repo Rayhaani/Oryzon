@@ -4527,7 +4527,7 @@ function openSecureChat() {
         return;
     }
    const pro = PROS.find(p => String(p.id) === String(currentProfileProId));
-    window.location.href = `vendor-chat.html?with=${encodeURIComponent(currentProfileProId)}&name=${encodeURIComponent(pro ? pro.name : '')}`; 
+    window.location.href = `vendor-chat.html?with=${encodeURIComponent(currentProfileProId)}&name=${encodeURIComponent(pro ? pro.name : '')}&src=services`;
     }
 
 // ══════════════════════════════════════════════════════════════
