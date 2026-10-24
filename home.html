@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nexus Protocol</title>
+<meta name="theme-color" content="#000000">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000;
+  --gold:#fde08d;
+  --b1:#F8D9A2; --b2:#E3C48D; --b3:#C09060; --b4:#A77542; --b5:#8B5B2D; --b6:#B8763A;
+  --muted:rgba(255,255,255,.55);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:#fff;font-family:'Inter',system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+.page{position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;isolation:isolate}
+
+/* ===== AURORA ===== */
+.aurora{position:absolute;left:-10%;right:-10%;top:0;height:78%;z-index:-2;filter:blur(46px) saturate(1.15);opacity:.9}
+.ray{position:absolute;top:4%;height:92%;border-radius:50% 50% 40% 40%/30% 30% 60% 60%;mix-blend-mode:screen;will-change:transform,opacity}
+.r1{left:2%;width:24%;background:linear-gradient(180deg,transparent 0%,var(--b3) 28%,var(--b1) 55%,var(--b5) 82%,transparent 100%);opacity:.62;animation:sway1 11s ease-in-out infinite alternate}
+.r2{left:20%;width:18%;background:linear-gradient(180deg,transparent 4%,var(--b4) 30%,var(--b2) 58%,transparent 96%);opacity:.5;animation:sway2 14s ease-in-out infinite alternate}
+.r3{left:40%;width:22%;background:linear-gradient(180deg,transparent 0%,var(--b5) 25%,var(--b6) 55%,var(--b3) 78%,transparent 100%);opacity:.55;animation:sway3 12s ease-in-out infinite alternate}
+.r4{left:60%;width:20%;background:linear-gradient(180deg,transparent 2%,var(--b3) 32%,var(--b1) 62%,transparent 98%);opacity:.6;animation:sway2 16s ease-in-out infinite alternate-reverse}
+.r5{left:78%;width:22%;background:linear-gradient(180deg,transparent 0%,var(--b6) 30%,var(--b2) 58%,var(--b5) 84%,transparent 100%);opacity:.5;animation:sway1 13s ease-in-out infinite alternate-reverse}
+@keyframes sway1{0%{transform:translateX(-4vw) scaleY(.9) skewX(-4deg);opacity:.35}100%{transform:translateX(6vw) scaleY(1.08) skewX(5deg);opacity:.7}}
+@keyframes sway2{0%{transform:translateX(5vw) scaleY(1.05) skewX(4deg);opacity:.3}100%{transform:translateX(-6vw) scaleY(.88) skewX(-5deg);opacity:.62}}
+@keyframes sway3{0%{transform:translateX(-5vw) scaleY(.92) skewX(3deg);opacity:.35}100%{transform:translateX(4vw) scaleY(1.1) skewX(-4deg);opacity:.68}}
+
+.shade{position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:
+   linear-gradient(to bottom,rgba(0,0,0,.55) 0%,transparent 22%),
+   linear-gradient(to top,#000 0%,rgba(0,0,0,.92) 26%,rgba(0,0,0,.45) 48%,transparent 72%)}
+.grain{position:absolute;inset:0;z-index:-1;opacity:.08;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#dust{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+
+/* ===== TOP ===== */
+.login{position:absolute;top:calc(env(safe-area-inset-top) + 14px);right:18px;font-size:13px;font-weight:600;color:#fff;padding:8px 16px;border:1px solid rgba(255,255,255,.22);border-radius:30px;text-decoration:none;background:rgba(0,0,0,.25);backdrop-filter:blur(8px);transition:.25s}
+.login:hover{color:var(--gold);border-color:var(--gold)}
+
+/* ===== CONTENT (same proportions as TradingView) ===== */
+.inner{width:100%;max-width:480px;padding:0 16px calc(env(safe-area-inset-bottom) + 14px)}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Orbitron',sans-serif;font-weight:900;font-size:21px;letter-spacing:1.5px;margin-bottom:30px}
+.logo i{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 210deg,#F8D9A2,#B8763A,#8B5B2D,#E3C48D,#F8D9A2);box-shadow:0 0 18px rgba(253,224,141,.4)}
+h1{font-size:clamp(26px,8.2vw,34px);line-height:1.14;font-weight:700;letter-spacing:-.01em}
+.rotor{position:relative;display:block;height:1.2em;margin-top:2px;white-space:nowrap}
+.rotor span{position:absolute;left:0;top:0;opacity:0;transform:translateY(60%);filter:blur(5px);transition:opacity .5s ease,transform .5s cubic-bezier(.2,.8,.2,1),filter .5s ease}
+.rotor span.in{opacity:1;transform:none;filter:none}
+.rotor span.out{opacity:0;transform:translateY(-60%);filter:blur(5px)}
+.rotor b{font-weight:700;background:linear-gradient(90deg,#fff,var(--b2) 45%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.btn-google{margin-top:26px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#111;border:0;border-radius:14px;height:48px;font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;transition:transform .2s,box-shadow .3s}
+.btn-google:hover{box-shadow:0 0 30px rgba(253,224,141,.35)}
+.btn-google:active{transform:scale(.985)}
+.g{width:28px;height:28px;border-radius:50%;background:#f1f3f8;display:grid;place-items:center}
+.other{display:block;width:100%;text-align:center;background:none;border:0;color:#fff;font-size:15px;font-weight:500;font-family:inherit;padding:30px 0 34px;cursor:pointer}
+.other:hover{color:var(--gold)}
+.terms{text-align:center;font-size:11px;color:var(--muted);line-height:1.55}
+.terms a{color:var(--gold);text-decoration:none}
+
+/* ===== SHEET ===== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:50;opacity:0;pointer-events:none;transition:.3s;display:flex;align-items:flex-end;justify-content:center}
+.overlay.open{opacity:1;pointer-events:auto}
+.sheet{width:100%;max-width:480px;background:linear-gradient(135deg,#1e1c1c,#0b0b0b);border:1px solid rgba(253,224,141,.2);border-radius:22px 22px 0 0;padding:14px 16px calc(env(safe-area-inset-bottom) + 22px);transform:translateY(100%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.overlay.open .sheet{transform:none}
+.grab{width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.2);margin:0 auto 18px}
+.opt{display:flex;align-items:center;gap:14px;width:100%;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#0a0a0a;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:left;transition:.25s}
+.opt:hover{border-color:var(--gold)}
+.opt small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.opt .e{font-size:22px}
+
+@media(min-width:700px){.inner{margin-left:max(6vw,16px);padding-bottom:28px}.ray{filter:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="aurora"><div class="ray r1"></div><div class="ray r2"></div><div class="ray r3"></div><div class="ray r4"></div><div class="ray r5"></div></div>
+  <canvas id="dust"></canvas>
+  <div class="shade"></div>
+  <div class="grain"></div>
+
+  <a class="login" href="login.html">Log in</a>
+
+  <div class="inner">
+    <div class="logo"><i></i>NEXUS PROTOCOL</div>
+
+    <h1>
+      Sign up to
+      <span class="rotor" aria-live="polite">
+        <span><b>explore the feed</b></span>
+        <span><b>hire professionals</b></span>
+        <span><b>chat &amp; do business</b></span>
+        <span><b>shop the market</b></span>
+        <span><b>trade poultry</b></span>
+        <span><b>sell used items</b></span>
+        <span><b>manage your health</b></span>
+      </span>
+    </h1>
+
+    <button class="btn-google" onclick="continueWithGoogle()">
+      <span class="g"><svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg></span>
+      Continue with Google
+    </button>
+    <button class="other" onclick="toggleSheet(true)">Other</button>
+    <p class="terms">By signing up, you agree to our <a href="#">Terms of Use</a> as well as our <a href="#">Privacy</a> and <a href="#">Cookies Policy</a></p>
+  </div>
+</main>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)toggleSheet(false)">
+  <div class="sheet">
+    <div class="grab"></div>
+    <button class="opt" onclick="location.href='index.html'"><span class="e">✉️</span><span>Sign up with email<small>Create your Nexus account</small></span></button>
+    <button class="opt" onclick="location.href='login.html'"><span class="e">🔐</span><span>Log in<small>Already registered? Welcome back</small></span></button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const items=[...document.querySelectorAll('.rotor span')];
+  let i=0;
+  function show(n){
+    items.forEach((el,k)=>{el.classList.remove('in','out');if(k===i)el.classList.add('out')});
+    i=n;items[i].classList.remove('out');void items[i].offsetWidth;items[i].classList.add('in');
+  }
+  show(0);setInterval(()=>show((i+1)%items.length),2600);
+})();
+
+/* gold dust */
+(function(){
+  const c=document.getElementById('dust'),x=c.getContext('2d');
+  let w,h,p=[];
+  function size(){const r=devicePixelRatio||1;w=c.width=innerWidth*r;h=c.height=innerHeight*r;}
+  size();addEventListener('resize',size);
+  const N=Math.min(46,Math.floor(innerWidth/9));
+  for(let k=0;k<N;k++)p.push({x:Math.random(),y:Math.random()*.8,r:Math.random()*1.6+.4,s:Math.random()*.00012+.00003,a:Math.random()*6.28,t:Math.random()*.6+.2});
+  (function loop(){
+    x.clearRect(0,0,w,h);
+    p.forEach(d=>{
+      d.y-=d.s*16;d.a+=.012;if(d.y<-.02){d.y=.82;d.x=Math.random()}
+      const al=d.t*(.5+.5*Math.sin(d.a));
+      x.beginPath();x.arc((d.x+Math.sin(d.a)*.01)*w,d.y*h,d.r*(devicePixelRatio||1),0,6.28);
+      x.fillStyle='rgba(253,224,141,'+al+')';x.fill();
+    });
+    requestAnimationFrame(loop);
+  })();
+})();
+
+function continueWithGoogle(){ location.href='index.html'; } // TODO: Firebase Google sign-in
+function toggleSheet(o){document.getElementById('overlay').classList.toggle('open',o)}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleSheet(false)});
+</script>
+</body>
+</html>
