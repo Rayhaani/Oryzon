@@ -293,7 +293,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp }
+        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, setDoc }
             from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -344,6 +344,21 @@
                     vendorId:    localStorage.getItem('nexus_user_session') || ''
                 });
 
+                // Open the shop automatically on the first listing (no registration, no verification)
+                try {
+                    const me = localStorage.getItem('nexus_user_session') || '';
+                    if (me) {
+                        const vRef = doc(db, "vendors", me);
+                        const vSnap = await getDoc(vRef);
+                        if (!vSnap.exists() || !vSnap.data().storeName) {
+                            await setDoc(vRef, {
+                                storeName: me.charAt(0).toUpperCase() + me.slice(1),
+                                createdAt: serverTimestamp()
+                            }, { merge: true });
+                        }
+                    }
+                } catch (vErr) { console.warn("Vendor profile not created:", vErr.message); }
+                
                 showNotif(docRef.id, imageUrl, name);
 
             } catch (e) {
