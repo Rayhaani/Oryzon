@@ -4096,6 +4096,7 @@ window.__chatsStoryMatrixDestroy = function () {
     let searchQ = '';
     let userPicked = false;
    let srcFilter = 'all';
+   let isSeller = false;
     let unsubs = [];
     let starting = false;
     let myIsVendor = null;
@@ -4263,15 +4264,83 @@ window.__chatsStoryMatrixDestroy = function () {
             </a>`;
         }).join('');
     }
+function updateChatsPerf() {
+        const since = Date.now() - 7 * 86400000;
+        let chats = 0;
+        threads.selling.forEach(t => { if (toMs(t.lastActive) >= since) chats++; });
+        setPerf('biz-perf-chats', chats);
+    }
 
+    function updateToolsTab() {
+        const b = $('biz-tab-tools');
+        if (b) b.style.display = (isSeller || threads.selling.size > 0) ? '' : 'none';
+        const p = $('biz-tools-pane');
+        if (p && p.style.display === 'block') updateChatsPerf();
+    }
+
+    function setPerf(id, v) {
+        const el = $(id);
+        if (el) el.textContent = (v == null) ? '– –' : String(v);
+    }
+
+    async function detectSeller() {
+        const me = window.myId;
+        if (!me) return;
+        try {
+            const v = await db.collection('vendors').doc(me).get();
+            if (v.exists) isSeller = true;
+        } catch (e) {}
+        if (!isSeller && window.firebase && firebase.database) {
+            try {
+                const p = await firebase.database().ref('providers/' + me + '/name').once('value');
+                if (p.exists()) isSeller = true;
+            } catch (e) {}
+        }
+        updateToolsTab();
+    }
+
+    async function loadPerformance() {
+        const me = window.myId;
+        if (!me) return;
+        updateChatsPerf();
+        setPerf('biz-perf-views', null);
+        setPerf('biz-perf-orders', null);
+        if (!(window.firebase && firebase.database)) return;
+        const since = Date.now() - 7 * 86400000;
+        try {
+            const rtdb = firebase.database();
+            const [viewsSnap, ordersSnap, requestsSnap] = await Promise.all([
+                rtdb.ref('providers/' + me + '/analytics/views').once('value'),
+                rtdb.ref('providers/' + me + '/orders').once('value'),
+                rtdb.ref('providers/' + me + '/requests').once('value')
+            ]);
+            if (viewsSnap.exists()) {
+                const views = viewsSnap.val() || {};
+                let total = 0;
+                for (let i = 0; i < 7; i++) {
+                    total += Number(views[new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)]) || 0;
+                }
+                setPerf('biz-perf-views', total);
+            }
+            if (ordersSnap.exists() || requestsSnap.exists()) {
+                let n = 0;
+                [ordersSnap.val(), requestsSnap.val()].forEach(obj => {
+                    Object.values(obj || {}).forEach(o => { if ((o.createdAt || 0) >= since) n++; });
+                });
+                setPerf('biz-perf-orders', n);
+            }
+        } catch (e) { console.warn('Performance load failed:', e.message); }
+       }
     function switchTab(t, auto) {
         if (!auto) userPicked = true;
-        const isUpdates = t === 'updates';
-        if (!isUpdates) tab = t;
-        ['buying', 'selling', 'updates'].forEach(n => { const b = $('biz-tab-' + n); if (b) b.classList.toggle('active', n === t); });
+       const isUpdates = t === 'updates';
+        const isTools = t === 'tools';
+        if (!isUpdates && !isTools) tab = t;
+        ['buying', 'selling', 'updates', 'tools'].forEach(n => { const b = $('biz-tab-' + n); if (b) b.classList.toggle('active', n === t); });
         $('biz-selling-subfilters').style.display = t === 'selling' ? 'flex' : 'none';
-        $('biz-list-wrap').style.display = isUpdates ? 'none' : 'block';
+        $('biz-list-wrap').style.display = (isUpdates || isTools) ? 'none' : 'block';
         $('biz-updates-pane').style.display = isUpdates ? 'flex' : 'none';
+        $('biz-tools-pane').style.display = isTools ? 'block' : 'none';
         $('biz-list-buying').style.display = t === 'buying' ? 'block' : 'none';
         $('biz-list-selling').style.display = t === 'selling' ? 'block' : 'none';
         if (isUpdates) {
@@ -4279,6 +4348,7 @@ window.__chatsStoryMatrixDestroy = function () {
             if (fr && !fr.getAttribute('src')) fr.src = 'updates.html?embed=1';
             return;
         }
+        if (isTools) { loadPerformance(); return; } 
         renderList();
     }
 
@@ -4296,6 +4366,7 @@ window.__chatsStoryMatrixDestroy = function () {
             snap.forEach(doc => { const d = doc.data(); if (d.vendorId && d.customerId) map.set(doc.id, { id: doc.id, ...d }); });
             threads[kind] = map;
            updateFabBadge();
+           updateToolsTab();
             ready[kind] = true;
             if (!userPicked && ready.buying && ready.selling && tab !== 'updates') {
                 if (threads.selling.size > 0 && tab !== 'selling') { switchTab('selling', true); return; }
@@ -4439,6 +4510,7 @@ window.__chatsStoryMatrixDestroy = function () {
                 .catch(() => {});
         }
        startListeners();
+       detectSeller();
         const n = +localStorage.getItem('nexus_biz_hint') || 0;
         if (n < 3) { localStorage.setItem('nexus_biz_hint', String(n + 1)); flashLabel(3200); }
         else { $('bizFabLabel').textContent = 'Business'; }
