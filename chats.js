@@ -4292,7 +4292,7 @@ function updateChatsPerf() {
         } catch (e) {}
         if (!isSeller && window.firebase && firebase.database) {
             try {
-                const p = await firebase.database().ref('providers/' + me + '/name').once('value');
+                const p = await firebase.database().ref('providers/' + me + '/category').once('value');
                 if (p.exists()) isSeller = true;
             } catch (e) {}
         }
