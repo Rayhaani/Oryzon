@@ -813,10 +813,20 @@ async function openMyBusinessDashboard() {
     mbSwitchTab('overview');
 
     try {
-        const snap = await firebase.database().ref('providers/' + username).once('value');
-        const data = snap.val();
-        if (!data) { showGlobalToast('❌ Business profile not found.'); return; }
-
+       const provRef = firebase.database().ref('providers/' + username);
+        const snap = await provRef.once('value');
+        let data = snap.val();
+        if (!data) {
+            // Marketplace vendor opening the dashboard for the first time: create a minimal profile.
+            // No "status" on purpose: the services directory lists only status === 'approved'.
+            data = {
+                username: username,
+                businessName: username.charAt(0).toUpperCase() + username.slice(1),
+                marketplace: true,
+                createdAt: Date.now()
+            };
+            await provRef.set(data);
+        } 
         document.getElementById('mb-business-name').textContent = data.businessName || data.categoryLabel || 'My Business';
         const headerPublishBtn = document.getElementById('mb-header-publish-btn');
         if (data.color && headerPublishBtn) headerPublishBtn.style.borderColor = data.color;
