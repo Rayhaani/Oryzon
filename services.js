@@ -3365,6 +3365,7 @@ runOnServicesInit(() => {
             const targetPro = PROS.find(p => String(p.id) === sharedProId);
             if (targetPro) openProfileSheet(targetPro.id);
         }
+   if (urlParams.get('open') === 'post') setTimeout(() => openPostServiceSheet(), 400);
     });
    }
     document.getElementById("search-input").addEventListener("keydown", (e) => { if(e.key==="Enter") triggerRouterCheck(); });
