@@ -4292,6 +4292,12 @@ function updateChatsPerf() {
             const v = await db.collection('vendors').doc(me).get();
             if (v.exists) isSeller = true;
         } catch (e) {}
+       if (!isSeller) {
+            try {
+                const ps = await db.collection('products').where('vendorId', '==', me).limit(1).get();
+                if (!ps.empty) isSeller = true;
+            } catch (e) {}
+}
         if (!isSeller && window.firebase && firebase.database) {
             try {
                 const p = await firebase.database().ref('providers/' + me + '/category').once('value');
