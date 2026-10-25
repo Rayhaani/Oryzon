@@ -491,3 +491,17 @@ var SERVICES_SCRIPTS = [
     if (document.readyState === 'complete') schedule();
     else window.addEventListener('load', schedule);
 })();
+
+(function () {
+    window.npMediumUrl = function (u) {
+        try {
+            if (!u || typeof u !== 'string' || u.indexOf('data:') === 0 || /\.(gif|svg)(\?|$)/i.test(u)) return u;
+            if (u.indexOf('/medium/') > -1 || u.indexOf('/thumbs/') > -1) return u;
+            var m = /^(https:\/\/[^\/]+\.backblazeb2\.com\/file\/[^\/]+\/)(.+)\.(jpe?g|png|webp)(\?.*)?$/i.exec(u)
+                 || /^(https:\/\/[^\/]+\.backblazeb2\.com\/)(.+)\.(jpe?g|png|webp)(\?.*)?$/i.exec(u);
+            if (!m) return u;
+            return m[1] + 'medium/' + m[2] + '.webp';
+        } catch (e) {}
+        return u;
+    };
+})();
