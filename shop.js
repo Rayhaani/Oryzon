@@ -53,7 +53,7 @@ async function bootShopMarketplace() {
 
         const [_appMod, _fsMod] = await _loadShopEsm();
         const { initializeApp, getApps, getApp } = _appMod;
-        const { getFirestore, collection, query, orderBy, onSnapshot, where, getDocs, limit } = _fsMod;
+        const { getFirestore, collection, query, orderBy, onSnapshot, where, getDocs, limit, doc, getDoc, setDoc, serverTimestamp } = _fsMod;
         const firebaseConfig = {
             apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
             authDomain: "oryzon-50ea4.firebaseapp.com",
@@ -440,39 +440,43 @@ async function bootShopMarketplace() {
         listenToMarketplace();
 
         /* ---------- SELL ⇄ MY BUSINESS ----------
-           A user becomes a vendor the first time they post a product.
-           Since sell.html's exact field name isn't visible to me, this checks
-           every common naming convention for the seller identifier so it
-           works regardless of which one sell.html actually uses. If none of
-           these match your real field name, tell me the exact field name
-           sell.html writes and I'll narrow this to just that one. */
-        async function checkVendorStatus() {
-            const username = localStorage.getItem("nexus_user_session");
-            const pill = document.getElementById('sellPill');
-            const label = document.getElementById('sellPillText');
-            if (!username || !pill || !label) return;
+            A vendor is anyone with a vendors/{username} profile that has a storeName.
+            sell.html creates that profile automatically on the first listing.
+            Older vendors (who listed before that existed) are found through their
+            products (field: vendorId) and get their profile created here, once. */
+         async function checkVendorStatus() {
+             const username = localStorage.getItem("nexus_user_session");
+             const pill = document.getElementById('sellPill');
+             const label = document.getElementById('sellPillText');
+             if (!username || !pill || !label) return;
 
-            const candidateFields = ['sellerUsername', 'seller', 'sellerId', 'vendorUsername', 'vendorId', 'ownerUsername', 'username'];
-            try {
-                const checks = candidateFields.map(field =>
-                    getDocs(query(collection(db, "products"), where(field, "==", username), limit(1)))
-                        .then(snap => !snap.empty)
-                        .catch(() => false)
-                );
-                const results = await Promise.all(checks);
-                const isVendor = results.some(Boolean);
+             try {
+                 let isVendor = false;
+                 const vSnap = await getDoc(doc(db, "vendors", username));
+                 if (vSnap.exists() && vSnap.data().storeName) isVendor = true;
 
-                if (isVendor) {
-                    label.textContent = 'My Business';
-                    pill.onclick = () => { if (typeof openMyBusinessDashboard === 'function') openMyBusinessDashboard(); };
-                } else {
-                    label.textContent = 'Sell';
-                    pill.onclick = () => { NexusRouter.navigateTo('sell.html'); };
-                }
-            } catch (err) {
-                console.warn('Could not check vendor status:', err.message);
-            }
-        }
+                 if (!isVendor) {
+                     const ps = await getDocs(query(collection(db, "products"), where("vendorId", "==", username), limit(1)));
+                     if (!ps.empty) {
+                         isVendor = true;
+                         setDoc(doc(db, "vendors", username), {
+                             storeName: username.charAt(0).toUpperCase() + username.slice(1),
+                             createdAt: serverTimestamp()
+                         }, { merge: true }).catch(() => {});
+                     }
+                 }
+
+                 if (isVendor) {
+                     label.textContent = 'My Business';
+                     pill.onclick = () => { if (typeof openMyBusinessDashboard === 'function') openMyBusinessDashboard(); };
+                 } else {
+                     label.textContent = 'Sell';
+                     pill.onclick = () => { NexusRouter.navigateTo('sell.html'); };
+                 }
+             } catch (err) {
+                 console.warn('Could not check vendor status:', err.message);
+             }
+                                       }
         checkVendorStatus();
 
         /* ---------- 4. NEAR ME (geolocation + escalating radius search) ---------- */
