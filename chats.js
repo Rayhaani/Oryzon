@@ -4273,9 +4273,11 @@ function updateChatsPerf() {
 
     function updateToolsTab() {
         const b = $('biz-tab-tools');
-        if (b) b.style.display = (isSeller || threads.selling.size > 0) ? '' : 'none';
+        if (b) b.style.display = '';
+        const seller = isSeller || threads.selling.size > 0;
         const p = $('biz-tools-pane');
-        if (p && p.style.display === 'block') updateChatsPerf();
+        if (p) p.classList.toggle('not-seller', !seller);
+        if (p && seller && p.style.display === 'block') updateChatsPerf();
     }
 
     function setPerf(id, v) {
@@ -4348,7 +4350,7 @@ function updateChatsPerf() {
             if (fr && !fr.getAttribute('src')) fr.src = 'updates.html?embed=1';
             return;
         }
-        if (isTools) { loadPerformance(); return; } 
+        if (isTools) { updateToolsTab(); if (isSeller || threads.selling.size > 0) loadPerformance(); return; }
         renderList();
     }
 
@@ -4510,7 +4512,8 @@ function updateChatsPerf() {
                 .catch(() => {});
         }
        startListeners();
-       detectSeller();
+       updateToolsTab();
+        detectSeller();
         const n = +localStorage.getItem('nexus_biz_hint') || 0;
         if (n < 3) { localStorage.setItem('nexus_biz_hint', String(n + 1)); flashLabel(3200); }
         else { $('bizFabLabel').textContent = 'Business'; }
