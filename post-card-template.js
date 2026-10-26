@@ -1253,7 +1253,7 @@ const rawPic = post.userProfilePic || npAvatarSvg(post.username || 'user');
 
         const nxFastUrl = (url) => (url && url.includes('cloudinary.com'))
             ? url.replace('/upload/', '/upload/f_auto,q_auto,w_700/')
-            : url;
+            : (window.npMediumUrl ? window.npMediumUrl(url) : url);
 
         const slidesHTML = nxMediaItems.map(item => {
             const fUrl = nxFastUrl(item.url);
@@ -1265,14 +1265,14 @@ const rawPic = post.userProfilePic || npAvatarSvg(post.username || 'user');
                     </div>
                 </div>`;
             }
-            return `<div class="post-media-slide"><img src="${fUrl}" class="post-media" loading="lazy" alt="post image"></div>`;
+            return `<div class="post-media-slide"><img src="${fUrl}" data-orig="${item.url}" onerror="npThumbFail(this)" class="post-media" loading="lazy" alt="post image"></div>`;
         }).join('');
 
         const dotsHTML = nxMediaItems.map((_, i) => `<span class="post-media-dot${i === 0 ? ' active' : ''}"></span>`).join('');
 
         const gridHTML = nxMediaItems.map(item => item.type === 'video'
     ? `<video src="${nxFastUrl(item.url)}" muted playsinline preload="none"></video>`
-    : `<img src="${nxFastUrl(item.url)}" alt="post image">`
+    : `<img src="${nxFastUrl(item.url)}" data-orig="${item.url}" onerror="npThumbFail(this)" alt="post image">`
 ).join('');
 
         mediaWrapperHTML = `
@@ -1291,7 +1291,7 @@ const rawPic = post.userProfilePic || npAvatarSvg(post.username || 'user');
         // ---- EXISTING single-media path — UNCHANGED ----
         const fastUrl = post.mediaUrl.includes('cloudinary.com')
             ? post.mediaUrl.replace('/upload/', '/upload/f_auto,q_auto,w_700/')
-            : post.mediaUrl;
+            : (window.npMediumUrl ? window.npMediumUrl(post.mediaUrl) : post.mediaUrl);
 
         const boostTagHTML = post.boosted
             ? `<div class="post-boost-tag"><i class="fa-solid fa-rocket"></i> Sponsored</div>`
@@ -1311,7 +1311,7 @@ const rawPic = post.userProfilePic || npAvatarSvg(post.username || 'user');
                     </div>
                 </div>`;
         } else {
-            mediaWrapperHTML = `<div style="position:relative;">${boostTagHTML}<img src="${fastUrl}" class="post-media" loading="lazy" alt="post image"></div>`;
+            mediaWrapperHTML = `<div style="position:relative;">${boostTagHTML}<img src="${fastUrl}" data-orig="${post.mediaUrl}" onerror="npThumbFail(this)" class="post-media" loading="lazy" alt="post image"></div>`;
         }
     }
 
@@ -1413,11 +1413,11 @@ const rawPic = post.userProfilePic || npAvatarSvg(post.username || 'user');
                   <div class="post-header ${post.isVerified ? 'post-header-premium' : ''}">
             <a href="me.html?user=${encodeURIComponent(post.username || '')}"
                style="position:absolute; left:0; top:0; width:54px; height:54px; display:block; z-index:20; text-decoration:none;">
-               <img src="${avatarUrl}"
+               <img src="${window.npThumbUrl ? window.npThumbUrl(avatarUrl) : avatarUrl}" data-orig="${avatarUrl}"
                      class="post-avatar"
                      loading="lazy"
                      alt=""
-                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27%3E%3C/svg%3E';"> 
+                     onerror="var o=this.getAttribute('data-orig'); if (o && this.src!==o) { this.src=o; return; } this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27%3E%3C/svg%3E';"> 
                             </a>
 
 <div class="post-username-row" style="display: flex !important; flex-direction: column !important; justify-content: center !important; flex: 1 !important; min-width: 0 !important; margin: 0 0 0 2px !important;">
