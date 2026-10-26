@@ -10623,3 +10623,256 @@ window.addEventListener('message', function (e) {
 window.inboxWaitForAuth = inboxWaitForAuth;
 window.inboxOpenChat = inboxOpenChat;
 })();
+
+/* ============================================================
+   QUICK START — one-minute onboarding for local trades.
+   Writes the same providers/{username} shape as the full form,
+   so directory, Near Me, profile and dashboard need no changes.
+   ============================================================ */
+const qsState = { categoryId: null, label: null, sub: null, gpsLat: null, gpsLng: null, gpsCity: '', gpsAddress: '', gpsReady: false };
+let qsPhotos = [];
+let qsBusy = false;
+let qsCats = [];
+
+function qsEsc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function qsNormalizePhone(raw) {
+    const s = String(raw || '').replace(/[\s\-()]/g, '');
+    if (/^0\d{10}$/.test(s)) return '+234' + s.slice(1);
+    if (/^234\d{10}$/.test(s)) return '+' + s;
+    if (/^\+\d{8,15}$/.test(s)) return s;
+    return '';
+}
+
+function qsRenderChips() {
+    qsCats = (typeof PS_CATS !== 'undefined' ? PS_CATS : []).filter(c => c.id !== 'doctor' && c.id !== 'veterinary');
+    const box = document.getElementById('qs-chips');
+    box.innerHTML = qsCats.map((c, i) => `<button type="button" class="qs-chip" data-i="${i}" onclick="qsPickTrade(${i})">${c.icon || ''} ${qsEsc(c.label)}</button>`).join('')
+        + `<button type="button" class="qs-chip" id="qs-chip-other" onclick="qsPickOther()">✏️ Other</button>`;
+}
+
+function qsPickTrade(i) {
+    const c = qsCats[i];
+    if (!c) return;
+    qsState.categoryId = c.id;
+    qsState.label = c.label;
+    qsState.sub = c.label;
+    document.querySelectorAll('#qs-chips .qs-chip').forEach(b => b.classList.toggle('active', b.dataset.i === String(i)));
+    document.getElementById('qs-other-wrap').style.display = 'none';
+}
+
+function qsPickOther() {
+    qsState.categoryId = 'other';
+    qsState.label = null;
+    qsState.sub = null;
+    document.querySelectorAll('#qs-chips .qs-chip').forEach(b => b.classList.toggle('active', b.id === 'qs-chip-other'));
+    document.getElementById('qs-other-wrap').style.display = 'block';
+    document.getElementById('qs-other').focus();
+}
+
+function qsOtherInput(v) {
+    const t = String(v || '').trim();
+    qsState.label = t ? t.charAt(0).toUpperCase() + t.slice(1) : null;
+    qsState.sub = qsState.label;
+}
+
+function qsCompress(file) {
+    return new Promise(resolve => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            const s = Math.min(1, 1280 / Math.max(img.width, img.height));
+            const c = document.createElement('canvas');
+            c.width = Math.round(img.width * s);
+            c.height = Math.round(img.height * s);
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            c.toBlob(b => { URL.revokeObjectURL(url); resolve(b ? new File([b], 'photo.jpg', { type: 'image/jpeg' }) : file); }, 'image/jpeg', 0.75);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+        img.src = url;
+    });
+}
+
+function qsRenderPhotos() {
+    const box = document.getElementById('qs-photos');
+    box.innerHTML = qsPhotos.map((p, i) => `<div class="qs-photo"><img src="${p.preview}"><button type="button" class="qs-photo-x" onclick="qsRemovePhoto(${i})">✕</button></div>`).join('')
+        + (qsPhotos.length < 4 ? `<div class="qs-photo" onclick="document.getElementById('qs-photo-input').click()">＋</div>` : '');
+}
+
+async function qsAddPhotos(input) {
+    const files = Array.from(input.files || []);
+    input.value = '';
+    for (const f of files) {
+        if (qsPhotos.length >= 4) break;
+        if (!f.type.startsWith('image/')) continue;
+        const small = await qsCompress(f);
+        qsPhotos.push({ file: small, preview: URL.createObjectURL(small) });
+    }
+    qsRenderPhotos();
+}
+
+function qsRemovePhoto(i) {
+    qsPhotos.splice(i, 1);
+    qsRenderPhotos();
+}
+
+function qsCaptureGPS() {
+    captureGPSUniversal({
+        statusId: 'qs-gps-status',
+        btnId: 'qs-gps-btn',
+        cardId: 'qs-gps-card',
+        stateTarget: qsState,
+        onSuccess: () => {
+            const a = document.getElementById('qs-area');
+            a.style.display = 'block';
+            a.value = qsState.gpsAddress || '';
+            if (!qsState.gpsAddress) a.focus();
+        }
+    });
+}
+
+function qsAreaInput(v) {
+    qsState.gpsAddress = String(v || '').trim();
+    qsState.gpsCity = qsState.gpsAddress.split(',').pop().trim();
+}
+
+function qsReset() {
+    Object.assign(qsState, { categoryId: null, label: null, sub: null, gpsLat: null, gpsLng: null, gpsCity: '', gpsAddress: '', gpsReady: false });
+    qsPhotos = [];
+    qsBusy = false;
+    ['qs-other', 'qs-price', 'qs-phone', 'qs-area'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('qs-area').style.display = 'none';
+    document.getElementById('qs-other-wrap').style.display = 'none';
+    document.getElementById('qs-gps-status').textContent = 'Stand where you work so customers near you can find you.';
+    document.getElementById('qs-gps-btn').textContent = '📍 Use my location';
+    document.getElementById('qs-gps-card').style.borderColor = '';
+    document.getElementById('qs-gps-card').style.background = '';
+    document.getElementById('qs-success').style.display = 'none';
+    document.getElementById('qs-go').disabled = false;
+    document.getElementById('qs-go').textContent = 'Go live';
+    qsRenderChips();
+    qsRenderPhotos();
+}
+
+async function openQuickStart() {
+    const me = localStorage.getItem('nexus_user_session');
+    if (!me) { showGlobalToast('⚠️ Please login first.'); setTimeout(() => { window.location.href = 'login.html'; }, 1200); return; }
+    try {
+        // Already has a business profile? Open it instead of overwriting.
+        const snap = await firebase.database().ref('providers/' + me + '/category').once('value');
+        if (snap.exists()) {
+            showGlobalToast('You already have a business profile.');
+            if (typeof openMyBusinessDashboard === 'function') openMyBusinessDashboard();
+            return;
+        }
+    } catch (e) {}
+    qsReset();
+    document.getElementById('qs-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeQuickStart() {
+    document.getElementById('qs-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+async function qsUploadPhotos(username) {
+    const urls = [];
+    for (const p of qsPhotos) {
+        try {
+            const fd = new FormData();
+            fd.append('file', p.file);
+            fd.append('type', 'portfolio');
+            fd.append('username', username);
+            const res = await fetch(`${BACKEND_URL}/upload`, { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) urls.push({ url: data.url, type: 'image' });
+        } catch (e) { console.warn('Photo upload failed:', e); }
+    }
+    return urls;
+}
+
+async function qsSubmit() {
+    if (qsBusy) return;
+    const warn = m => showGlobalToast('⚠️ ' + m);
+
+    if (!qsState.categoryId || !qsState.label) return warn('Choose what you do.');
+    const unit = document.getElementById('qs-unit').value;
+    const price = parseFloat(document.getElementById('qs-price').value);
+    if (unit !== 'negotiable' && !(price > 0)) return warn('Enter your price.');
+    const phone = qsNormalizePhone(document.getElementById('qs-phone').value);
+    if (!phone) return warn('Enter a phone number customers can call.');
+    if (!qsState.gpsReady) return warn('Tap "Use my location" first.');
+    if (!qsState.gpsAddress) return warn('Type your area name.');
+
+    if (!(await guaranteeAuth())) { warn('Please login again.'); setTimeout(() => { window.location.href = 'login.html'; }, 1200); return; }
+
+    qsBusy = true;
+    const btn = document.getElementById('qs-go');
+    btn.disabled = true;
+    btn.textContent = 'Going live...';
+
+    try {
+        const username = localStorage.getItem('nexus_user_session');
+        const urls = await qsUploadPhotos(username);
+        const currency = document.getElementById('qs-currency').dataset.currency || 'NGN';
+        const basePrice = price > 0 ? price : 0;
+        const itemId = 'svc_' + Date.now();
+
+        await firebase.database().ref('providers/' + username).update({
+            category: qsState.categoryId,
+            subcategory: qsState.sub || qsState.label,
+            categoryLabel: qsState.label,
+            pricing: { base: basePrice, unit: unit, currency: currency },
+            bio: '',
+            schedule: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            location: { lat: qsState.gpsLat, lng: qsState.gpsLng, updatedAt: Date.now() },
+            city: qsState.gpsCity || '',
+            address: qsState.gpsAddress,
+            portfolio: urls,
+            phone: phone,
+            phoneVerified: false,
+            quickStart: true,
+            status: 'unverified',
+            createdAt: Date.now(),
+            username: username,
+            categories: {
+                Services: {
+                    items: {
+                        [itemId]: {
+                            name: qsState.sub || qsState.label,
+                            desc: '',
+                            price: basePrice,
+                            currency: currency,
+                            unit: unit,
+                            image: (urls[0] && urls[0].url) || '',
+                            createdAt: Date.now()
+                        }
+                    }
+                }
+            }
+        });
+
+        document.getElementById('qs-success').style.display = 'flex';
+    } catch (err) {
+        console.error('Quick Start error:', err);
+        showGlobalToast('❌ ' + (err.message || 'Something went wrong. Try again.'));
+        btn.disabled = false;
+        btn.textContent = 'Go live';
+    } finally {
+        qsBusy = false;
+    }
+}
+
+window.openQuickStart = openQuickStart;
+window.closeQuickStart = closeQuickStart;
+window.qsPickTrade = qsPickTrade;
+window.qsPickOther = qsPickOther;
+window.qsOtherInput = qsOtherInput;
+window.qsAddPhotos = qsAddPhotos;
+window.qsRemovePhoto = qsRemovePhoto;
+window.qsCaptureGPS = qsCaptureGPS;
+window.qsAreaInput = qsAreaInput;
+window.qsSubmit = qsSubmit;
