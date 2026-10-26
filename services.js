@@ -10630,13 +10630,18 @@ window.inboxOpenChat = inboxOpenChat;
    Writes the same providers/{username} shape as the full form,
    so directory, Near Me, profile and dashboard need no changes.
    ============================================================ */
-const qsState = { categoryId: null, label: null, sub: null, gpsLat: null, gpsLng: null, gpsCity: '', gpsAddress: '', gpsReady: false };
+const qsState = { gpsLat: null, gpsLng: null, gpsCity: '', gpsAddress: '', gpsReady: false };
+let qsServices = [];      // [{ name, catId, catLabel, isCat }]
+let qsSuggestions = [];
 let qsPhotos = [];
 let qsBusy = false;
-let qsCats = [];
 
 function qsEsc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function qsTitle(s) {
+    return String(s || '').trim().replace(/\s+/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
 function qsNormalizePhone(raw) {
@@ -10647,38 +10652,79 @@ function qsNormalizePhone(raw) {
     return '';
 }
 
-function qsRenderChips() {
-    qsCats = (typeof PS_CATS !== 'undefined' ? PS_CATS : []).filter(c => c.id !== 'doctor' && c.id !== 'veterinary');
-    const box = document.getElementById('qs-chips');
-    box.innerHTML = qsCats.map((c, i) => `<button type="button" class="qs-chip" data-i="${i}" onclick="qsPickTrade(${i})">${c.icon || ''} ${qsEsc(c.label)}</button>`).join('')
-        + `<button type="button" class="qs-chip" id="qs-chip-other" onclick="qsPickOther()">✏️ Other</button>`;
+// ── Services: type-ahead (categories + specialties), free text allowed ──
+function qsBuildIndex() {
+    const out = [];
+    (typeof PS_CATS !== 'undefined' ? PS_CATS : []).forEach(c => {
+        if (c.id === 'doctor' || c.id === 'veterinary') return;   // licensed professions use the full form
+        out.push({ name: c.label, catId: c.id, catLabel: c.label, icon: c.icon, isCat: true });
+        (c.subs || []).forEach(s => out.push({ name: s, catId: c.id, catLabel: c.label, icon: c.icon, isCat: false }));
+    });
+    return out;
 }
 
-function qsPickTrade(i) {
-    const c = qsCats[i];
-    if (!c) return;
-    qsState.categoryId = c.id;
-    qsState.label = c.label;
-    qsState.sub = c.label;
-    document.querySelectorAll('#qs-chips .qs-chip').forEach(b => b.classList.toggle('active', b.dataset.i === String(i)));
-    document.getElementById('qs-other-wrap').style.display = 'none';
+function qsRenderTags() {
+    const box = document.getElementById('qs-tags');
+    box.innerHTML = qsServices.map((s, i) => `<span class="qs-tag">${qsEsc(s.name)}<button type="button" onclick="qsRemoveService(${i})" aria-label="Remove">✕</button></span>`).join('');
 }
 
-function qsPickOther() {
-    qsState.categoryId = 'other';
-    qsState.label = null;
-    qsState.sub = null;
-    document.querySelectorAll('#qs-chips .qs-chip').forEach(b => b.classList.toggle('active', b.id === 'qs-chip-other'));
-    document.getElementById('qs-other-wrap').style.display = 'block';
-    document.getElementById('qs-other').focus();
+function qsHideSuggest() {
+    const el = document.getElementById('qs-suggest');
+    if (el) el.style.display = 'none';
 }
 
-function qsOtherInput(v) {
-    const t = String(v || '').trim();
-    qsState.label = t ? t.charAt(0).toUpperCase() + t.slice(1) : null;
-    qsState.sub = qsState.label;
+function qsServiceTyping(v) {
+    const typed = String(v || '').trim();
+    const box = document.getElementById('qs-suggest');
+    if (!typed) { qsHideSuggest(); return; }
+    const q = typed.toLowerCase();
+    const taken = new Set(qsServices.map(s => s.name.toLowerCase()));
+    qsSuggestions = qsBuildIndex()
+        .filter(e => !taken.has(e.name.toLowerCase()) && (e.name.toLowerCase().includes(q) || e.catLabel.toLowerCase().includes(q)))
+        .sort((a, b) => (b.name.toLowerCase().startsWith(q) ? 1 : 0) - (a.name.toLowerCase().startsWith(q) ? 1 : 0))
+        .slice(0, 6);
+    const exact = qsSuggestions.some(e => e.name.toLowerCase() === q) || taken.has(q);
+    let html = qsSuggestions.map((e, i) =>
+        `<div class="qs-sug" onclick="qsAddSuggestion(${i})"><span>${e.icon || ''}</span><span>${qsEsc(e.name)}</span><span class="qs-sug-cat">${e.isCat ? '' : qsEsc(e.catLabel)}</span></div>`
+    ).join('');
+    if (!exact) html += `<div class="qs-sug qs-sug-add" onclick="qsAddFree()">＋ Add "${qsEsc(qsTitle(typed))}"</div>`;
+    box.innerHTML = html;
+    box.style.display = html ? 'block' : 'none';
 }
 
+function qsAddService(entry) {
+    if (qsServices.length >= 6) { showGlobalToast('⚠️ You can add up to 6 services.'); return; }
+    if (qsServices.some(s => s.name.toLowerCase() === entry.name.toLowerCase())) return;
+    qsServices.push(entry);
+    document.getElementById('qs-service-input').value = '';
+    qsHideSuggest();
+    qsRenderTags();
+}
+
+function qsAddSuggestion(i) {
+    const e = qsSuggestions[i];
+    if (e) qsAddService({ name: e.name, catId: e.catId, catLabel: e.catLabel, isCat: !!e.isCat });
+}
+
+function qsAddFree() {
+    const t = qsTitle(document.getElementById('qs-service-input').value);
+    if (t) qsAddService({ name: t, catId: 'other', catLabel: t, isCat: false });
+}
+
+function qsServiceKey(e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const q = e.target.value.trim().toLowerCase();
+    const idx = qsSuggestions.findIndex(s => s.name.toLowerCase() === q);
+    if (idx >= 0) qsAddSuggestion(idx); else qsAddFree();
+}
+
+function qsRemoveService(i) {
+    qsServices.splice(i, 1);
+    qsRenderTags();
+}
+
+// ── Photos ──
 function qsCompress(file) {
     return new Promise(resolve => {
         const img = new Image();
@@ -10719,6 +10765,7 @@ function qsRemovePhoto(i) {
     qsRenderPhotos();
 }
 
+// ── Location ──
 function qsCaptureGPS() {
     captureGPSUniversal({
         statusId: 'qs-gps-status',
@@ -10739,13 +10786,16 @@ function qsAreaInput(v) {
     qsState.gpsCity = qsState.gpsAddress.split(',').pop().trim();
 }
 
+// ── Open / close / reset ──
 function qsReset() {
-    Object.assign(qsState, { categoryId: null, label: null, sub: null, gpsLat: null, gpsLng: null, gpsCity: '', gpsAddress: '', gpsReady: false });
+    Object.assign(qsState, { gpsLat: null, gpsLng: null, gpsCity: '', gpsAddress: '', gpsReady: false });
+    qsServices = [];
+    qsSuggestions = [];
     qsPhotos = [];
     qsBusy = false;
-    ['qs-other', 'qs-price', 'qs-phone', 'qs-area'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['qs-service-input', 'qs-price', 'qs-phone', 'qs-area'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('qs-area').style.display = 'none';
-    document.getElementById('qs-other-wrap').style.display = 'none';
+    qsHideSuggest();
     document.getElementById('qs-gps-status').textContent = 'Stand where you work so customers near you can find you.';
     document.getElementById('qs-gps-btn').textContent = '📍 Use my location';
     document.getElementById('qs-gps-card').style.borderColor = '';
@@ -10753,7 +10803,7 @@ function qsReset() {
     document.getElementById('qs-success').style.display = 'none';
     document.getElementById('qs-go').disabled = false;
     document.getElementById('qs-go').textContent = 'Go live';
-    qsRenderChips();
+    qsRenderTags();
     qsRenderPhotos();
 }
 
@@ -10779,6 +10829,7 @@ function closeQuickStart() {
     document.body.style.overflow = '';
 }
 
+// ── Submit ──
 async function qsUploadPhotos(username) {
     const urls = [];
     for (const p of qsPhotos) {
@@ -10799,7 +10850,7 @@ async function qsSubmit() {
     if (qsBusy) return;
     const warn = m => showGlobalToast('⚠️ ' + m);
 
-    if (!qsState.categoryId || !qsState.label) return warn('Choose what you do.');
+    if (!qsServices.length) return warn('Add at least one service you offer.');
     const unit = document.getElementById('qs-unit').value;
     const price = parseFloat(document.getElementById('qs-price').value);
     if (unit !== 'negotiable' && !(price > 0)) return warn('Enter your price.');
@@ -10820,16 +10871,30 @@ async function qsSubmit() {
         const urls = await qsUploadPhotos(username);
         const currency = document.getElementById('qs-currency').dataset.currency || 'NGN';
         const basePrice = price > 0 ? price : 0;
-        const itemId = 'svc_' + Date.now();
+        const stamp = Date.now();
+        const primary = qsServices.find(s => s.catId !== 'other') || qsServices[0];
+
+        const items = {};
+        qsServices.forEach((s, i) => {
+            items['svc_' + stamp + '_' + i] = {
+                name: s.name,
+                desc: '',
+                price: basePrice,
+                currency: currency,
+                unit: unit,
+                image: (urls[0] && urls[0].url) || '',
+                createdAt: stamp
+            };
+        });
 
         await firebase.database().ref('providers/' + username).update({
-            category: qsState.categoryId,
-            subcategory: qsState.sub || qsState.label,
-            categoryLabel: qsState.label,
+            category: primary.catId,
+            subcategory: primary.name,
+            categoryLabel: primary.catLabel,
             pricing: { base: basePrice, unit: unit, currency: currency },
             bio: '',
             schedule: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-            location: { lat: qsState.gpsLat, lng: qsState.gpsLng, updatedAt: Date.now() },
+            location: { lat: qsState.gpsLat, lng: qsState.gpsLng, updatedAt: stamp },
             city: qsState.gpsCity || '',
             address: qsState.gpsAddress,
             portfolio: urls,
@@ -10837,23 +10902,9 @@ async function qsSubmit() {
             phoneVerified: false,
             quickStart: true,
             status: 'unverified',
-            createdAt: Date.now(),
+            createdAt: stamp,
             username: username,
-            categories: {
-                Services: {
-                    items: {
-                        [itemId]: {
-                            name: qsState.sub || qsState.label,
-                            desc: '',
-                            price: basePrice,
-                            currency: currency,
-                            unit: unit,
-                            image: (urls[0] && urls[0].url) || '',
-                            createdAt: Date.now()
-                        }
-                    }
-                }
-            }
+            categories: { Services: { items: items } }
         });
 
         document.getElementById('qs-success').style.display = 'flex';
@@ -10869,9 +10920,12 @@ async function qsSubmit() {
 
 window.openQuickStart = openQuickStart;
 window.closeQuickStart = closeQuickStart;
-window.qsPickTrade = qsPickTrade;
-window.qsPickOther = qsPickOther;
-window.qsOtherInput = qsOtherInput;
+window.qsServiceTyping = qsServiceTyping;
+window.qsServiceKey = qsServiceKey;
+window.qsHideSuggest = qsHideSuggest;
+window.qsAddSuggestion = qsAddSuggestion;
+window.qsAddFree = qsAddFree;
+window.qsRemoveService = qsRemoveService;
 window.qsAddPhotos = qsAddPhotos;
 window.qsRemovePhoto = qsRemovePhoto;
 window.qsCaptureGPS = qsCaptureGPS;
