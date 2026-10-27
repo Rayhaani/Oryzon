@@ -298,119 +298,144 @@ let refreshChatTimesInterval = setInterval(refreshAllChatTimes, 30000);
             } catch (e) { console.error('decryptLastMessagePreview error:', e); return null; }
         }
 
-        async function loadChats() {
-            const container = document.getElementById('chats-list-container');
-            container.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading...</p>';
+      // ===== JERIN CHATS: cache-first (kamar WhatsApp) =====
+        function npChatsKey() { return 'np_chats_v1_' + myId; }
+        function npPeers() { try { return JSON.parse(localStorage.getItem('np_peers_v1') || '{}'); } catch (e) { return {}; } }
+        function npSavePeer(u, d) { try { const m = npPeers(); m[u] = d; localStorage.setItem('np_peers_v1', JSON.stringify(m)); } catch (e) {} }
+        function npCapName(n) { return String(n).split(' ').map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' '); }
+        function npEscHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+        let __npChatsSig = '';
+        const __npPeerFetching = {};
 
-            await authReadyPromise;
-            if (!chatsAuth.currentUser) {
-                container.innerHTML = '<p style="text-align:center; padding:30px; color:#ff4444; font-size:13px;">Ba a tabbatar da shiga ba. Sake login.</p>';
-                return;
+        function npChatRowHtml(r, peer) {
+            const rawUser = r.rawUser;
+            const initialName = (peer && peer.name) ? npEscHtml(peer.name) : rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
+            const pic = (peer && peer.pic) ? peer.pic : `https://api.dicebear.com/7.x/bottts/svg?seed=${rawUser}`;
+            const shownPic = (peer && peer.pic && window.npThumbUrl) ? window.npThumbUrl(peer.pic) : pic;
+            const unreadLabel = r.unreadNum > 99 ? '99+' : r.unreadNum;
+            const personalChatHref = `chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(pic)}`;
+            return `
+                <a href="${personalChatHref}" class="chat-item" id="chat-link-${rawUser}">
+                    <div class="profile-stack" id="stack-${rawUser}" data-online="${peer && peer.online ? 'true' : 'false'}"
+                         data-avatar-kind="personal" data-avatar-key="${rawUser}"
+                         data-chat-href="${personalChatHref}"
+                         data-info-href="me.html?user=${encodeURIComponent(rawUser)}"
+                         onclick="handleAvatarTap(event)">
+                        <img src="${shownPic}" data-orig="${pic}" onerror="npThumbFail(this)" id="avatar-${rawUser}" class="user-img">
+                    </div>
+                    <div class="chat-details">
+                        <span class="name" id="name-${rawUser}">${initialName}</span>
+                        <p class="preview-text" id="preview-${rawUser}">${npEscHtml(r.lastMsg)}</p>
+                    </div>
+                    <div class="chat-meta">
+                        <span class="time" data-ts="${r.lastMessageTime || ''}">${formatChatTime(r.lastMessageTime)}</span>
+                        ${r.unreadNum > 0 ? `<span class="wa-unread-badge">${unreadLabel}</span>` : ''}
+                    </div>
+                </a>`;
+        }
+
+        function npApplyPeer(rawUser, d) {
+            const nameSpan = document.getElementById('name-' + rawUser);
+            if (nameSpan && d.name) nameSpan.textContent = d.name;
+            const overlayNameSpan = document.getElementById('overlay-name-' + rawUser);
+            if (overlayNameSpan && d.name) overlayNameSpan.textContent = d.name;
+            const stackEl = document.getElementById('stack-' + rawUser);
+            if (d.pic) {
+                const img = document.getElementById('avatar-' + rawUser);
+                if (img) { img.setAttribute('data-orig', d.pic); img.src = window.npThumbUrl ? window.npThumbUrl(d.pic) : d.pic; }
+                const overlayImg = document.getElementById('overlay-avatar-' + rawUser);
+                if (overlayImg) overlayImg.src = d.pic;
+                if (stackEl) stackEl.setAttribute('data-chat-href', `chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(d.pic)}`);
             }
+            if (stackEl) stackEl.setAttribute('data-online', d.online ? 'true' : 'false');
+        }
 
-            try {
-                const snapshot = await db.collection("personalChats").get({ source: 'server' });
-        container.innerHTML = '';
-                let hasChats = false;
-                let unreadSenderCount = 0;
-                identifiedContacts.clear(); 
+        function npFetchPeer(rawUser) {
+            if (__npPeerFetching[rawUser]) return;
+            __npPeerFetching[rawUser] = true;
+            db.collection('users').doc(rawUser).get().then(function (userDoc) {
+                if (!userDoc.exists) return;
+                const u = userDoc.data();
+                const fullName = u.fullName || u.name || u.username;
+                const d = { name: fullName ? npCapName(fullName) : '', pic: u.userProfilePic || '', online: u.isOnline === true, ts: Date.now() };
+                npSavePeer(rawUser, d);
+                npApplyPeer(rawUser, d);
+            }).catch(function () {}).then(function () { __npPeerFetching[rawUser] = false; });
+        }
 
-                snapshot.forEach(doc => {
-                    const chatId = doc.id;
-                    if (!chatId.includes(myId)) return;
-
-                    const parts = chatId.split('__');
-                    if (parts.length < 2) return; 
-                    const rawUser = parts[0] === myId ? parts[1] : parts[0];
-                    if (!rawUser || rawUser === myId) return;
-                    
-                    identifiedContacts.add(rawUser);
-                        
-                    const initialName = rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
-                    const data = doc.data();
-                    const lastMsg = data.lastMessage || "Tap to open chat";
-                    
-                    const lastTime = formatChatTime(data.lastMessageTime);
-                    
-                    const avatarUrl = window.NX_AV_BLANK;
-                    hasChats = true;
-                    
-                    console.log('DEBUG CHAT ROW →', rawUser, '| FULL DATA=', JSON.stringify(data));
-                    const unreadNum = data.unreadCount && data.unreadCount[myId] > 0 ? data.unreadCount[myId] : 0;
-                    const unreadLabel = unreadNum > 99 ? '99+' : unreadNum;
-                    if (unreadNum > 0) unreadSenderCount++;
-
-                    const personalChatHref = `chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(avatarUrl)}`;
-                    container.insertAdjacentHTML('beforeend', `
-                        <a href="${personalChatHref}" class="chat-item" id="chat-link-${rawUser}">
-                            <div class="profile-stack" id="stack-${rawUser}" data-online="false"
-                                 data-avatar-kind="personal" data-avatar-key="${rawUser}"
-                                 data-chat-href="${personalChatHref}"
-                                 data-info-href="me.html?user=${encodeURIComponent(rawUser)}"
-                                 onclick="handleAvatarTap(event)">
-                                <img src="${avatarUrl}" id="avatar-${rawUser}" class="user-img">
-                            </div>
-                            <div class="chat-details">
-                                <span class="name" id="name-${rawUser}">${initialName}</span>
-                               <p class="preview-text" id="preview-${rawUser}">${lastMsg}</p>
-                            </div>
-                            <div class="chat-meta">
-                                <span class="time" data-ts="${data.lastMessageTime || ''}">${lastTime}</span>
-                                ${unreadNum > 0 ? `<span class="wa-unread-badge">${unreadLabel}</span>` : ''}
-                            </div>
-                        </a>
-                   `);
-
-                    if (data.lastMessageEnc && data.lastMessageEnc.ciphertext) {
-                        decryptLastMessagePreview(rawUser, data.lastMessageEnc).then(decrypted => {
-                            if (decrypted) {
-                                const el = document.getElementById(`preview-${rawUser}`);
-                                if (el) el.textContent = decrypted.length > 60 ? decrypted.substring(0, 60) + '…' : decrypted;
-                            }
-                        });
-                    }
-
-                    db.collection('users').doc(rawUser).get().then(userDoc => { 
-                        if (userDoc.exists) {
-                            const userData = userDoc.data();
-                            const fullName = userData.fullName || userData.name || userData.username;
-                            if (fullName) {
-                                const nameSpan = document.getElementById(`name-${rawUser}`);
-                                if (nameSpan) {
-                                    nameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                                }
-                                const overlayNameSpan = document.getElementById(`overlay-name-${rawUser}`);
-                                if (overlayNameSpan) {
-                                    overlayNameSpan.textContent = fullName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                                }
-                            }
-                            const stackEl = document.getElementById(`stack-${rawUser}`);
-                            if (userData.userProfilePic) {
-                                const img = document.getElementById(`avatar-${rawUser}`);
-                                if (img) img.src = userData.userProfilePic;
-                                
-                                const overlayImg = document.getElementById(`overlay-avatar-${rawUser}`);
-                                if (overlayImg) overlayImg.src = userData.userProfilePic;
-
-                                if (stackEl) stackEl.setAttribute('data-chat-href', `chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(userData.userProfilePic)}`);
-                            }
-                            if (stackEl) stackEl.setAttribute('data-online', userData.isOnline === true ? 'true' : 'false');
+        function npAfterRender(rows) {
+            const peers = npPeers();
+            rows.forEach(function (r) {
+                if (r.enc) {
+                    decryptLastMessagePreview(r.rawUser, r.enc).then(function (decrypted) {
+                        if (decrypted) {
+                            const el = document.getElementById('preview-' + r.rawUser);
+                            if (el) el.textContent = decrypted.length > 60 ? decrypted.substring(0, 60) + '…' : decrypted;
                         }
                     });
-                    
-                });
-
-                if (!hasChats) {
-                    container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
                 }
-
-                injectRealFirebaseContacts();
-                updateSmartBtnBadge('personal', unreadSenderCount);
-            } catch(err) {
-                console.error("Chat load error:", err);
-                container.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Error loading chats</p>';
-            }
+                const p = peers[r.rawUser];
+                if (!p || !p.ts || (Date.now() - p.ts) > 120000) npFetchPeer(r.rawUser);
+            });
         }
+
+        function npRenderChatRows(rows, fromCache) {
+            const container = document.getElementById('chats-list-container');
+            if (!container) return false;
+            const sig = JSON.stringify(rows.map(function (r) { return [r.rawUser, r.lastMsg, r.lastMessageTime, r.unreadNum]; }));
+            if (!fromCache && sig === __npChatsSig && container.childElementCount) return false;
+            __npChatsSig = sig;
+            if (!rows.length) {
+                container.innerHTML = '<p style="text-align:center; padding:30px; color:#555; font-size:13px;">No messages yet</p>';
+                return true;
+            }
+            const peers = npPeers();
+            container.innerHTML = rows.map(function (r) { return npChatRowHtml(r, peers[r.rawUser]); }).join('');
+            return true;
+        }
+
+        function npPaintChatsFromCache() {
+            let rows = null;
+            try { rows = JSON.parse(localStorage.getItem(npChatsKey()) || 'null'); } catch (e) {}
+            if (!Array.isArray(rows) || !rows.length) return;
+            let unread = 0;
+            rows.forEach(function (r) { identifiedContacts.add(r.rawUser); if (r.unreadNum > 0) unread++; });
+            npRenderChatRows(rows, true);
+            npAfterRender(rows);
+            updateSmartBtnBadge('personal', unread);
+        }
+        runOnChatsInit(npPaintChatsFromCache);
+
+        function renderPersonalChats(snapshot) {
+            let unreadSenderCount = 0;
+            identifiedContacts.clear();
+            const rows = [];
+            snapshot.forEach(function (doc) {
+                const chatId = doc.id;
+                if (!chatId.includes(myId)) return;
+                const parts = chatId.split('__');
+                if (parts.length < 2) return;
+                const rawUser = parts[0] === myId ? parts[1] : parts[0];
+                if (!rawUser || rawUser === myId) return;
+                const data = doc.data();
+                const unreadNum = data.unreadCount && data.unreadCount[myId] > 0 ? data.unreadCount[myId] : 0;
+                rows.push({
+                    rawUser: rawUser,
+                    lastMsg: data.lastMessage || 'Tap to open chat',
+                    lastMessageTime: data.lastMessageTime || '',
+                    unreadNum: unreadNum,
+                    enc: (data.lastMessageEnc && data.lastMessageEnc.ciphertext) ? data.lastMessageEnc : null
+                });
+                identifiedContacts.add(rawUser);
+                if (unreadNum > 0) unreadSenderCount++;
+            });
+            rows.sort(function (a, b) { return new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0); });
+            const changed = npRenderChatRows(rows, false);
+            try { localStorage.setItem(npChatsKey(), JSON.stringify(rows)); } catch (e) {}
+            if (changed) npAfterRender(rows);
+            injectRealFirebaseContacts();
+            updateSmartBtnBadge('personal', unreadSenderCount);
+                   }           
 
      function injectRealFirebaseContacts() {
             const listBody = document.getElementById('carpet-contacts-list');
@@ -2614,8 +2639,8 @@ if (window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
       runOnChatsInit(() => {
         authReadyPromise.then((user) => {
             if (!user) return;
-            unsubPersonalChatsMain = db.collection("personalChats").onSnapshot(() => { loadChats(); });
-            unsubFriendsMain = db.collection("friends").onSnapshot(() => { loadFriendsList(); });
+            unsubPersonalChatsMain = db.collection("personalChats").onSnapshot(function (snap) { renderPersonalChats(snap); }, function (err) { console.error("personalChats listener error:", err); });
+            unsubFriendsMain = db.collection("friends").where('users', 'array-contains', myId).onSnapshot(() => { loadFriendsList(); });
         });
       });
        function toggleSearchBar() {
