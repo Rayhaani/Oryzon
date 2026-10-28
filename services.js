@@ -302,6 +302,8 @@ async function loadRealProvidersFromFirebase() {
                 coverImageUrl: p.coverImageUrl || null,
                 location: (p.location && isFinite(p.location.lat) && isFinite(p.location.lng)) ? { lat: Number(p.location.lat), lng: Number(p.location.lng) } : null,
                 phone: p.phone || '',
+                country: p.country || '',
+                priceCurrency: (p.pricing && p.pricing.currency) || p.currency || '',
                 priceNum: p.pricing ? (Number(p.pricing.base) || 0) : 0,
                 bioOriginal: p.bio || '',
                 bioLang: p.bioLang || '',
@@ -544,6 +546,7 @@ function speakProSummary(proId) {
             const parsed = JSON.parse(cached);
             if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
                 window.userLocalityData = parsed.data;
+                try { npAfterLocality(); } catch (e) {}
                 return;
             }
         }
@@ -552,6 +555,7 @@ function speakProSummary(proId) {
         const data = await res.json();
         localStorage.setItem('oryzon_locality', JSON.stringify({ data, timestamp: Date.now() }));
         window.userLocalityData = data;
+        try { npAfterLocality(); } catch (e) {}
     } catch (e) {
         // Shiru
     }
@@ -643,7 +647,7 @@ function pauseStoryMarquee() {
 }
 
 function getHighlyRatedPros() {
-    let pool = PROS;
+    let pool = PROS.filter(npReachable);
     if (userRealCoords) {
         pool = PROS.filter(p => {
             if (p.location && typeof p.location.lat === 'number' && typeof p.location.lng === 'number') {
@@ -663,7 +667,7 @@ function initAppElements() {
     track.addEventListener('mousedown', pauseStoryMarquee);
 
    function getCategoryRepresentativePhoto(catId) {
-    const candidates = PROS.filter(p => p.category === catId && (p.photoUrl || p.coverImageUrl));
+    const candidates = PROS.filter(p => p.category === catId && (p.photoUrl || p.coverImageUrl) && npReachable(p));
     if (candidates.length === 0) return null;
     candidates.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     return candidates[0].photoUrl || candidates[0].coverImageUrl;
@@ -694,6 +698,7 @@ function initAppElements() {
 
 function getFilteredPros() {
     return npApplySort(PROS.filter(p => {
+        if (!npReachable(p)) return false;
         if (state.selectedCat && !npCatMatch(p, state.selectedCat)) return false;
         if (state.nearMeActive && p.distance > 1.5) return false;
         if (state.onlyAvail && !p.online) return false;
@@ -955,7 +960,6 @@ function closeStoryDeck() {
  function openProfileSheet(proId) {
     const pro = PROS.find(p => String(p.id) === String(proId));
    if (!pro) return;
-    try { npRenderProfileAbout(pro); } catch (e) {}
     mbTrackProfileView(proId);
      
     // Hero banner: real portfolio photo idan yana akwai, in ba haka ba, gradient default
@@ -4747,287 +4751,142 @@ function npSafeAddress(p) {
     return [p.area, p.lga, p.city].filter(Boolean).join(', ') || String(p.city || '').trim();
 }
 // ════════════════════════════════════════════════════════════
-//  🌐 NP LANGUAGE — screen text for the new "Post your service" flow, location sheet and home sections.
-//  English + Hausa. Anything missing in Hausa falls back to English, so nothing can ever show blank.
+//  Screen text for the "Post your service" flow, the location sheet and the home sections (English).
+//  Every string lives here so the platform can be localized later without touching the logic.
 // ════════════════════════════════════════════════════════════
-const NP_LANGS = { en: 'English', ha: 'Hausa' };
+const NP_LANGS = { en: 'English' };
 const NPT = {
     en: {
         // — Post your service —
         qs_title: 'Post your service',
         qs_s_service: 'What service do you offer?',
-        qs_service_ph: 'Type your service… e.g. hair, tailor, mechanic',
-        qs_or_tap: 'Or tap one',
+        qs_service_ph: 'Search for a service, e.g. Plumbing',
         qs_in: 'in',
-        qs_full_tag: 'Full setup',
+        qs_full_tag: 'Detailed form',
         qs_add_custom: 'Add “{x}”',
-        qs_more_hint: 'You can add more services',
-        qs_add_more_in: 'Add more in {x}',
+        qs_more_hint: 'You can add more services.',
         qs_remove: 'Remove',
         qs_already: 'Already added',
         qs_max: 'You can add up to {n} services',
-        qs_family_mix: 'Food sellers and other services need separate posts',
-        qs_special_alone: 'This service needs its own setup — remove the other services first',
-        qs_full_open: '{x} needs a few extra details. Opening its form…',
-        qs_s_price: 'Your price',
+        qs_family_mix: 'Food and drink sellers need a separate listing from other services',
+        qs_special_alone: 'This service uses a detailed form. Remove your other selections first',
+        qs_full_open: 'Opening the detailed form for {x}…',
+        qs_s_price: 'Pricing',
         qs_currency: 'Currency',
-        qs_amount: 'Amount',
+        qs_amount: 'Price',
         unit_per_job: 'Per job',
         unit_per_hour: 'Per hour',
         unit_per_day: 'Per day',
         unit_negotiable: 'Negotiable',
-        qs_price_ph: 'Starting price',
-        qs_price_food_hint: 'Price of each item',
-        qs_s_photo: 'Photos of your work',
-        qs_photo_sub: 'The first photo is shown to customers',
-        qs_main_photo: 'Main photo',
+        qs_price_ph: '0.00',
+        qs_price_food_hint: 'Set a price for each item',
+        qs_s_photo: 'Photos',
+        qs_photo_sub: 'Add up to 3 photos of your work. The first one is your cover photo.',
+        qs_main_photo: 'Cover photo',
         qs_more_photo: 'Add photo',
-        qs_img_only: 'Please choose a photo',
-        qs_too_big: 'This photo is too big',
-        qs_s_about: 'About you',
-        qs_bio_ph: 'Tell customers about your work',
-        qs_bio_lang: 'Written in',
-        qs_s_where: 'Where can customers find you?',
-        qs_where_hint: 'Tap the button — then confirm the place name',
-        qs_where_btn: '📍 Set my location',
-        qs_where_change: '✏️ Change location',
+        qs_img_only: 'Please choose an image',
+        qs_too_big: 'This image is too large',
+        qs_s_about: 'About your service',
+        qs_bio_ph: 'Describe what you offer and why customers should choose you',
+        qs_s_where: 'Location',
+        qs_where_hint: 'Customers use this to find you. You will confirm the place name next.',
+        qs_where_btn: 'Set location',
+        qs_where_change: 'Change',
         qs_s_phone: 'Phone number',
-        qs_phone_ph: 'e.g. 0803 123 4567',
-        qs_s_id: 'Verify it is really you',
-        qs_id_private: '🔒 Private — only used to verify you. Customers never see it.',
-        qs_id_select: '— Choose ID type —',
-        id_national_id: 'National ID Card',
-        id_passport: 'International Passport',
-        id_drivers_license: 'Driver’s License',
-        id_voters_card: 'Voter’s Card',
+        qs_phone_ph: 'Phone number',
+        qs_s_id: 'Identity verification',
+        qs_id_private: 'Private. Used only to verify your identity and never shown to customers.',
+        qs_id_select: 'Select ID type',
+        id_national_id: 'National ID card',
+        id_passport: 'Passport',
+        id_drivers_license: 'Driver’s license',
+        id_voters_card: 'Voter’s card',
         qs_id_photo: 'ID photo',
-        qs_selfie: 'Your selfie',
-        qs_s_gender: 'You are',
+        qs_selfie: 'Selfie',
+        qs_s_gender: 'Gender',
         qs_male: 'Male',
         qs_female: 'Female',
-        qs_action_required: 'Still needed before you can publish',
-        qs_all_set: 'All set — you can publish',
-        qs_m_service: 'Choose your service',
+        qs_action_required: 'Complete these to publish',
+        qs_all_set: 'Ready to publish',
+        qs_m_service: 'Select a service',
         qs_m_price: 'Add your price',
-        qs_m_currency: 'Choose currency',
-        qs_m_photo: 'Add a photo of your work',
-        qs_m_bio: 'Write a short description',
+        qs_m_currency: 'Select a currency',
+        qs_m_photo: 'Add a photo',
+        qs_m_bio: 'Add a description',
         qs_m_where: 'Set your location',
-        qs_m_phone: 'Add your phone number',
-        qs_m_idtype: 'Choose ID type',
+        qs_m_phone: 'Add a phone number',
+        qs_m_idtype: 'Select an ID type',
         qs_m_idphoto: 'Add a photo of your ID',
-        qs_m_selfie: 'Add your selfie',
-        qs_m_gender: 'Choose male or female',
-        qs_publish: 'Publish my service',
+        qs_m_selfie: 'Add a selfie',
+        qs_m_gender: 'Select your gender',
+        qs_publish: 'Publish',
         qs_publishing: 'Publishing…',
-        qs_full_link: 'I am a professional — I need the full setup (licence, menu…)',
-        qs_pending: 'Your earlier application is still being reviewed. Publishing again will replace it.',
-        qs_err_photo: 'Your photo could not be uploaded. Check your network and try again.',
-        qs_err_verify: 'Your ID photos could not be uploaded. Check your network and try again.',
-        qs_err_incomplete: 'Something is missing — please check the list and try again.',
+        qs_pending: 'Your previous application is still under review. Publishing again will replace it.',
+        qs_err_photo: 'Your photo could not be uploaded. Check your connection and try again.',
+        qs_err_verify: 'Your ID photos could not be uploaded. Check your connection and try again.',
+        qs_err_incomplete: 'Something is missing. Please check the list and try again.',
         qs_err_generic: 'Could not publish.',
         // — Location sheet —
-        npLoc_title: 'Confirm your place',
-        npLoc_sub: 'Customers will see this place name.',
-        npLoc_atwork_q: 'Are you at your work place now?',
-        npLoc_yes: 'Yes, I am here',
-        npLoc_no: 'No, I am elsewhere',
+        npLoc_title: 'Confirm your location',
+        npLoc_sub: 'This is the place customers will see on your profile.',
+        npLoc_atwork_q: 'Are you at your workplace right now?',
+        npLoc_yes: 'Yes',
+        npLoc_no: 'No',
         npLoc_country: 'Country',
+        npLoc_pick_country: 'Select country',
         npLoc_state: 'State / Region',
         npLoc_lga: 'Local Government (LGA)',
-        npLoc_city: 'Town / City',
-        npLoc_area: 'Area / Unguwa / Street',
-        npLoc_area_ph: 'e.g. Sabon Gari Market',
+        npLoc_city: 'City / Town',
+        npLoc_area: 'Neighborhood / Street',
+        npLoc_area_ph: 'e.g. Main Street',
         npLoc_landmark: 'Landmark (optional)',
-        npLoc_landmark_ph: 'e.g. Behind the central mosque',
+        npLoc_landmark_ph: 'e.g. Next to the central market',
         npLoc_cancel: 'Cancel',
-        npLoc_confirm: 'Confirm place',
+        npLoc_confirm: 'Confirm location',
         npLoc_checking: 'Checking…',
         npLoc_getting: 'Getting your location…',
         npLoc_retry: 'Trying again…',
         npLoc_finding: 'Finding the place name…',
-        npLoc_please_confirm: 'Please confirm the place',
+        npLoc_please_confirm: 'Confirm your location',
         npLoc_not_set: 'Location not set',
-        npLoc_done: 'Location saved',
-        npLoc_banner_gps: 'We found this from your phone. Check it and correct anything wrong.',
-        npLoc_banner_manual: 'Choose your State and LGA, then write your area.',
-        npLoc_pick_state: '— Choose State —',
-        npLoc_pick_lga: '— Choose LGA —',
-        npLoc_pick_state_first: '— Choose State first —',
-        npLoc_other_lga: 'My LGA is not on the list',
-        npLoc_lga_other_ph: 'Write your LGA',
-        npLoc_city_ph: 'Write your town or city',
-        npLoc_no_detect: 'We could not detect the place. Please type it.',
-        npLoc_r_denied: 'Location is blocked on your phone. Choose your place below.',
-        npLoc_r_unavail: 'Location is not available. Choose your place below.',
-        npLoc_r_timeout: 'Location took too long. Choose your place below.',
-        npLoc_e_state: 'Please choose your State.',
-        npLoc_e_lga: 'Please choose your LGA.',
-        npLoc_e_city: 'Please write your town or city.',
-        npLoc_e_area: 'Please write your area or street (at least 3 letters).',
-        npLoc_e_notfound: 'We could not find this place. Check the spelling or choose a nearby town.',
+        npLoc_done: 'Location confirmed',
+        npLoc_banner_gps: 'We detected this from your device. Check it and correct anything that is wrong.',
+        npLoc_banner_manual: 'Select your country and state, then enter your neighborhood.',
+        npLoc_pick_state: 'Select state',
+        npLoc_pick_lga: 'Select LGA',
+        npLoc_pick_state_first: 'Select state first',
+        npLoc_other_lga: 'My LGA is not listed',
+        npLoc_lga_other_ph: 'Enter your LGA',
+        npLoc_city_ph: 'Enter your city or town',
+        npLoc_no_detect: 'We could not detect the place. Please enter it manually.',
+        npLoc_r_denied: 'Location access is blocked. Enter your location below.',
+        npLoc_r_unavail: 'Location is unavailable. Enter your location below.',
+        npLoc_r_timeout: 'Location timed out. Enter your location below.',
+        npLoc_e_country: 'Select your country.',
+        npLoc_e_state: 'Select your state or region.',
+        npLoc_e_lga: 'Select your LGA.',
+        npLoc_e_city: 'Enter your city or town.',
+        npLoc_e_area: 'Enter your neighborhood or street (at least 3 characters).',
+        npLoc_e_notfound: 'We could not find this place. Check the spelling or enter a nearby town.',
         // — Home —
         home_near: 'Near you',
         home_avail: 'Available now',
         home_see_all: 'See all',
-        home_enable_t: 'See providers near you',
-        home_enable_s: 'Allow location to find people who work close to you.',
+        home_enable_t: 'Find providers near you',
+        home_enable_s: 'Allow location access to see providers close to you.',
         home_enable_b: 'Allow location',
         home_loc_denied: 'Location is off. Turn it on in your browser to see providers near you.',
         sort_recommended: 'Recommended',
         sort_nearest: 'Nearest',
         sort_top: 'Top rated',
-        sort_price_asc: 'Price ↑',
-        sort_price_desc: 'Price ↓',
-        sort_available: 'Available now',
-        lang_title: 'Choose language',
-        about_title: 'About',
-        about_translated: 'Translated automatically',
-        about_original: 'Original in {lang}',
-        about_show_orig: 'Show original',
-        about_call: '📞 Call'
-    },
-    ha: {
-        qs_title: 'Saka sana’arka',
-        qs_s_service: 'Wane aiki kake yi?',
-        qs_service_ph: 'Rubuta aikinka… misali kitso, tela, makaniki',
-        qs_or_tap: 'Ko ka danna ɗaya',
-        qs_in: 'a cikin',
-        qs_full_tag: 'Cikakken tsari',
-        qs_add_custom: 'Ƙara “{x}”',
-        qs_more_hint: 'Za ka iya ƙara wasu ayyuka',
-        qs_add_more_in: 'Ƙara wasu a {x}',
-        qs_remove: 'Cire',
-        qs_already: 'An riga an ƙara shi',
-        qs_max: 'Za ka iya ƙara ayyuka har {n}',
-        qs_family_mix: 'Masu sayar da abinci da sauran ayyuka suna buƙatar posts daban',
-        qs_special_alone: 'Wannan aikin yana da nasa tsarin — cire sauran ayyukan tukuna',
-        qs_full_open: '{x} yana buƙatar ƙarin bayanai. Ana buɗe fom ɗinsa…',
-        qs_s_price: 'Farashinka',
-        qs_currency: 'Kuɗi',
-        qs_amount: 'Adadi',
-        unit_per_job: 'Kowane aiki',
-        unit_per_hour: 'Kowace awa',
-        unit_per_day: 'Kowace rana',
-        unit_negotiable: 'Ana ciniki',
-        qs_price_ph: 'Farashin farawa',
-        qs_price_food_hint: 'Farashin kowanne abu',
-        qs_s_photo: 'Hotunan aikinka',
-        qs_photo_sub: 'Hoton farko shi ne abokan ciniki za su fara gani',
-        qs_main_photo: 'Babban hoto',
-        qs_more_photo: 'Ƙara hoto',
-        qs_img_only: 'Don Allah zaɓi hoto',
-        qs_too_big: 'Wannan hoton ya yi girma da yawa',
-        qs_s_about: 'Game da kai',
-        qs_bio_ph: 'Gaya wa abokan ciniki game da aikinka',
-        qs_bio_lang: 'An rubuta da',
-        qs_s_where: 'A ina abokan ciniki za su same ka?',
-        qs_where_hint: 'Danna maɓallin — sannan ka tabbatar da sunan wurin',
-        qs_where_btn: '📍 Saka wurina',
-        qs_where_change: '✏️ Canza wuri',
-        qs_s_phone: 'Lambar waya',
-        qs_phone_ph: 'misali 0803 123 4567',
-        qs_s_id: 'Tabbatar cewa kai ne',
-        qs_id_private: '🔒 Sirri ne — don tabbatar da kai kawai. Abokan ciniki ba sa gani.',
-        qs_id_select: '— Zaɓi nau’in ID —',
-        id_national_id: 'Katin ɗan ƙasa (NIN)',
-        id_passport: 'Fasfo',
-        id_drivers_license: 'Lasisin tuƙi',
-        id_voters_card: 'Katin zaɓe',
-        qs_id_photo: 'Hoton ID',
-        qs_selfie: 'Hoton fuskarka',
-        qs_s_gender: 'Kai',
-        qs_male: 'Namiji',
-        qs_female: 'Mace',
-        qs_action_required: 'Har yanzu ana buƙatar waɗannan kafin ka wallafa',
-        qs_all_set: 'Komai ya cika — za ka iya wallafawa',
-        qs_m_service: 'Zaɓi aikinka',
-        qs_m_price: 'Saka farashinka',
-        qs_m_currency: 'Zaɓi kuɗi',
-        qs_m_photo: 'Saka hoton aikinka',
-        qs_m_bio: 'Rubuta taƙaitaccen bayani',
-        qs_m_where: 'Saka wurinka',
-        qs_m_phone: 'Saka lambar wayarka',
-        qs_m_idtype: 'Zaɓi nau’in ID',
-        qs_m_idphoto: 'Saka hoton ID ɗinka',
-        qs_m_selfie: 'Saka hoton fuskarka',
-        qs_m_gender: 'Zaɓi namiji ko mace',
-        qs_publish: 'Wallafa sana’ata',
-        qs_publishing: 'Ana wallafawa…',
-        qs_full_link: 'Ni ƙwararre ne — ina buƙatar cikakken tsari (lasisi, menu…)',
-        qs_pending: 'Ana duba aikace-aikacenka na baya. Idan ka sake wallafawa zai maye gurbinsa.',
-        qs_err_photo: 'Ba a iya ɗora hotonka ba. Duba network ɗinka ka sake gwadawa.',
-        qs_err_verify: 'Ba a iya ɗora hotunan ID ɗinka ba. Duba network ɗinka ka sake gwadawa.',
-        qs_err_incomplete: 'Akwai abin da ya rage — duba jerin ka sake gwadawa.',
-        qs_err_generic: 'Ba a iya wallafawa ba.',
-        npLoc_title: 'Tabbatar da wurinka',
-        npLoc_sub: 'Abokan ciniki za su ga sunan wannan wurin.',
-        npLoc_atwork_q: 'Yanzu kana wurin aikinka ne?',
-        npLoc_yes: 'Eh, ina nan',
-        npLoc_no: 'A’a, ina wani wuri',
-        npLoc_country: 'Ƙasa',
-        npLoc_state: 'Jiha',
-        npLoc_lga: 'Ƙaramar Hukuma (LGA)',
-        npLoc_city: 'Gari / Birni',
-        npLoc_area: 'Unguwa / Titi',
-        npLoc_area_ph: 'misali Kasuwar Sabon Gari',
-        npLoc_landmark: 'Alama (zaɓi)',
-        npLoc_landmark_ph: 'misali Bayan babban masallaci',
-        npLoc_cancel: 'Soke',
-        npLoc_confirm: 'Tabbatar da wuri',
-        npLoc_checking: 'Ana dubawa…',
-        npLoc_getting: 'Ana nemo wurinka…',
-        npLoc_retry: 'Ana sake gwadawa…',
-        npLoc_finding: 'Ana nemo sunan wurin…',
-        npLoc_please_confirm: 'Don Allah ka tabbatar da wurin',
-        npLoc_not_set: 'Ba a saka wuri ba',
-        npLoc_done: 'An ajiye wurin',
-        npLoc_banner_gps: 'Mun same shi daga wayarka. Duba shi ka gyara duk abin da bai dace ba.',
-        npLoc_banner_manual: 'Zaɓi Jiha da LGA, sannan ka rubuta unguwarka.',
-        npLoc_pick_state: '— Zaɓi Jiha —',
-        npLoc_pick_lga: '— Zaɓi LGA —',
-        npLoc_pick_state_first: '— Zaɓi Jiha tukuna —',
-        npLoc_other_lga: 'LGA ɗina ba ya cikin jerin',
-        npLoc_lga_other_ph: 'Rubuta LGA ɗinka',
-        npLoc_city_ph: 'Rubuta garinka ko birninka',
-        npLoc_no_detect: 'Ba mu iya gano wurin ba. Don Allah ka rubuta shi.',
-        npLoc_r_denied: 'An hana wuri a wayarka. Zaɓi wurinka a ƙasa.',
-        npLoc_r_unavail: 'Babu wuri a yanzu. Zaɓi wurinka a ƙasa.',
-        npLoc_r_timeout: 'Wuri ya ɗauki lokaci. Zaɓi wurinka a ƙasa.',
-        npLoc_e_state: 'Don Allah zaɓi Jiharka.',
-        npLoc_e_lga: 'Don Allah zaɓi LGA ɗinka.',
-        npLoc_e_city: 'Don Allah rubuta garinka ko birninka.',
-        npLoc_e_area: 'Don Allah rubuta unguwarka ko titinka (akalla haruffa 3).',
-        npLoc_e_notfound: 'Ba mu sami wannan wurin ba. Duba rubutun ko zaɓi garin da ke kusa.',
-        home_near: 'Kusa da kai',
-        home_avail: 'Ana samuwa yanzu',
-        home_see_all: 'Duba duka',
-        home_enable_t: 'Duba masu aiki kusa da kai',
-        home_enable_s: 'Ba da izinin wuri don samun mutanen da ke aiki kusa da kai.',
-        home_enable_b: 'Ba da izinin wuri',
-        home_loc_denied: 'Wuri a kashe yake. Ka kunna shi a browser ɗinka don ganin masu aiki kusa da kai.',
-        sort_recommended: 'Shawarwari',
-        sort_nearest: 'Mafi kusa',
-        sort_top: 'Mafi daraja',
-        sort_price_asc: 'Farashi ↑',
-        sort_price_desc: 'Farashi ↓',
-        sort_available: 'Ana samuwa yanzu',
-        lang_title: 'Zaɓi harshe',
-        about_title: 'Game da',
-        about_translated: 'An fassara ta atomatik',
-        about_original: 'Na asali a {lang}',
-        about_show_orig: 'Duba na asali',
-        about_call: '📞 Kira'
+        sort_price_asc: 'Price: low to high',
+        sort_price_desc: 'Price: high to low',
+        sort_available: 'Available now'
     }
 };
-function npLang() {
-    try { const v = localStorage.getItem('np_lang'); if (v && NP_LANGS[v]) return v; } catch (e) {}
-    const nav = String(navigator.language || 'en').slice(0, 2).toLowerCase();
-    return NP_LANGS[nav] ? nav : 'en';
-}
+function npLang() { return 'en'; }
 function npT(key, vars) {
-    const l = npLang();
-    let s = (NPT[l] && NPT[l][key]) || NPT.en[key] || key;
+    let s = (NPT.en && NPT.en[key]) || key;
     if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
     return s;
 }
@@ -5038,9 +4897,9 @@ function npApplyI18n(root) {
 }
 
 // ════════════════════════════════════════════════════════════
-//  📍 NP LOCATION — real, confirmed place names.
+//  NP LOCATION — real, confirmed place names.
 //  GPS is only EVIDENCE. The name that appears on the provider card always comes
-//  from a place the provider confirmed (State → LGA → Unguwa/Area), never from raw
+//  from a place the provider confirmed (Country → State → LGA/City → Neighborhood), never from raw
 //  coordinates and never from an unconfirmed reverse-geocode guess.
 // ════════════════════════════════════════════════════════════
 const NP_RAW_COORDS_RE = /^\s*-?\d{1,3}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?\s*$/;
@@ -5131,7 +4990,7 @@ async function reverseGeocodeCoords(lat, lng) {
         return empty;
     }
 }
-// Forward geocode — used to check that a typed place exists when there is no GPS (best effort, never blocks Nigeria).
+// Forward geocode — used to check that a typed place exists when there is no GPS (best effort, never blocks the user).
 async function npForwardGeocode(q) {
     try {
         const arr = await npFetchJson(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(q)}&accept-language=en`, 6000);
@@ -5142,7 +5001,7 @@ async function npForwardGeocode(q) {
     return null;
 }
 
-const npLoc = { opts: null, gps: null, geo: null, atWork: true, country: 'NG', ng: {}, countries: [], statesList: [], busy: false };
+const npLoc = { opts: null, gps: null, geo: null, atWork: true, country: '', ng: {}, countries: [], statesList: [], busy: false };
 
 function npLocEl(id) { return document.getElementById(id); }
 function npLocFill(sel, items, placeholder, current) {
@@ -5181,7 +5040,7 @@ async function npLocOpen(opts) {
     const [ng, countries] = await Promise.all([npLoadNgLgas(), npLoadCountries()]);
     npLoc.ng = ng; npLoc.countries = countries;
     const cSel = npLocEl('np-loc-country');
-    cSel.innerHTML = countries.map(c => `<option value="${c.code}">${npEsc(c.name)}</option>`).join('');
+    cSel.innerHTML = `<option value="">${npEsc(npT('npLoc_pick_country'))}</option>` + countries.map(c => `<option value="${c.code}">${npEsc(c.name)}</option>`).join('');
     const g = npLoc.geo;
     const geoUsable = !!(npLoc.gps && g && g.state && npLoc.gps.acc <= 1500);
     npLoc.atWork = geoUsable;
@@ -5194,8 +5053,10 @@ async function npLocOpen(opts) {
 async function npLocApplyMode(first) {
     const g = npLoc.geo;
     const useGeo = npLoc.atWork && !!g;
-    const wantCountry = useGeo && g.countryCode && npLoc.countries.some(c => c.code === g.countryCode) ? g.countryCode
-        : ((window.userLocalityData && npLoc.countries.some(c => c.code === window.userLocalityData.country_code)) ? window.userLocalityData.country_code : 'NG');
+    const listed = c => !!c && npLoc.countries.some(x => x.code === c);
+    const ld = (typeof npLocalityData === 'function') ? npLocalityData() : window.userLocalityData;
+    const ipCc = ld && String(ld.country_code || '').toUpperCase();
+    const wantCountry = (useGeo && listed(g.countryCode)) ? g.countryCode : (listed(ipCc) ? ipCc : '');
     npLocEl('np-loc-country').value = first || !npLoc.country ? wantCountry : npLoc.country;
     npLoc.country = npLocEl('np-loc-country').value;
     await npLocRenderCountry(useGeo ? g : null);
@@ -5296,6 +5157,7 @@ async function npLocConfirm() {
     const area = npLocEl('np-loc-area').value.trim();
     const landmark = npLocEl('np-loc-landmark').value.trim();
     const warn = (msg) => { const w = npLocEl('np-loc-warn'); w.textContent = msg; w.style.display = 'block'; };
+    if (!npLoc.country) return warn(npT('npLoc_e_country'));
     if (!stateName) return warn(npT('npLoc_e_state'));
     if (!lgaName) return warn(npT(isNG ? 'npLoc_e_lga' : 'npLoc_e_city'));
     if (area.length < 3) return warn(npT('npLoc_e_area'));
@@ -5393,7 +5255,7 @@ function npLocMeta(t) {
 }
 
 // ════════════════════════════════════════════════════════════
-//  📍 UNIVERSAL GPS CAPTURE — works for ALL categories (Plumber, Chef, Snacks, Beverages, Doctor, ...)
+//  UNIVERSAL GPS CAPTURE — works for ALL categories (Plumber, Chef, Snacks, Beverages, Doctor, ...)
 //  Flow: GPS (evidence) → reverse geocode (suggestion) → provider CONFIRMS or corrects the place
 //  → only then gpsReady = true.  If GPS fails the same sheet opens for manual State/LGA/Area entry.
 // ════════════════════════════════════════════════════════════
@@ -5417,10 +5279,10 @@ function captureGPSUniversal(config, isRetry) {
     if (btn && !btn.dataset.idleLabel) btn.dataset.idleLabel = btn.textContent;
 
     const finish = (target) => {
-        if (status) status.textContent = '✅ ' + npT('npLoc_done');
+        if (status) status.textContent = npT('npLoc_done');
         if (coords) coords.textContent = target.gpsAddress || '';
         if (btn) { btn.disabled = false; btn.textContent = doneBtnLabel; }
-        if (card) {
+        if (card && cardId !== 'qs-loc-card') {
             card.style.borderColor = 'rgba(16,185,129,0.4)';
             card.style.background = 'rgba(16,185,129,0.08)';
         }
@@ -5429,7 +5291,7 @@ function captureGPSUniversal(config, isRetry) {
             if (el) el.textContent = typeof formatter === 'function' ? formatter(target) : (target.gpsAddress || '');
         });
         if (typeof onSuccess === 'function') onSuccess();
-        psShowToast('📍 ' + npT('npLoc_done'));
+        psShowToast(npT('npLoc_done'));
     };
     const cancelled = () => {
         if (btn) { btn.disabled = false; btn.textContent = idleLabel(); }
@@ -5440,20 +5302,20 @@ function captureGPSUniversal(config, isRetry) {
     if (!navigator.geolocation) { openSheet(null, null, 'unsupported'); return; }
 
     if (btn) { btn.disabled = true; btn.textContent = '…'; }
-    if (status) status.textContent = isRetry ? '🔄 ' + npT('npLoc_retry') : '🔄 ' + npT('npLoc_getting');
+    if (status) status.textContent = isRetry ? npT('npLoc_retry') : npT('npLoc_getting');
 
     navigator.geolocation.getCurrentPosition(
         async (pos) => {
             const gps = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: Math.round(pos.coords.accuracy || 0) };
-            if (status) status.textContent = '🔄 ' + npT('npLoc_finding');
+            if (status) status.textContent = npT('npLoc_finding');
             const geo = await reverseGeocodeCoords(gps.lat, gps.lng);
-            if (status) status.textContent = '📍 ' + npT('npLoc_please_confirm');
+            if (status) status.textContent = npT('npLoc_please_confirm');
             openSheet(gps, geo, null);
         },
         (err) => {
             if (!isRetry && err.code !== 1) { captureGPSUniversal(config, true); return; }
             const reason = ({ 1: 'denied', 2: 'unavailable', 3: 'timeout' })[err.code] || 'unavailable';
-            if (status) status.textContent = '📍 ' + npT('npLoc_please_confirm');
+            if (status) status.textContent = npT('npLoc_please_confirm');
             openSheet(null, null, reason);
         },
         isRetry
@@ -5463,19 +5325,20 @@ function captureGPSUniversal(config, isRetry) {
 }
 
 // ════════════════════════════════════════════════════════════
-//  🚀 QUICK START — one-page, Fiverr-style "Post your service" (Tier 1)
-//  • No category list. One search box with suggestions; pick several services (they become the
-//    badges under the description on the provider card).
-//  • Everything a provider card needs is collected here; Publish stays disabled until NOTHING is missing.
-//  • Chef/Caterer, Doctor and Veterinary keep their full professional flows (hand-off, nothing removed).
-//  • Later steps (Tier 2 / Tier 3) live in My Business → Profile Health.
+//  POST YOUR SERVICE — single-page listing form.
+//  • One search box with suggestions; several services can be selected (they become the badges on the provider card).
+//  • Everything the provider card needs is collected here; Publish stays disabled until nothing is missing.
+//  • Chef / Caterer keeps its detailed menu form (hand-off). Doctors and vets are handled in the Health section.
 // ════════════════════════════════════════════════════════════
-const QS_FULL_SETUP_IDS = ['chef', 'doctor', 'veterinary'];
+const QS_FULL_SETUP_IDS = ['chef'];                 // keeps its detailed menu form
+const QS_HIDE_CATS = ['doctor', 'veterinary'];       // these live in the Health section
 const QS_FOOD_IDS = ['snacks', 'beverages'];
 const QS_MAX_SERVICES = 8;
+// Names stored in the admin list in local words → plain global English.
+const QS_LABEL_FIX = { 'Kitso / Hair': 'Hair Stylist', 'Kitso': null, 'Henna/Lalle': 'Henna', 'Native Wear': 'Traditional Wear', 'English Wear': 'Western Wear' };
 const QS_ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const QS_UNITS = ['per job', 'per hour', 'per day', 'negotiable'];
-// Extra search words (Hausa / Yoruba / Pidgin / everyday words). They only help people FIND their trade.
+// Extra search words (everyday / local-language words). They are never displayed — they only help people FIND their trade.
 const QS_ALIAS_RULES = [
     [/plumb/i, ['famfo', 'mai famfo', 'mai gyaran famfo', 'pipe', 'tap', 'leak']],
     [/electric/i, ['lantarki', 'mai gyaran lantarki', 'wiring', 'nepa', 'light']],
@@ -5494,11 +5357,8 @@ const QS_ALIAS_RULES = [
     [/emergen/i, ['gaggawa']],
     [/chef|cater|cook/i, ['girki', 'mai girki', 'abinci', 'mama put', 'cook']],
     [/snack/i, ['puff puff', 'chin chin', 'masa', 'waina', 'doughnut', 'meatpie', 'ciye ciye', 'kayan ciye ciye']],
-    [/beverage|drink/i, ['kunu', 'zobo', 'fura', 'nono', 'abin sha', 'juice']],
-    [/doctor/i, ['likita', 'asibiti']],
-    [/veterin/i, ['likitan dabbobi', 'dabbobi', 'vet', 'animals']]
+    [/beverage|drink/i, ['kunu', 'zobo', 'fura', 'nono', 'abin sha', 'juice']]
 ];
-const QS_POPULAR_ORDER = [/kitso|hair/i, /mechanic/i, /tailor/i, /deliver/i, /snack/i, /beverage|drink/i, /plumb/i, /electric/i, /weld/i, /carpent/i, /laundry/i, /paint/i, /mason/i, /clean/i, /make.?up/i];
 const NP_CURRENCY_BY_COUNTRY = { NG: 'NGN', GH: 'GHS', NE: 'XOF', BJ: 'XOF', TG: 'XOF', SN: 'XOF', CI: 'XOF', CM: 'XAF', TD: 'XAF', KE: 'KES', ZA: 'ZAR', US: 'USD', GB: 'GBP', IN: 'INR', AE: 'AED', SA: 'SAR', EG: 'EGP' };
 
 const qs = {
@@ -5506,7 +5366,7 @@ const qs = {
     selected: [],
     price: '', unit: 'per job', currency: '', currencyTouched: false, itemPrices: {},
     photos: {}, verifyPrev: {},
-    bio: '', bioTouched: false, bioLang: 'en',
+    bio: '', bioTouched: false,
     phone: '', idType: '', gender: '',
     loc: { gpsReady: false },
     publishing: false
@@ -5529,9 +5389,10 @@ function qsAliasesFor(cat) {
 function qsBuildCatalog() {
     const out = [], seen = new Set();
     (Array.isArray(PS_CATS) ? PS_CATS : []).forEach((cat, idx) => {
-        if (!cat || !cat.label) return;
+        if (!cat || !cat.label || QS_HIDE_CATS.indexOf(cat.id) > -1) return;
         const aliases = qsAliasesFor(cat);
-        const base = { idx, catId: cat.id, parentLabel: cat.label, icon: cat.icon || '🛠️', special: QS_FULL_SETUP_IDS.indexOf(cat.id) > -1, food: QS_FOOD_IDS.indexOf(cat.id) > -1 };
+        const catLabel = (cat.label in QS_LABEL_FIX) ? QS_LABEL_FIX[cat.label] : cat.label;
+        const base = { idx, catId: cat.id, parentLabel: catLabel, icon: cat.icon || '🛠️', special: QS_FULL_SETUP_IDS.indexOf(cat.id) > -1, food: QS_FOOD_IDS.indexOf(cat.id) > -1 };
         const push = (label, isCategory, sub) => {
             const key = idx + ':' + (isCategory ? '' : label);
             if (seen.has(key)) return;
@@ -5543,8 +5404,12 @@ function qsBuildCatalog() {
                 hayAlias: aliases.map(qsNormText)
             }));
         };
-        push(cat.label, true);
-        (cat.subs || []).forEach(sub => { if (sub && String(sub).toLowerCase() !== 'other') push(String(sub), false); });
+        push(catLabel, true);
+        (cat.subs || []).forEach(sub => {
+            if (!sub || String(sub).toLowerCase() === 'other') return;
+            const name = (sub in QS_LABEL_FIX) ? QS_LABEL_FIX[sub] : String(sub);
+            if (name) push(name, false);
+        });
     });
     return out;
 }
@@ -5602,6 +5467,7 @@ function openPostServiceSheet() {
     ov.style.display = 'flex';
     requestAnimationFrame(() => ov.classList.add('open'));
     document.body.style.overflow = 'hidden';
+    npPushOverlay('qs');          // same overlay stack the rest of the app uses: hides the footer + back button closes it
     qsCheckPending();
 }
 function qsInit() {
@@ -5610,22 +5476,27 @@ function qsInit() {
     Object.keys(qs.photos).forEach(k => { try { URL.revokeObjectURL(qs.photos[k].previewUrl); } catch (e) {} });
     qs.photos = {}; qs.verifyPrev = {};
     Object.keys(verificationFiles).forEach(k => delete verificationFiles[k]);
-    qs.bio = ''; qs.bioTouched = false; qs.bioLang = (npLang() === 'ha') ? 'ha' : 'en';
+    qs.bio = ''; qs.bioTouched = false;
     qs.phone = ''; qs.idType = ''; qs.gender = '';
     qs.loc = { gpsReady: false };
     qs.q = ''; qs.publishing = false;
     qs.currency = qsDefaultCurrency();
 }
+function qsHideNow() {
+    const ov = qsEl('qs-overlay');
+    if (!ov) return;
+    ov.classList.remove('open');
+    setTimeout(() => { if (!ov.classList.contains('open')) ov.style.display = 'none'; }, 260);
+    const psOv = document.getElementById('post-service-sheet-overlay');
+    if (!(psOv && psOv.style.display !== 'none' && psOv.style.display !== '')) document.body.style.overflow = '';
+}
 function qsClose(force) {
     const ov = qsEl('qs-overlay');
     if (!ov) return;
     if (qs.publishing && !force) return;
-    ov.classList.remove('open');
-    setTimeout(() => { ov.style.display = 'none'; }, 280);
-    const psOv = document.getElementById('post-service-sheet-overlay');
-    if (!(psOv && psOv.style.display !== 'none' && psOv.style.display !== '')) document.body.style.overflow = '';
+    qsHideNow();
+    npCloseOverlay('qs');         // pops our history entry (also releases the footer lock)
 }
-function qsOverlayClick(ev) { if (ev.target && ev.target.id === 'qs-overlay') qsClose(); }
 async function qsCheckPending() {
     const box = qsEl('qs-pending');
     if (!box) return;
@@ -5636,10 +5507,6 @@ async function qsCheckPending() {
         const snap = await firebase.database().ref('providers/' + u + '/status').once('value');
         if (snap.val() === 'pending_verification') { box.textContent = npT('qs_pending'); box.hidden = false; }
     } catch (e) { /* rules may hide it — not important */ }
-}
-function qsOpenFullSetup() {
-    qsClose(true);
-    openLegacyPostServiceSheet();
 }
 
 /* ───────── services (typeahead + chips) ───────── */
@@ -5674,14 +5541,14 @@ function qsRenderSuggest() {
     qs.suggestions = qsSearch(q);
     let html = qs.suggestions.map((e, i) => `
         <button type="button" class="qs-sug" role="option" onmousedown="event.preventDefault()" onclick="qsPick(${i})">
-            <span class="qs-sug-ic">${npEsc(e.icon)}</span>
-            <span class="qs-sug-main"><span class="qs-sug-label">${qsHighlight(e.label, q)}</span>${e.isCategory ? '' : `<span class="qs-sug-parent">${npEsc(npT('qs_in'))} ${npEsc(e.parentLabel)}</span>`}</span>
+            <span class="qs-sug-label">${qsHighlight(e.label, q)}</span>
+            ${e.isCategory ? '' : `<span class="qs-sug-parent">${npEsc(npT('qs_in'))} ${npEsc(e.parentLabel)}</span>`}
             ${e.special ? `<span class="qs-sug-tag">${npEsc(npT('qs_full_tag'))}</span>` : ''}
         </button>`).join('');
     const nq = qsNormText(q);
     const exact = qs.catalog.some(e => e.hayLabel === nq);
     if (!exact && q.length >= 2) {
-        html += `<button type="button" class="qs-sug qs-sug-custom" onmousedown="event.preventDefault()" onclick="qsAddCustom()"><span class="qs-sug-ic">➕</span><span class="qs-sug-main"><span class="qs-sug-label">${npEsc(npT('qs_add_custom', { x: q }))}</span></span></button>`;
+        html += `<button type="button" class="qs-sug qs-sug-custom" onmousedown="event.preventDefault()" onclick="qsAddCustom()"><span class="qs-sug-label">${npEsc(npT('qs_add_custom', { x: q }))}</span></button>`;
     }
     box.innerHTML = html;
     box.hidden = !html;
@@ -5713,14 +5580,6 @@ function qsAddCustom() {
     qsHideSuggest();
     qsAfterServicesChange();
 }
-function qsAddTile(catIdx) {
-    const e = qs.catalog.find(x => x.idx === catIdx && x.isCategory);
-    if (e) qsAddEntry(e);
-}
-function qsAddSub(catIdx, subName) {
-    const e = qs.catalog.find(x => x.idx === catIdx && !x.isCategory && x.label === subName);
-    if (e) qsAddEntry(e);
-}
 function qsRemoveAt(i) {
     const s = qs.selected[i];
     if (!s) return;
@@ -5738,66 +5597,39 @@ function qsHandoff(e) {
 }
 function qsIsFood() { return !!(qs.selected[0] && qs.selected[0].food); }
 function qsAfterServicesChange() {
-    qsRenderChips(); qsRenderPopular(); qsRenderSubs(); qsRenderPrice(); qsApplyBioTemplate(); qsRefresh();
+    qsRenderChips(); qsRenderPrice(); qsApplyBioTemplate(); qsRefresh();
 }
 function qsRenderChips() {
     const box = qsEl('qs-chips');
     if (!box) return;
-    box.innerHTML = qs.selected.map((s, i) => `<span class="qs-chip">${npEsc(s.icon)} ${npEsc(s.label)}<button type="button" aria-label="${npEsc(npT('qs_remove'))}" onclick="qsRemoveAt(${i})">✕</button></span>`).join('');
+    box.innerHTML = qs.selected.map((s, i) => `<span class="qs-chip">${npEsc(s.label)}<button type="button" aria-label="${npEsc(npT('qs_remove'))}" onclick="qsRemoveAt(${i})"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></span>`).join('');
     qsEl('qs-hint').textContent = qs.selected.length ? npT('qs_more_hint') : '';
 }
-function qsRenderPopular() {
-    const box = qsEl('qs-popular');
-    if (!box) return;
-    if (qs.selected.length) { box.innerHTML = ''; box.hidden = true; return; }
-    const cats = qs.catalog.filter(e => e.isCategory && !e.special);
-    const picked = [];
-    QS_POPULAR_ORDER.forEach(re => { const hit = cats.find(c => re.test(c.label + ' ' + c.catId) && picked.indexOf(c) < 0); if (hit) picked.push(hit); });
-    cats.forEach(c => { if (picked.length < 12 && picked.indexOf(c) < 0) picked.push(c); });
-    const list = picked.slice(0, 12);
-    box.hidden = !list.length;
-    box.innerHTML = `<div class="qs-sub-title">${npEsc(npT('qs_or_tap'))}</div><div class="qs-tiles">` +
-        list.map(c => `<button type="button" class="qs-tile" onclick="qsAddTile(${c.idx})"><span class="qs-tile-ic">${npEsc(c.icon)}</span><span class="qs-tile-label">${npEsc(c.label)}</span></button>`).join('') + '</div>';
-}
-function qsRenderSubs() {
-    const box = qsEl('qs-subs');
-    if (!box) return;
-    const first = qs.selected[0];
-    if (!first || first.idx < 0) { box.innerHTML = ''; box.hidden = true; return; }
-    const cat = PS_CATS[first.idx] || {};
-    const have = new Set(qs.selected.map(s => s.key));
-    const subs = (cat.subs || []).filter(s => s && String(s).toLowerCase() !== 'other' && !have.has(first.idx + ':' + s));
-    box.hidden = !subs.length;
-    box.innerHTML = subs.length ? `<div class="qs-sub-title">${npEsc(npT('qs_add_more_in', { x: cat.label }))}</div><div class="qs-subpills">` +
-        subs.slice(0, 10).map(s => `<button type="button" class="qs-subpill" onclick="qsAddSub(${first.idx}, this.dataset.sub)" data-sub="${npEsc(s)}">+ ${npEsc(s)}</button>`).join('') + '</div>' : '';
-}
-
 /* ───────── price ───────── */
-function qsDefaultCurrency() {
-    const loc = window.userLocalityData || {};
-    if (loc.currency && /^[A-Z]{3}$/.test(loc.currency)) return loc.currency;
-    if (loc.country_code && NP_CURRENCY_BY_COUNTRY[loc.country_code]) return NP_CURRENCY_BY_COUNTRY[loc.country_code];
-    return 'NGN';
-}
-function qsCurrency() {
-    const b = qsEl('qs-currency');
-    return (b && b.dataset.currency) || qs.currency || '';
-}
+function qsDefaultCurrency() { return 'USD'; }
+function qsCurrency() { return qs.currency || ''; }
 function qsRenderCurrency() {
-    const b = qsEl('qs-currency');
-    if (!b) return;
     const c = qsCurrency();
-    b.dataset.currency = c;
     let sym = c;
     try { if (typeof getCurrencySymbol === 'function') sym = getCurrencySymbol(c) || c; } catch (e) {}
-    b.innerHTML = c ? `${npEsc(sym)} ${npEsc(c)} <span style="font-size:9px;opacity:.6;">▾</span>` : `🌍 ${npEsc(npT('qs_currency'))} <span style="font-size:9px;opacity:.6;">▾</span>`;
+    ['qs-currency', 'qs-currency-food'].forEach(id => {
+        const b = qsEl(id);
+        if (!b) return;
+        b.dataset.currency = c;
+        b.innerHTML = `<span>${npEsc(sym)} ${npEsc(c)}</span><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    });
 }
-function qsOpenCurrency() {
+function qsOpenCurrency(id) {
+    id = id || 'qs-currency';
     qs.currencyTouched = true;
-    if (typeof openCurrencyPicker === 'function') openCurrencyPicker('qs-currency');
-    // The shared picker writes the choice onto the button; re-read it shortly after.
-    const poll = setInterval(() => { const b = qsEl('qs-currency'); if (b && b.dataset.currency && b.dataset.currency !== qs.currency) { qs.currency = b.dataset.currency; qsRefresh(); } }, 400);
-    setTimeout(() => clearInterval(poll), 60000);
+    if (typeof openCurrencyPicker === 'function') openCurrencyPicker(id);
+    // The shared picker writes the choice onto the button; read it back once it changes.
+    const before = qs.currency;
+    const poll = setInterval(() => {
+        const b = qsEl(id);
+        if (b && b.dataset.currency && b.dataset.currency !== before) { clearInterval(poll); qs.currency = b.dataset.currency; qsRenderCurrency(); qsRefresh(); }
+    }, 300);
+    setTimeout(() => clearInterval(poll), 90000);
 }
 function qsRenderPrice() {
     const food = qsIsFood();
@@ -5805,10 +5637,10 @@ function qsRenderPrice() {
     qsEl('qs-price-general').style.display = food ? 'none' : 'block';
     qsEl('qs-price-food').style.display = food ? 'block' : 'none';
     qsEl('qs-price').value = qs.price;
-    qsEl('qs-units').innerHTML = QS_UNITS.map(u => `<button type="button" class="qs-unit${qs.unit === u ? ' on' : ''}" onclick="qsSetUnit('${u}')">${npEsc(npT('unit_' + u.replace(' ', '_')))}</button>`).join('');
+    qsEl('qs-units').innerHTML = QS_UNITS.map(u => `<button type="button" class="qs-seg-b${qs.unit === u ? ' on' : ''}" onclick="qsSetUnit('${u}')">${npEsc(npT('unit_' + u.replace(' ', '_')))}</button>`).join('');
     if (food) {
         qsEl('qs-item-rows').innerHTML = qs.selected.map((s, i) => `
-            <div class="qs-item-row"><span class="qs-item-name">${npEsc(s.icon)} ${npEsc(s.label)}</span>
+            <div class="qs-item-row"><span class="qs-item-name">${npEsc(s.label)}</span>
             <input type="number" inputmode="numeric" min="1" placeholder="${npEsc(npT('qs_amount'))}" value="${qs.itemPrices[s.key] || ''}" oninput="qsSetItemPrice(${i}, this.value)"></div>`).join('');
     }
 }
@@ -5858,6 +5690,8 @@ function qsRemovePhoto(ev, i) {
     qsRenderPhotos(); qsRefresh();
 }
 function qsPhotoCount() { return Object.keys(qs.photos).filter(k => qs.photos[k] && qs.photos[k].file).length; }
+const QS_PLUS_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+const QS_X_SVG = '<svg viewBox="0 0 12 12" width="9" height="9" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 function qsRenderPhotos() {
     [0, 1, 2].forEach(i => {
         const slot = qsEl('qs-slot-' + i);
@@ -5865,8 +5699,8 @@ function qsRenderPhotos() {
         const p = qs.photos[i];
         slot.classList.toggle('filled', !!p);
         slot.innerHTML = `<input type="file" accept="image/*" onchange="qsHandlePhoto(this,${i})" hidden>` + (p
-            ? `<img src="${p.previewUrl}" class="ps-port-preview" alt=""><button type="button" class="ps-port-remove" onclick="qsRemovePhoto(event,${i})" aria-label="${npEsc(npT('qs_remove'))}">✕</button>`
-            : `<div class="ps-port-inner"><span style="font-size:22px;">📷</span><span class="qs-slot-label">${npEsc(i === 0 ? npT('qs_main_photo') : npT('qs_more_photo'))}</span></div>`);
+            ? `<img src="${p.previewUrl}" class="ps-port-preview" alt=""><button type="button" class="qs-slot-x" onclick="qsRemovePhoto(event,${i})" aria-label="${npEsc(npT('qs_remove'))}">${QS_X_SVG}</button>`
+            : `<div class="qs-slot-in">${QS_PLUS_SVG}<span class="qs-slot-label">${npEsc(i === 0 ? npT('qs_main_photo') : npT('qs_more_photo'))}</span></div>`);
     });
 }
 function qsHandleVerify(input, key) {
@@ -5886,10 +5720,10 @@ function qsRenderVerify() {
         const slot = qsEl('qs-verify-' + key);
         if (!slot) return;
         const prev = qs.verifyPrev[key];
-        slot.classList.toggle('filled', !!(prev && verificationFiles[key]));
+        const has = !!(prev && verificationFiles[key]);
+        slot.classList.toggle('filled', has);
         slot.innerHTML = `<input type="file" accept="image/*" ${key === 'selfie' ? 'capture="user"' : ''} onchange="qsHandleVerify(this,'${key}')" hidden>` +
-            ((prev && verificationFiles[key]) ? `<img src="${prev}" alt="" class="qs-verify-img">`
-                : `<span style="font-size:22px;">${key === 'id' ? '🪪' : '🤳'}</span><span class="qs-slot-label">${npEsc(npT(key === 'id' ? 'qs_id_photo' : 'qs_selfie'))}</span>`);
+            (has ? `<img src="${prev}" alt="" class="qs-verify-img">` : `${QS_PLUS_SVG}<span class="qs-slot-label">${npEsc(npT(key === 'id' ? 'qs_id_photo' : 'qs_selfie'))}</span>`);
     });
 }
 
@@ -5899,12 +5733,8 @@ function qsBioTemplate() {
     const words = [];
     qs.selected.slice(0, 2).forEach(s => { const w = qsWord(s); if (w && words.indexOf(w) < 0) words.push(w); });
     if (!words.length) return '';
-    const svc = words.join(', ');
     const area = qs.loc.gpsArea || '';
-    const text = (qs.bioLang === 'ha')
-        ? `${svc}${area ? ' a ' + area : ''}. Aiki mai gaskiya, farashi mai kyau. Ku kira ni!`
-        : `${svc}${area ? ' in ' + area : ''}. Honest work, fair price. Call me!`;
-    return text.slice(0, 130);
+    return `Professional ${words.join(' & ')}${area ? ' in ' + area : ''}. Message me to book.`.slice(0, 130);
 }
 function qsApplyBioTemplate() {
     if (qs.bioTouched) return;
@@ -5918,12 +5748,6 @@ function qsOnBio(v) {
     qsEl('qs-bio-count').textContent = qs.bio.length;
     qsRefresh();
 }
-function qsOnBioLang(v) {
-    qs.bioLang = v;
-    qsApplyBioTemplate();
-    qsRefresh();
-}
-
 /* ───────── location / phone / gender ───────── */
 function qsSetLocation() {
     captureGPSUniversal({
@@ -5937,14 +5761,12 @@ function qsSetLocation() {
 }
 function qsRenderLocation() {
     const done = !!qs.loc.gpsReady;
-    qsEl('qs-loc-status').textContent = done ? '✅ ' + npT('npLoc_done') : npT('qs_where_hint');
-    qsEl('qs-loc-coords').textContent = done ? qs.loc.gpsAddress + (qs.loc.gpsState ? ' · ' + qs.loc.gpsState : '') : '';
+    qsEl('qs-loc-status').textContent = done ? npT('npLoc_done') : npT('qs_where_hint');
+    qsEl('qs-loc-coords').textContent = done ? qs.loc.gpsAddress + (qs.loc.gpsState ? ', ' + qs.loc.gpsState : '') : '';
     const b = qsEl('qs-loc-btn');
     b.textContent = done ? npT('qs_where_change') : npT('qs_where_btn');
     b.dataset.idleLabel = npT('qs_where_btn');
-    const card = qsEl('qs-loc-card');
-    card.style.borderColor = done ? 'rgba(16,185,129,0.4)' : '';
-    card.style.background = done ? 'rgba(16,185,129,0.08)' : '';
+    qsEl('qs-loc-card').classList.toggle('done', done);
 }
 function qsPhoneOk(v) { const d = String(v || '').replace(/[^\d]/g, ''); return d.length >= 7 && d.length <= 15; }
 function qsOnPhone(v) { qs.phone = String(v || '').replace(/[^\d+\s-]/g, ''); qsRefresh(); }
@@ -5988,11 +5810,11 @@ function qsRefresh() {
     if (box) {
         if (missing.length) {
             box.className = 'qs-checklist warn';
-            box.innerHTML = `<div class="qs-check-title">⚠️ ${npEsc(npT('qs_action_required'))}</div><div class="qs-check-items">` +
+            box.innerHTML = `<div class="qs-check-title">${npEsc(npT('qs_action_required'))}</div><div class="qs-check-items">` +
                 missing.map(x => `<button type="button" class="qs-check-item" onclick="qsGoto('${x.sec}')">${npEsc(npT(x.key))}</button>`).join('') + '</div>';
         } else {
             box.className = 'qs-checklist ok';
-            box.innerHTML = `<div class="qs-check-title">✅ ${npEsc(npT('qs_all_set'))}</div>`;
+            box.innerHTML = `<div class="qs-check-title">${npEsc(npT('qs_all_set'))}</div>`;
         }
     }
     const btn = qsEl('qs-publish');
@@ -6007,9 +5829,7 @@ function qsGoto(sec) {
 }
 function qsRenderAll() {
     npApplyI18n(qsEl('qs-overlay'));
-    npUpdateLangBtn();
-    qsRenderChips(); qsRenderPopular(); qsRenderSubs(); qsRenderPrice(); qsRenderPhotos(); qsRenderVerify(); qsRenderLocation();
-    qsEl('qs-bio-lang').value = qs.bioLang;
+    qsRenderChips(); qsRenderPrice(); qsRenderPhotos(); qsRenderVerify(); qsRenderLocation();
     qsApplyBioTemplate();
     if (qs.bioTouched) { qsEl('qs-bio').value = qs.bio; qsEl('qs-bio-count').textContent = qs.bio.length; }
     qsEl('qs-phone').value = qs.phone;
@@ -6077,8 +5897,6 @@ function qsBuildPayload(username, photoUrls, verKeys) {
         pricing: { base: basePrice, unit: food ? 'per item' : qs.unit, currency },
         currency,
         bio: String(qs.bio).trim().slice(0, 130),
-        bioLang: qs.bioLang,
-        languages: [qs.bioLang],
         gender: qs.gender,
         schedule: QS_ALL_DAYS.slice(),
         phone: String(qs.phone).replace(/[^\d+]/g, ''),
@@ -6109,12 +5927,12 @@ async function qsPublish() {
     const missing = qsRefresh();
     if (missing.length) {
         qsGoto(missing[0].sec);
-        psShowToast('⚠️ ' + npT(missing[0].key));
+        psShowToast(npT(missing[0].key));
         return;
     }
-    if (!(await guaranteeAuth())) { showGlobalToast('⚠️ Please login again.'); setTimeout(() => window.location.href = 'login.html', 1200); return; }
+    if (!(await guaranteeAuth())) { showGlobalToast('Please sign in again.'); setTimeout(() => window.location.href = 'login.html', 1200); return; }
     const username = localStorage.getItem('nexus_user_session');
-    if (!username) { showGlobalToast('⚠️ Please login again.'); setTimeout(() => window.location.href = 'login.html', 1200); return; }
+    if (!username) { showGlobalToast('Please sign in again.'); setTimeout(() => window.location.href = 'login.html', 1200); return; }
 
     // Never overwrite a provider who is already approved — send them to their dashboard instead.
     try {
@@ -6126,7 +5944,7 @@ async function qsPublish() {
     qs.publishing = true;
     btn.disabled = true;
     const oldLabel = btn.textContent;
-    btn.textContent = '⏳ ' + npT('qs_publishing');
+    btn.textContent = npT('qs_publishing');
     psProgressShow();
     const fail = (msg) => {
         psProgressError(msg);
@@ -6170,7 +5988,7 @@ async function qsPublish() {
 }
 
 // ════════════════════════════════════════════════════════════
-//  🏠 HOME PROVIDER SECTIONS · ↕️ SORT BAR · 🌐 TRANSLATION · 📝 PROFILE ABOUT
+//  HOME PROVIDER SECTIONS · SORT BAR · REACHABILITY · BIO TRANSLATION
 //  (Airbnb / Uber Eats / Fiverr pattern: browse rows on the home page, sort & filter on results.)
 // ════════════════════════════════════════════════════════════
 function $id(id) { return document.getElementById(id); }
@@ -6184,7 +6002,7 @@ function npRefreshDistances() {
         }
     });
 }
-function npRealPros() { return PROS.filter(p => p.realUsername); }
+function npRealPros() { return PROS.filter(p => p.realUsername && npReachable(p)); }
 function npCardsInto(el, list) {
     const html = list.map(p => '<div class="np-hitem">' + createProCardHtml(p) + '</div>').join('');
     if (el._sig !== html) { el.innerHTML = html; el._sig = html; }
@@ -6193,7 +6011,6 @@ function npHasGeo(p) { return !!(p.location && typeof p.location.lat === 'number
 function npRenderHomeSections() {
     const mv = $id('main-view');
     if (mv) npApplyI18n(mv);
-    npUpdateLangBtn();
     npRefreshDistances();
     const nearWrap = $id('np-nearby-section'), nearList = $id('np-nearby-list'), nearEnable = $id('np-nearby-enable');
     const availWrap = $id('np-avail-section'), availList = $id('np-avail-list');
@@ -6242,6 +6059,69 @@ function npSeeAll(kind) {
     switchView('results');
 }
 
+
+// ════════════════════════════════════════════════════════════
+//  🌍 REACHABILITY — services are done in person, so a customer must never be shown providers
+//  they cannot realistically reach (e.g. a Ghana visitor seeing Nigerian providers).
+//  • Viewer country  = IP country (cached) → else GPS box (NG / GH).
+//  • Provider country = saved country → else the currency they priced in → else GPS box.
+//  • Different country → hidden, EXCEPT a provider really close across a border (≤ 60 km, GPS needed).
+//  • Unknown on either side → shown (never hide someone just because we are unsure).
+// ════════════════════════════════════════════════════════════
+const NP_CUR_COUNTRY = { NGN: 'NG', GHS: 'GH', KES: 'KE', ZAR: 'ZA', UGX: 'UG', TZS: 'TZ', RWF: 'RW', ETB: 'ET', EGP: 'EG', MAD: 'MA', GMD: 'GM', SLL: 'SL', LRD: 'LR', ZMW: 'ZM', MWK: 'MW', BWP: 'BW', NAD: 'NA', AOA: 'AO', DZD: 'DZ', TND: 'TN', INR: 'IN', PKR: 'PK', BDT: 'BD', GBP: 'GB', AED: 'AE', SAR: 'SA' };
+const NP_BOX = { NG: [4.2, 13.95, 2.65, 14.7], GH: [4.7, 11.2, -3.3, 1.25] };   // [minLat, maxLat, minLng, maxLng]
+function npBoxCountry(lat, lng) {
+    if (!isFinite(lat) || !isFinite(lng)) return '';
+    const hit = Object.keys(NP_BOX).filter(k => { const b = NP_BOX[k]; return lat >= b[0] && lat <= b[1] && lng >= b[2] && lng <= b[3]; });
+    return hit.length === 1 ? hit[0] : '';
+}
+function npLocalityData() {
+    if (window.userLocalityData) return window.userLocalityData;
+    try { const c = JSON.parse(localStorage.getItem('oryzon_locality') || 'null'); return (c && c.data) || null; } catch (e) { return null; }
+}
+function npViewerCountry() {
+    const ld = npLocalityData();
+    const cc = ld && String(ld.country_code || '').toUpperCase();
+    if (cc && /^[A-Z]{2}$/.test(cc)) return cc;
+    return userRealCoords ? npBoxCountry(userRealCoords.lat, userRealCoords.lng) : '';
+}
+function npProviderCountry(p) {
+    const c = String(p.country || '').toUpperCase();
+    if (/^[A-Z]{2}$/.test(c)) return c;
+    if (!p.realUsername) return 'NG';                       // the built-in sample providers are Nigerian (Kano)
+    const cur = NP_CUR_COUNTRY[String(p.priceCurrency || '').toUpperCase()];
+    if (cur) return cur;
+    return p.location ? npBoxCountry(p.location.lat, p.location.lng) : '';
+}
+function npReachable(p) {
+    const vc = npViewerCountry();
+    if (!vc) return true;
+    const pc = npProviderCountry(p);
+    if (!pc || pc === vc) return true;
+    if (userRealCoords && npHasGeo(p)) return haversineDistanceKm(userRealCoords.lat, userRealCoords.lng, p.location.lat, p.location.lng) <= 60;
+    return false;
+}
+function npSmartOrder(list) {
+    const myCity = npCityKey(npMyCity());
+    const keyed = list.map((p, i) => {
+        const d = (userRealCoords && npHasGeo(p)) ? haversineDistanceKm(userRealCoords.lat, userRealCoords.lng, p.location.lat, p.location.lng) : null;
+        const sameCity = myCity && npCityKey(p.city) === myCity ? 0 : 1;
+        return { p, i, d, sameCity };
+    });
+    keyed.sort((a, b) => {
+        if (userRealCoords) {
+            if ((a.d === null) !== (b.d === null)) return a.d === null ? 1 : -1;
+            if (a.d !== null && Math.abs(a.d - b.d) > 0.05) return a.d - b.d;
+        } else if (a.sameCity !== b.sameCity) return a.sameCity - b.sameCity;
+        return a.i - b.i;
+    });
+    return keyed.map(x => x.p);
+}
+// IP country arrives after the page has drawn — redraw once so the right providers show.
+function npAfterLocality() {
+    try { if (state.view === 'results') renderResultsPage(); else initAppElements(); } catch (e) {}
+}
+
 // ── Results: sort + filter ──
 function npPriceNum(p) {
     if (typeof p.priceNum === 'number') return p.priceNum;
@@ -6255,7 +6135,7 @@ function npApplySort(list) {
     else if (s === 'top') a.sort((x, y) => (y.rating || 0) - (x.rating || 0) || (y.reviews || 0) - (x.reviews || 0));
     else if (s === 'price_asc') a.sort((x, y) => (npPriceNum(x) || 1e12) - (npPriceNum(y) || 1e12));
     else if (s === 'price_desc') a.sort((x, y) => npPriceNum(y) - npPriceNum(x));
-    return a;     // 'recommended' keeps the platform's default order
+    return npSmartOrder(a);   // 'recommended' = closest first (same city → distance), original order otherwise
 }
 function npRenderSortBar() {
     const bar = $id('np-sort-bar'); if (!bar) return;
@@ -6275,7 +6155,7 @@ function npToggleAvail() { state.onlyAvail = !state.onlyAvail; renderResultsPage
 
 // Provider category ids come from the "Post your service" list (e.g. skilled_pro) while the home
 // categories use their own ids (e.g. plumber) — so also match on the category NAME the provider chose.
-// Search words in Hausa / Pidgin / everyday speech (famfo, kitso, dan achaba…) find the right trade.
+// Everyday and regional search words find the right trade.
 function npQueryMatch(p, query) {
     const nq = qsNormText(query);
     if (!nq) return false;
@@ -6363,50 +6243,6 @@ async function npTranslateBios() {
     if (changed) {
         try { if (state.view === 'results') renderResultsPage(); else initAppElements(); } catch (e) {}
     }
-}
-function npRenderProfileAbout(pro) {
-    const box = $id('np-profile-about'); if (!box) return;
-    if (!pro || !pro.realUsername || !pro.bio) { box.style.display = 'none'; box.innerHTML = ''; return; }
-    let html = '<div class="np-about-t">' + npEsc(npT('about_title')) + '</div><div class="np-about-b">' + npEsc(pro.bio) + '</div>';
-    if (pro.bioTranslated && pro.bioOriginal) {
-        const ln = (pro.bioLang && NP_LANGS[pro.bioLang]) ? NP_LANGS[pro.bioLang] : '';
-        html += '<details class="np-about-o"><summary>' + npEsc(npT('about_translated')) + ' · ' + npEsc(npT('about_show_orig')) + '</summary><div>' + npEsc(pro.bioOriginal) + '</div>' +
-            (ln ? '<div class="np-about-l">' + npEsc(npT('about_original', { lang: ln })) + '</div>' : '') + '</details>';
-    }
-    const tel = String(pro.phone || '').replace(/[^\d+]/g, '');
-    if (tel.length >= 7) html += '<a class="np-about-call" href="tel:' + npEsc(tel) + '">' + npEsc(npT('about_call')) + ' ' + npEsc(pro.phone) + '</a>';
-    box.innerHTML = html; box.style.display = 'block';
-}
-
-// ── 🌐 Language picker ──
-function npUpdateLangBtn() {
-    const l = npLang();
-    document.querySelectorAll('.np-lang-btn').forEach(b => { b.textContent = '🌐 ' + (NP_LANGS[l] || l); });
-}
-function npOpenLangPicker() {
-    const ov = $id('np-lang-overlay'); if (!ov) return;
-    const cur = npLang();
-    $id('np-lang-list').innerHTML = Object.keys(NP_LANGS).map(k => '<button type="button" class="np-lang-opt' + (k === cur ? ' on' : '') + '" onclick="npSetLang(\'' + k + '\')">' + npEsc(NP_LANGS[k]) + (k === cur ? ' ✓' : '') + '</button>').join('');
-    npApplyI18n(ov);
-    ov.style.display = 'flex';
-}
-function npCloseLang(ev) {
-    if (ev && ev.target && ev.target.id !== 'np-lang-overlay') return;
-    const ov = $id('np-lang-overlay'); if (ov) ov.style.display = 'none';
-}
-function npSetLang(l) {
-    try { localStorage.setItem('np_lang', l); } catch (e) {}
-    const ov = $id('np-lang-overlay'); if (ov) ov.style.display = 'none';
-    npApplyI18n(document);
-    npUpdateLangBtn();
-    npTrDown = false;
-    const q = $id('qs-overlay');
-    if (q && q.style.display === 'flex') {
-        if (!qs.bioTouched) qs.bioLang = l;
-        qsRenderAll();
-    }
-    try { npRenderHomeSections(); } catch (e) {}
-    if (state.view === 'results') renderResultsPage();
 }
 
 // ────────────────────────────────────────────
@@ -11728,11 +11564,12 @@ window.renderAllStoriesGrid = renderAllStoriesGrid;
 window.filterAllStoriesGrid = filterAllStoriesGrid;
 window.openAllStoriesOverlay = openAllStoriesOverlay;
 window.closeAllStoriesOverlay = closeAllStoriesOverlay;
+window.npAfterLocality = npAfterLocality;
 window.npApplyI18n = npApplyI18n;
 window.npApplySort = npApplySort;
+window.npBoxCountry = npBoxCountry;
 window.npCardsInto = npCardsInto;
 window.npCatMatch = npCatMatch;
-window.npCloseLang = npCloseLang;
 window.npDataUrl = npDataUrl;
 window.npEnableLocation = npEnableLocation;
 window.npFetchJson = npFetchJson;
@@ -11760,30 +11597,29 @@ window.npLocOpen = npLocOpen;
 window.npLocRenderCountry = npLocRenderCountry;
 window.npLocRenderLgas = npLocRenderLgas;
 window.npLocSetAtWork = npLocSetAtWork;
+window.npLocalityData = npLocalityData;
 window.npNorm = npNorm;
-window.npOpenLangPicker = npOpenLangPicker;
 window.npPriceNum = npPriceNum;
+window.npProviderCountry = npProviderCountry;
 window.npQueryMatch = npQueryMatch;
+window.npReachable = npReachable;
 window.npRealPros = npRealPros;
 window.npRefreshDistances = npRefreshDistances;
 window.npRenderHomeSections = npRenderHomeSections;
-window.npRenderProfileAbout = npRenderProfileAbout;
 window.npRenderSortBar = npRenderSortBar;
 window.npSafeAddress = npSafeAddress;
 window.npSeeAll = npSeeAll;
-window.npSetLang = npSetLang;
 window.npSetSort = npSetSort;
+window.npSmartOrder = npSmartOrder;
 window.npT = npT;
 window.npToggleAvail = npToggleAvail;
 window.npTrLoad = npTrLoad;
 window.npTrSave = npTrSave;
 window.npTranslateBatch = npTranslateBatch;
 window.npTranslateBios = npTranslateBios;
-window.npUpdateLangBtn = npUpdateLangBtn;
+window.npViewerCountry = npViewerCountry;
 window.qsAddCustom = qsAddCustom;
 window.qsAddEntry = qsAddEntry;
-window.qsAddSub = qsAddSub;
-window.qsAddTile = qsAddTile;
 window.qsAddressOk = qsAddressOk;
 window.qsAfterServicesChange = qsAfterServicesChange;
 window.qsAliasesFor = qsAliasesFor;
@@ -11801,6 +11637,7 @@ window.qsGoto = qsGoto;
 window.qsHandlePhoto = qsHandlePhoto;
 window.qsHandleVerify = qsHandleVerify;
 window.qsHandoff = qsHandoff;
+window.qsHideNow = qsHideNow;
 window.qsHideSuggest = qsHideSuggest;
 window.qsHighlight = qsHighlight;
 window.qsInit = qsInit;
@@ -11808,14 +11645,11 @@ window.qsIsFood = qsIsFood;
 window.qsMissing = qsMissing;
 window.qsNormText = qsNormText;
 window.qsOnBio = qsOnBio;
-window.qsOnBioLang = qsOnBioLang;
 window.qsOnIdType = qsOnIdType;
 window.qsOnKey = qsOnKey;
 window.qsOnPhone = qsOnPhone;
 window.qsOnType = qsOnType;
 window.qsOpenCurrency = qsOpenCurrency;
-window.qsOpenFullSetup = qsOpenFullSetup;
-window.qsOverlayClick = qsOverlayClick;
 window.qsPhoneOk = qsPhoneOk;
 window.qsPhotoCount = qsPhotoCount;
 window.qsPick = qsPick;
@@ -11828,9 +11662,7 @@ window.qsRenderChips = qsRenderChips;
 window.qsRenderCurrency = qsRenderCurrency;
 window.qsRenderLocation = qsRenderLocation;
 window.qsRenderPhotos = qsRenderPhotos;
-window.qsRenderPopular = qsRenderPopular;
 window.qsRenderPrice = qsRenderPrice;
-window.qsRenderSubs = qsRenderSubs;
 window.qsRenderSuggest = qsRenderSuggest;
 window.qsRenderVerify = qsRenderVerify;
 window.qsScore = qsScore;
@@ -12141,6 +11973,8 @@ function npApplyClose(name) {
         document.getElementById('gv-overlay').style.display = 'none';
     } else if (name === 'inbox') {
         document.getElementById('inbox-overlay').style.display = 'none';
+    } else if (name === 'qs') {
+        try { qsHideNow(); } catch (e) {}
     }
 }
 window.addEventListener('popstate', function () {
