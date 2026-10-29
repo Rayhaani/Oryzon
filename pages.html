@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Anti-flash: if this is a real page (?page=slug), set a class on
+        // <html> IMMEDIATELY, before the browser even starts parsing <body>.
+        // The CSS below hides the hardcoded demo name/follower-count until
+        // real Firestore data arrives — so "Maijalalaini Islamic Medicine"
+        // or "182K followers" never get a chance to flash on screen.
+        if (new URLSearchParams(location.search).get('page')) {
+            document.documentElement.classList.add('pg-loading');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Nexus — Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS din wannan page an fitar da shi zuwa pages.css domin SPA
+         navigation (router.js) tana canza #page-content kadai — <style>
+         a cikin <head> na wata page ba ya tafiya tare da ita idan an
+         bude ta ta hanyar fetch + innerHTML swap daga wata page. -->
+    <link rel="stylesheet" href="pages.css">
+</head>
+<body>
+<div id="page-content">
+    <header>
+        <div class="fb-back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></div>
+        <span class="fb-header-title" id="headerTitleText">Maijalalaini Islamic Medicine <i class="fa-solid fa-circle-check verified-badge" id="headerVerifiedIcon"></i></span>
+        <div class="header-actions">
+            <div class="header-icon-btn" onclick="openModal('searchModal')"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="header-icon-btn" onclick="openMenuSheet()" style="display:flex; align-items:center; gap:3px; background:none; border:none; width:auto; height:auto; padding:0 4px;">
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.3s;">•</span>
+                <span class="dot-item" style="color:#fff; font-size:18px; font-weight:900; display:inline-block; animation: dotSequence 1.5s infinite ease-in-out; animation-delay:0.6s;">•</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= PAGE VIEW ================= -->
+    <div id="pageView">
+        <section class="pg-hero">
+            <div class="pg-cover" id="pgCover">
+                <img class="pg-cover-img" id="pageCoverImg" alt="" style="display:none;">
+                <div class="pg-cover-fade"></div>
+            </div>
+            <div class="pg-idrow">
+                <div class="pg-av"><img id="pageAvatarImg" alt="" src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2790%27 height=%2790%27%3E%3C/svg%3E"></div>
+                <div class="pg-actions" id="pgActions"></div>
+            </div>
+            <div class="pg-ident">
+                <h1 class="pg-name" id="pageNameTitle"></h1>
+                <div class="pg-sub" id="pageMetaRow"></div>
+            </div>
+            <div id="pgBioWrap"></div>
+            <div class="pg-facts" id="pgFacts"></div>
+            <div class="pg-stats" id="pgStats"></div>
+            <div class="pg-hl" id="pgHighlights" style="display:none;"></div>
+        </section>
+
+        <nav class="pg-tabs" id="pageTabs"></nav>
+
+        <div class="tab-panel active" id="tab-posts"><div id="timeline-area"></div></div>
+        <div class="tab-panel" id="tab-photos"><div class="media-grid" id="photosGrid"></div></div>
+        <div class="tab-panel" id="tab-videos"><div class="media-grid" id="videosGrid"></div></div>
+        <div class="tab-panel" id="tab-shop"><div class="shop-grid" id="shopGrid"></div></div>
+        <div class="tab-panel" id="tab-events"><div class="events-list" id="eventsList"></div></div>
+        <div class="tab-panel" id="tab-reviews"><div id="reviewsBox"></div></div>
+        <div class="tab-panel" id="tab-about"><div class="pg-ab" id="aboutBox"></div></div>
+    </div>
+
+    <!-- Sheets, search, viewer, toast (filled by pages.js) -->
+    <div id="pgSheetWrap"><div id="pgSheetBg"></div><div id="pgSheet"></div></div>
+    <div class="pg-ov" id="pgSearch">
+        <div class="pg-ov-top">
+            <div class="bk" data-act="back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M11 17l-5-5 5-5M18 12H6"/></svg></div>
+            <input id="pgSearchInput" type="search" placeholder="Search this page" autocomplete="off">
+        </div>
+        <div class="pg-ov-body" id="pgSearchBody"></div>
+    </div>
+    <div class="pg-ov" id="pgLight"></div>
+    <div id="pgToast"></div>
+</div>
+
+    <!-- SHARED POST CARD TEMPLATE — single source of truth for generatePostHTML() -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="post-card-template.js"></script>
+    <script src="router.js"></script>
+    <script src="pages.js"></script>
+</body>
+</html>
