@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>NEXUS - Service Providers</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #050505; --surface: #0f0f0f; --surface2: #141414; --raised: #191919; --sel: #272727;
+  --line: #1f1f1f; --line2: #2a2a2a; --txt: #ffffff; --txt2: #d4d4d4; --muted: #838383; --faint: #5c5c5c;
+  --ok: #4ade80; --warn: #f5b942; --bad: #f87171; --info: #a3a3a3;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+html, body { background: var(--bg); color: var(--txt); font-family: var(--font); font-size: 14px; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; }
+svg.ic { width: 1em; height: 1em; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* top bar */
+.topbar { position: sticky; top: 0; z-index: 200; background: rgba(5,5,5,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); height: 56px; display: flex; align-items: center; padding: 0 16px; gap: 12px; }
+.back-btn { width: 36px; height: 36px; border-radius: 50%; background: transparent; border: none; color: var(--txt); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; margin-left: -6px; }
+.back-btn:hover { background: var(--surface2); }
+.page-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.2px; flex: 1; }
+.top-pill { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--txt2); background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 6px 10px; white-space: nowrap; }
+@media (max-width: 420px) { .top-pill { font-size: 11px; padding: 5px 8px; gap: 5px; } .topbar { gap: 8px; padding: 0 12px; } }
+.top-pill b { color: var(--txt); font-weight: 700; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+.dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+.dot.live { animation: pulse 1.6s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+.main { padding: 16px; max-width: 960px; margin: 0 auto; }
+
+/* stat tiles */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+button.stat-box { color: var(--txt); font-family: inherit; }
+.stat-box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 14px 12px; cursor: default; text-align: left; }
+.stat-box.click { cursor: pointer; }
+.stat-box.click:hover { border-color: var(--line2); }
+.stat-box .sl { font-size: 12px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 7px; }
+.stat-box .sv { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-top: 6px; line-height: 1; }
+
+/* controls */
+.controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+.search-box { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 0 14px; color: var(--muted); font-size: 16px; }
+.search-box:focus-within { border-color: #4a4a4a; }
+.search-box input { flex: 1; background: none; border: none; outline: none; color: var(--txt); font-size: 15px; padding: 13px 0; font-family: inherit; min-width: 0; }
+.search-box input::placeholder { color: #6b6b6b; }
+.filter-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-btn { flex-shrink: 0; padding: 8px 14px; border-radius: 20px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 7px; }
+.filter-btn:hover { color: var(--txt2); }
+.filter-btn.active { background: var(--sel); border-color: var(--sel); color: var(--txt); }
+.count-badge { min-width: 18px; height: 18px; padding: 0 6px; border-radius: 9px; background: var(--txt); color: #050505; font-size: 11px; font-weight: 700; display: none; align-items: center; justify-content: center; }
+.list-count { font-size: 12px; color: var(--muted); margin-bottom: 10px; font-weight: 500; }
+
+/* chips */
+.status-chip, .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px; white-space: nowrap; background: var(--raised); color: var(--txt2); }
+.chip.warn { color: var(--warn); background: rgba(245,185,66,0.10); }
+.chip.bad { color: var(--bad); background: rgba(248,113,113,0.10); }
+.chip.ok { color: var(--ok); background: rgba(74,222,128,0.10); }
+.chip.muted { color: var(--muted); }
+
+/* buttons */
+.act-btn { flex: 1 1 auto; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line2); background: transparent; color: var(--txt2); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.act-btn:hover { background: var(--raised); }
+.act-btn.primary { background: var(--txt); border-color: var(--txt); color: #050505; }
+.act-btn.primary:hover { background: #e5e5e5; }
+.act-btn.danger { color: var(--bad); border-color: rgba(248,113,113,0.28); }
+.act-btn.danger:hover { background: rgba(248,113,113,0.08); }
+.act-btn.icon-only { flex: 0 0 auto; padding: 10px 12px; }
+.card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+
+.load-more-btn { width: 100%; padding: 13px; margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; color: var(--txt2); font-size: 14px; font-weight: 600; cursor: pointer; display: none; }
+.load-more-btn:hover { background: var(--raised); }
+
+.empty-state { text-align: center; padding: 64px 20px; color: var(--muted); }
+.empty-state .ei { font-size: 30px; margin-bottom: 12px; color: var(--faint); display: flex; justify-content: center; }
+.empty-state .et { font-size: 15px; font-weight: 600; color: var(--txt2); }
+.empty-state .es { font-size: 13px; margin-top: 6px; }
+.loading-state { text-align: center; padding: 56px 20px; color: var(--muted); font-size: 14px; }
+.spinner { width: 22px; height: 22px; border: 2px solid var(--sel); border-top-color: var(--txt); border-radius: 50%; margin: 0 auto 12px; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* modals */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 9999; display: none; align-items: flex-end; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal-box, .dialog-box { background: var(--bg); border: 1px solid var(--line); width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; border-radius: 22px 22px 0 0; animation: slideUp .22s ease forwards; }
+.dialog-box { padding: 22px 20px calc(20px + env(safe-area-inset-bottom, 0px)); max-width: 440px; }
+@keyframes slideUp { from { transform: translateY(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (min-width: 700px) { .modal-overlay { align-items: center; padding: 20px; } .modal-box, .dialog-box { border-radius: 22px; } }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; position: sticky; top: 0; background: var(--bg); z-index: 2; border-bottom: 1px solid var(--line); }
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--raised); border: none; color: var(--txt2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.modal-body { padding: 8px 20px 24px; }
+.modal-field { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--line); gap: 16px; }
+.modal-field:last-child { border-bottom: none; }
+.mfk { font-size: 13px; color: var(--muted); font-weight: 500; flex-shrink: 0; }
+.mfv { font-size: 14px; color: var(--txt); font-weight: 500; text-align: right; word-break: break-word; }
+.sec-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; margin: 24px 0 10px; display: flex; align-items: center; gap: 8px; }
+.dialog-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.2px; }
+.dialog-sub { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+.opts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.opt { padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--txt2); font-size: 14px; font-weight: 500; cursor: pointer; text-align: left; }
+.opt:hover { background: var(--raised); }
+.opt.selected { background: var(--sel); border-color: var(--sel); color: var(--txt); }
+.text-area, .text-input { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--txt); font-size: 16px; padding: 13px 14px; outline: none; margin-bottom: 14px; font-family: inherit; resize: none; }
+.text-area:focus, .text-input:focus { border-color: #4a4a4a; }
+.text-area.hidden { display: none; }
+.dialog-actions { display: flex; flex-direction: column; gap: 8px; }
+.btn-main { width: 100%; padding: 14px; background: var(--txt); border: none; border-radius: 14px; color: #050505; font-size: 15px; font-weight: 700; cursor: pointer; }
+.btn-main.danger { background: var(--bad); color: #050505; }
+.btn-ghost { width: 100%; padding: 13px; background: var(--raised); border: none; border-radius: 14px; color: var(--txt2); font-size: 14px; font-weight: 600; cursor: pointer; }
+
+/* toast */
+.toast { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: var(--sel); color: var(--txt); padding: 12px 20px; border-radius: 24px; font-size: 14px; font-weight: 600; z-index: 99999; max-width: calc(100vw - 32px); box-shadow: 0 10px 30px rgba(0,0,0,0.6); animation: toastIn .25s ease; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%); } }
+
+@media (max-width: 560px) { .stats-row { grid-template-columns: repeat(2, 1fr); } .main { padding: 14px; } }
+
+/* avatar — exact copy of the chats-header avatar */
+:root {
+    --nx-av: 48px;
+    --nx-av-p: calc(var(--nx-av) * 0.0476);
+}
+.nx-av {
+    position: relative;
+    display: block;
+    width: var(--nx-av); height: var(--nx-av);
+    padding: var(--nx-av-p);
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fde08d, #b8860b);
+    box-sizing: border-box;
+    flex-shrink: 0;
+    cursor: default;
+}
+.nx-av > img {
+    display: block;
+    width: 100% !important; height: 100% !important;
+    box-sizing: content-box !important;
+    border: var(--nx-av-p) solid #050505 !important;
+    border-radius: 50% !important;
+    background: #262626 !important;
+    object-fit: cover;
+    position: relative; z-index: 2;
+    padding: 0 !important;
+}
+
+/* provider cards */
+.providers-list { display: flex; flex-direction: column; gap: 12px; }
+.prov-card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.prov-card:hover { border-color: var(--line2); }
+.prov-card.has-reports { border-color: rgba(248,113,113,0.35); }
+.card-top { display: flex; align-items: center; gap: 12px; }
+.card-identity { flex: 1; min-width: 0; }
+.prov-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prov-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.meta-item { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.meta-item.wide { grid-column: 1 / -1; }
+.meta-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+.meta-value { font-size: 14px; color: var(--txt); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta-value.wrap { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--txt2); }
+.port-strip { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.port-strip::-webkit-scrollbar { display: none; }
+.port-thumb { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; flex-shrink: 0; background: var(--raised); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 18px; }
+.port-more { width: 52px; height: 52px; border-radius: 12px; background: var(--raised); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--muted); font-weight: 600; }
+
+/* detail modal */
+.notice { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line2); border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.45; color: var(--txt2); margin-top: 14px; }
+.notice.warn { border-color: rgba(245,185,66,0.35); }
+.notice .ic { margin-top: 2px; font-size: 16px; color: var(--warn); }
+.notice.ok .ic { color: var(--ok); }
+.flag-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.flag-item { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--txt2); }
+.flag-item .dot { margin-top: 1px; }
+.day-pill-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.day-pill { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 10px; background: var(--raised); color: var(--txt2); }
+.map-link-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; margin-top: 12px; background: transparent; border: 1px solid var(--line2); border-radius: 12px; color: var(--txt); font-size: 14px; font-weight: 600; text-decoration: none; }
+.map-link-btn:hover { background: var(--raised); }
+.verif-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.verif-img-box { aspect-ratio: 4/3; border-radius: 14px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; position: relative; }
+.verif-img-box img { width: 100%; height: 100%; object-fit: cover; }
+.verif-fallback { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 500; padding: 10px; text-align: center; }
+.verif-fallback a { color: var(--txt); }
+.verif-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.65); color: #fff; font-size: 11px; font-weight: 600; text-align: center; padding: 5px; }
+.gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.gallery-item { aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); cursor: pointer; }
+.gallery-item img, .gallery-item video { width: 100%; height: 100%; object-fit: cover; }
+.muted-note { font-size: 13px; color: var(--muted); }
+.modal-action-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.reject-box { font-size: 13.5px; color: var(--bad); background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); border-radius: 12px; padding: 12px 14px; }
+.privacy-note { font-size: 12px; color: var(--muted); margin-top: 8px; text-align: center; line-height: 1.5; }
+
+/* reports + reviews */
+.report-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+.report-card.pending { border-color: rgba(248,113,113,0.3); }
+.report-card.resolved, .report-card.dismissed { opacity: .7; }
+.report-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.report-reason { font-size: 14px; font-weight: 600; }
+.report-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.report-desc { font-size: 13.5px; color: var(--txt2); line-height: 1.5; margin-bottom: 10px; }
+.report-proofs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; }
+.report-proof-thumb { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--raised); cursor: pointer; }
+.report-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.review-summary { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+.review-avg-score { font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -0.5px; }
+.review-avg-stars, .review-stars { color: var(--warn); font-size: 13px; letter-spacing: 1px; }
+.review-avg-count { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.review-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+.review-card-head { display: flex; justify-content: space-between; align-items: center; }
+.review-author { font-size: 14px; font-weight: 600; }
+.review-date { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.review-comment { font-size: 13.5px; color: var(--txt2); line-height: 1.5; margin-top: 8px; }
+@media (max-width: 480px) { .verif-grid { grid-template-columns: 1fr; } }
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <button class="back-btn" type="button" data-ic="back" aria-label="Back" onclick="window.location.href='admin.html'"></button>
+  <h1 class="page-title">Service providers</h1>
+  <span class="top-pill" title="Open reports"><span class="dot bad"></span><b id="reports-count">0</b> Reports</span>
+  <span class="top-pill" title="Awaiting review"><span class="dot warn live"></span><b id="pending-count">0</b> Pending</span>
+</header>
+
+<main class="main">
+  <section class="stats-row" aria-label="Summary">
+    <button type="button" class="stat-box click" data-act="filter" data-filter="all"><div class="sl"><span class="dot"></span>Total</div><div class="sv" id="s-total">—</div></button>
+    <button type="button" class="stat-box click" data-act="filter" data-filter="pending"><div class="sl"><span class="dot warn"></span>Pending review</div><div class="sv" id="s-pending">—</div></button>
+    <button type="button" class="stat-box click" data-act="filter" data-filter="approved"><div class="sl"><span class="dot ok"></span>Approved</div><div class="sv" id="s-approved">—</div></button>
+    <button type="button" class="stat-box click" data-act="filter" data-filter="rejected"><div class="sl"><span class="dot bad"></span>Rejected</div><div class="sv" id="s-rejected">—</div></button>
+  </section>
+
+  <section class="controls">
+    <label class="search-box" data-ic="search">
+      <input type="text" id="search-input" placeholder="Search by category, service, location or ID" autocomplete="off">
+    </label>
+    <div class="filter-row" id="filter-row">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="pending">Pending</button>
+      <button class="filter-btn" data-filter="approved">Approved</button>
+      <button class="filter-btn" data-filter="rejected">Rejected</button>
+      <button class="filter-btn" data-filter="suspended">Suspended</button>
+      <button class="filter-btn" data-filter="location">Location review<span class="count-badge" id="location-filter-badge">0</span></button>
+      <button class="filter-btn" data-filter="reports">Reports<span class="count-badge" id="reports-filter-badge">0</span></button>
+    </div>
+  </section>
+
+  <div class="list-count" id="providers-count">Loading…</div>
+  <div class="providers-list" id="providers-list">
+    <div class="loading-state"><div class="spinner"></div>Loading providers…</div>
+  </div>
+  <button class="load-more-btn" id="load-more-btn" type="button" data-act="more">Load more</button>
+</main>
+
+<!-- PROVIDER DETAILS -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="view-title">
+    <div class="modal-header">
+      <span class="modal-title" id="view-title">Provider details</span>
+      <button class="modal-close" type="button" data-act="close" data-modal="view-modal" aria-label="Close" data-ic="x"></button>
+    </div>
+    <div class="modal-body" id="view-modal-body"></div>
+  </div>
+</div>
+
+<!-- REJECT -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="dialog-box" role="dialog" aria-modal="true">
+    <div class="dialog-title">Reject application</div>
+    <div class="dialog-sub" id="reject-modal-sub">Select a reason. The provider will see it.</div>
+    <div class="opts">
+      <button class="opt" type="button" data-act="reason" data-reason="Blurry or unreadable ID">Blurry or unreadable ID</button>
+      <button class="opt" type="button" data-act="reason" data-reason="Selfie does not match ID">Selfie does not match ID</button>
+      <button class="opt" type="button" data-act="reason" data-reason="Incomplete portfolio">Incomplete portfolio</button>
+      <button class="opt" type="button" data-act="reason" data-reason="Suspicious or fake details">Suspicious or fake details</button>
+      <button class="opt" type="button" data-act="reason" data-reason="Location could not be verified">Location could not be verified</button>
+      <button class="opt" type="button" data-act="reason" data-reason="custom">Custom reason</button>
+    </div>
+    <textarea class="text-area hidden" id="reject-custom-input" rows="3" placeholder="Enter a reason"></textarea>
+    <div class="dialog-actions">
+      <button class="btn-main danger" type="button" data-act="confirm-reject">Reject application</button>
+      <button class="btn-ghost" type="button" data-act="close" data-modal="reject-modal">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="dialog-box" role="dialog" aria-modal="true">
+    <div class="dialog-title">Delete provider</div>
+    <div class="dialog-sub" id="delete-modal-msg">This permanently deletes the provider record. This cannot be undone.</div>
+    <div class="dialog-actions">
+      <button class="btn-main danger" type="button" data-act="confirm-delete">Delete permanently</button>
+      <button class="btn-ghost" type="button" data-act="close" data-modal="delete-modal">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- WARNING -->
+<div class="modal-overlay" id="warning-modal">
+  <div class="dialog-box" role="dialog" aria-modal="true">
+    <div class="dialog-title">Send a warning</div>
+    <div class="dialog-sub" id="warning-modal-sub">The provider will see this message the next time they open their account.</div>
+    <textarea class="text-area" id="warning-message-input" rows="4" placeholder="Write the message the provider will see"></textarea>
+    <div class="dialog-actions">
+      <button class="btn-main" type="button" data-act="confirm-warning">Send warning</button>
+      <button class="btn-ghost" type="button" data-act="close" data-modal="warning-modal">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN SIGN-IN (RTDB rules require auth to read providers) -->
+<div class="modal-overlay show" id="admin-login-overlay" style="z-index:10500;align-items:center;padding:20px;">
+  <div class="dialog-box" style="border-radius:22px;max-width:380px;" role="dialog" aria-modal="true">
+    <div class="dialog-title">Admin sign in</div>
+    <div class="dialog-sub">Sign in with your admin account to view providers.</div>
+    <input class="text-input" type="email" id="admin-login-email" placeholder="Email" autocomplete="username">
+    <input class="text-input" type="password" id="admin-login-password" placeholder="Password" autocomplete="current-password">
+    <div id="admin-login-error" style="font-size:13px;color:var(--bad);margin:-4px 0 12px;display:none;"></div>
+    <button class="btn-main" type="button" id="admin-login-btn">Sign in</button>
+  </div>
+</div>
+
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+const IC = {
+  back: '<path d="M15 5l-7 7 7 7"/>', search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  pause: '<path d="M8 5v14M16 5v14"/>', play: '<path d="M7 4.5v15l12-7.5z"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/>',
+  flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>', warn: '<path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18v.01"/>',
+  pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/>',
+  id: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6.5 16c.6-1.6 1.7-2.2 2.5-2.2s1.9.6 2.5 2.2M14 10h4M14 13h3"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>', image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>',
+  video: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>', star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>', shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.5-5 6.5-5s5.7 1.5 6.5 5M16 4.5a3.5 3.5 0 010 7M18 15c2 .5 3.2 2 3.5 5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', ban: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
+  tool: '<path d="M14.5 6.5a4 4 0 00-5 5L3 18l3 3 6.5-6.5a4 4 0 005-5l-2.5 2.5-2.5-.5-.5-2.5z"/>',
+  ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>', inbox: '<path d="M3 13l3-8h12l3 8v6H3v-6zM3 13h5l1 3h6l1-3h5"/>'
+};
+function ic(name) { return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (IC[name] || '') + '</svg>'; }
+function hydrateIcons(root) { (root || document).querySelectorAll('[data-ic]').forEach(function (el) { if (!el.dataset.done) { el.insertAdjacentHTML('afterbegin', ic(el.dataset.ic)); el.dataset.done = '1'; } }); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+function safeUrl(u) { u = String(u || ''); return /^https?:\/\//i.test(u) ? u : ''; }
+
+const AV_BLANK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23262626'/%3E%3C/svg%3E";
+function avatarHtml(url, size) {
+    const u = safeUrl(url);
+    return '<div class="nx-av"' + (size ? ' style="--nx-av:' + size + 'px"' : '') + '><img src="' + esc(u || AV_BLANK) + '" alt="" onerror="this.onerror=null;this.src=\'' + AV_BLANK.replace(/'/g, "\\'") + '\'"></div>';
+}
+
+// ── FIREBASE INIT (same project as admin.html / users.html) ──
+const firebaseConfig = {
+    apiKey: "AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc",
+    authDomain: "oryzon-50ea4.firebaseapp.com",
+    databaseURL: "https://oryzon-50ea4-default-rtdb.firebaseio.com",
+    projectId: "oryzon-50ea4",
+    storageBucket: "oryzon-50ea4.firebasestorage.app",
+    messagingSenderId: "782106742622",
+    appId: "1:782106742622:web:902d512bfe42dd4cf289cf",
+    measurementId: "G-K5085DLL2W"
+};
+firebase.initializeApp(firebaseConfig);
+const rtdb = firebase.database();
+
+const BACKEND_URL = "https://oryzon-backend-ed1q.onrender.com";
+const auth = firebase.auth();
+let adminUser = null;
+
+// Signed URLs are cached for a few minutes so re-opening the same provider does not request new ones.
+const signedUrlCache = {}; // key -> { url, expiresAt }
+
+async function fetchVerificationSignedUrl(key) {
+    if (!key) return { url: null, error: "No file key" };
+    const cached = signedUrlCache[key];
+    if (cached && cached.expiresAt > Date.now()) return { url: cached.url, error: null };
+    if (!adminUser) return { url: null, error: "Not signed in" };
+    try {
+        const token = await adminUser.getIdToken();
+        const res = await fetch(`${BACKEND_URL}/verification-url`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ key })
+        });
+        const data = await res.json();
+        if (!data.success) return { url: null, error: `Error ${res.status}: ${data.error || 'unknown'}` };
+        signedUrlCache[key] = { url: data.url, expiresAt: Date.now() + 8 * 60 * 1000 };
+        return { url: data.url, error: null };
+    } catch (e) {
+        return { url: null, error: `Network error: ${e.message}` };
+    }
+}
+
+// ── STATE ──
+let allProviders = [];
+let filteredProviders = [];
+let allReports = [];
+let currentFilter = "all";
+let searchQuery = "";
+let pendingRejectUid = "";
+let pendingDeleteUid = "";
+let pendingWarningUid = "";
+let selectedRejectReason = "";
+let displayCount = 20;
+const PAGE_SIZE = 20;
+const reviewsCache = {}; // providerId -> reviews (loaded on demand)
+
+// ── HELPERS ──
+function formatDate(ms) {
+    if (!ms) return "—";
+    return new Date(ms).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+function timeAgo(ms) {
+    if (!ms) return "—";
+    const seconds = Math.floor((Date.now() - ms) / 1000);
+    if (seconds < 60) return "just now";
+    if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+    if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+    if (seconds < 2592000) return Math.floor(seconds / 86400) + "d ago";
+    return formatDate(ms);
+}
+function fmtMoney(amount, currency) {
+    const n = Number(amount || 0);
+    if (currency) {
+        try { return new Intl.NumberFormat(undefined, { style: "currency", currency: String(currency).toUpperCase(), maximumFractionDigits: 2 }).format(n); } catch (e) { return String(currency).toUpperCase() + " " + n.toLocaleString(); }
+    }
+    return n.toLocaleString();
+}
+function priceText(p) {
+    if (!p.pricing) return "—";
+    return fmtMoney(p.pricing.base, p.pricing.currency || p.currency) + (p.pricing.unit ? " · " + p.pricing.unit : "");
+}
+function idTypeLabel(t) {
+    return ({ national_id: "National ID card", passport: "Passport", drivers_license: "Driver’s license", voters_card: "Voter’s card" })[t] || t || "—";
+}
+function titleOf(p) { return (p.categoryLabel || "Provider") + (p.subcategory && p.subcategory !== p.categoryLabel ? " · " + p.subcategory : ""); }
+
+function getStatusInfo(p) {
+    if (p.suspended === true) return { key: "suspended", label: "Suspended", dot: "" };
+    const vs = (p.verification && p.verification.status) || p.status || "pending";
+    if (p.verified === true || vs === "approved") return { key: "approved", label: "Approved", dot: "ok" };
+    if (vs === "rejected" || p.status === "rejected") return { key: "rejected", label: "Rejected", dot: "bad" };
+    return { key: "pending", label: "Pending", dot: "warn" };
+}
+
+// ── LOCATION (verified place + how it was verified) ──
+const FLAG_INFO = {
+    unlisted_lga:                    { text: "Area is not in the official list", level: "warn" },
+    low_gps_accuracy:                { text: "GPS accuracy was low", level: "warn" },
+    gps_far_from_chosen_lga:         { text: "GPS position is far from the chosen area", level: "warn" },
+    manual_location:                 { text: "Location was typed in manually", level: "warn" },
+    registered_away_from_workplace:  { text: "Registered away from the workplace", level: "warn" },
+    gps_unavailable:                 { text: "GPS was unavailable", level: "warn" },
+    place_found_on_map:              { text: "Place name found on the map", level: "ok" },
+    place_not_found_on_map:          { text: "Place name not found on the map", level: "warn" }
+};
+function locPlace(p) {
+    const m = p.locationMeta || {};
+    const parts = [p.area || m.area, p.lga || m.lga, p.city, p.state || m.state, p.country || m.country].filter(Boolean);
+    const seen = {}; const uniq = parts.filter(x => { const k = String(x).toLowerCase(); if (seen[k]) return false; seen[k] = 1; return true; });
+    return uniq.join(", ") || p.address || "";
+}
+function needsLocationReview(p) { return !!(p.locationMeta && p.locationMeta.needsReview === true); }
+function locFlags(p) { return (p.locationMeta && Array.isArray(p.locationMeta.flags)) ? p.locationMeta.flags : []; }
+function sourceLabel(s) { return ({ gps: "Device GPS", manual: "Entered manually" })[s] || "Unknown"; }
+
+// ── LOAD ──
+function loadProviders() {
+    rtdb.ref("providers").on("value", (snap) => {
+        const data = snap.val() || {};
+        allProviders = Object.keys(data).map(uid => ({ id: uid, ...data[uid] }));
+        allProviders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        updateStats();
+        applyFilters();
+    }, (err) => {
+        document.getElementById("providers-list").innerHTML =
+            `<div class="empty-state"><div class="ei">${ic("warn")}</div><div class="et">Could not load providers</div><div class="es">${esc(err.message)}</div></div>`;
+    });
+}
+function loadReports() {
+    rtdb.ref("reports").on("value", (snap) => {
+        const data = snap.val() || {};
+        allReports = Object.keys(data).map(id => ({ id, ...data[id] }));
+        allReports.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        updateStats();
+        applyFilters();
+    }, (err) => { console.error("Could not load reports:", err.message); });
+}
+function getProviderReports(uid) { return allReports.filter(r => r.providerId === uid); }
+function getPendingReportCount(uid) { return getProviderReports(uid).filter(r => (r.status || "pending") === "pending").length; }
+
+function setBadge(id, n) {
+    const el = document.getElementById(id);
+    if (n > 0) { el.style.display = "inline-flex"; el.textContent = n; } else { el.style.display = "none"; }
+}
+function updateStats() {
+    let pending = 0, approved = 0, rejected = 0, locReview = 0;
+    allProviders.forEach(p => {
+        const s = getStatusInfo(p).key;
+        if (s === "pending") { pending++; if (needsLocationReview(p)) locReview++; }
+        else if (s === "approved") approved++;
+        else if (s === "rejected") rejected++;
+    });
+    document.getElementById("s-total").textContent = allProviders.length;
+    document.getElementById("s-pending").textContent = pending;
+    document.getElementById("s-approved").textContent = approved;
+    document.getElementById("s-rejected").textContent = rejected;
+    document.getElementById("pending-count").textContent = pending;
+    const pendingReports = allReports.filter(r => (r.status || "pending") === "pending").length;
+    document.getElementById("reports-count").textContent = pendingReports;
+    setBadge("reports-filter-badge", pendingReports);
+    setBadge("location-filter-badge", locReview);
+}
+
+function setFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.filter === f));
+    applyFilters();
+}
+function applyFilters() {
+    filteredProviders = allProviders.filter(p => {
+        if (currentFilter === "reports") return getPendingReportCount(p.id) > 0;
+        if (currentFilter === "location") return getStatusInfo(p).key === "pending" && needsLocationReview(p);
+        const s = getStatusInfo(p).key;
+        if (currentFilter !== "all" && s !== currentFilter) return false;
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (p.categoryLabel || "").toLowerCase().includes(q) ||
+               (p.subcategory || "").toLowerCase().includes(q) ||
+               (p.id || "").toLowerCase().includes(q) ||
+               locPlace(p).toLowerCase().includes(q);
+    });
+    displayCount = PAGE_SIZE;
+    renderProviders();
+}
+
+function renderProviders() {
+    const list = document.getElementById("providers-list");
+    const countEl = document.getElementById("providers-count");
+    const loadMoreBtn = document.getElementById("load-more-btn");
+    const toShow = filteredProviders.slice(0, displayCount);
+    const noun = currentFilter === "reports" ? "reported providers" : "providers";
+    countEl.textContent = `Showing ${toShow.length} of ${filteredProviders.length} ${noun}`;
+
+    if (filteredProviders.length === 0) {
+        const empty = ({
+            reports:  ["flag", "No open reports", "No provider currently has an open report"],
+            location: ["pin", "Nothing to review", "No pending application has a location flag"]
+        })[currentFilter] || ["search", "No providers found", "Try adjusting your search or filter"];
+        list.innerHTML = `<div class="empty-state"><div class="ei">${ic(empty[0])}</div><div class="et">${empty[1]}</div><div class="es">${empty[2]}</div></div>`;
+        loadMoreBtn.style.display = "none";
+        return;
+    }
+    list.innerHTML = toShow.map(createProviderCard).join("");
+    loadMoreBtn.style.display = filteredProviders.length > displayCount ? "block" : "none";
+}
+
+function createProviderCard(p) {
+    const status = getStatusInfo(p);
+    const portfolio = Array.isArray(p.portfolio) ? p.portfolio : [];
+    const reportCount = getPendingReportCount(p.id);
+    const place = locPlace(p);
+    const portStrip = portfolio.slice(0, 4).map(item => {
+        if (item.type === "video") return `<div class="port-thumb">${ic("video")}</div>`;
+        const u = safeUrl(item.url);
+        return u ? `<img class="port-thumb" src="${esc(u)}" loading="lazy" alt="" onerror="this.style.opacity=0.2">` : "";
+    }).join("") + (portfolio.length > 4 ? `<div class="port-more">+${portfolio.length - 4}</div>` : "");
+    const id = esc(p.id);
+
+    const chips = [
+        needsLocationReview(p) ? `<span class="chip warn">${ic("pin")}Location review</span>` : "",
+        reportCount > 0 ? `<span class="chip bad">${ic("flag")}${reportCount} open report${reportCount > 1 ? "s" : ""}</span>` : ""
+    ].filter(Boolean).join("");
+
+    return `
+    <article class="prov-card${reportCount > 0 ? " has-reports" : ""}" id="prov-card-${id}">
+        <div class="card-top">
+            ${avatarHtml("")}
+            <div class="card-identity">
+                <div class="prov-name">${esc(titleOf(p))}</div>
+                <div class="prov-sub">${esc(p.id.substring(0, 14))}${p.id.length > 14 ? "…" : ""} · ${esc(timeAgo(p.createdAt))}</div>
+            </div>
+            <span class="status-chip"><span class="dot ${status.dot}"></span>${status.label}</span>
+        </div>
+        ${chips ? `<div class="chip-row">${chips}</div>` : ""}
+        <div class="card-meta">
+            <div class="meta-item"><span class="meta-label">Price</span><span class="meta-value">${esc(priceText(p))}</span></div>
+            <div class="meta-item"><span class="meta-label">ID type</span><span class="meta-value">${esc(idTypeLabel(p.verification && p.verification.idType))}</span></div>
+            <div class="meta-item wide"><span class="meta-label">Location</span><span class="meta-value">${esc(place || "Not provided")}</span></div>
+            <div class="meta-item wide"><span class="meta-label">Bio</span><span class="meta-value wrap">${esc(p.bio || "—")}</span></div>
+        </div>
+        ${portfolio.length ? `<div class="port-strip">${portStrip}</div>` : ""}
+        <div class="card-actions">
+            <button class="act-btn" type="button" data-act="view" data-id="${id}">${ic("eye")}View</button>
+            ${status.key !== "approved"
+                ? `<button class="act-btn primary" type="button" data-act="approve" data-id="${id}">${ic("check")}Approve</button>`
+                : `<button class="act-btn" type="button" data-act="suspend" data-id="${id}" data-cur="0">${ic("pause")}Suspend</button>`}
+            ${status.key === "suspended"
+                ? `<button class="act-btn" type="button" data-act="suspend" data-id="${id}" data-cur="1">${ic("play")}Unsuspend</button>` : ""}
+            ${status.key !== "rejected"
+                ? `<button class="act-btn danger" type="button" data-act="reject" data-id="${id}">${ic("x")}Reject</button>` : ""}
+            <button class="act-btn danger icon-only" type="button" data-act="delete" data-id="${id}" aria-label="Delete provider">${ic("trash")}</button>
+        </div>
+    </article>`;
+}
+
+// ── DETAILS ──
+function locationSection(p) {
+    const m = p.locationMeta;
+    const place = locPlace(p);
+    const hasGps = p.location && typeof p.location.lat === "number" && typeof p.location.lng === "number";
+    const mapsUrl = hasGps ? `https://www.google.com/maps?q=${p.location.lat},${p.location.lng}` : null;
+    let html = `<div class="modal-field"><span class="mfk">Place</span><span class="mfv">${esc(place || "Not provided")}</span></div>`;
+    if (p.landmark) html += `<div class="modal-field"><span class="mfk">Landmark</span><span class="mfv">${esc(p.landmark)}</span></div>`;
+    if (m) {
+        html += `<div class="modal-field"><span class="mfk">Source</span><span class="mfv">${esc(sourceLabel(m.source))}</span></div>`;
+        if (m.precision) html += `<div class="modal-field"><span class="mfk">Precision</span><span class="mfv">${esc(String(m.precision).replace(/_/g, " "))}</span></div>`;
+        if (m.accuracyM != null) html += `<div class="modal-field"><span class="mfk">GPS accuracy</span><span class="mfv">±${esc(Math.round(m.accuracyM))} m</span></div>`;
+        if (m.gpsDistanceKm != null) html += `<div class="modal-field"><span class="mfk">GPS to chosen area</span><span class="mfv">${esc(Number(m.gpsDistanceKm).toFixed(1))} km</span></div>`;
+        if (m.confirmedAt) html += `<div class="modal-field"><span class="mfk">Confirmed</span><span class="mfv">${esc(formatDate(m.confirmedAt))}</span></div>`;
+        const flags = locFlags(p);
+        if (flags.length) {
+            html += `<div class="flag-list">${flags.map(f => {
+                const info = FLAG_INFO[f] || { text: String(f).replace(/_/g, " "), level: "warn" };
+                return `<div class="flag-item"><span class="dot ${info.level === "ok" ? "ok" : "warn"}"></span>${esc(info.text)}</div>`;
+            }).join("")}</div>`;
+        }
+        html += m.needsReview
+            ? `<div class="notice warn">${ic("warn")}<div>Check this location before approving. Confirm the place name is real and matches the provider’s identity documents.</div></div>`
+            : `<div class="notice ok">${ic("shield")}<div>Location was captured from the device and matches the place the provider confirmed.</div></div>`;
+    }
+    html += mapsUrl
+        ? `<a class="map-link-btn" href="${esc(mapsUrl)}" target="_blank" rel="noopener">${ic("ext")}Open in Maps</a>`
+        : `<div class="muted-note" style="margin-top:10px;">No coordinates were submitted.</div>`;
+    return html;
+}
+
+function openViewModal(uid) {
+    const p = allProviders.find(x => x.id === uid);
+    if (!p) return;
+    const status = getStatusInfo(p);
+    const v = p.verification || {};
+    const portfolio = Array.isArray(p.portfolio) ? p.portfolio : [];
+    const id = esc(p.id);
+
+    document.getElementById("view-modal-body").innerHTML = `
+        <div class="modal-field"><span class="mfk">Status</span><span class="mfv">${status.label}</span></div>
+        <div class="modal-field"><span class="mfk">Provider ID</span><span class="mfv">${id}</span></div>
+        <div class="modal-field"><span class="mfk">Category</span><span class="mfv">${esc(p.categoryLabel || "—")}</span></div>
+        <div class="modal-field"><span class="mfk">Service</span><span class="mfv">${esc(Array.isArray(p.servicesOffered) && p.servicesOffered.length ? p.servicesOffered.join(", ") : (p.subcategory || "—"))}</span></div>
+        <div class="modal-field"><span class="mfk">Price</span><span class="mfv">${esc(priceText(p))}</span></div>
+        <div class="modal-field"><span class="mfk">Phone</span><span class="mfv">${esc(p.phone || "—")}</span></div>
+        <div class="modal-field"><span class="mfk">Gender</span><span class="mfv">${esc(p.gender ? p.gender.charAt(0).toUpperCase() + p.gender.slice(1) : "—")}</span></div>
+        <div class="modal-field"><span class="mfk">Submitted</span><span class="mfv">${esc(formatDate(p.createdAt))}</span></div>
+        <div class="modal-field"><span class="mfk">Bio</span><span class="mfv">${esc(p.bio || "—")}</span></div>
+        ${p.bioOriginal && p.bioLang && p.bioLang !== "en" ? `<div class="modal-field"><span class="mfk">Original bio (${esc(p.bioLang)})</span><span class="mfv">${esc(p.bioOriginal)}</span></div>` : ""}
+
+        <div class="sec-label">${ic("pin")}Location</div>
+        ${locationSection(p)}
+
+        <div class="sec-label">${ic("clock")}Available days</div>
+        <div class="day-pill-row">${(p.schedule || []).map(d => `<span class="day-pill">${esc(d)}</span>`).join("") || `<span class="muted-note">Not specified</span>`}</div>
+
+        <div class="sec-label">${ic("id")}Identity verification</div>
+        <div class="modal-field"><span class="mfk">ID type</span><span class="mfv">${esc(idTypeLabel(v.idType))}</span></div>
+        <div class="verif-grid">
+            <div class="verif-img-box" id="verif-box-id"><div class="verif-fallback">Loading…</div><div class="verif-label">ID document</div></div>
+            <div class="verif-img-box" id="verif-box-selfie"><div class="verif-fallback">Loading…</div><div class="verif-label">Selfie with ID</div></div>
+        </div>
+
+        <div class="sec-label">${ic("image")}Work portfolio (${portfolio.length})</div>
+        <div class="gallery-grid">
+        ${portfolio.map(item => {
+            const u = safeUrl(item.url); if (!u) return "";
+            return item.type === "video"
+                ? `<div class="gallery-item" data-act="lightbox" data-type="video" data-url="${esc(u)}"><video src="${esc(u)}" muted playsinline></video></div>`
+                : `<div class="gallery-item" data-act="lightbox" data-type="image" data-url="${esc(u)}"><img src="${esc(u)}" loading="lazy" alt="" onerror="this.style.opacity=0.2"></div>`;
+        }).join("") || `<div class="muted-note">No portfolio items</div>`}
+        </div>
+
+        ${status.key === "rejected" && v.rejectReason ? `
+        <div class="sec-label">${ic("ban")}Rejection reason</div>
+        <div class="reject-box">${esc(v.rejectReason)}</div>` : ""}
+
+        <div class="sec-label">${ic("star")}Customer reviews</div>
+        <div id="reviews-section-${id}"><div class="muted-note">Loading reviews…</div></div>
+
+        <div class="sec-label">${ic("flag")}Reports (${getProviderReports(p.id).length})</div>
+        <div id="reports-section-${id}">${renderReportsForProvider(p.id)}</div>
+
+        <div class="modal-action-row">
+            ${status.key !== "approved" ? `<button class="act-btn primary" type="button" data-act="approve-close" data-id="${id}">${ic("check")}Approve</button>` : ""}
+            ${status.key !== "rejected" ? `<button class="act-btn danger" type="button" data-act="reject-from-view" data-id="${id}">${ic("x")}Reject</button>` : ""}
+        </div>
+        <div class="modal-action-row">
+            <button class="act-btn" type="button" data-act="warn-from-view" data-id="${id}">${ic("warn")}Send warning</button>
+        </div>
+        ${status.key !== "pending" && (v.idKey || v.selfieKey) ? `
+        <div class="modal-action-row">
+            <button class="act-btn danger" type="button" data-act="purge" data-id="${id}">${ic("trash")}Delete ID and selfie files</button>
+        </div>
+        <div class="privacy-note">The review is complete. Delete the verification files to protect this person’s privacy.</div>` : ""}
+    `;
+    document.getElementById("view-modal").classList.add("show");
+    loadVerificationImage("verif-box-id", "ID document", v.idKey);
+    loadVerificationImage("verif-box-selfie", "Selfie with ID", v.selfieKey);
+    loadProviderReviews(p.id);
+}
+
+// ── REVIEWS ──
+async function loadProviderReviews(uid) {
+    const sel = `reviews-section-${uid}`;
+    const container = document.getElementById(sel);
+    if (!container) return;
+    try {
+        let reviews = reviewsCache[uid];
+        if (!reviews) {
+            const snap = await rtdb.ref("reviews/" + uid).once("value");
+            const data = snap.val() || {};
+            reviews = Object.keys(data).map(id => ({ id, ...data[id] }));
+            reviews.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            reviewsCache[uid] = reviews;
+        }
+        const live = document.getElementById(sel);
+        if (!live) return;
+        if (reviews.length === 0) { live.innerHTML = `<div class="muted-note">No reviews yet.</div>`; return; }
+        const avg = reviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / reviews.length;
+        const full = Math.round(avg);
+        live.innerHTML = `
+            <div class="review-summary">
+                <div><div class="review-avg-score">${avg.toFixed(1)}</div><div class="review-avg-stars">${"★".repeat(full)}${"☆".repeat(5 - full)}</div></div>
+                <div class="review-avg-count">${reviews.length} review${reviews.length > 1 ? "s" : ""}</div>
+            </div>
+            ${reviews.map(r => {
+                const stars = Math.max(0, Math.min(5, Number(r.rating) || 0));
+                return `<div class="review-card">
+                    <div class="review-card-head"><span class="review-author">${esc(r.customerName || "Anonymous")}</span><span class="review-stars">${"★".repeat(stars)}${"☆".repeat(5 - stars)}</span></div>
+                    <div class="review-date">${esc(formatDate(r.createdAt))}</div>
+                    <div class="review-comment">${esc(r.comment || "")}</div>
+                </div>`;
+            }).join("")}`;
+    } catch (e) {
+        const live = document.getElementById(sel);
+        if (live) live.innerHTML = `<div class="muted-note">Could not load reviews: ${esc(e.message)}</div>`;
+    }
+}
+
+// ── REPORTS ──
+function renderReportsForProvider(uid) {
+    const reports = getProviderReports(uid);
+    if (reports.length === 0) return `<div class="muted-note">No reports have been filed against this provider.</div>`;
+    const id = esc(uid);
+    return reports.map(r => {
+        const status = ["pending", "resolved", "dismissed"].includes(r.status) ? r.status : "pending";
+        const proofs = Array.isArray(r.proofs) ? r.proofs : [];
+        const chipCls = status === "pending" ? "bad" : status === "resolved" ? "ok" : "muted";
+        return `
+        <div class="report-card ${status}">
+            <div class="report-card-head">
+                <div><div class="report-reason">${esc(r.reason || "No reason given")}</div>
+                <div class="report-meta">By ${esc(r.reporterName || "Unknown customer")} · ${esc(formatDate(r.createdAt))}</div></div>
+                <span class="chip ${chipCls}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+            </div>
+            ${r.description ? `<div class="report-desc">${esc(r.description)}</div>` : ""}
+            ${proofs.length ? `<div class="report-proofs">${proofs.map(pr => {
+                const u = safeUrl(pr.url); if (!u) return "";
+                return pr.type === "video"
+                    ? `<video class="report-proof-thumb" src="${esc(u)}" muted></video>`
+                    : `<img class="report-proof-thumb" src="${esc(u)}" alt="" data-act="open-url" data-url="${esc(u)}" onerror="this.style.opacity=0.2">`;
+            }).join("")}</div>` : `<div class="muted-note" style="margin-bottom:10px;">No proof attached.</div>`}
+            ${status === "pending" ? `
+            <div class="report-actions">
+                <button class="act-btn" type="button" data-act="resolve-report" data-rid="${esc(r.id)}" data-id="${id}">${ic("check")}Resolve</button>
+                <button class="act-btn" type="button" data-act="dismiss-report" data-rid="${esc(r.id)}" data-id="${id}">${ic("x")}Dismiss</button>
+                <button class="act-btn" type="button" data-act="warn" data-id="${id}">${ic("warn")}Warn provider</button>
+            </div>` : ""}
+        </div>`;
+    }).join("");
+}
+async function resolveReport(reportId, providerUid) {
+    try {
+        await rtdb.ref("reports/" + reportId).update({ status: "resolved", resolvedAt: firebase.database.ServerValue.TIMESTAMP, resolvedBy: "Super Admin" });
+        showToast("Report resolved");
+        refreshOpenReportSections(providerUid);
+    } catch (e) { showToast("Error: " + e.message); }
+}
+async function dismissReport(reportId, providerUid) {
+    try {
+        await rtdb.ref("reports/" + reportId).update({ status: "dismissed", resolvedAt: firebase.database.ServerValue.TIMESTAMP, resolvedBy: "Super Admin" });
+        showToast("Report dismissed");
+        refreshOpenReportSections(providerUid);
+    } catch (e) { showToast("Error: " + e.message); }
+}
+function refreshOpenReportSections(uid) {
+    const section = document.getElementById(`reports-section-${uid}`);
+    if (section) section.innerHTML = renderReportsForProvider(uid);
+}
+
+// ── WARNING ──
+function openWarningModal(uid) {
+    pendingWarningUid = uid;
+    document.getElementById("warning-message-input").value = "";
+    const p = allProviders.find(x => x.id === uid);
+    document.getElementById("warning-modal-sub").textContent =
+        `Warning for ${p ? titleOf(p) : uid}. The provider will see it the next time they open their account.`;
+    document.getElementById("warning-modal").classList.add("show");
+}
+async function confirmSendWarning() {
+    const message = document.getElementById("warning-message-input").value.trim();
+    if (!message) { showToast("Write a message first"); return; }
+    try {
+        await rtdb.ref("providers/" + pendingWarningUid + "/warnings").push({
+            message, sentBy: "Super Admin", sentAt: firebase.database.ServerValue.TIMESTAMP, acknowledged: false
+        });
+        closeModal("warning-modal");
+        showToast("Warning sent");
+    } catch (e) { showToast("Error: " + e.message); }
+}
+
+async function purgeVerificationFiles(uid) {
+    const p = allProviders.find(x => x.id === uid);
+    if (!p || !adminUser) { showToast("Admin sign-in required"); return; }
+    const v = p.verification || {};
+    try {
+        const token = await adminUser.getIdToken();
+        const keys = [v.idKey, v.selfieKey].filter(Boolean);
+        for (const key of keys) {
+            await fetch(`${BACKEND_URL}/verification-delete`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify({ key })
+            });
+            delete signedUrlCache[key];
+        }
+        await rtdb.ref("providers/" + uid).update({
+            "verification/idKey": null,
+            "verification/selfieKey": null,
+            "verification/filesPurged": true,
+            "verification/purgedAt": firebase.database.ServerValue.TIMESTAMP
+        });
+        showToast("Verification files deleted");
+        closeModal("view-modal");
+    } catch (e) { showToast("Error: " + e.message); }
+}
+
+async function loadVerificationImage(boxId, labelText, key) {
+    const box = document.getElementById(boxId);
+    if (!box) return;
+    const label = `<div class="verif-label">${esc(labelText)}</div>`;
+    if (!key) { box.innerHTML = `<div class="verif-fallback">${ic("inbox")}No file on record</div>${label}`; return; }
+    if (!adminUser) {
+        box.innerHTML = `<div class="verif-fallback">${ic("lock")}Sign-in required<a href="#" data-act="show-login">Sign in</a></div>${label}`;
+        return;
+    }
+    const result = await fetchVerificationSignedUrl(key);
+    const live = document.getElementById(boxId);
+    if (!live) return;
+    if (!result.url) { live.innerHTML = `<div class="verif-fallback">${ic("warn")}${esc(result.error || "Could not load image")}</div>${label}`; return; }
+    live.innerHTML = `<img src="${esc(result.url)}" alt="${esc(labelText)}">${label}`;
+    const img = live.querySelector("img");
+    img.addEventListener("error", () => { live.innerHTML = `<div class="verif-fallback">${ic("warn")}Image expired or failed to load</div>${label}`; });
+}
+
+function openMediaLightbox(url, type) {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;display:flex;align-items:center;justify-content:center;";
+    overlay.onclick = () => overlay.remove();
+    const media = document.createElement(type === "video" ? "video" : "img");
+    media.src = url;
+    media.style.cssText = "max-width:95vw;max-height:95vh;object-fit:contain;";
+    if (type === "video") { media.controls = true; media.autoplay = true; media.onclick = (e) => e.stopPropagation(); }
+    overlay.appendChild(media);
+    const x = document.createElement("div");
+    x.innerHTML = ic("x");
+    x.style.cssText = "position:absolute;top:18px;right:18px;color:#fff;font-size:26px;cursor:pointer;display:flex;";
+    overlay.appendChild(x);
+    document.body.appendChild(overlay);
+}
+
+// ── APPROVE / REJECT / SUSPEND / DELETE ──
+async function approveProvider(uid) {
+    try {
+        await rtdb.ref("providers/" + uid).update({
+            verified: true, status: "approved", suspended: false,
+            "verification/status": "approved",
+            "verification/reviewedAt": firebase.database.ServerValue.TIMESTAMP,
+            "verification/reviewedBy": "Super Admin",
+            "verification/rejectReason": null
+        });
+        showToast("Provider approved");
+    } catch (e) { showToast("Error: " + e.message); }
+}
+function openRejectModal(uid) {
+    pendingRejectUid = uid;
+    selectedRejectReason = "";
+    document.querySelectorAll("#reject-modal .opt").forEach(b => b.classList.remove("selected"));
+    const ci = document.getElementById("reject-custom-input");
+    ci.classList.add("hidden"); ci.value = "";
+    const p = allProviders.find(x => x.id === uid);
+    document.getElementById("reject-modal-sub").textContent = `Rejecting ${p ? titleOf(p) : uid}. The provider will see the reason.`;
+    document.getElementById("reject-modal").classList.add("show");
+}
+function selectReason(btn, reason) {
+    document.querySelectorAll("#reject-modal .opt").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    const ci = document.getElementById("reject-custom-input");
+    if (reason === "custom") { ci.classList.remove("hidden"); ci.focus(); selectedRejectReason = ""; }
+    else { ci.classList.add("hidden"); selectedRejectReason = reason; }
+}
+async function confirmReject() {
+    const customVal = document.getElementById("reject-custom-input").value.trim();
+    if (customVal) selectedRejectReason = customVal;
+    if (!selectedRejectReason) { showToast("Select a reason"); return; }
+    try {
+        await rtdb.ref("providers/" + pendingRejectUid).update({
+            verified: false, status: "rejected",
+            "verification/status": "rejected",
+            "verification/reviewedAt": firebase.database.ServerValue.TIMESTAMP,
+            "verification/reviewedBy": "Super Admin",
+            "verification/rejectReason": selectedRejectReason
+        });
+        closeModal("reject-modal");
+        showToast("Application rejected");
+    } catch (e) { showToast("Error: " + e.message); }
+}
+async function toggleSuspend(uid, currentlySuspended) {
+    try {
+        await rtdb.ref("providers/" + uid).update({ suspended: !currentlySuspended });
+        showToast(currentlySuspended ? "Suspension lifted" : "Provider suspended");
+    } catch (e) { showToast("Error: " + e.message); }
+}
+function openDeleteModal(uid) {
+    pendingDeleteUid = uid;
+    document.getElementById("delete-modal-msg").textContent =
+        `This permanently deletes the provider record (${uid}). This cannot be undone.`;
+    document.getElementById("delete-modal").classList.add("show");
+}
+async function confirmDelete() {
+    try {
+        await rtdb.ref("providers/" + pendingDeleteUid).remove();
+        closeModal("delete-modal");
+        showToast("Provider deleted");
+    } catch (e) { showToast("Error: " + e.message); }
+}
+
+// ── CLOSE / TOAST ──
+function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+function showToast(msg) {
+    const existing = document.getElementById("toast-el");
+    if (existing) existing.remove();
+    const t = document.createElement("div");
+    t.className = "toast"; t.id = "toast-el";
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = "0"; t.style.transition = "opacity .3s"; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+// ── EVENTS ──
+document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const id = el.dataset.id;
+    switch (el.dataset.act) {
+        case "filter": setFilter(el.dataset.filter); break;
+        case "more": displayCount += PAGE_SIZE; renderProviders(); break;
+        case "view": openViewModal(id); break;
+        case "approve": approveProvider(id); break;
+        case "approve-close": approveProvider(id); closeModal("view-modal"); break;
+        case "reject": openRejectModal(id); break;
+        case "reject-from-view": closeModal("view-modal"); openRejectModal(id); break;
+        case "suspend": toggleSuspend(id, el.dataset.cur === "1"); break;
+        case "delete": openDeleteModal(id); break;
+        case "warn": openWarningModal(id); break;
+        case "warn-from-view": closeModal("view-modal"); openWarningModal(id); break;
+        case "purge": purgeVerificationFiles(id); break;
+        case "resolve-report": resolveReport(el.dataset.rid, id); break;
+        case "dismiss-report": dismissReport(el.dataset.rid, id); break;
+        case "lightbox": openMediaLightbox(el.dataset.url, el.dataset.type); break;
+        case "open-url": window.open(el.dataset.url, "_blank", "noopener"); break;
+        case "reason": selectReason(el, el.dataset.reason); break;
+        case "confirm-reject": confirmReject(); break;
+        case "confirm-delete": confirmDelete(); break;
+        case "confirm-warning": confirmSendWarning(); break;
+        case "close": closeModal(el.dataset.modal); break;
+        case "show-login": e.preventDefault(); document.getElementById("admin-login-overlay").classList.add("show"); break;
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    hydrateIcons();
+    let providersStarted = false;
+    const ADMIN_UID = "3w81YH5QG6gH61II7jVCKfTRYo72";
+    auth.onAuthStateChanged((user) => {
+        if (user && user.uid === ADMIN_UID) {
+            adminUser = user;
+            document.getElementById("admin-login-overlay").classList.remove("show");
+            if (!providersStarted) { providersStarted = true; loadProviders(); loadReports(); }
+        } else {
+            adminUser = null;
+            if (user) auth.signOut(); // not the admin account — sign out immediately
+            document.getElementById("admin-login-overlay").classList.add("show");
+        }
+    });
+    document.getElementById("admin-login-btn").addEventListener("click", async () => {
+        const email = document.getElementById("admin-login-email").value.trim();
+        const password = document.getElementById("admin-login-password").value;
+        const errEl = document.getElementById("admin-login-error");
+        errEl.style.display = "none";
+        if (!email || !password) { errEl.textContent = "Enter your email and password."; errEl.style.display = "block"; return; }
+        try {
+            await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+            await auth.signInWithEmailAndPassword(email, password);
+        } catch (e) {
+            errEl.textContent = "Sign-in failed: " + e.message;
+            errEl.style.display = "block";
+        }
+    });
+    document.getElementById("admin-login-password").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("admin-login-btn").click();
+    });
+    document.getElementById("search-input").addEventListener("input", function () {
+        searchQuery = this.value.trim();
+        applyFilters();
+    });
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+        btn.addEventListener("click", function () { setFilter(this.dataset.filter); });
+    });
+    document.querySelectorAll(".modal-overlay").forEach(overlay => {
+        overlay.addEventListener("click", function (e) { if (e.target === this && this.id !== "admin-login-overlay") this.classList.remove("show"); });
+    });
+});
+
+</script>
+</body>
+</html>
