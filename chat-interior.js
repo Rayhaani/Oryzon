@@ -224,17 +224,35 @@ function resolveMediaSrc(cacheKey, url, iv, mimeType, elId) {
 const NX_BLANK_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23262626'/%3E%3C/svg%3E";
 // Load header info
 function populateChatHeaderInfo() {
-    document.getElementById('chat-header-name').textContent = chatWith;
-    { const _av = document.getElementById('chat-header-avatar'); _av.onerror = () => { _av.onerror = null; _av.src = NX_BLANK_AVATAR; }; _av.src = NX_BLANK_AVATAR; }
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem('np_ci_peer_' + chatWith) || 'null'); } catch (e) {}
+    document.getElementById('chat-header-name').textContent = (cached && cached.name) ? cached.name : chatWith;
+    {
+        const _av = document.getElementById('chat-header-avatar');
+        const _pic = (cached && cached.pic) ? cached.pic : '';
+        _av.setAttribute('data-orig', _pic);
+        _av.onerror = () => {
+            const o = _av.getAttribute('data-orig');
+            if (o && _av.src !== o) { _av.src = o; return; }
+            _av.onerror = null; _av.src = NX_BLANK_AVATAR;
+        };
+        _av.src = _pic ? (window.npThumbUrl ? window.npThumbUrl(_pic) : _pic) : NX_BLANK_AVATAR;
+    }
 
     db.collection('users').doc(chatWith).get().then(doc => {
         if (doc.exists) {
             const d = doc.data();
             document.getElementById('chat-header-name').textContent = d.username || chatWith;
-            if (d.userProfilePic) document.getElementById('chat-header-avatar').src = d.userProfilePic;
+            if (d.userProfilePic) {
+                const _a = document.getElementById('chat-header-avatar');
+                _a.setAttribute('data-orig', d.userProfilePic);
+                const _t = window.npThumbUrl ? window.npThumbUrl(d.userProfilePic) : d.userProfilePic;
+                if (_a.src !== _t) _a.src = _t;
+            }
+            try { localStorage.setItem('np_ci_peer_' + chatWith, JSON.stringify({ name: d.username || chatWith, pic: d.userProfilePic || '' })); } catch (e) {}
         }
     });
-}
+            }
 
 // ── Voice Call Button ──────────────────────────
 function handleVoiceCall() {
@@ -330,7 +348,7 @@ function runChatSearch(query) {
     if (!query || query.length < 2 || !latestMsgSnapshot) { resultsEl.innerHTML = ''; return; }
     const q = query.toLowerCase();
     let matches = [];
-    latestMsgSnapshot.forEach(doc => {
+        nxAllDocs().forEach(doc => {
         const d = doc.data();
         const decrypted = decryptedCache[doc.id];
         const text = d.encrypted ? (decrypted && decrypted.text) : d.text;
@@ -451,9 +469,15 @@ function scrollChatToBottom() {
 function wireScrollTracking() {
     const cf = document.getElementById('chat-flow');
     if (!cf) return;
-    cf.addEventListener('scroll', () => {
+        cf.addEventListener('scroll', () => {
         const near = (cf.scrollHeight - cf.scrollTop - cf.clientHeight) < 80;
         if (near !== isUserNearBottom) { isUserNearBottom = near; updateScrollToBottomBtn(); }
+        if (cf.scrollTop < 160 && nxMsgHasMore && !nxMsgLoadingOlder) {
+            nxMsgLoadingOlder = true;
+            nxMsgLimit += 40;
+            nxSubscribeMessages();
+            setTimeout(() => { nxMsgLoadingOlder = false; }, 900);
+        }
     });
 }
 window.addEventListener('pageshow', (e) => {
@@ -469,28 +493,71 @@ let pendingMessages = []; // {id, kind, file, url, progress, status: 'uploading'
 let msgUnsubscribe = null;
 let typingUnsubscribe = null;
 
-function listenToNexusMessages() {
-    // Idan aka riga aka saurara (misali init() ya sake gudana ba tare da
-    // destroy() tsakani ba), fara rufe tsofaffin listeners kafin sabbin.
+let nxMsgLimit = 40;
+let nxMsgHasMore = false;
+let nxMsgLoadingOlder = false;
+let nxFullDocs = null;
+
+// Yana loda dukan tarihin chat a bango (domin search / media / starred), ba tare da zana shi ba.
+function nxLoadFullHistory(roomId) {
+    if (nxFullDocs || !roomId || roomId !== chatRoomId) return;
+    db.collection('personalChats').doc(roomId).collection('messages').orderBy('timestamp', 'asc').get()
+        .then(function (s) { if (roomId === chatRoomId) nxFullDocs = s.docs; })
+        .catch(function () {});
+}
+// Duka saƙonni: tarihin cikakke (idan ya riga ya iso) + sabbin saƙonnin da ke kan allo.
+function nxAllDocs() {
+    const cur = latestMsgSnapshot ? latestMsgSnapshot.docs : [];
+    if (!nxFullDocs) return cur;
+    const map = new Map();
+    nxFullDocs.forEach(function (d) { map.set(d.id, d); });
+    cur.forEach(function (d) { map.set(d.id, d); });
+    return Array.from(map.values()).sort(function (a, b) { return nxTsMs(a.data().timestamp) - nxTsMs(b.data().timestamp); });
+}
+
+function nxSubscribeMessages() {
     if (msgUnsubscribe) { msgUnsubscribe(); msgUnsubscribe = null; }
-    if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
-
-    db.collection('personalChats').doc(chatRoomId).set({
-        unreadCount: { [myId]: 0 }
-    }, { merge: true }).catch(err => console.error('Reset unread error:', err));
-
     msgUnsubscribe = db.collection('personalChats').doc(chatRoomId).collection('messages')
-      .orderBy('timestamp', 'asc')
-      .onSnapshot((snapshot) => {
+      .orderBy('timestamp', 'desc').limit(nxMsgLimit)
+      .onSnapshot((snap) => {
+          const docs = snap.docs.slice().reverse();
+          nxMsgHasMore = snap.docs.length >= nxMsgLimit;
+          const snapshot = {
+              docs: docs,
+              size: docs.length,
+              empty: docs.length === 0,
+              forEach: function (cb) { docs.forEach(cb); },
+              docChanges: function () { return snap.docChanges(); }
+          };
           if (latestMsgSnapshot && !isUserNearBottom) {
+              const prevLast = latestMsgSnapshot.docs.length ? nxTsMs(latestMsgSnapshot.docs[latestMsgSnapshot.docs.length - 1].data().timestamp) : 0;
               snapshot.docChanges().forEach(ch => {
-                  if (ch.type === 'added' && ch.doc.data().senderId !== myId) unseenWhileScrolledUp++;
+                  if (ch.type !== 'added') return;
+                  const cd = ch.doc.data();
+                  if (cd.senderId === myId) return;
+                  if (!prevLast || cd.timestamp == null || nxTsMs(cd.timestamp) > prevLast) unseenWhileScrolledUp++;
               });
           }
           latestMsgSnapshot = snapshot;
           renderChatFlow();
           updateScrollToBottomBtn();
       });
+}
+
+function listenToNexusMessages() {
+    // Idan aka riga aka saurara (misali init() ya sake gudana ba tare da
+    // destroy() tsakani ba), fara rufe tsofaffin listeners kafin sabbin.
+    if (msgUnsubscribe) { msgUnsubscribe(); msgUnsubscribe = null; }
+    if (typingUnsubscribe) { typingUnsubscribe(); typingUnsubscribe = null; }
+    nxMsgLimit = 40;
+    nxFullDocs = null;
+
+    db.collection('personalChats').doc(chatRoomId).set({
+        unreadCount: { [myId]: 0 }
+    }, { merge: true }).catch(err => console.error('Reset unread error:', err));
+
+    nxSubscribeMessages();
+    { const _room = chatRoomId; setTimeout(function () { nxLoadFullHistory(_room); }, 3500); }
 
     // ── Typing indicator: bibiyar filin typing.{chatWith} akan doc na dakin chat ──
     typingUnsubscribe = db.collection('personalChats').doc(chatRoomId).onSnapshot((doc) => {
@@ -3604,6 +3671,7 @@ function NexusChatInterior_init() {
     decryptedCache = {};
     decryptedMediaCache = {};
     latestMsgSnapshot = null;
+        nxFullDocs = null; nxMsgLimit = 40; nxMsgHasMore = false; nxMsgLoadingOlder = false;
     pendingMessages = [];
     isUserNearBottom = true;
     unseenWhileScrolledUp = 0;
@@ -3695,7 +3763,7 @@ function nxStarMsgText(doc, d) {
 function nxStarredDocs() {
     var out = [];
     if (!latestMsgSnapshot) return out;
-    latestMsgSnapshot.forEach(function (doc) {
+        nxAllDocs().forEach(function (doc) {
         var d = doc.data();
         if (!(d.starredBy && d.starredBy[myId])) return;
         var ts = nxTsMs(d.timestamp);
@@ -3928,7 +3996,7 @@ function nxTsMs(t) {
 function nxMediaIndex() {
     var out = { media: [], docs: [], links: [], starred: 0 };
     if (!latestMsgSnapshot) return out;
-    latestMsgSnapshot.forEach(function (doc) {
+        nxAllDocs().forEach(function (doc) {
         var d = doc.data();
         var ts = nxTsMs(d.timestamp);
         if (myClearedAt && ts && ts < nxTsMs(myClearedAt)) return;
