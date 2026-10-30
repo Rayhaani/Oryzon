@@ -310,10 +310,11 @@ let refreshChatTimesInterval = setInterval(refreshAllChatTimes, 30000);
         function npChatRowHtml(r, peer) {
             const rawUser = r.rawUser;
             const initialName = (peer && peer.name) ? npEscHtml(peer.name) : rawUser.charAt(0).toUpperCase() + rawUser.slice(1);
-            const pic = (peer && peer.pic) ? peer.pic : `https://api.dicebear.com/7.x/bottts/svg?seed=${rawUser}`;
-            const shownPic = (peer && peer.pic && window.npThumbUrl) ? window.npThumbUrl(peer.pic) : pic;
-            const unreadLabel = r.unreadNum > 99 ? '99+' : r.unreadNum;
-            const personalChatHref = `chat-interior.html?with=${encodeURIComponent(rawUser)}&avatar=${encodeURIComponent(pic)}`;
+                        const hasPic = !!(peer && peer.pic);
+            const pic = hasPic ? peer.pic : (window.NX_AV_BLANK || '');
+            const shownPic = (hasPic && window.npThumbUrl) ? window.npThumbUrl(peer.pic) : pic;
+           const unreadLabel = r.unreadNum > 99 ? '99+' : r.unreadNum;
+            const personalChatHref = `chat-interior.html?with=${encodeURIComponent(rawUser)}` + (hasPic ? `&avatar=${encodeURIComponent(peer.pic)}` : '');
             return `
                 <a href="${personalChatHref}" class="chat-item" id="chat-link-${rawUser}">
                     <div class="profile-stack" id="stack-${rawUser}" data-online="${peer && peer.online ? 'true' : 'false'}"
