@@ -395,7 +395,7 @@ function listenNotifBadgeCount() {
     if (window.self !== window.top || window.__npWarmPages) return;
     window.__npWarmPages = true;
     window.__npImgKeep = window.__npImgKeep || [];
-    var WARM_PAGES = ['services.html'];
+        var WARM_PAGES = ['services.html', 'chats.html'];
 
     function warmImages() {
         try {
