@@ -31,6 +31,8 @@ function restoreCachedProfilePhotos() {
 // sun wanzu a global scope daga nexus-core.js kai tsaye — sake
 // ayyana su a nan zai haifar da "Firebase already defined in global
 // scope" da SyntaxError na redeclaration.
+var db = window.db || firebase.firestore();
+
 let viewedProfileUser = null;
 let postsCountUnsub = null;
 let authStateUnsub = null;
@@ -1128,7 +1130,7 @@ function renderNotifications(docs) {
 }
 
 // Fara listening idan page ta loda
-listenToNotifications();
+
 
 
 
