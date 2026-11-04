@@ -51,21 +51,36 @@
     row.querySelectorAll('.np-helpful-btn').forEach(function (b) { b.style.background = 'transparent'; b.style.color = 'rgba(255,255,255,0.75)'; b.style.borderColor = 'rgba(255,255,255,0.12)'; });
     btn.style.color = '#00F2FF'; btn.style.borderColor = '#00F2FF'; if (navigator.vibrate) navigator.vibrate(10);
   };
-  /* Full ratings page body (summary · positive/critical · sort · list). Same markup as services' ratings page. */
+  /* Ratings page — ONE markup for services + marketplace: back bar · summary · filter · sort · list.
+     handlers (optional): {sent:'fnName', sort:'fnName'} → inline onclicks (services keeps its own logic); omit → mountReviews wires it. */
+  NX.ratingsInner = function (h) {
+    h = h || {};
+    var on = function (fn, arg) { return h[fn] ? ' onclick="' + h[fn] + '(\'' + arg + '\')"' : ''; };
+    return '<div id="rf-summary" class="rf6-sum"></div><div class="rf6-lab">Filter by</div><div id="rf-dim-pills" class="rf6-row"></div>' +
+      '<div class="rf6-row" style="margin-top:8px;"><button type="button"' + on('sent', 'positive') + ' id="rf-pill-positive" data-s="positive" class="rf6-chip">Positive</button><button type="button"' + on('sent', 'negative') + ' id="rf-pill-negative" data-s="negative" class="rf6-chip">Critical</button></div>' +
+      '<div class="rf6-lab">Sort by</div><div id="rf-sort" class="rf6-row">' +
+      [['relevant', 'Most relevant'], ['newest', 'Newest'], ['high', 'Highest'], ['low', 'Lowest']].map(function (k) { return '<button type="button" data-k="' + k[0] + '" class="rf6-chip' + (k[0] === 'relevant' ? ' on' : '') + '"' + on('sort', k[0]) + '>' + k[1] + '</button>'; }).join('') +
+      '</div><div id="rf-reviews-list" style="margin-top:18px;display:flex;flex-direction:column;gap:12px;"></div>';
+  };
+  NX.ratingsPageHTML = function (o) {
+    o = o || {};
+    return '<div class="rv6-bar"><button type="button" class="rv6-back" onclick="' + o.back + '" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button><div class="rv6-bt">' + (o.title || 'Ratings and reviews') + '</div></div>' +
+      '<div id="rv6-body" style="flex:1;overflow-y:auto;padding:4px 18px 28px;">' + NX.ratingsInner(o.handlers) + '</div>';
+  };
   NX.mountReviews = function (el, reviews, opts) {
     opts = opts || {};
     var all = (reviews || []).map(function (r) {
       var t = r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : (r.createdAt || r.time || r.timestamp || 0);
-      return Object.assign({}, r, { createdAt: Number(t) || 0, reviewerName: r.reviewerName || r.customerName || r.username || 'Customer',
-        date: r.date || (t ? new Date(Number(t)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''), comment: r.comment || r.text || '', helpfulCount: r.helpfulCount || 0, customerUsername: r.customerUsername || r.username || '' });
+      if (t && t.toMillis) t = t.toMillis();
+      return Object.assign({}, r, { createdAt: Number(t) || 0, reviewerName: r.reviewerName || r.userName || r.customerName || r.username || 'Customer',
+        date: r.date || (t ? new Date(Number(t)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''), comment: r.comment || r.text || '', helpfulCount: r.helpfulCount || 0, customerUsername: r.customerUsername || r.username || r.userName || '' });
     });
     var sort = 'relevant', sent = null;
-    el.innerHTML = '<div id="rf-summary" class="rf6-sum"></div><div class="rf6-row" style="margin-top:12px;"><button type="button" class="rf6-chip" data-s="positive">Positive</button><button type="button" class="rf6-chip" data-s="negative">Critical</button></div><div id="rf-sort" class="rf6-row" style="margin-top:10px;">' +
-      [['relevant', 'Most relevant'], ['newest', 'Newest'], ['high', 'Highest'], ['low', 'Lowest']].map(function (k) { return '<button type="button" data-k="' + k[0] + '" class="rf6-chip' + (k[0] === 'relevant' ? ' on' : '') + '">' + k[1] + '</button>'; }).join('') +
-      '</div><div class="nx-rv-list" style="margin-top:18px;display:flex;flex-direction:column;gap:12px;"></div>';
-    var sum = el.querySelector('#rf-summary'), list = el.querySelector('.nx-rv-list');
+    el.innerHTML = NX.ratingsInner(null);
+    var sum = el.querySelector('#rf-summary'), list = el.querySelector('#rf-reviews-list');
+    el.querySelector('#rf-dim-pills').style.display = 'none';
     sum.innerHTML = all.length ? NX.reviewSummary(all) : '<div class="rf6-empty">No reviews yet</div>';
-    if (!all.length) { el.querySelectorAll('.rf6-row').forEach(function (x) { x.style.display = 'none'; }); return; }
+    if (!all.length) { el.querySelectorAll('.rf6-row,.rf6-lab').forEach(function (x) { x.style.display = 'none'; }); return; }
     function draw() {
       var l = all.slice();
       if (sent === 'positive') l = l.filter(function (r) { return r.rating >= 4; });
