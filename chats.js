@@ -2648,13 +2648,6 @@ if (window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
                 </svg>`;
         }
 
-        runOnChatsInit(() => {
-            const personalLinks = document.querySelectorAll("#personal .chat-item");
-            personalLinks.forEach(link => {
-                const nameText = link.querySelector(".name").innerText;
-                const avatarSrc = link.querySelector(".user-img").src;
-                link.href = `chat-interior.html?user=${encodeURIComponent(nameText)}&avatar=${encodeURIComponent(avatarSrc)}`;
-            });
         });
 
       let unsubPersonalChatsMain = null;
@@ -2662,8 +2655,8 @@ if (window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
       runOnChatsInit(() => {
         authReadyPromise.then((user) => {
             if (!user) return;
-            unsubPersonalChatsMain = db.collection("personalChats").onSnapshot(() => { loadChats(); });
-            unsubFriendsMain = db.collection("friends").onSnapshot(() => { loadFriendsList(); });
+                       unsubPersonalChatsMain = db.collection("personalChats").onSnapshot(function (snap) { renderPersonalChats(snap); }, function (err) { console.error("personalChats listener error:", err); });
+            unsubFriendsMain = db.collection("friends").where('users', 'array-contains', myId).onSnapshot(() => { loadFriendsList(); });         
         });
       });
        function toggleSearchBar() {
