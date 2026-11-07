@@ -163,7 +163,7 @@ function updateUnreadBadge(count) {
 }
 
 function buildNotifCard(notif) {
-    const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${notif.from || 'user'}`;
+        const defaultAvatar = window.NX_AV_BRAND;
     const isUnread = notif.read === false;
 
     let inlineActionHTML = '';
@@ -393,7 +393,7 @@ async function loadFollowBackList() {
 }
 
 function buildFollowBackRow(username) {
-    const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`;
+        const defaultAvatar = window.NX_AV_BRAND;
     const initialName = ucfirst(username);
     return `
         <div class="fb-card" id="fb-card-${username}">
@@ -433,7 +433,7 @@ async function hydrateFollowBackRow(username, followingSet) {
         if (mutuals.length === 0) { mutualsEl.innerHTML = ''; return; }
 
         const shown = mutuals.slice(0, 3);
-        let avatarsHTML = shown.map(u => `<img src="https://api.dicebear.com/7.x/bottts/svg?seed=${u}">`).join('');
+                let avatarsHTML = shown.map(u => `<img src="${window.NX_AV_BRAND}">`).join('');
         mutualsEl.innerHTML = `<div class="fb-mutual-avatars">${avatarsHTML}</div><span class="fb-mutual-text">${mutuals.length} mutual${mutuals.length > 1 ? 's' : ''}</span>`;
     } catch (e) { /* silent */ }
 }
