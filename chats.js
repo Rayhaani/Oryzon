@@ -2674,8 +2674,6 @@ if (window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
                 </svg>`;
         }
 
-        });
-
       let unsubPersonalChatsMain = null;
       let unsubFriendsMain = null;
       runOnChatsInit(() => {
