@@ -3584,6 +3584,7 @@ function NexusChatInterior_init() {
     // chatWith/myId/chatRoomId ta hanyar closure) su ga sabon daraja.
     const urlParams = new URLSearchParams(window.location.search);
     chatWith = urlParams.get('with') || 'Unknown User';
+    try{var _d=localStorage.getItem('nx_share_draft_'+chatWith);if(_d){localStorage.removeItem('nx_share_draft_'+chatWith);setTimeout(function(){var i=document.getElementById('msgInput');if(i){i.value=_d;i.dispatchEvent(new Event('input',{bubbles:true}));i.focus();}},700);}}catch(e){}
     myId = localStorage.getItem('nexus_user_session');
     if (!myId) { window.location.href = 'login.html'; return; }
     chatRoomId = getChatRoomId(myId, chatWith);
