@@ -1961,7 +1961,7 @@ window.toggleSave = async function(btn, postId) {
     }
     function nexcmCurrentAvatarUrl() {
         const u = nexcmCurrentUsername();
-        return localStorage.getItem('userProfilePic') || npAvatarSvg(u);
+               return localStorage.getItem('userProfilePic') || (window.NX_AV_BRAND || npAvatarSvg(u)); 
     }
 
     function injectNexcmStyles() {
@@ -2430,7 +2430,7 @@ window.toggleSave = async function(btn, postId) {
                         <div class="nexcm-comment-card ${sentimentClass}" id="nexcmCard-${comment.id}">
                             <div class="nexcm-core-layout">
                                 <div class="nexcm-avatar-frame">
-                                    <img src="${npAvatarSvg(comment.author)}" class="nexcm-avatar">
+                                 <img src="${(window.NX_AV_BRAND || npAvatarSvg(comment.author))}" class="nexcm-avatar"> 
                                 </div>
                                 <div class="nexcm-body-cluster">
                                     <div class="nexcm-meta-layer">
@@ -2471,7 +2471,7 @@ window.toggleSave = async function(btn, postId) {
                                 <div class="nexcm-comment-card">
                                     <div class="nexcm-core-layout">
                                         <div class="nexcm-avatar-frame" style="width:26px;height:26px;">
-                                            <img src="${npAvatarSvg(reply.author)}" class="nexcm-avatar">
+                                         <img src="${(window.NX_AV_BRAND || npAvatarSvg(reply.author))}" class="nexcm-avatar">  
                                         </div>
                                         <div class="nexcm-body-cluster">
                                             <div class="nexcm-meta-layer">
