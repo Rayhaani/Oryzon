@@ -720,3 +720,5 @@ var SERVICES_SCRIPTS = [
         isOpen: function () { return anyOpen(); }
     };
 })();
+
+window.NX_AV_BRAND = window.NX_AV_BRAND || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='48' cy='48' r='46' fill='%23F2C75C'/%3E%3Ccircle cx='52' cy='52' r='45' fill='%23262626'/%3E%3C/svg%3E";
