@@ -288,8 +288,7 @@ function initSocialPage() {
                     if (photo) {
                         headerAvatar.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
                     } else {
-                        const initial = (data.fullName || currentUser || '?').trim().charAt(0).toUpperCase();
-                        headerAvatar.innerText = initial;
+                                               headerAvatar.innerHTML = `<img src="${window.NX_AV_BRAND}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`; 
                     }
                 }
                 if (window.NexusMenu) NexusMenu.setUser({ fullName: data.fullName || currentUser, photo: data.userProfilePic || localStorage.getItem('userProfilePic') || '', cover: data.userCover || '', verified: !!data.isVerified, followers: data.followerCount || 0, friends: data.friendCount || 0 });
@@ -598,9 +597,9 @@ const storyOrder = ['your_story','live_now','trt_afrika','bbc_news','arewa_tech'
 
 const storyMap = {
     'your_story': {
-        avatar: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=me',
+               avatar: localStorage.getItem('userProfilePic') || window.NX_AV_BRAND, 
         name: 'Your Story', time: 'just now',
-        slides: [{ img: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=me', text: 'Your story' }]
+                slides: [{ img: localStorage.getItem('userProfilePic') || window.NX_AV_BRAND, text: 'Your story' }]
     },
     'live_now': {
         avatar: 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Al_Jazeera_%E8%8B%B1%E8%AA%9E_logo.svg',
@@ -1192,7 +1191,7 @@ async function startLiveStudio() {
     try {
         const liveDocRef = await db.collection('nexus_live_sessions').add({
             host: currentUser,
-            hostAvatar: localStorage.getItem('userProfilePic') || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + currentUser,
+                       hostAvatar: localStorage.getItem('userProfilePic') || window.NX_AV_BRAND, 
             status: 'live',
             startedAt: firebase.firestore.FieldValue.serverTimestamp(),
             endedAt: null
@@ -1549,7 +1548,7 @@ function sendLiveReaction() {
         var photo = a ? a.avatar : (user.photo || localStorage.getItem('userProfilePic') || '');
         var name = a ? a.name : userName();
         if (photo) h.innerHTML = '<img src="' + esc(photo) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-        else { h.textContent = (String(name || '?').trim().charAt(0) || '?').toUpperCase(); }
+                else { h.innerHTML = '<img src="' + window.NX_AV_BRAND + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'; }
     }
 
     // ---------- composer: "Posting as" ----------
