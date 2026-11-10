@@ -146,7 +146,7 @@
 
                         <!-- Services (grid mixed) -->
             <div class="footer-icon" data-page="services.html" aria-label="Services">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><path d="M17.5 3l3.5 7h-7z"/><rect x="3" y="14" width="7" height="7" rx="2"/><circle cx="17.5" cy="17.5" r="3.5"/></svg>               
+                               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><path d="M17.5 3l3.5 7h-7z"/><rect x="3" y="14" width="7" height="7" rx="2"/><circle cx="17.5" cy="17.5" r="3.5"/></svg>                 
                 <span class="notif-badge chat-nav-dot" id="servicesBadgeCount"></span>
             </div>
 
