@@ -141,12 +141,12 @@
         <div class="footer-capsule-bar">
             <!-- Home (Instagram style) -->
             <div class="footer-icon" data-page="social.html" aria-label="Home">
-                <svg class="nx-home-svg" viewBox="0 0 24 24"><path d="M12 2.6c-.5 0-1 .2-1.4.5L3.3 8.4C2.5 9 2 9.9 2 10.9V19.5C2 20.9 3.1 22 4.5 22H8.5c.8 0 1.5-.7 1.5-1.5V16.5c0-1.1.9-2 2-2s2 .9 2 2v4c0 .8.7 1.5 1.5 1.5h4c1.4 0 2.5-1.1 2.5-2.5V10.9c0-1-.5-1.9-1.3-2.5l-7.3-5.3c-.4-.3-.9-.5-1.4-.5z"/></svg>
+               <svg class="nx-home-svg" viewBox="0 0 24 24"><g transform="translate(12 12) scale(.9) translate(-12 -12)"><path stroke-width="2.2" d="M12 2.6c-.5 0-1 .2-1.4.5L3.3 8.4C2.5 9 2 9.9 2 10.9V19.5C2 20.9 3.1 22 4.5 22H8.5c.8 0 1.5-.7 1.5-1.5V16.5c0-1.1.9-2 2-2s2 .9 2 2v4c0 .8.7 1.5 1.5 1.5h4c1.4 0 2.5-1.1 2.5-2.5V10.9c0-1-.5-1.9-1.3-2.5l-7.3-5.3c-.4-.3-.9-.5-1.4-.5z"/></g></svg>            
             </div>
 
             <!-- Services (service bell) -->
             <div class="footer-icon" data-page="services.html" aria-label="Services">
-                <svg viewBox="0 0 24 24"><path d="M4 17a8 8 0 0 1 16 0z"/><path d="M2.5 20.5h19"/><path d="M12 9V6.5M10 6h4"/></svg>
+                             <svg viewBox="0 0 24 24"><path d="M3 16a9 9 0 0 1 18 0z"/><path d="M2 20h20"/><path d="M12 7V4.5M9.5 4h5"/></svg>                   
                 <span class="notif-badge chat-nav-dot" id="servicesBadgeCount"></span>
             </div>
 
