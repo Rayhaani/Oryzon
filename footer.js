@@ -141,12 +141,12 @@
         <div class="footer-capsule-bar">
             <!-- Home (Instagram style) -->
             <div class="footer-icon" data-page="social.html" aria-label="Home">
-               <svg class="nx-home-svg" viewBox="0 0 24 24"><g transform="translate(12 12) scale(.9) translate(-12 -12)"><path stroke-width="2.2" d="M12 2.6c-.5 0-1 .2-1.4.5L3.3 8.4C2.5 9 2 9.9 2 10.9V19.5C2 20.9 3.1 22 4.5 22H8.5c.8 0 1.5-.7 1.5-1.5V16.5c0-1.1.9-2 2-2s2 .9 2 2v4c0 .8.7 1.5 1.5 1.5h4c1.4 0 2.5-1.1 2.5-2.5V10.9c0-1-.5-1.9-1.3-2.5l-7.3-5.3c-.4-.3-.9-.5-1.4-.5z"/></g></svg>            
+               <svg class="nx-home-svg" viewBox="0 0 24 24"><g transform="translate(12 12) scale(.9) translate(-12 -12)"><path stroke-width="2.2" d="M12 2.6c-.5 0-1 .2-1.4.5L3.3 8.4C2.5 9 2 9.9 2 10.9V19.5C2 20.9 3.1 22 4.5 22H8.5c.8 0 1.5-.7 1.5-1.5V16.5c0-1.1.9-2 2-2s2 .9 2 2v4c0 .8.7 1.5 1.5 1.5h4c1.4 0 2.5-1.1 2.5-2.5V10.9c0-1-.5-1.9-1.3-2.5l-7.3-5.3c-.4-.3-.9-.5-1.4-.5z"/></g></svg>             
             </div>
 
-            <!-- Services (service bell) -->
+                        <!-- Services (grid mixed) -->
             <div class="footer-icon" data-page="services.html" aria-label="Services">
-                             <svg viewBox="0 0 24 24"><path d="M3 16a9 9 0 0 1 18 0z"/><path d="M2 20h20"/><path d="M12 7V4.5M9.5 4h5"/></svg>                   
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><path d="M17.5 3l3.5 7h-7z"/><rect x="3" y="14" width="7" height="7" rx="2"/><circle cx="17.5" cy="17.5" r="3.5"/></svg>               
                 <span class="notif-badge chat-nav-dot" id="servicesBadgeCount"></span>
             </div>
 
@@ -163,12 +163,12 @@
 
             <!-- Videos -->
             <div class="footer-icon" data-page="videos.html" aria-label="Videos">
-                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="5" ry="5"/><path class="nx-play-fill" d="M10 9l5 3-5 3V9z"/></svg>
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path class="nx-play-fill" d="M10.5 9l4.5 3-4.5 3z"/></svg>            
             </div>
 
             <!-- Health -->
             <div class="footer-icon" data-page="health.html" aria-label="Health">
-                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                          <svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> 
             </div>
         </div>
     </nav>
