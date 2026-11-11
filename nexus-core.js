@@ -724,3 +724,19 @@ var SERVICES_SCRIPTS = [
 })();
 
 window.NX_AV_BRAND = window.NX_AV_BRAND || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='48' cy='48' r='46' fill='%23F2C75C'/%3E%3Ccircle cx='52' cy='52' r='45' fill='%23262626'/%3E%3C/svg%3E";
+
+(function () {
+    if (window.self !== window.top || window.__npSpaLinks) return;
+    window.__npSpaLinks = true;
+    var SPA = /^(?:\.\/)?(chat-interior|chats)\.html(?:[?#].*)?$/i;
+    document.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (!a || a.target === '_blank' || a.hasAttribute('download') || a.hasAttribute('data-spa-link') || a.hasAttribute('data-page')) return;
+        var href = a.getAttribute('href') || '';
+        if (!SPA.test(href)) return;
+        if (!window.NexusRouter || typeof window.NexusRouter.navigateTo !== 'function') return;
+        e.preventDefault();
+        window.NexusRouter.navigateTo(href);
+    }, false);
+})();
