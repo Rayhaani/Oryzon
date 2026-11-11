@@ -2679,8 +2679,8 @@ if (window.NexusRouter && typeof window.NexusRouter.navigateTo === 'function') {
       runOnChatsInit(() => {
         authReadyPromise.then((user) => {
             if (!user) return;
-                       unsubPersonalChatsMain = db.collection("personalChats").onSnapshot(function (snap) { renderPersonalChats(snap); }, function (err) { console.error("personalChats listener error:", err); });
-            unsubFriendsMain = db.collection("friends").where('users', 'array-contains', myId).onSnapshot(() => { loadFriendsList(); });         
+            unsubPersonalChatsMain = db.collection("personalChats").where('members', 'array-contains', myId).onSnapshot(function (snap) { renderPersonalChats(snap); }, function (err) { console.error("personalChats listener error:", err); });          
+           unsubFriendsMain = db.collection("friends").where('users', 'array-contains', myId).onSnapshot(() => { loadFriendsList(); });         
         });
       });
        function toggleSearchBar() {
