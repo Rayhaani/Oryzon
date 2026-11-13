@@ -185,19 +185,70 @@ async function encryptFileForUpload(file) {
     return { file: encFile, iv: b64encode(iv), mimeType: file.type, encrypted: true };
 }
 let decryptedMediaCache = {};
+const nxMediaDB = (function () {
+    let dbp = null;
+    function open() {
+        if (dbp) return dbp;
+        dbp = new Promise(function (resolve, reject) {
+            try {
+                const rq = indexedDB.open('np_media_cache_v1', 1);
+                rq.onupgradeneeded = function () { rq.result.createObjectStore('m'); };
+                rq.onsuccess = function () { resolve(rq.result); };
+                rq.onerror = function () { reject(rq.error); };
+            } catch (e) { reject(e); }
+        });
+        return dbp;
+    }
+    return {
+        get: function (key) {
+            return open().then(function (db) {
+                return new Promise(function (res) {
+                    const rq = db.transaction('m').objectStore('m').get(key);
+                    rq.onsuccess = function () { res(rq.result || null); };
+                    rq.onerror = function () { res(null); };
+                });
+            }).catch(function () { return null; });
+        },
+        put: function (key, blob) {
+            return open().then(function (db) {
+                return new Promise(function (res) {
+                    const tx = db.transaction('m', 'readwrite');
+                    tx.objectStore('m').put(blob, key);
+                    tx.oncomplete = function () { res(true); };
+                    tx.onerror = function () { res(false); };
+                });
+            }).catch(function () { return false; });
+        }
+    };
+})();
 async function decryptMediaToBlobUrl(url, iv, mimeType) {
+    const hit = await nxMediaDB.get(url);
+    if (hit) return URL.createObjectURL(hit);
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('Could not download file');
     const ctBuf = await resp.arrayBuffer();
     const ptBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64decode(iv) }, e2eSharedKey, ctBuf);
-    return URL.createObjectURL(new Blob([ptBuf], { type: mimeType || 'application/octet-stream' }));
+    const blob = new Blob([ptBuf], { type: mimeType || 'application/octet-stream' });
+    nxMediaDB.put(url, blob);
+    return URL.createObjectURL(blob);
 }
 function ensureMediaDecrypted(cacheKey, mediaUrl, iv, mimeType, onReady) {
     if (decryptedMediaCache[cacheKey] !== undefined) {
         if (decryptedMediaCache[cacheKey] && decryptedMediaCache[cacheKey] !== 'error') onReady(decryptedMediaCache[cacheKey]);
         return;
     }
-    if (!e2eSharedKey) return; // tukuna ana jiran key exchange
+    if (!e2eSharedKey) {
+        // idan an riga an adana hoton/bidiyon, nuna shi kai tsaye ba tare da jiran key ba
+        if (decryptedMediaCache[cacheKey] === undefined) {
+            decryptedMediaCache[cacheKey] = null;
+            nxMediaDB.get(mediaUrl).then(function (hit) {
+                if (hit) { const u = URL.createObjectURL(hit); decryptedMediaCache[cacheKey] = u; onReady(u); }
+                else decryptedMediaCache[cacheKey] = undefined;
+            });
+        }
+        return; // tukuna ana jiran key exchange
+    }
+    
     decryptedMediaCache[cacheKey] = null;
     decryptMediaToBlobUrl(mediaUrl, iv, mimeType).then(blobUrl => {
         decryptedMediaCache[cacheKey] = blobUrl;
