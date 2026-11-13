@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNERGY | FACEBOOK STYLE V13</title>
+    <style>#page-content .mx-actions,#page-content .mx-tabs{visibility:hidden;animation:mxShow0 0s linear 3s forwards}#page-content .mx-actions.mx-on,#page-content .mx-tabs.mx-on{visibility:visible;animation:none}@keyframes mxShow0{to{visibility:visible}}#np-snap .mx-actions{visibility:hidden!important}</style>
+    <script>
+    (function () {
+        if (location.search.indexOf('embed=1') === -1) { document.write('<script src="router.js"><\/script>'); return; }
+        window.__go = function (u) {
+            try {
+                if (u.indexOf('vendor-chat.html') === 0 && window.parent.inboxOpenChat) { window.parent.inboxOpenChat(u); return; }
+                if (window.parent.NexusRouter) { window.parent.NexusRouter.navigateTo(u); return; }
+            } catch (e) {}
+            window.top.location.href = u;
+        };
+        window.NexusRouter = {
+            navigateTo: function (u) {
+                try { if (u === 'social.html' && window.parent.npCloseOverlay && window.parent.npCloseOverlay('me')) return; } catch (e) {}
+                window.__go(u);
+            },
+            registerPage: function (p, h) { window.__meHandlers = h; }
+        };
+        document.addEventListener('click', function (e) {
+            var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+            if (!a) return;
+            var h = a.getAttribute('href');
+            if (h && /\.html/.test(h) && h.indexOf('http') !== 0) { e.preventDefault(); window.__go(h); }
+        }, true);
+    })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+   <script src="nexus-core.js"></script>
+   <script src="post-card-template.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
+    <link rel="stylesheet" href="me.css?v=13">
+</head>
+<body>
+
+<main id="page-content">
+<!-- BACK BUTTON - daidai salon .nfeed-back-btn (babu circle) -->
+<div onclick="window.NexusRouter ? NexusRouter.navigateTo('social.html') : (window.location.href='social.html')"
+     style="position: absolute; top: 12px; left: 12px; z-index: 50;
+            display: flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; color: #fff; font-size: 17px;
+            cursor: pointer; flex-shrink: 0;">
+    <i class="fa-solid fa-chevron-left"></i>
+</div>
+
+<!-- COVER - same cover as Pages (gold brand gradient fading into the black page). Tap opens gallery -->
+<div class="pg-cover" id="mx-cover" style="cursor: pointer;"
+     onclick="if(window.__meIsOwn)document.getElementById('cover-upload').click()">
+    <img class="pg-cover-img" id="main-cover-img" alt="" style="pointer-events: none;">
+    <div class="pg-cover-fade"></div>
+    <input type="file" id="cover-upload" accept="image/*" class="hidden" onchange="updatePhoto(event, 'cover')">
+</div>
+
+<!-- AVATAR + SUNA + STATS -->
+<div style="display: flex; align-items: flex-start; padding: 0 15px; margin-top: -45px;">
+    
+    <!-- AVATAR -->
+ <div class="nx-av" id="mx-avatar" style="--nx-av:90px; z-index:30; cursor:default;">
+    <img id="main-profile-img" alt="">
+        <!-- Camera icon (own profile only) -->
+        <div id="profile-cam" onclick="event.stopPropagation(); document.getElementById('profile-upload').click()"
+             style="position: absolute; bottom: 0; right: 0; width: 26px; height: 26px; background: #e4e6eb; border-radius: 50%; display: none; align-items: center; justify-content: center; border: 2px solid #050505; cursor: pointer; z-index: 40;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+        </div>
+    </div>
+    <!-- ↑ AVATAR div ya rufe -->
+
+    <!-- Input a WAJE daga avatar div, amma cikin flex row -->
+    <input type="file" id="profile-upload" accept="image/*" class="hidden" onchange="updatePhoto(event, 'profile')">
+
+    <!-- SUNA + STATS -->
+    <div style="flex: 1; padding-left: 12px; margin-top: 48px;">
+        
+        <!-- Suna -->
+        <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 8px;">
+            <h1 id="profile-name-text" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; font-weight: 800; color: #fff; margin: 0;">Loading...</h1>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#fde08d"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.97-.81-4.08s-2.49-1.46-4.08-1.27c-.66-1.1-1.91-1.81-3.17-1.81s-2.51.71-3.17 1.81c-1.58-.19-3.07.16-4.08 1.27s-1.27 2.69-.81 4.08c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.97.81 4.08s2.49 1.46 4.08 1.27c.66 1.1 1.91 1.81 3.17 1.81s2.51-.71 3.17-1.81c1.58.19 3.07-.16 4.08-1.27s1.27-2.69.81-4.08c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.25L6.85 12.5l1.44-1.44 2.25 2.25 5.27-5.27 1.44 1.44-6.71 6.77z"/></svg>
+            <span id="getVerifiedBtn" onclick="try{window.parent.openGetVerified('account')}catch(e){location.href='get-verified.html?entity=account'}" style="color: #fde08d; font-size: 11px; font-weight: 700; cursor: pointer;">Get Verified</span>
+        </div>
+
+        <!-- Stats -->
+        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 0;">
+            
+            <div onclick="switchTab('showcase')" style="cursor: pointer; display: flex; align-items: baseline; gap: 4px; margin-right: 14px;">
+                <span id="stats-posts-count" style="font-size: 14px; font-weight: 700; color: #fff;">0</span>
+                <span style="font-size: 12px; color: #71767b;">Posts</span>
+            </div>
+
+            <div style="cursor: pointer; display: flex; align-items: baseline; gap: 4px; margin-right: 14px;">
+    <span id="stats-followers-count" style="font-size: 14px; font-weight: 700; color: #fff;">0</span>
+    <span style="font-size: 12px; color: #71767b;">Followers</span>
+            </div>
+
+            <div style="cursor: pointer; display: flex; align-items: baseline; gap: 4px;">
+    <span id="stats-friends-count" style="font-size: 14px; font-weight: 700; color: #fff;">0</span>
+    <span id="stats-third-label" style="font-size: 12px; color: #71767b;">Friends</span>
+            </div>
+
+        </div>
+    </div>
+    <!-- ↑ SUNA+STATS div ya rufe -->
+
+</div>
+<!-- ↑ AVATAR+SUNA row div ya rufe -->
+    
+
+                <div class="mt-4 pt-2" style="padding: 0 15px;">
+                    <div id="mx-prof" class="mx-prof" style="display:none;"></div>
+                    <p id="mx-bio" class="text-gray-400 text-[11px] leading-relaxed max-w-sm mb-4" style="display:none;"></p>
+                    <div class="mx-info" id="mx-info" style="display:none;"></div>
+                    <div class="flex gap-3 mb-6 mx-actions">
+                        
+                    <button id="follow-btn" onclick="toggleFollow()" class="btn-slim btn-black">Follow</button>
+
+                    <button id="editProfileBtn" onclick="openEditProfileModal()" class="btn-slim btn-black" style="display:none;">Edit Profile</button>
+
+                    <button id="contact-btn" onclick="handleChatBtn()" class="btn-slim btn-white flex items-center justify-center">Message</button>
+
+                    <button id="shareProfileBtn" type="button" onclick="meShareProfile()" class="btn-slim btn-ico" aria-label="Share profile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg></button>
+                    <button id="qrProfileBtn" type="button" onclick="meOpenQr()" class="btn-slim btn-ico" aria-label="Profile QR code" style="display:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v0M14 20h3M20 17v4"/></svg></button>
+
+<!-- Dropdown menu -->
+<div id="chat-dropdown" style="
+    display:none;
+    position:absolute;
+    background:#111;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;
+    overflow:hidden;
+    z-index:9999;
+    min-width:200px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    backdrop-filter:blur(20px);
+">
+    <div onclick="window.location.href='chat-interior.html?with='+getProfileUser()" style="
+        padding:14px 18px;
+        display:flex; align-items:center; gap:10px;
+        border-bottom:1px solid rgba(255,255,255,0.06);
+        cursor:pointer;
+        font-size:13px; font-weight:600; color:#fff;
+    ">
+        <i class="fa-regular fa-comment" style="color:#00f2fe; font-size:16px;"></i>
+        Personal Chat
+    </div>
+    <div onclick="window.location.href='vendor-chat.html?vendorId='+getProfileUser()" style="
+        padding:14px 18px;
+        display:flex; align-items:center; gap:10px;
+        cursor:pointer;
+        font-size:13px; font-weight:600; color:#fff;
+    ">
+        <i class="fa-solid fa-store" style="color:#fde08d; font-size:16px;"></i>
+        Business Chat
+    </div>
+</div>
+
+<button id="mx-book-btn" type="button" class="btn-slim mx-book" style="display:none;"><i class="fa-solid fa-calendar-check"></i> Book</button>
+
+                        
+                    </div>
+                    <div class="smart-box-highlights" id="highlights-box">
+    <div class="highlights-scroll" id="highlights-scroll"></div>
+                    </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="mx-lock" class="mx-lock" style="display:none;">
+            <div class="mx-lock-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+            <h3>This profile is private</h3>
+            <p>Only friends can see their posts, showcase and highlights.</p>
+        </div>
+
+        <div class="flex gap-4 my-6 mx-tabs">
+     <button id="btn-showcase" onclick="switchTab('showcase')" class="btn-slim btn-white">Showcase</button>
+     <button id="btn-timeline" onclick="switchTab('timeline')" class="btn-slim btn-trans">Timeline</button>
+</div>
+
+<!-- Ka tabbatar timeline-area yana farawa da "display: none" a CSS ko kuma ka bashi class="hidden" -->
+<div id="timeline-area" class="hidden pb-10 px-1">
+    <!-- Post zasu shigo nan -->
+</div>
+        
+        
+        <!-- SHOWCASE AREA (Dynamic) -->
+<div id="showcase-area" class="insta-grid pb-10">
+    <!-- Hotunan Firebase za su fito a nan -->
+</div>
+        
+
+        <!-- TIMELINE AREA WITH FULL DETAILS -->
+        <div id="timeline-area" class="hidden pb-10 px-1">
+        <!-- Post 1 -->
+            <div class="glass-vault p-4 rounded-[30px] border-none bg-white/5">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=mamba" class="w-10 h-10 rounded-full border border-cyan-400/30">
+                        <div>
+                            <h4 class="text-white font-bold text-xs">Aliyu Haedar</h4>
+                            <p class="text-gray-500 text-[10px]">2 hours ago • <span class="text-cyan-400 font-bold">Public</span></p>
+                        </div>
+                    </div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <p class="text-gray-300 text-xs mb-4">Barka da dare abokai! Yau na zagaya kasuwar Kantin Kwari, gaskiya harkar Toubs tana kara bunkasa. 🚀</p>
+                <div class="rounded-2xl overflow-hidden border border-white/5">
+                    <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=500" class="w-full">
+                </div>
+                <div class="flex justify-between mt-4 pt-3 border-t border-white/5">
+                    <div class="flex gap-4">
+                        <span class="text-[10px] text-gray-500 font-bold">❤️ 1.2k</span>
+                        <span class="text-[10px] text-gray-500 font-bold">💬 45 Comments</span>
+                    </div>
+                    <span class="text-[10px] text-cyan-400 font-bold cursor-pointer">Write a comment...</span>
+                </div>
+            </div>
+            
+            <!-- Post 2 -->
+            <div class="glass-vault p-4 rounded-[30px] border-none bg-white/5">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=mamba" class="w-10 h-10 rounded-full border border-cyan-400/30">
+                        <div>
+                            <h4 class="text-white font-bold text-xs">Aliyu Haedar</h4>
+                            <p class="text-gray-500 text-[10px]">Yesterday at 10:45 PM</p>
+                        </div>
+                    </div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <p class="text-[14px] text-white italic font-medium">"Success is not just about profit, it's about the value you bring to your community." 💡</p>
+                <div class="flex gap-4 mt-4 pt-3 border-t border-white/5">
+                    <span class="text-[10px] text-gray-500 font-bold">❤️ 850</span>
+                    <span class="text-[10px] text-gray-500 font-bold">💬 12 Comments</span>
+                </div>
+            </div>
+        </div>
+
+        
+<div id="subscriptionModal" class="premium-global-overlay">
+    <!-- Header: Back Arrow + Title -->
+    <div class="p-nav">
+        <i class="fas fa-arrow-left" onclick="closeSubModal()"></i>
+        <span>Subscribe</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="p-main">
+        <h1 class="p-title">Get verified with Premium</h1>
+        <p class="p-desc">Enjoy an enhanced experience, exclusive creator tools, top-tier verification and security.</p>
+
+        <!-- The Slider Container -->
+        <div class="p-slider">
+            <!-- Card 1 -->
+            <div class="p-card slate">
+                <div class="p-banner"><h2>Premium</h2></div>
+                <div class="p-inner">
+                    <p class="p-section">Enhanced Experience</p>
+                    <div class="p-row"><span>Ads</span><b>Minimal</b></div>
+                    <div class="p-row"><span>Edit Post</span><i class="fas fa-check"></i></div>
+                    <div class="p-row"><span>Longer Videos</span><i class="fas fa-check"></i></div>
+                </div>
+                <button class="p-btn">Subscribe ₦3,050.00/mo</button>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="p-card obsidian">
+                <div class="p-banner"><h2>Premium+</h2></div>
+                <div class="p-inner">
+                    <p class="p-section">Ultimate Experience</p>
+                    <div class="p-row"><span>Ads</span><b>Fully Ad-Free</b></div>
+                    <div class="p-row"><span>Grok AI</span><i class="fas fa-star" style="color:gold"></i></div>
+                    <div class="p-row"><span>Priority</span><b>Largest Boost</b></div>
+                </div>
+                <button class="p-btn gold-vibe">Subscribe ₦38,900.00/mo</button>
+            </div>
+        </div>
+    </div>
+</div>
+        
+     <div class="hl-modal-overlay" id="hlModalOverlay">
+    <div class="hl-modal-box">
+        <h3>New highlight</h3>
+        <input type="text" id="hlLabelInput" placeholder="Highlight name">
+        <div class="hl-preview-box" id="hlPreviewBox" onclick="document.getElementById('hlFileInput').click()">
+            <span id="hlPreviewText">Tap to choose a photo or video</span>
+            <input type="file" id="hlFileInput" accept="image/*,video/*" style="display:none">
+        </div>
+        <div class="hl-modal-actions">
+            <button class="hl-btn-cancel" onclick="closeHighlightModal()">Cancel</button>
+            <button class="hl-btn-save" onclick="saveNewHighlight()">Save</button>
+        </div>
+    </div>
+     </div>
+
+    <div class="ep-modal-overlay" id="editProfileModalOverlay">
+        <div class="ep-modal-box">
+            <div class="ep-top">
+                <button type="button" class="ep-btn-cancel" onclick="closeEditProfileModal()">Cancel</button>
+                <h3>Edit profile</h3>
+                <button type="button" class="ep-btn-save" id="epSaveBtn" onclick="saveProfileDetails()">Save</button>
+            </div>
+            <div class="ep-scroll">
+            <div class="ep-step">
+                <div class="ep-rail"><i></i><u></u></div>
+                <div class="ep-body"><h4>Basics</h4>
+                    <label class="ep-label" for="epBio">Bio</label>
+                    <textarea id="epBio" placeholder="Tell people about yourself" maxlength="160" rows="3"></textarea>
+                    <label class="ep-label" for="epOccupation">Occupation</label>
+                    <input type="text" id="epOccupation" placeholder="e.g. Electrician, Solar installer" maxlength="80" autocomplete="off">
+                </div>
+            </div>
+            <div class="ep-step">
+                <div class="ep-rail"><i></i><u></u></div>
+                <div class="ep-body"><h4>Work &amp; education</h4>
+                    <label class="ep-label">Work</label>
+                    <div id="epWorkList"></div>
+                    <button type="button" class="ep-add-field" id="epAddWork" onclick="epAddWork()">+ Add workplace</button>
+                    <label class="ep-label">Education</label>
+                    <div id="epEduList"></div>
+                    <button type="button" class="ep-add-field" id="epAddEdu" onclick="epAddEdu()">+ Add school</button>
+                </div>
+            </div>
+            <div class="ep-step">
+                <div class="ep-rail"><i></i><u></u></div>
+                <div class="ep-body"><h4>Location</h4>
+                    <label class="ep-label" for="epCity">City</label>
+                    <input type="text" id="epCity" placeholder="e.g. London" maxlength="60" autocomplete="off">
+                    <label class="ep-label" for="epNeighborhood">Neighborhood</label>
+                    <input type="text" id="epNeighborhood" placeholder="e.g. Downtown" maxlength="60" autocomplete="off">
+                </div>
+            </div>
+            <div class="ep-step">
+                <div class="ep-rail"><i></i><u></u></div>
+                <div class="ep-body"><h4>Personal details</h4>
+                    <label class="ep-label" for="epHometown">Hometown</label>
+                    <input type="text" id="epHometown" placeholder="e.g. Kano" maxlength="60" autocomplete="off">
+                    <label class="ep-label" for="epLanguages">Languages</label>
+                    <input type="text" id="epLanguages" placeholder="e.g. Hausa, English" maxlength="80" autocomplete="off">
+                    <label class="ep-label" for="epBirthday">Birthday</label>
+                    <div class="ep-row"><input type="date" id="epBirthday"><select class="ep-vis" id="epVisBirthday" aria-label="Who can see this"><option value="public">Public</option><option value="friends" selected>Friends</option><option value="me">Only me</option></select></div>
+                </div>
+            </div>
+            <div class="ep-step">
+                <div class="ep-rail"><i></i><u></u></div>
+                <div class="ep-body"><h4>Contact info</h4>
+                    <label class="ep-label" for="epEmail">Email</label>
+                    <div class="ep-row"><input type="email" id="epEmail" placeholder="e.g. name@email.com" maxlength="100" autocapitalize="none" autocomplete="off"><select class="ep-vis" id="epVisEmail" aria-label="Who can see this"><option value="public">Public</option><option value="friends">Friends</option><option value="me" selected>Only me</option></select></div>
+                    <label class="ep-label" for="epPhone">Phone</label>
+                    <div class="ep-row"><input type="text" id="epPhone" placeholder="e.g. +234 800 000 0000" maxlength="25" inputmode="tel" autocomplete="off"><select class="ep-vis" id="epVisPhone" aria-label="Who can see this"><option value="public">Public</option><option value="friends">Friends</option><option value="me" selected>Only me</option></select></div>
+                </div>
+            </div>
+            <div class="ep-step">
+                <div class="ep-rail"><i></i><u></u></div>
+                <div class="ep-body"><h4>Links &amp; contact</h4>
+                    <label class="ep-label" for="epWebsite">Website</label>
+                    <input type="text" id="epWebsite" placeholder="e.g. yourbusiness.com" maxlength="120" autocapitalize="none" autocomplete="off">
+                    <label class="ep-label" for="epInstagram">Instagram</label>
+                    <input type="text" id="epInstagram" placeholder="e.g. @yourhandle" maxlength="60" autocapitalize="none" autocomplete="off">
+                    <label class="ep-label" for="epTiktok">TikTok</label>
+                    <input type="text" id="epTiktok" placeholder="e.g. @yourhandle" maxlength="60" autocapitalize="none" autocomplete="off">
+                    <label class="ep-label" for="epFacebook">Facebook</label>
+                    <input type="text" id="epFacebook" placeholder="e.g. your.page" maxlength="80" autocapitalize="none" autocomplete="off">
+                    <label class="ep-label" for="epX">X (Twitter)</label>
+                    <input type="text" id="epX" placeholder="e.g. @yourhandle" maxlength="60" autocapitalize="none" autocomplete="off">
+                    <label class="ep-label" for="epWhatsapp">WhatsApp number</label>
+                    <input type="text" id="epWhatsapp" placeholder="e.g. +1 555 000 0000" maxlength="25" inputmode="tel" autocomplete="off">
+                </div>
+            </div>
+            <div class="ep-step">
+                <div class="ep-rail"><i></i><u></u></div>
+                <div class="ep-body"><h4>Privacy</h4>
+                    <label class="ep-switch-row" for="epPrivate">
+                        <span class="ep-switch-txt"><b>Private profile</b><small>Only your friends can see your posts, showcase, highlights and details. Everyone else sees your photo, name and counts.</small></span>
+                        <input type="checkbox" id="epPrivate" class="ep-switch">
+                    </label>
+                </div>
+            </div>
+            <div class="ep-step">
+                <div class="ep-rail"><i></i></div>
+                <div class="ep-body"><h4>Custom fields</h4>
+                    <div id="epCustomList"></div>
+                    <button type="button" class="ep-add-field" id="epAddField" onclick="epAddCustomField()">+ Add custom field</button>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+<div class="story-viewer-overlay" id="storyViewerOverlay">
+    <div class="sv-stage" id="storyMediaWrap"><div class="sv-cube" id="svCube"></div></div>
+    <template id="svTpl">
+        <div class="sv-face">
+            <div class="sv-media"></div>
+            <div class="sv-scrim sv-scrim-t"></div>
+            <div class="sv-scrim sv-scrim-b"></div>
+            <div class="story-tap-zone story-tap-left" onclick="prevStory()"></div>
+            <div class="story-tap-zone story-tap-right" onclick="nextStory()"></div>
+            <div class="story-header">
+                <div class="nx-av" style="--nx-av:36px;"><img class="sv-av" alt=""></div>
+                <div class="story-user-info">
+                    <span class="story-username"></span>
+                    <span class="story-time"></span>
+                </div>
+                <button class="story-follow-btn" onclick="followFromStory()" style="display:none;">Follow</button>
+                <i class="fa-solid fa-ellipsis-vertical" style="color:#fff; font-size:18px; cursor:pointer; padding:5px;" onclick="openStoryOptionsMenu(event)"></i>
+            </div>
+            <div class="story-footer">
+                <div class="sf-pill">
+                    <button type="button" class="sf-ic sf-share" onclick="shareStory()" aria-label="Share"><svg width="20" height="20" viewBox="0 0 512 512" fill="#fff"><path d="M307 34.8c-11.5 5.1-19 16.6-19 29.2v64H176C78.8 128 0 206.8 0 304c0 112.3 80.1 167.7 94.7 177.2 2.4 1.6 5.2 2.3 8 2.3 8.6 0 15.3-7 15.3-15.3 0-4.1-1.7-8.1-4.6-10.8C93.1 447.2 80 410 80 376c0-66.3 53.7-120 120-120h88v64c0 12.6 7.4 24.1 19 29.2s25 3 34.4-5.4l160-144c6.7-6.1 10.6-14.7 10.6-23.8s-3.8-17.7-10.6-23.8l-160-144c-9.4-8.5-22.9-10.6-34.4-5.4z"/></svg></button>
+                    <input type="text" class="story-reply-input" placeholder="Send message..." autocomplete="off" enterkeyhint="send" oninput="storyReplyChanged()" onfocus="storyReplyFocus()" onblur="storyReplyBlur()" onkeydown="if(event.key==='Enter'){sendStoryReply();}">
+                    <button type="button" class="sf-ic sf-heart" onclick="likeStory()" aria-label="Like"><svg width="20" height="20" viewBox="0 0 24 24" fill="#050505"><path d="M12 21s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.8-8 11-8 11z"/></svg></button>
+                    <button type="button" class="sf-ic sf-send" onclick="sendStoryReply()" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="2.4"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg></button>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+<div class="mx-sheet-ov" id="mxShare" onclick="if(event.target===this)meCloseShare()">
+    <div class="mx-sheet">
+        <div class="mx-sheet-grab"></div>
+        <div class="mx-sheet-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="mxShareQ" type="text" placeholder="Search" autocomplete="off" oninput="meShareRender()"></div>
+        <div class="mx-sheet-grid" id="mxShareGrid"></div>
+        <div class="mx-sheet-apps" id="mxShareApps">
+            <button type="button" class="mxs-app" id="mxShareAddStory" onclick="meShareAddStory()"><span class="mxs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span><span>Add to story</span></button>
+            <button type="button" class="mxs-app" onclick="meShareCopy()"><span class="mxs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></span><span>Copy link</span></button>
+            <button type="button" class="mxs-app" onclick="meShareNative()"><span class="mxs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></span><span>Share</span></button>
+            <button type="button" class="mxs-app" onclick="meShareTo('whatsapp')"><span class="mxs-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.8-.1 1.4z"/></svg></span><span>WhatsApp</span></button>
+            <button type="button" class="mxs-app" onclick="meShareTo('telegram')"><span class="mxs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M21.5 3.3 2.7 10.6c-.9.4-.9 1 0 1.3l4.8 1.5 1.8 5.6c.2.6.1.8.7.8.5 0 .7-.2 1-.5l2.3-2.3 4.8 3.5c.9.5 1.5.2 1.7-.8l3.1-14.7c.3-1.2-.4-1.8-1.4-1.4zM8.6 13.2l9.9-6.2c.5-.3.9-.1.5.2l-8.1 7.3-.3 3.5z"/></svg></span><span>Telegram</span></button>
+            <button type="button" class="mxs-app" onclick="meShareTo('x')"><span class="mxs-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M18.2 2h3.4l-7.4 8.5L23 22h-6.8l-5.3-7-6.1 7H1.4l7.9-9L1 2h7l4.8 6.4zm-1.2 18h1.9L7 3.9H5z"/></svg></span><span>X</span></button>
+        </div>
+        <div class="mx-sheet-send" id="mxShareSend" style="display:none">
+            <input id="mxShareMsg" type="text" placeholder="Write a message…" autocomplete="off" onkeydown="if(event.key==='Enter')meShareSendChat()">
+            <button type="button" onclick="meShareSendChat()">Send</button>
+        </div>
+    </div>
+</div>
+
+<div class="mx-sheet-ov" id="mxFollow" onclick="if(event.target===this)meCloseFollowSheet()">
+    <div class="mx-sheet mx-fs">
+        <div class="mx-sheet-grab"></div>
+        <div class="mx-fs-head">
+            <div class="nx-av" style="--nx-av:56px"><img id="mxFsAv" alt=""></div>
+            <div class="mx-fs-who">
+                <div class="mx-fs-name" id="mxFsName"></div>
+                <div class="mx-fs-user"><span id="mxFsUser"></span><span class="mx-fs-badge" id="mxFsBadge">Following</span></div>
+            </div>
+        </div>
+        <div id="mxFsMain">
+            <div class="mx-fs-note" id="mxFsFriendNote" style="display:none">You follow each other, so you are friends.</div>
+            <button type="button" class="mx-fs-row mx-fs-cf" id="mxFsCF" onclick="meFsToggleCF()"><span class="mx-fs-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span><span class="mx-fs-t"><b id="mxFsCFt">Add to Close Friends</b><i id="mxFsCFs">Share stories with only the people you choose</i></span></button>
+            <button type="button" class="mx-fs-row" onclick="meFsOpenMute()"><span class="mx-fs-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M23 9l-6 6M17 9l6 6"/></svg></span><span class="mx-fs-t"><b>Mute</b><i id="mxFsMuteSub">Hide their posts or stories without unfollowing</i></span><svg class="mx-fs-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a8a8a" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+            <button type="button" class="mx-fs-row" onclick="meFsMessage()"><span class="mx-fs-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span><span class="mx-fs-t"><b>Message</b><i>Send a private message</i></span></button>
+            <button type="button" class="mx-fs-row" onclick="meFsShare()"><span class="mx-fs-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg></span><span class="mx-fs-t"><b>Share this profile</b><i>Send it to friends or add it to your story</i></span></button>
+            <button type="button" class="mx-fs-row" onclick="meFsCopy()"><span class="mx-fs-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span><span class="mx-fs-t"><b>Copy profile link</b><i>Paste it anywhere</i></span></button>
+            <div class="mx-fs-sep"></div>
+            <button type="button" class="mx-fs-row danger" onclick="meFsAsk()"><span class="mx-fs-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff4d6d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M17 8l5 5M22 8l-5 5"/></svg></span><span class="mx-fs-t"><b>Unfollow</b></span></button>
+        </div>
+        <div id="mxFsMutePanel" style="display:none">
+            <div class="mx-fs-q" style="text-align:left;padding:10px 6px 4px">Mute</div>
+            <div class="mx-fs-sub" style="text-align:left;padding:0 6px 10px">They will not be told. You still follow them.</div>
+            <label class="mx-fs-sw"><span class="mx-fs-t"><b>Posts</b><i>Hide their posts from your feed</i></span><input type="checkbox" class="ep-switch" id="mxFsMutePosts" onchange="meFsSetMute('posts',this.checked)"></label>
+            <label class="mx-fs-sw"><span class="mx-fs-t"><b>Stories</b><i>Hide their stories and status updates</i></span><input type="checkbox" class="ep-switch" id="mxFsMuteStories" onchange="meFsSetMute('stories',this.checked)"></label>
+            <button type="button" class="mx-fs-btn" onclick="meFsBack()">Done</button>
+        </div>
+        <div id="mxFsConfirm" style="display:none">
+            <div class="mx-fs-q">Unfollow <span id="mxFsConfirmName"></span>?</div>
+            <div class="mx-fs-sub">Their posts and stories will stop appearing in your feed. If you are friends, the friendship will end too. You can follow again any time.</div>
+            <button type="button" class="mx-fs-btn danger" onclick="meFsUnfollow()">Unfollow</button>
+            <button type="button" class="mx-fs-btn" onclick="meFsBack()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="mx-qr-overlay" id="mxQrOverlay" onclick="if(event.target===this)meCloseQr()">
+    <div class="mx-qr-card">
+        <div class="mx-qr-name" id="mxQrName"></div>
+        <div class="mx-qr-code" id="mxQrCode"></div>
+        <div class="mx-qr-link" id="mxQrLink"></div>
+        <div class="mx-qr-acts">
+            <button type="button" class="btn-slim" onclick="meCopyProfileLink()">Copy link</button>
+            <button type="button" class="btn-slim" onclick="meCloseQr()">Done</button>
+        </div>
+    </div>
+</div>
+</main>
+
+<script>
+(function () {
+    if (location.search.indexOf('embed=1') === -1) { document.write('<script src="me.js?v=13"><\/script>'); return; }
+    var warm = location.search.indexOf('warm=1') > -1;
+    var root = document.getElementById('page-content');
+    var pristine = root.innerHTML.replace(/(?:window\.)?location\.href\s*=(?!=)\s*('[^']*'(?:\+[\w.()]+)?)/g, '__go($1)');
+    var code = null;
+    var RESERVED = { 'if':1, 'for':1, 'while':1, 'switch':1, 'return':1, 'function':1, 'catch':1, 'typeof':1, 'new':1, 'await':1, 'async':1, 'with':1, 'do':1, 'else':1, 'in':1, 'of':1, 'void':1, 'delete':1, 'throw':1, 'try':1, 'var':1, 'let':1, 'const':1, 'class':1, 'this':1, 'super':1, 'yield':1 };
+    function run() {
+        var src = code.replace(/window\.location\.href\s*=(?!=)\s*([^;\n]+);/g, '__go($1);');
+        var names = {};
+        (pristine + src).replace(/on[a-z]+\s*=\s*\\?["']([^"']*)/g, function (m, body) {
+            body.replace(/([A-Za-z_$][\w$]*)\s*\(/g, function (mm, n) { if (!RESERVED[n]) names[n] = 1; return mm; });
+            return m;
+        });
+        var exp = Object.keys(names).map(function (n) {
+            return 'try{if(typeof ' + n + "==='function')window." + n + '=' + n + ';}catch(e){}';
+        }).join('\n');
+        var s = document.createElement('script');
+        s.text = '(function(){\n' + src + '\n' + exp + '\n})();';
+        document.body.appendChild(s);
+        document.body.removeChild(s);
+    }
+    function start() {
+        if (code !== null) { run(); return; }
+        fetch('me.js?v=13').then(function (r) { return r.text(); }).then(function (t) { code = t; run(); });
+    }
+    window.meClose = function () {
+        try { if (window.__meHandlers && window.__meHandlers.destroy) window.__meHandlers.destroy(); } catch (e) {}
+        window.__meHandlers = null;
+        root.innerHTML = pristine;
+    };
+    window.meOpen = function (search) {
+        window.meClose();
+        history.replaceState(null, '', location.pathname + search);
+        start();
+    };
+    window.addEventListener('load', function () { window.__meReady = true; });
+    if (warm) {
+        fetch('me.js?v=13').then(function (r) { return r.text(); }).then(function (t) { code = t; });
+    } else {
+        start();
+    }
+})();
+</script>
+    </body>
+    </html>
