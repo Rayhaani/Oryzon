@@ -4405,6 +4405,7 @@ window.__chatsStoryMatrixDestroy = function () {
        if (srcFilter === 'marketplace' || srcFilter === 'services') rows = rows.filter(r => r.src.toLowerCase() === srcFilter);
         else if (srcFilter === 'unread') rows = rows.filter(r => r.unread);
         rows.sort((a, b) => b.ts - a.ts);
+               if (bizReady && ready[which]) console.log('[BIZ] render', Math.round(performance.now()), which, rows.map(r => (r.t._biz ? 'BIZ:' : 'VC:') + String(r.t.id).slice(-12) + ':' + String(r.t.lastText || '').slice(0, 15)).join(' | ') || '(none)', '| bizRooms', bizRooms.buying.size, bizRooms.selling.size, '| rawVC', rawThreads.buying.size, rawThreads.selling.size);
 
                if (!bizReady || !ready[which]) console.log('[BIZ]', Math.round(performance.now()), 'showing Loading | bizReady', bizReady, '| ready', JSON.stringify(ready), '| which', which);
         if (!bizReady || !ready[which]) { box.innerHTML = '<div class="inbox-empty-state">Loading...</div>'; return; }   // wait for BOTH sources so no stale / empty list flashes
