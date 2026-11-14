@@ -4405,6 +4405,7 @@ window.__chatsStoryMatrixDestroy = function () {
         else if (srcFilter === 'unread') rows = rows.filter(r => r.unread);
         rows.sort((a, b) => b.ts - a.ts);
 
+               if (!bizReady || !ready[which]) console.log('[BIZ]', Math.round(performance.now()), 'showing Loading | bizReady', bizReady, '| ready', JSON.stringify(ready), '| which', which);
         if (!bizReady || !ready[which]) { box.innerHTML = '<div class="inbox-empty-state">Loading...</div>'; return; }   // wait for BOTH sources so no stale / empty list flashes
         if (!rows.length) {
             box.innerHTML = `<div class="inbox-empty-state">${ready[which] ? (srcFilter !== 'all' ? 'No chats match this filter' : 'No chats yet') : 'Loading...'}</div>`;
@@ -4528,6 +4529,7 @@ function updateChatsPerf() {
     }
 
     async function startListeners() {
+              console.log('[BIZ]', Math.round(performance.now()), 'startListeners | unsubs', unsubs.length, '| starting', starting, '| myId', window.myId, '| db', typeof db, '| authUser', !!(window.chatsAuth && window.chatsAuth.currentUser));
         if (unsubs.length || starting || !window.myId || typeof db === 'undefined') return;
         starting = true;
         const a = window.chatsAuth;
@@ -4540,6 +4542,7 @@ function updateChatsPerf() {
             const map = new Map();
             snap.forEach(doc => { const d = doc.data(); if (d.vendorId && d.customerId) map.set(doc.id, { id: doc.id, ...d }); });
             threads[kind] = map;
+                       console.log('[BIZ]', Math.round(performance.now()), 'vendorChats snapshot', kind, 'size', snap.size, 'fromCache', !!(snap.metadata && snap.metadata.fromCache));
             mergeBiz(kind);
            updateFabBadge();
            updateToolsTab();
@@ -4554,6 +4557,7 @@ function updateChatsPerf() {
         unsubs.push(db.collection('vendorChats').where('customerId', '==', window.myId).onSnapshot(apply('buying'), onErr('buying')));
         unsubs.push(db.collection('vendorChats').where('vendorId', '==', window.myId).onSnapshot(apply('selling'), onErr('selling')));
         unsubs.push(db.collection('personalChats').where('members', 'array-contains', window.myId).onSnapshot(snap => {
+                     console.log('[BIZ]', Math.round(performance.now()), 'personalChats snapshot size', snap.size, 'fromCache', !!(snap.metadata && snap.metadata.fromCache));
             const me = window.myId, b = new Map(), sl = new Map();
             snap.forEach(doc => {
                 const x = doc.data();
