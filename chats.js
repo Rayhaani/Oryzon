@@ -4179,6 +4179,7 @@ window.__chatsStoryMatrixDestroy = function () {
     let labelTimer = null;
     const ready = { buying: false, selling: false };
     const threads = { buying: new Map(), selling: new Map() };
+       const rawThreads = { buying: new Map(), selling: new Map() };
     const metaCache = new Map();
     const lastCache = new Map();
     const lastPending = new Set();
@@ -4262,14 +4263,14 @@ window.__chatsStoryMatrixDestroy = function () {
     });
     window.addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.nxMkChat === 'close' && bizChat.cur && bizChat.cur.open) bizClose(true); });
 
-    function mergeBiz(kind) {
-        const m = threads[kind], other = kind === 'buying' ? 'vendorId' : 'customerId';
-        Array.from(m.keys()).forEach(k => { if (m.get(k)._biz) m.delete(k); });
+        function mergeBiz(kind) {
+        const m = new Map(rawThreads[kind]), other = kind === 'buying' ? 'vendorId' : 'customerId';
         bizRooms[kind].forEach((t, id) => {
-            Array.from(m.entries()).forEach(([k, o]) => { if (!o._biz && o[other] === t[other] ) m.delete(k); });
+            Array.from(m.entries()).forEach(([k, o]) => { if (!o._biz && o[other] === t[other]) m.delete(k); });
             m.set(id, t);
         });
-    }
+        threads[kind] = m;
+       }
 
 
     const $ = id => document.getElementById(id);
@@ -4541,7 +4542,7 @@ function updateChatsPerf() {
         const apply = kind => snap => {
             const map = new Map();
             snap.forEach(doc => { const d = doc.data(); if (d.vendorId && d.customerId) map.set(doc.id, { id: doc.id, ...d }); });
-            threads[kind] = map;
+                        rawThreads[kind] = map;
                        console.log('[BIZ]', Math.round(performance.now()), 'vendorChats snapshot', kind, 'size', snap.size, 'fromCache', !!(snap.metadata && snap.metadata.fromCache));
             mergeBiz(kind);
            updateFabBadge();
@@ -4567,6 +4568,7 @@ function updateChatsPerf() {
                 if (x.marketVendor === me) sl.set(doc.id, t);
             });
             bizRooms.buying = b; bizRooms.selling = sl;
+                       console.log('[BIZ] rooms', snap.size, 'buying', b.size, 'selling', sl.size, '|', snap.docs.map(d => String(d.id).slice(-14) + ':' + (d.data().lastMessageTime ? 'ok' : 'NO-TIME')).join(', '));
             mergeBiz('buying'); mergeBiz('selling');
             bizReady = true;
             updateFabBadge(); updateToolsTab(); scheduleRender();
@@ -4684,7 +4686,7 @@ function updateChatsPerf() {
         unsubs.forEach(u => { try { u && u(); } catch (e) {} });
         unsubs = []; starting = false;
         clearTimeout(renderTimer); clearTimeout(labelTimer);
-        threads.buying.clear(); threads.selling.clear();
+                threads.buying.clear(); threads.selling.clear(); rawThreads.buying.clear(); rawThreads.selling.clear();
         ready.buying = false; ready.selling = false;
         document.documentElement.classList.remove('biz-mode');
         mode = 'normal';
