@@ -4569,7 +4569,7 @@ function updateChatsPerf() {
                 if (x.marketVendor === me) sl.set(doc.id, t);
             });
             bizRooms.buying = b; bizRooms.selling = sl;
-                       console.log('[BIZ] rooms', snap.size, 'buying', b.size, 'selling', sl.size, '|', snap.docs.map(d => String(d.id).slice(-14) + ':' + (d.data().lastMessageTime ? 'ok' : 'NO-TIME')).join(', '));
+                        console.log('[BIZ] rooms', snap.size, 'buying', b.size, 'selling', sl.size, '|', snap.docs.filter(d => String(d.id).indexOf('~biz~') > -1).map(d => { const x = d.data(); return d.id + ' src=' + x.source + ' mv=' + x.marketVendor + ' mb=' + x.marketBuyer + ' t=' + !!x.lastMessageTime + ' members=' + JSON.stringify(x.members) + ' pending=' + d.metadata.hasPendingWrites; }).join(' || '));
             mergeBiz('buying'); mergeBiz('selling');
             bizReady = true;
             updateFabBadge(); updateToolsTab(); scheduleRender();
