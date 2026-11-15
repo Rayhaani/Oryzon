@@ -286,10 +286,10 @@
     var fired; try { fired = JSON.parse(localStorage.getItem('nexusMedFired') || '{}'); } catch (e) { fired = {}; }
     Object.keys(fired).forEach(function (k) { if (k.indexOf(day) !== 0) delete fired[k]; });
     meds.forEach(function (m) {
-      var p = String(m.time || '').split(':'); if (p.length < 2) return; var base = (+p[0]) * 60 + (+p[1]);
-      if (m.freq === 'Weekly' && new Date(m.id).getDay() !== now.getDay()) return;
-      offsets(m.freq).forEach(function (off, i) {
-        var due = (base + off) % 1440, key = day + '|' + m.id + '|' + i;
+      var days = window.medDays ? window.medDays(m) : null; if (days && days.indexOf(now.getDay()) < 0) return;
+      (window.medTimes ? window.medTimes(m) : []).forEach(function (t, i) {
+        var p = String(t).split(':'); if (p.length < 2) return;
+        var due = (+p[0]) * 60 + (+p[1]), key = day + '|' + m.id + '|' + i;
         if (!fired[key] && mins >= due && mins - due <= 30) {      // due now (30-min grace if the app was just opened)
           fired[key] = 1; ring(m, pad(Math.floor(due / 60)) + ':' + pad(due % 60));
         }
@@ -491,7 +491,7 @@
   var bgOn = function () { try { return localStorage.getItem('nexusBgReminders') === '1'; } catch (e) { return false; } };
   function reminderPayload() {
     var meds = []; try { meds = JSON.parse(localStorage.getItem('nexusMeds') || '[]'); } catch (e) {}
-    return { enabled: true, tzOffsetMin: -new Date().getTimezoneOffset(), reminders: meds.map(function (m) { return { id: String(m.id), time: m.time, freq: m.freq, startDow: new Date(m.id).getDay() }; }) };
+    return { enabled: true, tzOffsetMin: -new Date().getTimezoneOffset(), reminders: meds.map(function (m) { return { id: String(m.id), time: m.time, freq: m.freq, startDow: new Date(m.id).getDay(), times: window.medTimes ? window.medTimes(m) : [m.time], days: window.medDays ? window.medDays(m) : null }; }) };
   }
   async function syncReminders() { if (bgOn()) try { await api('/health/reminders/sync', { body: reminderPayload() }); } catch (e) {} }
   function paintBg() { var b = $('nxBgBtn'); if (b) b.textContent = bgOn() ? 'Turn off background reminders' : 'Turn on background reminders'; }
