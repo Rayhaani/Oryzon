@@ -505,7 +505,7 @@
       var token = await firebase.messaging().getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
       await api('/health/push/token', { body: { token: token } });
       localStorage.setItem('nexusBgReminders', '1'); await syncReminders(); paintBg(); toast('Background reminders on');
-    } catch (e) { toast('Could not turn on background reminders.'); }
+        } catch (e) { toast('Could not turn on: ' + ((e && (e.code || e.message)) || 'unknown')); }
   };
   ['addMedReminder', 'deleteMedReminder'].forEach(function (n) { var f = window[n]; if (typeof f === 'function') window[n] = function () { var r = f.apply(this, arguments); setTimeout(syncReminders, 50); return r; }; });
   var _om2 = window.openMeds; window.openMeds = function () { var r = _om2.apply(this, arguments); paintBg(); return r; };
