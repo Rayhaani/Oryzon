@@ -1022,18 +1022,55 @@ async function askNexusAiStructured(extractedText, fileName, lang) {
         function openMeds() { renderMedsList(); document.getElementById('medsModal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
         function closeMeds() { document.getElementById('medsModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
         function getMeds() { return JSON.parse(localStorage.getItem('nexusMeds') || '[]'); }
+        /* Each dose has its own time (the way Medisafe, MyTherapy and Apple Health do it). Weekly = choose the days. */
+        const NX_DOSES = { 'Once daily': ['08:00'], 'Twice daily': ['08:00', '20:00'], 'Three times daily': ['08:00', '14:00', '20:00'], 'Weekly': ['08:00'] };
+        const NX_DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        function medTimes(m) {
+            if (Array.isArray(m.times) && m.times.length) return m.times;
+            const p = String(m.time || '').split(':'); if (p.length < 2) return [];
+            const base = (+p[0]) * 60 + (+p[1]), offs = m.freq === 'Twice daily' ? [0, 720] : m.freq === 'Three times daily' ? [0, 480, 960] : [0];   // reminders saved before dose times existed
+            return offs.map(o => { const t = (base + o) % 1440; return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); });
+        }
+        function medDays(m) {
+            if (Array.isArray(m.days) && m.days.length) return m.days;
+            return m.freq === 'Weekly' ? [new Date(m.id).getDay()] : null;
+        }
+        function nxMedBuild() {
+            const f = document.getElementById('medFreq'), box = document.getElementById('medTimes'), dbox = document.getElementById('medDays');
+            if (!f || !box || !dbox) return;
+            const defs = NX_DOSES[f.value] || ['08:00'];
+            const prev = JSON.parse(box.dataset.defs || '[]'), old = Array.from(box.querySelectorAll('input')).map((inp, i) => inp.value !== prev[i] ? inp.value : '');   // keep only times the user typed
+            box.dataset.defs = JSON.stringify(defs);
+            box.innerHTML = defs.map((d, i) => `<label class="nx-dose"><span>${defs.length > 1 ? 'Dose ' + (i + 1) : 'Time'}</span><input id="${i ? 'medTime' + (i + 1) : 'medTime'}" type="time" class="nx-field" value="${old[i] || d}"></label>`).join('');
+            const weekly = f.value === 'Weekly';
+            dbox.classList.toggle('hidden', !weekly);
+            if (weekly && !dbox.children.length) dbox.innerHTML = NX_DOW.map((n, i) => `<button type="button" class="nx-day" data-d="${i}" aria-pressed="false" onclick="this.setAttribute('aria-pressed', this.getAttribute('aria-pressed') !== 'true')">${n}</button>`).join('');
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', nxMedBuild); else nxMedBuild();
         function addMedReminder() {
             const name = document.getElementById('medName').value.trim();
-            const time = document.getElementById('medTime').value;
             const freq = document.getElementById('medFreq').value;
-            if (!name || !time) { showToast('Please add a medication name and time.'); return; }
+            const times = Array.from(document.querySelectorAll('#medTimes input')).map(i => i.value);
+            if (!name) { showToast('Please add a medication name.'); return; }
+            if (times.some(t => !t)) { showToast('Please set a time for every dose.'); return; }
+            if (new Set(times).size !== times.length) { showToast('Each dose needs a different time.'); return; }
+            times.sort();
+            let days = null;
+            if (freq === 'Weekly') {
+                days = Array.from(document.querySelectorAll('#medDays [aria-pressed="true"]')).map(b => +b.dataset.d);
+                if (!days.length) { showToast('Choose at least one day of the week.'); return; }
+            }
             const meds = getMeds();
-            meds.push({ id: Date.now(), name, time, freq });
+            const m = { id: Date.now(), name, time: times[0], times, freq };
+            if (days) m.days = days;
+            meds.push(m);
             localStorage.setItem('nexusMeds', JSON.stringify(meds));
-            document.getElementById('medName').value = ''; document.getElementById('medTime').value = '';
+            document.getElementById('medName').value = '';
+            document.getElementById('medTimes').innerHTML = ''; nxMedBuild();
+            document.querySelectorAll('#medDays .nx-day').forEach(b => b.setAttribute('aria-pressed', 'false'));
             renderMedsList();
             showToast(`Reminder set for ${name}`);
-        }
+               }
         function deleteMedReminder(id) {
             localStorage.setItem('nexusMeds', JSON.stringify(getMeds().filter(m => m.id !== id)));
             renderMedsList();
@@ -1046,7 +1083,7 @@ async function askNexusAiStructured(extractedText, fileName, lang) {
                 <div class="nx-list-item">
                     <div>
                         <div class="text-[13px] font-bold text-white">${m.name}</div>
-                        <div class="text-[12px] text-gray-500">${m.freq} · ${m.time}</div>
+                         <div class="text-[12px] text-gray-500">${m.freq} · ${(m.freq === 'Weekly' && medDays(m) ? medDays(m).map(x => NX_DOW[x]).join(', ') + ' · ' : '')}${medTimes(m).join(', ')}</div>
                     </div>
                     <button onclick="deleteMedReminder(${m.id})" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
                 </div>`).join('');
