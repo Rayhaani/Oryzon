@@ -307,7 +307,7 @@
   setTimeout(tick, 1500);
   /* the reminders note must not lie after permission is granted */
   var _om = window.openMeds;
-  if (_om) window.openMeds = function () { _om.apply(this, arguments); var n = $('nxRemNote'); if (n && 'Notification' in window && Notification.permission === 'granted') n.textContent = 'Reminders ring while Nexus is open in your browser. Notifications are allowed.'; };
+    if (_om) window.openMeds = function () { _om.apply(this, arguments); var n = $('nxRemNote'); if (n && 'Notification' in window && Notification.permission === 'granted' && n.firstChild && n.firstChild.nodeType === 3) n.firstChild.nodeValue = 'Reminders ring while Nexus is open in your browser. Notifications are allowed. '; };
 })();
 
 /* ============================================================
