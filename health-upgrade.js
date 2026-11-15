@@ -318,7 +318,7 @@
   'use strict';
   if (window.__nxHealthUp3) return; window.__nxHealthUp3 = 1;
   var BACKEND = 'https://oryzon-backend-ed1q.onrender.com';
-  var VAPID_KEY = '';      // ← Firebase console → Project settings → Cloud Messaging → Web Push certificates → "Key pair". Empty = background reminders stay off.
+  var VAPID_KEY = 'BAvRAyWB-6x0-UBgArEIUTngdH3kxHWHMoP5QHC7Kz6cVCZSQZMignJx1dzZ_rHlYjrFHfkpaDsFnGz0qs2PSTI';      // ← Firebase console → Project settings → Cloud Messaging → Web Push certificates → "Key pair". Empty = background reminders stay off.
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var toast = function (m) { try { window.showToast(m); } catch (e) {} };
