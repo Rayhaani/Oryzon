@@ -15,7 +15,8 @@ const messaging = firebase.messaging();
 
 // Background notification handler
 messaging.onBackgroundMessage((payload) => {
-    const { title, body } = payload.notification;
+       if (payload.notification) return;
+    const { title, body } = payload.data || {}; 
     self.registration.showNotification(title, {
         body: body,
         icon: '/icon-192.png',
@@ -27,6 +28,7 @@ messaging.onBackgroundMessage((payload) => {
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
+        if (event.notification.data && event.notification.data.FCM_MSG) return;
     event.notification.close();
     const url = event.notification.data && event.notification.data.url 
         ? event.notification.data.url 
