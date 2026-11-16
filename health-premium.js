@@ -46,8 +46,8 @@
   function ensureUI() {
     var pc = $('page-content'); if (!pc) return; injectCss();
     if (!$('nxPrem')) pc.insertAdjacentHTML('beforeend', SHELL);
-    var anchor = document.querySelector('.feature-card[onclick*="openProfiles"]');
-    if (anchor && !document.querySelector('[data-nx-prem]')) anchor.insertAdjacentHTML('beforebegin', '<div class="feature-card" data-nx-prem="1" style="--card-accent:#fde08d;" onclick="nxPremium.open()" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\')nxPremium.open()"><div class="fi-box"><i class="fa-solid fa-gem" style="color:#fde08d"></i></div><h3 class="futuristic-font text-[13px] font-bold">Nexus Health+</h3><p class="text-[12px] text-gray-500 mt-1">Nutrition, Meal Scan &amp; AI Coach</p></div>');
+        var anchor = document.querySelector('.nxt-tile[onclick*="openTriage"]') || document.querySelector('.nxt-tile');
+    if (anchor && !document.querySelector('[data-nx-prem]')) anchor.insertAdjacentHTML('beforebegin', '<button type="button" class="nxt-card nxt-tile" data-nx-prem="1" style="grid-column:1/-1" onclick="nxPremium.open()"><span class="nxt-well"><i class="fa-solid fa-gem" style="color:#fde08d"></i></span><span class="nxt-tt"><b>Nexus Health+</b><span class="nxt-ts">Nutrition, Meal Scan &amp; AI Coach</span></span></button>');
   }
 
   /* ---------- tabs ---------- */
