@@ -77,7 +77,7 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js',
-            'nexus-core.js', 'currency-data.js', 'services.js'
+            'nexus-core.js', 'currency-data.js', 'nx-shared.js', 'services.js'
         ],
         'chats.html': [
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
@@ -190,7 +190,7 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-            'shop.js'
+            'nx-shared.js', 'shop.js'
         ],
         'products-page.html': [
             'https://cdn.tailwindcss.com',
@@ -321,6 +321,11 @@
         'health.css'
     ],
 }; 
+    // CSS ɗin da ke <head> a asali amma ba cikin #page-content ba.
+    const PAGE_SHARED_CSS = {
+        'services.html': ['nx-shared.css'],
+        'shop.html': ['nx-shared.css']
+    };
     const loadedStyles = new Set();
 
     const CONTENT_SELECTOR = '#page-content';
@@ -342,6 +347,7 @@
     if (PAGE_STYLES[currentPath]) {
     (Array.isArray(PAGE_STYLES[currentPath]) ? PAGE_STYLES[currentPath] : [PAGE_STYLES[currentPath]]).forEach(h => loadedStyles.add(h));
     }
+       if (PAGE_SHARED_CSS[currentPath]) PAGE_SHARED_CSS[currentPath].forEach(h => loadedStyles.add(h));
     // Preload sauran pages' SHARED assets kadai (fonts, fontawesome, da
     // sauransu) a background tun farko — OWN CSS file na kowace page (item
     // na KARSHE a jerinta a PAGE_STYLES) BA A preload shi nan take ba.
@@ -594,7 +600,7 @@
             const _stList = PAGE_STYLES[targetPath] ? (Array.isArray(PAGE_STYLES[targetPath]) ? PAGE_STYLES[targetPath] : [PAGE_STYLES[targetPath]]) : [];
             _stList.slice(0, -1).forEach(h => { loadStylesheetOnce(h).catch(() => {}); });
             await Promise.all([
-                Promise.race([loadStylesheetsAll(_stList.slice(-1)), new Promise(r => setTimeout(r, 2500))]),
+               Promise.race([loadStylesheetsAll(_stList.slice(-1).concat(PAGE_SHARED_CSS[targetPath] || [])), new Promise(r => setTimeout(r, 2500))]),
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
             ]).catch(e => console.error(e));
 
@@ -703,7 +709,7 @@ currentContentEl.style.removeProperty('visibility');
                 .catch(function () { prefetchedPaths.delete(targetPath); });
         }
 
-        const assets = [].concat(PAGE_SCRIPTS[targetPath] || [], PAGE_STYLES[targetPath] || []);
+                const assets = [].concat(PAGE_SCRIPTS[targetPath] || [], PAGE_STYLES[targetPath] || [], PAGE_SHARED_CSS[targetPath] || []);
         assets.forEach(function (url) {
             if (!url || loadedScripts.has(url) || loadedStyles.has(url)) return;
             const link = document.createElement('link');
