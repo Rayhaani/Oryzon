@@ -55,7 +55,7 @@
   function render() {
     $('nxpTabs').innerHTML = TABS.map(function (t) { return '<button type="button" class="nxp-tab' + (S.tab === t[0] ? ' on' : '') + '" onclick="nxPremium.tab(\'' + t[0] + '\')">' + t[1] + '</button>'; }).join('');
     var st = S.st; $('nxpSub').textContent = st ? (st.plan === 'free' ? 'Free plan' : (st.plan === 'plus' ? 'Plus' : 'Premium') + (st.status === 'trialing' ? ' · trial' : '')) : '';
-    if (!st) { $('nxpBody').innerHTML = '<div class="nxp-sub">Loading…</div>'; return; }
+        if (!st) { $('nxpBody').innerHTML = S.err ? '<div class="nxp-card"><div class="nxp-sub">Could not load Nexus Health+ (' + esc(S.err) + ').</div><button class="nxp-btn" onclick="nxPremium.open()">Try again</button></div>' : '<div class="nxp-sub">Loading…</div>'; return; }
     if (S.tab === 'plans') plans(); else if (S.tab === 'nutrition') nutrition(); else coach();
   }
 
@@ -136,7 +136,7 @@
   }
 
   /* ---------- actions ---------- */
-  async function refresh() { try { S.st = await api('/premium/status'); } catch (e) { if (e.status === 401) toast(ERR.login); S.st = S.st || null; } render(); }
+    async function refresh() { S.err = null; try { S.st = await api('/premium/status'); } catch (e) { if (e.status === 401) toast(ERR.login); S.err = e.status ? ('error ' + e.status) : 'no connection'; } render(); }
   window.nxPremium = {
     open: async function () { ensureUI(); $('nxPrem').classList.remove('hidden'); document.body.style.overflow = 'hidden'; S.day = null; S.fast = null; S.ins = null; render(); await refresh(); },
     close: function () { var m = $('nxPrem'); if (m) m.classList.add('hidden'); document.body.style.overflow = 'auto'; },
