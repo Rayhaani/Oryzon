@@ -231,6 +231,9 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
             'health.js',
+            'health-upgrade.js',
+            'health-care.js',
+            'health-premium.js',
             'footer.js' 
         ],
     };
