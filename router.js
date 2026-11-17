@@ -109,6 +109,7 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
+            'chat-composer.js',
            'media-upload.js?v=20261020',
            'post-card-template.js',
             'group.js?v=20261020'
@@ -332,6 +333,7 @@
     const loadedScripts = new Set();
     const registeredPages = {}; // path -> { init, destroy }
     let currentPath = normalizePath(window.location.pathname);
+   let _nxPrevPath = null; // page we came from (Back from group.html -> chats.html)
     let isNavigating = false;
     const pageCache = new Map();
 
@@ -681,6 +683,7 @@ currentContentEl.style.removeProperty('visibility');
                     window.history.replaceState({ nexusRoute: targetPath }, '', url);
                 }
             }
+             _nxPrevPath = currentPath;
             currentPath = targetPath;
 
             // Load the page's script bundle (once), then init it.
