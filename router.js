@@ -324,7 +324,7 @@
     // CSS ɗin da ke <head> a asali amma ba cikin #page-content ba.
     const PAGE_SHARED_CSS = {
         'services.html': ['nx-shared.css'],
-        'shop.html': ['nx-shared.css']
+        'shop.html': ['nx-shared.css', 'nx-btn.css', 'mk-ui.css']
     };
     const loadedStyles = new Set();
 
@@ -456,7 +456,10 @@
             link.onerror = function () {
                 reject(new Error('Failed to load stylesheet: ' + href));
             };
-            document.head.appendChild(link);
+                const _firstShared = /^(shop|services)\.css/.test(href)
+                ? document.head.querySelector('link[rel="stylesheet"][href*="nx-shared.css"],link[rel="stylesheet"][href*="nx-btn.css"],link[rel="stylesheet"][href*="mk-ui.css"]')
+                : null;
+            if (_firstShared) document.head.insertBefore(link, _firstShared); else document.head.appendChild(link);
         });
     }
 
