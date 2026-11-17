@@ -825,24 +825,25 @@ currentContentEl.style.removeProperty('visibility');
         if (window.NexusOverlay && window.NexusOverlay.isOpen && window.NexusOverlay.isOpen()) return;
        if (document.getElementById('mediaViewer')) return;
 
+               // Back from group.html ALWAYS goes to chats.html (the group list), then one more
+        // back goes home. This must run BEFORE the poppedPath check below, because the
+        // popped history entry is "social.html" (chats -> group uses replaceState).
+        if (currentPath === 'group.html') {
+            navigateTo('chats.html', { pushHistory: false }).then(function () {
+                window.history.pushState(
+                    { nexusRoute: 'chats.html' },
+                    '',
+                    new URL('chats.html', window.location.href).href
+                );
+            });
+            return;
+        }
+
         const poppedPath = (e.state && e.state.nexusRoute) || normalizePath(window.location.pathname);
         const wasOnHome = (currentPath === 'social.html');
 
         if (poppedPath !== 'social.html') {
-            // group.html sabon exception: back daga group KOYAUSHE ya kai
-            // chats.html kai tsaye (ba social.html ba), sannan mu sa
-            // dummy entry domin danna back na gaba ya tsaya a chats.html,
-            // ba ya wuce ta zuwa social.html.
-            if (currentPath === 'group.html') {
-                navigateTo('chats.html', { pushHistory: false }).then(function () {
-                    window.history.pushState(
-                        { nexusRoute: 'chats.html' },
-                        '',
-                        new URL('chats.html', window.location.href).href
-                    );
-                });
-                return;
-            }
+            
             // Ko da menene aka samu a history state, Instagram-style back
             // koyaushe ya kai mutum HOME — ba jerin sauran pages ba.
             navigateTo('social.html', { pushHistory: false }).then(function () {
