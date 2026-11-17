@@ -248,7 +248,7 @@
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
         'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap',
         'https://fonts.googleapis.com/css2?family=Syncopate:wght@700&display=swap',
-        'social.css'
+         'social.css?v=2'
     ],
     'services.html': [
         'https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap',
