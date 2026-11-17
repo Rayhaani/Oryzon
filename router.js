@@ -630,7 +630,7 @@
             const _stList = PAGE_STYLES[targetPath] ? (Array.isArray(PAGE_STYLES[targetPath]) ? PAGE_STYLES[targetPath] : [PAGE_STYLES[targetPath]]) : [];
             _stList.slice(0, -1).forEach(h => { loadStylesheetOnce(h).catch(() => {}); });
             await Promise.all([
-                Promise.race([Promise.all(_stList.slice(-1).concat(PAGE_SHARED_CSS[targetPath] || []).map(loadStylesheetDeferred)), new Promise(r => setTimeout(r, 2500))]),
+                Promise.race([Promise.all(_stList.slice(-1).concat(PAGE_SHARED_CSS[targetPath] || []).map(loadStylesheetDeferred)), new Promise(r => setTimeout(r, 12000))]),
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
             ]).catch(e => console.error(e));
 
