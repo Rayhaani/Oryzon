@@ -468,6 +468,31 @@
     return Promise.all((Array.isArray(list) ? list : [list]).map(loadStylesheetOnce));
    }
 
+       // CSS na target page: yana saukewa ya gama loda amma a KASHE (media="not all"),
+    // domin kada ya shafi current page kafin swap. enableDeferredCss() yana kunna shi a lokacin swap.
+    const _deferredCss = [];
+    function loadStylesheetDeferred(href) {
+        return new Promise(function (resolve) {
+            if (!href) { resolve(); return; }
+            const pending = Array.prototype.find.call(document.querySelectorAll('link[rel="stylesheet"]'), function (l) { return l.getAttribute('href') === href && l.media === 'not all'; });
+            if (pending) { _deferredCss.push(pending); resolve(); return; }
+            if (loadedStyles.has(href)) { resolve(); return; }
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href;
+            link.media = 'not all';
+            link.onload = function () { loadedStyles.add(href); resolve(); };
+            link.onerror = function () { resolve(); };
+            const _fs = /^(shop|services)\.css/.test(href)
+                ? document.head.querySelector('link[rel="stylesheet"][href*="nx-shared.css"],link[rel="stylesheet"][href*="nx-btn.css"],link[rel="stylesheet"][href*="mk-ui.css"]')
+                : null;
+            if (_fs) document.head.insertBefore(link, _fs); else document.head.appendChild(link);
+            _deferredCss.push(link);
+        });
+    }
+    function enableDeferredCss() {
+        _deferredCss.splice(0).forEach(function (l) { l.media = 'all'; });
+    }
    // Kowace shigarwa a PAGE_STYLES tana da nata CSS file a matsayin
    // ITEM NA KARSHE a array (misali 'social.css', 'chats.css'). Sauran
    // items (Google Fonts, FontAwesome, da sauransu) ana ajiye su domin
@@ -603,7 +628,7 @@
             const _stList = PAGE_STYLES[targetPath] ? (Array.isArray(PAGE_STYLES[targetPath]) ? PAGE_STYLES[targetPath] : [PAGE_STYLES[targetPath]]) : [];
             _stList.slice(0, -1).forEach(h => { loadStylesheetOnce(h).catch(() => {}); });
             await Promise.all([
-               Promise.race([loadStylesheetsAll(_stList.slice(-1).concat(PAGE_SHARED_CSS[targetPath] || [])), new Promise(r => setTimeout(r, 2500))]),
+                Promise.race([Promise.all(_stList.slice(-1).concat(PAGE_SHARED_CSS[targetPath] || []).map(loadStylesheetDeferred)), new Promise(r => setTimeout(r, 2500))]),
                 preloadScript ? loadScriptOnce(preloadScript) : Promise.resolve()
             ]).catch(e => console.error(e));
 
@@ -624,6 +649,7 @@
 
            unloadPageOwnCss(currentPath);
 currentContentEl.innerHTML = newContent.innerHTML;
+enableDeferredCss();
 currentContentEl.style.removeProperty('visibility'); 
 
             // YANZU ne muke fita daga immersive-mode — card/video na
