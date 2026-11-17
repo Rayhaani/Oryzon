@@ -827,6 +827,15 @@ currentContentEl.style.removeProperty('visibility');
 
         const poppedPath = (e.state && e.state.nexusRoute) || normalizePath(window.location.pathname);
         const wasOnHome = (currentPath === 'social.html');
+                // Back from a group opened from the chats list returns to chats.html (not social.html).
+        // chats -> group REPLACES the history entry, so the entry underneath is social.html and the
+        // generic rule below used to send the user home. A group opened from anywhere else keeps the old behaviour.
+        if (currentPath === 'group.html' && (_nxPrevPath === 'chats.html' || _nxPrevPath === null)) {
+            navigateTo('chats.html', { pushHistory: false }).then(function () {
+                window.history.pushState({ nexusRoute: 'chats.html' }, '', new URL('chats.html', window.location.href).href);
+            });
+            return;
+        }
 
         if (poppedPath !== 'social.html') {
             // group.html sabon exception: back daga group KOYAUSHE ya kai
