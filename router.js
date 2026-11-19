@@ -84,7 +84,7 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
             'footer.js?v=4',
-            'chats.js?v=1'
+            'chats.js?v=2'
         ],
         // chat-interior.html yana bukatar firebase compat SDKs (iri daya
         // da chats.html, 10.7.1, domin kaucewa "Firebase already defined"
@@ -883,7 +883,7 @@ currentContentEl.style.removeProperty('visibility');
     window.history.replaceState({ nexusRoute: currentPath }, '', window.location.href);
     if (currentPath === 'social.html') { _armHomeBackBuffer(); }
    (function () {
-    function nxLoadOverlay() { loadScriptOnce('nx-overlay.js?v=1'); }
+    function nxLoadOverlay() { loadScriptOnce('nx-overlay.js?v=2'); }
     if (document.body) nxLoadOverlay();
     else document.addEventListener('DOMContentLoaded', nxLoadOverlay);
 })();
