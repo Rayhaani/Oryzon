@@ -829,7 +829,7 @@ currentContentEl.style.removeProperty('visibility');
                // Back from group.html ALWAYS goes to chats.html (the group list), then one more
         // back goes home. This must run BEFORE the poppedPath check below, because the
         // popped history entry is "social.html" (chats -> group uses replaceState).
-        if (currentPath === 'group.html') {
+            if (currentPath === 'group.html' || currentPath === 'pages.html' || currentPath === 'channels.html') {
             navigateTo('chats.html', { pushHistory: false }).then(function () {
                 window.history.pushState(
                     { nexusRoute: 'chats.html' },
