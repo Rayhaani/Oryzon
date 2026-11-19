@@ -66,8 +66,7 @@ function toggleVideoSound(event, element) {
 let timelineUnsub = null;
 function loadTimelinePosts() {
     const timelineArea = document.getElementById('timeline-area');
-    { const _tu = viewedProfileUser && viewedProfileUser.username; if (_tu && !meRelReady(_tu)) { meViewerRel(_tu).then(function () { loadTimelinePosts(); }); return; } }
-    
+        { const _tu = viewedProfileUser && viewedProfileUser.username; if (_tu && !meRelReady(_tu)) { meViewerRel(_tu).then(function (v) { if (v === 'friend') loadTimelinePosts(); }); } }
     if (!viewedProfileUser || !viewedProfileUser.username) {
         timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Loading timeline...</p>';
         return;
@@ -79,7 +78,7 @@ function loadTimelinePosts() {
         mePostsQ(viewedProfileUser.username).orderBy("timestamp", "desc"),
         db.collection('posts').where("username", "==", viewedProfileUser.username).orderBy("timestamp", "desc"),
         snapshot => {
-            
+            timelineArea.innerHTML = '';   // every snapshot re-draws the list (before, posts were added again and again)  
             let hasPosts = false;
             snapshot.forEach(doc => {
                 const post = doc.data();
@@ -87,56 +86,17 @@ function loadTimelinePosts() {
                     hasPosts = true;
                     
                     timelineArea.insertAdjacentHTML('beforeend', generatePostHTML({id: doc.id, ...post}));
-                    setTimeout(() => postCard_restoreLikes(timelineArea), 1000);
-                    
-                    db.collection('users').doc(post.username).get().then(userDoc => {
-    if (!userDoc.exists) return;
-    const pic = userDoc.data().userProfilePic;
-    if (!pic) return;
-    const card = timelineArea.querySelector(`.post-card[data-post-id="${doc.id}"]`);
-    if (card) {
-        const avatar = card.querySelector('.post-avatar');
-        if (avatar) avatar.src = pic;
-    }
-});
-
-// Ƙidaya comments na kowane post
-db.collection("nexus_contributions")
-    .where("postId", "==", doc.id)
-    .where("parentId", "==", null)
-    .onSnapshot(commentSnap => {
-        const el = document.getElementById(`comment-count-${doc.id}`);
-        if (el) el.textContent = commentSnap.size;
-    });
                 }
             });
 
-            const myUsername = localStorage.getItem('nexus_user_session');
-if(myUsername){
-    db.collection('likes').where('user','==',myUsername).get().then(snap=>{
-        snap.forEach(doc=>{
-            const postId = doc.data().postId;
-            const card = timelineArea.querySelector(`.post-card[data-post-id="${postId}"]`);
-            if(card){
-                const likeBtn = card.querySelectorAll('.capsule')[0];
-               
-                if(likeBtn){
-    likeBtn.classList.add('liked');
-    likeBtn.querySelector('i').className = 'fa-solid fa-heart';
-    likeBtn.querySelector('i').style.color = '#ff4d6d';
-    
-    // Restore like count daga Firestore
-    db.collection('likes')
-        .where('postId', '==', postId)
-        .get().then(countSnap => {
-            const countEl = likeBtn.querySelector('span');
-            if(countEl) countEl.textContent = countSnap.size > 0 ? countSnap.size : '';
-        });
+                       if (hasPosts) {
+                // the profile owner's picture is already known (no query per post)
+                if (viewedProfileUser && viewedProfileUser.userProfilePic) {
+                    timelineArea.querySelectorAll('.post-card .post-avatar').forEach(function (img) { img.src = viewedProfileUser.userProfilePic; });
                 }
-            }
-        });
-    });
-}
+                // ONE batched read for "which of these did I like" (before: ALL my likes + a query per liked post + a listener per post)
+                try { postCard_restoreLikes(timelineArea); } catch (e) { console.warn(e); }
+                       } 
             
             if(!hasPosts) {
                 timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">No posts found on timeline.</p>';
@@ -144,7 +104,7 @@ if(myUsername){
         }, (err) => {
             console.error("Timeline error:", err);
             timelineArea.innerHTML = '<p style="text-align:center; padding:20px; color:#ff4444;">Kuskure wajen loda posts.</p>';
-        });
+                }, meWarmSnap('posts', viewedProfileUser.username));
 }
 
 
@@ -164,9 +124,7 @@ function loadHighlights() {
 
     if (meCachePaint('hl', profileUser, container)) { const _hb = document.getElementById('highlights-box'); if (_hb) _hb.style.display = 'block'; }
 
-    highlightsUnsub = db.collection('users').doc(profileUser)
-    .collection('highlights').orderBy('order', 'asc')
-    .onSnapshot(snapshot => {
+        const renderHighlights = snapshot => {
         const highlightsBox = document.getElementById('highlights-box');
         // an empty answer from the local cache is not the truth yet: keep what is on screen
         if (snapshot.empty && snapshot.metadata && snapshot.metadata.fromCache && container.__meFromCache) return;
@@ -216,7 +174,13 @@ function loadHighlights() {
     }
 });
         meCacheSave('hl', profileUser, container);
-});
+};
+    // quick first paint (only when the saved copy above did not already paint)
+    if (!container.__meFromCache) {
+        const wh = meWarmSnap('highlights', profileUser);
+        if (wh) { try { renderHighlights(wh); } catch (e) { console.error(e); } }
+    }
+    highlightsUnsub = db.collection('users').doc(profileUser).collection('highlights').orderBy('order', 'asc').onSnapshot(renderHighlights);
 }
         
 
@@ -806,7 +770,7 @@ let showcaseUnsubscribe = null;
 
 function loadShowcaseImages() {
     const showcaseArea = document.getElementById('showcase-area');
-    { const _su = viewedProfileUser && viewedProfileUser.username; if (_su && !meRelReady(_su)) { meViewerRel(_su).then(function () { loadShowcaseImages(); }); return; } }
+        { const _su = viewedProfileUser && viewedProfileUser.username; if (_su && !meRelReady(_su)) { meViewerRel(_su).then(function (v) { if (v === 'friend') loadShowcaseImages(); }); } }
     if (!viewedProfileUser || !viewedProfileUser.username) {
         showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Loading showcase...</p>';
         return;
@@ -852,11 +816,12 @@ function loadShowcaseImages() {
             if (!hasImages) {
                 showcaseArea.innerHTML = '<p style="text-align:center; width:100%; padding:20px; color:#666;">Babu hotuna a nan.</p>';
                 meCacheClear('sc', viewedProfileUser.username);
-            } else {
+                        } else {
                 meCacheSave('sc', viewedProfileUser.username, showcaseArea);
             }
-        }, (err) => { console.error("Showcase error: ", err); });
-}
+            try { mePdSavePosts(viewedProfileUser.username, snapshot); } catch (e) {}
+        }, (err) => { console.error("Showcase error: ", err); }, showcaseArea.__meFromCache ? null : meWarmSnap('posts', viewedProfileUser.username));
+            }
 
 async function deleteShowcasePost(postId) {
     if (!confirm(" Are you sure you want to delete this post?")) return;
@@ -961,9 +926,11 @@ function applyUserToProfile(user) {
     meSetAvatar(profilePic, user.fullName || user.username);
     meSetCover(coverPhoto);
     
-    if (profilePic) localStorage.setItem('userProfilePic', profilePic); else localStorage.removeItem('userProfilePic');
-    if (coverPhoto) localStorage.setItem('userCover', coverPhoto); else localStorage.removeItem('userCover');
-
+        const _mine = (user.username || '') === (localStorage.getItem('nexus_user_session') || '');
+    if (_mine) {   // (before: opening another person's profile replaced MY saved picture with theirs)
+        if (profilePic) localStorage.setItem('userProfilePic', profilePic); else localStorage.removeItem('userProfilePic');
+        if (coverPhoto) localStorage.setItem('userCover', coverPhoto); else localStorage.removeItem('userCover');
+    }
     // Nuna fullName idan akwai shi, idan ba a nuna username
     document.getElementById('profile-name-text').textContent = 
         user.fullName || user.username || "User";
@@ -990,18 +957,41 @@ async function initProfile() {
             return;
         }
 
-        // Cache-first: idan an taba bude wannan profile, nuna shi nan take
-        let cachedDoc = null;
-        try { cachedDoc = await db.collection('users').doc(profileUser).get({ source: 'cache' }); } catch (e) {}
+                // ===== INSTANT PROFILE =====
+        // 1) everything this device already knows about this person (saved by the last visit or by the feed prefetch): no network, ~0 ms
+        const pd = mePdRead(profileUser);
+        // 2) ALL the network work starts NOW, in parallel (before: one query after the other)
         const serverPromise = db.collection('users').doc(profileUser).get();
+        if (!isOwnProfile) {
+            window.__meFollowP = db.collection('follows').where('follower', '==', username).where('following', '==', profileUser).limit(1).get().catch(function () { return null; });
+            if (pd && pd.friend != null && !(window.__meRelCache && window.__meRelCache.u === profileUser)) window.__meRelCache = { u: profileUser, v: pd.friend ? 'friend' : 'other' };
+            meViewerRel(profileUser).catch(function () {});
+        }
+        window.__mePostsDone = null; window.__meHlDone = null;
+        window.__mePostsP = null; window.__meHlP = null;
+        try { window.__mePostsP = mePostsQ(profileUser).limit(24).get().then(function (s) { window.__mePostsDone = { user: profileUser, rows: s.docs.map(function (d) { return { id: d.id, data: d.data() }; }) }; }).catch(function () {}); } catch (e) {}
+        try { window.__meHlP = db.collection('users').doc(profileUser).collection('highlights').orderBy('order', 'asc').get().then(function (s) { window.__meHlDone = { user: profileUser, rows: s.docs.map(function (d) { return { id: d.id, data: d.data() }; }) }; }).catch(function () {}); } catch (e) {}
+        let cachedDoc = null;
+        if (pd && pd.user) {
+            const wu = meRevive(Object.assign({}, pd.user)); const wid = wu.uid || profileUser; delete wu.uid;
+            cachedDoc = { exists: true, id: wid, data: function () { return wu; } };
+        } else {
+            try { cachedDoc = await db.collection('users').doc(profileUser).get({ source: 'cache' }); } catch (e) {}
+        }
+        const saveFresh = function (sd) { if (sd && sd.exists) { try { mePdWrite(profileUser, { user: meSerializeUser(Object.assign({ uid: sd.id }, sd.data())) }); } catch (e) {} } };
         let userDoc;
         if (cachedDoc && cachedDoc.exists) {
             userDoc = cachedDoc;
             serverPromise.then(function (sd) {
-                if (sd && sd.exists && viewedProfileUser) { viewedProfileUser = { uid: sd.id, ...sd.data() }; applyUserToProfile(viewedProfileUser); }
+                saveFresh(sd);
+                if (sd && sd.exists && viewedProfileUser) { viewedProfileUser = { uid: sd.id, ...sd.data() }; applyUserToProfile(viewedProfileUser); try { meInstantStats(viewedProfileUser, isOwnProfile); } catch (e) {} }
             }).catch(function () {});
         } else {
+            // not known yet: show the name + picture the feed already had (like Instagram) while the real data loads
+            const seed = meSeedFor(profileUser);
+            if (seed) { try { viewedProfileUser = { uid: profileUser, username: profileUser, fullName: seed.fullName, userProfilePic: seed.userProfilePic }; applyUserToProfile(viewedProfileUser); } catch (e) {} }
             userDoc = await serverPromise;
+            saveFresh(userDoc);
         }
 
         if (userDoc.exists) {
@@ -1018,10 +1008,13 @@ async function initProfile() {
 
         // Apply profile UI
        applyUserToProfile(viewedProfileUser);
+               try { meInstantStats(viewedProfileUser, isOwnProfile); } catch (e) {}
+        if (!isOwnProfile && pd && pd.following != null) { meApplyFollowState(pd.following); meMarkReady(); }
         window.__meLocked = await meComputeLocked(viewedProfileUser, profileUser, isOwnProfile);
         meApplyLock(window.__meLocked);
         try { meRenderAbout(viewedProfileUser, profileUser); } catch (e) { console.error('About error:', e); }
-
+               // the posts + highlights were requested at the same moment as the user document: give them a moment to land so the first paint has everything
+        try { if (!meWarmSnap('posts', profileUser)) await Promise.race([Promise.all([window.__mePostsP || 0, window.__meHlP || 0]), new Promise(function (r) { setTimeout(r, 200); })]); } catch (e) {}
         // Loda showcase nan take - a keɓe domin kada wani kuskure ya hana ta
         try {
             switchTab('showcase');
@@ -1035,7 +1028,7 @@ async function initProfile() {
         const verifyB = document.getElementById('getVerifiedBtn'); if (verifyB && !isOwnProfile) verifyB.style.display = 'none';
         try {
             Promise.resolve(initFollowButton()).catch(function () {}).then(meMarkReady);
-            loadFollowerCount();
+               setTimeout(loadFollowerCount, 1200);   // the number is already on screen (from the user document); the live count can wait
 
             if (isOwnProfile) {
                 document.getElementById('stats-third-label').textContent = 'Friends';
@@ -1406,22 +1399,18 @@ async function initFollowButton() {
     // someone else's profile: Share is available here too (Instagram / Facebook both offer it)
     { const sb = document.getElementById('shareProfileBtn'); if (sb) sb.style.display = 'flex'; }
 
-    // Duba ko ina following shi riga
-    const followerSnap = await db.collection('follows')
-        .where('follower', '==', myUsername)
-        .get();
-    const existingFollow = followerSnap.docs.some(d => d.data().following === profileUser);
-
-    const btn = document.getElementById('follow-btn');
-    if (existingFollow) {
-        btn.textContent = 'Following';
-        btn.dataset.state = 'following';
-        btn.style.background = 'rgba(255,255,255,0.1)';
-        btn.style.color = '#fff';
-    } else {
-        btn.textContent = 'Follow';
-        btn.dataset.state = 'none';
-    }
+       // Duba ko ina following shi riga — answer was requested at the very start (in parallel), and a saved answer is shown first
+    let existingFollow = null;
+    const pdw = mePdRead(profileUser);
+    if (pdw && pdw.following != null) { existingFollow = pdw.following; meApplyFollowState(existingFollow); }
+    try {
+        const fs = await (window.__meFollowP || db.collection('follows').where('follower', '==', myUsername).where('following', '==', profileUser).limit(1).get());
+        if (fs) existingFollow = !fs.empty;
+    } catch (e) {}
+    window.__meFollowP = null;
+    if (existingFollow == null) existingFollow = false;
+    meApplyFollowState(existingFollow);
+    mePdWrite(profileUser, { following: existingFollow }); 
 }
 
 // Duba ko wani friends doc ya rigaya ya wanzu tsakanin mutane biyu
@@ -2389,20 +2378,37 @@ function meMarkReady() {
 // ============================================================
 // PRIVACY: private profile = friends only
 // ============================================================
+function meFriendsCached() {
+    try { const e = JSON.parse(localStorage.getItem('nx_friends_' + localStorage.getItem('nexus_user_session')) || 'null'); if (e && Date.now() - e.at < 600000) return new Set(e.list); } catch (x) {}
+    return null;
+}
+async function meLoadFriendsSet(me) {
+    const snap = await db.collection('friends').where('users', 'array-contains', me).get();
+    const s = new Set(); snap.forEach(function (d) { (d.data().users || []).forEach(function (x) { if (x !== me) s.add(x); }); });
+    try { localStorage.setItem('nx_friends_' + me, JSON.stringify({ at: Date.now(), list: Array.from(s) })); } catch (e) {}
+    return s;
+}
+function meFriendsInvalidate() { try { localStorage.removeItem('nx_friends_' + localStorage.getItem('nexus_user_session')); } catch (e) {} }
 async function meViewerRel(profileUser) {
     const me = localStorage.getItem('nexus_user_session');
     if (!me) { window.__meRelCache = { u: profileUser, v: 'other' }; return 'other'; }
     if (window.__meRelCache && window.__meRelCache.u === profileUser) return window.__meRelCache.v;
-    let v = 'other';
-    try { if (await friendsDocExists(me, profileUser)) v = 'friend'; } catch (e) {}
-    window.__meRelCache = { u: profileUser, v: v };
-    return v;
+    if (window.__meRelP && window.__meRelP.u === profileUser) return window.__meRelP.p;   // already being asked → do not ask twice
+    const p = (async function () {
+        let v = 'other';
+        try { const set = meFriendsCached() || await meLoadFriendsSet(me); if (set.has(profileUser)) v = 'friend'; } catch (e) {}
+        window.__meRelCache = { u: profileUser, v: v };
+        try { mePdWrite(profileUser, { friend: v === 'friend' }); } catch (e) {}
+        return v;
+    })();
+    window.__meRelP = { u: profileUser, p: p };
+    return p;
 }
 async function meComputeLocked(user, profileUser, own) {
     if (own || !user || !user.isPrivate) return false;
     const me = localStorage.getItem('nexus_user_session');
     if (!me) return true;
-    try { return !(await friendsDocExists(me, profileUser)); } catch (e) { return true; }
+        try { return (await meViewerRel(profileUser)) !== 'friend'; } catch (e) { return true; }
 }
 function meApplyLock(locked) {
     const lock = document.getElementById('mx-lock');
@@ -2535,8 +2541,10 @@ function meFsCopy() { meCloseFollowSheet(); meCopyProfileLink(); }
 
 // PRIVACY helper: listen with the privacy-filtered query first; if it fails (e.g. composite index not created yet)
 // fall back to the plain query so nothing ever goes blank.
-function nxFallbackSub(primary, fallback, next, errCb) {
+function nxFallbackSub(primary, fallback, next, errCb, warmSnap) {
     let un = null, dead = false;
+    // optional quick first paint — the live answer replaces it a moment later
+    if (warmSnap) { try { next(warmSnap); } catch (e) { console.error(e); } }
     un = primary.onSnapshot(next, function (err) {
         console.warn('[privacy] filtered listener failed, using the plain query:', err && err.code);
         if (dead) return;
@@ -2648,3 +2656,89 @@ async function meFsSetMute(kind, on) {
     if (await meFsSave(field, cur)) showToast((on ? 'Muted ' : 'Unmuted ') + (kind === 'posts' ? 'posts' : 'stories'));
 }
 function meFsOpenMute() { meFsEl('mxFsMain').style.display = 'none'; meFsEl('mxFsMutePanel').style.display = ''; }
+// ============================================================
+// INSTANT PROFILE — data layer
+// The feed (social.js) saves what a profile needs into localStorage while you scroll; this page saves it after every visit.
+// Opening a profile paints from it at once, then the live data replaces it (stale-while-revalidate).
+// ============================================================
+function meMe() { return localStorage.getItem('nexus_user_session') || ''; }
+function mePdKey(user) { return 'nx_pd_' + meMe() + '_' + user; }
+function meRevive(o) {   // saved Firestore timestamps ({seconds, nanoseconds}) get toDate()/toMillis() back
+    if (!o || typeof o !== 'object') return o;
+    if (typeof o.seconds === 'number' && typeof o.nanoseconds === 'number' && !o.toDate) {
+        const s = o.seconds, n = o.nanoseconds;
+        return { seconds: s, nanoseconds: n, toDate: function () { return new Date(s * 1000 + n / 1e6); }, toMillis: function () { return s * 1000 + Math.floor(n / 1e6); } };
+    }
+    if (Array.isArray(o)) return o.map(meRevive);
+    const out = {}; Object.keys(o).forEach(function (k) { out[k] = meRevive(o[k]); }); return out;
+}
+function meSerializeUser(u) { return JSON.parse(JSON.stringify(u)); }
+function mePdRead(user) {
+    try { const s = localStorage.getItem(mePdKey(user)); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function mePdWrite(user, patch) {
+    try {
+        const e = Object.assign(mePdRead(user) || {}, patch, { at: Date.now() });
+        const str = JSON.stringify(e);
+        if (str.length > 120000) { delete e.posts; localStorage.setItem(mePdKey(user), JSON.stringify(e)); } else localStorage.setItem(mePdKey(user), str);
+        const pre = 'nx_pd_' + meMe() + '_', keys = [];
+        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf(pre) === 0) { let at = 0; try { at = JSON.parse(localStorage.getItem(k)).at || 0; } catch (x) {} keys.push([k, at]); } }
+        if (keys.length > 14) { keys.sort(function (a, b) { return a[0] === mePdKey(user) ? 1 : (a[1] - b[1]); }); keys.slice(0, keys.length - 14).forEach(function (x) { localStorage.removeItem(x[0]); }); }
+    } catch (err) { /* storage full → skip */ }
+}
+function mePdSavePosts(user, snapshot) {
+    const rows = []; snapshot.docs.slice(0, 24).forEach(function (d) { rows.push({ id: d.id, data: d.data() }); });
+    mePdWrite(user, { posts: JSON.parse(JSON.stringify(rows)) });
+}
+// Same shape as a Firestore snapshot, so the existing render code is reused for the quick first paint.
+function meSnapLike(rows) {
+    const docs = rows.map(function (r) { const data = meRevive(r.data); return { id: r.id, exists: true, data: function () { return data; }, ref: null }; });
+    return { docs: docs, size: docs.length, empty: !docs.length, forEach: function (f) { docs.forEach(f); }, metadata: { fromCache: true }, __warm: true };
+}
+function meWarmSnap(kind, user) {
+    try {
+        const own = user === meMe();
+        const rel = (window.__meRelCache && window.__meRelCache.u === user) ? window.__meRelCache.v : '';
+        let rows = null;
+        if (kind === 'posts') {
+            const d = window.__mePostsDone;
+            if (d && d.user === user && d.rows.length) rows = d.rows;
+            else { const pd = mePdRead(user); if (pd && pd.posts && pd.posts.length) rows = pd.posts; }
+            // never show friends-only posts to someone who is not a friend (a saved copy could be from when we were friends)
+            if (rows && !own && rel !== 'friend') rows = rows.filter(function (r) { return !(r.data && r.data.authorPrivate === true); });
+        } else if (kind === 'highlights') {
+            const h = window.__meHlDone;
+            if (h && h.user === user && h.rows.length) rows = h.rows;
+            else { const pd = mePdRead(user); if (pd && pd.highlights && pd.highlights.length) rows = pd.highlights; }
+        }
+        return rows && rows.length ? meSnapLike(rows) : null;
+    } catch (e) { return null; }
+}
+// the name + picture the feed already had when the avatar was tapped
+function meSeedFor(user) {
+    try {
+        const s = window.__nxProfileSeed || (window.parent && window.parent !== window && window.parent.__nxProfileSeed) || (window.top && window.top.__nxProfileSeed);
+        if (s && s.username === user && Date.now() - s.at < 20000) return s;
+    } catch (e) {}
+    return null;
+}
+function meApplyFollowState(isF) {
+    const btn = document.getElementById('follow-btn'); if (!btn) return;
+    if (isF) { btn.textContent = 'Following'; btn.dataset.state = 'following'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = '#fff'; }
+    else { btn.textContent = 'Follow'; btn.dataset.state = 'none'; btn.style.background = ''; btn.style.color = ''; }
+}
+// numbers from the user document — shown at once; the live listeners correct them a moment later
+function meInstantStats(u, own) {
+    if (!u) return;
+    const f = document.getElementById('stats-followers-count'); if (f && u.followerCount != null) f.textContent = (u.followerCount || 0).toLocaleString();
+    const t = document.getElementById('stats-friends-count'); if (t) t.textContent = ((own ? u.friendCount : u.followingCount) || 0).toLocaleString();
+}
+// after a follow / unfollow here the saved answers must not be stale
+(function () {
+    const _tf = toggleFollow;
+    toggleFollow = async function () {
+        const r = await _tf.apply(this, arguments);
+        try { const u = getProfileUser(); const pd = mePdRead(u); if (pd) { delete pd.following; delete pd.friend; localStorage.setItem(mePdKey(u), JSON.stringify(pd)); } meFriendsInvalidate(); window.__meRelCache = null; window.__meRelP = null; } catch (e) {}
+        return r;
+    };
+})();
