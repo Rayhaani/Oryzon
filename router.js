@@ -83,7 +83,6 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
-            'overlay-router.js?v=2',
             'footer.js?v=4',
             'chats.js?v=1'
         ],
@@ -883,6 +882,11 @@ currentContentEl.style.removeProperty('visibility');
   // Register initial page's history state so popstate works from the start.
     window.history.replaceState({ nexusRoute: currentPath }, '', window.location.href);
     if (currentPath === 'social.html') { _armHomeBackBuffer(); }
+   (function () {
+    function nxLoadOverlay() { loadScriptOnce('nx-overlay.js?v=1'); }
+    if (document.body) nxLoadOverlay();
+    else document.addEventListener('DOMContentLoaded', nxLoadOverlay);
+})();
 // Proactively warm manyan pages (social, shop) tun farko, STAGGERED
     // (400ms tazara) don kaucewa cunkoson bandwidth — zero-second nav.
     ['social.html', 'shop.html', 'videos.html', 'chats.html', 'chat-interior.html']
