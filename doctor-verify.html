@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Health Professional Verification — Nexus</title>
+<style>
+
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+    :root { --gold:#fde08d; --muted:rgba(255,255,255,0.55); --line:rgba(255,255,255,0.08); --card:rgba(255,255,255,0.05); }
+    body { background:#050505; color:#fff; font-family:'Inter', sans-serif; padding-bottom:130px; -webkit-font-smoothing:antialiased; }
+    .hidden { display:none !important; }
+    .icon-btn { display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; flex-shrink:0; }
+    .icon-btn svg { display:block; }
+
+    /* ===== HEADER ===== */
+    .hdr { position:sticky; top:0; z-index:50; background:#050505; padding:14px 14px 12px; }
+    .hdr-row { position:relative; display:flex; align-items:center; min-height:24px; }
+    .hdr-title { position:absolute; left:0; right:0; text-align:center; font-size:17px; font-weight:700; pointer-events:none; }
+    .hdr-row .icon-btn svg { width:21px; height:21px; }
+    .steps { display:flex; gap:5px; margin-top:14px; }
+    .steps i { flex:1; height:4px; border-radius:3px; background:rgba(255,255,255,0.1); display:block; }
+    .steps i.done { background:var(--gold); }
+
+    .wrap { padding:6px 18px 0; }
+
+    /* ===== HERO ===== */
+    .hero { text-align:center; padding:14px 0 6px; }
+    .hero-badge { width:96px; height:96px; margin:0 auto 16px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 40%, rgba(253,224,141,0.16), rgba(253,224,141,0) 70%); }
+
+    /* ===== ANIMATED TIER HERO (WebGL vortex background, one palette per tier) ===== */
+
+    /* ===== LIVE PREVIEW (replica of the real post header) ===== */
+    .ph { display:flex; align-items:center; gap:10px; height:58px; padding:0 14px 0 8px; border-radius:30px; border:1px solid rgba(253,224,141,0.5);
+        background:radial-gradient(ellipse 90% 140% at 48% 0%, #F8D9A2 0%, #E3C48D 22%, #C09060 50%, #A77542 72%, #8B5B2D 100%); }
+
+    /* ===== SECTION TITLES ===== */
+    .sec { font-size:12px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; color:var(--muted); margin:28px 0 12px; }
+
+    /* ===== TYPE CARDS (no longer shown on the landing page) ===== */
+    .type-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .type-card { background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:14px 13px; cursor:pointer; transition:border-color .15s, background .15s; }
+    .type-card.sel { border-color:var(--gold); background:rgba(253,224,141,0.07); }
+    .type-top { display:flex; align-items:center; justify-content:space-between; }
+    .type-name { font-size:14.5px; font-weight:800; margin-top:10px; }
+    .type-desc { font-size:11.5px; color:var(--muted); margin-top:4px; line-height:1.4; }
+    .radio { width:18px; height:18px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; }
+    .type-card.sel .radio { border-color:var(--gold); }
+    .type-card.sel .radio::after { content:''; width:9px; height:9px; border-radius:50%; background:var(--gold); }
+    .swatch { width:30px; height:30px; display:flex; align-items:center; justify-content:center; }
+
+    /* ===== BENEFITS ===== */
+    .benefit { display:flex; gap:13px; padding:13px 0; border-bottom:1px solid var(--line); }
+    .benefit:last-child { border-bottom:none; }
+    .b-ico { width:38px; height:38px; border-radius:11px; background:var(--card); display:flex; align-items:center; justify-content:center; color:var(--gold); flex-shrink:0; }
+    .b-ico svg { width:19px; height:19px; }
+    .benefit.off { opacity:0.45; }
+    .benefit.off .b-ico { color:var(--muted); }
+    .b-note { font-size:12.5px; font-weight:600; color:#3ddc84; margin-top:3px; }
+    .b-title { font-size:14px; font-weight:700; }
+    .b-desc { font-size:12.5px; color:var(--muted); margin-top:3px; line-height:1.45; }
+
+    /* ===== PRICING ===== */
+
+    /* ===== FAQ ===== */
+
+    /* ===== FOOTER CTA ===== */
+    .foot { position:fixed; left:0; right:0; bottom:0; background:rgba(5,5,5,0.94); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-top:1px solid var(--line); padding:12px 18px 16px; z-index:45; }
+    .foot-row { display:flex; gap:10px; }
+    .btn { flex:1; text-align:center; padding:14px; border-radius:14px; font-size:14.5px; font-weight:800; cursor:pointer; user-select:none; }
+    .btn.primary { background:var(--gold); color:#1a1200; }
+    .btn.secondary { background:rgba(255,255,255,0.09); color:#fff; flex:0 0 32%; }
+    .btn.disabled { opacity:0.35; pointer-events:none; }
+    .foot-note { text-align:center; font-size:11px; color:var(--muted); margin-top:9px; }
+
+    /* ===== WIZARD ===== */
+    .w-title { font-size:22px; font-weight:800; letter-spacing:-0.3px; margin-top:14px; }
+    .w-sub { font-size:13.5px; color:var(--muted); margin-top:6px; line-height:1.5; margin-bottom:20px; }
+    .check-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); }
+    .check-row:last-child { border-bottom:none; }
+    .ck { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ck.ok { background:rgba(61,220,132,0.16); color:#3ddc84; }
+    .ck.bad { background:rgba(255,92,92,0.16); color:#ff5c5c; }
+    .ck svg { width:13px; height:13px; }
+    .ck-body { flex:1; }
+    .ck-title { font-size:14px; font-weight:600; }
+    .ck-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+    .fix { font-size:12.5px; font-weight:700; color:var(--gold); cursor:pointer; }
+
+    .field { margin-bottom:16px; }
+    .lbl { font-size:12px; font-weight:700; color:rgba(255,255,255,0.7); margin-bottom:7px; display:block; }
+    .inp { width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:13px 14px; color:#fff; font-family:'Inter',sans-serif; font-size:14px; outline:none; -webkit-appearance:none; appearance:none; }
+    .inp:focus { border-color:rgba(253,224,141,0.6); }
+    .inp::placeholder { color:rgba(255,255,255,0.32); }
+    select.inp option { color:#000; }
+    .row2 { display:flex; gap:10px; } .row2 > * { flex:1; min-width:0; }
+    .hint { font-size:11.5px; color:var(--muted); margin-top:6px; line-height:1.45; }
+
+    .upload { border:1.5px dashed rgba(255,255,255,0.22); border-radius:14px; height:118px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:var(--muted); font-size:12.5px; cursor:pointer; overflow:hidden; position:relative; text-align:center; padding:0 10px; }
+    .upload svg { width:24px; height:24px; color:rgba(255,255,255,0.4); }
+    .upload img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .upload .re { position:absolute; right:8px; bottom:8px; background:rgba(0,0,0,0.65); font-size:11px; font-weight:700; padding:4px 9px; border-radius:8px; color:#fff; }
+    .privacy { display:flex; gap:10px; background:rgba(0,242,254,0.06); border:1px solid rgba(0,242,254,0.18); border-radius:12px; padding:12px 13px; margin-top:6px; font-size:12px; color:rgba(255,255,255,0.75); line-height:1.5; }
+    .privacy svg { width:17px; height:17px; color:#6fe9f5; flex-shrink:0; margin-top:1px; }
+
+    .sum { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:6px 16px; margin-bottom:22px; }
+    .sum-row { display:flex; justify-content:space-between; padding:12px 0; font-size:13.5px; border-bottom:1px solid var(--line); }
+    .sum-row:last-child { border-bottom:none; font-weight:800; font-size:15px; }
+    .sum-row span:first-child { color:var(--muted); } .sum-row:last-child span:first-child { color:#fff; }
+
+    /* ===== STATUS ===== */
+    .st-hero { text-align:center; padding:24px 0 8px; }
+    .st-ico { width:84px; height:84px; border-radius:50%; margin:0 auto 18px; display:flex; align-items:center; justify-content:center; }
+    .st-ico.pend { background:rgba(0,242,254,0.1); color:#6fe9f5; }
+    .st-ico.rej { background:rgba(255,92,92,0.12); color:#ff5c5c; }
+    .st-ico svg { width:38px; height:38px; }
+    .st-hero h2 { font-size:23px; font-weight:800; letter-spacing:-0.3px; }
+    .st-hero p { font-size:13.5px; color:var(--muted); margin:9px auto 0; line-height:1.5; max-width:310px; }
+    .timeline { margin:26px 0 8px; }
+    .tl { display:flex; gap:14px; position:relative; padding-bottom:22px; }
+    .tl:last-child { padding-bottom:0; }
+    .tl::before { content:''; position:absolute; left:11px; top:26px; bottom:0; width:2px; background:rgba(255,255,255,0.1); }
+    .tl:last-child::before { display:none; }
+    .tl-dot { width:24px; height:24px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; flex-shrink:0; z-index:1; }
+    .tl.done .tl-dot { background:#3ddc84; color:#04240f; }
+    .tl.now .tl-dot { background:var(--gold); color:#1a1200; }
+    .tl-dot svg { width:12px; height:12px; }
+    .tl-t { font-size:14px; font-weight:700; } .tl-s { font-size:12px; color:var(--muted); margin-top:2px; }
+    .tl.todo .tl-t { color:var(--muted); }
+    .link-btn { text-align:center; font-size:13.5px; font-weight:700; padding:14px; cursor:pointer; color:#ff6b6b; }
+    .card-list { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:4px 16px; margin-top:22px; }
+    .proc-wrap { padding:120px 20px 0; text-align:center; }
+    .spinner { width:52px; height:52px; border-radius:50%; border:3px solid rgba(255,255,255,0.12); border-top-color:#6fb8ff; margin:0 auto 22px; animation:spin 0.9s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .proc-text { font-size:14.5px; font-weight:600; color:rgba(255,255,255,0.85); }
+    .toast { position:fixed; bottom:110px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.96); color:#0a0a0a; font-size:13px; font-weight:700; padding:11px 20px; border-radius:30px; z-index:400; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; white-space:nowrap; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(-8px); }
+    input[type=file] { display:none; }
+   
+    .hero { text-align:center; padding:14px 0 6px; }
+    .hero-badge { width:96px; height:96px; margin:0 auto 16px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 40%, rgba(253,224,141,0.16), rgba(253,224,141,0) 70%); color:var(--gold); }
+    .hero-badge svg { width:52px; height:52px; }
+    .hero h1 { font-size:26px; font-weight:800; letter-spacing:-0.4px; line-height:1.15; }
+    .hero p { font-size:14px; color:var(--muted); line-height:1.5; margin:10px auto 0; max-width:320px; }
+    .st-ico.ok { background:rgba(61,220,132,0.14); color:#3ddc84; }
+    .consent { display:flex; gap:12px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-top:14px; font-size:12.5px; line-height:1.5; color:rgba(255,255,255,0.8); cursor:pointer; }
+    .consent .box { width:22px; height:22px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.3); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#1a1200; }
+    .consent.on .box { background:var(--gold); border-color:var(--gold); }
+    .consent .box svg { width:13px; height:13px; opacity:0; } .consent.on .box svg { opacity:1; }
+    textarea.inp { min-height:96px; resize:none; line-height:1.45; }
+</style>
+</head>
+<body>
+<div class="hdr">
+    <div class="hdr-row">
+        <span class="icon-btn" id="backBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+        <span class="hdr-title" id="hdrTitle">Verified Doctor</span>
+    </div>
+    <div class="steps hidden" id="steps"></div>
+</div>
+<div class="wrap" id="view"></div>
+<div class="foot hidden" id="foot"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept="image/*">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+const BACKEND = 'https://oryzon-backend-ed1q.onrender.com';
+const FB_CONFIG = { apiKey:"AIzaSyDExSOnFbN-wJbT1UFgB-kBs37bEa3KiWc", authDomain:"oryzon-50ea4.firebaseapp.com", projectId:"oryzon-50ea4", storageBucket:"oryzon-50ea4.firebasestorage.app", messagingSenderId:"782106742622", appId:"1:782106742622:web:902d512bfe42dd4cf289cf" };
+const SPECS = ['General Practitioner','Cardiology','Pediatrics','Dermatology','Psychiatry','Gynecology','Neurology','Orthopedics','Ophthalmology','ENT','Dentistry','Other'];
+const ID_TYPES = ['Passport','Driver’s license','National ID card'];
+const $ = id => document.getElementById(id);
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(t){ return t ? new Date(t).toLocaleDateString(undefined,{ day:'numeric', month:'short', year:'numeric' }) : ''; }
+const ic = (p, w=1.8) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICON = {
+    lock: ic('<rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 018 0v3"/>'),
+    check: ic('<path d="M5 13l4 4L19 7"/>', 2.6),
+    camera: ic('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
+    id: ic('<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M6.5 16c.6-1.4 1.6-2 2.5-2s1.9.6 2.5 2M14 10h4M14 13h3"/>'),
+    doc: ic('<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>'),
+    clock: ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+    xcircle: ic('<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>'),
+    medic: ic('<path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M12 8v6M9 11h6"/>', 1.7)
+};
+const COUNTRIES = (function(){
+    try {
+        const dn = new Intl.DisplayNames(['en'], { type:'region', fallback:'none' }), out = [], A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', skip = ['EU','UN','EZ','QO','AC','CP','DG','EA','IC','TA','XA','XB'];
+        for(const a of A) for(const b of A){ const c = a + b; if(skip.includes(c)) continue; const n = dn.of(c); if(n && n !== c) out.push([c, n]); }
+        return out.sort((x, y) => x[1].localeCompare(y[1]));
+    } catch(e){ return [['GB','United Kingdom'],['NG','Nigeria'],['US','United States'],['IN','India'],['XX','Other']]; }
+})();
+
+/* ---------- state ---------- */
+let AUTH_USER = null, S = { status:'none' }, mode = 'landing', step = 0;
+const WIZ = ['Profile','Identity','Licence','Review'];
+const D = { name:'', specialty:'', country:'', years:'', bio:'', legalName:'', idType:'', idCountry:'', front:null, back:null, selfie:null, licence:null, licNo:'', licBody:'', near:false, consent:false };
+
+function pickImage(cb){
+    const fi = $('fileInput'); fi.value='';
+    fi.onchange = () => { const f = fi.files[0]; if(!f) return; const r = new FileReader(); r.onload = e => cb(e.target.result); r.readAsDataURL(f); };
+    fi.click();
+}
+
+/* ---------- landing ---------- */
+function render(){
+    if(mode === 'wizard') return renderWizard();
+    $('steps').classList.add('hidden');
+    if(S.status === 'pending' || S.status === 'approved' || S.status === 'rejected') return renderStatus();
+    renderLanding();
+}
+function renderLanding(){
+    $('hdrTitle').textContent = 'Verified Doctor';
+    const rows = [['Verified Doctor mark','Patients see that Nexus checked your licence'],['Listed in the Health directory','Appear in “Doctors near me” and the specialty search'],['Doctor Desk','Receive and answer consultation requests'],['Free for health professionals','No fee to apply or to stay verified']];
+    $('view').innerHTML = `
+        <div class="hero"><div class="hero-badge">${ICON.medic}</div>
+            <h1>Get verified as a health professional</h1>
+            <p>Confirm your medical licence and identity once. Patients can then trust that you are who you say you are.</p></div>
+        <div class="card-list" style="margin-top:22px">${rows.map(r => `<div class="check-row"><div class="ck ok">${ICON.check}</div><div class="ck-body"><div class="ck-title">${r[0]}</div><div class="ck-sub">${r[1]}</div></div></div>`).join('')}</div>
+        <div class="privacy" style="margin-top:18px">${ICON.lock}<span>This is separate from the blue and gold Oryzon badges. It is only for people who practise medicine, and it is free.</span></div>`;
+    const f = $('foot'); f.classList.remove('hidden');
+    f.innerHTML = `<div class="foot-row"><div class="btn primary" id="goBtn">Start verification</div></div><div class="foot-note">Free · Reviewed by our team in 1–3 business days</div>`;
+    $('goBtn').onclick = () => { mode = 'wizard'; step = 0; render(); window.scrollTo(0,0); };
+}
+
+/* ---------- wizard ---------- */
+function renderWizard(){
+    $('hdrTitle').textContent = WIZ[step];
+    const bar = $('steps'); bar.classList.remove('hidden');
+    bar.innerHTML = WIZ.map((_, i) => `<i class="${i <= step ? 'done' : ''}"></i>`).join('');
+    const foot = $('foot'); foot.classList.remove('hidden');
+    const last = step === WIZ.length - 1;
+    foot.innerHTML = `<div class="foot-row"><div class="btn secondary" id="prevBtn">Back</div><div class="btn primary" id="nextBtn">${last ? 'Submit for review' : 'Continue'}</div></div>`;
+    $('prevBtn').onclick = wizBack; $('nextBtn').onclick = wizNext;
+    [stepProfile, stepIdentity, stepLicence, stepReview][step]();
+    updateNext();
+}
+const bind = (id, key, ev='input') => { const el = $(id); if(el) el.addEventListener(ev, e => { D[key] = e.target.value; updateNext(); if(id === 'idType') stepIdentity(); }); };
+function opts(list, cur, ph){ return `<option value="">${ph}</option>` + list.map(x => { const v = Array.isArray(x) ? x[0] : x, l = Array.isArray(x) ? x[1] : x; return `<option value="${esc(v)}" ${cur === v ? 'selected' : ''}>${esc(l)}</option>`; }).join(''); }
+function stepProfile(){
+    $('view').innerHTML = `
+        <div class="w-title">Your professional profile</div>
+        <div class="w-sub">This is what patients will see in the Health directory.</div>
+        <div class="field"><label class="lbl">Name shown to patients</label><input class="inp" id="name" value="${esc(D.name)}" placeholder="e.g. Amina Yusuf" maxlength="80"></div>
+        <div class="field"><label class="lbl">Specialty</label><select class="inp" id="specialty">${opts(SPECS, D.specialty, 'Select')}</select></div>
+        <div class="row2">
+            <div class="field"><label class="lbl">Country of licence</label><select class="inp" id="country">${opts(COUNTRIES, D.country, 'Select')}</select></div>
+            <div class="field"><label class="lbl">Years in practice</label><input class="inp" id="years" type="number" inputmode="numeric" min="0" max="70" value="${esc(D.years)}" placeholder="0"></div>
+        </div>
+        <div class="field"><label class="lbl">Short bio</label><textarea class="inp" id="bio" maxlength="600" placeholder="Your experience and the care you provide">${esc(D.bio)}</textarea><div class="hint">At least 10 characters. Shown to patients.</div></div>`;
+    bind('name','name'); bind('specialty','specialty','change'); bind('country','country','change'); bind('years','years'); bind('bio','bio');
+}
+function stepIdentity(){
+    const up = (key, label, icon) => `<div class="field"><span class="lbl">${label}</span><div class="upload" data-up="${key}">${D[key] ? `<img src="${D[key]}"><span class="re">Replace</span>` : `${icon}<span>Tap to upload</span>`}</div></div>`;
+    $('view').innerHTML = `
+        <div class="w-title">Confirm your identity</div>
+        <div class="w-sub">Upload a government-issued ID and a selfie so we can confirm it’s really you.</div>
+        <div class="field"><label class="lbl">Full legal name</label><input class="inp" id="legalName" value="${esc(D.legalName)}" placeholder="As shown on your ID"></div>
+        <div class="row2">
+            <div class="field"><label class="lbl">ID type</label><select class="inp" id="idType">${opts(ID_TYPES, D.idType, 'Select')}</select></div>
+            <div class="field"><label class="lbl">Country of issue</label><input class="inp" id="idCountry" value="${esc(D.idCountry)}" placeholder="Country"></div>
+        </div>
+        ${up('front','ID — front', ICON.id)}
+        ${D.idType && D.idType !== 'Passport' ? up('back','ID — back', ICON.id) : ''}
+        ${up('selfie','Selfie', ICON.camera)}
+        <div class="hint" style="margin-top:-8px;margin-bottom:6px;">Face the camera in good light. Your face must be clearly visible.</div>
+        <div class="privacy">${ICON.lock}<span>Your documents are used only to confirm your identity and are never shown on your profile.</span></div>`;
+    bind('legalName','legalName'); bind('idType','idType','change'); bind('idCountry','idCountry');
+    document.querySelectorAll('[data-up]').forEach(u => u.onclick = () => pickImage(src => { D[u.dataset.up] = src; stepIdentity(); updateNext(); }));
+}
+function stepLicence(){
+    $('view').innerHTML = `
+        <div class="w-title">Your medical licence</div>
+        <div class="w-sub">Enter your licence details and upload a clear photo of the licence or registration certificate.</div>
+        <div class="field"><label class="lbl">Licence number</label><input class="inp" id="licNo" value="${esc(D.licNo)}" placeholder="As shown on your licence" maxlength="40"></div>
+        <div class="field"><label class="lbl">Licensing body</label><input class="inp" id="licBody" value="${esc(D.licBody)}" placeholder="e.g. your national medical council" maxlength="80"></div>
+        <div class="field"><span class="lbl">Licence or registration certificate</span><div class="upload" data-up="licence">${D.licence ? `<img src="${D.licence}"><span class="re">Replace</span>` : `${ICON.doc}<span>Tap to upload</span>`}</div></div>
+        <div class="hint" style="margin-top:-8px;margin-bottom:6px;">Photo of the whole document. The name and number must be readable.</div>
+        <div class="privacy">${ICON.lock}<span>Your licence is used only to confirm you are a licensed professional and is never shown on your profile.</span></div>`;
+    bind('licNo','licNo'); bind('licBody','licBody');
+    document.querySelector('[data-up]').onclick = () => pickImage(src => { D.licence = src; stepLicence(); updateNext(); });
+}
+function stepReview(){
+    const cn = (COUNTRIES.find(c => c[0] === D.country) || [])[1] || D.country;
+    $('view').innerHTML = `
+        <div class="w-title">Review and submit</div>
+        <div class="w-sub">Check your details. Our team reviews every request. It is free.</div>
+        <div class="sum">
+            <div class="sum-row"><span>Shown as</span><span>Dr. ${esc(D.name.replace(/^dr\.?\s+/i, ''))}</span></div>
+            <div class="sum-row"><span>Specialty</span><span>${esc(D.specialty)}</span></div>
+            <div class="sum-row"><span>Licence</span><span>${esc(D.licNo)} · ${esc(cn)}</span></div>
+            <div class="sum-row"><span>Name on ID</span><span>${esc(D.legalName)}</span></div>
+        </div>
+        <div class="consent ${D.near ? 'on' : ''}" id="nearBox"><div class="box">${ICON.check}</div><div>Show me in “Doctors near me” (uses my current location, rounded to about 100 m)</div></div>
+        <div class="consent ${D.consent ? 'on' : ''}" id="consentBox"><div class="box">${ICON.check}</div><div>I confirm the information is true and I consent to Nexus checking my licence and identity. My documents are seen only by the Nexus review team and are deleted as soon as it decides.</div></div>`;
+    $('nearBox').onclick = () => { D.near = !D.near; $('nearBox').classList.toggle('on', D.near); };
+    $('consentBox').onclick = () => { D.consent = !D.consent; $('consentBox').classList.toggle('on', D.consent); updateNext(); };
+}
+function valid(){
+    if(step === 0) return D.name.trim().length >= 2 && D.specialty && D.country && D.years !== '' && +D.years >= 0 && +D.years <= 70 && D.bio.trim().length >= 10;
+    if(step === 1){ const nb = D.idType && D.idType !== 'Passport'; return !!(D.legalName.trim().length >= 2 && D.idType && D.idCountry.trim().length >= 2 && D.front && D.selfie && (!nb || D.back)); }
+    if(step === 2) return !!(D.licNo.trim().length >= 3 && D.licBody.trim().length >= 2 && D.licence);
+    return D.consent;
+}
+function updateNext(){ const b = $('nextBtn'); if(b) b.classList.toggle('disabled', !valid()); }
+function wizBack(){ if(step === 0){ mode = 'landing'; render(); } else { step--; render(); } window.scrollTo(0,0); }
+function wizNext(){ if(!valid()) return; if(step < WIZ.length - 1){ step++; render(); window.scrollTo(0,0); return; } finishSubmit(); }
+
+/* ---------- backend ---------- */
+async function authToken(){ if(!AUTH_USER) throw new Error('signin'); return AUTH_USER.getIdToken(); }
+async function api(path, opts){
+    opts = opts || {}; const t = await authToken();
+    const r = await fetch(BACKEND + path, { method: opts.method || 'GET', headers: Object.assign({ Authorization:'Bearer ' + t }, opts.body ? { 'Content-Type':'application/json' } : {}), body: opts.body ? JSON.stringify(opts.body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    if(!r.ok){ const e = new Error(j.error || 'failed'); e.status = r.status; throw e; }
+    return j;
+}
+function shrink(dataUrl){ return new Promise(res => { const im = new Image(); im.onload = () => { const k = Math.min(1, 1600 / Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', 0.85)); }; im.onerror = () => res(dataUrl); im.src = dataUrl; }); }
+async function uploadDoc(dataUrl, docType){
+    const blob = await (await fetch(await shrink(dataUrl))).blob();
+    const fd = new FormData(); fd.append('file', blob, docType + '.jpg'); fd.append('docType', docType);
+    const r = await fetch(BACKEND + '/upload-verification', { method:'POST', headers:{ Authorization:'Bearer ' + await authToken() }, body: fd });
+    const j = await r.json().catch(() => ({}));
+    if(!r.ok || !j.key) throw new Error(j.error || 'upload_failed');
+    return j.key;
+}
+const ERR = { already_pending:'You already have a request under review.', already_approved:'You are already verified.', bad_document:'A document could not be accepted. Please upload it again.', missing_profile:'Please complete your profile details.', missing_identity:'Please complete your identity details.', consent_required:'Please tick the confirmation box.', upload_failed:'A photo could not be uploaded. Please try again.' };
+function renderProcessing(msg){ $('hdrTitle').textContent = WIZ[step]; $('foot').classList.add('hidden'); $('view').innerHTML = `<div class="proc-wrap"><div class="spinner"></div><div class="proc-text" id="procText">${esc(msg)}</div></div>`; }
+function getCoords(){ return new Promise(res => navigator.geolocation ? navigator.geolocation.getCurrentPosition(p => res({ lat:p.coords.latitude, lng:p.coords.longitude }), () => res(null), { timeout:8000 }) : res(null)); }
+async function finishSubmit(){
+    renderProcessing('Uploading your documents');
+    try {
+        const docs = {}; docs.front = await uploadDoc(D.front, 'id');
+        if(D.idType !== 'Passport' && D.back) docs.back = await uploadDoc(D.back, 'id-back');
+        docs.selfie = await uploadDoc(D.selfie, 'selfie'); docs.licence = await uploadDoc(D.licence, 'licence');
+        const t = $('procText'); if(t) t.textContent = 'Sending your request';
+        const body = { name:D.name.trim().replace(/^dr\.?\s+/i, ''), specialty:D.specialty, country:D.country, years:+D.years, bio:D.bio.trim(), licenceNumber:D.licNo.trim(), licenceBody:D.licBody.trim(), consent:true, identity:{ legalName:D.legalName.trim(), docType:D.idType, country:D.idCountry.trim() }, docs };
+        if(D.near){ const c = await getCoords(); if(c){ body.lat = c.lat; body.lng = c.lng; } }
+        await api('/doctor-verify/apply', { method:'POST', body });
+        D.front = D.back = D.selfie = D.licence = null;
+        S = { status:'pending', submittedAt:Date.now() }; mode = 'landing'; render(); window.scrollTo(0,0); toast('Request submitted');
+    } catch(e){
+        mode = 'wizard'; step = WIZ.length - 1; render();
+        toast(e.status === 401 || e.message === 'signin' ? 'Please sign in again.' : (ERR[e.message] || 'Could not submit. Please try again.'));
+    }
+}
+
+/* ---------- status ---------- */
+function renderStatus(){
+    $('hdrTitle').textContent = 'Verification';
+    const view = $('view'), foot = $('foot');
+    if(S.status === 'pending'){
+        foot.classList.add('hidden');
+        view.innerHTML = `
+            <div class="st-hero"><div class="st-ico pend">${ICON.clock}</div><h2>Your request is under review</h2><p>We’ll notify you as soon as there’s a decision. This usually takes 1–3 business days.</p></div>
+            <div class="timeline">
+                <div class="tl done"><div class="tl-dot">${ICON.check}</div><div><div class="tl-t">Request submitted</div><div class="tl-s">${fmtDate(S.submittedAt)}</div></div></div>
+                <div class="tl now"><div class="tl-dot">${ICON.clock}</div><div><div class="tl-t">Under review</div><div class="tl-s">Our team is checking your licence and identity</div></div></div>
+                <div class="tl todo"><div class="tl-dot"></div><div><div class="tl-t">Decision</div><div class="tl-s">It is free, nothing to pay</div></div></div>
+            </div>`;
+    } else if(S.status === 'approved'){
+        foot.classList.remove('hidden');
+        view.innerHTML = `<div class="st-hero"><div class="st-ico ok">${ICON.check}</div><h2>You are a Verified Doctor</h2><p>You now appear in the Health directory. Open Nexus Medical City to use your Doctor Desk. If you do not see it, reload the page.</p></div>`;
+        foot.innerHTML = `<div class="foot-row"><div class="btn primary" id="doneBtn">Done</div></div>`; $('doneBtn').onclick = leave;
+    } else {
+        foot.classList.remove('hidden');
+        view.innerHTML = `<div class="st-hero"><div class="st-ico rej">${ICON.xcircle}</div><h2>We couldn’t verify you yet</h2><p>${esc(S.reviewNote || 'Please check your documents and try again.')}</p></div>`;
+        foot.innerHTML = `<div class="foot-row"><div class="btn primary" id="retry">Start a new request</div></div>`;
+        $('retry').onclick = () => { S = { status:'none' }; mode = 'wizard'; step = 0; render(); window.scrollTo(0,0); };
+    }
+}
+
+/* ---------- navigation & boot ---------- */
+function leave(){ if(window.parent && window.parent !== window && typeof window.parent.closePageOverlay === 'function') window.parent.closePageOverlay(); else history.back(); }
+$('backBtn').addEventListener('click', () => { if(mode === 'wizard'){ wizBack(); return; } leave(); });
+async function loadProfile(u){
+    D.name = (u.displayName || '').trim();
+    try {
+        const fs = firebase.firestore(), m = await fs.collection('uidMap').doc(u.uid).get(), un = m.exists ? m.data().username : '';
+        if(un){ const d = await fs.collection('users').doc(un).get(); const x = d.exists ? d.data() : {}; D.name = x.fullName || D.name || un; }
+    } catch(e){}
+}
+(function boot(){
+    $('view').innerHTML = '<div class="proc-wrap"><div class="spinner"></div></div>';
+    try { if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG); } catch(e){}
+    firebase.auth().onAuthStateChanged(async u => {
+        if(!u){ AUTH_USER = null; $('view').innerHTML = '<div class="proc-wrap"><div class="proc-text">Please sign in to continue.</div></div>'; return; }
+        AUTH_USER = u; await loadProfile(u);
+        try { const j = await api('/doctor-verify/status'); S = j.status === 'none' ? { status:'none' } : j; } catch(e){ S = { status:'none' }; toast('Could not load your status.'); }
+        render();
+    });
+})();
+</script>
+</body>
+</html>
