@@ -335,7 +335,7 @@
     return j;
   }
   var errText = function (e) {
-    var m = { login: 'Please log in first.', too_many_pending: 'You already have 5 pending requests.', doctor_not_found: 'This doctor is no longer available.', bad_slot: 'Please choose a future time.', call_link_required: 'Please enter a secure https link.', already_answered: 'This request was already answered.', not_pending: 'This application was already reviewed.' };
+    var m = { login: 'Please log in first.', too_many_pending: 'You already have 5 pending requests.', doctor_not_found: 'This doctor is no longer available.', bad_slot: 'Please choose a future time.', call_link_required: 'Please enter a secure https link.', already_answered: 'This request was already answered.', not_pending: 'This application was already reviewed.', slot_taken: 'That time was just taken. Please choose another time.', not_accepting: 'This doctor is not taking new requests right now.' };
     return m[e.message] || 'Something went wrong. Please try again.';
   };
 
@@ -345,7 +345,7 @@
     try {
       var snap = await firebase.firestore().collection('doctors').where('verified', '==', true).get();
       if (snap.empty) return;
-      var list = snap.docs.map(function (d) { var x = d.data(); return { id: d.id, name: x.name, specialty: x.specialty || 'Other', rating: 0, reviews: 0, duration: x.duration || 30, price: 0, availability: x.availability || 'ahead', verified: true, sample: false, bio: x.bio || '', initials: x.initials || 'DR', accentA: x.accentA || '#fde08d', accentB: x.accentB || '#a855f7', lat: x.lat, lng: x.lng, country: x.country, years: x.years }; });
+      var list = snap.docs.map(function (d) { var x = d.data(); return { id: d.id, name: x.name, specialty: x.specialty || 'Other', rating: 0, reviews: 0, duration: x.duration || 30, price: x.price || 0, availability: x.availability || 'ahead', verified: true, sample: false, bio: x.bio || '', initials: x.initials || 'DR', accentA: x.accentA || '#fde08d', accentB: x.accentB || '#a855f7', lat: x.lat, lng: x.lng, country: x.country, years: x.years }; });
       NEXA_DOCTORS.length = 0; list.forEach(function (d) { NEXA_DOCTORS.push(d); });
       realDoctors = true;
       var n = $('nxSampleNotice'); if (n) n.style.display = 'none';
@@ -382,7 +382,7 @@
     var ct = NEXA_CONSULT_TYPES.find(function (c) { return c.id === nexaBooking.consultTypeId; });
     var slot = new Date(nexaBooking.date), t = String(nexaBooking.time).split(':').map(Number); slot.setHours(t[0], t[1], 0, 0);
     try {
-      await api('/health/consult/request', { body: { doctorId: d.id, slotISO: slot.toISOString(), mode: ct.label, notes: nexaBooking.notes } });
+      await api('/telehealth/request', { body: { doctorId: d.id, slotISO: slot.toISOString(), mode: ct.label, notes: nexaBooking.notes } });
       closeDoctorBookingWizard(); await syncRequests(); renderAppointments(); toast('Request sent to ' + d.name);
     } catch (e) { toast(errText(e)); }
   };
@@ -400,10 +400,10 @@
   window.renderAppointments = function () {
     _ra2.apply(this, arguments);
     var w = $('appointmentList'); if (!w || !myReqs.length) return;
-    var label = { requested: 'Waiting for doctor', accepted: 'Accepted', declined: 'Declined' };
+    var label = { requested: 'Waiting for doctor', accepted: 'Accepted', declined: 'Declined', cancelled: 'Cancelled' };
     w.innerHTML += myReqs.slice(0, 5).map(function (r) {
       var docName = (NEXA_DOCTORS.find(function (d) { return d.id === r.doctorId; }) || {}).name || 'Doctor';
-      return '<div class="nx-list-item"><div><div class="text-[13px] font-bold text-white">' + esc(docName) + '</div><div class="text-[12px] text-gray-500">' + esc(label[r.status] || r.status) + ' · ' + esc(new Date(r.slot).toLocaleString()) + '</div></div>' +
+      return '<div class="nx-list-item"><div><div class="text-[13px] font-bold text-white">' + esc(docName) + '</div><div class="text-[12px] text-gray-500">' + esc(label[r.status] || r.status) + ' · ' + esc(new Date(r.slot).toLocaleString()) + (r.fee > 0 ? ' · $' + esc(r.fee) : r.fee === 0 ? ' · Free' : '') + '</div>' + ((r.status === 'requested' || r.status === 'accepted') && new Date(r.slot) > new Date() ? '<button type="button" class="nx-sample-tag" style="margin-top:6px" onclick="nxCancelConsult(\'' + esc(r.id) + '\')">Cancel request</button>' : '') + '</div>' +
         (r.status === 'accepted' && /^https:\/\//i.test(r.callLink || '') ? '<a class="nx-sample-tag" href="' + esc(r.callLink) + '" target="_blank" rel="noopener noreferrer">Join call</a>' : '<i class="fa-solid fa-' + (r.status === 'declined' ? 'circle-xmark text-red-400' : 'hourglass-half text-yellow-300') + '"></i>') + '</div>';
     }).join('');
   };
