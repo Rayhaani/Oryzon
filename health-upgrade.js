@@ -420,7 +420,7 @@
       if (isDoctor && t) { t.textContent = 'Doctor Desk'; s.textContent = 'Answer consultation requests'; }
     } catch (e) {}
   }
-  window.nxOpenDoctor = function () { if (isDoctor) nxOpenDesk(); else nxOpenDocReg(); };
+  window.nxOpenDoctor = function () { if (isDoctor) nxOpenDesk(); else location.href = 'doctor-verify.html'; };
   window.nxCloseDocReg = function () { $('nxDocRegModal').classList.add('hidden'); document.body.style.overflow = 'auto'; };
   window.nxOpenDocReg = async function () {
     var spec = $('dcSpec'), c = $('dcCountry');
