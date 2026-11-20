@@ -2570,11 +2570,7 @@ function nxMountSwitcher() {
         logo.insertAdjacentHTML('beforeend', '<i class="fa-solid fa-chevron-down nx-sw-chev"></i><span class="nx-sw-label"></span>');
         logo.addEventListener('click', nxToggleSwMenu);
     }
-    const cl = document.querySelector('header .header-right-cluster');
-    if (cl && !document.getElementById('nxTuneBtn')) {
-        const b = document.createElement('div'); b.id = 'nxTuneBtn'; b.setAttribute('aria-label', 'Tune your feed'); b.innerHTML = '<i class="fa-solid fa-sliders"></i>';
-        b.onclick = nxOpenTune; cl.insertBefore(b, cl.firstChild);
-    }
+    
     if (!document.getElementById('nxSwMenu')) {
         const m = document.createElement('div'); m.id = 'nxSwMenu';
         m.innerHTML = '<div class="nx-sw-row" data-tab="foryou"><i class="fa-solid fa-wand-magic-sparkles"></i>For You</div>' +
