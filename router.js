@@ -121,13 +121,13 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
             'post-card-template.js',
-            'pages.js?v=4'
+            'pages.js?v=5'
         ],
         'channels.html': [
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
-            'channels.js?v=4'
+            'channels.js?v=5'
         ],
         // status.html yana amfani da firebase 9.22.0 (ba 10.12.2 ba kamar
         // sauran pages) domin haka ne ainihin file dinsa ya kasance tun
