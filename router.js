@@ -888,6 +888,7 @@ currentContentEl.style.removeProperty('visibility');
     if (document.body) nxLoadOverlay();
     else document.addEventListener('DOMContentLoaded', nxLoadOverlay);
 })();
+    try { if (localStorage.getItem('nxq') === '1') { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { loadScriptOnce('nxq.js?v=1'); }); else loadScriptOnce('nxq.js?v=1'); } } catch (e) {}
 // Proactively warm manyan pages (social, shop) tun farko, STAGGERED
     // (400ms tazara) don kaucewa cunkoson bandwidth — zero-second nav.
     ['social.html', 'shop.html', 'videos.html', 'chats.html', 'chat-interior.html']
