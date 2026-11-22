@@ -84,7 +84,7 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
             'footer.js?v=4',
-            'chats.js?v=7'
+            'chats.js?v=8'
         ],
         // chat-interior.html yana bukatar firebase compat SDKs (iri daya
         // da chats.html, 10.7.1, domin kaucewa "Firebase already defined"
