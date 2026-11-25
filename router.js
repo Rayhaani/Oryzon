@@ -84,7 +84,7 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
             'footer.js?v=4',
-            'chats.js?v=9'
+            'chats.js?v=10'
         ],
         // chat-interior.html yana bukatar firebase compat SDKs (iri daya
         // da chats.html, 10.7.1, domin kaucewa "Firebase already defined"
@@ -111,7 +111,7 @@
           'media-upload.js?v=20261020',
            'chat-composer.js',
            'post-card-template.js',
-            'group.js?v=4'
+            'group.js?v=10'
         ],
         // pages.html (na "Pages", ba na kowace group tab a chats.html ba) —
         // dogaro iri daya da group.html: firebase compat SDKs + post-card-
@@ -121,13 +121,13 @@
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
             'post-card-template.js',
-            'pages.js?v=5'
+            'pages.js?v=10'
         ],
         'channels.html': [
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
             'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
-            'channels.js?v=5'
+            'channels.js?v=10'
         ],
         // status.html yana amfani da firebase 9.22.0 (ba 10.12.2 ba kamar
         // sauran pages) domin haka ne ainihin file dinsa ya kasance tun
