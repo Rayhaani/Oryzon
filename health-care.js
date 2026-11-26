@@ -18,7 +18,7 @@
   var jget = function (k, d) { try { return JSON.parse(lsGet(k, '')) || d; } catch (e) { return d; } };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var toast = function (m) { try { window.showToast(m); } catch (e) {} };
-  var lang = function () { var l = lsGet('nexusLang', 'en'); return l === 'fr' ? l : 'en'; };
+  var lang = function () { var l = lsGet('nexusReachLang', '') || lsGet('nexusLang', 'en'); return l === 'fr' || l === 'ha' ? l : 'en'; };
   var pid = function () { try { return getActiveProfileId(); } catch (e) { return 'self'; } };
   var bump = function (k) { var m = jget('nexusImpact', {}); m[k] = (m[k] || 0) + 1; lsSet('nexusImpact', JSON.stringify(m)); };   // local, anonymous counters
   var DAY = 86400000;
@@ -283,6 +283,7 @@
   /* ───────────────────────── public API ───────────────────────── */
   window.nxCare = {
     evaluate: evaluate, pregnancy: pregnancy, vaxDue: vaxDue, vaxStatus: vaxStatus, passportText: passportText, fhir: fhir, Q: Q, VAX: VAX,
+    S: S, ADVICE: ADVICE, state: function () { return st; }, passportData: passportData, getInc: function () { return inc; },
     openTriage: function () { ensureUI(); st = { who: '', cat: '', yes: [], step: 0 }; trRender(); $('nxCareTriage').classList.remove('hidden'); lock(true); },
     closeTriage: function () { var m = $('nxCareTriage'); if (m) m.classList.add('hidden'); lock(false); },
     pick: function (k, v) { st[k] = v; st.step = k === 'who' ? 1 : 2; st.yes = []; trRender(); },
