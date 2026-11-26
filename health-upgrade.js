@@ -45,7 +45,7 @@
     en: { call: 'Call', amb: 'Ambulance / medical', pol: 'Police', fire: 'Fire', pick: 'Choose your country to see the right numbers', fallback: 'Call 112 (works on most mobile networks) or your local emergency number.' },
     fr: { call: 'Appeler', amb: 'Ambulance / urgences médicales', pol: 'Police', fire: 'Pompiers', pick: 'Choisissez votre pays pour voir les bons numéros', fallback: 'Appelez le 112 (fonctionne sur la plupart des réseaux mobiles) ou votre numéro d’urgence local.' }
   };
-  var tr = function (k) { var l = lsGet('nexusLang', 'en'); return (T[l] && T[l][k]) || T.en[k]; };
+  var tr = function (k) { var l = lsGet('nexusReachLang', '') || lsGet('nexusLang', 'en'); return ((window.nxT && window.nxT[l]) && window.nxT[l][k]) || (T[l] && T[l][k]) || T.en[k]; };
 
   window.nxEmgRender = function () {
     var sel = $('nxEmgCountry'), body = $('nxEmgBody'); if (!sel || !body) return;
