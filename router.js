@@ -235,6 +235,7 @@
             'health-telehealth.js',
             'health-care.js',
             'health-reach.js',
+            'health-i18n.js',
             'health-premium.js',
             'footer.js' 
         ],
