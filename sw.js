@@ -33,7 +33,7 @@ const CACHE_NAME = 'nexus-v1'; // <-- KARA lambar wannan duk lokacin da ka canza
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(caches.open(CACHE_NAME).then((c) => Promise.all(
-        ['health.html','health.js','health-upgrade.js','health-care.js','health-premium.js','health-telehealth.js','health-reach.js','health-i18n.js','health-i18n-ha.js','health.css']
+        ['health.html','health.js','health-upgrade.js','health-care.js','health-premium.js','health-telehealth.js','health-reach.js','health-i18n.js','health-i18n-ha.js','health-i18n-fr.js','health-i18n-es.js','health-i18n-pt.js','health-i18n-ar.js','health-i18n-sw.js','health.css']
             .map((u) => c.add(new Request(u, { cache: 'reload' })).catch(() => {}))
     )));
 });
